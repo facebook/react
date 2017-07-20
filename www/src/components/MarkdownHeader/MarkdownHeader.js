@@ -1,19 +1,43 @@
+import Flex from '../Flex';
 import PropTypes from 'prop-types';
 import React from 'react';
-import styles from './MarkdownHeader.module.scss';
+import {colors, fonts} from '../../theme';
 
 const MarkdownHeader = ({path, title}) => (
-  <header className={styles.MarkdownHeader}>
-    <h1 className={styles.Title}>
+  <Flex type="header" halign="space-between" valign="baseline">
+    <h1
+      css={{
+        color: colors.dark,
+        marginRight: '5%',
+        ...fonts.header,
+      }}>
       {title}
     </h1>
     {path &&
       <a
-        className={styles.EditLink}
+        css={{
+          color: colors.subtle,
+          borderColor: colors.divider,
+          transition: 'all 0.2s ease',
+          transitionPropery: 'color, border-color',
+          whiteSpace: 'nowrap',
+
+          ':after': {
+            display: 'block',
+            content: '',
+            borderTopWidth: 1,
+            borderTopStyle: 'solid',
+          },
+
+          ':hover': {
+            color: colors.text,
+            borderColor: colors.text,
+          },
+        }}
         href={`https://github.com/facebook/react/tree/master/docs/${path}`}>
         Edit this page
       </a>}
-  </header>
+  </Flex>
 );
 
 MarkdownHeader.propTypes = {

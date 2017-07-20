@@ -1,6 +1,6 @@
 import React from 'react';
+import Flex from '../Flex';
 import Section from './Section';
-import styles from './Sidebar.module.scss';
 
 class Sidebar extends React.Component {
   constructor(props, context) {
@@ -16,7 +16,14 @@ class Sidebar extends React.Component {
     const {activeSection} = this.state;
 
     return (
-      <nav className={styles.Sidebar}>
+      <Flex
+        type="nav"
+        direction="column"
+        halign="stretch"
+        css={{
+          width: '100%',
+          paddingLeft: '1rem',
+        }}>
         {sectionList.map((section, index) => (
           <Section
             isActive={activeSection === section || sectionList.length === 1}
@@ -25,7 +32,7 @@ class Sidebar extends React.Component {
             section={section}
           />
         ))}
-      </nav>
+      </Flex>
     );
   }
 

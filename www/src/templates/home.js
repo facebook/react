@@ -3,7 +3,7 @@ import CodeEditor from '../components/CodeEditor';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-import './home.scss';
+// TODO import './home.scss';
 
 import arrowSvg from '../icons/arrow.svg';
 

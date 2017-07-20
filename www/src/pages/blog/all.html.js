@@ -3,7 +3,7 @@ import MarkdownHeader from '../../components/MarkdownHeader';
 import Container from '../../components/Container';
 import PropTypes from 'prop-types';
 import React from 'react';
-import styles from './all.module.scss';
+import {sharedStyles} from '../../theme';
 import dateToString from '../../utils/dateToString';
 import toCommaSeparatedList from '../../utils/toCommaSeparatedList';
 
@@ -12,9 +12,13 @@ const AllBlogPosts = ({data}) => (
     <MarkdownHeader title="All Posts" />
     <ul>
       {data.allMarkdownRemark.edges.map(({node}) => (
-        <li className={styles.ListItem} key={node.fields.slug}>
+        <li
+          css={{
+            marginTop: 10,
+          }}
+          key={node.fields.slug}>
           <Link
-            className={styles.Link}
+            css={sharedStyles.link}
             key={node.fields.slug}
             to={node.fields.slug}>
             {node.frontmatter.title}

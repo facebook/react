@@ -1,4 +1,4 @@
-import { navigateTo } from 'gatsby-link';
+import {navigateTo} from 'gatsby-link';
 import PropTypes from 'prop-types';
 import React from 'react';
 

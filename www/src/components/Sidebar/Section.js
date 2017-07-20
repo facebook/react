@@ -1,8 +1,7 @@
-import cn from 'classnames';
 import Link from 'gatsby-link';
 import React from 'react';
-import styles from './Section.module.scss';
 import slugify from '../../utils/slugify';
+import {colors} from '../../theme';
 
 const toAnchor = (href = '') => {
   const index = href.indexOf('#');
@@ -28,24 +27,30 @@ const isItemActive = item => {
 };
 
 const Section = ({isActive, onClick, section}) => (
-  <div className={styles.Section}>
-    <h2 className={styles.Header}>
+  <div>
+    <h2 css={{margin: '1rem 0'}}>
       <a
-        className={cn(styles.HeaderLink, {
-          [styles.ActiveHeaderLink]: isActive,
-        })}
+        css={{
+          color: isActive ? colors.text : colors.subtle,
+          transition: 'color 0.2s ease',
+          cursor: 'pointer',
+
+          ':hover': {
+            color: colors.text,
+          },
+        }}
         onClick={onClick}>
         {section.title}
       </a>
     </h2>
     {isActive &&
-      <ul className={styles.List}>
+      <ul css={{marginBottom: 10}}>
         {section.items.map(item => (
           <li key={item.id}>
             {CreateLink(item)}
 
             {item.subitems &&
-              <ul className={styles.SubList}>
+              <ul css={{marginLeft: 20}}>
                 {item.subitems.map(subitem => (
                   <li key={subitem.id}>
                     {CreateLink(subitem)}
@@ -58,39 +63,71 @@ const Section = ({isActive, onClick, section}) => (
   </div>
 );
 
+const activeLinkCss = {
+  color: colors.brand,
+
+  ':before': {
+    content: '',
+    width: 4,
+    height: '100%',
+    borderLeft: `4px solid ${colors.brand}`,
+    marginLeft: -20,
+    paddingLeft: 16,
+  },
+};
+
+const linkCss = {
+  color: colors.text,
+  display: 'inline-block',
+  borderBottom: '1px solid transparent',
+  transition: 'border 0.2s ease',
+  marginTop: 5,
+
+  '&:hover': {
+    color: colors.brand,
+  },
+};
+
 const CreateLink = item => {
   if (item.id.includes('.html')) {
     return (
-      <Link
-        className={cn(styles.Link, {
-          [styles.ActiveLink]: isItemActive(item),
-        })}
-        to={item.id}>
+      <Link css={[linkCss, isItemActive(item) && activeLinkCss]} to={item.id}>
         {item.title}
       </Link>
     );
   } else if (item.forceInternal) {
     return (
       <Link
-        className={cn(styles.Link, {
-          [styles.ActiveLink]: isItemActive(item),
-        })}
+        css={[linkCss, isItemActive(item) && activeLinkCss]}
         to={toAnchor(item.href)}>
         {item.title}
       </Link>
     );
   } else if (item.href) {
     return (
-      <a className={cn(styles.Link, styles.ExternalLink)} href={item.href}>
+      <a
+        css={[
+          linkCss,
+          {
+            paddingRight: 15,
+
+            ':hover': {
+              borderBottomColor: 'transparent',
+            },
+
+            ':after': {
+              content: '" " url(../../../../docs/img/external.png)', // TODO Move to a better relative location
+            },
+          },
+        ]}
+        href={item.href}>
         {item.title}
       </a>
     );
   } else {
     return (
       <Link
-        className={cn(styles.Link, {
-          [styles.ActiveLink]: isItemActive(item),
-        })}
+        css={[linkCss, isItemActive(item) && activeLinkCss]}
         to={slugify(item.id)}>
         {item.title}
       </Link>
