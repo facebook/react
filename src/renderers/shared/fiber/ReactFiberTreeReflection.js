@@ -242,6 +242,41 @@ exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
   while (true) {
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
+    } else if (node.child) {
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return null;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return null;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  // Flow needs the return null here, but ESLint complains about it.
+  // eslint-disable-next-line no-unreachable
+  return null;
+};
+
+exports.findCurrentHostFiberWithNoPortals = function(
+  parent: Fiber,
+): Fiber | null {
+  const currentParent = findCurrentFiberUsingSlowPath(parent);
+  if (!currentParent) {
+    return null;
+  }
+
+  // Next we'll drill down this component to find the first HostComponent/Text.
+  let node: Fiber = currentParent;
+  while (true) {
+    if (node.tag === HostComponent || node.tag === HostText) {
+      return node;
     } else if (node.child && node.tag !== HostPortal) {
       node.child.return = node;
       node = node.child;
