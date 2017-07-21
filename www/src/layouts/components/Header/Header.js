@@ -1,10 +1,10 @@
 import Container from 'components/Container';
 import HeaderLink from './HeaderLink';
 import React from 'react';
+import SearchSvg from './SearchSvg';
 import {colors, fonts, media} from 'theme';
 
 import logoSvg from 'icons/logo.svg';
-import searchSvg from 'icons/search.svg';
 
 // Note this version may point to an alpha/beta/next release.
 // This is how the previous Jekyll site determined version though.
@@ -116,7 +116,7 @@ const Header = ({location}) => (
             },
           }}>
           <label htmlFor="search">
-            <img src={searchSvg} alt="Search" height="16" />
+            <SearchSvg />
           </label>
           <div
             css={{

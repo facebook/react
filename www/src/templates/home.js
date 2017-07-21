@@ -3,9 +3,6 @@ import CodeEditor from './components/CodeEditor';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
-// TODO import './home.scss';
-
-import arrowSvg from 'icons/arrow.svg';
 
 // TODO The non-markdown portions of this page won't get localized currently.
 
@@ -66,7 +63,7 @@ class Home extends React.Component {
                   <div className="cta_group__item">
                     <ButtonLink to="/tutorial/tutorial.html" type="secondary">
                       Take the tutorial{' '}
-                      <img src={arrowSvg} alt="Search" height="12" />
+                      <ArrowSvg />
                     </ButtonLink>
                   </div>
                 </div>
@@ -90,7 +87,7 @@ class Home extends React.Component {
               <div className="cta_group__item">
                 <ButtonLink to="/tutorial/tutorial.html" type="secondary">
                   Take the tutorial{' '}
-                  <img src={arrowSvg} alt="Search" height="12" />
+                  <ArrowSvg />
                 </ButtonLink>
               </div>
             </div>
@@ -237,6 +234,19 @@ class MarkdownEditor extends React.Component {
 
 ReactDOM.render(<MarkdownEditor />, mountNode);
 `.trim();
+
+const ArrowSvg = () => (
+  <svg
+    height="12"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 4.53657 8.69699"
+  >
+    <path
+      d="M.18254,8.697a.18149.18149,0,0,1-.12886-.31034L4.09723,4.34126.05369.29954a.18149.18149,0,0,1,.2559-.2559L4.4838,4.21785a.18149.18149,0,0,1,0,.2559L.30958,8.648A.18149.18149,0,0,1,.18254,8.697Z"
+      fill="currentColor"
+    />
+  </svg>
+);
 
 // eslint-disable-next-line no-undef
 export const pageQuery = graphql`
