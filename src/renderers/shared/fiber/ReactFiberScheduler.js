@@ -1507,13 +1507,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function activeUpdates<A>(fn: () => A): A {
+  function flushSync<A>(batch: () => A): A {
     const previousIsBatchingUpdates = isBatchingUpdates;
     const previousPriorityContext = priorityContext;
     isBatchingUpdates = true;
     priorityContext = SynchronousPriority;
     try {
-      return fn();
+      return batch();
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
       priorityContext = previousPriorityContext;
@@ -1540,7 +1540,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     syncUpdates: syncUpdates,
-    activeUpdates: activeUpdates,
+    flushSync: flushSync,
     deferredUpdates: deferredUpdates,
   };
 };

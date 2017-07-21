@@ -135,7 +135,7 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('1');
       });
 
-      it('activeUpdates batches sync updates and flushes them at the end of the batch', () => {
+      it('flushSync batches sync updates and flushes them at the end of the batch', () => {
         let ops = [];
         let instance;
 
@@ -159,7 +159,7 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual(['A']);
         expect(container.textContent).toEqual('A');
 
-        ReactDOM.activeUpdates(() => {
+        ReactDOM.flushSync(() => {
           instance.push('B');
           instance.push('C');
           // Not flushed yet
@@ -173,7 +173,7 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual(['A', 'ABC', 'ABCD']);
       });
 
-      it('activeUpdates flushes updates even if nested inside another activeUpdates', () => {
+      it('flushSync flushes updates even if nested inside another flushSync', () => {
         let ops = [];
         let instance;
 
@@ -197,17 +197,17 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual(['A']);
         expect(container.textContent).toEqual('A');
 
-        ReactDOM.activeUpdates(() => {
+        ReactDOM.flushSync(() => {
           instance.push('B');
           instance.push('C');
           // Not flushed yet
           expect(container.textContent).toEqual('A');
           expect(ops).toEqual(['A']);
 
-          ReactDOM.activeUpdates(() => {
+          ReactDOM.flushSync(() => {
             instance.push('D');
           });
-          // The nested activeUpdates caused everything to flush.
+          // The nested flushSync caused everything to flush.
           expect(container.textContent).toEqual('ABCD');
           expect(ops).toEqual(['A', 'ABCD']);
         });
@@ -215,7 +215,7 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual(['A', 'ABCD']);
       });
 
-      it('activeUpdates does not create a nested update', () => {
+      it('flushSync does not create a nested update', () => {
         let ops = [];
 
         class Component extends React.Component {
@@ -224,7 +224,7 @@ describe('ReactDOMFiberAsync', () => {
             this.setState(state => ({text: state.text + val}));
           }
           componentDidMount() {
-            ReactDOM.activeUpdates(() => {
+            ReactDOM.flushSync(() => {
               this.push('A');
               this.push('B');
               this.push('C');
@@ -247,11 +247,11 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual(['ABC']);
       });
 
-      it('activeUpdates flushes updates before end of the tick', () => {
+      it('flushSync flushes updates before end of the tick', () => {
         let ops = [];
         let instance;
 
-        class Component extends React.Component {
+        class Component extends React.unstable_AsyncComponent {
           state = {text: ''};
           push(val) {
             this.setState(state => ({text: state.text + val}));
@@ -265,14 +265,7 @@ describe('ReactDOMFiberAsync', () => {
           }
         }
 
-        class AsyncWrapper extends React.Component {
-          static unstable_asyncUpdates = true;
-          render() {
-            return this.props.children;
-          }
-        }
-
-        ReactDOM.render(<AsyncWrapper><Component /></AsyncWrapper>, container);
+        ReactDOM.render(<Component />, container);
         jest.runAllTimers();
 
         // Updates are async by default
@@ -280,7 +273,7 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual([]);
         expect(container.textContent).toEqual('');
 
-        ReactDOM.activeUpdates(() => {
+        ReactDOM.flushSync(() => {
           instance.push('B');
           instance.push('C');
           // Not flushed yet
