@@ -215,36 +215,22 @@ describe('ReactDOMFiberAsync', () => {
         expect(ops).toEqual(['A', 'ABCD']);
       });
 
-      it('flushSync does not create a nested update', () => {
-        let ops = [];
-
+      it('flushSync throws if already performing work', () => {
         class Component extends React.Component {
-          state = {text: ''};
-          push(val) {
-            this.setState(state => ({text: state.text + val}));
-          }
-          componentDidMount() {
-            ReactDOM.flushSync(() => {
-              this.push('A');
-              this.push('B');
-              this.push('C');
-            });
-            // Not flushed yet
-            expect(container.textContent).toEqual('');
-            expect(ops).toEqual([]);
-          }
           componentDidUpdate() {
-            ops.push(this.state.text);
+            ReactDOM.flushSync(() => {});
           }
           render() {
-            return <span>{this.state.text}</span>;
+            return null;
           }
         }
 
+        // Initial mount
         ReactDOM.render(<Component />, container);
-
-        expect(container.textContent).toEqual('ABC');
-        expect(ops).toEqual(['ABC']);
+        // Update
+        expect(() => ReactDOM.render(<Component />, container)).toThrow(
+          'flushSync was called from inside a lifecycle method',
+        );
       });
 
       it('flushSync flushes updates before end of the tick', () => {

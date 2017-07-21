@@ -363,6 +363,8 @@ var ReactNoop = {
 
   syncUpdates: NoopRenderer.syncUpdates,
 
+  flushSync: NoopRenderer.flushSync,
+
   // Logs the current state of the tree.
   dumpTree(rootID: string = DEFAULT_ROOT_ID) {
     const root = roots.get(rootID);

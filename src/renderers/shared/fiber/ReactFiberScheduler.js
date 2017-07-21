@@ -1517,9 +1517,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
       priorityContext = previousPriorityContext;
-      if (!isPerformingWork) {
-        performWork(TaskPriority, null);
-      }
+
+      invariant(
+        !isPerformingWork,
+        'flushSync was called from inside a lifecycle method. It cannot be ' +
+          'called when React is already rendering.',
+      );
+      performWork(TaskPriority, null);
     }
   }
 
