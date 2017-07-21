@@ -12,6 +12,7 @@
 'use strict';
 
 import CodeEditor from '../components/CodeEditor';
+import React from 'react';
 import ReactDOM from 'react-dom';
 
 // TODO This is a huge hack.

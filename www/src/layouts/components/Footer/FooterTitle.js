@@ -11,6 +11,7 @@
 
 'use strict';
 
+import React from 'react';
 import {colors} from 'theme';
 
 const FooterTitle = ({children, title}) => (

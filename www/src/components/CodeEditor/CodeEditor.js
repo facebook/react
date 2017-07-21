@@ -11,7 +11,7 @@
 
 'use strict';
 
-import {Component} from 'react';
+import React, {Component} from 'react';
 import {transform} from 'babel-standalone';
 import Flex from 'components/Flex';
 import {LiveProvider, LiveEditor} from 'react-live';
@@ -200,10 +200,13 @@ class CodeEditor extends Component {
 
     // Evaluated code references React and ReactDOM (as globals).
     // Make sure they're visible to the eval'ed code.
+    // eslint-disable-next-line no-unused-vars, no-shadow
     const React = require('react');
+    // eslint-disable-next-line no-unused-vars
     const ReactDOM = require('react-dom');
 
     // HACK Remarkable plugin is used in one of the examples too.
+    // eslint-disable-next-line no-unused-vars
     const Remarkable = require('remarkable');
 
     // eslint-disable-next-line no-eval

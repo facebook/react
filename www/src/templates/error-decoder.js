@@ -16,6 +16,7 @@ import ErrorDecoder from './components/ErrorDecoder';
 import Flex from 'components/Flex';
 import hex2rgba from 'hex2rgba';
 import MarkdownHeader from './components/MarkdownHeader';
+import React from 'react';
 import {StickyContainer} from 'react-sticky';
 import StickySidebar from './components/StickySidebar';
 import {colors, sharedStyles} from 'theme';

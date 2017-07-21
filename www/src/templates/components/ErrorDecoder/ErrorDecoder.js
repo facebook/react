@@ -11,7 +11,7 @@
 
 'use strict';
 
-import {Component} from 'react';
+import React, {Component} from 'react';
 
 const errorCodes = require('../../../../../scripts/error-codes/codes.json');
 
@@ -69,7 +69,8 @@ function ErrorResult(props) {
   if (!code) {
     return (
       <p>
-        When you encounter an error, you'll receive a link to this page for that specific error and we'll show you the full error text.
+        When you encounter an error,
+        you'll receive a link to this page for that specific error and we'll show you the full error text.
       </p>
     );
   }
