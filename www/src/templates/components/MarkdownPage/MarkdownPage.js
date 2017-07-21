@@ -56,6 +56,7 @@ const MarkdownPage = ({
                     <span>
                       by {toCommaSeparatedList(authors, author => (
                         <a
+                          css={sharedStyles.link}
                           href={author.frontmatter.url}
                           key={author.frontmatter.name}>
                           {author.frontmatter.name}
