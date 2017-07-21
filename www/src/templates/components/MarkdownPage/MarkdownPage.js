@@ -12,6 +12,7 @@ import {sharedStyles} from 'theme';
 
 // TODO Use 'react-helmet' to set metadata
 
+console.log('sharedStyles:', sharedStyles.markdown);
 // TODO Set nested markup styles (eg <p>, <code>, etc)
 
 const MarkdownPage = ({
@@ -65,11 +66,13 @@ const MarkdownPage = ({
                 </div>}
 
               <div
-                css={{
-                  marginTop: 65,
-                  marginBottom: 120,
-                  '& a:not(.anchor)': sharedStyles.link,
-                }}
+                css={[
+                  sharedStyles.markdown,
+                  {
+                    marginTop: 65,
+                    marginBottom: 120,
+                  },
+                ]}
                 dangerouslySetInnerHTML={{__html: markdownRemark.html}}
               />
             </Flex>

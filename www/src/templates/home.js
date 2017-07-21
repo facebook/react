@@ -1,12 +1,11 @@
 import ButtonLink from './components/ButtonLink';
 import Container from 'components/Container';
 import Flex from 'components/Flex';
+import hex2rgba from 'hex2rgba';
 import mountCodeExample from 'utils/mountCodeExample';
 import PropTypes from 'prop-types';
 import {Component} from 'react';
-import {colors, media} from 'theme';
-
-// TODO The non-markdown portions of this page won't get localized currently.
+import {colors, media, sharedStyles} from 'theme';
 
 // TODO Split '.marketing-row .marketing-col' into tabs?
 
@@ -20,7 +19,7 @@ class Home extends Component {
 
   render() {
     const {data} = this.props;
-    console.log(this.props, data);
+
     return (
       <div css={{width: '100%'}}>
         <header
@@ -112,7 +111,10 @@ class Home extends Component {
         </header>
 
         <Container>
-          <div dangerouslySetInnerHTML={{__html: data.markdownRemark.html}} />
+          <div
+            css={[sharedStyles.markdown, markdownStyles]}
+            dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
+          />
         </Container>
 
         <section
@@ -190,6 +192,74 @@ export const pageQuery = graphql`
 `;
 
 export default Home;
+
+// TODO This nasty CSS is required because 'docs/index.md' defines hard-coded class names.
+const markdownStyles = {
+  '& .home-section': {
+    marginTop: 60,
+    marginBottom: 65,
+  },
+
+  '& .homeDivider': {
+    height: 1,
+    marginBottom: -1,
+    border: 'none',
+    borderBottom: `1 solid ${colors.divider}`,
+  },
+
+  '& .marketing-row': {
+    display: 'flex',
+    flexDirection: 'row',
+
+    [media.mediumDown]: {
+      flexDirection: 'column',
+    },
+  },
+
+  '& .marketing-col': {
+    display: 'flex',
+    flexDirection: 'column',
+    flex: '0 1 33%',
+    marginLeft: 40,
+
+    '&:first-ofType': {
+      marginLeft: 0,
+    },
+
+    [media.mediumDown]: {
+      display: 'block',
+      marginTop: 40,
+      marginLeft: 0,
+
+      '&:first-ofType': {
+        marginTop: 0,
+      },
+    },
+
+    '& h3': {
+      color: colors.subtle,
+
+      [media.largeDown]: {
+        fontSize: 18,
+        fontWeight: 400,
+      },
+
+      [media.xlargeUp]: {
+        fontSize: 24,
+        fontWeight: 500,
+      },
+    },
+  },
+
+  '& .example': {
+    marginTop: 80,
+
+    '& code': {
+      background: hex2rgba(colors.note, 0.5),
+      padding: '0 3',
+    },
+  },
+};
 
 // TODO Move these hard-coded examples into example files and out of the template?
 // Alternately, move them into the markdown and transform them during build?

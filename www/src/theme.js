@@ -33,15 +33,36 @@ const fonts = {
 // Shared styles are generally better as components,
 // Except when they must be used within nested CSS selectors.
 // This is the case for eg markdown content.
-const sharedStyles = {
-  link: {
-    backgroundColor: hex2rgba(colors.brandLight, 0.5),
-    borderBottom: `1px solid ${hex2rgba(colors.black, 0.2)}`,
-    color: colors.text,
+const linkStyle = {
+  backgroundColor: hex2rgba(colors.brandLight, 0.5),
+  borderBottom: `1px solid ${hex2rgba(colors.black, 0.2)}`,
+  color: colors.text,
 
-    ':hover': {
-      backgroundColor: colors.brandLight,
-      borderBottomColor: colors.text,
+  ':hover': {
+    backgroundColor: colors.brandLight,
+    borderBottomColor: colors.text,
+  },
+};
+const sharedStyles = {
+  link: linkStyle,
+  markdown: {
+    '& a:not(.anchor)': linkStyle,
+
+    '& p': {
+      marginTop: 20,
+    },
+
+    '& hr': {
+      height: 1,
+      marginBottom: -1,
+      border: 'none',
+      borderBottom: `1px solid ${colors.divider}`,
+    },
+
+    '& h2': {
+      borderTop: `1px solid ${colors.divider}`,
+      marginTop: 44,
+      paddingTop: 40,
     },
   },
 };
