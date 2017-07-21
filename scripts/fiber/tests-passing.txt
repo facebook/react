@@ -674,9 +674,9 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
 * renders synchronously by default
 * renders synchronously when feature flag is disabled
-* unstable_asyncUpdates at the root makes the entire tree async
+* AsyncComponent at the root makes the entire tree async
 * updates inside an async tree are async by default
-* unstable_asyncUpdates creates an async subtree
+* AsyncComponent creates an async subtree
 * updates inside an async subtree are async by default
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js

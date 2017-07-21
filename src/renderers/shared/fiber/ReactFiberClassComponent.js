@@ -388,7 +388,8 @@ module.exports = function(
     if (
       ReactFeatureFlags.enableAsyncSubtreeAPI &&
       workInProgress.type != null &&
-      workInProgress.type.unstable_asyncUpdates === true
+      workInProgress.type.prototype != null &&
+      workInProgress.type.prototype.unstable_isAsyncReactComponent === true
     ) {
       workInProgress.internalContextTag |= AsyncUpdates;
     }
