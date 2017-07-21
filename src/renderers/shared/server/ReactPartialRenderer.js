@@ -414,7 +414,7 @@ function resolve(child, context) {
 class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
     var topFrame = {
-      children: Array.isArray() ? element : [element],
+      children: toArray(element),
       childIndex: 0,
       context: emptyObject,
       footer: '',
