@@ -246,7 +246,7 @@ function freezeDefaultProps(element) {
   if (typeof type !== 'function' || type.wasTaggedReactComponent) {
     return;
   }
-  Object.defineProperty(type, 'wasTaggedReactComponent', { value: true });
+  Object.defineProperty(type, 'wasTaggedReactComponent', {value: true});
   Object.defineProperty(type, 'defaultProps', {
     writable: false,
     configurable: false,
