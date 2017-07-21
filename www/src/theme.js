@@ -30,43 +30,6 @@ const fonts = {
   },
 };
 
-// Shared styles are generally better as components,
-// Except when they must be used within nested CSS selectors.
-// This is the case for eg markdown content.
-const linkStyle = {
-  backgroundColor: hex2rgba(colors.brandLight, 0.5),
-  borderBottom: `1px solid ${hex2rgba(colors.black, 0.2)}`,
-  color: colors.text,
-
-  ':hover': {
-    backgroundColor: colors.brandLight,
-    borderBottomColor: colors.text,
-  },
-};
-const sharedStyles = {
-  link: linkStyle,
-  markdown: {
-    '& a:not(.anchor)': linkStyle,
-
-    '& p': {
-      marginTop: 20,
-    },
-
-    '& hr': {
-      height: 1,
-      marginBottom: -1,
-      border: 'none',
-      borderBottom: `1px solid ${colors.divider}`,
-    },
-
-    '& h2': {
-      borderTop: `1px solid ${colors.divider}`,
-      marginTop: 44,
-      paddingTop: 40,
-    },
-  },
-};
-
 // Generate a bunch of pre-defined @media queries using the ranges above.
 // These queries will have human-friendly identifiers,
 // eg 'media.xsmall', 'media.smallDown', 'media.mediumUp', 'media.smallToLarge'
@@ -113,6 +76,78 @@ const media = generateMediaQueries({
   xlarge: [1280, 1339],
   xxlarge: [1340, null],
 });
+
+// Shared styles are generally better as components,
+// Except when they must be used within nested CSS selectors.
+// This is the case for eg markdown content.
+const linkStyle = {
+  backgroundColor: hex2rgba(colors.brandLight, 0.5),
+  borderBottom: `1px solid ${hex2rgba(colors.black, 0.2)}`,
+  color: colors.text,
+
+  ':hover': {
+    backgroundColor: colors.brandLight,
+    borderBottomColor: colors.text,
+  },
+};
+const sharedStyles = {
+  link: linkStyle,
+  markdown: {
+    lineHeight: '25px',
+
+    '& a:not(.anchor)': linkStyle,
+
+    '& p': {
+      marginTop: 20,
+    },
+
+    '& hr': {
+      height: 1,
+      marginBottom: -1,
+      border: 'none',
+      borderBottom: `1px solid ${colors.divider}`,
+    },
+
+    '& h1': {
+      [media.xsmall]: {
+        fontSize: 30,
+        // 30px, 700);
+      },
+
+      [media.smallToLarge]: {
+        fontSize: 45,
+        // 45px, 700);
+      },
+
+      [media.xlargeUp]: {
+        fontSize: 60,
+        // 60px, 700);
+      },
+    },
+
+    '& h2': {
+      borderTop: `1px solid ${colors.divider}`,
+      marginTop: 44,
+      paddingTop: 40,
+
+      [media.largeDown]: {
+        fontSize: 20,
+        // 25px, 700);
+      },
+      [media.xlargeUp]: {
+        fontSize: 35,
+        // 40px, 700);
+      },
+    },
+
+    '& h3': {
+      [media.xlargeUp]: {
+        fontSize: 25,
+        // 30px, 700);
+      },
+    },
+  },
+};
 
 export default {
   colors,
