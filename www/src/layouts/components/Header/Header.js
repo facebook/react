@@ -1,6 +1,5 @@
 import Container from 'components/Container';
 import HeaderLink from './HeaderLink';
-import React from 'react';
 import SearchSvg from './SearchSvg';
 import {colors, fonts, media} from 'theme';
 

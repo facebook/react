@@ -1,6 +1,5 @@
 import MarkdownPage from './components/MarkdownPage';
 import PropTypes from 'prop-types';
-import React from 'react';
 
 import sectionList from '../../../docs/_data/nav_community.yml';
 

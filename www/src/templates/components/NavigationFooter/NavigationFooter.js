@@ -2,7 +2,6 @@ import Container from 'components/Container';
 import Flex from 'components/Flex';
 import Link from 'gatsby-link';
 import PropTypes from 'prop-types';
-import React from 'react';
 import {colors, fonts, media} from 'theme';
 
 const NavigationFooter = ({next, prev}) => (

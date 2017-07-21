@@ -1,5 +1,3 @@
-import React from 'react';
-
 const addString = (list, string) =>
   list.push(<span key={`${list.length}-${string}`}>{string}</span>);
 

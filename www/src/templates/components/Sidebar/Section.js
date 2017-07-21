@@ -1,5 +1,4 @@
 import Link from 'gatsby-link';
-import React from 'react';
 import slugify from 'utils/slugify';
 import {colors} from 'theme';
 
