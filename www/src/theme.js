@@ -95,10 +95,26 @@ const sharedStyles = {
   markdown: {
     lineHeight: '25px',
 
+    '& .gatsby-highlight': {
+      marginTop: 30,
+    },
+
     '& a:not(.anchor)': linkStyle,
 
     '& p': {
-      marginTop: 20,
+      marginTop: 30,
+      fontSize: 18,
+      lineHeight: '35px',
+
+      [media.largeDown]: {
+        fontSize: 16,
+        lineHeight: '30px',
+      }
+    },
+
+    '& p > code, & li > code': {
+      background: hex2rgba(colors.note, 0.5),
+      padding: '0 3',
     },
 
     '& hr': {
@@ -141,6 +157,8 @@ const sharedStyles = {
     },
 
     '& h3': {
+      marginTop: 45,
+
       [media.xlargeUp]: {
         fontSize: 25,
         // 30px, 700);
