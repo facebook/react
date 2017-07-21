@@ -7,8 +7,6 @@ import PropTypes from 'prop-types';
 import {Component} from 'react';
 import {colors, media, sharedStyles} from 'theme';
 
-// TODO Split '.marketing-row .marketing-col' into tabs?
-
 class Home extends Component {
   componentDidMount() {
     mountCodeExample('helloExample', HELLO_COMPONENT);
@@ -222,7 +220,7 @@ const markdownStyles = {
     flex: '0 1 33%',
     marginLeft: 40,
 
-    '&:first-ofType': {
+    '&:first-of-type': {
       marginLeft: 0,
     },
 
@@ -231,7 +229,7 @@ const markdownStyles = {
       marginTop: 40,
       marginLeft: 0,
 
-      '&:first-ofType': {
+      '&:first-of-type': {
         marginTop: 0,
       },
     },

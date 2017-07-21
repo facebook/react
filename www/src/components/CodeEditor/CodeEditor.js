@@ -29,8 +29,10 @@ class CodeEditor extends Component {
 
     return (
       <LiveProvider code={code} mountStylesheet={false}>
-        <Flex
+        <div
           css={{
+            display: 'flex',
+            flexDirection: 'row',
             [media.largeDown]: {
               flexDirection: 'column',
             },
@@ -51,7 +53,7 @@ class CodeEditor extends Component {
 
                 '& p': {
                   marginTop: 15,
-                  marginTight: 40,
+                  marginRight: 40,
 
                   [media.xlargeUp]: {
                     marginTop: 25,
@@ -61,12 +63,13 @@ class CodeEditor extends Component {
               {children}
             </div>}
 
-          <Flex
-            shrink="0"
-            valign="stretch"
-            basis="67%"
+          <div
             css={{
-              [media.largeDown]: {
+              display: 'flex',
+              flex: '0 0 67%',
+              alignItems: 'stretch',
+              flexDirection: 'row',
+              [media.smallDown]: {
                 flexDirection: 'column',
               },
             }}>
@@ -75,10 +78,8 @@ class CodeEditor extends Component {
                 css={{
                   height: '100%',
                   width: '100%',
+                  borderRadius: '10px 0 0 10px !important',
 
-                  [media.mediumUp]: {
-                    borderRadius: '10px 0 0 10px !important',
-                  },
                   [media.smallDown]: {
                     borderRadius: '10px 10px 0 0 !important',
                   },
@@ -98,11 +99,9 @@ class CodeEditor extends Component {
                   flex: '0 0 50%',
                   overflow: 'hidden',
                   border: `1px solid ${colors.error}`,
+                  borderRadius: '0 10px 10px 0',
 
-                  [media.mediumUp]: {
-                    borderRadius: '0 10px 10px 0',
-                  },
-                  [media.mediumDown]: {
+                  [media.smallDown]: {
                     borderRadius: '0 0 10px 10px',
                   },
                 }}>
@@ -130,11 +129,9 @@ class CodeEditor extends Component {
                   flex: '0 0 50%',
                   overflow: 'hidden',
                   border: `1px solid ${colors.divider}`,
+                  borderRadius: '0 10px 10px 0',
 
-                  [media.mediumUp]: {
-                    borderRadius: '0 10px 10px 0',
-                  },
-                  [media.mediumDown]: {
+                  [media.smallDown]: {
                     borderRadius: '0 0 10px 10px',
                   },
                 }}>
@@ -171,8 +168,8 @@ class CodeEditor extends Component {
                   ref={this._setMountRef}
                 />
               </div>}
-          </Flex>
-        </Flex>
+          </div>
+        </div>
       </LiveProvider>
     );
   }
