@@ -27,6 +27,8 @@ class CodeEditor extends Component {
   }
 
   componentDidMount() {
+    // Initial render() will always be a no-op,
+    // Because the mountNode ref won't exist yet.
     this._render();
   }
 
@@ -92,6 +94,7 @@ class CodeEditor extends Component {
                   height: '100%',
                   width: '100%',
                   borderRadius: '10px 0 0 10px !important',
+                  marginTop: '0 !important',
 
                   [media.smallDown]: {
                     borderRadius: '10px 10px 0 0 !important',
@@ -209,8 +212,17 @@ class CodeEditor extends Component {
     // eslint-disable-next-line no-unused-vars
     const Remarkable = require('remarkable');
 
-    // eslint-disable-next-line no-eval
-    eval(compiled);
+    try {
+      // eslint-disable-next-line no-eval
+      eval(compiled);
+    } catch (error) {
+      console.error(error);
+
+      this.setState({
+        compiled: null,
+        error,
+      });
+    }
   }
 
   _setMountRef = ref => {
