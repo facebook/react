@@ -25,9 +25,6 @@ import {sharedStyles} from 'theme';
 
 // TODO Use 'react-helmet' to set metadata
 
-console.log('sharedStyles:', sharedStyles.markdown);
-// TODO Set nested markup styles (eg <p>, <code>, etc)
-
 const MarkdownPage = ({
   authors,
   date,

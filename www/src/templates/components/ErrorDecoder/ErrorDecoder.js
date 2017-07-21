@@ -30,7 +30,9 @@ function urlify(str) {
 
   for (let i = 0; i < segments.length; i++) {
     if (i % 2 === 1) {
-      segments[i] = (<a key={i} target="_blank" href={segments[i]}>{segments[i]}</a>);
+      segments[i] = (
+        <a key={i} target="_blank" href={segments[i]}>{segments[i]}</a>
+      );
     }
   }
 
@@ -104,12 +106,7 @@ class ErrorDecoder extends Component {
   }
 
   render() {
-    return (
-      <ErrorResult
-        code={this.state.code}
-        msg={this.state.errorMsg}
-      />
-    );
+    return <ErrorResult code={this.state.code} msg={this.state.errorMsg} />;
   }
 }
 

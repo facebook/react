@@ -55,24 +55,27 @@ const ErrorPage = ({data, location}) => (
             css={{
               marginTop: 65,
               marginBottom: 120,
-            }}
-          >
-            <div css={sharedStyles.markdown} dangerouslySetInnerHTML={{__html: data.markdownRemark.html}} />
-            <p css={{
-              '& p': {
-                marginTop: 30
-              },
-              '& code': {
-                display: 'block',
-                marginTop: 30,
-                padding: '1rem',
-                borderRadius: '0.5rem',
-                backgroundColor: hex2rgba(colors.error, 0.1),
-                color: colors.error,
-              }
             }}>
+            <div
+              css={sharedStyles.markdown}
+              dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
+            />
+            <div
+              css={{
+                '& p': {
+                  marginTop: 30,
+                },
+                '& code': {
+                  display: 'block',
+                  marginTop: 30,
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: hex2rgba(colors.error, 0.1),
+                  color: colors.error,
+                },
+              }}>
               <ErrorDecoder location={todoLocation} />
-            </p>
+            </div>
           </div>
         </Flex>
 
