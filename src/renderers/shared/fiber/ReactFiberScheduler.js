@@ -21,7 +21,7 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 export type CapturedError = {
   componentName: ?string,
   componentStack: string,
-  error: Error,
+  error: mixed,
   errorBoundary: ?Object,
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
@@ -38,7 +38,11 @@ var {
   getStackAddendumByWorkInProgressFiber,
 } = require('ReactFiberComponentTreeHook');
 var {logCapturedError} = require('ReactFiberErrorLogger');
-var {invokeGuardedCallback} = require('ReactErrorUtils');
+var {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = require('ReactErrorUtils');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
@@ -222,7 +226,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let failedBoundaries: Set<Fiber> | null = null;
   // Error boundaries that captured an error during the current commit.
   let commitPhaseBoundaries: Set<Fiber> | null = null;
-  let firstUncaughtError: Error | null = null;
+  let firstUncaughtError: mixed | null = null;
   let didFatal: boolean = false;
 
   let isCommitting: boolean = false;
@@ -468,17 +472,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       startCommitHostEffectsTimer();
     }
     while (nextEffect !== null) {
-      let error = null;
+      let didError = false;
+      let error;
       if (__DEV__) {
-        error = invokeGuardedCallback(null, commitAllHostEffects, null);
+        invokeGuardedCallback(null, commitAllHostEffects, null);
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+        }
       } else {
         try {
           commitAllHostEffects();
         } catch (e) {
+          didError = true;
           error = e;
         }
       }
-      if (error !== null) {
+      if (didError) {
         invariant(
           nextEffect !== null,
           'Should have next effect. This error is likely caused by a bug ' +
@@ -512,17 +522,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       startCommitLifeCyclesTimer();
     }
     while (nextEffect !== null) {
-      let error = null;
+      let didError = false;
+      let error;
       if (__DEV__) {
-        error = invokeGuardedCallback(null, commitAllLifeCycles, null);
+        invokeGuardedCallback(null, commitAllLifeCycles, null);
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+        }
       } else {
         try {
           commitAllLifeCycles();
         } catch (e) {
+          didError = true;
           error = e;
         }
       }
-      if (error !== null) {
+      if (didError) {
         invariant(
           nextEffect !== null,
           'Should have next effect. This error is likely caused by a bug ' +
@@ -951,26 +967,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // reset it at the end.
     const previousPriorityContext = priorityContext;
 
-    let error;
+    let didError = false;
+    let error = null;
     if (__DEV__) {
-      error = invokeGuardedCallback(
-        null,
-        workLoop,
-        null,
-        minPriorityLevel,
-        deadline,
-      );
+      invokeGuardedCallback(null, workLoop, null, minPriorityLevel, deadline);
+      if (hasCaughtError()) {
+        didError = true;
+        error = clearCaughtError();
+      }
     } else {
       try {
         workLoop(minPriorityLevel, deadline);
-        error = null;
       } catch (e) {
+        didError = true;
         error = e;
       }
     }
 
     // An error was thrown during the render phase.
-    while (error !== null) {
+    while (didError) {
       if (didFatal) {
         // This was a fatal error. Don't attempt to recover from it.
         firstUncaughtError = error;
@@ -1000,8 +1015,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         continue;
       }
 
+      didError = false;
+      error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
+        invokeGuardedCallback(
           null,
           performWorkCatchBlock,
           null,
@@ -1010,6 +1027,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           minPriorityLevel,
           deadline,
         );
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+          continue;
+        }
       } else {
         try {
           performWorkCatchBlock(
@@ -1020,16 +1042,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           );
           error = null;
         } catch (e) {
+          didError = true;
           error = e;
+          continue;
         }
       }
-
-      if (error !== null) {
-        // Another error was thrown during the render phase. Continue the
-        // loop to handle the new error.
-        continue;
-      }
-
       // We're finished working. Exit the error loop.
       break;
     }
@@ -1067,7 +1084,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   // Returns the boundary that captured the error, or null if the error is ignored
-  function captureError(failedWork: Fiber, error: Error): Fiber | null {
+  function captureError(failedWork: Fiber, error: mixed): Fiber | null {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     if (__DEV__) {

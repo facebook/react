@@ -14,69 +14,15 @@
 
 const invariant = require('fbjs/lib/invariant');
 
-let caughtError = null;
-
-let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
-  const funcArgs = Array.prototype.slice.call(arguments, 3);
-  try {
-    func.apply(context, funcArgs);
-  } catch (error) {
-    return error;
-  }
-  return null;
-};
-
-if (__DEV__) {
-  /**
-   * To help development we can get better devtools integration by simulating a
-   * real browser event.
-   */
-  if (
-    typeof window !== 'undefined' &&
-    typeof window.dispatchEvent === 'function' &&
-    typeof document !== 'undefined' &&
-    typeof document.createEvent === 'function'
-  ) {
-    const fakeNode = document.createElement('react');
-    let depth = 0;
-
-    invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
-      depth++;
-      const thisDepth = depth;
-      const funcArgs = Array.prototype.slice.call(arguments, 3);
-      const boundFunc = function() {
-        func.apply(context, funcArgs);
-      };
-      let fakeEventError = null;
-      const onFakeEventError = function(event) {
-        // Don't capture nested errors
-        if (depth === thisDepth) {
-          fakeEventError = event.error;
-        }
-      };
-      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
-      window.addEventListener('error', onFakeEventError);
-      fakeNode.addEventListener(evtType, boundFunc, false);
-      const evt = document.createEvent('Event');
-      evt.initEvent(evtType, false, false);
-      fakeNode.dispatchEvent(evt);
-      fakeNode.removeEventListener(evtType, boundFunc, false);
-      window.removeEventListener('error', onFakeEventError);
-      depth--;
-      return fakeEventError;
-    };
-  }
-}
-
-let rethrowCaughtError = function() {
-  if (caughtError) {
-    const error = caughtError;
-    caughtError = null;
-    throw error;
-  }
-};
-
 const ReactErrorUtils = {
+  // Used by Fiber to simulate a try-catch.
+  _caughtError: null,
+  _hasCaughtError: false,
+
+  // Used by event system to capture/rethrow the first error.
+  _rethrowError: null,
+  _hasRethrowError: false,
+
   injection: {
     injectErrorUtils(injectedErrorUtils: Object) {
       invariant(
@@ -106,8 +52,8 @@ const ReactErrorUtils = {
     d: D,
     e: E,
     f: F,
-  ): Error | null {
-    return invokeGuardedCallback.apply(this, arguments);
+  ): void {
+    invokeGuardedCallback.apply(ReactErrorUtils, arguments);
   },
 
   /**
@@ -130,9 +76,13 @@ const ReactErrorUtils = {
     e: E,
     f: F,
   ): void {
-    const error = ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
-    if (error !== null && caughtError === null) {
-      caughtError = error;
+    ReactErrorUtils.invokeGuardedCallback.apply(this, arguments);
+    if (ReactErrorUtils.hasCaughtError()) {
+      const error = ReactErrorUtils.clearCaughtError();
+      if (!ReactErrorUtils._hasRethrowError) {
+        ReactErrorUtils._hasRethrowError = true;
+        ReactErrorUtils._rethrowError = error;
+      }
     }
   },
 
@@ -141,8 +91,151 @@ const ReactErrorUtils = {
    * we will rethrow to be handled by the top level error handler.
    */
   rethrowCaughtError: function() {
-    return rethrowCaughtError.apply(this, arguments);
+    return rethrowCaughtError.apply(ReactErrorUtils, arguments);
   },
+
+  hasCaughtError: function() {
+    return ReactErrorUtils._hasCaughtError;
+  },
+
+  clearCaughtError: function() {
+    if (ReactErrorUtils._hasCaughtError) {
+      const error = ReactErrorUtils._caughtError;
+      ReactErrorUtils._caughtError = null;
+      ReactErrorUtils._hasCaughtError = false;
+      return error;
+    } else {
+      invariant(
+        false,
+        'clearCaughtError was called but no error was captured. This error ' +
+          'is likely caused by a bug in React. Please file an issue.',
+      );
+    }
+  },
+};
+
+let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
+  ReactErrorUtils._hasCaughtError = false;
+  ReactErrorUtils._caughtError = null;
+  const funcArgs = Array.prototype.slice.call(arguments, 3);
+  try {
+    func.apply(context, funcArgs);
+  } catch (error) {
+    ReactErrorUtils._caughtError = error;
+    ReactErrorUtils._hasCaughtError = true;
+  }
+};
+
+if (__DEV__) {
+  const ReactFeatureFlags = require('ReactFeatureFlags');
+
+  if (
+    typeof window !== 'undefined' &&
+    typeof window.dispatchEvent === 'function' &&
+    typeof document !== 'undefined' &&
+    typeof document.createEvent === 'function'
+  ) {
+    let preventDefault = true;
+
+    /**
+     * To help development we can get better devtools integration by simulating a
+     * real browser event.
+     */
+    const fakeNode = document.createElement('react');
+    let depth = 0;
+
+    const invokeGuardedCallbackDev = function(
+      name,
+      func,
+      context,
+      a,
+      b,
+      c,
+      d,
+      e,
+      f,
+    ) {
+      ReactErrorUtils._hasCaughtError = false;
+      ReactErrorUtils._caughtError = null;
+
+      depth++;
+      const thisDepth = depth;
+      const funcArgs = Array.prototype.slice.call(arguments, 3);
+      const boundFunc = function() {
+        func.apply(context, funcArgs);
+      };
+      const onFakeEventError = function(event) {
+        // Don't capture nested errors
+        if (depth === thisDepth) {
+          ReactErrorUtils._caughtError = event.error;
+          ReactErrorUtils._hasCaughtError = true;
+        }
+        if (preventDefault) {
+          event.preventDefault();
+        }
+      };
+      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
+      window.addEventListener('error', onFakeEventError);
+      fakeNode.addEventListener(evtType, boundFunc, false);
+      const evt = document.createEvent('Event');
+      evt.initEvent(evtType, false, false);
+      fakeNode.dispatchEvent(evt);
+      fakeNode.removeEventListener(evtType, boundFunc, false);
+      window.removeEventListener('error', onFakeEventError);
+      depth--;
+    };
+
+    // Feature test the development version of invokeGuardedCallback
+    // before enabling.
+    let useInvokeGuardedCallbackDev;
+    if (ReactFeatureFlags.forceInvokeGuardedCallbackDev) {
+      // jsdom doesn't handle throwing null correctly (it fails when attempting
+      // to access the 'message' property) but we need the ability to test it.
+      // We use a feature flag to override the default feature test.
+      useInvokeGuardedCallbackDev = true;
+    } else {
+      try {
+        const err = new Error('test');
+        invokeGuardedCallbackDev(
+          null,
+          () => {
+            throw err;
+          },
+          null,
+        );
+        const A = ReactErrorUtils.clearCaughtError();
+
+        invokeGuardedCallbackDev(
+          null,
+          () => {
+            throw null;
+          },
+          null,
+        );
+        const B = ReactErrorUtils.clearCaughtError();
+
+        if (A === err && B === null) {
+          useInvokeGuardedCallbackDev = true;
+        }
+      } catch (e) {
+        useInvokeGuardedCallbackDev = false;
+      }
+    }
+
+    if (useInvokeGuardedCallbackDev) {
+      invokeGuardedCallback = invokeGuardedCallbackDev;
+      preventDefault = false;
+    }
+  }
+}
+
+let rethrowCaughtError = function() {
+  if (ReactErrorUtils._hasRethrowError) {
+    const error = ReactErrorUtils._rethrowError;
+    ReactErrorUtils._rethrowError = null;
+    ReactErrorUtils._hasRethrowError = false;
+    throw error;
+  }
 };
 
 module.exports = ReactErrorUtils;

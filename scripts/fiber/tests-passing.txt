@@ -2328,21 +2328,22 @@ src/renderers/shared/stack/reconciler/__tests__/Transaction-test.js
 * should allow nesting of transactions
 
 src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
-* it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (development)
+* it should rethrow caught errors (development)
 * should call the callback the passed arguments (development)
 * should call the callback with the provided context (development)
-* should return a caught error (development)
-* should return null if no error is thrown (development)
+* should catch errors (development)
+* should return false from clearCaughtError if no error was thrown (development)
 * can nest with same debug name (development)
 * does not return nested errors (development)
 * can be shimmed (development)
-* it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
+* it should rethrow caught errors (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
-* should return a caught error (production)
-* should return null if no error is thrown (production)
+* should catch errors (production)
+* should return false from clearCaughtError if no error was thrown (production)
 * can nest with same debug name (production)
 * does not return nested errors (production)
+* catches null values
 * can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js
