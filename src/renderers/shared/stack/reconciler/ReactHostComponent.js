@@ -11,11 +11,9 @@
 
 'use strict';
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var genericComponentClass = null;
-// This registry keeps track of wrapper classes around host tags.
-var tagToComponentClass = {};
 var textComponentClass = null;
 
 var ReactHostComponentInjection = {
@@ -29,11 +27,6 @@ var ReactHostComponentInjection = {
   injectTextComponentClass: function(componentClass) {
     textComponentClass = componentClass;
   },
-  // This accepts a keyed object with classes as values. Each key represents a
-  // tag. That particular tag will use this class instead of the generic one.
-  injectComponentClasses: function(componentClasses) {
-    Object.assign(tagToComponentClass, componentClasses);
-  },
 };
 
 /**
@@ -46,7 +39,7 @@ function createInternalComponent(element) {
   invariant(
     genericComponentClass,
     'There is no registered component for the tag %s',
-    element.type
+    element.type,
   );
   return new genericComponentClass(element);
 }

@@ -75,7 +75,7 @@ Ian Bicking ([@ianbicking](https://twitter.com/ianbicking)) of Mozilla Labs [exp
 
 React was also recently mentioned at ng-conf, where the Angular team commented on React's concept of the virtual DOM:
 
-<iframe width="560" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
 
 ## React and Web Components
 

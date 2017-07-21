@@ -21,7 +21,7 @@ React.renderComponent((
 
 ## Going Big with React
 
-Areeb Malik, from Facebook, talks about his experience using React. "On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test Javascript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale"
+Areeb Malik, from Facebook, talks about his experience using React. "On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test JavaScript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale"
 
 [![](/react/img/blog/skills-matter.png)](https://skillsmatter.com/skillscasts/5429-going-big-with-react)
 
@@ -32,7 +32,7 @@ Areeb Malik, from Facebook, talks about his experience using React. "On paper, a
 
 ## What is React?
 
-[Craig McKeachie](http://www.funnyant.com/author/admin/) author of [Javascript Framework Guide](http://www.funnyant.com/javascript-framework-guide/) wrote an excellent news named ["What is React.js? Another Template Library?](http://www.funnyant.com/reactjs-what-is-it/)
+[Craig McKeachie](http://www.funnyant.com/author/admin/) author of [JavaScript Framework Guide](http://www.funnyant.com/javascript-framework-guide/) wrote an excellent news named ["What is React.js? Another Template Library?](http://www.funnyant.com/reactjs-what-is-it/)
 
 - Is React a template library?
 - Is React similar to Web Components?
@@ -104,7 +104,7 @@ var parsedComponent = reactParser(html, React);
 
 If you haven't yet tried out React, Jacob Rios did a Hangout where he covers the most important aspects and thankfully he recorded it!
 
-<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
 
 
 ## Random Tweets

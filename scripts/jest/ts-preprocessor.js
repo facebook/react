@@ -11,7 +11,8 @@ var tsOptions = {
 
 function formatErrorMessage(error) {
   return (
-    error.file.filename + '(' +
+    error.file.filename +
+    '(' +
     error.file.getLineAndCharacterOfPosition(error.start).line +
     '): ' +
     error.messageText
@@ -23,24 +24,18 @@ function compile(content, contentFilename) {
   var compilerHost = {
     getSourceFile(filename, languageVersion) {
       var source;
+      var jestRegex = /jest\.d\.ts/;
+      var reactRegex = /(?:React|ReactDOM|PropTypes)(?:\.d)?\.ts$/;
 
-      // `path.normalize` and `path.join` are used to turn forward slashes in
+      // `path.normalize` is used to turn forward slashes in
       // the file path into backslashes on Windows.
       filename = path.normalize(filename);
-      var reactRegex = new RegExp(
-        path.join('/', '(?:React|ReactDOM)(?:\.d)?\.ts$')
-      );
-
-      var jestRegex = /jest\.d\.ts/;
-
       if (filename === 'lib.d.ts') {
-        source = fs.readFileSync(
-          require.resolve('typescript/lib/lib.d.ts')
-        ).toString();
+        source = fs
+          .readFileSync(require.resolve('typescript/lib/lib.d.ts'))
+          .toString();
       } else if (filename.match(jestRegex)) {
-        source = fs.readFileSync(
-          path.join(__dirname, 'jest.d.ts')
-        ).toString();
+        source = fs.readFileSync(path.join(__dirname, 'jest.d.ts')).toString();
       } else if (filename === contentFilename) {
         source = content;
       } else if (reactRegex.test(filename)) {
@@ -83,11 +78,11 @@ function compile(content, contentFilename) {
       return ts.sys.useCaseSensitiveFileNames;
     },
   };
-  var program = ts.createProgram([
-    'lib.d.ts',
-    'jest.d.ts',
-    contentFilename,
-  ], tsOptions, compilerHost);
+  var program = ts.createProgram(
+    ['lib.d.ts', 'jest.d.ts', contentFilename],
+    tsOptions,
+    compilerHost
+  );
   var emitResult = program.emit();
   var errors = ts.getPreEmitDiagnostics(program).concat(emitResult.diagnostics);
   if (errors.length) {

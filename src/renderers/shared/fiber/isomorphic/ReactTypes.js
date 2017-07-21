@@ -12,9 +12,13 @@
 
 'use strict';
 
-import type { ReactCoroutine, ReactYield } from 'ReactCoroutine';
-
-export type ReactNode = ReactElement<any> | ReactCoroutine | ReactYield | ReactText | ReactFragment;
+export type ReactNode =
+  | ReactElement<any>
+  | ReactCoroutine
+  | ReactYield
+  | ReactPortal
+  | ReactText
+  | ReactFragment;
 
 export type ReactFragment = ReactEmpty | Iterable<ReactNode>;
 
@@ -23,3 +27,26 @@ export type ReactNodeList = ReactEmpty | ReactNode;
 export type ReactText = string | number;
 
 export type ReactEmpty = null | void | boolean;
+
+export type ReactCoroutine = {
+  $$typeof: Symbol | number,
+  key: null | string,
+  children: any,
+  // This should be a more specific CoroutineHandler
+  handler: (props: any, yields: Array<mixed>) => ReactNodeList,
+  props: any,
+};
+
+export type ReactYield = {
+  $$typeof: Symbol | number,
+  value: mixed,
+};
+
+export type ReactPortal = {
+  $$typeof: Symbol | number,
+  key: null | string,
+  containerInfo: any,
+  children: ReactNodeList,
+  // TODO: figure out the API for cross-renderer implementation.
+  implementation: any,
+};

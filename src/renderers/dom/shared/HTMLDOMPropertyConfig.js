@@ -23,7 +23,7 @@ var HAS_OVERLOADED_BOOLEAN_VALUE =
 
 var HTMLDOMPropertyConfig = {
   isCustomAttribute: RegExp.prototype.test.bind(
-    new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$')
+    new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$'),
   ),
   Properties: {
     /**
@@ -36,6 +36,8 @@ var HTMLDOMPropertyConfig = {
     allowFullScreen: HAS_BOOLEAN_VALUE,
     allowTransparency: 0,
     alt: 0,
+    // specifies target context for links with `preload` type
+    as: 0,
     async: HAS_BOOLEAN_VALUE,
     autoComplete: 0,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
@@ -56,6 +58,7 @@ var HTMLDOMPropertyConfig = {
     contentEditable: 0,
     contextMenu: 0,
     controls: HAS_BOOLEAN_VALUE,
+    controlsList: 0,
     coords: 0,
     crossOrigin: 0,
     data: 0, // For `<object />` acts as `src`.
@@ -82,7 +85,6 @@ var HTMLDOMPropertyConfig = {
     hrefLang: 0,
     htmlFor: 0,
     httpEquiv: 0,
-    icon: 0,
     id: 0,
     inputMode: 0,
     integrity: 0,
@@ -116,6 +118,7 @@ var HTMLDOMPropertyConfig = {
     optimum: 0,
     pattern: 0,
     placeholder: 0,
+    playsInline: HAS_BOOLEAN_VALUE,
     poster: 0,
     preload: 0,
     profile: 0,
@@ -137,6 +140,8 @@ var HTMLDOMPropertyConfig = {
     shape: 0,
     size: HAS_POSITIVE_NUMERIC_VALUE,
     sizes: 0,
+    // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
+    slot: 0,
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: 0,
     src: 0,
@@ -207,7 +212,34 @@ var HTMLDOMPropertyConfig = {
     htmlFor: 'for',
     httpEquiv: 'http-equiv',
   },
-  DOMPropertyNames: {
+  DOMPropertyNames: {},
+  DOMMutationMethods: {
+    value: function(node, value) {
+      if (value == null) {
+        return node.removeAttribute('value');
+      }
+
+      // Number inputs get special treatment due to some edge cases in
+      // Chrome. Let everything else assign the value attribute as normal.
+      // https://github.com/facebook/react/issues/7253#issuecomment-236074326
+      if (node.type !== 'number' || node.hasAttribute('value') === false) {
+        node.setAttribute('value', '' + value);
+      } else if (
+        node.validity &&
+        !node.validity.badInput &&
+        node.ownerDocument.activeElement !== node
+      ) {
+        // Don't assign an attribute if validation reports bad
+        // input. Chrome will clear the value. Additionally, don't
+        // operate on inputs that have focus, otherwise Chrome might
+        // strip off trailing decimal places and cause the user's
+        // cursor position to jump to the beginning of the input.
+        //
+        // In ReactDOMInput, we have an onBlur event that will trigger
+        // this function again when focus is lost.
+        node.setAttribute('value', '' + value);
+      }
+    },
   },
 };
 

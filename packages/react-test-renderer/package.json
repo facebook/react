@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "16.0.0-alpha",
+  "version": "16.0.0-alpha.13",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -14,13 +14,20 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
+  "dependencies": {
+    "fbjs": "^0.8.9",
+    "object-assign": "^4.1.0"
+  },
   "peerDependencies": {
-    "react": "^16.0.0-alpha"
+    "react": "^16.0.0-alpha.13"
   },
   "files": [
     "LICENSE",
     "PATENTS",
     "README.md",
-    "index.js"
+    "index.js",
+    "shallow.js",
+    "stack.js",
+    "cjs/"
   ]
 }

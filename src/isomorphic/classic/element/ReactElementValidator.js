@@ -19,22 +19,69 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactComponentTreeHook = require('ReactComponentTreeHook');
 var ReactElement = require('ReactElement');
-var ReactPropTypeLocations = require('ReactPropTypeLocations');
 
-var checkReactTypeSpec = require('checkReactTypeSpec');
+if (__DEV__) {
+  var checkPropTypes = require('prop-types/checkPropTypes');
+  var lowPriorityWarning = require('lowPriorityWarning');
+  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var warning = require('fbjs/lib/warning');
+  var describeComponentFrame = require('describeComponentFrame');
+  var getComponentName = require('getComponentName');
 
-var canDefineProperty = require('canDefineProperty');
-var getIteratorFn = require('getIteratorFn');
-var warning = require('warning');
+  var currentlyValidatingElement = null;
+
+  var getDisplayName = function(element: ?ReactElement): string {
+    if (element == null) {
+      return '#empty';
+    } else if (typeof element === 'string' || typeof element === 'number') {
+      return '#text';
+    } else if (typeof element.type === 'string') {
+      return element.type;
+    } else {
+      return element.type.displayName || element.type.name || 'Unknown';
+    }
+  };
+
+  var getStackAddendum = function(): string {
+    var stack = '';
+    if (currentlyValidatingElement) {
+      var name = getDisplayName(currentlyValidatingElement);
+      var owner = currentlyValidatingElement._owner;
+      stack += describeComponentFrame(
+        name,
+        currentlyValidatingElement._source,
+        owner && getComponentName(owner),
+      );
+    }
+    stack += ReactDebugCurrentFrame.getStackAddendum() || '';
+    return stack;
+  };
+}
+
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
-    var name = ReactCurrentOwner.current.getName();
+    var name = getComponentName(ReactCurrentOwner.current);
     if (name) {
-      return ' Check the render method of `' + name + '`.';
+      return '\n\nCheck the render method of `' + name + '`.';
     }
+  }
+  return '';
+}
+
+function getSourceInfoErrorAddendum(elementProps) {
+  if (
+    elementProps !== null &&
+    elementProps !== undefined &&
+    elementProps.__source !== undefined
+  ) {
+    var source = elementProps.__source;
+    var fileName = source.fileName.replace(/^.*[\\\/]/, '');
+    var lineNumber = source.lineNumber;
+    return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
   return '';
 }
@@ -50,10 +97,11 @@ function getCurrentComponentErrorInfo(parentType) {
   var info = getDeclarationErrorAddendum();
 
   if (!info) {
-    var parentName = typeof parentType === 'string' ?
-      parentType : parentType.displayName || parentType.name;
+    var parentName = typeof parentType === 'string'
+      ? parentType
+      : parentType.displayName || parentType.name;
     if (parentName) {
-      info = ` Check the top-level render call using <${parentName}>.`;
+      info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }
   }
   return info;
@@ -76,36 +124,35 @@ function validateExplicitKey(element, parentType) {
   }
   element._store.validated = true;
 
-  var memoizer = ownerHasKeyUseWarning.uniqueKey || (
-    ownerHasKeyUseWarning.uniqueKey = {}
-  );
-
   var currentComponentErrorInfo = getCurrentComponentErrorInfo(parentType);
-  if (memoizer[currentComponentErrorInfo]) {
+  if (ownerHasKeyUseWarning[currentComponentErrorInfo]) {
     return;
   }
-  memoizer[currentComponentErrorInfo] = true;
+  ownerHasKeyUseWarning[currentComponentErrorInfo] = true;
 
   // Usually the current owner is the offender, but if it accepts children as a
   // property, it may be the creator of the child that's responsible for
   // assigning it a key.
   var childOwner = '';
-  if (element &&
-      element._owner &&
-      element._owner !== ReactCurrentOwner.current) {
+  if (
+    element &&
+    element._owner &&
+    element._owner !== ReactCurrentOwner.current
+  ) {
     // Give the component that originally created this child.
-    childOwner =
-      ` It was passed a child from ${element._owner.getName()}.`;
+    childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
+  currentlyValidatingElement = element;
   warning(
     false,
     'Each child in an array or iterator should have a unique "key" prop.' +
-    '%s%s See https://fb.me/react-warning-keys for more information.%s',
+      '%s%s See https://fb.me/react-warning-keys for more information.%s',
     currentComponentErrorInfo,
     childOwner,
-    ReactComponentTreeHook.getCurrentStackAddendum(element)
+    getStackAddendum(),
   );
+  currentlyValidatingElement = null;
 }
 
 /**
@@ -134,9 +181,11 @@ function validateChildKeys(node, parentType) {
       node._store.validated = true;
     }
   } else if (node) {
-    var iteratorFn = getIteratorFn(node);
-    // Entry iterators provide implicit keys.
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && node[ITERATOR_SYMBOL]) || node[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
+      // Entry iterators used to provide implicit keys,
+      // but now we print a separate warning for them later.
       if (iteratorFn !== node.entries) {
         var iterator = iteratorFn.call(node);
         var step;
@@ -162,21 +211,27 @@ function validatePropTypes(element) {
     return;
   }
   var name = componentClass.displayName || componentClass.name;
-  if (componentClass.propTypes) {
-    checkReactTypeSpec(
-      componentClass.propTypes,
-      element.props,
-      ReactPropTypeLocations.prop,
-      name,
-      element,
-      null
-    );
+
+  // ReactNative `View.propTypes` have been deprecated in favor of `ViewPropTypes`.
+  // In their place a temporary getter has been added with a deprecated warning message.
+  // Avoid triggering that warning during validation using the temporary workaround,
+  // __propTypesSecretDontUseThesePlease.
+  // TODO (bvaughn) Revert this particular change any time after April 1 ReactNative tag.
+  var propTypes = typeof componentClass.__propTypesSecretDontUseThesePlease ===
+    'object'
+    ? componentClass.__propTypesSecretDontUseThesePlease
+    : componentClass.propTypes;
+
+  if (propTypes) {
+    currentlyValidatingElement = element;
+    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
+    currentlyValidatingElement = null;
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
       componentClass.getDefaultProps.isReactClassApproved,
       'getDefaultProps is only used on classic React.createClass ' +
-      'definitions. Use a static property named `defaultProps` instead.'
+        'definitions. Use a static property named `defaultProps` instead.',
     );
   }
 }
@@ -206,19 +261,41 @@ function freezeDefaultProps(element) {
 }
 
 var ReactElementValidator = {
-
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function' ||
-                    (type !== null && typeof type === 'object');
+    var validType = typeof type === 'string' || typeof type === 'function';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
-    warning(
-      validType,
-      'React.createElement: type should not be null, undefined, boolean, or ' +
-        'number. It should be a string (for DOM elements) or a ReactClass ' +
-        '(for composite components).%s',
-      getDeclarationErrorAddendum()
-    );
+    if (!validType) {
+      var info = '';
+      if (
+        type === undefined ||
+        (typeof type === 'object' &&
+          type !== null &&
+          Object.keys(type).length === 0)
+      ) {
+        info +=
+          ' You likely forgot to export your component from the file ' +
+          "it's defined in.";
+      }
+
+      var sourceInfo = getSourceInfoErrorAddendum(props);
+      if (sourceInfo) {
+        info += sourceInfo;
+      } else {
+        info += getDeclarationErrorAddendum();
+      }
+
+      info += ReactDebugCurrentFrame.getStackAddendum() || '';
+
+      warning(
+        false,
+        'React.createElement: type is invalid -- expected a string (for ' +
+          'built-in components) or a class/function (for composite ' +
+          'components) but got: %s.%s',
+        type == null ? type : typeof type,
+        info,
+      );
+    }
 
     var element = ReactElement.createElement.apply(this, arguments);
 
@@ -249,36 +326,26 @@ var ReactElementValidator = {
   },
 
   createFactory: function(type) {
-    var validatedFactory = ReactElementValidator.createElement.bind(
-      null,
-      type
-    );
+    var validatedFactory = ReactElementValidator.createElement.bind(null, type);
     // Legacy hook TODO: Warn if this is accessed
     validatedFactory.type = type;
 
     if (__DEV__) {
-      if (canDefineProperty) {
-        Object.defineProperty(
-          validatedFactory,
-          'type',
-          {
-            enumerable: false,
-            get: function() {
-              warning(
-                false,
-                'Factory.type is deprecated. Access the class directly ' +
-                'before passing it to createFactory.'
-              );
-              Object.defineProperty(this, 'type', {
-                value: type,
-              });
-              return type;
-            },
-          }
-        );
-      }
+      Object.defineProperty(validatedFactory, 'type', {
+        enumerable: false,
+        get: function() {
+          lowPriorityWarning(
+            false,
+            'Factory.type is deprecated. Access the class directly ' +
+              'before passing it to createFactory.',
+          );
+          Object.defineProperty(this, 'type', {
+            value: type,
+          });
+          return type;
+        },
+      });
     }
-
 
     return validatedFactory;
   },
@@ -291,7 +358,6 @@ var ReactElementValidator = {
     validatePropTypes(newElement);
     return newElement;
   },
-
 };
 
 module.exports = ReactElementValidator;

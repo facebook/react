@@ -11,7 +11,7 @@
       $side: nth($pos, 2);
 
       @if $length == 2 { // eg. to top
-        // Swap for backwards compatability
+        // Swap for backwards compatibility
         $degree: _position-flipper(nth($pos, 2));
       }
       @else if $length == 3 { // eg. to top left
@@ -38,7 +38,7 @@
     $spec: to $side $corner;
   }
   @else if $length == 1 {
-    // Swap for backwards compatability
+    // Swap for backwards compatibility
     @if $type == string {
       $degree: $pos;
       $spec: to _position-flipper($pos);

@@ -14,9 +14,9 @@
 
 type ReactNodeType = 0 | 1 | 2;
 
-var ReactElement = require('ReactElement');
+var React = require('react');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var ReactNodeTypes = {
   HOST: 0,
@@ -26,7 +26,7 @@ var ReactNodeTypes = {
   getType: function(node: ReactElement<any>): ReactNodeType {
     if (node === null || node === false) {
       return ReactNodeTypes.EMPTY;
-    } else if (ReactElement.isValidElement(node)) {
+    } else if (React.isValidElement(node)) {
       if (typeof node.type === 'function') {
         return ReactNodeTypes.COMPOSITE;
       } else {

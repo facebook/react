@@ -3,9 +3,8 @@ id: design-principles
 title: Design Principles
 layout: contributing
 permalink: contributing/design-principles.html
+prev: implementation-notes.html
 ---
-
-After using React in a couple of applications, you might be interested in contributing to React. Before [diving into specifics](https://github.com/facebook/react/blob/master/CONTRIBUTING.md), we think it's important to establish a few design principles guiding our decisions about changes in React.
 
 We wrote this document so that you have a better idea of how we decide what React does and what React doesn't do, and what our development philosophy is like. While we are excited to see community contributions, we are not likely to choose a path that violates one or more of these principles.
 
@@ -21,7 +20,7 @@ The key feature of React is composition of components. Components written by dif
 
 For example, it should be possible to introduce some local state into a component without changing any of the components using it. Similarly, it should be possible to add some initialization and teardown code to any component when necessary.
 
-There is nothing "bad" about using state or lifecycle hooks in components. Like any powerful features, they should be used in moderation, but we have no intention to remove them. On the contrary, we think they are integral parts of what makes React useful. We might enable [more functional patterns](https://github.com/reactjs/react-future/tree/master/07%20-%20Returning%20State) in the future, but both local state and lifecycle hooks will be a part of that model.
+There is nothing "bad" about using state or lifecycle hooks in components. Like any powerful feature, they should be used in moderation, but we have no intention to remove them. On the contrary, we think they are integral parts of what makes React useful. We might enable [more functional patterns](https://github.com/reactjs/react-future/tree/master/07%20-%20Returning%20State) in the future, but both local state and lifecycle hooks will be a part of that model.
 
 Components are often described as "just functions" but in our view they need to be more than that to be useful. In React, components describe any composable behavior, and this includes rendering, lifecycle, and state. Some external libraries like [Relay](http://facebook.github.io/relay/) augment components with other responsibilities such as describing data dependencies. It is possible that those ideas might make it back into React too in some form.
 
@@ -125,7 +124,7 @@ We do, however, provide some global configuration on the build level. For exampl
 
 ### Beyond the DOM
 
-We see the value of React in the way it allows us to write components that have less bugs and compose together well. DOM is the original rendering target for React but [React Native](http://facebook.github.io/react-native/) is just as important both to Facebook and the community.
+We see the value of React in the way it allows us to write components that have fewer bugs and compose together well. DOM is the original rendering target for React but [React Native](http://facebook.github.io/react-native/) is just as important both to Facebook and the community.
 
 Being renderer-agnostic is an important design constraint of React. It adds some overhead in the internal representations. On the other hand, any improvements to the core translate across platforms.
 
@@ -147,7 +146,7 @@ Optimizing for search is also important because of our reliance on [codemods](ht
 
 [JSX](/react/docs/displaying-data.html#jsx-syntax) plays a similar role. While it is not required with React, we use it extensively at Facebook both for aesthetic and pragmatic reasons.
 
-In our codebase, JSX provides an unambigious hint to the tools that they are dealing with a React element tree. This makes it possible to add build-time optimizations such as [hoisting constant elements](http://babeljs.io/docs/plugins/transform-react-constant-elements/), safely lint and codemod internal component usage, and [include JSX source location](https://github.com/facebook/react/pull/6771) into the warnings.
+In our codebase, JSX provides an unambiguous hint to the tools that they are dealing with a React element tree. This makes it possible to add build-time optimizations such as [hoisting constant elements](http://babeljs.io/docs/plugins/transform-react-constant-elements/), safely lint and codemod internal component usage, and [include JSX source location](https://github.com/facebook/react/pull/6771) into the warnings.
 
 ### Dogfooding
 

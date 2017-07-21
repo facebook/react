@@ -9,6 +9,7 @@ of patent rights can be found in the PATENTS file in the same directory.
 
 React = null
 ReactDOM = null
+PropTypes = null
 
 describe 'ReactCoffeeScriptClass', ->
   div = null
@@ -19,8 +20,9 @@ describe 'ReactCoffeeScriptClass', ->
   renderedName = null;
 
   beforeEach ->
-    React = require 'React'
-    ReactDOM = require 'ReactDOM'
+    React = require 'react'
+    ReactDOM = require 'react-dom'
+    PropTypes = require 'prop-types'
     container = document.createElement 'div'
     attachedListener = null
     renderedName = null
@@ -102,8 +104,8 @@ describe 'ReactCoffeeScriptClass', ->
   it 'renders based on context in the constructor', ->
     class Foo extends React.Component
       @contextTypes:
-        tag: React.PropTypes.string
-        className: React.PropTypes.string
+        tag: PropTypes.string
+        className: PropTypes.string
 
       constructor: (props, context) ->
         super props, context
@@ -118,8 +120,8 @@ describe 'ReactCoffeeScriptClass', ->
 
     class Outer extends React.Component
       @childContextTypes:
-        tag: React.PropTypes.string
-        className: React.PropTypes.string
+        tag: PropTypes.string
+        className: PropTypes.string
 
       getChildContext: ->
         tag: 'span'
@@ -319,6 +321,25 @@ describe 'ReactCoffeeScriptClass', ->
     )
     undefined
 
+  it 'does not warn about getInitialState() on class components
+      if state is also defined.', ->
+    spyOn console, 'error'
+    class Foo extends React.Component
+      constructor: (props) ->
+        super props
+        @state = bar: @props.initialValue
+
+      getInitialState: ->
+        {}
+
+      render: ->
+        span
+          className: 'foo'
+
+    test React.createElement(Foo), 'SPAN', 'foo'
+    expect(console.error.calls.count()).toBe 0
+    undefined
+
   it 'should warn when misspelling shouldComponentUpdate', ->
     spyOn console, 'error'
     class NamedComponent extends React.Component
@@ -357,16 +378,16 @@ describe 'ReactCoffeeScriptClass', ->
     undefined
 
   it 'should throw AND warn when trying to access classic APIs', ->
-    spyOn console, 'error'
+    spyOn console, 'warn'
     instance =
       test Inner(name: 'foo'), 'DIV', 'foo'
     expect(-> instance.replaceState {}).toThrow()
     expect(-> instance.isMounted()).toThrow()
-    expect(console.error.calls.count()).toBe 2
-    expect(console.error.calls.argsFor(0)[0]).toContain(
+    expect(console.warn.calls.count()).toBe 2
+    expect(console.warn.calls.argsFor(0)[0]).toContain(
       'replaceState(...) is deprecated in plain JavaScript React classes'
     )
-    expect(console.error.calls.argsFor(1)[0]).toContain(
+    expect(console.warn.calls.argsFor(1)[0]).toContain(
       'isMounted(...) is deprecated in plain JavaScript React classes'
     )
     undefined
@@ -374,13 +395,13 @@ describe 'ReactCoffeeScriptClass', ->
   it 'supports this.context passed via getChildContext', ->
     class Bar extends React.Component
       @contextTypes:
-        bar: React.PropTypes.string
+        bar: PropTypes.string
       render: ->
         div className: @context.bar
 
     class Foo extends React.Component
       @childContextTypes:
-        bar: React.PropTypes.string
+        bar: PropTypes.string
       getChildContext: ->
         bar: 'bar-through-context'
       render: ->

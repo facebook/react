@@ -12,7 +12,8 @@
 'use strict';
 
 var ReactDOMFeatureFlags = {
-  useCreateElement: true,
+  fiberAsyncScheduling: false,
+  useFiber: true,
 };
 
 module.exports = ReactDOMFeatureFlags;

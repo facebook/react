@@ -16,7 +16,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -24,11 +24,11 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-tweak"></a>Tweaking in real time <a class="hash-link" href="#talk-tweak">#</a></h3>
     <p>
-      <strong>Brenton Simpson</strong> showed us how eBay brings Bret Victorâ€™s feedback loop to your favorite editor using Webpack, react-hot-loader, and <a href="https://github.com/appsforartists/ambidex">Ambidex</a>.
+      <strong>Brenton Simpson</strong> showed us how eBay brings Bret Victorâ€™s feedback loop to your favorite editor using webpack, react-hot-loader, and <a href="https://github.com/appsforartists/ambidex">Ambidex</a>.
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/yaymfLj5tjA" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/yaymfLj5tjA" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -40,7 +40,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/OZGgVxFxSIs" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/OZGgVxFxSIs" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -52,7 +52,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/9sc8Pyc51uU" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/9sc8Pyc51uU" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -64,7 +64,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/W2DgDNQZOwo" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/W2DgDNQZOwo" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -76,7 +76,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/XZfvW1a8Xac" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/XZfvW1a8Xac" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -88,7 +88,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/KtmjkCuV-EU" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/KtmjkCuV-EU" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -100,7 +100,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/KYzlpRvWZ6c" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/KYzlpRvWZ6c" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -112,7 +112,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/Sla-DkvmIHY" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/Sla-DkvmIHY" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -124,7 +124,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/z5e7kWSHWTg" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/z5e7kWSHWTg" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -136,7 +136,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/7rDsRXj9-cU" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/7rDsRXj9-cU" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -148,7 +148,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/g0TD0efcwVg" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/g0TD0efcwVg" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -156,11 +156,11 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-immutable"></a>Immutability <a class="hash-link" href="#talk-immutable">#</a></h3>
     <p>
-      <strong>Lee Byron</strong> led a master-class on persistent immutable data structures, showing us the world of possibility that they can unlock for your software, and perhaps Javascript in general.
+      <strong>Lee Byron</strong> led a master-class on persistent immutable data structures, showing us the world of possibility that they can unlock for your software, and perhaps JavaScript in general.
     </p>
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/I7IdS-PbEgI" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/I7IdS-PbEgI" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -171,7 +171,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>Jafar Husain</strong> told us a story about how Netflix was able to push React into places where the DOM could not go.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/eNC0mRYGWgc" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/eNC0mRYGWgc" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -182,7 +182,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>Zach Nation</strong> showed us how we can produce visualizations from over 45 million data points without breaking a sweat.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/2ii1lEkIv1s" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/2ii1lEkIv1s" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -193,7 +193,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>David Nolen</strong> gave us a view of React from a non-JavaScript perspective, challenging some common intuition along the way.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/5hGHdETNteE" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/5hGHdETNteE" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -204,7 +204,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>Bill Fisher</strong> coordinated a Flux panel together with <strong>Michael Ridgway</strong>, <strong>Spike Brehm</strong>, <strong>Andres Suarez</strong>, <strong>Jing Chen</strong>, <strong>Ian Obermiller</strong>, and <strong>Kyle Davis</strong>.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/LTj4O7WJJ98" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/LTj4O7WJJ98" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -215,7 +215,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>Bonnie Eisenman</strong> led us through the â€˜adapterâ€™ approach to inter-component communication taken by her team at Codecademy.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/ZM6wXoFTY3o" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/ZM6wXoFTY3o" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -226,7 +226,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>James Brantly</strong> demonstrated how we can reap the benefits of static typing using both Flow and TypeScript.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/9PTa9-PPVAc" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/9PTa9-PPVAc" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -237,7 +237,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
       <strong>Tom Occhino</strong>, <strong>Ben Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian MarkbÃ¥ge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
   </div>
   <div class="skinny-col">
-    <iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/EPpkboSKvPI" frameborder="0" allowfullscreen></iframe>
+    <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/EPpkboSKvPI" frameborder="0" allowfullscreen></iframe>
   </div>
 </div>
 
@@ -245,7 +245,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
 
 The conference is over, but the conversation has just begun.
 
-**Mihai Parparita** detailed his efforts to [hack his way to a React.js Conf ticket](http://blog.persistent.info/2014/12/html-munging-my-way-to-reactjs-conf.html); **James Long** blogged about [his first encounter with React Native](http://jlongster.com/First-Impressions-using-React-Native); **Eric Florenzano** talked about how he perceives the [impact of Relay, GraphQL, and React Native](https://medium.com/@ericflo/facebook-just-taught-us-all-how-to-build-websites-51f1e7e996f2) on software development; **Margaret Staples** blogged about her experience of [being on-campus at Facebook HQ](http://deadlugosi.blogspot.com/2015/02/facebook-gave-me-ice-cream.html); **Jeff Barczewski** tied his experience of attending the conference up with a bow in this [blog post filled with photos, videos, and links](http://codewinds.com/blog/2015-02-04-reactjs-conf.html); **Kevin Old** left us with [his takeaways](http://kevinold.com/2015/01/31/takeaways-from-reactjs-conf-2015.html); **Paul Wittmann** found React Native [freshly on his radar](http://www.railslove.com/stories/fresh-on-our-radar-react-native); and finally, undeterred by not being able to attend the conference in person, **Justin Ball** [summarized it from afar](http://www.justinball.com/2015/02/03/i-didn't-attend-react.js-conf/).
+**Mihai Parparita** detailed his efforts to [hack his way to a React.js Conf ticket](http://blog.persistent.info/2014/12/html-munging-my-way-to-reactjs-conf.html); **James Long** blogged about [his first encounter with React Native](http://jlongster.com/First-Impressions-using-React-Native); **Eric Florenzano** talked about how he perceives the [impact of Relay, GraphQL, and React Native](https://medium.com/@ericflo/facebook-just-taught-us-all-how-to-build-websites-51f1e7e996f2) on software development; **Margaret Staples** blogged about her experience of [being on-campus at Facebook HQ](http://deadlugosi.blogspot.com/2015/02/facebook-gave-me-ice-cream.html); **Jeff Barczewski** tied his experience of attending the conference up with a bow in this [blog post filled with photos, videos, and links](http://codewinds.com/blog/2015-02-04-reactjs-conf.html); **Kevin Old** left us with [his takeaways](http://kevinold.com/2015/01/31/takeaways-from-reactjs-conf-2015.html); **Paul Wittmann** found React Native [freshly on his radar](http://www.railslove.com/stories/fresh-on-our-radar-react-native); and finally, undeterred by not being able to attend the conference in person, **Justin Ball** [summarized it from afar](http://www.justinball.com/2015/02/02/i-didn't-attend-react.js-conf.html).
 
 And, in case you missed a session, you can borrow **Michael Chanâ€™s** [drawings](http://chantastic.io/2015-reactjs-conf/), **Mihai Parparitaâ€™s** [summary](https://quip.com/uJQeABv7nkFN), or **Shaohua Zhouâ€™s** [day 1](http://getshao.com/2015/01/29/react-js-conf-notes-day1/) / [day 2](http://getshao.com/2015/01/29/react-js-conf-notes-day-2/) notes.
 
@@ -266,4 +266,4 @@ And, in case you missed a session, you can borrow **Michael Chanâ€™s** [drawings
 
 **All proceeds from React.js Conf 2015 were donated to the wonderful programs at [code.org](http://code.org)**. These programs aim to increase access to the field of computer science by underrepresented members of our community. Watch this video to learn more.
 
-<iframe width="305" height="171" src="https://www.youtube-nocookie.com/embed/FC5FbmsH4fw" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/FC5FbmsH4fw" frameborder="0" allowfullscreen></iframe>

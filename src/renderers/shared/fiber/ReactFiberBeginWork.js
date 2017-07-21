@@ -12,179 +12,628 @@
 
 'use strict';
 
-import type { ReactCoroutine } from 'ReactCoroutine';
-import type { Fiber } from 'ReactFiber';
-import type { HostConfig } from 'ReactFiberReconciler';
+import type {ReactCoroutine} from 'ReactTypes';
+import type {Fiber} from 'ReactFiber';
+import type {HostContext} from 'ReactFiberHostContext';
+import type {HydrationContext} from 'ReactFiberHydrationContext';
+import type {FiberRoot} from 'ReactFiberRoot';
+import type {HostConfig} from 'ReactFiberReconciler';
+import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var {
+  mountChildFibersInPlace,
   reconcileChildFibers,
   reconcileChildFibersInPlace,
+  cloneChildFibers,
 } = require('ReactChildFiber');
+var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var {
+  getMaskedContext,
+  getUnmaskedContext,
+  hasContextChanged,
+  pushContextProvider,
+  pushTopLevelContextObject,
+  invalidateContextProvider,
+} = require('ReactFiberContext');
 var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
-  HostContainer,
+  HostRoot,
   HostComponent,
+  HostText,
+  HostPortal,
   CoroutineComponent,
   CoroutineHandlerPhase,
   YieldComponent,
+  Fragment,
 } = ReactTypeOfWork;
+var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
 var {
-  NoWork,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
-var { findNextUnitOfWorkAtPriority } = require('ReactFiberPendingWork');
+  PerformedWork,
+  Placement,
+  ContentReset,
+  Err,
+  Ref,
+} = require('ReactTypeOfSideEffect');
+var ReactFiberClassComponent = require('ReactFiberClassComponent');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+var invariant = require('fbjs/lib/invariant');
 
-module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
+if (__DEV__) {
+  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+  var {cancelWorkTimer} = require('ReactDebugFiberPerf');
+  var warning = require('fbjs/lib/warning');
+
+  var warnedAboutStatelessRefs = {};
+}
+
+module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+  hostContext: HostContext<C, CX>,
+  hydrationContext: HydrationContext<C>,
+  scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
+  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
+) {
+  const {
+    shouldSetTextContent,
+    useSyncScheduling,
+    shouldDeprioritizeSubtree,
+  } = config;
+
+  const {pushHostContext, pushHostContainer} = hostContext;
+
+  const {
+    enterHydrationState,
+    resetHydrationState,
+    tryToClaimNextHydratableInstance,
+  } = hydrationContext;
+
+  const {
+    adoptClassInstance,
+    constructClassInstance,
+    mountClassInstance,
+    // resumeMountClassInstance,
+    updateClassInstance,
+  } = ReactFiberClassComponent(
+    scheduleUpdate,
+    getPriorityContext,
+    memoizeProps,
+    memoizeState,
+  );
 
   function reconcileChildren(current, workInProgress, nextChildren) {
-    const priority = workInProgress.pendingWorkPriority;
-    reconcileChildrenAtPriority(current, workInProgress, nextChildren, priority);
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    reconcileChildrenAtPriority(
+      current,
+      workInProgress,
+      nextChildren,
+      priorityLevel,
+    );
   }
 
-  function reconcileChildrenAtPriority(current, workInProgress, nextChildren, priorityLevel) {
-    if (current && current.childInProgress) {
-      workInProgress.childInProgress = reconcileChildFibersInPlace(
+  function reconcileChildrenAtPriority(
+    current,
+    workInProgress,
+    nextChildren,
+    priorityLevel,
+  ) {
+    if (current === null) {
+      // If this is a fresh new component that hasn't been rendered yet, we
+      // won't update its child set by applying minimal side-effects. Instead,
+      // we will add them all to the child before it gets rendered. That means
+      // we can optimize this reconciliation pass by not tracking side-effects.
+      workInProgress.child = mountChildFibersInPlace(
         workInProgress,
-        current.childInProgress,
+        workInProgress.child,
         nextChildren,
-        priorityLevel
+        priorityLevel,
       );
-      // This is now invalid because we reused nodes.
-      current.childInProgress = null;
-    } else if (workInProgress.childInProgress) {
-      workInProgress.childInProgress = reconcileChildFibersInPlace(
+    } else if (current.child === workInProgress.child) {
+      // If the current child is the same as the work in progress, it means that
+      // we haven't yet started any work on these children. Therefore, we use
+      // the clone algorithm to create a copy of all the current children.
+
+      // If we had any progressed work already, that is invalid at this point so
+      // let's throw it out.
+      workInProgress.child = reconcileChildFibers(
         workInProgress,
-        workInProgress.childInProgress,
+        workInProgress.child,
         nextChildren,
-        priorityLevel
+        priorityLevel,
       );
     } else {
-      workInProgress.childInProgress = reconcileChildFibers(
+      // If, on the other hand, it is already using a clone, that means we've
+      // already begun some work on this tree and we can continue where we left
+      // off by reconciling against the existing children.
+      workInProgress.child = reconcileChildFibersInPlace(
         workInProgress,
-        current ? current.child : null,
+        workInProgress.child,
         nextChildren,
-        priorityLevel
+        priorityLevel,
       );
+    }
+  }
+
+  function updateFragment(current, workInProgress) {
+    var nextChildren = workInProgress.pendingProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextChildren === null) {
+        nextChildren = workInProgress.memoizedProps;
+      }
+    } else if (
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
+    ) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextChildren);
+    return workInProgress.child;
+  }
+
+  function markRef(current: Fiber | null, workInProgress: Fiber) {
+    const ref = workInProgress.ref;
+    if (ref !== null && (!current || current.ref !== ref)) {
+      // Schedule a Ref effect
+      workInProgress.effectTag |= Ref;
     }
   }
 
   function updateFunctionalComponent(current, workInProgress) {
     var fn = workInProgress.type;
-    var props = workInProgress.pendingProps;
-    var nextChildren = fn(props);
-    reconcileChildren(current, workInProgress, nextChildren);
-    workInProgress.pendingWorkPriority = NoWork;
-  }
+    var nextProps = workInProgress.pendingProps;
 
-  function updateClassComponent(current : ?Fiber, workInProgress : Fiber) {
-    var props = workInProgress.pendingProps;
-    var instance = workInProgress.stateNode;
-    if (!instance) {
-      var ctor = workInProgress.type;
-      workInProgress.stateNode = instance = new ctor(props);
-    } else if (typeof instance.shouldComponentUpdate === 'function') {
-      if (current && current.memoizedProps) {
-        // Revert to the last flushed props, incase we aborted an update.
-        instance.props = current.memoizedProps;
-        if (!instance.shouldComponentUpdate(props)) {
-          return bailoutOnCurrent(current, workInProgress);
-        }
+    const memoizedProps = workInProgress.memoizedProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextProps === null) {
+        nextProps = memoizedProps;
       }
-      if (!workInProgress.childInProgress && workInProgress.memoizedProps) {
-        // Reset the props, in case this is a ping-pong case rather than a
-        // completed update case. For the completed update case, the instance
-        // props will already be the memoizedProps.
-        instance.props = workInProgress.memoizedProps;
-        if (!instance.shouldComponentUpdate(props)) {
-          return bailoutOnAlreadyFinishedWork(current, workInProgress);
-        }
-      }
-    }
-    instance.props = props;
-    var nextChildren = instance.render();
-    reconcileChildren(current, workInProgress, nextChildren);
-    workInProgress.pendingWorkPriority = NoWork;
-    return workInProgress.childInProgress;
-  }
-
-  function updateHostComponent(current, workInProgress) {
-    var nextChildren = workInProgress.pendingProps.children;
-
-    let priority = workInProgress.pendingWorkPriority;
-    if (workInProgress.pendingProps.hidden && priority !== OffscreenPriority) {
-      // If this host component is hidden, we can reconcile its children at
-      // the lowest priority and bail out from this particular pass. Unless, we're
-      // currently reconciling the lowest priority.
-      // If we have a child in progress already, we reconcile against that set
-      // to retain any work within it. We'll recreate any component that was in
-      // the current set and next set but not in the previous in progress set.
-      // TODO: This attaches a node that hasn't completed rendering so it
-      // becomes part of the render tree, even though it never completed. Its
-      // `output` property is unpredictable because of it.
-      reconcileChildrenAtPriority(current, workInProgress, nextChildren, OffscreenPriority);
-      workInProgress.pendingWorkPriority = OffscreenPriority;
-      return null;
     } else {
-      reconcileChildren(current, workInProgress, nextChildren);
-      workInProgress.pendingWorkPriority = NoWork;
-      return workInProgress.childInProgress;
+      if (nextProps === null || memoizedProps === nextProps) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      // TODO: Disable this before release, since it is not part of the public API
+      // I use this for testing to compare the relative overhead of classes.
+      if (
+        typeof fn.shouldComponentUpdate === 'function' &&
+        !fn.shouldComponentUpdate(memoizedProps, nextProps)
+      ) {
+        // Memoize props even if shouldComponentUpdate returns false
+        memoizeProps(workInProgress, nextProps);
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
     }
+
+    var unmaskedContext = getUnmaskedContext(workInProgress);
+    var context = getMaskedContext(workInProgress, unmaskedContext);
+
+    var nextChildren;
+
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, 'render');
+      nextChildren = fn(nextProps, context);
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+    } else {
+      nextChildren = fn(nextProps, context);
+    }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
+    return workInProgress.child;
   }
 
-  function mountIndeterminateComponent(current, workInProgress) {
+  function updateClassComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    priorityLevel: PriorityLevel,
+  ) {
+    // Push context providers early to prevent context stack mismatches.
+    // During mounting we don't know the child context yet as the instance doesn't exist.
+    // We will invalidate the child context in finishClassComponent() right after rendering.
+    const hasContext = pushContextProvider(workInProgress);
+
+    let shouldUpdate;
+    if (current === null) {
+      if (!workInProgress.stateNode) {
+        // In the initial pass we might need to construct the instance.
+        constructClassInstance(workInProgress, workInProgress.pendingProps);
+        mountClassInstance(workInProgress, priorityLevel);
+        shouldUpdate = true;
+      } else {
+        invariant(false, 'Resuming work not yet implemented.');
+        // In a resume, we'll already have an instance we can reuse.
+        // shouldUpdate = resumeMountClassInstance(workInProgress, priorityLevel);
+      }
+    } else {
+      shouldUpdate = updateClassInstance(
+        current,
+        workInProgress,
+        priorityLevel,
+      );
+    }
+    return finishClassComponent(
+      current,
+      workInProgress,
+      shouldUpdate,
+      hasContext,
+    );
+  }
+
+  function finishClassComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    shouldUpdate: boolean,
+    hasContext: boolean,
+  ) {
+    // Refs should update even if shouldComponentUpdate returns false
+    markRef(current, workInProgress);
+
+    if (!shouldUpdate) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const instance = workInProgress.stateNode;
+
+    // Rerender
+    ReactCurrentOwner.current = workInProgress;
+    let nextChildren;
+    if (__DEV__) {
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, 'render');
+      nextChildren = instance.render();
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+    } else {
+      nextChildren = instance.render();
+    }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
+    reconcileChildren(current, workInProgress, nextChildren);
+    // Memoize props and state using the values we just used to render.
+    // TODO: Restructure so we never read values from the instance.
+    memoizeState(workInProgress, instance.state);
+    memoizeProps(workInProgress, instance.props);
+
+    // The context might have changed so we need to recalculate it.
+    if (hasContext) {
+      invalidateContextProvider(workInProgress);
+    }
+    return workInProgress.child;
+  }
+
+  function updateHostRoot(current, workInProgress, priorityLevel) {
+    const root = (workInProgress.stateNode: FiberRoot);
+    if (root.pendingContext) {
+      pushTopLevelContextObject(
+        workInProgress,
+        root.pendingContext,
+        root.pendingContext !== root.context,
+      );
+    } else if (root.context) {
+      // Should always be set
+      pushTopLevelContextObject(workInProgress, root.context, false);
+    }
+
+    pushHostContainer(workInProgress, root.containerInfo);
+
+    const updateQueue = workInProgress.updateQueue;
+    if (updateQueue !== null) {
+      const prevState = workInProgress.memoizedState;
+      const state = beginUpdateQueue(
+        current,
+        workInProgress,
+        updateQueue,
+        null,
+        prevState,
+        null,
+        priorityLevel,
+      );
+      if (prevState === state) {
+        // If the state is the same as before, that's a bailout because we had
+        // no work matching this priority.
+        resetHydrationState();
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      const element = state.element;
+      if (
+        (current === null || current.child === null) &&
+        enterHydrationState(workInProgress)
+      ) {
+        // If we don't have any current children this might be the first pass.
+        // We always try to hydrate. If this isn't a hydration pass there won't
+        // be any children to hydrate which is effectively the same thing as
+        // not hydrating.
+
+        // This is a bit of a hack. We track the host root as a placement to
+        // know that we're currently in a mounting state. That way isMounted
+        // works as expected. We must reset this before committing.
+        // TODO: Delete this when we delete isMounted and findDOMNode.
+        workInProgress.effectTag |= Placement;
+
+        // Ensure that children mount into this root without tracking
+        // side-effects. This ensures that we don't store Placement effects on
+        // nodes that will be hydrated.
+        workInProgress.child = mountChildFibersInPlace(
+          workInProgress,
+          workInProgress.child,
+          element,
+          priorityLevel,
+        );
+      } else {
+        // Otherwise reset hydration state in case we aborted and resumed another
+        // root.
+        resetHydrationState();
+        reconcileChildren(current, workInProgress, element);
+      }
+      memoizeState(workInProgress, state);
+      return workInProgress.child;
+    }
+    resetHydrationState();
+    // If there is no update queue, that's a bailout because the root has no props.
+    return bailoutOnAlreadyFinishedWork(current, workInProgress);
+  }
+
+  function updateHostComponent(current, workInProgress, renderPriority) {
+    pushHostContext(workInProgress);
+
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
+
+    const type = workInProgress.type;
+    const memoizedProps = workInProgress.memoizedProps;
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = memoizedProps;
+      invariant(
+        nextProps !== null,
+        'We should always have pending or current props. This error is ' +
+          'likely caused by a bug in React. Please file an issue.',
+      );
+    }
+    const prevProps = current !== null ? current.memoizedProps : null;
+
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (nextProps === null || memoizedProps === nextProps) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    let nextChildren = nextProps.children;
+    const isDirectTextChild = shouldSetTextContent(type, nextProps);
+
+    if (isDirectTextChild) {
+      // We special case a direct text child of a host node. This is a common
+      // case. We won't handle it as a reified child. We will instead handle
+      // this in the host environment that also have access to this prop. That
+      // avoids allocating another HostText fiber and traversing it.
+      nextChildren = null;
+    } else if (prevProps && shouldSetTextContent(type, prevProps)) {
+      // If we're switching from a direct text child to a normal child, or to
+      // empty, we need to schedule the text content to be reset.
+      workInProgress.effectTag |= ContentReset;
+    }
+
+    markRef(current, workInProgress);
+
+    // Check the host config to see if the children are offscreen/hidden.
+    if (
+      renderPriority !== OffscreenPriority &&
+      !useSyncScheduling &&
+      shouldDeprioritizeSubtree(type, nextProps)
+    ) {
+      // Down-prioritize the children.
+      workInProgress.pendingWorkPriority = OffscreenPriority;
+      // Bailout and come back to this fiber later at OffscreenPriority.
+      return null;
+    }
+
+    reconcileChildren(current, workInProgress, nextChildren);
+    memoizeProps(workInProgress, nextProps);
+    return workInProgress.child;
+  }
+
+  function updateHostText(current, workInProgress) {
+    if (current === null) {
+      tryToClaimNextHydratableInstance(workInProgress);
+    }
+    let nextProps = workInProgress.pendingProps;
+    if (nextProps === null) {
+      nextProps = workInProgress.memoizedProps;
+    }
+    memoizeProps(workInProgress, nextProps);
+    // Nothing to do here. This is terminal. We'll do the completion step
+    // immediately after.
+    return null;
+  }
+
+  function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
+    invariant(
+      current === null,
+      'An indeterminate component should never have mounted. This error is ' +
+        'likely caused by a bug in React. Please file an issue.',
+    );
     var fn = workInProgress.type;
     var props = workInProgress.pendingProps;
-    var value = fn(props);
-    if (typeof value === 'object' && value && typeof value.render === 'function') {
+    var unmaskedContext = getUnmaskedContext(workInProgress);
+    var context = getMaskedContext(workInProgress, unmaskedContext);
+
+    var value;
+
+    if (__DEV__) {
+      ReactCurrentOwner.current = workInProgress;
+      value = fn(props, context);
+    } else {
+      value = fn(props, context);
+    }
+    // React DevTools reads this flag.
+    workInProgress.effectTag |= PerformedWork;
+
+    if (
+      typeof value === 'object' &&
+      value !== null &&
+      typeof value.render === 'function'
+    ) {
       // Proceed under the assumption that this is a class instance
       workInProgress.tag = ClassComponent;
-      if (workInProgress.alternate) {
-        workInProgress.alternate.tag = ClassComponent;
-      }
-      value = value.render();
+
+      // Push context providers early to prevent context stack mismatches.
+      // During mounting we don't know the child context yet as the instance doesn't exist.
+      // We will invalidate the child context in finishClassComponent() right after rendering.
+      const hasContext = pushContextProvider(workInProgress);
+      adoptClassInstance(workInProgress, value);
+      mountClassInstance(workInProgress, priorityLevel);
+      return finishClassComponent(current, workInProgress, true, hasContext);
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
-      if (workInProgress.alternate) {
-        workInProgress.alternate.tag = FunctionalComponent;
+      if (__DEV__) {
+        const Component = workInProgress.type;
+
+        if (Component) {
+          warning(
+            !Component.childContextTypes,
+            '%s(...): childContextTypes cannot be defined on a functional component.',
+            Component.displayName || Component.name || 'Component',
+          );
+        }
+        if (workInProgress.ref !== null) {
+          let info = '';
+          const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+          if (ownerName) {
+            info += '\n\nCheck the render method of `' + ownerName + '`.';
+          }
+
+          let warningKey = ownerName || workInProgress._debugID || '';
+          const debugSource = workInProgress._debugSource;
+          if (debugSource) {
+            warningKey = debugSource.fileName + ':' + debugSource.lineNumber;
+          }
+          if (!warnedAboutStatelessRefs[warningKey]) {
+            warnedAboutStatelessRefs[warningKey] = true;
+            warning(
+              false,
+              'Stateless function components cannot be given refs. ' +
+                'Attempts to access this ref will fail.%s%s',
+              info,
+              ReactDebugCurrentFiber.getCurrentFiberStackAddendum(),
+            );
+          }
+        }
       }
+      reconcileChildren(current, workInProgress, value);
+      memoizeProps(workInProgress, props);
+      return workInProgress.child;
     }
-    reconcileChildren(current, workInProgress, value);
-    workInProgress.pendingWorkPriority = NoWork;
   }
 
   function updateCoroutineComponent(current, workInProgress) {
-    var coroutine = (workInProgress.pendingProps : ?ReactCoroutine);
-    if (!coroutine) {
-      throw new Error('Should be resolved by now');
-    }
-    reconcileChildren(current, workInProgress, coroutine.children);
-    workInProgress.pendingWorkPriority = NoWork;
-  }
-
-  function reuseChildren(returnFiber : Fiber, firstChild : Fiber) {
-    // TODO: None of this should be necessary if structured better.
-    // The returnFiber pointer only needs to be updated when we walk into this child
-    // which we don't do right now. If the pending work priority indicated only
-    // if a child has work rather than if the node has work, then we would know
-    // by a single lookup on workInProgress rather than having to go through
-    // each child.
-    let child = firstChild;
-    do {
-      // Update the returnFiber of the child to the newest fiber.
-      child.return = returnFiber;
-      // Retain the priority if there's any work left to do in the children.
-      if (child.pendingWorkPriority !== NoWork &&
-          (returnFiber.pendingWorkPriority === NoWork ||
-          returnFiber.pendingWorkPriority > child.pendingWorkPriority)) {
-        returnFiber.pendingWorkPriority = child.pendingWorkPriority;
+    var nextCoroutine = (workInProgress.pendingProps: null | ReactCoroutine);
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextCoroutine === null) {
+        nextCoroutine = current && current.memoizedProps;
+        invariant(
+          nextCoroutine !== null,
+          'We should always have pending or current props. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
       }
-    } while (child = child.sibling);
+    } else if (
+      nextCoroutine === null ||
+      workInProgress.memoizedProps === nextCoroutine
+    ) {
+      nextCoroutine = workInProgress.memoizedProps;
+      // TODO: When bailing out, we might need to return the stateNode instead
+      // of the child. To check it for work.
+      // return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const nextChildren = nextCoroutine.children;
+    const priorityLevel = workInProgress.pendingWorkPriority;
+
+    // The following is a fork of reconcileChildrenAtPriority but using
+    // stateNode to store the child.
+    if (current === null) {
+      workInProgress.stateNode = mountChildFibersInPlace(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel,
+      );
+    } else if (current.child === workInProgress.child) {
+      workInProgress.stateNode = reconcileChildFibers(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel,
+      );
+    } else {
+      workInProgress.stateNode = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.stateNode,
+        nextChildren,
+        priorityLevel,
+      );
+    }
+
+    memoizeProps(workInProgress, nextCoroutine);
+    // This doesn't take arbitrary time so we could synchronously just begin
+    // eagerly do the work of workInProgress.child as an optimization.
+    return workInProgress.stateNode;
   }
 
+  function updatePortalComponent(current, workInProgress) {
+    pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
+    const priorityLevel = workInProgress.pendingWorkPriority;
+    let nextChildren = workInProgress.pendingProps;
+    if (hasContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+      if (nextChildren === null) {
+        nextChildren = current && current.memoizedProps;
+        invariant(
+          nextChildren != null,
+          'We should always have pending or current props. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    } else if (
+      nextChildren === null ||
+      workInProgress.memoizedProps === nextChildren
+    ) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    if (current === null) {
+      // Portals are special because we don't append the children during mount
+      // but at commit. Therefore we need to track insertions which the normal
+      // flow doesn't do during mount. This doesn't happen at the root because
+      // the root always starts with a "current" with a null child.
+      // TODO: Consider unifying this with how the root works.
+      workInProgress.child = reconcileChildFibersInPlace(
+        workInProgress,
+        workInProgress.child,
+        nextChildren,
+        priorityLevel,
+      );
+      memoizeProps(workInProgress, nextChildren);
+    } else {
+      reconcileChildren(current, workInProgress, nextChildren);
+      memoizeProps(workInProgress, nextChildren);
+    }
+    return workInProgress.child;
+  }
+
+  /*
   function reuseChildrenEffects(returnFiber : Fiber, firstChild : Fiber) {
     let child = firstChild;
     do {
@@ -201,147 +650,192 @@ module.exports = function<T, P, I, C>(config : HostConfig<T, P, I, C>) {
       }
     } while (child = child.sibling);
   }
+  */
 
-  function bailoutOnCurrent(current : Fiber, workInProgress : Fiber) : ?Fiber {
-    // The most likely scenario is that the previous copy of the tree contains
-    // the same props as the new one. In that case, we can just copy the output
-    // and children from that node.
-    workInProgress.memoizedProps = workInProgress.pendingProps;
-    workInProgress.output = current.output;
-    const priorityLevel = workInProgress.pendingWorkPriority;
-    workInProgress.pendingProps = null;
-    workInProgress.pendingWorkPriority = NoWork;
-    workInProgress.stateNode = current.stateNode;
-    workInProgress.childInProgress = current.childInProgress;
-    if (current.child) {
-      // If we bail out but still has work with the current priority in this
-      // subtree, we need to go find it right now. If we don't, we won't flush
-      // it until the next tick.
-      workInProgress.child = current.child;
-      reuseChildren(workInProgress, workInProgress.child);
-      if (workInProgress.pendingWorkPriority !== NoWork && workInProgress.pendingWorkPriority <= priorityLevel) {
-        // TODO: This passes the current node and reads the priority level and
-        // pending props from that. We want it to read our priority level and
-        // pending props from the work in progress. Needs restructuring.
-        return findNextUnitOfWorkAtPriority(current, priorityLevel);
-      } else {
-        return null;
-      }
-    } else {
-      workInProgress.child = null;
-      return null;
+  function bailoutOnAlreadyFinishedWork(
+    current,
+    workInProgress: Fiber,
+  ): Fiber | null {
+    if (__DEV__) {
+      cancelWorkTimer(workInProgress);
     }
+
+    // TODO: We should ideally be able to bail out early if the children have no
+    // more work to do. However, since we don't have a separation of this
+    // Fiber's priority and its children yet - we don't know without doing lots
+    // of the same work we do anyway. Once we have that separation we can just
+    // bail out here if the children has no more work at this priority level.
+    // if (workInProgress.priorityOfChildren <= priorityLevel) {
+    //   // If there are side-effects in these children that have not yet been
+    //   // committed we need to ensure that they get properly transferred up.
+    //   if (current && current.child !== workInProgress.child) {
+    //     reuseChildrenEffects(workInProgress, child);
+    //   }
+    //   return null;
+    // }
+
+    cloneChildFibers(current, workInProgress);
+    return workInProgress.child;
   }
 
-  function bailoutOnAlreadyFinishedWork(current, workInProgress : Fiber) : ?Fiber {
-    // If we started this work before, and finished it, or if we're in a
-    // ping-pong update scenario, this version could already be what we're
-    // looking for. In that case, we should be able to just bail out.
-    const priorityLevel = workInProgress.pendingWorkPriority;
-    workInProgress.pendingProps = null;
-    workInProgress.pendingWorkPriority = NoWork;
-
-    workInProgress.firstEffect = null;
-    workInProgress.nextEffect = null;
-    workInProgress.lastEffect = null;
-
-    if (workInProgress.child) {
-      // On the way up here, we reset the child node to be the current one by
-      // cloning. However, it is really the original child that represents the
-      // already completed work. Therefore we have to reuse the alternate.
-      // But if we don't have a current, this was not cloned. This is super weird.
-      const child = !current ? workInProgress.child : workInProgress.child.alternate;
-      if (!child) {
-        throw new Error('We must have a current child to be able to use this.');
-      }
-      workInProgress.child = child;
-      // Ensure that the effects of reused work are preserved.
-      reuseChildrenEffects(workInProgress, child);
-      // If we bail out but still has work with the current priority in this
-      // subtree, we need to go find it right now. If we don't, we won't flush
-      // it until the next tick.
-      reuseChildren(workInProgress, child);
-      if (workInProgress.pendingWorkPriority !== NoWork &&
-          workInProgress.pendingWorkPriority <= priorityLevel) {
-        // TODO: This passes the current node and reads the priority level and
-        // pending props from that. We want it to read our priority level and
-        // pending props from the work in progress. Needs restructuring.
-        return findNextUnitOfWorkAtPriority(workInProgress, priorityLevel);
-      }
+  function bailoutOnLowPriority(current, workInProgress) {
+    if (__DEV__) {
+      cancelWorkTimer(workInProgress);
     }
+
+    // TODO: Handle HostComponent tags here as well and call pushHostContext()?
+    // See PR 8590 discussion for context
+    switch (workInProgress.tag) {
+      case ClassComponent:
+        pushContextProvider(workInProgress);
+        break;
+      case HostPortal:
+        pushHostContainer(
+          workInProgress,
+          workInProgress.stateNode.containerInfo,
+        );
+        break;
+    }
+    // TODO: What if this is currently in progress?
+    // How can that happen? How is this not being cloned?
     return null;
   }
 
-  function beginWork(current : ?Fiber, workInProgress : Fiber) : ?Fiber {
-    // The current, flushed, state of this fiber is the alternate.
-    // Ideally nothing should rely on this, but relying on it here
-    // means that we don't need an additional field on the work in
-    // progress.
-    if (current && workInProgress.pendingProps === current.memoizedProps) {
-      return bailoutOnCurrent(current, workInProgress);
+  // TODO: Delete memoizeProps/State and move to reconcile/bailout instead
+  function memoizeProps(workInProgress: Fiber, nextProps: any) {
+    workInProgress.memoizedProps = nextProps;
+  }
+
+  function memoizeState(workInProgress: Fiber, nextState: any) {
+    workInProgress.memoizedState = nextState;
+    // Don't reset the updateQueue, in case there are pending updates. Resetting
+    // is handled by beginUpdateQueue.
+  }
+
+  function beginWork(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    priorityLevel: PriorityLevel,
+  ): Fiber | null {
+    if (
+      workInProgress.pendingWorkPriority === NoWork ||
+      workInProgress.pendingWorkPriority > priorityLevel
+    ) {
+      return bailoutOnLowPriority(current, workInProgress);
     }
 
-    if (!workInProgress.childInProgress &&
-        workInProgress.pendingProps === workInProgress.memoizedProps) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    if (__DEV__) {
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     }
 
     switch (workInProgress.tag) {
       case IndeterminateComponent:
-        mountIndeterminateComponent(current, workInProgress);
-        return workInProgress.childInProgress;
+        return mountIndeterminateComponent(
+          current,
+          workInProgress,
+          priorityLevel,
+        );
       case FunctionalComponent:
-        updateFunctionalComponent(current, workInProgress);
-        return workInProgress.childInProgress;
+        return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
-        return updateClassComponent(current, workInProgress);
-      case HostContainer:
-        reconcileChildren(current, workInProgress, workInProgress.pendingProps);
-        // A yield component is just a placeholder, we can just run through the
-        // next one immediately.
-        workInProgress.pendingWorkPriority = NoWork;
-        if (workInProgress.childInProgress) {
-          return beginWork(
-            workInProgress.childInProgress.alternate,
-            workInProgress.childInProgress
-          );
-        }
-        return null;
+        return updateClassComponent(current, workInProgress, priorityLevel);
+      case HostRoot:
+        return updateHostRoot(current, workInProgress, priorityLevel);
       case HostComponent:
-        return updateHostComponent(current, workInProgress);
+        return updateHostComponent(current, workInProgress, priorityLevel);
+      case HostText:
+        return updateHostText(current, workInProgress);
       case CoroutineHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
         workInProgress.tag = CoroutineComponent;
-        // Intentionally fall through since this is now the same.
+      // Intentionally fall through since this is now the same.
       case CoroutineComponent:
-        updateCoroutineComponent(current, workInProgress);
-        // This doesn't take arbitrary time so we could synchronously just begin
-        // eagerly do the work of workInProgress.child as an optimization.
-        if (workInProgress.childInProgress) {
-          return beginWork(
-            workInProgress.childInProgress.alternate,
-            workInProgress.childInProgress
-          );
-        }
-        return workInProgress.childInProgress;
+        return updateCoroutineComponent(current, workInProgress);
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
-        workInProgress.pendingWorkPriority = NoWork;
-        if (workInProgress.sibling) {
-          return beginWork(
-            workInProgress.sibling.alternate,
-            workInProgress.sibling
-          );
-        }
         return null;
+      case HostPortal:
+        return updatePortalComponent(current, workInProgress);
+      case Fragment:
+        return updateFragment(current, workInProgress);
       default:
-        throw new Error('Unknown unit of work tag');
+        invariant(
+          false,
+          'Unknown unit of work tag. This error is likely caused by a bug in ' +
+            'React. Please file an issue.',
+        );
     }
+  }
+
+  function beginFailedWork(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    priorityLevel: PriorityLevel,
+  ) {
+    // Push context providers here to avoid a push/pop context mismatch.
+    switch (workInProgress.tag) {
+      case ClassComponent:
+        pushContextProvider(workInProgress);
+        break;
+      case HostRoot:
+        const root: FiberRoot = workInProgress.stateNode;
+        pushHostContainer(workInProgress, root.containerInfo);
+        break;
+      default:
+        invariant(
+          false,
+          'Invalid type of work. This error is likely caused by a bug in React. ' +
+            'Please file an issue.',
+        );
+    }
+
+    // Add an error effect so we can handle the error during the commit phase
+    workInProgress.effectTag |= Err;
+
+    // This is a weird case where we do "resume" work — work that failed on
+    // our first attempt. Because we no longer have a notion of "progressed
+    // deletions," reset the child to the current child to make sure we delete
+    // it again. TODO: Find a better way to handle this, perhaps during a more
+    // general overhaul of error handling.
+    if (current === null) {
+      workInProgress.child = null;
+    } else if (workInProgress.child !== current.child) {
+      workInProgress.child = current.child;
+    }
+
+    if (
+      workInProgress.pendingWorkPriority === NoWork ||
+      workInProgress.pendingWorkPriority > priorityLevel
+    ) {
+      return bailoutOnLowPriority(current, workInProgress);
+    }
+
+    // If we don't bail out, we're going be recomputing our children so we need
+    // to drop our effect list.
+    workInProgress.firstEffect = null;
+    workInProgress.lastEffect = null;
+
+    // Unmount the current children as if the component rendered null
+    const nextChildren = null;
+    reconcileChildrenAtPriority(
+      current,
+      workInProgress,
+      nextChildren,
+      priorityLevel,
+    );
+
+    if (workInProgress.tag === ClassComponent) {
+      const instance = workInProgress.stateNode;
+      workInProgress.memoizedProps = instance.props;
+      workInProgress.memoizedState = instance.state;
+    }
+
+    return workInProgress.child;
   }
 
   return {
     beginWork,
+    beginFailedWork,
   };
-
 };

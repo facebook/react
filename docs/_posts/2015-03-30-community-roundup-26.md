@@ -13,7 +13,7 @@ We open sourced React Native last week and the community reception blew away all
 
 **Give us 6 months**. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn't been shipped to any users yet. There's a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.
 
-<iframe width="560" height="315" src="https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
+<iframe width="100%" height="315" src="https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
 
 
 ## Ray Wenderlich - Property Finder
@@ -75,11 +75,11 @@ Jay Garcia spent a lot of time during the beta working on a NES music player wit
 </center>
 
 
-## React Native with Babel and Webpack
+## React Native with Babel and webpack
 
-React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as Webpack and Babel. The main reason for this is performance – we couldn't get those tools to have sub-second reload time on a large codebase.
+React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as webpack and Babel. The main reason for this is performance – we couldn't get those tools to have sub-second reload time on a large codebase.
 
-Roman Liutikov found a way to [use Webpack and Babel to run on React Native](https://github.com/roman01la/react-native-babel)! In the future, we want to work with those projects to provide cleaner extension mechanisms.
+Roman Liutikov found a way to [use webpack and Babel to run on React Native](https://github.com/roman01la/react-native-babel)! In the future, we want to work with those projects to provide cleaner extension mechanisms.
 
 
 ## A Dynamic, Crazy, Native Mobile Future—Powered by JavaScript
@@ -92,4 +92,3 @@ Clay Allsopp wrote a post about [all the crazy things you could do with a JavaSc
 We've spent a lot of efforts getting the onboarding as easy as possible and we're really happy that people noticed. We still have a lot of work to do on documentation, stay tuned!
 
 <blockquote class="twitter-tweet" lang="en"><p>Wow. Getting started with React Native might have been the smoothest experience I’ve ever had with a new developer product.</p>&mdash; Andreas Eldh (@eldh) <a href="https://twitter.com/eldh/status/581186172094980096">March 26, 2015</a></blockquote>
-

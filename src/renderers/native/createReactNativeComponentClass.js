@@ -12,37 +12,15 @@
 
 'use strict';
 
-var ReactNativeBaseComponent = require('ReactNativeBaseComponent');
+const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 
 // See also ReactNativeBaseComponent
-type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object;
-  uiViewClassName: string;
+export type ReactNativeBaseComponentViewConfig = {
+  validAttributes: Object,
+  uiViewClassName: string,
   propTypes?: Object,
-}
-
-/**
- * @param {string} config iOS View configuration.
- * @private
- */
-var createReactNativeComponentClass = function(
-  viewConfig: ReactNativeBaseComponentViewConfig
-): ReactClass<any> {
-  var Constructor = function(element) {
-    this._currentElement = element;
-    this._topLevelWrapper = null;
-    this._hostParent = null;
-    this._hostContainerInfo = null;
-    this._rootNodeID = null;
-    this._renderedChildren = null;
-  };
-  Constructor.displayName = viewConfig.uiViewClassName;
-  Constructor.viewConfig = viewConfig;
-  Constructor.propTypes = viewConfig.propTypes;
-  Constructor.prototype = new ReactNativeBaseComponent(viewConfig);
-  Constructor.prototype.constructor = Constructor;
-
-  return ((Constructor: any): ReactClass<any>);
 };
 
-module.exports = createReactNativeComponentClass;
+module.exports = ReactNativeFeatureFlags.useFiber
+  ? require('createReactNativeComponentClassFiber')
+  : require('createReactNativeComponentClassStack');

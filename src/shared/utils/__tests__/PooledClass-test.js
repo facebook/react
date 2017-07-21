@@ -14,40 +14,38 @@
 var PooledClass;
 var PoolableClass;
 
-describe('Pooled class', function() {
-  beforeEach(function() {
+describe('Pooled class', () => {
+  beforeEach(() => {
     PooledClass = require('PooledClass');
     PoolableClass = function() {};
     PoolableClass.prototype.destructor = function() {};
     PooledClass.addPoolingTo(PoolableClass);
   });
 
-  it('should initialize a pool correctly', function() {
+  it('should initialize a pool correctly', () => {
     expect(PoolableClass.instancePool).toBeDefined();
   });
 
-  it('should return a new instance when the pool is empty', function() {
+  it('should return a new instance when the pool is empty', () => {
     var instance = PoolableClass.getPooled();
     expect(instance instanceof PoolableClass).toBe(true);
   });
 
-  it('should return the instance back into the pool when it gets released',
-    function() {
-      var instance = PoolableClass.getPooled();
-      PoolableClass.release(instance);
-      expect(PoolableClass.instancePool.length).toBe(1);
-      expect(PoolableClass.instancePool[0]).toBe(instance);
-    }
-  );
+  it('should return the instance back into the pool when it gets released', () => {
+    var instance = PoolableClass.getPooled();
+    PoolableClass.release(instance);
+    expect(PoolableClass.instancePool.length).toBe(1);
+    expect(PoolableClass.instancePool[0]).toBe(instance);
+  });
 
-  it('should return an old instance if available in the pool', function() {
+  it('should return an old instance if available in the pool', () => {
     var instance = PoolableClass.getPooled();
     PoolableClass.release(instance);
     var instance2 = PoolableClass.getPooled();
     expect(instance).toBe(instance2);
   });
 
-  it('should call the destructor when instance gets released', function() {
+  it('should call the destructor when instance gets released', () => {
     var log = [];
     var PoolableClassWithDestructor = function() {};
     PoolableClassWithDestructor.prototype.destructor = function() {
@@ -59,7 +57,7 @@ describe('Pooled class', function() {
     expect(log).toEqual(['released']);
   });
 
-  it('should accept poolers with different arguments', function() {
+  it('should accept poolers with different arguments', () => {
     var log = [];
     var PoolableClassWithMultiArguments = function(a, b) {
       log.push(a, b);
@@ -67,56 +65,50 @@ describe('Pooled class', function() {
     PoolableClassWithMultiArguments.prototype.destructor = function() {};
     PooledClass.addPoolingTo(
       PoolableClassWithMultiArguments,
-      PooledClass.twoArgumentPooler
+      PooledClass.twoArgumentPooler,
     );
     PoolableClassWithMultiArguments.getPooled('a', 'b', 'c');
     expect(log).toEqual(['a', 'b']);
   });
 
-  it('should call a new constructor with arguments', function() {
+  it('should call a new constructor with arguments', () => {
     var log = [];
     var PoolableClassWithOneArgument = function(a) {
       log.push(a);
     };
     PoolableClassWithOneArgument.prototype.destructor = function() {};
-    PooledClass.addPoolingTo(
-      PoolableClassWithOneArgument
-    );
+    PooledClass.addPoolingTo(PoolableClassWithOneArgument);
     PoolableClassWithOneArgument.getPooled('new');
     expect(log).toEqual(['new']);
   });
 
-  it('should call an old constructor with arguments', function() {
+  it('should call an old constructor with arguments', () => {
     var log = [];
     var PoolableClassWithOneArgument = function(a) {
       log.push(a);
     };
     PoolableClassWithOneArgument.prototype.destructor = function() {};
-    PooledClass.addPoolingTo(
-      PoolableClassWithOneArgument
-    );
+    PooledClass.addPoolingTo(PoolableClassWithOneArgument);
     var instance = PoolableClassWithOneArgument.getPooled('new');
     PoolableClassWithOneArgument.release(instance);
     PoolableClassWithOneArgument.getPooled('old');
     expect(log).toEqual(['new', 'old']);
   });
 
-  it('should throw when the class releases an instance of a different type',
-    function() {
-      var RandomClass = function() {};
-      RandomClass.prototype.destructor = function() {};
-      PooledClass.addPoolingTo(RandomClass);
-      var randomInstance = RandomClass.getPooled();
-      PoolableClass.getPooled();
-      expect(function() {
-        PoolableClass.release(randomInstance);
-      }).toThrowError(
-        'Trying to release an instance into a pool of a different type.'
-      );
-    }
-  );
+  it('should throw when the class releases an instance of a different type', () => {
+    var RandomClass = function() {};
+    RandomClass.prototype.destructor = function() {};
+    PooledClass.addPoolingTo(RandomClass);
+    var randomInstance = RandomClass.getPooled();
+    PoolableClass.getPooled();
+    expect(function() {
+      PoolableClass.release(randomInstance);
+    }).toThrowError(
+      'Trying to release an instance into a pool of a different type.',
+    );
+  });
 
-  it('should throw if no destructor is defined', function() {
+  it('should throw if no destructor is defined', () => {
     var ImmortalClass = function() {};
     PooledClass.addPoolingTo(ImmortalClass);
     var inst = ImmortalClass.getPooled();

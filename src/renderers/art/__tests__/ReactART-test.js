@@ -13,12 +13,9 @@
 
 'use strict';
 
-jest
-  .unmock('ReactART');
-
-var React = require('React');
-var ReactDOM = require('ReactDOM');
-var ReactTestUtils = require('ReactTestUtils');
+var React = require('react');
+var ReactDOM = require('react-dom');
+var ReactTestUtils = require('react-dom/test-utils');
 
 var Group;
 var Shape;
@@ -27,7 +24,7 @@ var TestComponent;
 
 var Missing = {};
 
-var ReactART = require('ReactART');
+var ReactART = require('react-art');
 var ARTSVGMode = require('art/modes/svg');
 var ARTCurrentMode = require('art/modes/current');
 
@@ -51,9 +48,8 @@ function testDOMNodeStructure(domNode, expectedStructure) {
   }
 }
 
-describe('ReactART', function() {
-
-  beforeEach(function() {
+describe('ReactART', () => {
+  beforeEach(() => {
     ARTCurrentMode.setCurrent(ARTSVGMode);
 
     Group = ReactART.Group;
@@ -62,29 +58,33 @@ describe('ReactART', function() {
 
     TestComponent = class extends React.Component {
       render() {
-
-        var a =
+        var a = (
           <Shape
             d="M0,0l50,0l0,50l-50,0z"
-            fill={new ReactART.LinearGradient(["black", "white"])}
+            fill={new ReactART.LinearGradient(['black', 'white'])}
             key="a"
-            width={50} height={50}
-            x={50} y={50}
+            width={50}
+            height={50}
+            x={50}
+            y={50}
             opacity={0.1}
-          />;
+          />
+        );
 
-        var b =
+        var b = (
           <Shape
             fill="#3C5A99"
             key="b"
             scale={0.5}
-            x={50} y={50}
+            x={50}
+            y={50}
             title="This is an F"
             cursor="pointer">
             M64.564,38.583H54l0.008-5.834c0-3.035,0.293-4.666,4.657-4.666
             h5.833V16.429h-9.33c-11.213,0-15.159,5.654-15.159,15.16v6.994
             h-6.99v11.652h6.99v33.815H54V50.235h9.331L64.564,38.583z
-          </Shape>;
+          </Shape>
+        );
 
         var c = <Group key="c" />;
 
@@ -99,7 +99,7 @@ describe('ReactART', function() {
     };
   });
 
-  it('should have the correct lifecycle state', function() {
+  it('should have the correct lifecycle state', () => {
     var instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     var group = instance.refs.group;
@@ -107,7 +107,7 @@ describe('ReactART', function() {
     expect(typeof group.indicate).toBe('function');
   });
 
-  it('should render a reasonable SVG structure in SVG mode', function() {
+  it('should render a reasonable SVG structure in SVG mode', () => {
     var instance = <TestComponent />;
     instance = ReactTestUtils.renderIntoDocument(instance);
 
@@ -116,46 +116,47 @@ describe('ReactART', function() {
       width: '150',
       height: '200',
       children: [
-        { nodeName: 'defs' },
+        {nodeName: 'defs'},
         {
           nodeName: 'g',
           children: [
             {
               nodeName: 'defs',
-              children: [
-                { nodeName: 'linearGradient' }
-              ]
+              children: [{nodeName: 'linearGradient'}],
             },
-            { nodeName: 'path' },
-            { nodeName: 'path' },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
+            {nodeName: 'path'},
+            {nodeName: 'path'},
+            {nodeName: 'g'},
+          ],
+        },
+      ],
     };
 
     var realNode = ReactDOM.findDOMNode(instance);
     testDOMNodeStructure(realNode, expectedStructure);
   });
 
-  it('should be able to reorder components', function() {
+  it('should be able to reorder components', () => {
     var container = document.createElement('div');
-    var instance = ReactDOM.render(<TestComponent flipped={false} />, container);
+    var instance = ReactDOM.render(
+      <TestComponent flipped={false} />,
+      container,
+    );
 
     var expectedStructure = {
       nodeName: 'svg',
       children: [
-        { nodeName: 'defs' },
+        {nodeName: 'defs'},
         {
           nodeName: 'g',
           children: [
-            { nodeName: 'defs' },
-            { nodeName: 'path', opacity: '0.1' },
-            { nodeName: 'path', opacity: Missing },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
+            {nodeName: 'defs'},
+            {nodeName: 'path', opacity: '0.1'},
+            {nodeName: 'path', opacity: Missing},
+            {nodeName: 'g'},
+          ],
+        },
+      ],
     };
 
     var realNode = ReactDOM.findDOMNode(instance);
@@ -166,23 +167,23 @@ describe('ReactART', function() {
     var expectedNewStructure = {
       nodeName: 'svg',
       children: [
-        { nodeName: 'defs' },
+        {nodeName: 'defs'},
         {
           nodeName: 'g',
           children: [
-            { nodeName: 'defs' },
-            { nodeName: 'path', opacity: Missing },
-            { nodeName: 'path', opacity: '0.1' },
-            { nodeName: 'g' }
-          ]
-        }
-      ]
+            {nodeName: 'defs'},
+            {nodeName: 'path', opacity: Missing},
+            {nodeName: 'path', opacity: '0.1'},
+            {nodeName: 'g'},
+          ],
+        },
+      ],
     };
 
     testDOMNodeStructure(realNode, expectedNewStructure);
   });
 
-  it('should be able to reorder many components', function() {
+  it('should be able to reorder many components', () => {
     var container = document.createElement('div');
 
     class Component extends React.Component {
@@ -190,7 +191,7 @@ describe('ReactART', function() {
         var chars = this.props.chars.split('');
         return (
           <Surface>
-            {chars.map((text) => <Shape key={text} title={text} />)}
+            {chars.map(text => <Shape key={text} title={text} />)}
           </Surface>
         );
       }
@@ -210,7 +211,7 @@ describe('ReactART', function() {
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  it('renders composite with lifecycle inside group', function() {
+  it('renders composite with lifecycle inside group', () => {
     var mounted = false;
 
     class CustomShape extends React.Component {
@@ -228,12 +229,12 @@ describe('ReactART', function() {
         <Group>
           <CustomShape />
         </Group>
-      </Surface>
+      </Surface>,
     );
     expect(mounted).toBe(true);
   });
 
-  it('resolves refs before componentDidMount', function() {
+  it('resolves refs before componentDidMount', () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;
@@ -262,7 +263,7 @@ describe('ReactART', function() {
     expect(ref.constructor).toBe(CustomShape);
   });
 
-  it('resolves refs before componentDidUpdate', function() {
+  it('resolves refs before componentDidUpdate', () => {
     class CustomShape extends React.Component {
       render() {
         return <Shape />;
@@ -298,4 +299,33 @@ describe('ReactART', function() {
     expect(ref.constructor).toBe(CustomShape);
   });
 
+  it('adds and updates event handlers', () => {
+    const container = document.createElement('div');
+
+    function render(onClick) {
+      return ReactDOM.render(
+        <Surface>
+          <Shape onClick={onClick} />
+        </Surface>,
+        container,
+      );
+    }
+
+    function doClick(instance) {
+      const path = ReactDOM.findDOMNode(instance).querySelector('path');
+
+      // ReactTestUtils.Simulate.click doesn't work with SVG elements
+      path.click();
+    }
+
+    const onClick1 = jest.fn();
+    let instance = render(onClick1);
+    doClick(instance);
+    expect(onClick1).toBeCalled();
+
+    const onClick2 = jest.fn();
+    instance = render(onClick2);
+    doClick(instance);
+    expect(onClick2).toBeCalled();
+  });
 });

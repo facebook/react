@@ -11,44 +11,40 @@
 
 'use strict';
 
-var ReactInstrumentation = require('ReactInstrumentation');
 var ReactNativeComponentTree = require('ReactNativeComponentTree');
 var ReactNativeTagHandles = require('ReactNativeTagHandles');
 var UIManager = require('UIManager');
 
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 var ReactNativeTextComponent = function(text) {
   // This is really a ReactText (ReactNode), not a ReactElement
   this._currentElement = text;
   this._stringText = '' + text;
   this._hostParent = null;
-  this._rootNodeID = null;
+  this._rootNodeID = 0;
 };
 
 Object.assign(ReactNativeTextComponent.prototype, {
-
-  mountComponent: function(transaction, hostParent, hostContainerInfo, context) {
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onSetText(this._debugID, this._stringText);
-    }
-
+  mountComponent: function(
+    transaction,
+    hostParent,
+    hostContainerInfo,
+    context,
+  ) {
     // TODO: hostParent should have this context already. Stop abusing context.
     invariant(
       context.isInAParentText,
       'RawText "%s" must be wrapped in an explicit <Text> component.',
-      this._stringText
+      this._stringText,
     );
     this._hostParent = hostParent;
     var tag = ReactNativeTagHandles.allocateTag();
     this._rootNodeID = tag;
     var nativeTopRootTag = hostContainerInfo._tag;
-    UIManager.createView(
-      tag,
-      'RCTRawText',
-      nativeTopRootTag,
-      {text: this._stringText}
-    );
+    UIManager.createView(tag, 'RCTRawText', nativeTopRootTag, {
+      text: this._stringText,
+    });
 
     ReactNativeComponentTree.precacheNode(this, tag);
 
@@ -65,17 +61,9 @@ Object.assign(ReactNativeTextComponent.prototype, {
       var nextStringText = '' + nextText;
       if (nextStringText !== this._stringText) {
         this._stringText = nextStringText;
-        UIManager.updateView(
-          this._rootNodeID,
-          'RCTRawText',
-          {text: this._stringText}
-        );
-        if (__DEV__) {
-          ReactInstrumentation.debugTool.onSetText(
-            this._debugID,
-            nextStringText
-          );
-        }
+        UIManager.updateView(this._rootNodeID, 'RCTRawText', {
+          text: this._stringText,
+        });
       }
     }
   },
@@ -84,9 +72,8 @@ Object.assign(ReactNativeTextComponent.prototype, {
     ReactNativeComponentTree.uncacheNode(this);
     this._currentElement = null;
     this._stringText = null;
-    this._rootNodeID = null;
+    this._rootNodeID = 0;
   },
-
 });
 
 module.exports = ReactNativeTextComponent;

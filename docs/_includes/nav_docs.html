@@ -6,30 +6,16 @@
       <ul>
         {% for item in section.items %}
           <li>
-            {{ item | sidebar_item_link}}
+            {{ item | docs_sidebar_link}}
             {% if item.subitems %}
               <ul>
                 {% for subitem in item.subitems %}
                   <li>
-                    {{ subitem | sidebar_item_link}}
+                    {{ subitem | docs_sidebar_link }}
                   </li>
                 {% endfor %}
               </ul>
             {% endif %}
-          </li>
-        {% endfor %}
-      </ul>
-    </div>
-  {% endfor %}
-
-  <!-- Tips Nav -->
-  {% for section in site.data.nav_tips %}
-    <div class="nav-docs-section">
-      <h3>{{ section.title }}</h3>
-      <ul>
-        {% for item in section.items %}
-          <li>
-            <a href="/react/tips/{{ item.id }}.html"{% if page.id == item.id %} class="active"{% endif %}>{{ item.title }}</a>
           </li>
         {% endfor %}
       </ul>
@@ -49,4 +35,5 @@
       </ul>
     </div>
   {% endfor %}
+
 </div>

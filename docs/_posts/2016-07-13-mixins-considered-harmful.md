@@ -440,7 +440,7 @@ Multiple components may be sharing `RowMixin` to render the header, and each of 
 
 If you see rendering logic inside a mixin, it’s time to extract a component!
 
-Instead of `RowMixin`, we will define a `<Row>` component. We will also replace the convention of defining a `getHeaderText()` method with the standard mechanism of top-data flow in React: passing props.
+Instead of `RowMixin`, we will define a `<RowHeader>` component. We will also replace the convention of defining a `getHeaderText()` method with the standard mechanism of top-data flow in React: passing props.
 
 Finally, since neither of those components currently need lifecycle hooks or state, we can declare them as simple functions:
 

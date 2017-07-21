@@ -35,7 +35,7 @@ Run `npm start` to launch the development server. The browser will open automati
 
 ![compiled successfully](/react/img/blog/create-apps-with-no-configuration/compiled-successfully.png)
 
-Create React App uses both Webpack and Babel under the hood.  
+Create React App uses both webpack and Babel under the hood.
 The console output is tuned to be minimal to help you focus on the problems:
 
 ![failed to compile](/react/img/blog/create-apps-with-no-configuration/failed-to-compile.png)
@@ -76,7 +76,7 @@ Your `package.json` contains only a single build dependency and a few scripts:
 }
 ```
 
-We take care of updating Babel, ESLint, and Webpack to stable compatible versions so you can update a single dependency to get them all.
+We take care of updating Babel, ESLint, and webpack to stable compatible versions so you can update a single dependency to get them all.
 
 ### Zero Configuration
 
