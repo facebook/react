@@ -126,7 +126,7 @@ const sharedStyles = {
       [media.largeDown]: {
         fontSize: 16,
         lineHeight: '30px',
-      }
+      },
     },
 
     '& p > code, & li > code': {
