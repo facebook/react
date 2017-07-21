@@ -106,6 +106,10 @@ const sharedStyles = {
       fontSize: 18,
       lineHeight: '35px',
 
+      '&:first-of-type': {
+        marginTop: 0,
+      },
+
       [media.largeDown]: {
         fontSize: 16,
         lineHeight: '30px',
