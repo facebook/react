@@ -37,7 +37,10 @@ if (__DEV__) {
   var getComponentName = require('getComponentName');
 }
 
-var {findCurrentHostFiber} = require('ReactFiberTreeReflection');
+var {
+  findCurrentHostFiber,
+  findCurrentHostFiberWithNoPortals,
+} = require('ReactFiberTreeReflection');
 
 var getContextForSubtree = require('getContextForSubtree');
 
@@ -173,6 +176,9 @@ export type Reconciler<C, I, TI> = {
 
   // Use for findDOMNode/findHostNode. Legacy API.
   findHostInstance(component: Fiber): I | TI | null,
+
+  // Used internally for filtering out portals. Legacy API.
+  findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
 getContextForSubtree._injectFiber(function(fiber: Fiber) {
@@ -305,6 +311,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     findHostInstance(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiber(fiber);
+      if (hostFiber === null) {
+        return null;
+      }
+      return hostFiber.stateNode;
+    },
+
+    findHostInstanceWithNoPortals(fiber: Fiber): PI | null {
+      const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
       if (hostFiber === null) {
         return null;
       }

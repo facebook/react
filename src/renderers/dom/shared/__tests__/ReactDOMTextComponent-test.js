@@ -120,6 +120,8 @@ describe('ReactDOMTextComponent', () => {
     ReactDOM.render(reactEl, el);
     expect(el.textContent).toBe('foobarbaz');
 
+    ReactDOM.unmountComponentAtNode(el);
+
     reactEl = <div>{''}{''}{''}</div>;
     el.innerHTML = ReactDOMServer.renderToString(reactEl);
 

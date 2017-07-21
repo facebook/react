@@ -73,8 +73,12 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 });
 
 type DOMContainer =
-  | (Element & {_reactRootContainer: ?Object})
-  | (Document & {_reactRootContainer: ?Object});
+  | (Element & {
+    _reactRootContainer: ?Object,
+  })
+  | (Document & {
+    _reactRootContainer: ?Object,
+  });
 
 type Container = Element | Document;
 type Props = {
@@ -531,6 +535,21 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
+    if (container._reactRootContainer && container.nodeType !== COMMENT_NODE) {
+      const hostInstance = DOMRenderer.findHostInstanceWithNoPortals(
+        container._reactRootContainer.current,
+      );
+      if (hostInstance) {
+        warning(
+          hostInstance.parentNode === container,
+          'render(...): It looks like the React-rendered content of this ' +
+            'container was removed without using React. This is not ' +
+            'supported and will cause errors. Instead, call ' +
+            'ReactDOM.unmountComponentAtNode to empty a container.',
+        );
+      }
+    }
+
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
     const hasNonRootReactChild = !!(rootEl &&
