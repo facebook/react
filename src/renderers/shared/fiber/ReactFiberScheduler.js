@@ -1497,13 +1497,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function syncUpdates<A>(fn: () => A): A {
+  function flushSync<A>(batch: () => A): A {
+    const previousIsBatchingUpdates = isBatchingUpdates;
     const previousPriorityContext = priorityContext;
+    isBatchingUpdates = true;
     priorityContext = SynchronousPriority;
     try {
-      return fn();
+      return batch();
     } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
       priorityContext = previousPriorityContext;
+
+      invariant(
+        !isPerformingWork,
+        'flushSync was called from inside a lifecycle method. It cannot be ' +
+          'called when React is already rendering.',
+      );
+      performWork(TaskPriority, null);
     }
   }
 
@@ -1523,7 +1533,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
-    syncUpdates: syncUpdates,
+    flushSync: flushSync,
     deferredUpdates: deferredUpdates,
   };
 };
