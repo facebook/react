@@ -166,7 +166,6 @@ export type Reconciler<C, I, TI> = {
   performWithPriority(priorityLevel: PriorityLevel, fn: Function): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
-  syncUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
   deferredUpdates<A>(fn: () => A): A,
 
@@ -200,7 +199,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     performWithPriority,
     batchedUpdates,
     unbatchedUpdates,
-    syncUpdates,
     flushSync,
     deferredUpdates,
   } = ReactFiberScheduler(config);
@@ -291,8 +289,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     batchedUpdates,
 
     unbatchedUpdates,
-
-    syncUpdates,
 
     deferredUpdates,
 

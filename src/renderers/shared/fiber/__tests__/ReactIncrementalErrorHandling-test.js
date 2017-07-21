@@ -134,7 +134,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(
         <ErrorBoundary>
           <BrokenRender />
@@ -176,19 +176,17 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        ReactNoop.render(
-          <ErrorBoundary>
-            Before the storm.
-          </ErrorBoundary>,
-        );
-        ReactNoop.render(
-          <ErrorBoundary>
-            <BrokenRender />
-          </ErrorBoundary>,
-        );
-      });
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(
+        <ErrorBoundary>
+          Before the storm.
+        </ErrorBoundary>,
+      );
+      ReactNoop.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>,
+      );
     });
 
     expect(ops).toEqual([
@@ -292,7 +290,7 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     expect(() => {
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         ReactNoop.render(
           <RethrowErrorBoundary>
             <BrokenRender />
@@ -327,19 +325,17 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     expect(() => {
-      ReactNoop.syncUpdates(() => {
-        ReactNoop.batchedUpdates(() => {
-          ReactNoop.render(
-            <RethrowErrorBoundary>
-              Before the storm.
-            </RethrowErrorBoundary>,
-          );
-          ReactNoop.render(
-            <RethrowErrorBoundary>
-              <BrokenRender />
-            </RethrowErrorBoundary>,
-          );
-        });
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(
+          <RethrowErrorBoundary>
+            Before the storm.
+          </RethrowErrorBoundary>,
+        );
+        ReactNoop.render(
+          <RethrowErrorBoundary>
+            <BrokenRender />
+          </RethrowErrorBoundary>,
+        );
       });
     }).toThrow('Hello');
     expect(ops).toEqual([
@@ -383,7 +379,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('applies sync updates regardless despite errors in scheduling', () => {
     ReactNoop.render(<span prop="a:1" />);
     expect(() => {
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         ReactNoop.batchedUpdates(() => {
           ReactNoop.render(<span prop="a:2" />);
           ReactNoop.render(<span prop="a:3" />);
