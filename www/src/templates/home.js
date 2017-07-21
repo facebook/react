@@ -251,11 +251,6 @@ const markdownStyles = {
 
   '& .example': {
     marginTop: 80,
-
-    '& code': {
-      background: hex2rgba(colors.note, 0.5),
-      padding: '0 3',
-    },
   },
 };
 
