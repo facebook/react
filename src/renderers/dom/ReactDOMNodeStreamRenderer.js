@@ -40,10 +40,6 @@ class ReactMarkupReadableStream extends Readable {
  * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostream
  */
 function renderToStream(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToStream(): You must pass a valid ReactElement.',
-  );
   return new ReactMarkupReadableStream(element, false);
 }
 

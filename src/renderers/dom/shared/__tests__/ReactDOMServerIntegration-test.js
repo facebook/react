@@ -313,6 +313,19 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('basic rendering', function() {
+    beforeEach(() => {
+      onAfterResetModules = () => {
+        const ReactFeatureFlags = require('ReactFeatureFlags');
+        ReactFeatureFlags.disableNewFiberFeatures = false;
+      };
+
+      resetModules();
+    });
+
+    afterEach(() => {
+      onAfterResetModules = null;
+    });
+
     itRenders('a blank div', async render => {
       const e = await render(<div />);
       expect(e.tagName).toBe('DIV');
@@ -330,18 +343,11 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     if (ReactDOMFeatureFlags.useFiber) {
-      it('a array type children as a child', () => {
-        spyOn(console, 'error');
-        let markup = ReactDOMServer.renderToString([
-          <div key={1}>text1</div>,
-          <p key={2}>text2</p>,
-        ]);
-
-        const root = document.createElement('div');
-        root.innerHTML = markup;
-        expect(root.childNodes[0].tagName).toBe('DIV');
-        expect(root.childNodes[1].tagName).toBe('P');
-        expectDev(console.error.calls.count()).toBe(0);
+      itRenders('a array type children as a child', async render => {
+        let e = await render([<div key={1}>text1</div>, <p key={2}>text2</p>]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('P');
       });
     }
   });
