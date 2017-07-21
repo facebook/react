@@ -1,6 +1,5 @@
 import Flex from 'components/Flex';
 import PropTypes from 'prop-types';
-import React from 'react';
 import {colors, fonts} from 'theme';
 
 const MarkdownHeader = ({path, title}) => (

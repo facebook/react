@@ -2,7 +2,6 @@ import Container from 'components/Container';
 import Flex from 'components/Flex';
 import MarkdownHeader from 'templates/components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
-import React from 'react';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import StickySidebar from '../StickySidebar';

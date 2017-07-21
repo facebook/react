@@ -1,6 +1,6 @@
+import {Component} from 'react';
 import ButtonLink from './components/ButtonLink';
 import CodeEditor from './components/CodeEditor';
-import React from 'react';
 import ReactDOM from 'react-dom';
 import PropTypes from 'prop-types';
 
@@ -33,7 +33,7 @@ const mount = (containerId, code) => {
   );
 };
 
-class Home extends React.Component {
+class Home extends Component {
   componentDidMount() {
     mount('helloExample', HELLO_COMPONENT);
     mount('timerExample', TIMER_COMPONENT);

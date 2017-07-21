@@ -1,4 +1,4 @@
-import React from 'react';
+import {Component} from 'react';
 import Typekit from 'react-typekit';
 
 let stylesStr;
@@ -10,7 +10,7 @@ if (process.env.NODE_ENV === `production`) {
   }
 }
 
-export default class HTML extends React.Component {
+export default class HTML extends Component {
   render() {
     let css;
     if (process.env.NODE_ENV === `production`) {

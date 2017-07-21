@@ -1,7 +1,6 @@
 import Link from 'gatsby-link';
 import Container from 'components/Container';
 import Header from 'components/Header';
-import React from 'react';
 
 const PageNotFound = () => (
   <Container>

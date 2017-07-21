@@ -1,8 +1,8 @@
-import React from 'react';
+import {Component} from 'react';
 import Flex from 'components/Flex';
 import Section from './Section';
 
-class Sidebar extends React.Component {
+class Sidebar extends Component {
   constructor(props, context) {
     super(props, context);
 

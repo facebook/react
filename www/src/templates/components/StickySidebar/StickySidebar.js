@@ -1,4 +1,3 @@
-import React from 'react';
 import {Sticky} from 'react-sticky';
 import Sidebar from 'templates/components/Sidebar';
 import {media} from 'theme';

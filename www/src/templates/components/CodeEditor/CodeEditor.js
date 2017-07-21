@@ -1,12 +1,12 @@
+import {Component} from 'react';
 import {transform} from 'babel-standalone';
 import Flex from 'components/Flex';
-import React from 'react';
 import {LiveProvider, LiveEditor} from 'react-live';
 import {colors, media} from 'theme';
 
 const compile = code => transform(code, {presets: ['es2015', 'react']}).code;
 
-class CodeEditor extends React.Component {
+class CodeEditor extends Component {
   constructor(props, context) {
     super(props, context);
 

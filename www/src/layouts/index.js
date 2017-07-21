@@ -1,8 +1,8 @@
+import {Component} from 'react';
 import docsearch from 'docsearch.js';
 import Flex from 'components/Flex';
 import Footer from './components/Footer';
 import Header from './components/Header';
-import React from 'react';
 import {media} from 'theme';
 
 // TODO Comment
@@ -11,7 +11,7 @@ import 'css/reset.css';
 import 'css/algolia.css';
 import 'css/prism.css';
 
-class Template extends React.Component {
+class Template extends Component {
   componentDidMount() {
     // Initialize Algolia search.
     // TODO Is this expensive? Should it be deferred until a user is about to search?
