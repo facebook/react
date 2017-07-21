@@ -12,6 +12,7 @@
 # Ignore Docs
 <PROJECT_ROOT>/docs/.*
 <PROJECT_ROOT>/.*/docs/.*
+<PROJECT_ROOT>/www/.*
 
 [include]
 
