@@ -1,5 +1,4 @@
 import React from 'react';
-
 import Fixture from '../../Fixture';
 
 class RangeKeyboardFixture extends React.Component {

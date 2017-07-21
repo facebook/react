@@ -1,5 +1,4 @@
-const React = window.React;
-
+import React from 'react';
 import Fixture from '../../Fixture';
 
 class NumberTestCase extends React.Component {

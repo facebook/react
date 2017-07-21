@@ -1,4 +1,5 @@
-const React = window.React;
+import React from 'react';
+import FixtureSet from '../../FixtureSet';
 
 class TextAreaFixtures extends React.Component {
   state = {value: ''};
@@ -7,8 +8,8 @@ class TextAreaFixtures extends React.Component {
   };
   render() {
     return (
-      <div>
-        <form className="container">
+      <FixtureSet title="Selects" description="">
+        <form>
           <fieldset>
             <legend>Controlled</legend>
             <textarea value={this.state.value} onChange={this.onChange} />
@@ -26,9 +27,9 @@ class TextAreaFixtures extends React.Component {
             {this.state.value}
           </div>
         </div>
-      </div>
+      </FixtureSet>
     );
   }
 }
 
-module.exports = TextAreaFixtures;
+export default TextAreaFixtures;

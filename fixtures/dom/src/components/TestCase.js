@@ -122,8 +122,10 @@ TestCase.Steps = class extends React.Component {
     const {children} = this.props;
     return (
       <div>
-        <h3>Steps to reproduce:</h3>
-        <ol>
+        <h3 className="test-case__heading">
+          Steps to reproduce:
+        </h3>
+        <ol className="test-case__steps">
           {children}
         </ol>
       </div>
@@ -136,7 +138,9 @@ TestCase.ExpectedResult = class extends React.Component {
     const {children} = this.props;
     return (
       <div>
-        <h3>Expected Result:</h3>
+        <h3 className="test-case__heading">
+          Expected Result:
+        </h3>
         <p>
           {children}
         </p>

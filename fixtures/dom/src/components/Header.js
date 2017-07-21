@@ -1,6 +1,6 @@
 import {parse, stringify} from 'query-string';
 import getVersionTags from '../tags';
-const React = window.React;
+import React from 'react';
 
 class Header extends React.Component {
   constructor(props, context) {
@@ -48,7 +48,7 @@ class Header extends React.Component {
               <select
                 value={window.location.pathname}
                 onChange={this.handleFixtureChange}>
-                <option value="/">Select a Fixture</option>
+                <option value="/">Playground</option>
                 <option value="/range-inputs">Range Inputs</option>
                 <option value="/text-inputs">Text Inputs</option>
                 <option value="/number-inputs">Number Input</option>

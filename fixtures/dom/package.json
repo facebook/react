@@ -7,17 +7,17 @@
   },
   "dependencies": {
     "classnames": "^2.2.5",
-    "query-string": "^4.2.3",
+    "component-playground": "^2.0.0",
     "prop-types": "^15.5.6",
-    "react": "^15.4.1",
-    "react-dom": "^15.4.1",
+    "query-string": "^4.2.3",
+    "react": "./stubs/react",
+    "react-dom": "./stubs/react-dom",
     "semver": "^5.3.0"
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
-    "build": "react-scripts build && cp build/index.html build/200.html",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "build": "react-scripts build",
+    "prebuild": "cp ../../build/dist/{react,react-dom,react-dom-server}.development.js public/",
+    "prestart": "cp ../../build/dist/{react,react-dom,react-dom-server}.development.js public/"
   }
 }

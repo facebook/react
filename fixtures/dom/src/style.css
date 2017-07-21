@@ -6,10 +6,15 @@
 
 html {
   font-size: 10px;
+  height: 100%;
 }
+
 body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", "Oxygen",
+    "Ubuntu", "Cantarell", "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
   font-size: 1.4rem;
+  height: 100%;
   margin: 0;
   padding: 0;
 }
@@ -19,25 +24,35 @@ select {
 }
 
 button {
-  margin: 10px;
-  font-size: 18px;
-  padding: 5px;
+  background: #48d0e8;
+  border-radius: 2px;
+  border: 0;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18), inset 0 0 1px rgba(0, 0, 0, 0.12);
+  color: #0b262b;
+  display: inline-block;
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  padding: 7px 10px;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.12);
+  text-transform: uppercase;
+  text-decoration: none;
 }
-
 
 .header {
   background: #222;
-  box-shadow: inset 0 -1px 3px #000;
+  box-shadow: inset 0 -1px 3px rgba(0, 0, 0, 0.3);
   font-size: 1.6rem;
   line-height: 3.2rem;
   overflow: hidden;
   padding: .8rem 1.6rem;
+  flex-shrink: 0;
 }
 
 .header__inner {
   display: table;
   margin: 0 auto;
-  max-width: 1000px;
   overflow: hidden;
   text-align: center;
   width: 100%;
@@ -71,6 +86,16 @@ button {
   width: 0;
 }
 
+.fill-height {
+  height: 100%;
+}
+
+.root-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 .container {
   margin: 0 auto;
   max-width: 900px;
@@ -101,7 +126,8 @@ fieldset {
   overflow: hidden;
 }
 
-ul, ol {
+ul,
+ol {
   margin: 0 0 2rem 0;
 }
 
@@ -126,7 +152,7 @@ li {
   color: #444;
   font-style: italic;
   line-height: 1.5;
-  margin-bottom: 2.4rem;
+  margin-bottom: 1.8rem;
   margin-left: 0.4rem;
   padding-left: 1.6rem;
 }
@@ -138,11 +164,20 @@ li {
 }
 
 .test-case__title {
-  padding: 10px 15px 8px;
-  line-height: 16px;
-  font-size: 18px;
+  padding: 10px 10px 8px;
+  line-height: 1;
+  font-size: 14px;
   border-bottom: 1px dashed #d9d9d9;
   margin: 0 0 -1px;
+}
+
+.test-case__heading {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.test-case__steps {
+  padding: 0 0 0 1.25em;
 }
 
 .test-case__title__check {
@@ -207,8 +242,105 @@ li {
 }
 
 .test-fixture {
-  padding: 20px;
-  margin: 0 -15px; /* opposite of .test-case padding */
   background-color: #f4f4f4;
   border-top: 1px solid #d9d9d9;
+  margin: 0 -15px; /* opposite of .test-case padding */
+  padding: 20px;
+}
+
+.fixture-set {
+  margin: 20px auto;
+  max-width: 1024px;
+  padding: 0 20px;
+  width: 100%;
+}
+
+.playground {
+  position: relative;
+  height: calc(100% - 48px); /* height of footer */
+  width: 100%;
+}
+
+.playgroundCode,
+.playgroundPreview {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+}
+
+.playgroundCode {
+  left: 0;
+}
+
+.playgroundPreview {
+  background: white;
+  padding: 16px;
+  right: 0;
+}
+
+.playgroundStage {
+  overflow: auto;
+  margin: 16px;
+}
+
+.playground .CodeMirror,
+.playgroundCode {
+  font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas',
+    'DejaVu Sans Mono', monospace;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.playground .CodeMirror {
+  background: transparent !important;
+  height: auto;
+}
+
+.playgroundCode {
+  background: #272822;
+  color: #665;
+  overflow: auto;
+  margin: 0;
+}
+
+.playgroundCode.empty {
+  padding: 20px;
+}
+
+.playgroundError {
+  background: rgba(200, 70, 70, 0.5);
+  border: 1px solid rgba(200, 70, 70, 0.88);
+  color: #3a0811;
+  font-family: 'Operator', 'Inconsolata', 'Fira Code', 'Menlo', 'Consolas',
+    'DejaVu Sans Mono', monospace;
+  overflow: auto;
+  padding: 8px 12px;
+  margin-top: 16px;
+  white-space: pre;
+  font-size: 12px;
+  text-shadow: 0 1px 0px rgba(255, 255, 255, 0.12);
+}
+
+.playgroundError:first-line {
+  display: block;
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.playgroundFooter {
+  background: #222;
+  border-top: 1px solid #181818;
+  bottom: 0;
+  color: #eef;
+  flex-shrink: 0;
+  font-size: 12px;
+  left: 0;
+  padding: 10px 12px;
+  position: fixed;
+  width: 100%;
+}
+
+.playgroundFooter button {
+  margin-right: 12px;
 }
