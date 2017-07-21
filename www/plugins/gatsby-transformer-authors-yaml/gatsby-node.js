@@ -1,4 +1,3 @@
-const Promise = require('bluebird');
 const readFileSync = require('fs').readFileSync;
 const resolve = require('path').resolve;
 const safeLoad = require('js-yaml').safeLoad;

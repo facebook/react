@@ -15,7 +15,8 @@ import Container from 'components/Container';
 import FooterLink from './FooterLink';
 import FooterNav from './FooterNav';
 import FooterTitle from './FooterTitle';
-import {colors, fonts, media} from 'theme';
+import React from 'react';
+import {colors, media} from 'theme';
 
 import ossLogoPng from 'images/oss_logo.png';
 

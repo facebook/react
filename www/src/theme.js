@@ -68,7 +68,7 @@ function generateMediaQueries(ranges) {
 
     for (let j = i + 1; j < keys.length; j++) {
       const keyB = keys[j];
-      const [minB, maxB] = ranges[keyB];
+      const [maxB] = ranges[keyB];
 
       if (maxB) {
         mediaQueries[

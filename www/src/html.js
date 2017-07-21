@@ -11,7 +11,7 @@
 
 'use strict';
 
-import {Component} from 'react';
+import React, {Component} from 'react';
 import Typekit from 'react-typekit';
 
 let stylesStr;

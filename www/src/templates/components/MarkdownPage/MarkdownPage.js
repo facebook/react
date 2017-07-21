@@ -17,6 +17,7 @@ import MarkdownHeader from 'templates/components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
+import React from 'react';
 import StickySidebar from '../StickySidebar';
 import dateToString from 'utils/dateToString';
 import findSectionForPath from 'utils/findSectionForPath';

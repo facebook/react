@@ -18,7 +18,7 @@ exports.modifyWebpackConfig = ({ config, stage }) => {
     resolve: {
       root: resolve(__dirname, './src'),
       extensions: ['', '.js', '.jsx', '.json'],
-    }
+    },
   });
   return config;
 };
@@ -51,7 +51,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   if (allMarkdown.errors) {
     console.error(allMarkdown.errors);
 
-    reject(allMarkdown.errors);
+    throw Error(allMarkdown.errors);
   }
 
   allMarkdown.data.allMarkdownRemark.edges.forEach(edge => {
