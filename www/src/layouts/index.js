@@ -18,11 +18,11 @@ import Footer from './components/Footer';
 import Header from './components/Header';
 import {media} from 'theme';
 
-// TODO Comment
+// Import global styles
+import './prism-styles';
 import 'glamor/reset';
 import 'css/reset.css';
 import 'css/algolia.css';
-import 'css/prism.css';
 
 class Template extends Component {
   componentDidMount() {
