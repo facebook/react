@@ -8,6 +8,7 @@ const MarkdownHeader = ({path, title}) => (
       css={{
         color: colors.dark,
         marginRight: '5%',
+        marginBottom: 0,
         ...fonts.header,
       }}>
       {title}

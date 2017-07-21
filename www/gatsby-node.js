@@ -16,6 +16,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   const blogTemplate = resolve('./src/templates/blog.js');
   const communityTemplate = resolve('./src/templates/community.js');
   const docsTemplate = resolve('./src/templates/docs.js');
+  const errorDecoderTemplate = resolve('./src/templates/error-decoder.js');
   const tutorialTemplate = resolve('./src/templates/tutorial.js');
   const homeTemplate = resolve('./src/templates/home.js');
 
@@ -43,7 +44,6 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   allMarkdown.data.allMarkdownRemark.edges.forEach(edge => {
     const slug = edge.node.fields.slug;
 
-    // Create landing page
     if (slug === '/index.html') {
       createPage({
         path: '/',
@@ -53,7 +53,15 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
         },
       });
 
-      // Create docs, tutorial, and community pages.
+    } else if (slug === 'docs/error-decoder.html') {
+      createPage({
+        path: '/docs/error-decoder.html*',
+        component: errorDecoderTemplate,
+        context: {
+          slug,
+        },
+      });
+
     } else if (
       slug.includes('blog/') ||
       slug.includes('community/') ||
