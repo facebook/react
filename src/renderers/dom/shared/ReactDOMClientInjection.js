@@ -14,7 +14,6 @@
 var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
 var ChangeEventPlugin = require('ChangeEventPlugin');
 var DOMEventPluginOrder = require('DOMEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
 var EventPluginHub = require('EventPluginHub');
 var EventPluginUtils = require('EventPluginUtils');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
@@ -39,7 +38,6 @@ EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
  */
 EventPluginHub.injection.injectEventPluginsByName({
   SimpleEventPlugin: SimpleEventPlugin,
-  EnterLeaveEventPlugin: EnterLeaveEventPlugin,
   ChangeEventPlugin: ChangeEventPlugin,
   SelectEventPlugin: SelectEventPlugin,
   BeforeInputEventPlugin: BeforeInputEventPlugin,

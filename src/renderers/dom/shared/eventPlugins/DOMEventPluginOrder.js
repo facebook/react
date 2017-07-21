@@ -24,7 +24,6 @@ var DOMEventPluginOrder = [
   'ResponderEventPlugin',
   'SimpleEventPlugin',
   'TapEventPlugin',
-  'EnterLeaveEventPlugin',
   'ChangeEventPlugin',
   'SelectEventPlugin',
   'BeforeInputEventPlugin',
