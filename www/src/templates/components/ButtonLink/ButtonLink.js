@@ -21,6 +21,11 @@ const ButtonLink = ({children, type, ...rest}) => {
 
 const style = {
   display: 'inline-block',
+  fontSize: 16,
+
+  [media.xlargeUp]: {
+    fontSize: 20,
+  },
 };
 
 const primaryStyle = {

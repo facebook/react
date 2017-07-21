@@ -1,97 +1,142 @@
-import {Component} from 'react';
 import ButtonLink from './components/ButtonLink';
-import CodeEditor from './components/CodeEditor';
-import ReactDOM from 'react-dom';
+import Container from 'components/Container';
+import Flex from 'components/Flex';
+import mountCodeExample from 'utils/mountCodeExample';
 import PropTypes from 'prop-types';
+import {Component} from 'react';
+import {colors, media} from 'theme';
 
 // TODO The non-markdown portions of this page won't get localized currently.
 
 // TODO Split '.marketing-row .marketing-col' into tabs?
 
-// TODO This is a huge hack.
-// Remark transform this template to split code examples and their targets apart.
-const mount = (containerId, code) => {
-  const container = document.getElementById(containerId);
-  const parent = container.parentElement;
-
-  const children = Array.prototype.filter.call(
-    parent.children,
-    child => child !== container,
-  );
-  children.forEach(child => parent.removeChild(child));
-
-  const description = children
-    .map(child => child.outerHTML)
-    .join('')
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  ReactDOM.render(
-    <CodeEditor code={code}>
-      {<div dangerouslySetInnerHTML={{__html: description}} />}
-    </CodeEditor>,
-    container,
-  );
-};
-
 class Home extends Component {
   componentDidMount() {
-    mount('helloExample', HELLO_COMPONENT);
-    mount('timerExample', TIMER_COMPONENT);
-    mount('todoExample', TODO_COMPONENT);
-    mount('markdownExample', MARKDOWN_COMPONENT);
+    mountCodeExample('helloExample', HELLO_COMPONENT);
+    mountCodeExample('timerExample', TIMER_COMPONENT);
+    mountCodeExample('todoExample', TODO_COMPONENT);
+    mountCodeExample('markdownExample', MARKDOWN_COMPONENT);
   }
 
   render() {
     const {data} = this.props;
     console.log(this.props, data);
     return (
-      <div>
-        <div className="home">
-          <header className="hero">
-            <div className="hero__inner">
-              <div className="wrapper">
-                <h1 className="hero__title">React</h1>
-                <p className="hero__subtitle">
-                  A JavaScript library for building user interfaces
-                </p>
-                <div className="hero__cta_group cta_group">
-                  <div className="cta_group__item">
-                    <ButtonLink to="/docs/hello-world.html" type="primary">
-                      Get Started
-                    </ButtonLink>
-                  </div>
-                  <div className="cta_group__item">
-                    <ButtonLink to="/tutorial/tutorial.html" type="secondary">
-                      Take the tutorial{' '}
-                      <ArrowSvg />
-                    </ButtonLink>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </header>
-
+      <div css={{width: '100%'}}>
+        <header
+          css={{
+            backgroundColor: colors.dark,
+            color: colors.white,
+          }}>
           <div
-            className="wrapper article__inner"
-            dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
-          />
-        </div>
-        <section className="prefooter_nav">
-          <div className="wrapper">
-            <div className="cta_group">
-              <div className="cta_group__item">
+            css={{
+              paddingTop: 45,
+              paddingBottom: 20,
+
+              [media.smallUp]: {
+                paddingTop: 60,
+                paddingBottom: 70,
+              },
+
+              [media.xlargeUp]: {
+                paddingTop: 95,
+                paddingBottom: 85,
+                maxWidth: 1500, // Positioning of background logo
+                marginLeft: 'auto',
+                marginRight: 'auto',
+                backgroundImage: 'url(/large-logo.svg)',
+                backgroundRepeat: 'no-repeat',
+                backgroundPosition: '100% 100px',
+                backgroundSize: '50% auto',
+              },
+            }}>
+            <Container>
+              <h1
+                css={{
+                  color: colors.brand,
+                  textAlign: 'center',
+                  margin: 0,
+                  fontSize: 45,
+                  [media.xsmall]: {
+                    fontSize: 30,
+                  },
+                  [media.xlargeUp]: {
+                    fontSize: 60,
+                  },
+                }}>
+                React
+              </h1>
+              <p
+                css={{
+                  paddingTop: 15,
+                  textAlign: 'center',
+                  fontSize: 24,
+
+                  [media.xsmall]: {
+                    fontSize: 16,
+                    maxWidth: '12em',
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                  },
+
+                  [media.xlargeUp]: {
+                    paddingTop: 20,
+                    fontSize: 30,
+                  },
+                }}>
+                A JavaScript library for building user interfaces
+              </p>
+              <Flex
+                valign="center"
+                css={{
+                  paddingTop: 40,
+
+                  [media.xlargeUp]: {
+                    paddingTop: 65,
+                  },
+                }}>
+                <CtaItem>
+                  <ButtonLink to="/docs/hello-world.html" type="primary">
+                    Get Started
+                  </ButtonLink>
+                </CtaItem>
+                <CtaItem>
+                  <ButtonLink to="/tutorial/tutorial.html" type="secondary">
+                    Take the tutorial{' '}
+                    <ArrowSvg />
+                  </ButtonLink>
+                </CtaItem>
+              </Flex>
+            </Container>
+          </div>
+        </header>
+
+        <Container>
+          <div dangerouslySetInnerHTML={{__html: data.markdownRemark.html}} />
+        </Container>
+
+        <section
+          css={{
+            background: colors.dark,
+            color: colors.white,
+            paddingTop: 45,
+            paddingBottom: 45,
+          }}>
+          <Container>
+            <Flex valign="center">
+              <CtaItem>
                 <ButtonLink to="/docs/hello-world.html" type="primary">
                   Get Started
                 </ButtonLink>
-              </div>
-              <div className="cta_group__item">
+              </CtaItem>
+              <CtaItem>
                 <ButtonLink to="/tutorial/tutorial.html" type="secondary">
                   Take the tutorial{' '}
                   <ArrowSvg />
                 </ButtonLink>
-              </div>
-            </div>
-          </div>
+              </CtaItem>
+            </Flex>
+          </Container>
         </section>
       </div>
     );
@@ -102,6 +147,52 @@ Home.propTypes = {
   data: PropTypes.object.isRequired,
 };
 
+const CtaItem = ({children}) => (
+  <div
+    css={{
+      width: '50%',
+      paddingLeft: 20,
+
+      [media.xlargeUp]: {
+        paddingLeft: 40,
+      },
+
+      '&:first-child': {
+        textAlign: 'right',
+      },
+    }}>
+    {children}
+  </div>
+);
+
+const ArrowSvg = () => (
+  <svg
+    height="12"
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 4.53657 8.69699">
+    <path
+      d="M.18254,8.697a.18149.18149,0,0,1-.12886-.31034L4.09723,4.34126.05369.29954a.18149.18149,0,0,1,.2559-.2559L4.4838,4.21785a.18149.18149,0,0,1,0,.2559L.30958,8.648A.18149.18149,0,0,1,.18254,8.697Z"
+      fill="currentColor"
+    />
+  </svg>
+);
+
+// eslint-disable-next-line no-undef
+export const pageQuery = graphql`
+  query HomeMarkdown($slug: String!) {
+    markdownRemark(fields: { slug: { eq: $slug } }) {
+      html
+      frontmatter {
+        title
+      }
+    }
+  }
+`;
+
+export default Home;
+
+// TODO Move these hard-coded examples into example files and out of the template?
+// Alternately, move them into the markdown and transform them during build?
 const HELLO_COMPONENT = `
 class HelloMessage extends React.Component {
   render() {
@@ -234,29 +325,3 @@ class MarkdownEditor extends React.Component {
 
 ReactDOM.render(<MarkdownEditor />, mountNode);
 `.trim();
-
-const ArrowSvg = () => (
-  <svg
-    height="12"
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 4.53657 8.69699">
-    <path
-      d="M.18254,8.697a.18149.18149,0,0,1-.12886-.31034L4.09723,4.34126.05369.29954a.18149.18149,0,0,1,.2559-.2559L4.4838,4.21785a.18149.18149,0,0,1,0,.2559L.30958,8.648A.18149.18149,0,0,1,.18254,8.697Z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-// eslint-disable-next-line no-undef
-export const pageQuery = graphql`
-  query HomeMarkdown($slug: String!) {
-    markdownRemark(fields: { slug: { eq: $slug } }) {
-      html
-      frontmatter {
-        title
-      }
-    }
-  }
-`;
-
-export default Home;

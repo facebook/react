@@ -12,7 +12,7 @@ const {version} = require('../../../../../package.json');
 const Header = ({location}) => (
   <header
     css={{
-      backgroundColor: colors.dark,
+      backgroundColor: colors.darker,
       color: colors.white,
       position: 'fixed',
       zIndex: 1,
