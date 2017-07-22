@@ -9,7 +9,6 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "20.1.0-delta.1",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
@@ -121,8 +120,8 @@
   },
   "jest": {
     "projects": [
-      "<rootDir>/scripts/jest/stack.config.json",
-      "<rootDir>/scripts/jest/fiber.config.json"
+      "<rootDir>/scripts/jest/stack.config.js",
+      "<rootDir>/scripts/jest/fiber.config.js"
     ]
   }
 }
