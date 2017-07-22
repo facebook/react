@@ -9,8 +9,9 @@ module.exports = {
   plugins: [
     'react',
     'react-internal',
+    'react-dom'
   ],
-
+  
   // We're stricter than the default config, mostly. We'll override a few rules
   // and then enable some React specific ones.
   rules: {
