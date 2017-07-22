@@ -12,6 +12,7 @@ jest.mock('ReactFeatureFlags', () => {
   const flags = require.requireActual('ReactFeatureFlags');
   return Object.assign({}, flags, {
     disableNewFiberFeatures: true,
+    forceInvokeGuardedCallbackDev: true,
   });
 });
 jest.mock('ReactNativeFeatureFlags', () => {

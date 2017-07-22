@@ -45,7 +45,7 @@ describe('ReactErrorUtils', () => {
   });
 
   function invokeGuardedCallbackTests(environment) {
-    it(`it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (${environment})`, () => {
+    it(`it should rethrow caught errors (${environment})`, () => {
       var err = new Error('foo');
       var callback = function() {
         throw err;
@@ -55,6 +55,7 @@ describe('ReactErrorUtils', () => {
         callback,
         null,
       );
+      expect(ReactErrorUtils.hasCaughtError()).toBe(false);
       expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
     });
 
@@ -82,7 +83,7 @@ describe('ReactErrorUtils', () => {
       expect(context.didCall).toBe(true);
     });
 
-    it(`should return a caught error (${environment})`, () => {
+    it(`should catch errors (${environment})`, () => {
       const error = new Error();
       const returnValue = ReactErrorUtils.invokeGuardedCallback(
         'foo',
@@ -93,37 +94,39 @@ describe('ReactErrorUtils', () => {
         'arg1',
         'arg2',
       );
-      expect(returnValue).toBe(error);
+      expect(returnValue).toBe(undefined);
+      expect(ReactErrorUtils.hasCaughtError()).toBe(true);
+      expect(ReactErrorUtils.clearCaughtError()).toBe(error);
     });
 
-    it(`should return null if no error is thrown (${environment})`, () => {
+    it(`should return false from clearCaughtError if no error was thrown (${environment})`, () => {
       var callback = jest.fn();
-      const returnValue = ReactErrorUtils.invokeGuardedCallback(
-        'foo',
-        callback,
-        null,
-      );
-      expect(returnValue).toBe(null);
+      ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
+      expect(ReactErrorUtils.hasCaughtError()).toBe(false);
+      expect(ReactErrorUtils.clearCaughtError).toThrow('no error');
     });
 
     it(`can nest with same debug name (${environment})`, () => {
       const err1 = new Error();
       let err2;
       const err3 = new Error();
-      const err4 = ReactErrorUtils.invokeGuardedCallback(
+      let err4;
+      ReactErrorUtils.invokeGuardedCallback(
         'foo',
         function() {
-          err2 = ReactErrorUtils.invokeGuardedCallback(
+          ReactErrorUtils.invokeGuardedCallback(
             'foo',
             function() {
               throw err1;
             },
             null,
           );
+          err2 = ReactErrorUtils.clearCaughtError();
           throw err3;
         },
         null,
       );
+      err4 = ReactErrorUtils.clearCaughtError();
 
       expect(err2).toBe(err1);
       expect(err4).toBe(err3);
@@ -132,36 +135,56 @@ describe('ReactErrorUtils', () => {
     it(`does not return nested errors (${environment})`, () => {
       const err1 = new Error();
       let err2;
-      const err3 = ReactErrorUtils.invokeGuardedCallback(
+      ReactErrorUtils.invokeGuardedCallback(
         'foo',
         function() {
-          err2 = ReactErrorUtils.invokeGuardedCallback(
+          ReactErrorUtils.invokeGuardedCallback(
             'foo',
             function() {
               throw err1;
             },
             null,
           );
+          err2 = ReactErrorUtils.clearCaughtError();
         },
         null,
       );
+      // Returns null because inner error was already captured
+      expect(ReactErrorUtils.hasCaughtError()).toBe(false);
 
-      expect(err3).toBe(null); // Returns null because inner error was already captured
       expect(err2).toBe(err1);
     });
+
+    if (environment === 'production') {
+      // jsdom doesn't handle this properly, but Chrome and Firefox should. Test
+      // this with a fixture.
+      it('catches null values', () => {
+        ReactErrorUtils.invokeGuardedCallback(
+          null,
+          function() {
+            throw null;
+          },
+          null,
+        );
+        expect(ReactErrorUtils.hasCaughtError()).toBe(true);
+        expect(ReactErrorUtils.clearCaughtError()).toBe(null);
+      });
+    }
 
     it(`can be shimmed (${environment})`, () => {
       const ops = [];
       // Override the original invokeGuardedCallback
-      ReactErrorUtils.invokeGuardedCallback = function(name, func, context, a) {
-        ops.push(a);
-        try {
-          func.call(context, a);
-        } catch (error) {
-          return error;
-        }
-        return null;
-      };
+      ReactErrorUtils.injection.injectErrorUtils({
+        invokeGuardedCallback(name, func, context, a) {
+          ops.push(a);
+          try {
+            func.call(context, a);
+          } catch (error) {
+            this._hasCaughtError = true;
+            this._caughtError = error;
+          }
+        },
+      });
 
       var err = new Error('foo');
       var callback = function() {
@@ -174,9 +197,6 @@ describe('ReactErrorUtils', () => {
         'somearg',
       );
       expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
-      // invokeGuardedCallbackAndCatchFirstError and rethrowCaughtError close
-      // over ReactErrorUtils.invokeGuardedCallback so should use the
-      // shimmed version.
       expect(ops).toEqual(['somearg']);
     });
   }

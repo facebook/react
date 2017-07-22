@@ -326,7 +326,7 @@ describe('ReactIncremental', () => {
     }
 
     // Init
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
     ReactNoop.flush();
@@ -335,7 +335,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // Render the high priority work (everying except the hidden trees).
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
@@ -773,7 +773,7 @@ describe('ReactIncremental', () => {
       // Interrupt the current low pri work with a high pri update elsewhere in
       // the tree.
       ops = [];
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         sibling.setState({});
       });
       expect(ops).toEqual(['Sibling']);
@@ -1661,42 +1661,6 @@ describe('ReactIncremental', () => {
     },
   );
 
-  it('performs batched updates at the end of the batch', () => {
-    var ops = [];
-    var instance;
-
-    class Foo extends React.Component {
-      state = {n: 0};
-      render() {
-        instance = this;
-        return <div />;
-      }
-    }
-
-    ReactNoop.render(<Foo />);
-    ReactNoop.flush();
-    ops = [];
-
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        instance.setState({n: 1}, () => ops.push('setState 1'));
-        instance.setState({n: 2}, () => ops.push('setState 2'));
-        ops.push('end batchedUpdates');
-      });
-      ops.push('end syncUpdates');
-    });
-
-    // ReactNoop.flush() not needed because updates are synchronous
-
-    expect(ops).toEqual([
-      'end batchedUpdates',
-      'setState 1',
-      'setState 2',
-      'end syncUpdates',
-    ]);
-    expect(instance.state.n).toEqual(2);
-  });
-
   it('can nest batchedUpdates', () => {
     var ops = [];
     var instance;
@@ -1713,7 +1677,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     ops = [];
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.batchedUpdates(() => {
         instance.setState({n: 1}, () => ops.push('setState 1'));
         instance.setState({n: 2}, () => ops.push('setState 2'));
@@ -1724,7 +1688,6 @@ describe('ReactIncremental', () => {
         });
         ops.push('end outer batchedUpdates');
       });
-      ops.push('end syncUpdates');
     });
 
     // ReactNoop.flush() not needed because updates are synchronous
@@ -1736,7 +1699,6 @@ describe('ReactIncremental', () => {
       'setState 2',
       'setState 3',
       'setState 4',
-      'end syncUpdates',
     ]);
     expect(instance.state.n).toEqual(4);
   });

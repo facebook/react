@@ -26,7 +26,11 @@ var {
 } = ReactTypeOfWork;
 var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
-var {invokeGuardedCallback} = require('ReactErrorUtils');
+var {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = require('ReactErrorUtils');
 
 var {
   Placement,
@@ -70,14 +74,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
-      const unmountError = invokeGuardedCallback(
+      invokeGuardedCallback(
         null,
         callComponentWillUnmountWithTimerInDev,
         null,
         current,
         instance,
       );
-      if (unmountError) {
+      if (hasCaughtError()) {
+        const unmountError = clearCaughtError();
         captureError(current, unmountError);
       }
     } else {
@@ -93,8 +98,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = current.ref;
     if (ref !== null) {
       if (__DEV__) {
-        const refError = invokeGuardedCallback(null, ref, null, null);
-        if (refError !== null) {
+        invokeGuardedCallback(null, ref, null, null);
+        if (hasCaughtError()) {
+          const refError = clearCaughtError();
           captureError(current, refError);
         }
       } else {

@@ -29,17 +29,37 @@ function logCapturedError(capturedError: CapturedError): void {
     return;
   }
 
+  const error = (capturedError.error: any);
+
+  // Duck-typing
+  let message;
+  let name;
+  let stack;
+
+  if (
+    error !== null &&
+    typeof error.message === 'string' &&
+    typeof error.name === 'string' &&
+    typeof error.stack === 'string'
+  ) {
+    message = error.message;
+    name = error.name;
+    stack = error.stack;
+  } else {
+    // A non-error was thrown.
+    message = '' + error;
+    name = 'Error';
+    stack = '';
+  }
+
   if (__DEV__) {
     const {
       componentName,
       componentStack,
-      error,
       errorBoundaryName,
       errorBoundaryFound,
       willRetry,
     } = capturedError;
-
-    const {message, name, stack} = error;
 
     const errorSummary = message ? `${name}: ${message}` : name;
 
@@ -85,10 +105,7 @@ function logCapturedError(capturedError: CapturedError): void {
         `The error is located at: ${componentStack}\n\n` +
         `The error was thrown at: ${formattedCallStack}`,
     );
-  }
-
-  if (!__DEV__) {
-    const {error} = capturedError;
+  } else {
     console.error(
       `React caught an error thrown by one of your components.\n\n${error.stack}`,
     );

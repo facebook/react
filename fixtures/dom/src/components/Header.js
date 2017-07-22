@@ -59,6 +59,7 @@ class Header extends React.Component {
                   Input change events
                 </option>
                 <option value="/buttons">Buttons</option>
+                <option value="/error-handling">Error Handling</option>
               </select>
             </label>
             <label htmlFor="react_version">
