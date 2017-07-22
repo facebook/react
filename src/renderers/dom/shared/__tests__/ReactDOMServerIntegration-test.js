@@ -344,10 +344,18 @@ describe('ReactDOMServerIntegration', () => {
 
     if (ReactDOMFeatureFlags.useFiber) {
       itRenders('a array type children as a child', async render => {
-        let e = await render([<div key={1}>text1</div>, <p key={2}>text2</p>]);
+        let Header = props => {
+          return <p>header</p>;
+        };
+        let e = await render([
+          <div key={1}>text1</div>,
+          <span key={2}>text2</span>,
+          <Header key={3} />,
+        ]);
         let parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
-        expect(parent.childNodes[1].tagName).toBe('P');
+        expect(parent.childNodes[1].tagName).toBe('SPAN');
+        expect(parent.childNodes[2].tagName).toBe('P');
       });
     }
   });
