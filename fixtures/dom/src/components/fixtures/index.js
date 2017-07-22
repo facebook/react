@@ -9,6 +9,7 @@ import PasswordInputFixtures from './password-inputs';
 import ButtonFixtures from './buttons';
 import DateInputFixtures from './date-inputs';
 import ErrorHandling from './error-handling';
+import EventPooling from './event-pooling';
 
 /**
  * A simple routing component that renders the appropriate
@@ -36,6 +37,8 @@ function FixturesPage() {
       return <DateInputFixtures />;
     case '/error-handling':
       return <ErrorHandling />;
+    case '/event-pooling':
+      return <EventPooling />;
     default:
       return <p>Please select a test fixture.</p>;
   }
