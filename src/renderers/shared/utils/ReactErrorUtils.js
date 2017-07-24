@@ -16,12 +16,12 @@ const invariant = require('fbjs/lib/invariant');
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
-  _caughtError: null,
-  _hasCaughtError: false,
+  _caughtError: (null: mixed),
+  _hasCaughtError: (false: boolean),
 
   // Used by event system to capture/rethrow the first error.
-  _rethrowError: null,
-  _hasRethrowError: false,
+  _rethrowError: (null: mixed),
+  _hasRethrowError: (false: boolean),
 
   injection: {
     injectErrorUtils(injectedErrorUtils: Object) {
@@ -155,33 +155,40 @@ if (__DEV__) {
       e,
       f,
     ) {
-      ReactErrorUtils._hasCaughtError = false;
-      ReactErrorUtils._caughtError = null;
-
       depth++;
-      const thisDepth = depth;
+
+      let error;
+      let didError = true;
       const funcArgs = Array.prototype.slice.call(arguments, 3);
       const boundFunc = function() {
         func.apply(context, funcArgs);
+        didError = false;
       };
       const onFakeEventError = function(event) {
-        // Don't capture nested errors
-        if (depth === thisDepth) {
-          ReactErrorUtils._caughtError = event.error;
-          ReactErrorUtils._hasCaughtError = true;
-        }
+        error = event.error;
         if (preventDefault) {
           event.preventDefault();
         }
       };
+
       const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
       window.addEventListener('error', onFakeEventError);
       fakeNode.addEventListener(evtType, boundFunc, false);
       const evt = document.createEvent('Event');
+
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
+      if (didError) {
+        ReactErrorUtils._hasCaughtError = true;
+        ReactErrorUtils._caughtError = error;
+      } else {
+        ReactErrorUtils._hasCaughtError = false;
+        ReactErrorUtils._caughtError = null;
+      }
+
       fakeNode.removeEventListener(evtType, boundFunc, false);
       window.removeEventListener('error', onFakeEventError);
+
       depth--;
     };
 

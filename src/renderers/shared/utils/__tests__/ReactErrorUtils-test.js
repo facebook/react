@@ -132,7 +132,7 @@ describe('ReactErrorUtils', () => {
       expect(err4).toBe(err3);
     });
 
-    it(`does not return nested errors (${environment})`, () => {
+    it(`handles nested errors (${environment})`, () => {
       const err1 = new Error();
       let err2;
       ReactErrorUtils.invokeGuardedCallback(
@@ -153,6 +153,37 @@ describe('ReactErrorUtils', () => {
       expect(ReactErrorUtils.hasCaughtError()).toBe(false);
 
       expect(err2).toBe(err1);
+    });
+
+    it('handles nested errors in separate renderers', () => {
+      const ReactErrorUtils1 = require('ReactErrorUtils');
+      jest.resetModules();
+      const ReactErrorUtils2 = require('ReactErrorUtils');
+      expect(ReactErrorUtils1).not.toEqual(ReactErrorUtils2);
+
+      let ops = [];
+
+      ReactErrorUtils1.invokeGuardedCallback(
+        null,
+        () => {
+          ReactErrorUtils2.invokeGuardedCallback(
+            null,
+            () => {
+              throw new Error('nested error');
+            },
+            null,
+          );
+          // ReactErrorUtils2 should catch the error
+          ops.push(ReactErrorUtils2.hasCaughtError());
+          ops.push(ReactErrorUtils2.clearCaughtError().message);
+        },
+        null,
+      );
+
+      // ReactErrorUtils1 should not catch the error
+      ops.push(ReactErrorUtils1.hasCaughtError());
+
+      expect(ops).toEqual([true, 'nested error', false]);
     });
 
     if (environment === 'production') {
