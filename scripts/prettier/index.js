@@ -13,7 +13,7 @@
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
-const execFileSync = require('child_process').execFileSync;
+const spawnSync = require('child_process').spawnSync;
 
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
@@ -34,15 +34,11 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: ['src/**/*.js', 'fixtures/**/*.js'],
-    ignore: [
-      '**/third_party/**',
-      '**/node_modules/**',
-      'fixtures/packaging/**/*.js',
-    ],
+    patterns: ['src/**/*.js'],
+    ignore: ['**/third_party/**', '**/node_modules/**'],
   },
   scripts: {
-    patterns: ['scripts/**/*.js', 'fixtures/packaging/**/*.js'],
+    patterns: ['scripts/**/*.js', 'fixtures/**/*.js'],
     ignore: ['scripts/bench/benchmarks/**'],
     options: {
       'trailing-comma': 'es5',
@@ -52,11 +48,17 @@ const config = {
 
 function exec(command, args) {
   console.log('> ' + [command].concat(args).join(' '));
-  var options = {};
-  return execFileSync(command, args, options).toString();
+  var options = {
+    cwd: process.cwd(),
+    env: process.env,
+    stdio: 'pipe',
+    encoding: 'utf-8',
+  };
+  const childProcess = spawnSync(command, args, options);
+  return childProcess.stdout.trim();
 }
 
-var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
+var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']);
 var changedFiles = new Set(
   exec('git', [
     'diff',
@@ -89,7 +91,10 @@ Object.keys(config).forEach(key => {
   args.push(`--${shouldWrite ? 'write' : 'l'}`);
 
   try {
-    exec(prettierCmd, [...args, ...files]);
+    const invalidFiles = exec(prettierCmd, [...args, ...files]);
+    if (!shouldWrite && invalidFiles) {
+      throw Error(invalidFiles);
+    }
   } catch (e) {
     if (!shouldWrite) {
       console.log(
@@ -99,8 +104,9 @@ Object.keys(config).forEach(key => {
           ) +
           chalk.dim(`    Please run `) +
           chalk.reset('yarn prettier') +
-          chalk.dim(` and add changes to files listed above to your commit.`) +
-          `\n`
+          chalk.dim(` and add changes to files listed below to your commit:`) +
+          `\n\n` +
+          e.message
       );
       process.exit(1);
     }
