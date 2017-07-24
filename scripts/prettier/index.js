@@ -13,7 +13,7 @@
 const chalk = require('chalk');
 const glob = require('glob');
 const path = require('path');
-const spawnSync = require('child_process').spawnSync;
+const execFileSync = require('child_process').execFileSync;
 
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
@@ -54,11 +54,10 @@ function exec(command, args) {
     stdio: 'pipe',
     encoding: 'utf-8',
   };
-  const childProcess = spawnSync(command, args, options);
-  return childProcess.stdout.trim();
+  return execFileSync(command, args, options);
 }
 
-var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']);
+var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
 var changedFiles = new Set(
   exec('git', [
     'diff',
@@ -91,10 +90,7 @@ Object.keys(config).forEach(key => {
   args.push(`--${shouldWrite ? 'write' : 'l'}`);
 
   try {
-    const invalidFiles = exec(prettierCmd, [...args, ...files]);
-    if (!shouldWrite && invalidFiles) {
-      throw Error(invalidFiles);
-    }
+    exec(prettierCmd, [...args, ...files]).trim();
   } catch (e) {
     if (!shouldWrite) {
       console.log(
@@ -106,7 +102,7 @@ Object.keys(config).forEach(key => {
           chalk.reset('yarn prettier-all') +
           chalk.dim(` and add changes to files listed below to your commit:`) +
           `\n\n` +
-          e.message
+          e.stdout
       );
       process.exit(1);
     }
