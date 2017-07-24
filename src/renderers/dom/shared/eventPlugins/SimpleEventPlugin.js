@@ -137,6 +137,8 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
 
   var type = {
     dependencies: [topEvent],
+    phasedRegistrationNames: null,
+    registrationName: null,
   };
 
   if (isPhased) {
