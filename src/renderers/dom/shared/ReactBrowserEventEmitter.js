@@ -171,6 +171,25 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
             'scroll',
             mountAt,
           );
+        } else if (
+          dependency === 'topMouseEnter' ||
+          dependency === 'topMouseLeave'
+        ) {
+          if (isEventSupported('mouseenter', true)) {
+            ReactDOMEventListener.trapCapturedEvent(
+              'topMouseEnter',
+              'mouseenter',
+              mountAt,
+            );
+            ReactDOMEventListener.trapCapturedEvent(
+              'topMouseLeave',
+              'mouseleave',
+              mountAt,
+            );
+          }
+
+          isListening.topMouseEnter = true;
+          isListening.topMouseLeave = true;
         } else if (dependency === 'topFocus' || dependency === 'topBlur') {
           ReactDOMEventListener.trapCapturedEvent('topFocus', 'focus', mountAt);
           ReactDOMEventListener.trapCapturedEvent('topBlur', 'blur', mountAt);

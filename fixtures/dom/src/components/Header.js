@@ -51,6 +51,7 @@ class Header extends React.Component {
                 <option value="/">Select a Fixture</option>
                 <option value="/range-inputs">Range Inputs</option>
                 <option value="/text-inputs">Text Inputs</option>
+                <option value="/mouse-events">Mouse Events</option>
                 <option value="/number-inputs">Number Input</option>
                 <option value="/password-inputs">Password Input</option>
                 <option value="/selects">Selects</option>

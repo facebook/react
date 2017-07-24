@@ -859,16 +859,10 @@ describe('ReactDOMFiber', () => {
 
       function simulateMouseMove(from, to) {
         if (from) {
-          ReactTestUtils.simulateNativeEventOnNode('topMouseOut', from, {
-            target: from,
-            relatedTarget: to,
-          });
+          ReactTestUtils.simulateNativeEventOnNode('topMouseLeave', from, {});
         }
         if (to) {
-          ReactTestUtils.simulateNativeEventOnNode('topMouseOver', to, {
-            target: to,
-            relatedTarget: from,
-          });
+          ReactTestUtils.simulateNativeEventOnNode('topMouseEnter', to, {});
         }
       }
 
@@ -876,8 +870,9 @@ describe('ReactDOMFiber', () => {
         <div>
           <div
             onMouseEnter={() => ops.push('enter parent')}
-            onMouseLeave={() => ops.push('leave parent')}>
-            <div ref={n => (firstTarget = n)} />
+            onMouseLeave={() => ops.push('leave parent')}
+            ref={n => (firstTarget = n)}>
+
             {ReactDOM.unstable_createPortal(
               <div
                 onMouseEnter={() => ops.push('enter portal')}
