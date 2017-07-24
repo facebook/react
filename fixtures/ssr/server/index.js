@@ -40,7 +40,7 @@ if (process.env.NODE_ENV === 'development') {
     proxy({
       ws: true,
       target: 'http://localhost:3001',
-    }),
+    })
   );
 }
 

@@ -120,7 +120,7 @@ class App extends Component {
     eval(
       window.Babel.transform(code, {
         presets: ['react', 'es2015'],
-      }).code,
+      }).code
     );
   }
 
