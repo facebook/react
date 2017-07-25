@@ -47,7 +47,7 @@ if (__DEV__) {
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
-  captureError: (failedFiber: Fiber, error: Error) => Fiber | null,
+  captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
   const {
     commitMount,
