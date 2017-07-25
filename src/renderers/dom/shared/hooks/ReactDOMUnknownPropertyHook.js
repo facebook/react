@@ -67,6 +67,11 @@ if (__DEV__) {
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
+    if (EventPluginRegistry.plugins.length === 0 && name.indexOf('on') === 0) {
+      // If no event plugins have been injected, we might be in a server environment.
+      // Don't check events in this case.
+      return true;
+    }
     warnedProperties[name] = true;
     var lowerCasedName = name.toLowerCase();
 
