@@ -589,7 +589,7 @@ ReactDOMComponent.Mixin = {
             !isCustomComponentTag &&
             Object.prototype.toString.call(el) ===
               '[object HTMLUnknownElement]' &&
-            !warnedUnknownTags[this._tag]
+            !warnedUnknownTags.hasOwnProperty(this._tag)
           ) {
             warnedUnknownTags[this._tag] = true;
             warning(

@@ -426,7 +426,7 @@ var ReactDOMFiberComponent = {
           !isCustomComponentTag &&
           Object.prototype.toString.call(domElement) ===
             '[object HTMLUnknownElement]' &&
-          !warnedUnknownTags[type]
+          !warnedUnknownTags.hasOwnProperty(type)
         ) {
           warnedUnknownTags[type] = true;
           warning(
