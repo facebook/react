@@ -110,7 +110,8 @@
   "jest": {
     "projects": [
       "<rootDir>/scripts/jest/stack.config.json",
-      "<rootDir>/scripts/jest/fiber.config.json"
+      "<rootDir>/scripts/jest/fiber.config.json",
+      "<rootDir>/scripts/jest/fiber.prod.config.json"
     ]
   }
 }
