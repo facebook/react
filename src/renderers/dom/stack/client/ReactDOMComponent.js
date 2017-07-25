@@ -374,7 +374,13 @@ function validateDangerousTag(tag) {
 }
 
 var globalIdCounter = 1;
-var warnedUnknownTags = {};
+var warnedUnknownTags = {
+  // People often believe <time> is a part of HTML5, but it was dropped.
+  // However it is currently widely used for semantic purposes, and Chrome
+  // intends to ship it (as of July 2017). To avoid flooding people with warnings,
+  // we intentionally *don't* warn about <time> even if it's unrecognized.
+  time: true,
+};
 
 /**
  * Creates a new React class that is idempotent and capable of containing other

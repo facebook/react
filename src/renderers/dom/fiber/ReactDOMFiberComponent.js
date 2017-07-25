@@ -65,7 +65,13 @@ var {
 } = DOMNamespaces;
 
 if (__DEV__) {
-  var warnedUnknownTags = {};
+  var warnedUnknownTags = {
+    // People often believe <time> is a part of HTML5, but it was dropped.
+    // However it is currently widely used for semantic purposes, and Chrome
+    // intends to ship it (as of July 2017). To avoid flooding people with warnings,
+    // we intentionally *don't* warn about <time> even if it's unrecognized.
+    time: true,
+  };
 
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);

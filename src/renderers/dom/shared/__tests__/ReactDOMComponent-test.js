@@ -822,6 +822,10 @@ describe('ReactDOMComponent', () => {
           if (this instanceof window.HTMLUnknownElement) {
             return '[object HTMLUnknownElement]';
           }
+          // Special case! Read explanation below in the test.
+          if (this instanceof window.HTMLTimeElement) {
+            return '[object HTMLUnknownElement]';
+          }
           return realToString.apply(this, arguments);
         };
         Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
@@ -830,6 +834,12 @@ describe('ReactDOMComponent', () => {
         // Test deduplication
         ReactTestUtils.renderIntoDocument(<foo />);
         ReactTestUtils.renderIntoDocument(<foo />);
+        // This is a funny case.
+        // People often believe <time> is a part of HTML5, but it was dropped.
+        // However it is currently widely used for semantic purposes, and Chrome
+        // intends to ship it (as of July 2017). To avoid flooding people with warnings,
+        // we intentionally *don't* warn about <time> even if it's unrecognized.
+        ReactTestUtils.renderIntoDocument(<time />);
       } finally {
         Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
       }
