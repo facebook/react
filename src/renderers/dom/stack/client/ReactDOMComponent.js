@@ -374,6 +374,7 @@ function validateDangerousTag(tag) {
 }
 
 var globalIdCounter = 1;
+var warnedUnknownTags = {};
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -578,15 +579,21 @@ ReactDOMComponent.Mixin = {
           didWarnShadyDOM = true;
         }
         if (this._namespaceURI === DOMNamespaces.html) {
-          warning(
-            isCustomComponentTag ||
-              Object.prototype.toString.call(el) !==
-                '[object HTMLUnknownElement]',
-            'The tag <%s> is unrecognized in this browser. ' +
-              'If you meant to render a React component, start its name with ' +
-              'an uppercase letter.',
-            this._tag,
-          );
+          if (
+            !isCustomComponentTag &&
+            Object.prototype.toString.call(el) ===
+              '[object HTMLUnknownElement]' &&
+            !warnedUnknownTags[this._tag]
+          ) {
+            warnedUnknownTags[this._tag] = true;
+            warning(
+              false,
+              'The tag <%s> is unrecognized in this browser. ' +
+                'If you meant to render a React component, start its name with ' +
+                'an uppercase letter.',
+              this._tag,
+            );
+          }
         }
       }
       ReactDOMComponentTree.precacheNode(this, el);

@@ -825,14 +825,21 @@ describe('ReactDOMComponent', () => {
           return realToString.apply(this, arguments);
         };
         Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
-        ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+
+        ReactTestUtils.renderIntoDocument(<bar />);
+        // Test deduplication
+        ReactTestUtils.renderIntoDocument(<foo />);
+        ReactTestUtils.renderIntoDocument(<foo />);
       } finally {
         Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
       }
 
-      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.count()).toBe(2);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'The tag <mycustomcomponent> is unrecognized in this browser',
+        'The tag <bar> is unrecognized in this browser',
+      );
+      expectDev(console.error.calls.argsFor(1)[0]).toContain(
+        'The tag <foo> is unrecognized in this browser',
       );
     });
 

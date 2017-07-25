@@ -65,6 +65,8 @@ var {
 } = DOMNamespaces;
 
 if (__DEV__) {
+  var warnedUnknownTags = {};
+
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
@@ -414,15 +416,21 @@ var ReactDOMFiberComponent = {
 
     if (__DEV__) {
       if (namespaceURI === HTML_NAMESPACE) {
-        warning(
-          isCustomComponentTag ||
-            Object.prototype.toString.call(domElement) !==
-              '[object HTMLUnknownElement]',
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
+        if (
+          !isCustomComponentTag &&
+          Object.prototype.toString.call(domElement) ===
+            '[object HTMLUnknownElement]' &&
+          !warnedUnknownTags[type]
+        ) {
+          warnedUnknownTags[type] = true;
+          warning(
+            false,
+            'The tag <%s> is unrecognized in this browser. ' +
+              'If you meant to render a React component, start its name with ' +
+              'an uppercase letter.',
+            type,
+          );
+        }
       }
     }
 
