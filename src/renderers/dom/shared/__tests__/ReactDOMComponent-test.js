@@ -840,16 +840,26 @@ describe('ReactDOMComponent', () => {
         // intends to ship it (as of July 2017). To avoid flooding people with warnings,
         // we intentionally *don't* warn about <time> even if it's unrecognized.
         ReactTestUtils.renderIntoDocument(<time />);
+        // Corner case. Make sure out deduplication logic doesn't break with weird tag.
+        ReactTestUtils.renderIntoDocument(<hasOwnProperty />);
       } finally {
         Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
       }
 
-      expectDev(console.error.calls.count()).toBe(2);
+      expectDev(console.error.calls.count()).toBe(4);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'The tag <bar> is unrecognized in this browser',
       );
       expectDev(console.error.calls.argsFor(1)[0]).toContain(
         'The tag <foo> is unrecognized in this browser',
+      );
+      expectDev(console.error.calls.argsFor(2)[0]).toContain(
+        '<hasOwnProperty /> is using uppercase HTML',
+      );
+      expectDev(console.error.calls.argsFor(3)[0]).toContain(
+        ReactDOMFeatureFlags.useFiber
+          ? 'The tag <hasOwnProperty> is unrecognized in this browser'
+          : 'The tag <hasownproperty> is unrecognized in this browser',
       );
     });
 
