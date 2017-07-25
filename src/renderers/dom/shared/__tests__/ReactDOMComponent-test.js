@@ -35,18 +35,6 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('updateDOM', () => {
-    it('should handle className', () => {
-      var container = document.createElement('div');
-      ReactDOM.render(<div style={{}} />, container);
-
-      ReactDOM.render(<div className={'foo'} />, container);
-      expect(container.firstChild.className).toEqual('foo');
-      ReactDOM.render(<div className={'bar'} />, container);
-      expect(container.firstChild.className).toEqual('bar');
-      ReactDOM.render(<div className={null} />, container);
-      expect(container.firstChild.className).toEqual('');
-    });
-
     it('should gracefully handle various style value types', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div style={{}} />, container);
@@ -348,11 +336,11 @@ describe('ReactDOMComponent', () => {
 
     it('should remove properties', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<div className="monkey" />, container);
+      ReactDOM.render(<audio muted={true} />, container);
 
-      expect(container.firstChild.className).toEqual('monkey');
-      ReactDOM.render(<div />, container);
-      expect(container.firstChild.className).toEqual('');
+      expect(container.firstChild.muted).toEqual(true);
+      ReactDOM.render(<audio />, container);
+      expect(container.firstChild.muted).toEqual(false);
     });
 
     it('should properly update custom attributes on custom elements', () => {
@@ -1536,24 +1524,6 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
     });
 
-    it('should warn about class', () => {
-      spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(
-        React.createElement('div', {class: 'muffins'}),
-      );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-    });
-
-    it('should warn about class (ssr)', () => {
-      spyOn(console, 'error');
-      ReactDOMServer.renderToString(
-        React.createElement('div', {class: 'muffins'}),
-      );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-    });
-
     it('should warn about props that are no longer supported', () => {
       spyOn(console, 'error');
       ReactTestUtils.renderIntoDocument(<div />);
@@ -1580,11 +1550,11 @@ describe('ReactDOMComponent', () => {
 
     it('gives source code refs for unknown prop warning', () => {
       spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div class="paladin" />);
+      ReactTestUtils.renderIntoDocument(<div accesskey="paladin" />);
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Unknown DOM property accesskey. Did you mean accessKey?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
@@ -1594,11 +1564,11 @@ describe('ReactDOMComponent', () => {
 
     it('gives source code refs for unknown prop warning (ssr)', () => {
       spyOn(console, 'error');
-      ReactDOMServer.renderToString(<div class="paladin" />);
+      ReactDOMServer.renderToString(<div accesskey="paladin" />);
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Unknown DOM property accesskey. Did you mean accessKey?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property onclick. Did you mean ' +
@@ -1610,13 +1580,13 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
 
-      ReactTestUtils.renderIntoDocument(<div className="paladin" />, container);
+      ReactTestUtils.renderIntoDocument(<div accessKey="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(0);
 
-      ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
+      ReactTestUtils.renderIntoDocument(<div accesskey="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Unknown DOM property accesskey. Did you mean accessKey?\n    in div (at **)',
       );
     });
 
@@ -1624,18 +1594,18 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
 
       ReactTestUtils.renderIntoDocument(
-        <div className="foo1">
-          <div class="foo2" />
+        <div accessKey="foo1">
+          <div accesskey="foo2" />
           <div onClick="foo3" />
           <div onclick="foo4" />
-          <div className="foo5" />
-          <div className="foo6" />
+          <div accessKey="foo5" />
+          <div accessKey="foo6" />
         </div>,
       );
 
       expectDev(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('accessKey');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
       var previousLine = matches[1];
 
@@ -1652,18 +1622,18 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
 
       ReactDOMServer.renderToString(
-        <div className="foo1">
-          <div class="foo2" />
+        <div accessKey="foo1">
+          <div accesskey="foo2" />
           <div onClick="foo3" />
           <div onclick="foo4" />
-          <div className="foo5" />
-          <div className="foo6" />
+          <div accessKey="foo5" />
+          <div accessKey="foo6" />
         </div>,
       );
 
       expectDev(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('accessKey');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
       var previousLine = (matches || [])[1];
 
@@ -1689,7 +1659,7 @@ describe('ReactDOMComponent', () => {
 
       class Child1 extends React.Component {
         render() {
-          return <div class="paladin">Child1</div>;
+          return <div accesskey="paladin">Child1</div>;
         }
       }
 
@@ -1715,7 +1685,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('accessKey');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
       var previousLine = (matches || [])[1];
 
@@ -1740,7 +1710,7 @@ describe('ReactDOMComponent', () => {
 
       class Child1 extends React.Component {
         render() {
-          return <div class="paladin">Child1</div>;
+          return <div accesskey="paladin">Child1</div>;
         }
       }
 
@@ -1766,7 +1736,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('accessKey');
       var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
       var previousLine = (matches || [])[1];
 
@@ -1785,7 +1755,7 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
 
       ReactTestUtils.renderIntoDocument(
-        React.createElement('label', {for: 'test'}),
+        React.createElement('div', {accesskey: 'test'}),
       );
       ReactTestUtils.renderIntoDocument(
         React.createElement('input', {type: 'text', autofocus: true}),
@@ -1794,7 +1764,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label',
+        'Warning: Unknown DOM property accesskey. Did you mean accessKey?\n    in div',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
@@ -1806,7 +1776,7 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
 
       ReactDOMServer.renderToString(
-        React.createElement('label', {for: 'test'}),
+        React.createElement('div', {accesskey: 'test'}),
       );
       ReactDOMServer.renderToString(
         React.createElement('input', {type: 'text', autofocus: true}),
@@ -1815,7 +1785,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label',
+        'Warning: Unknown DOM property accesskey. Did you mean accessKey?\n    in div',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
@@ -1845,6 +1815,189 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(elem2, container);
 
       expect(container.firstChild.innerHTML).toBe(html2);
+    });
+  });
+
+  // There was a time when "className" was used instead of "class"
+  // for the css class html attribute. These tests are inverted versions
+  // of original tests to cover validations for "className" vs
+  // "class". React now supports both.
+  describe('class attribute', () => {
+    it('should correctly assign the class attribute', () => {
+      spyOn(console, 'error');
+      var el = ReactTestUtils.renderIntoDocument(
+        React.createElement('div', {class: 'muffins'}),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      expect(el.className).toEqual('muffins');
+    });
+
+    it('should correctly assign the className attribute', () => {
+      spyOn(console, 'error');
+      var el = ReactTestUtils.renderIntoDocument(
+        React.createElement('div', {className: 'muffins'}),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      expect(el.className).toEqual('muffins');
+    });
+
+    it('supports the class attribute with string rendering', () => {
+      spyOn(console, 'error');
+      let markup = ReactDOMServer.renderToString(
+        React.createElement('div', {class: 'muffins'}),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      expect(markup).toContain('class="muffins"');
+    });
+
+    it('removes className when set to null', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<div style={{}} />, container);
+
+      ReactDOM.render(<div className={'foo'} />, container);
+      expect(container.firstChild.className).toEqual('foo');
+      ReactDOM.render(<div className={'bar'} />, container);
+      expect(container.firstChild.className).toEqual('bar');
+      ReactDOM.render(<div className={null} />, container);
+      expect(container.firstChild.className).toEqual('');
+    });
+
+    it('removes class when set to null', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<div style={{}} />, container);
+
+      ReactDOM.render(<div class={'foo'} />, container);
+      expect(container.firstChild.className).toEqual('foo');
+      ReactDOM.render(<div class={'bar'} />, container);
+      expect(container.firstChild.className).toEqual('bar');
+      ReactDOM.render(<div class={null} />, container);
+      expect(container.firstChild.className).toEqual('');
+    });
+
+    it('switches from class to className', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div className="paladin" />, container);
+      ReactDOM.render(<div class="cleric" />, container);
+
+      expect(container.firstChild.className).toBe('cleric');
+    });
+
+    it('switches from className to class', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div class="paladin" />, container);
+      ReactDOM.render(<div className="cleric" />, container);
+
+      expect(container.firstChild.className).toBe('cleric');
+    });
+
+    it('warns when className and class are added to an element', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div class="paladin" className="cleric" />, container);
+
+      expect(container.firstChild.className).toBe('cleric');
+      expectDev(console.error.calls.count()).toBe(1);
+    });
+  });
+
+  // There was a time when "htmlFor" was used instead of "for"
+  // for the html "for" attribute. These tests are inverted versions
+  // of original tests to cover validations for "htmlFor" vs
+  // "for". React now supports both.
+  describe('for attribute', () => {
+    it('should correctly assign the for attribute', () => {
+      spyOn(console, 'error');
+      var el = ReactTestUtils.renderIntoDocument(
+        React.createElement('label', {for: 'muffins'}),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      expect(el.htmlFor).toEqual('muffins');
+    });
+
+    it('should correctly assign the htmlFor attribute', () => {
+      spyOn(console, 'error');
+      var el = ReactTestUtils.renderIntoDocument(
+        React.createElement('label', {htmlFor: 'muffins'}),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      expect(el.htmlFor).toEqual('muffins');
+    });
+
+    it('supports the for attribute with string rendering', () => {
+      spyOn(console, 'error');
+      let markup = ReactDOMServer.renderToString(
+        React.createElement('label', {for: 'muffins'}),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
+      expect(markup).toContain('for="muffins"');
+    });
+
+    it('removes htmlFor when set to null', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<label htmlFor={'foo'} />, container);
+      expect(container.firstChild.htmlFor).toEqual('foo');
+      ReactDOM.render(<label htmlFor={'bar'} />, container);
+      expect(container.firstChild.htmlFor).toEqual('bar');
+      ReactDOM.render(<label htmlFor={null} />, container);
+      expect(container.firstChild.htmlFor).toEqual('');
+    });
+
+    it('removes for when set to null', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<label for={'foo'} />, container);
+      expect(container.firstChild.htmlFor).toEqual('foo');
+      ReactDOM.render(<label for={'bar'} />, container);
+      expect(container.firstChild.htmlFor).toEqual('bar');
+      ReactDOM.render(<label for={null} />, container);
+      expect(container.firstChild.htmlFor).toEqual('');
+    });
+
+    it('switches from for to htmlFor', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<label htmlFor="paladin" />, container);
+      ReactDOM.render(<label for="cleric" />, container);
+
+      expect(container.firstChild.htmlFor).toBe('cleric');
+    });
+
+    it('switches from htmlFor to for', () => {
+      var container = document.createElement('div');
+
+      ReactDOM.render(<label for="paladin" />, container);
+      ReactDOM.render(<label htmlFor="cleric" />, container);
+
+      expect(container.firstChild.htmlFor).toBe('cleric');
+    });
+
+    it('warns when htmlFor and for are added to an element', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOM.render(<label for="paladin" htmlFor="cleric" />, container);
+
+      expect(container.firstChild.htmlFor).toBe('cleric');
+      expectDev(console.error.calls.count()).toBe(1);
+    });
+  });
+
+  describe('when a property and attribute for the same field are given', () => {
+    it('suggests using the attribute form', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div class="paladin" className="cleric" />, container);
+
+      expect(container.firstChild.className).toBe('cleric');
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: "class" and "className" were listed as properties on a <div />. Use "class".\n    in div (at **)',
+      );
     });
   });
 });
