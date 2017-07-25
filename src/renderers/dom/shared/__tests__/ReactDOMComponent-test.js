@@ -835,10 +835,10 @@ describe('ReactDOMComponent', () => {
         ReactTestUtils.renderIntoDocument(<foo />);
         ReactTestUtils.renderIntoDocument(<foo />);
         // This is a funny case.
-        // People often believe <time> is a part of HTML5, but it was dropped.
-        // However it is currently widely used for semantic purposes, and Chrome
-        // intends to ship it (as of July 2017). To avoid flooding people with warnings,
-        // we intentionally *don't* warn about <time> even if it's unrecognized.
+        // Chrome is the only major browser not shipping <time>. But as of July
+        // 2017 it intends to ship it due to widespread usage. We intentionally
+        // *don't* warn for <time> even if it's unrecognized by Chrome because
+        // it soon will be, and many apps have been using it anyway.
         ReactTestUtils.renderIntoDocument(<time />);
         // Corner case. Make sure out deduplication logic doesn't break with weird tag.
         ReactTestUtils.renderIntoDocument(<hasOwnProperty />);
