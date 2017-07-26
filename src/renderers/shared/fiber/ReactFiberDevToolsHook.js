@@ -17,6 +17,10 @@ import type {FiberRoot} from 'ReactFiberRoot';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
+
 let rendererID = null;
 let injectInternals = null;
 let onCommitRoot = null;
@@ -30,10 +34,11 @@ if (
     onCommitFiberRoot,
     onCommitFiberUnmount,
   } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
-  var warning = require('fbjs/lib/warning');
 
   injectInternals = function(internals: Object) {
-    warning(rendererID == null, 'Cannot inject into DevTools twice.');
+    if (__DEV__) {
+      warning(rendererID == null, 'Cannot inject into DevTools twice.');
+    }
     rendererID = inject(internals);
   };
 
