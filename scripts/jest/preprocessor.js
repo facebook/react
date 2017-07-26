@@ -43,9 +43,7 @@ var babelOptions = {
     [
       babelPluginModules,
       {
-        map: Object.assign({}, moduleMap, {
-          'object-assign': 'object-assign',
-        }),
+        map: moduleMap,
       },
     ],
     // Keep stacks detailed in tests.
