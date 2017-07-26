@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,160 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/10/16/react-v0.12-rc1.html">React v0.12 RC</a>
+
+</h1>
+
+<p class="meta">
+  October 16, 2014
+  by
+  
+    
+      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We are finally ready to share the work we&#39;ve been doing over the past couple months. A lot has gone into this and we want to make sure we iron out any potential issues before we make this final. So, we&#39;re shipping a Release Candidate for React v0.12 today. If you get a chance, please give it a try and report any issues you find! A full changelog will accompany the final release but we&#39;ve highlighted the interesting and breaking changes below.</p>
+
+<p>The release candidate is available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.12.0-rc1.js">https://fb.me/react-0.12.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.12.0-rc1.min.js">https://fb.me/react-0.12.0-rc1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.12.0-rc1.js">https://fb.me/react-with-addons-0.12.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-rc1.min.js">https://fb.me/react-with-addons-0.12.0-rc1.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.12.0-rc1.js">https://fb.me/JSXTransformer-0.12.0-rc1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.12.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<h2>React Elements</h2>
+
+<p>The biggest conceptual change we made in v0.12 is the move to React Elements. <a href="/react/blog/2014/10/14/introducting-react-elements.html">We talked about this topic in depth earlier this week</a>. If you haven&#39;t already, you should read up on the exciting changes in there!</p>
+
+<h2>JSX Changes</h2>
+
+<p>Earlier this year we decided to write <a href="https://facebook.github.io/jsx/">a specification for JSX</a>. This has allowed us to make some changes focused on the React specific JSX and still allow others to innovate in the same space.</p>
+
+<h3>The <code>@jsx</code> Pragma is Gone!</h3>
+
+<p>We have wanted to do this since before we even open sourced React. No more <code>/** @jsx React.DOM */</code>!. The React specific JSX transform assumes you have <code>React</code> in scope (which had to be true before anyway).</p>
+
+<p><code>JSXTransformer</code> and <code>react-tools</code> have both been updated to account for this.</p>
+
+<h3>JSX for Function Calls is No Longer Supported</h3>
+
+<p>The React specific JSX transform no longer transforms to function calls. Instead we use <code>React.createElement</code> and pass it arguments. This allows us to make optimizations and better support React as a compile target for things like Om. Read more in the <a href="/react/blog/2014/10/14/introducting-react-elements.html">React Elements introduction</a>.</p>
+
+<p>The result of this change is that we will no longer support arbitrary function calls. We understand that the ability to do was a convenient shortcut for many people but we believe the gains will be worth it.</p>
+
+<h3>JSX Lower-case Convention</h3>
+
+<p>We used to have a whitelist of HTML tags that got special treatment in JSX. However as new HTML tags got added to the spec, or we added support for more SVG tags, we had to go update our whitelist. Additionally, there was ambiguity about the behavior. There was always the chance that something new added to the tag list would result in breaking your code. For example:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">component</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>Is <code>component</code> an existing HTML tag? What if it becomes one?</p>
+
+<p>To address this, we decided on a convention: <strong>All JSX tags that start with a lower-case letter or contain a dash are treated as HTML.</strong></p>
+
+<p>This means that you no longer have to wait for us to upgrade JSX to use new tags. This also introduces the possibility to consume custom elements (Web Components) - although custom attributes are not yet fully supported.</p>
+
+<p>Currently we still use the whitelist as a sanity check. The transform will fail when it encounters an unknown tag. This allows you to update your code without hitting errors in production.</p>
+
+<p>In addition, the HTML tags are converted to strings instead of using <code>React.DOM</code> directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code> instead of <code>React.DOM.div()</code>.</p>
+
+<h3>JSX Spread Attributes</h3>
+
+<p>Previously there wasn&#39;t a way to for you to pass a dynamic or unknown set of properties through JSX. This is now possible using the spread <code>...</code> operator.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">myProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">a</span><span class="o">:</span> <span class="mi">1</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="mi">2</span> <span class="p">};</span>
+<span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">myProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>This merges the properties of the object onto the props of <code>MyComponent</code>.</p>
+
+<p><a href="https://gist.github.com/sebmarkbage/07bbe37bc42b6d4aef81">Read More About Spread Attributes</a></p>
+
+<p>If you used to use plain function calls to pass arbitrary props objects...</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">MyComponent</span><span class="p">(</span><span class="nx">myProps</span><span class="p">);</span>
+</code></pre></div>
+<p>You can now switch to using Spread Attributes instead:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="p">{...</span><span class="nx">myProps</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<h2>Breaking Change: <code>key</code> and <code>ref</code> Removed From <code>this.props</code></h2>
+
+<p>The props <code>key</code> and <code>ref</code> were already reserved property names. This turned out to be difficult to explicitly statically type since any object can accept these extra props. It also screws up JIT optimizations of React internals in modern VMs.</p>
+
+<p>These are concepts that React manages from outside the Component before it even gets created so it shouldn&#39;t be part of the props.</p>
+
+<p>We made this distinction clearer by moving them off the props object and onto the <code>ReactElement</code> itself. This means that you need to rename:</p>
+
+<p><code>someElement.props.key</code> -&gt; <code>someElement.key</code></p>
+
+<p>You can no longer access <code>this.props.ref</code> and <code>this.props.key</code> from inside the Component instance itself. So you need to use a different name for those props.</p>
+
+<p>You do NOT need to change the way to define <code>key</code> and <code>ref</code>, only if you need to read it. E.g. <code>&lt;div key=&quot;my-key&quot; /&gt;</code> and <code>div({ key: &#39;my-key&#39; })</code> still works.</p>
+
+<h2>Breaking Change: Default Props Resolution</h2>
+
+<p>This is a subtle difference but <code>defaultProps</code> are now resolved at <code>ReactElement</code> creation time instead of when it&#39;s mounted. This is means that we can avoid allocating an extra object for the resolved props.</p>
+
+<p>You will primarily see this breaking if you&#39;re also using <code>transferPropsTo</code>.</p>
+
+<h2>Deprecated: transferPropsTo</h2>
+
+<p><code>transferPropsTo</code> is deprecated in v0.12 and will be removed in v0.13. This helper function was a bit magical. It auto-merged a certain whitelist of properties and excluded others. It was also transferring too many properties. This meant that we have to keep a whitelist of valid HTML attributes in the React runtime. It also means that we can&#39;t catch typos on props.</p>
+
+<p>Our suggested solution is to use the Spread Attributes.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="p">{...</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>Or, just if you&#39;re not using JSX:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="k">return</span> <span class="nx">div</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">);</span>
+</code></pre></div>
+<p>Although to avoid passing too many props down, you&#39;ll probably want to use something like ES7 rest properties. <a href="https://gist.github.com/sebmarkbage/a6e220b7097eb3c79ab7">Read more about upgrading from transferPropsTo</a>.</p>
+
+<h2>Deprecated: Returning <code>false</code> in Event Handlers</h2>
+
+<p>It used to be possible to return <code>false</code> from event handlers to preventDefault. We did this because this works in most browsers. This is a confusing API and we might want to use the return value for something else. Therefore, this is deprecated. Use <code>event.preventDefault()</code> instead.</p>
+
+<h2>Renamed APIs</h2>
+
+<p>As part of the <a href="https://gist.github.com/sebmarkbage/fcb1b6ab493b0c77d589">new React terminology</a> we aliased some existing APIs to use the new naming convention:</p>
+
+<ul>
+<li><code>React.renderComponent</code> -&gt; <code>React.render</code></li>
+<li><code>React.renderComponentToString</code> -&gt; <code>React.renderToString</code></li>
+<li><code>React.renderComponentToStaticMarkup</code> -&gt; <code>React.renderToStaticMarkup</code></li>
+<li><code>React.isValidComponent</code> -&gt; <code>React.isValidElement</code></li>
+<li><code>React.PropTypes.component</code> -&gt; <code>React.PropTypes.element</code></li>
+<li><code>React.PropTypes.renderable</code> -&gt; <code>React.PropTypes.node</code></li>
+</ul>
+
+<p>The older APIs will log a warning but work the same. They will be removed in v0.13.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -812,45 +960,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.2.m
 <p>To finish this round-up, Andrew Gleave made a page that displays the <a href="https://github.com/andrewgleave/react-weather">Weather</a>. It&#39;s great to see that React is also used for small prototypes.</p>
 
 <figure><a href="https://github.com/andrewgleave/react-weather"><img src="/react/img/blog/weather.png" /></a></figure>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/09/03/introducing-the-jsx-specification.html">Introducing the JSX Specification</a>
-
-</h1>
-
-<p class="meta">
-  September  3, 2014
-  by
-  
-    
-      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>At Facebook we&#39;ve been using JSX for a long time. We originally introduced it to the world last year alongside React, but we actually used it in another form before that to create native DOM nodes. We&#39;ve also seen some similar efforts grow out of our work in order to be used with other libraries and in interesting ways. At this point React JSX is just one of many implementations.</p>
-
-<p>In order to make it easier to implement new versions and to make sure that the syntax remains compatible, we&#39;re now formalizing the syntax of JSX in a stand-alone spec without any semantic meaning. It&#39;s completely stand-alone from React itself.</p>
-
-<p>Read the spec now at <a href="https://facebook.github.io/jsx/">https://facebook.github.io/jsx/</a>.</p>
-
-<p>This is not a proposal to be standardized in ECMAScript. It&#39;s just a reference document that transpiler writers and syntax highlighters can agree on. It&#39;s currently in a draft stage and will probably continue to be a living document.</p>
-
-<p>Feel free to <a href="https://github.com/facebook/jsx/issues/new">open an Issue</a> or Pull Request if you find something wrong.</p>
 
 </div>
 

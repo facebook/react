@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,123 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/10/19/reactiflux-is-moving-to-discord.html">Reactiflux is moving to Discord</a>
+
+</h1>
+
+<p class="meta">
+  October 19, 2015
+  by
+  
+    
+      <a href="https://github.com/benigeri">Paul Benigeri</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>TL;DR: Slack decided that Reactiflux had too many members and disabled new invites. Reactiflux is moving to Discord. Join us: <a href="http://join.reactiflux.com/">http://join.reactiflux.com</a></p>
+
+<h2>What happened with Slack?</h2>
+
+<p>A few weeks ago, Reactiflux reached 7,500 members on Slack. Shortly after, Slack decided we were too big and disabled invites. There was no way for new users to join. Many of us were sad and upset. We loved Slack.  Our community was built around it.</p>
+
+<p>We reached out to Slack several times, but their decision was firm. Our large community caused performance issues. Slack wants to focus on building a great product for teams, not necessarily large open communities. Losing focus and building for too many use cases always leads to product bloat, and eventually a decrease in quality.</p>
+
+<h2>So… why Discord?</h2>
+
+<p>After a <a href="https://github.com/reactiflux/volunteers/issues/25">long and thorough debate</a>, Discord quickly emerged as the most promising service. After just a few days, 400 members had joined the Discord server, and many already loved it.</p>
+
+<h3>Easiest to join</h3>
+
+<p>Discord is the easiest platform to join. New users can immediately join our conversations without having to create an account. All they need to do is provide a name. No permission granting, no password, no email confirmation.</p>
+
+<p>This is critically useful for us, and will make Reactiflux even more open and accessible.</p>
+
+<h3>Great apps</h3>
+
+<p>Out of all of the services we’ve tried, Discord’s apps are by far the most polished. They are well designed, easy to use, and surprisingly fast. In addition to the web app, they have mobile apps on both iOS and Android as well as desktop apps for OS X and Windows, with Linux support coming soon.</p>
+
+<p>Their desktop apps are built with React and Electron, and their iOS app is built with React Native.</p>
+
+<h3>Moderation tools</h3>
+
+<p>So far, we’ve been fortunate not to have to deal with spammers and trolls. As our community continues to grow, that might change. Unsurprisingly, Discord is the only app we’ve seen with legitimate moderation tools. It was built for gaming communities, after all.</p>
+
+<h3>Great multiple Server support</h3>
+
+<p>Your  Discord account works with every Discord server, which is the equivalent of a Slack team. You don’t need to create a new account every time you join a new team. You can join new servers in one click, and it’s very easy to switch between them. Discord messages also work across servers, so your personal conversations are not scoped to a single server.</p>
+
+<p>Instead of having one huge, crowded Reactiflux server, we can branch off closely related channels into sub-servers. Communities will start overlapping, and it will be easy to interact with non-Reactiflux channels.</p>
+
+<h3>It’s hosted</h3>
+
+<p>Self-hosted apps require maintenance. We’re all busy, and we can barely find the time to keep our landing page up to date and running smoothly. More than anything, we need a stable platform, and we don’t have the resources to guarantee that right now.</p>
+
+<p>It’s a much safer bet to offload the hosting to Discord, who is already keeping the lights on for all their users.</p>
+
+<h3>We like the team</h3>
+
+<p>And they seem to like us back. They are excited for us to join them, and they’ve been very responsive to our feedback and suggestions.</p>
+
+<p>They implemented code syntax highlighting just a few days after we told them we needed it.</p>
+
+<p>Discord’s team has already built a solid suite of apps, and they have shown us how much they care about their users. We’re excited to see how they will continue to improve their product.</p>
+
+<h2>And what’s the catch?</h2>
+
+<p>Choosing the best chat service is subjective. There are a million reasons why Discord <em>might be</em> a terrible idea. Here are the ones that we’re most worried about:</p>
+
+<h3>Difficult channel management</h3>
+
+<p>Channel management seems to be the biggest issue. There is no way to opt out of channels; you can only mute them. And you can only mute channels one by one. There is no way to star channels, and channels can only be sorted on the server level. Each user will see the list of channels in the same order.</p>
+
+<p>As the number of channels grow, it will be challenging to keep things in order. Branching off sub-servers will help, and we will keep an easily accessible directory of channels across our main server and all of the sub-servers.</p>
+
+<p>We can build simple tools to make channel lookup easier, and the Discord team is working on improvements that should make this more manageable.</p>
+
+<h3>No Search</h3>
+
+<p>Lack of search is clearly a bummer, but Discord is working on it. Search is coming!</p>
+
+<h3>Firewall</h3>
+
+<p>A couple of users aren’t able to access Discord at work since other corporate filters classify it as a gaming application. This sucks, but it seems to be a  rare case. So far, it seems only to affect 0.6% of our current community (3/500).</p>
+
+<p>We hope that these users can get Discord&#39;s domains whitelisted, and we’ll try to find a solution if this is a widespread issue. The Discord team is aware of the issue as well.</p>
+
+<h2>Is Discord going to disappear tomorrow?</h2>
+
+<p>Probably not tomorrow. They have 14 people <a href="https://discordapp.com/company">full time</a>, and they’ve raised money from some of the best investors in Silicon Valley, including <a href="http://www.benchmark.com/">Benchmark</a> and <a href="http://www.accel.com/companies/">Accel</a>.</p>
+
+<p>By focusing on gaming communities, Discord has differentiated itself from the many other communication apps. Discord is well received and has a rapidly growing user base.  They plan to keep their basic offerings free for unlimited users and hope to make money with premium offerings (themes, add-ons, content, and more).</p>
+
+<h2>Join us!</h2>
+
+<p>More than 500 of us have already migrated to the new Reactiflux.  Join us, we&#39;re one click away: <a href="http://join.reactiflux.com/">http://join.reactiflux.com</a></p>
+
+<p><em>Note: Jordan Hawker’s thorough <a href="http://jhawk.co/team-chat-comparison">research</a> made our decision a lot easier.</em></p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -791,59 +902,6 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <li>Add-Ons: When using the test utils, <code>Simulate.mouseEnter</code> and <code>Simulate.mouseLeave</code> now work.</li>
 <li>Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/09/02/new-react-developer-tools.html">New React Developer Tools</a>
-
-</h1>
-
-<p class="meta">
-  September  2, 2015
-  by
-  
-    
-      <a href="http://benalpert.com">Ben Alpert</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>A month ago, we <a href="/react/blog/2015/08/03/new-react-devtools-beta.html">posted a beta</a> of the new React developer tools. Today, we&#39;re releasing the first stable version of the new devtools. We&#39;re calling it version 0.14, but it&#39;s a full rewrite so we think of it more like a 2.0 release.</p>
-
-<p><img src="/react/img/blog/devtools-full.gif" alt="Video/screenshot of new devtools"></p>
-
-<p>It contains a handful of new features, including:</p>
-
-<ul>
-<li>Built entirely with React, making it easier to develop and extend</li>
-<li>Firefox support</li>
-<li>Selected component instance is available as <code>$r</code> from the console</li>
-<li>More detail is shown in props in the component tree</li>
-<li>Right-click any node and choose &quot;Show Source&quot; to jump to the <code>render</code> method in the Sources panel</li>
-<li>Right-click any props or state value to make it available as <code>$tmp</code> from the console</li>
-<li>Full React Native support</li>
-</ul>
-
-<h2>Installation</h2>
-
-<p>Download the new devtools from the <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi">Chrome Web Store</a> and on <a href="https://addons.mozilla.org/en-US/firefox/addon/react-devtools/">Mozilla Add-ons</a> for Firefox. If you&#39;re developing using React, we highly recommend installing these devtools.</p>
-
-<p>If you already have the Chrome extension installed, it should autoupdate within the next week. You can also head to <code>chrome://extensions</code> and click &quot;Update extensions now&quot; if you&#39;d like to get the new version today. If you installed the devtools beta, please remove it and switch back to the version from the store to make sure you always get the latest updates and bug fixes.</p>
-
-<p>If you run into any issues, please post them on our <a href="https://github.com/facebook/react-devtools">react-devtools GitHub repo</a>.</p>
 
 </div>
 

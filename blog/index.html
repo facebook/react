@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,125 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a>
+
+</h1>
+
+<p class="meta">
+  July 26, 2017
+  by
+  
+    
+      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>As React 16 release is getting closer, we would like to announce a few changes to how React handles JavaScript errors inside components. These changes are included in React 16 beta versions, and will be a part of React 16.</p>
+
+<p><strong>By the way, <a href="https://github.com/facebook/react/issues/10294">we just released the first beta of React 16 for you to try!</a></strong></p>
+
+<h2>Behavior in React 15 and Earlier</h2>
+
+<p>In the past, JavaScript errors inside components used to corrupt React’s internal state and cause it to <a href="https://github.com/facebook/react/issues/4026">emit</a> <a href="https://github.com/facebook/react/issues/6895">cryptic</a> <a href="https://github.com/facebook/react/issues/8579">errors</a> on next renders. These errors were always caused by an earlier error in the application code, but React did not provide a way to handle them gracefully in components, and could not recover from them.</p>
+
+<h2>Introducing Error Boundaries</h2>
+
+<p>A JavaScript error in a part of the UI shouldn’t break the whole app. To solve this problem for React users, React 16 introduces a new concept of an “error boundary”.</p>
+
+<p>Error boundaries are React components that <strong>catch JavaScript errors in their children (and grandchildren), log those errors, and display a fallback UI</strong> instead of the component tree that crashed. Error boundaries catch errors during rendering, in lifecycle methods, and in constructors of the whole tree below them.</p>
+
+<p>A class component becomes an error boundary if it defines a new lifecycle method called <code>componentDidCatch(error, info)</code>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ErrorBoundary</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">hasError</span><span class="o">:</span> <span class="kc">false</span> <span class="p">};</span>
+  <span class="p">}</span>
+
+<span class="hll">  <span class="nx">componentDidCatch</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">info</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">    <span class="c1">// Display fallback UI</span>
+</span><span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">hasError</span><span class="o">:</span> <span class="kc">true</span> <span class="p">});</span>
+</span><span class="hll">    <span class="c1">// You can also log the error to an error reporting service</span>
+</span><span class="hll">    <span class="nx">logErrorToMyService</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span> <span class="nx">info</span><span class="p">);</span>
+</span><span class="hll">  <span class="p">}</span>
+</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+<span class="hll">    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">hasError</span><span class="p">)</span> <span class="p">{</span>
+</span><span class="hll">      <span class="c1">// You can render any custom fallback UI</span>
+</span><span class="hll">      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Something</span> <span class="nx">went</span> <span class="nx">wrong</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/h1&gt;;</span>
+</span><span class="hll">    <span class="p">}</span>
+</span>    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Then you can use it as a regular component:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">ErrorBoundary</span><span class="o">&gt;</span>
+  <span class="o">&lt;</span><span class="nx">MyWidget</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="err">/ErrorBoundary&gt;</span>
+</code></pre></div>
+<p>The <code>componentDidCatch()</code> method works like a JavaScript <code>catch {}</code> block, but for components. Only class components can be error boundaries. In practice, most of the time you’ll want to declare an error boundary component once and use it throughout your application.</p>
+
+<p>Note that <strong>error boundaries only catch errors in the components below them in the tree</strong>. An error boundary can’t catch an error within itself. If an error boundary fails trying to render the error message, the error will propagate to the closest error boundary above it. This, too, is similar to how <code>catch {}</code> block works in JavaScript.</p>
+
+<h2>Live Demo</h2>
+
+<p>Check out <a href="https://codepen.io/gaearon/pen/wqvxGa?editors=0010">this example of declaring and using an error boundary</a> with <a href="https://github.com/facebook/react/issues/10294">React 16 beta</a>.</p>
+
+<h2>Where to Place Error Boundaries</h2>
+
+<p>The granularity of error boundaries is up to you. You may wrap top-level route components to display a “Something went wrong” message to the user, just like server-side frameworks often handle crashes. You may also wrap individual widgets in an error boundary to protect them from crashing the rest of the application.</p>
+
+<h2>New Behavior for Uncaught Errors</h2>
+
+<p>This change has an important implication. <strong>As of React 16, errors that were not caught by any error boundary will result in unmounting of the whole React component tree.</strong></p>
+
+<p>We debated this decision, but in our experience it is worse to leave corrupted UI in place than to completely remove it. For example, in a product like Messenger leaving the broken UI visible could lead to somebody sending a message to the wrong person. Similarly, it is worse for a payments app to display a wrong amount than to render nothing.</p>
+
+<p>This change means that as you migrate to React 16, you will likely uncover existing crashes in your application that have been unnoticed before. Adding error boundaries lets you provide better user experience when something goes wrong.</p>
+
+<p>For example, Facebook Messenger wraps content of the sidebar, the info panel, the conversation log, and the message input into separate error boundaries. If some component in one of these UI areas crashes, the rest of them remain interactive.</p>
+
+<p>We also encourage you to use JS error reporting services (or build your own) so that you can learn about unhandled exceptions as they happen in production, and fix them.</p>
+
+<h2>Why Not Use <code>try</code> / <code>catch</code>?</h2>
+
+<p><code>try</code> / <code>catch</code> is great but it only works for imperative code:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">try</span> <span class="p">{</span>
+  <span class="nx">showButton</span><span class="p">();</span>
+<span class="p">}</span> <span class="k">catch</span> <span class="p">(</span><span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+  <span class="c1">// ...</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>However, React components are declarative and specify <em>what</em> should be rendered:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">Button</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>Error boundaries preserve the declarative nature of React, and behave as you would expect. For example, even if an error occurs in a <code>componentDidUpdate</code> hook caused by a <code>setState</code> somewhere deep in the tree, it will still correctly propagate to the closest error boundary.</p>
+
+<h2>Naming Changes from React 15</h2>
+
+<p>React 15 included a very limited support for error boundaries under a different method name: <code>unstable_handleError</code>. This method no longer works, and you will need to change it to <code>componentDidCatch</code> in your code starting from the first 16 beta release.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -804,262 +917,6 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/
 <li><code>ReactTestRenderer.create()</code> now accepts <code>{createNodeMock: element =&gt; mock}</code> as an optional argument so you can mock refs with snapshot testing.<br>
 <small>(<a href="https://github.com/Aweary">@Aweary</a> in <a href="https://github.com/facebook/react/pull/7649">#7649</a> and <a href="https://github.com/facebook/react/pull/8261">#8261</a>)</small></li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2016/09/28/our-first-50000-stars.html">Our First 50,000 Stars</a>
-
-</h1>
-
-<p class="meta">
-  September 28, 2016
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Just three and a half years ago we open sourced a little JavaScript library called React. The journey since that day has been incredibly exciting.</p>
-
-<h2>Commemorative T-Shirt</h2>
-
-<p>In order to celebrate 50,000 GitHub stars, <a href="http://www.maggieappleton.com/">Maggie Appleton</a> from <a href="http://egghead.io/">egghead.io</a> has designed us a special T-shirt, which will be available for purchase from Teespring <strong>only for a week</strong> through Thursday, October 6. Maggie also wrote <a href="https://www.behance.net/gallery/43269677/Reacts-50000-Stars-Shirt">a blog post</a> showing all the different concepts she came up with before settling on the final design.</p>
-
-<p><a target="_blank" href="https://teespring.com/react-50000-stars"><img src="/react/img/blog/react-50k-tshirt.jpg" width="650" height="340" alt="React 50k Tshirt" /></a></p>
-
-<p>The T-shirts are super soft using American Apparel&#39;s tri-blend fabric; we also have kids and toddler T-shirts and baby onesies available.</p>
-
-<ul>
-<li><a href="https://teespring.com/react-50000-stars">Adult T-shirts (straight-cut and fitted)</a></li>
-<li><a href="https://teespring.com/react-50000-stars-kids">Kids T-shirts</a></li>
-<li><a href="https://teespring.com/react-50000-stars-toddler">Toddler T-Shirts</a></li>
-<li><a href="https://teespring.com/react-50000-stars-baby">Baby Onesies</a></li>
-</ul>
-
-<p>Proceeds from the shirts will be donated to <a href="http://www.code2040.org/">CODE2040</a>, a nonprofit that creates access, awareness, and opportunities in technology for underrepresented minorities with a specific focus on Black and Latinx talent.</p>
-
-<h2>Archeology</h2>
-
-<p>We&#39;ve spent a lot of time trying to explain the concepts behind React and the problems it attempts to solve, but we haven&#39;t talked much about how React evolved before being open sourced. This milestone seemed like as good a time as any to dig through the earliest commits and share some of the more important moments and fun facts.</p>
-
-<p>The story begins in our ads org, where we were building incredibly sophisticated client side web apps using an internal MVC framework called <a href="http://web.archive.org/web/20130608154901/http://shaneosullivan.github.io/boltjs/intro.html">BoltJS</a>. Here&#39;s a sample of what some Bolt code looked like:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">CarView</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;javelin/core&#39;</span><span class="p">).</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">name</span><span class="o">:</span> <span class="s1">&#39;CarView&#39;</span><span class="p">,</span>
-  <span class="nx">extend</span><span class="o">:</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;container&#39;</span><span class="p">).</span><span class="nx">Container</span><span class="p">,</span>
-  <span class="nx">properties</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">wheels</span><span class="o">:</span> <span class="mi">4</span><span class="p">,</span>
-  <span class="p">},</span>
-  <span class="nx">declare</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span>
-      <span class="nx">childViews</span><span class="o">:</span> <span class="p">[</span>
-        <span class="p">{</span> <span class="nx">content</span><span class="o">:</span> <span class="s1">&#39;I have &#39;</span> <span class="p">},</span>
-        <span class="p">{</span> <span class="nx">ref</span><span class="o">:</span> <span class="s1">&#39;wheelView&#39;</span> <span class="p">},</span>
-        <span class="p">{</span> <span class="nx">content</span><span class="o">:</span> <span class="s1">&#39; wheels&#39;</span> <span class="p">}</span>
-      <span class="p">]</span>
-    <span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">setWheels</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">wheels</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">findRef</span><span class="p">(</span><span class="s1">&#39;wheelView&#39;</span><span class="p">).</span><span class="nx">setContent</span><span class="p">(</span><span class="nx">wheels</span><span class="p">);</span>
-  <span class="p">},</span>
-  <span class="nx">getWheels</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">findRef</span><span class="p">(</span><span class="s1">&#39;wheelView&#39;</span><span class="p">).</span><span class="nx">getContent</span><span class="p">();</span>
-  <span class="p">},</span>
-<span class="p">});</span>
-
-<span class="kd">var</span> <span class="nx">car</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">CarView</span><span class="p">();</span>
-<span class="nx">car</span><span class="p">.</span><span class="nx">setWheels</span><span class="p">(</span><span class="mi">3</span><span class="p">);</span>
-<span class="nx">car</span><span class="p">.</span><span class="nx">placeIn</span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">body</span><span class="p">);</span>
-<span class="c1">//&lt;div&gt;</span>
-<span class="c1">//  &lt;div&gt;I have &lt;/div&gt;</span>
-<span class="c1">//  &lt;div&gt;3&lt;/div&gt;</span>
-<span class="c1">//  &lt;div&gt; wheels&lt;/div&gt;</span>
-<span class="c1">//&lt;/div&gt;</span>
-</code></pre></div>
-<p>Bolt introduced a number of APIs and features that would eventually make their way into React including <code>render</code>, <code>createClass</code>, and <code>refs</code>. Bolt introduced the concept of <code>refs</code> as a way to create references to nodes that can be used imperatively. This was relevant for legacy interoperability and incremental adoption, and while React would eventually strive to be a lot more functional, <code>refs</code> proved to be a very useful way to break out of the functional paradigm when the need arose.</p>
-
-<p>But as our applications grew more and more sophisticated, our Bolt codebases got pretty complicated. Recognizing some of the framework&#39;s shortcomings, <a href="https://twitter.com/jordwalke">Jordan Walke</a> started experimenting with a side-project called <a href="https://github.com/jordwalke/FaxJs">FaxJS</a>. His goal was to solve many of the same problems as Bolt, but in a very different way. This is actually where most of React&#39;s fundamentals were born, including props, state, re-evaluating large portions of the tree to “diff” the UI, server-side rendering, and a basic concept of components.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">TestProject</span><span class="p">.</span><span class="nx">PersonDisplayer</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">structure</span> <span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="nx">Div</span><span class="p">({</span>
-      <span class="nx">classSet</span><span class="o">:</span> <span class="p">{</span> <span class="nx">personDisplayerContainer</span><span class="o">:</span> <span class="kc">true</span> <span class="p">},</span>
-      <span class="nx">titleDiv</span><span class="o">:</span> <span class="nx">Div</span><span class="p">({</span>
-        <span class="nx">classSet</span><span class="o">:</span> <span class="p">{</span> <span class="nx">personNameTitle</span><span class="o">:</span> <span class="kc">true</span> <span class="p">},</span>
-        <span class="nx">content</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span>
-      <span class="p">}),</span>
-      <span class="nx">nestedAgeDiv</span><span class="o">:</span> <span class="nx">Div</span><span class="p">({</span>
-        <span class="nx">content</span><span class="o">:</span> <span class="s1">&#39;Interests: &#39;</span> <span class="o">+</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">interests</span>
-      <span class="p">})</span>
-    <span class="p">});</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-</code></pre></div>
-<h2>FBolt is Born</h2>
-
-<p>Through his FaxJS experiment, Jordan became convinced that functional APIs  — which discouraged mutation —  offered a better, more scalable way to build user interfaces. He imported his library into Facebook&#39;s codebase in March of 2012 and renamed it “FBolt”, signifying an extension of Bolt where components are written in a functional programming style. Or maybe “FBolt” was a nod to FaxJS – he didn&#39;t tell us! ;)</p>
-
-<p>The interoperability between FBolt and Bolt allowed us to experiment with replacing just one component at a time with more functional component APIs. We could test the waters of this new functional paradigm, without having to go all in. We started with the components that were clearly best expressed functionally and then we would later continue to push the boundaries of what we could express as functions.</p>
-
-<p>Realizing that FBolt wouldn&#39;t be a great name for the library when used on its own, Jordan Walke and <a href="https://twitter.com/tomocchino">Tom Occhino</a> decided on a new name: “React.” After Tom sent out the diff to rename everything to React, Jordan commented:</p>
-
-<blockquote>
-<p>Jordan Walke:
-I might add for the sake of discussion, that many systems advertise some kind of reactivity, but they usually require that you set up some kind of point-to-point listeners and won&#39;t work on structured data. This API reacts to any state or property changes, and works with data of any form (as deeply structured as the graph itself) so I think the name is fitting.</p>
-</blockquote>
-
-<p>Most of Tom&#39;s other commits at the time were on the first version of <a href="https://github.com/graphql/graphiql">GraphiQL</a>, a project which was recently open sourced.</p>
-
-<h2>Adding JSX</h2>
-
-<p>Since about 2010 Facebook has been using an extension of PHP called <a href="https://www.facebook.com/notes/facebook-engineering/xhp-a-new-way-to-write-php/294003943919/">XHP</a>, which enables engineers to create UIs using XML literals right inside their PHP code. It was first introduced to help prevent XSS holes but ended up being an excellent way to structure applications with custom components.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">final</span> <span class="kr">class</span> <span class="o">:</span><span class="nx">a</span><span class="o">:</span><span class="nx">post</span> <span class="kr">extends</span> <span class="o">:</span><span class="nx">x</span><span class="o">:</span><span class="nx">element</span> <span class="p">{</span>
-  <span class="nx">attribute</span> <span class="o">:</span><span class="nx">a</span><span class="p">;</span>
-  <span class="kr">protected</span> <span class="kd">function</span> <span class="nx">render</span><span class="p">()</span><span class="o">:</span> <span class="nx">XHPRoot</span> <span class="p">{</span>
-    <span class="nx">$anchor</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">a</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">$this</span><span class="o">-&gt;</span><span class="nx">getChildren</span><span class="p">()}</span><span class="o">&lt;</span><span class="err">/a&gt;;</span>
-    <span class="nx">$form</span> <span class="o">=</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">form</span>
-        <span class="nx">method</span><span class="o">=</span><span class="s2">&quot;post&quot;</span>
-        <span class="nx">action</span><span class="o">=</span><span class="p">{</span><span class="nx">$this</span><span class="o">-&gt;:</span><span class="nx">href</span><span class="p">}</span>
-        <span class="nx">target</span><span class="o">=</span><span class="p">{</span><span class="nx">$this</span><span class="o">-&gt;:</span><span class="nx">target</span><span class="p">}</span>
-        <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;postLink&quot;</span>
-      <span class="o">&gt;</span><span class="p">{</span><span class="nx">$anchor</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/form&gt;</span>
-    <span class="p">);</span>
-    <span class="nx">$this</span><span class="o">-&gt;</span><span class="nx">transferAllAttributes</span><span class="p">(</span><span class="nx">$anchor</span><span class="p">);</span>
-    <span class="k">return</span> <span class="nx">$form</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Before Jordan&#39;s work had even made its way into the Facebook codebase, Adam Hupp implemented an XHP-like concept for JavaScript, written in Haskell. This system enabled you to write the following inside a JavaScript file:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="o">:</span><span class="nx">example</span><span class="o">:</span><span class="nx">hello</span><span class="p">(</span><span class="nx">attrib</span><span class="p">,</span> <span class="nx">children</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">div</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;special&quot;</span><span class="o">&gt;</span>
-      <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">World</span><span class="o">!&lt;</span><span class="err">/h1&gt;</span>
-      <span class="p">{</span><span class="nx">children</span><span class="p">}</span>
-    <span class="o">&lt;</span><span class="err">/div&gt;</span>
-  <span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>It would compile the above into the following normal ES3-compatible JavaScript:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">function</span> <span class="nx">jsx_example_hello</span><span class="p">(</span><span class="nx">attrib</span><span class="p">,</span> <span class="nx">children</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="nx">S</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s2">&quot;div&quot;</span><span class="p">,</span> <span class="p">{</span><span class="s2">&quot;class&quot;</span><span class="o">:</span> <span class="s2">&quot;special&quot;</span><span class="p">},</span> <span class="p">[</span>
-      <span class="nx">S</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="s2">&quot;h1&quot;</span><span class="p">,</span> <span class="p">{},</span> <span class="p">[</span><span class="s2">&quot;Hello, World!&quot;</span><span class="p">]),</span>
-      <span class="nx">children</span>
-    <span class="p">]</span>
-  <span class="p">);</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>In this prototype, <code>S.create</code> would immediately create and return a DOM node. Most of the conversations on this prototype revolved around the performance characteristics of <code>innerHTML</code> versus creating DOM nodes directly. At the time, it would have been less than ideal to push developers universally in the direction of creating DOM nodes directly since it did not perform as well, especially in Firefox and IE. Facebook&#39;s then-CTO <a href="https://twitter.com/btaylor">Bret Taylor</a> chimed in on the discussion at the time in favor of <code>innerHTML</code> over <code>document.createElement</code>:</p>
-
-<blockquote>
-<p>Bret Taylor:
-If you are not convinced about innerHTML, here is a small microbenchmark. It is about the same in Chrome. innerHTML is about 30% faster in the latest version of Firefox (much more in previous versions), and about 90% faster in IE8.</p>
-</blockquote>
-
-<p>This work was eventually abandoned but was revived after React made its way into the codebase. Jordan sidelined the previous performance discussions by introducing the concept of a “Virtual DOM,” though its eventual name didn&#39;t exist yet.</p>
-
-<blockquote>
-<p>Jordan Walke:
-For the first step, I propose that we do the easiest, yet most general transformation possible. My suggestion is to simply map xml expressions to function call expressions.</p>
-
-<ul>
-<li><code>&lt;x&gt;&lt;/x&gt;</code> becomes <code>x( )</code></li>
-<li><code>&lt;x height=12&gt;&lt;/x&gt;</code> becomes <code>x( {height:12} )</code></li>
-<li><code>&lt;x&gt; &lt;y&gt; &lt;/y&gt; &lt;/x&gt;</code> becomes <code>x({ childList: [y( )] })</code></li>
-</ul>
-
-<p>At this point, JSX doesn&#39;t need to know about React - it&#39;s just a convenient way to write function calls. Coincidentally, React&#39;s primary abstraction is the function. Okay maybe it&#39;s not so coincidental ;)</p>
-</blockquote>
-
-<p>Adam made a very insightful comment, which is now the default way we write lists in React with JSX.</p>
-
-<blockquote>
-<p>Adam Hupp:
-I think we should just treat arrays of elements as a frag. This is useful for constructs like:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">ul</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">foo</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="kd">function</span><span class="p">(</span><span class="nx">i</span><span class="p">)</span> <span class="p">{</span> <span class="k">return</span> <span class="o">&lt;</span><span class="nx">li</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">i</span><span class="p">.</span><span class="nx">data</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/li&gt;; })}&lt;/ul&gt;</span>
-</code></pre></div>
-<p>In this case the ul(..) will get a childList with a single child, which is itself a list.</p>
-</blockquote>
-
-<p>React didn&#39;t end up using Adam&#39;s implementation directly. Instead, we created JSX by forking <a href="https://github.com/laverdet/js-xml-literal">js-xml-literal</a>, a side project by XHP creator Marcel Laverdet. JSX took its name from js-xml-literal, which Jordan modified to just be syntactic sugar for deeply nested function calls.</p>
-
-<h2>API Churn</h2>
-
-<p>During the first year of React, internal adoption was growing quickly but there was quite a lot of churn in the component APIs and naming conventions:</p>
-
-<ul>
-<li><code>project</code> was renamed to <code>declare</code> then to <code>structure</code> and finally to <code>render</code>.</li>
-<li><code>Componentize</code> was renamed to <code>createComponent</code> and finally to <code>createClass</code>.</li>
-</ul>
-
-<p>As the project was about to be open sourced, <a href="https://twitter.com/leeb">Lee Byron</a> sat down with Jordan Walke, Tom Occhino and Sebastian Markbåge in order to refactor, reimplement, and rename one of React&#39;s most beloved features – the lifecycle API. Lee <a href="https://gist.github.com/vjeux/f2b015d230cc1ab18ed1df30550495ed">came up with a well-designed API</a> that is still in place today.</p>
-
-<ul>
-<li>Concepts
-
-<ul>
-<li>component - a ReactComponent instance</li>
-<li>state - internal state to a component</li>
-<li>props - external state to a component</li>
-<li>markup - the stringy HTML-ish stuff components generate</li>
-<li>DOM - the document and elements within the document</li>
-</ul></li>
-<li>Actions
-
-<ul>
-<li>mount - to put a component into a DOM</li>
-<li>initialize - to prepare a component for rendering</li>
-<li>update - a transition of state (and props) resulting a render.</li>
-<li>render - a side-effect-free process to get the representation (markup) of a component.</li>
-<li>validate - make assertions about something created and provided</li>
-<li>destroy - opposite of initialize</li>
-</ul></li>
-<li>Operands
-
-<ul>
-<li>create - make a new thing</li>
-<li>get - get an existing thing</li>
-<li>set - merge into existing</li>
-<li>replace - replace existing</li>
-<li>receive - respond to new data</li>
-<li>force - skip checks to do action</li>
-</ul></li>
-<li>Notifications
-
-<ul>
-<li>shouldObjectAction</li>
-<li>objectWillAction</li>
-<li>objectDidAction</li>
-</ul></li>
-</ul>
-
-<h2>Instagram</h2>
-
-<p>In 2012, Instagram got acquired by Facebook. <a href="https://twitter.com/floydophone">Pete Hunt</a>, who was working on Facebook photos and videos at the time, joined their newly formed web team. He wanted to build their website completely in React, which was in stark contrast with the incremental adoption model that had been used at Facebook.</p>
-
-<p>To make this happen, React had to be decoupled from Facebook&#39;s infrastructure, since Instagram didn&#39;t use any of it. This project acted as a forcing function to do the work needed to open source React. In the process, Pete also discovered and promoted a little project called webpack. He also implemented the <code>renderToString</code> primitive which was needed to do server-side rendering.</p>
-
-<p>As we started to prepare for the open source launch, <a href="https://twitter.com/miekd">Maykel Loomans</a>, a designer on Instagram, made a mock of what the website could look like. The header ended up defining the visual identity of React: its logo and the electric blue color!</p>
-
-<p><center><a target="_blank" href="/react/img/blog/react-50k-mock-full.jpg"><img src="/react/img/blog/react-50k-mock.jpg" width="400" height="410" alt="React website mock" /></a></center></p>
-
-<p>In its earliest days, React benefited tremendously from feedback, ideas, and technical contributions of early adopters and collaborators all over the company. While it might look like an overnight success in hindsight, the story of React is actually a great example of how new ideas often need to go through several rounds of refinement, iteration, and course correction over a long period of time before reaching their full potential.</p>
-
-<p>React&#39;s approach to building user interfaces with functional programming principles has changed the way we do things in just a few short years. It goes without saying, but React would be nothing without the amazing open source community that&#39;s built up around it!</p>
 
 </div>
 

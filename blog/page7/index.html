@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,65 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/09/02/new-react-developer-tools.html">New React Developer Tools</a>
+
+</h1>
+
+<p class="meta">
+  September  2, 2015
+  by
+  
+    
+      <a href="http://benalpert.com">Ben Alpert</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>A month ago, we <a href="/react/blog/2015/08/03/new-react-devtools-beta.html">posted a beta</a> of the new React developer tools. Today, we&#39;re releasing the first stable version of the new devtools. We&#39;re calling it version 0.14, but it&#39;s a full rewrite so we think of it more like a 2.0 release.</p>
+
+<p><img src="/react/img/blog/devtools-full.gif" alt="Video/screenshot of new devtools"></p>
+
+<p>It contains a handful of new features, including:</p>
+
+<ul>
+<li>Built entirely with React, making it easier to develop and extend</li>
+<li>Firefox support</li>
+<li>Selected component instance is available as <code>$r</code> from the console</li>
+<li>More detail is shown in props in the component tree</li>
+<li>Right-click any node and choose &quot;Show Source&quot; to jump to the <code>render</code> method in the Sources panel</li>
+<li>Right-click any props or state value to make it available as <code>$tmp</code> from the console</li>
+<li>Full React Native support</li>
+</ul>
+
+<h2>Installation</h2>
+
+<p>Download the new devtools from the <a href="https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi">Chrome Web Store</a> and on <a href="https://addons.mozilla.org/en-US/firefox/addon/react-devtools/">Mozilla Add-ons</a> for Firefox. If you&#39;re developing using React, we highly recommend installing these devtools.</p>
+
+<p>If you already have the Chrome extension installed, it should autoupdate within the next week. You can also head to <code>chrome://extensions</code> and click &quot;Update extensions now&quot; if you&#39;d like to get the new version today. If you installed the devtools beta, please remove it and switch back to the version from the store to make sure you always get the latest updates and bug fixes.</p>
+
+<p>If you run into any issues, please post them on our <a href="https://github.com/facebook/react-devtools">react-devtools GitHub repo</a>.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -465,61 +518,6 @@ for more info.</p>
 <p>Along with this change, we&#39;re also replacing <code>component.getDOMNode()</code> with <code>ReactDOM.findDOMNode(component)</code>. The <code>findDOMNode</code> method drills down to find which DOM node was rendered by a component, but it returns its argument when passed a DOM node so it&#39;s safe to call on a DOM component too. We introduced this function quietly in the last release, but now we&#39;re deprecating <code>.getDOMNode()</code> completely: it should be easy to change all existing calls in your code to be <code>ReactDOM.findDOMNode</code>. We also have an <a href="https://www.npmjs.com/package/react-codemod">automated codemod script</a> to help you with this transition. Note that the <code>findDOMNode</code> calls are unnecessary when you already have a DOM component ref (as in the example above), so you can (and should) skip them in most cases going forward.</p>
 
 <p>We hope you&#39;re as excited about this release as we are! Let us know what you think of it.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a>
-
-</h1>
-
-<p class="meta">
-  June 12, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re announcing the deprecation of react-tools and JSTransform.</p>
-
-<p>As many people have noticed already, React and React Native have both switched their respective build systems to make use of <a href="http://babeljs.io/">Babel</a>. This replaced <a href="https://github.com/facebook/jstransform">JSTransform</a>, the source transformation tool that we wrote at Facebook. JSTransform has been really good for us over the past several years, however as the JavaScript language continues to evolve, the architecture we used has begun to show its age. We&#39;ve faced maintenance issues and lagged behind implementing new language features. Last year, Babel (previously 6to5) exploded onto the scene, implementing new features at an amazing pace. Since then it has evolved a solid plugin API, and implemented some of our non-standard language features (JSX and Flow type annotations).</p>
-
-<p>react-tools has always been a very thin wrapper around JSTransform. It has served as a great tool for the community to get up and running, but at this point we&#39;re ready to <a href="https://www.youtube.com/watch?v=moSFlvxnbgk">let it go</a>. We won&#39;t ship a new version for v0.14.</p>
-
-<h2>Migrating to Babel</h2>
-
-<p>Many people in the React and broader JavaScript community have already adopted Babel. It has <a href="http://babeljs.io/docs/setup/">integrations with a number of tools</a>. Depending on your tool, you&#39;ll want to read up on the instructions.</p>
-
-<p>We&#39;ve been working with the Babel team as we started making use of it and we&#39;re confident that it will be the right tool to use with React.</p>
-
-<h2>Other Deprecations</h2>
-
-<h3>esprima-fb</h3>
-
-<p>As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (<a href="https://github.com/facebook/esprima/">esprima-fb</a>). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parser, we encourage you to look into using one of those.</p>
-
-<p>Alternatively, if you need to parse JSX, take a look at <a href="https://github.com/marijnh/acorn">acorn</a> parser in combination with <a href="https://github.com/RReverser/acorn-jsx">acorn-jsx</a> plugin which is used inside of Babel and thus always supports the latest syntax.</p>
-
-<h3>JSXTransformer</h3>
-
-<p>JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for <code>&lt;script&gt;</code> tags with <code>type=&quot;text/jsx&quot;</code> and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with <a href="https://babeljs.io/docs/usage/browser/">a nearly identical tool</a>, which has already been integrated into <a href="https://jsbin.com/">JS Bin</a>.</p>
-
-<p>We&#39;ll be deprecating JSXTransformer, however the current version will still be available from various CDNs and Bower.</p>
 
 </div>
 

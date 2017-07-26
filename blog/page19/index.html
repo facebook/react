@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,53 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html">React v0.5.2, v0.4.2</a>
+
+</h1>
+
+<p class="meta">
+  December 18, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a <code>key</code>. Typically &quot;safe&quot; data is used for a <code>key</code>, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.</p>
+
+<p>This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.</p>
+
+<p>Updated versions are available for immediate download via npm, bower, and on our <a href="/react/downloads.html">download page</a>.</p>
+
+<p>We take security very seriously at Facebook. For most of our products, users don&#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.</p>
+
+<p>While we&#39;ve encouraged responsible disclosure as part of <a href="https://www.facebook.com/whitehat/">Facebook&#39;s whitehat bounty program</a> since we launched, we don&#39;t have a good process for notifying our users. Hopefully we don&#39;t need to use it, but moving forward we&#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has <a href="http://emberjs.com/security/">an excellent policy</a> which we may use as our model.</p>
+
+<p>You can learn more about the vulnerability discussed here: <a href="https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU">CVE-2013-7035</a>.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -496,125 +537,6 @@ Is this some sort of template language? Specifically no. This might have been th
 <li>Improved compatibility for Windows</li>
 <li>Improved support for maintaining line numbers when transforming.</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/10/03/community-roundup-9.html">Community Round-up #9</a>
-
-</h1>
-
-<p class="meta">
-  October  3, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we&#39;ll probably organize more in the future.</p>
-
-<p><img src="/react/img/blog/react-hackathon.jpg" alt=""></p>
-
-<h2>React Hackathon Winner</h2>
-
-<p><a href="http://bold-it.com/">Alex Swan</a> implemented <a href="http://qu.izti.me/">Qu.izti.me</a>, a multi-player quiz game. It is real-time via Web Socket and mobile friendly.</p>
-
-<blockquote>
-<p>The game itself is pretty simple. People join the &quot;room&quot; by going to <a href="http://qu.izti.me/">http://qu.izti.me</a> on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.</p>
-
-<p>In my opinion, Socket.io and React go together like chocolate and peanut butter. The page was always an accurate representation of the game object.
-<figure><a href="http://bold-it.com/javascript/facebook-react-example/"><img src="/react/img/blog/quiztime.png" alt=""></a></figure></p>
-
-<p><a href="http://bold-it.com/javascript/facebook-react-example/">Read More...</a></p>
-</blockquote>
-
-<h2>JSConf EU Talk: Rethinking Best Practices</h2>
-
-<p><a href="http://www.petehunt.net/">Pete Hunt</a> presented React at JSConf EU. He covers three controversial design decisions of React:</p>
-
-<ol>
-<li>Build <strong>components</strong>, not templates</li>
-<li>Re-render the whole app on every update</li>
-<li>Virtual DOM</li>
-</ol>
-
-<p>The video will be available soon on the <a href="http://2013.jsconf.eu/speakers/pete-hunt-react-rethinking-best-practices.html">JSConf EU website</a>, but in the meantime, here are Pete&#39;s slides:</p>
-
-<figure><iframe src="https://www.slideshare.net/slideshow/embed_code/26589373" width="100%" height="450" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" allowfullscreen></iframe></figure>
-
-<h2>Pump - Clojure bindings for React</h2>
-
-<p><a href="http://solovyov.net/">Alexander Solovyov</a> has been working on React bindings for ClojureScript. This is really exciting as it is using &quot;native&quot; ClojureScript data structures.</p>
-<div class="highlight"><pre><code class="language-ruby" data-lang="ruby"><span class="p">(</span><span class="n">ns</span> <span class="n">your</span><span class="o">.</span><span class="n">app</span>
-  <span class="p">(</span><span class="ss">:require</span><span class="o">-</span><span class="n">macros</span> <span class="o">[</span><span class="n">pump</span><span class="o">.</span><span class="n">def</span><span class="o">-</span><span class="n">macros</span> <span class="ss">:refer</span> <span class="o">[</span><span class="n">defr</span><span class="o">]]</span><span class="p">)</span>
-  <span class="p">(</span><span class="ss">:require</span> <span class="o">[</span><span class="n">pump</span><span class="o">.</span><span class="n">core</span><span class="o">]</span><span class="p">))</span>
-
-<span class="p">(</span><span class="n">defr</span> <span class="no">Component</span>
-  <span class="ss">:get</span><span class="o">-</span><span class="n">initial</span><span class="o">-</span><span class="n">state</span> <span class="c1">#(identity {:some-value &quot;&quot;})</span>
-
-  <span class="o">[</span><span class="n">component</span> <span class="n">props</span> <span class="n">state</span><span class="o">]</span>
-
-  <span class="o">[</span><span class="ss">:div</span> <span class="p">{</span><span class="ss">:class</span><span class="o">-</span><span class="nb">name</span> <span class="s2">&quot;test&quot;</span><span class="p">}</span> <span class="s2">&quot;hello&quot;</span><span class="o">]</span><span class="p">)</span>
-</code></pre></div>
-<p><a href="https://github.com/piranha/pump">Check it out on GitHub...</a></p>
-
-<h2>JSXHint</h2>
-
-<p><a href="http://blog.selfassembled.org/">Todd Kennedy</a> working at <a href="http://www.condenast.com/">Cond&eacute; Nast</a> implemented a wrapper on-top of <a href="http://www.jshint.com/">JSHint</a> that first converts JSX files to JS.</p>
-
-<blockquote>
-<p>A wrapper around JSHint to allow linting of files containing JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">npm install -g jsxhint
-</code></pre></div>
-<p><a href="https://github.com/CondeNast/JSXHint">Check it out on GitHub...</a></p>
-</blockquote>
-
-<h2>Turbo React</h2>
-
-<p><a href="https://twitter.com/ssorallen">Ross Allen</a> working at <a href="http://mesosphere.io/">Mesosphere</a> combined <a href="https://github.com/rails/turbolinks/">Turbolinks</a>, a library used by Ruby on Rails to speed up page transition, and React.</p>
-
-<blockquote>
-<p>&quot;Re-request this page&quot; is just a link to the current page. When you click it, Turbolinks intercepts the GET request and fetchs the full page via XHR.</p>
-
-<p>The panel is rendered with a random panel- class on each request, and the progress bar gets a random widthX class.</p>
-
-<p>With Turbolinks alone, the entire <body> would be replaced, and transitions would not happen. In this little demo though, React adds and removes classes and text, and the attribute changes are animated with CSS transitions. The DOM is otherwise left intact.
-<figure><a href="https://turbo-react.herokuapp.com/"><img src="/react/img/blog/turboreact.png" alt=""></a></figure></p>
-
-<p><a href="https://turbo-react.herokuapp.com/">Check out the demo...</a></p>
-</blockquote>
-
-<h2>Reactive Table</h2>
-
-<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> continues his series of blog posts about React. This one is an introduction tutorial on rendering a simple table with React.</p>
-
-<blockquote>
-<p>React is all about components. So let&#39;s build one.</p>
-
-<p>Let&#39;s call it Table (to avoid any confusion what the component is about).</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Table</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="cm">/*stuff goeth here*/</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>You see that React components are defined using a regular JS object. Some properties and methods of the object such as render() have special meanings, the rest is upforgrabs.</p>
-
-<p><a href="http://www.phpied.com/reactive-table/">Read the full article...</a></p>
-</blockquote>
 
 </div>
 

@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,123 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/01/06/community-roundup-14.html">Community Round-up #14</a>
+
+</h1>
+
+<p class="meta">
+  January  6, 2014
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>The theme of this first round-up of 2014 is integration. I&#39;ve tried to assemble a list of articles and projects that use React in various environments.</p>
+
+<h2>React Baseline</h2>
+
+<p>React is only one-piece of your web application stack. <a href="https://github.com/intabulas">Mark Lussier</a> shared his baseline stack that uses React along with Grunt, Browserify, Bower, Zepto, Director and Sass. This should help you get started using React for a new project.</p>
+
+<blockquote>
+<p>As I do more projects with ReactJS I started to extract a baseline to use when starting new projects. This is very opinionated and I change my opinion from time to time. This is by no ways perfect and in your opinion most likely wrong :).. which is why I love github</p>
+
+<p>I encourage you to fork, and make it right and submit a pull request!</p>
+
+<p>My current opinion is using tools like Grunt, Browserify, Bower and multiple grunt plugins to get the job done. I also opted for Zepto over jQuery and the Flatiron Project&#39;s Director when I need a router. Oh and for the last little bit of tech that makes you mad, I am in the SASS camp when it comes to stylesheets</p>
+
+<p><a href="https://github.com/intabulas/reactjs-baseline">Check it out on GitHub...</a></p>
+</blockquote>
+
+<h2>Animal Sounds</h2>
+
+<p><a href="http://joshduck.com/">Josh Duck</a> used React in order to build a Windows 8 tablet app. This is a good example of a touch app written in React.
+<figure><a href="http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9"><img src="/react/img/blog/animal-sounds.jpg" alt=""></a></figure></p>
+
+<p><a href="http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9">Download the app...</a></p>
+
+<h2>React Rails Tutorial</h2>
+
+<p><a href="http://selem.im">Selem Delul</a> bundled the <a href="/react/tutorial/tutorial.html">React Tutorial</a> into a rails app. This is a good example on how to get started with a rails project.</p>
+
+<blockquote>
+<div class="highlight"><pre><code class="language-text" data-lang="text">git clone https://github.com/necrodome/react-rails-tutorial
+cd react-rails-tutorial
+bundle install
+rake db:migrate
+rails s
+</code></pre></div>
+<p>Then visit http://localhost:3000/app to see the React application that is explained in the React Tutorial. Try opening multiple tabs!</p>
+
+<p><a href="https://github.com/necrodome/react-rails-tutorial">View on GitHub...</a></p>
+</blockquote>
+
+<h2>Mixing with Backbone</h2>
+
+<p><a href="http://eldar.djafarov.com/">Eldar Djafarov</a> implemented a mixin to link Backbone models to React state and a small abstraction to write two-way binding on-top.</p>
+
+<p><a href="http://jsfiddle.net/djkojb/qZf48/13/">View code on JSFiddle</a></p>
+
+<p><a href="http://eldar.djafarov.com/2013/11/reactjs-mixing-with-backbone/">Check out the blog post...</a></p>
+
+<h2>React Infinite Scroll</h2>
+
+<p><a href="https://twitter.com/guillaumervls">Guillaume Rivals</a> implemented an InfiniteScroll component. This is a good example of a React component that has a simple yet powerful API.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="o">&lt;</span><span class="nx">InfiniteScroll</span>
+  <span class="nx">pageStart</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span><span class="p">}</span>
+  <span class="nx">loadMore</span><span class="o">=</span><span class="p">{</span><span class="nx">loadFunc</span><span class="p">}</span>
+  <span class="nx">hasMore</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span> <span class="o">||</span> <span class="kc">false</span><span class="p">}</span>
+  <span class="nx">loader</span><span class="o">=</span><span class="p">{</span><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;loader&quot;</span><span class="o">&gt;</span><span class="nx">Loading</span> <span class="p">...</span><span class="o">&lt;</span><span class="err">/div&gt;}&gt;</span>
+  <span class="p">{</span><span class="nx">items</span><span class="p">}</span> <span class="c1">// &lt;-- This is the &quot;stuff&quot; you want to load</span>
+<span class="o">&lt;</span><span class="err">/InfiniteScroll&gt;</span>
+</code></pre></div>
+<p><a href="https://github.com/guillaumervls/react-infinite-scroll">Try it out on GitHub!</a></p>
+
+<h2>Web Components Style</h2>
+
+<p><a href="http://subtlegradient.com/">Thomas Aylott</a> implemented an API that looks like Web Components but using React underneath.</p>
+
+<p><a href="http://jsfiddle.net/SubtleGradient/ue2Aa">View the source on JSFiddle...</a></p>
+
+<h2>React vs Angular</h2>
+
+<p>React is often compared with Angular. <a href="http://skulbuny.com/2013/10/31/react-vs-angular/">Pete Hunt</a> wrote an opinionated post on the subject.</p>
+
+<blockquote>
+<p>First of all I think it’s important to evaluate technologies on objective rather than subjective features. “It feels nicer” or “it’s cleaner” aren’t valid reasons: performance, modularity, community size and ease of testing / integration with other tools are.</p>
+
+<p>I’ve done a lot of work benchmarking, building apps, and reading the code of Angular to try to come up with a reasonable comparison between their ways of doing things.</p>
+
+<p><a href="http://skulbuny.com/2013/10/31/react-vs-angular/">Read the full post...</a></p>
+</blockquote>
+
+<h2>Random Tweet</h2>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>Really intrigued by React.js. I&#39;ve looked at all JS frameworks, and excepting <a href="https://twitter.com/serenadejs">@serenadejs</a> this is the first one which makes sense to me.</p>&mdash; Jonas Nicklas (@jonicklas) <a href="https://twitter.com/jonicklas/statuses/412640708755869696">December 16, 2013</a></blockquote></div>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -472,47 +583,6 @@ componentDidUpdate: function() {
 <li>Added support for use in IE8</li>
 <li>Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/12/18/react-v0.5.2-v0.4.2.html">React v0.5.2, v0.4.2</a>
-
-</h1>
-
-<p class="meta">
-  December 18, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re releasing an update to address a potential XSS vulnerability that can    arise when using user data as a <code>key</code>. Typically &quot;safe&quot; data is used for a <code>key</code>, for example, an id from your database, or a unique hash. However there are cases where it may be reasonable to use user generated content. A carefully crafted piece of content could result in arbitrary JS execution. While we make a very concerted effort to ensure all text is escaped before inserting it into the DOM, we missed one case. Immediately following the discovery of this vulnerability, we performed an audit to ensure we this was the only such vulnerability.</p>
-
-<p>This only affects v0.5.x and v0.4.x. Versions in the 0.3.x family are unaffected.</p>
-
-<p>Updated versions are available for immediate download via npm, bower, and on our <a href="/react/downloads.html">download page</a>.</p>
-
-<p>We take security very seriously at Facebook. For most of our products, users don&#39;t need to know that a security issue has been fixed. But with libraries like React, we need to make sure developers using React have access to fixes to keep their users safe.</p>
-
-<p>While we&#39;ve encouraged responsible disclosure as part of <a href="https://www.facebook.com/whitehat/">Facebook&#39;s whitehat bounty program</a> since we launched, we don&#39;t have a good process for notifying our users. Hopefully we don&#39;t need to use it, but moving forward we&#39;ll set up a little bit more process to ensure the safety of our users. Ember.js has <a href="http://emberjs.com/security/">an excellent policy</a> which we may use as our model.</p>
-
-<p>You can learn more about the vulnerability discussed here: <a href="https://groups.google.com/forum/#!topic/reactjs/OIqxlB2aGfU">CVE-2013-7035</a>.</p>
 
 </div>
 

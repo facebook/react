@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,110 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/07/03/community-roundup-4.html">Community Round-up #4</a>
+
+</h1>
+
+<p class="meta">
+  July  3, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React reconciliation process appears to be very well suited to implement a text editor with a live preview as people at Khan Academy show us.</p>
+
+<h2>Khan Academy</h2>
+
+<p><a href="http://bjk5.com/">Ben Kamens</a> explains how <a href="http://benalpert.com/">Ben Alpert</a> and <a href="http://joelburget.com/">Joel Burget</a> are promoting React inside of <a href="https://www.khanacademy.org/">Khan Academy</a>. They now have three projects in the works using React.</p>
+
+<blockquote>
+<p>Recently two Khan Academy devs dropped into our team chat and said they were gonna use React to write a new feature. They even hinted that we may want to adopt it product-wide.</p>
+
+<p>&quot;The library is only a week old. It&#39;s a brand new way of thinking about things. We&#39;re the first to use it outside of Facebook. Heck, even the React devs were surprised to hear we&#39;re using this in production!!!&quot;</p>
+
+<p><a href="http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology">Read the full post...</a></p>
+</blockquote>
+
+<p>The best part is the demo of how React reconciliation process makes live editing more user-friendly.</p>
+
+<blockquote>
+<p>Our renderer, post-React, is on the left. A typical math editor&#39;s preview is on the right.
+<figure><a href="http://bjk5.com/post/53742233351/getting-your-team-to-adopt-new-technology"><img src="/react/img/blog/monkeys.gif" width="70%" /></a></figure></p>
+</blockquote>
+
+<h2>React Snippets</h2>
+
+<p>Over the past several weeks, members of our team, <a href="http://www.petehunt.net/">Pete Hunt</a> and <a href="http://zpao.com/">Paul O&#39;Shannessy</a>, answered many questions that were asked in the <a href="https://groups.google.com/forum/#!forum/reactjs">React group</a>. They give a good overview of how to integrate React with other libraries and APIs through the use of <a href="/react/docs/reusable-components.html">Mixins</a> and <a href="/react/docs/working-with-the-browser.html">Lifecycle Methods</a>.</p>
+
+<blockquote>
+<p><a href="https://groups.google.com/forum/#!topic/reactjs/l6PnP8qbofk">Listening Scroll Event</a></p>
+
+<ul>
+<li><a href="http://jsfiddle.net/aabeL/1/">JSFiddle</a>: Basically I&#39;ve given you two mixins. The first lets you react to global scroll events. The second is, IMO, much more useful: it gives you scroll start and scroll end events, which you can use with setState() to create components that react based on whether the user is scrolling or not.</li>
+</ul>
+
+<p><a href="https://groups.google.com/forum/#!topic/reactjs/RVAY_eQmdpo">Fade-in Transition</a></p>
+
+<ul>
+<li><a href="http://jsfiddle.net/ufe8k/1/">JSFiddle</a>: Creating a new <code>&lt;FadeInWhenAdded&gt;</code> component and using jQuery <code>.fadeIn()</code> function on the DOM node.</li>
+<li><a href="http://jsfiddle.net/R8f5L/5/">JSFiddle</a>: Using CSS transition instead.</li>
+</ul>
+
+<p><a href="https://groups.google.com/forum/#!topic/reactjs/pyUZBRWcHB4">Socket.IO Integration</a></p>
+
+<ul>
+<li><a href="https://gist.github.com/zpao/5686416">Gist</a>: The big thing to notice is that my component is pretty dumb (it doesn&#39;t have to be but that&#39;s how I chose to model it). All it does is render itself based on the props that are passed in. renderOrUpdate is where the &quot;magic&quot; happens.</li>
+<li><a href="https://gist.github.com/petehunt/5687230">Gist</a>: This example is doing everything -- including the IO -- inside of a single React component.</li>
+<li><a href="https://gist.github.com/petehunt/5687276">Gist</a>: One pattern that we use at Instagram a lot is to employ separation of concerns and consolidate I/O and state into components higher in the hierarchy to keep the rest of the components mostly stateless and purely display.</li>
+</ul>
+
+<p><a href="https://groups.google.com/forum/#!topic/reactjs/mHfBGI3Qwz4">Sortable jQuery Plugin Integration</a></p>
+
+<ul>
+<li><a href="http://jsfiddle.net/LQxy7/">JSFiddle</a>: Your React component simply render empty divs, and then in componentDidMount() you call React.renderComponent() on each of those divs to set up a new root React tree. Be sure to explicitly unmountAndReleaseReactRootNode() for each component in componentWillUnmount().</li>
+</ul>
+</blockquote>
+
+<h2>Introduction to React Screencast</h2>
+
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> recorded himself implementing a simple <code>&lt;Blink&gt;</code> tag in React.</p>
+
+<figure><iframe src="https://player.vimeo.com/video/67248575" width="100%" height="340" frameborder="0" webkitAllowFullScreen mozallowfullscreen allowFullScreen></iframe></figure>
+
+<h2>Snake in React</h2>
+
+<p><a href="http://tomocchino.com/">Tom Occhino</a> implemented Snake in 150 lines with React.</p>
+
+<blockquote>
+<p><a href="https://github.com/tomocchino/react-snake/blob/master/src/snake.js">Check the source on GitHub</a>
+<figure><a href="https://tomocchino.github.io/react-snake/"><img src="/react/img/blog/snake.png" alt=""></a></figure></p>
+</blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -435,86 +533,6 @@
 <li><a href="/react/docs/jsx-is-not-html.html">Comments</a></li>
 <li><a href="/react/docs/jsx-is-not-html.html">Custom HTML Attributes</a></li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/06/12/community-roundup.html">Community Round-up #1</a>
-
-</h1>
-
-<p class="meta">
-  June 12, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>React was open sourced two weeks ago and it&#39;s time for a little round-up of what has been going on.</p>
-
-<h2>Khan Academy Question Editor</h2>
-
-<p>It looks like <a href="http://benalpert.com/">Ben Alpert</a> is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC (<a href="irc://chat.freenode.net/reactjs">#reactjs on Freenode</a>). Ben wrote about his experience using React:</p>
-
-<blockquote>
-<p>I just rewrote a 2000-line project in React and have now made a handful of pull requests to React. Everything about React I&#39;ve seen so far seems really well thought-out and I&#39;m proud to be the first non-FB/IG production user of React.</p>
-
-<p>The project that I rewrote in React (and am continuing to improve) is the Khan Academy question editor which content creators can use to enter questions and hints that will be presented to students:
-<figure><a href="http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html"><img src="/react/img/blog/khan-academy-editor.png" alt=""></a></figure></p>
-
-<p><a href="http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html">Read the full post...</a></p>
-</blockquote>
-
-<h2>Pimp my Backbone.View (by replacing it with React)</h2>
-
-<p><a href="https://blog.mayflower.de/">Paul Seiffert</a> wrote a blog post that explains how to integrate React into Backbone applications.</p>
-
-<blockquote>
-<p>React has some interesting concepts for JavaScript view objects that can be used to eliminate this one big problem I have with Backbone.js.</p>
-
-<p>As in most MVC implementations (although React is probably just a VC implementation), a view is one portion of the screen that is managed by a controlling object. This object is responsible for deciding when to re-render the view and how to react to user input. With React, these view-controllers objects are called components. A component knows how to render its view and how to handle to the user&#39;s interaction with it.</p>
-
-<p>The interesting thing is that React is figuring out by itself when to re-render a view and how to do this in the most efficient way.</p>
-
-<p><a href="https://blog.mayflower.de/3937-Backbone-React.html">Read the full post...</a></p>
-</blockquote>
-
-<h2>Using facebook&#39;s React with require.js</h2>
-
-<p><a href="http://blog.xenji.com/">Mario Mueller</a> wrote a menu component in React and was able to easily integrate it with require.js, EventEmitter2 and bower.</p>
-
-<blockquote>
-<p>I recently stumbled upon facebook&#39;s React library, which is a JavaScript library for building reusable frontend components. Even if this lib is only at version 0.3.x it behaves very stable, it is fast and is fun to code. I&#39;m a big fan of require.js, so I tried to use React within the require.js eco system. It was not as hard as expected and here are some examples and some thoughts about it.</p>
-
-<p><a href="http://blog.xenji.com/2013/06/facebooks-react-require-js.html">Read the full post...</a></p>
-</blockquote>
-
-<h2>Origins of React</h2>
-
-<p><a href="http://www.petehunt.net/blog/">Pete Hunt</a> explained what differentiates React from other JavaScript libraries in <a href="/react/blog/2013/06/05/why-react.html">a previous blog post</a>. <a href="http://leebyron.com/">Lee Byron</a> gives another perspective on Quora:</p>
-
-<blockquote>
-<p>React isn&#39;t quite like any other popular JavaScript libraries, and it solves a very specific problem: complex UI rendering. It&#39;s also intended to be used along side many other popular libraries. For example, React works well with Backbone.js, amongst many others.</p>
-
-<p>React was born out of frustrations with the common pattern of writing two-way data bindings in complex MVC apps. React is an implementation of one-way data bindings.</p>
-
-<p><a href="https://www.quora.com/React-JS-Library/How-is-Facebooks-React-JavaScript-library/answer/Lee-Byron?srid=3DcX">Read the full post...</a></p>
-</blockquote>
 
 </div>
 

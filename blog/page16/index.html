@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,76 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/04/04/reactnet.html">Use React and JSX in ASP.NET MVC</a>
+
+</h1>
+
+<p class="meta">
+  April  4, 2014
+  by
+  
+    
+      <a href="http://dan.cx/">Daniel Lo Nigro</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re happy to announce the initial release of
+<a href="http://reactjs.net/">ReactJS.NET</a>, which makes it easier to use React and JSX
+in .NET applications, focusing specifically on ASP.NET MVC web applications.
+It has several purposes:</p>
+
+<ul>
+<li>On-the-fly JSX to JavaScript compilation. Simply reference JSX files and they
+will be compiled and cached server-side.</li>
+</ul>
+<div class="highlight"><pre><code class="language-html" data-lang="html">   <span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;@Url.Content(&quot;</span><span class="err">/</span><span class="na">Scripts</span><span class="err">/</span><span class="na">HelloWorld</span><span class="err">.</span><span class="na">jsx</span><span class="err">&quot;)&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<ul>
+<li>JSX to JavaScript compilation via popular minification/combination libraries
+(Cassette and ASP.NET Bundling and Minification). This is suggested for
+production websites.</li>
+<li>Server-side component rendering to make your initial render super fast.</li>
+</ul>
+
+<p>Even though we are focusing on ASP.NET MVC, ReactJS.NET can also be used in
+Web Forms applications as well as non-web applications (for example, in build
+scripts). ReactJS.NET currently only works on Microsoft .NET but we are working
+on support for Linux and Mac OS X via Mono as well.</p>
+
+<h2>Installation</h2>
+
+<p>ReactJS.NET is packaged in NuGet. Simply run <code>Install-Package React.Mvc4</code> in the
+package manager console or search NuGet for &quot;React&quot; to install it.
+<a href="http://reactjs.net/docs">See the documentation</a> for more information. The
+GitHub project contains
+<a href="https://github.com/reactjs/React.NET/tree/master/src/React.Sample.Mvc4">a sample website</a>
+demonstrating all of the features.</p>
+
+<p>Let us know what you think, and feel free to send through any feedback and
+report bugs <a href="https://github.com/reactjs/React.NET">on GitHub</a>.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -522,121 +586,6 @@ Thomas Boyt (<a href="https://twitter.com/thomasaboyt">@thomasaboyt</a>) wrote <
 <h2>Random Tweets</h2>
 
 <div><blockquote class="twitter-tweet" lang="en"><p>Worked for 2 hours on a [@react_js](https://twitter.com/react_js) app sans internet. Love that I could get stuff done with it without googling every question.</p>&mdash; John Shimek (@varikin) <a href="https://twitter.com/varikin/status/436606891657949185">February 20, 2014</a></blockquote></div>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/02/24/community-roundup-17.html">Community Round-up #17</a>
-
-</h1>
-
-<p class="meta">
-  February 24, 2014
-  by
-  
-    
-      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>It&#39;s exciting to see the number of real-world React applications and components skyrocket over the past months! This community round-up features a few examples of inspiring React applications and components.</p>
-
-<h2>React in the Real World</h2>
-
-<h3>Facebook Lookback video editor</h3>
-
-<p>Large parts of Facebook&#39;s web frontend are already powered by React. The recently released Facebook <a href="https://www.facebook.com/lookback/edit/">Lookback video and its corresponding editor</a> are great examples of a complex, real-world React app.</p>
-
-<h3>Russia&#39;s largest bank is now powered by React</h3>
-
-<p>Sberbank, Russia&#39;s largest bank, recently switched large parts of their site to use React, as detailed in <a href="https://groups.google.com/forum/#!topic/reactjs/Kj6WATX0atg">this post by Vyacheslav Slinko</a>.</p>
-
-<h3>Relato</h3>
-
-<p><a href="https://bripkens.github.io/relato/">Relato</a> by <a href="https://github.com/bripkens">Ben Ripkens</a> shows Open Source Statistics based on npm data. It features a filterable and sortable table built in React. Check it out &ndash; it&#39;s super fast!</p>
-
-<h3>Makona Editor</h3>
-
-<p>John Lynch (<a href="https://twitter.com/johnrlynch">@johnrlynch</a>) created Makona, a block-style document editor for the web. Blocks of different content types comprise documents, authored using plain markup. At the switch of a toggle, block contents are then rendered on the page. While not quite a WYSIWYG editor, Makona uses plain textareas for input. This makes it compatible with a wider range of platforms than traditional rich text editors.
-<figure><a href="https://johnthethird.github.io/makona-editor/"><img src="/react/img/blog/makona-editor.png" alt=""></a></figure></p>
-
-<h3>Create Chrome extensions using React</h3>
-
-<p>React is in no way limited to just web pages. Brandon Tilley (<a href="https://twitter.com/BinaryMuse">@BinaryMuse</a>) just released a detailed walk-through of <a href="http://brandontilley.com/2014/02/24/creating-chrome-extensions-with-react.html">how he built his Chrome extension &quot;Fast Tab Switcher&quot; using React</a>.</p>
-
-<h3>Twitter Streaming Client</h3>
-
-<p>Javier Aguirre (<a href="https://twitter.com/javaguirre">@javaguirre</a>) put together a simple <a href="http://javaguirre.net/2014/02/11/twitter-streaming-api-with-node-socket-io-and-reactjs/">twitter streaming client using node, socket.io and React</a>.</p>
-
-<h3>Sproutsheet</h3>
-
-<p><a href="http://sproutsheet.com/">Sproutsheet</a> is a gardening calendar. You can use it to track certain events that happen in the life of your plants. It&#39;s currently in beta and supports localStorage, and data/image import and export.</p>
-
-<h3>Instant Domain Search</h3>
-
-<p><a href="https://instantdomainsearch.com/">Instant Domain Search</a> also uses React. It sure is instant!</p>
-
-<h3>SVG-based graphical node editor</h3>
-
-<p><a href="http://noflojs.org/">NoFlo</a> and <a href="http://meemoo.org/">Meemoo</a> developer <a href="http://www.forresto.com/">Forresto Oliphant</a> built an awesome SVG-based <a href="https://forresto.github.io/prototyping/react/">node editor</a> in React.
- <figure><a href="https://forresto.github.io/prototyping/react/"><img src="/react/img/blog/react-svg-fbp.png" alt=""></a></figure></p>
-
-<h3>Ultimate Tic-Tac-Toe Game in React</h3>
-
-<p>Rafał Cieślak (<a href="https://twitter.com/Ravicious">@Ravicious</a>) wrote a <a href="https://ravicious.github.io/ultimate-ttt/">React version</a> of <a href="http://mathwithbaddrawings.com/2013/06/16/ultimate-tic-tac-toe/">Ultimate Tic Tac Toe</a>. Find the source <a href="https://github.com/ravicious/ultimate-ttt">here</a>.</p>
-
-<h3>ReactJS Gallery</h3>
-
-<p><a href="https://github.com/lele85">Emanuele Rampichini</a>&#39;s <a href="https://github.com/lele85/ReactGallery">ReactJS Gallery</a> is a cool demo app that shows fullscreen images from a folder on the server. If the folder content changes, the gallery app updates via websockets.</p>
-
-<p>Emanuele shared this awesome demo video with us:</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/jYcpaemt90M" frameborder="0" allowfullscreen></iframe>
-
-<h2>React Components</h2>
-
-<h3>Table Sorter</h3>
-
-<p><a href="https://bgerm.github.io/react-table-sorter-demo/">Table Sorter</a> by <a href="https://github.com/bgerm">bgerm</a> [<a href="https://github.com/bgerm/react-table-sorter-demo">source</a>] is another helpful React component.</p>
-
-<h3>Static-search</h3>
-
-<p>Dmitry Chestnykh <a href="https://twitter.com/dchest">@dchest</a> wrote a <a href="https://github.com/dchest/static-search">static search indexer</a> in Go, along with a <a href="http://www.codingrobots.com/search/">React-based web front-end</a> that consumes search result via JSON.</p>
-
-<h3>Lorem Ipsum component</h3>
-
-<p><a href="https://github.com/martinandert">Martin Andert</a> created <a href="https://github.com/martinandert/react-lorem-component">react-lorem-component</a>, a simple component for all your placeholding needs.</p>
-
-<h3>Input with placeholder shim</h3>
-
-<p><a href="https://github.com/enigma-io/react-input-placeholder">react-input=placeholder</a> by <a href="https://github.com/enigma-io">enigma-io</a> is a small wrapper around React.DOM.input that shims in placeholder functionality for browsers that don&#39;t natively support it.</p>
-
-<h3>diContainer</h3>
-
-<p><a href="https://github.com/SpektrumFM/dicontainer">dicontainer</a> provides a dependency container that lets you inject Angular-style providers and services as simple React.js Mixins.</p>
-
-<h2>React server rendering</h2>
-
-<p>Ever wonder how to pre-render React components on the server? <a href="https://github.com/mhart/react-server-example">react-server-example</a> by Michael Hart (<a href="https://twitter.com/hichaelmart">@hichaelmart</a>) walks through the necessary steps.</p>
-
-<p>Similarly, Alan deLevie (<a href="https://twitter.com/adelevie">@adelevie</a>) created <a href="https://github.com/adelevie/react-client-server-starter">react-client-server-starter</a>, another detailed walk-through of how to server-render your app.</p>
-
-<h2>Random Tweet</h2>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>Recent changes: web ui is being upgraded to [#reactjs](https://twitter.com/search?q=%23reactjs&src=hash), HEAD~4 at [https://camlistore.googlesource.com/camlistore/](https://camlistore.googlesource.com/camlistore/)</p>&mdash; Camlistore (@Camlistore) <a href="https://twitter.com/Camlistore/status/423925795820539904">January 16, 2014</a></blockquote></div>
 
 </div>
 

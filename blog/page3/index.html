@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,79 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a>
+
+</h1>
+
+<p class="meta">
+  April  8, 2016
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Yesterday afternoon we shipped v15.0.0 and quickly got some feedback about a couple of issues. We apologize for these problems and we&#39;ve been working since then to make sure we get fixes into your hands as quickly as possible.</p>
+
+<p>The first of these issues is related to the removal of an undocumented API. This API was added to enable <a href="/react/docs/jsx-spread.html">JSX Spread Attributes</a> in our JS compile tools (react-tools, JSXTransformer) before <code>Object.assign</code> was standard. When we stopped supporting these tools last year, we kept the API there to catch the longer tail of people using those tools. Meanwhile we moved to using Babel and encouraged others to do the same. Babel will typically compile the spread use to an <code>_extends</code> helper, which will use <code>Object.assign</code>. We did not properly research other compilation tools before deciding to remove the API in v15. Specifically, TypeScript and coffee-react are two popular packages using <code>React.__spread</code>, as well as reactify which still makes use react-tools. In order to make sure that code compiled with these tools is not broken, we will be restoring the <code>React.__spread</code> API and adding a warning. It will be removed in the future so if you maintain a project making using of it, we encourage you to compile to <code>Object.assign</code> directly or a similar helper function.</p>
+
+<p>The second issue resulted in cursor position being lost in controlled inputs. We merged a pull request earlier this week to fix a separate regression from v0.14. Our goal was to target <code>&lt;option&gt;</code> elements but we ended up targeting all interactions with <code>value</code> properties. Unfortunately we didn&#39;t test it as thoroughly as we thought. We backed out the offending change and fixed the issue in different way which doesn&#39;t have the same problem.</p>
+
+<p>We apologize if you installed 15.0.0 and have encountered these issues yourselves.</p>
+
+<p>As usual, you can get install the <code>react</code> package via npm or download a browser bundle.</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-15.0.1.js">https://fb.me/react-15.0.1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-15.0.1.min.js">https://fb.me/react-15.0.1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-15.0.1.js">https://fb.me/react-with-addons-15.0.1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-15.0.1.min.js">https://fb.me/react-with-addons-15.0.1.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-15.0.1.js">https://fb.me/react-dom-15.0.1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-15.0.1.min.js">https://fb.me/react-dom-15.0.1.min.js</a><br></li>
+</ul>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
+<ul>
+<li>Restore <code>React.__spread</code> API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated.<br>
+<small><a href="https://github.com/zpao">@zpao</a> in <a href="https://github.com/facebook/react/pull/6444">#6444</a></small></li>
+</ul>
+
+<h3>ReactDOM</h3>
+
+<ul>
+<li>Fixed issue resulting in loss of cursor position in controlled inputs.<br>
+<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/6449">#6449</a></small></li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -599,91 +666,6 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <li><code>Object.is</code> is used in a number of places to compare values, which leads to fewer false positives, especially involving <code>NaN</code>. In particular, this affects the <code>shallowCompare</code> add-on.</li>
 <li>React DOM now defaults to using DOM attributes instead of properties, which fixes a few edge case bugs. Additionally the nullification of values (ex: <code>href={null}</code>) now results in the forceful removal, no longer trying to set to the default value used by browsers in the absence of a value.</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2016/02/19/new-versioning-scheme.html">New Versioning Scheme</a>
-
-</h1>
-
-<p class="meta">
-  February 19, 2016
-  by
-  
-    
-      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re announcing that we&#39;re switching to major revisions for React. The current version is 0.14.7. The next release will be: <strong>15.0.0</strong></p>
-
-<p>This change shouldn&#39;t materially affect most of you. Moving to major semver versions simply helps indicate our commitment to stability and gives us the flexibility to add new backwards-compatible features in minor releases. This means we can have fewer major releases and you won&#39;t have to wait as long to take advantage of improvements to React. Plus, if you&#39;re a component author, this versioning scheme gives you the flexibility to support two major versions of React at the same time so you don&#39;t need to leave anyone behind.</p>
-
-<p>The core of the React API has been stable for years. Our business as well as many of yours all depend heavily on the use of React as a core piece of our infrastructure. We&#39;re committed to the stability as well as the progress of React going forward.</p>
-
-<h2>Bring Everyone Along</h2>
-
-<p>React isn&#39;t just a library but an ecosystem. We know that your applications and ours are not just isolated islands of code. It is a network of your own application code, your own open source components and third party libraries that all depend on React.</p>
-
-<p><img src="/react/img/blog/versioning-1.png" width="403"></p>
-
-<p>Therefore it is important that we don&#39;t just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.</p>
-
-<p><img src="/react/img/blog/versioning-poll.png" width="596"></p>
-
-<h2>Introducing Minor Releases</h2>
-
-<p>Ideally everyone could just depend on the latest version of React all the time.</p>
-
-<p><img src="/react/img/blog/versioning-2.png" width="463"></p>
-
-<p>We know that in practice that is not possible. In the future, we expect more new additive APIs rather than breakage of existing ones. By moving to major revisions in the semver scheme, we can release new versions without breaking existing ones.</p>
-
-<p><img src="/react/img/blog/versioning-3.png" width="503"></p>
-
-<p>That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.</p>
-
-<h2>What Happened to 1.0.0?</h2>
-
-<p>Part of React&#39;s growth and popularity is that it is stable and performant in production. People have long asked what React v1.0 will look. Technically some breaking changes are important to avoid stagnating, but we still achieve stability by making it easy to upgrade. If major version numbers indicate API stability and engender trust that it can be used in production, then we got there a long time ago. There are too many preconceived notions of what v1.0 is. We&#39;re still following semver. We&#39;re just communicating stability by moving the 0 from the beginning to the end.</p>
-
-<h2>Breaking Changes</h2>
-
-<p>Minor revision releases will include deprecation warnings and tips for how to upgrade an API or pattern that will be removed or changed in the future.</p>
-
-<p>We will continue to release <a href="https://www.youtube.com/watch?v=d0pOgY8__JM">codemods</a> for common patterns to make automatic upgrades of your codebase easier.</p>
-
-<p>Once we&#39;ve reached the end of life for a particular major version, we&#39;ll release a new major version where all deprecated APIs have been removed.</p>
-
-<h2>Avoiding The Major Cliff</h2>
-
-<p>If you try to upgrade your component to 16.0.0 you might find that your application no longer works if you still have other dependencies. E.g. if Ryan&#39;s and Jed&#39;s components are only compatible with 15.x.x.</p>
-
-<p><img src="/react/img/blog/versioning-4.png" width="498"></p>
-
-<p>Worst case, you revert back to 15.1.0 for your application. Since you&#39;ll want to use your component, you might also revert that one.</p>
-
-<p><img src="/react/img/blog/versioning-5.png" width="493"></p>
-
-<p>Of course, Ryan and Jed think the same way. If we&#39;re not careful, we can hit a cliff where nobody upgrades. This has happened to many software project ecosystems in the past.</p>
-
-<p>Therefore, we&#39;re committed to making it easy for most components and libraries built on top of React to be compatible with two major versions at the same time. We will do this by introducing new APIs before completely removing the old ones, thereby avoiding those cliffs.</p>
-
-<p><img src="/react/img/blog/versioning-6.png" width="493"></p>
 
 </div>
 

@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,101 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/02/20/introducing-relay-and-graphql.html">Introducing Relay and GraphQL</a>
+
+</h1>
+
+<p class="meta">
+  February 20, 2015
+  by
+  
+    
+      <a href="https://twitter.com/wincent">Greg Hurrell</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <h2>Data fetching for React applications</h2>
+
+<p>There&#39;s more to building an application than creating a user interface. Data fetching is still a tricky problem, especially as applications become more complicated. At <a href="http://conf.reactjs.com/">React.js Conf</a> we announced two projects we&#39;ve created at Facebook to make data fetching simple for developers, even as a product grows to include dozens of contributors and the application becomes as complex as Facebook itself.</p>
+
+<iframe width="100%" height="315" src="https://www.youtube-nocookie.com/embed/9sc8Pyc51uU" frameborder="0" allowfullscreen></iframe>
+
+<p>The two projects &mdash; Relay and GraphQL &mdash; have been in use in production at Facebook for some time, and we&#39;re excited to be bringing them to the world as open source in the future. In the meantime, we wanted to share some additional information about the projects here.</p>
+
+<script async class="speakerdeck-embed" data-id="7af7c2f33bf9451a892dcd91de55b7c2" data-ratio="1.29456384323641" src="//speakerdeck.com/assets/embed.js"></script>
+
+<h2>What is Relay?</h2>
+
+<p>Relay is a new framework from Facebook that provides data-fetching functionality for React applications. It was announced at React.js Conf (January 2015).</p>
+
+<p>Each component specifies its own data dependencies declaratively using a query language called GraphQL. The data is made available to the component via properties on <code>this.props</code>.</p>
+
+<p>Developers compose these React components naturally, and Relay takes care of composing the data queries into efficient batches, providing each component with exactly the data that it requested (and no more), updating those components when the data changes, and maintaining a client-side store (cache) of all data.</p>
+
+<h2>What is GraphQL?</h2>
+
+<p>GraphQL is a data querying language designed to describe the complex, nested data dependencies of modern applications. It&#39;s been in production use in Facebook&#39;s native apps for several years.</p>
+
+<p>On the server, we configure the GraphQL system to map queries to underlying data-fetching code. This configuration layer allows GraphQL to work with arbitrary underlying storage mechanisms. Relay uses GraphQL as its query language, but it is not tied to a specific implementation of GraphQL.</p>
+
+<h2>The value proposition</h2>
+
+<p>Relay was born out of our experiences building large applications at Facebook. Our overarching goal is to enable developers to create correct, high-performance applications in a straightforward and obvious way. The design enables even large teams to make changes with a high degree of isolation and confidence. Fetching data is hard, dealing with ever-changing data is hard, and performance is hard. Relay aims to reduce these problems to simple ones, moving the tricky bits into the framework and freeing you to concentrate on building your application.</p>
+
+<p>By co-locating the queries with the view code, the developer can reason about what a component is doing by looking at it in isolation; it&#39;s not necessary to consider the context where the component was rendered in order to understand it. Components can be moved anywhere in a render hierarchy without having to apply a cascade of modifications to parent components or to the server code which prepares the data payload.</p>
+
+<p>Co-location leads developers to fall into the &quot;pit of success&quot;, because they get exactly the data they asked for and the data they asked for is explicitly defined right next to where it is used. This means that performance becomes the default (it becomes much harder to accidentally over-fetch), and components are more robust (under-fetching is also less likely for the same reason, so components won&#39;t try to render missing data and blow up at runtime).</p>
+
+<p>Relay provides a predictable environment for developers by maintaining an invariant: a component won&#39;t be rendered until all the data it requested is available. Additionally, queries are defined statically (ie. we can extract queries from a component tree before rendering) and the GraphQL schema provides an authoritative description of what queries are valid, so we can validate queries early and fail fast when the developer makes a mistake.</p>
+
+<p>Only the fields of an object that a component explicitly asks for will be accessible to that component, even if other fields are known and cached in the store (because another component requested them). This makes it impossible for implicit data dependency bugs to exist latently in the system.</p>
+
+<p>By handling all data-fetching via a single abstraction, we&#39;re able to handle a bunch of things that would otherwise have to be dealt with repeatedly and pervasively across the application:</p>
+
+<ul>
+<li><strong>Performance:</strong> All queries flow through the framework code, where things that would otherwise be inefficient, repeated query patterns get automatically collapsed and batched into efficient, minimal queries. Likewise, the framework knows which data have been previously requested, or for which requests are currently &quot;in flight&quot;, so queries can be automatically de-duplicated and the minimal queries can be produced.</li>
+<li><strong>Subscriptions:</strong> All data flows into a single store, and all reads from the store are via the framework. This means the framework knows which components care about which data and which should be re-rendered when data changes; components never have to set up individual subscriptions.</li>
+<li><strong>Common patterns:</strong> We can make common patterns easy. Pagination is the example that <a href="https://twitter.com/jingc">Jing</a> gave at the conference: if you have 10 records initially, getting the next page just means declaring you want 15 records in total, and the framework automatically constructs the minimal query to grab the delta between what you have and what you need, requests it, and re-renders your view when the data become available.</li>
+<li><strong>Simplified server implementation:</strong> Rather than having a proliferation of end-points (per action, per route), a single GraphQL endpoint can serve as a facade for any number of underlying resources.</li>
+<li><strong>Uniform mutations:</strong> There is one consistent pattern for performing mutations (writes), and it is conceptually baked into the data querying model itself. You can think of a mutation as a query with side-effects: you provide some parameters that describe the change to be made (eg. attaching a comment to a record) and a query that specifies the data you&#39;ll need to update your view of the world after the mutation completes (eg. the comment count on the record), and the data flows through the system using the normal flow. We can do an immediate &quot;optimistic&quot; update on the client (ie. update the view under the assumption that the write will succeed), and finally commit it, retry it or roll it back in the event of an error when the server payload comes back.</li>
+</ul>
+
+<h2>How does it relate to Flux?</h2>
+
+<p>In some ways Relay is inspired by Flux, but the mental model is much simpler. Instead of multiple stores, there is one central store that caches all GraphQL data. Instead of explicit subscriptions, the framework itself can track which data each component requests, and which components should be updated whenever the data change. Instead of actions, modifications take the form of mutations.</p>
+
+<p>At Facebook, we have apps built entirely using Flux, entirely using Relay, or with both. One pattern we see emerging is letting Relay manage the bulk of the data flow for an application, but using Flux stores on the side to handle a subset of application state.</p>
+
+<h2>Open source plans</h2>
+
+<p>We&#39;re working very hard right now on getting both GraphQL (a spec, and a reference implementation) and Relay ready for public release (no specific dates yet, but we are super excited about getting these out there).</p>
+
+<p>In the meantime, we&#39;ll be providing more and more information in the form of blog posts (and in <a href="https://gist.github.com/wincent/598fa75e22bdfa44cf47">other channels</a>). As we get closer to the open source release, you can expect more concrete details, syntax and API descriptions and more.</p>
+
+<p>Watch this space!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -694,129 +783,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.m
 <ul>
 <li>JSX-related transforms now always use double quotes for props and <code>displayName</code></li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/11/25/community-roundup-24.html">Community Round-up #24</a>
-
-</h1>
-
-<p class="meta">
-  November 25, 2014
-  by
-  
-    
-      <a href="https://twitter.com/steveluscher">Steven Luscher</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <h2>Keep it Simple</h2>
-
-<p>Pedro Nauck (<a href="https://github.com/pedronauck">pedronauck</a>) delivered an impeccably illustrated deck at Brazil&#39;s <em>Front in Floripa</em> conference. Watch him talk about how to keep delivering value as your app scales, by keeping your development process simple.</p>
-
-<script async class="speakerdeck-embed" data-id="44129b9054c901328b89221e99b278fe" data-ratio="1.33333333333333" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>Murilo Pereira (<a href="https://github.com/mpereira">mpereira</a>) tussles with the topic of complexity in this blog post about <a href="http://www.techsonian.net/2014/09/from-backbone-to-react-our-experience-scaling-a-web-application/">coping with scaling up</a>, where he describes how his team used React to make possible the “nearly impossible.”</p>
-
-<p>I (<a href="https://github.com/steveluscher">steveluscher</a>) spoke at Manning Publications&#39; “Powered By JavaScript” Strangeloop pre-conf in St. Louis. There, I proposed a new notation to talk about development complexity – Big-Coffee Notation ☕(n) – and spoke about the features of React that help keep our Big-Coffee from going quadratic, as our user interfaces get more complex.</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/rI0GQc__0SM" frameborder="0" allowfullscreen></iframe>
-
-<p>James Pearce (<a href="https://github.com/jamesgpearce">jamesgpearce</a>) carried Big-Coffee all the way to Raleigh, NC. At the <em>All Things Open</em> conference, he spoke about some of the design decisions that went into React, particularly those that lend themselves to simpler, more reliable code.</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/m2fuO2wl_3c" frameborder="0" allowfullscreen></iframe>
-
-<h2>All About Isomorphism</h2>
-
-<p>Michael Ridgway (<a href="https://github.com/mridgway">mridgway</a>) shows us how Yahoo! (who recently <a href="http://www.slideshare.net/rmsguhan/react-meetup-mailonreact">moved Yahoo! Mail to React</a>) renders their React+Flux application, server-side.</p>
-
-<script async class="speakerdeck-embed" data-id="87ecaa3048750132f42542ffc18c6fcf" data-ratio="1.77777777777778" src="//speakerdeck.com/assets/embed.js"></script>
-
-<p>Péter Márton (<a href="https://github.com/hekike">hekike</a>) helps us brew a cold one (literally) using an application that&#39;s server-client <a href="http://blog.risingstack.com/from-angularjs-to-react-the-isomorphic-way/">isomorphic and indexable</a>. Demo and sample code included – cold ones sold separately.</p>
-
-<p>And, lest you think that client-server isomorphism exists in pursuit of crawalable, indexable HTML alone, watch as Nate Hunzaker (<a href="https://github.com/nhunzaker">nhunzaker</a>) <a href="http://viget.com/extend/visualization-is-for-sharing-using-react-for-portable-data-visualization">server renders data visualizations as SVG</a> with React.</p>
-
-<h2>React Router Mows the Lawn</h2>
-
-<p>Ryan Florence (<a href="https://github.com/rpflorence%5D">rpflorence</a>) and Michael Jackson (<a href="https://github.com/mjackson">mjackson</a>) unveiled a new API for <a href="https://github.com/rackt/react-router">React Router</a> that solves some of its user&#39;s problems by eliminating the problems themselves. Read all about what React Router learned from its community of users, and how they&#39;ve <a href="https://github.com/rackt/react-router/wiki/Announcements">rolled your ideas into their latest release</a>.</p>
-
-<h2>React in Practice</h2>
-
-<p>Jonathan Beebe (<a href="https://github.com/somethingkindawierd">somethingkindawierd</a>) spoke about how he uses React to build tools that deliver hope to those trying to make the best of a bad situation. Watch his talk from this year&#39;s <em>Nodevember</em> conference in Nashville</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/uZgAq1CZ1N8" frameborder="0" allowfullscreen></iframe>
-
-<p>If you take a peek under the covers, you&#39;ll find that React powers <a href="https://blog.carousel.com/2014/11/introducing-carousel-for-web-ipad-and-android-tablet/">Carousel</a>, Dropbox&#39;s new photo and video gallery app.</p>
-
-<p>We enjoyed a cinematic/narrative experience with this React-powered, interactive story by British author William Boyd. Dive into “<a href="https://thevanishinggame.wellstoried.com">The Vanishing Game</a>” and see for yourself.</p>
-
-<h2>Be Kind, Rewind</h2>
-
-<p>Spend the next 60 seconds watching Daniel Woelfel (<a href="https://github.com/dwwoelfel">dwwoelfel</a>) serialize a React app&#39;s state as a string, then deserialize it to produce a working UI. Read about how he uses this technique to <a href="http://blog.circleci.com/local-state-global-concerns/">reproduce bugs</a> reported to him by his users.</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/5yHFTN-_mOo" frameborder="0" allowfullscreen></iframe>
-
-<h2>Community Components</h2>
-
-<p>Tom Chen (<a href="https://github.com/tomchentw">tomchentw</a>) brings us a <a href="https://tomchentw.github.io/react-google-maps/">react-google-maps</a> component, and a way to syntax highlight source code using Prism and the <a href="https://tomchentw.github.io/react-prism/">react-prism</a> component, for good measure.</p>
-
-<p>Jed Watson (<a href="https://github.com/JedWatson">jedwatson</a>) helps you manage touch, tap, and press events using the <a href="https://github.com/JedWatson/react-tappable">react-tappable</a> component.</p>
-
-<p>To find these, and more community-built components, consult the <a href="http://react-components.com/">React Components</a> and <a href="http://react.rocks">React Rocks</a> component directories. React Rocks recently exceeded one-hundred listed components and counting. See one missing? Add the keyword <code>react-component</code> to your <code>package.json</code> to get listed on React Components, and <a href="https://docs.google.com/forms/d/1TpnwJmLcmmGj-_TI68upu_bKBViYeiKx7Aj9uKmV6wY/viewform">submit a link to React Rocks</a>.</p>
-
-<h2>Waiter, There&#39;s a CSS In My JavaScript</h2>
-
-<p>The internet is abuzz with talk of styling React components using JavaScript instead of CSS. Christopher Chedeau (<a href="https://github.com/vjeux">vjeux</a>) talks about some of the <a href="https://speakerdeck.com/vjeux/react-css-in-js">fundamental style management challenges</a> we grapple with, at Facebook scale. A number of implementations of JavaScript centric style management solutions have appeared in the wild, including the React-focused <a href="https://github.com/js-next/react-style">react-style</a>.</p>
-
-<h2>Test Isolation</h2>
-
-<p>Yahoo! shows us how they make use of <code>iframe</code> elements to <a href="http://yahooeng.tumblr.com/post/102274727496/to-testutil-or-not-to-testutil">unit test React components in isolation</a>.</p>
-
-<h2>You&#39;ve Got The Hang of Flux, Now Let&#39;s Flow</h2>
-
-<p>Facebook Open Source released <a href="https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/">Flow</a> this month – a static type checker for JavaScript. Naturally, Flow supports JSX, and you can use it to <a href="https://code.facebook.com/posts/1505962329687926/flow-a-new-static-type-checker-for-javascript/#compatibility">type check React applications</a>. There&#39;s never been a better reason to start making use of <code>propTypes</code> in your component specifications!</p>
-
-<h2>Countdown to React.js Conf 2014</h2>
-
-<p>We&#39;re counting down the days until <a href="http://conf.reactjs.com">React.js Conf</a> at Facebook&#39;s headquarters in Menlo Park, California, on January 28th &amp; 29th, 2015. Thank you, to everyone who responded to the Call for Presenters. Mark the dates; tickets go on sale in three waves: at noon PST on November 28th, December 5th, and December 12th, 2014.</p>
-
-<h2>React Meetups Around the World</h2>
-
-<blockquote class="twitter-tweet" lang="en"><p>React JS meetup having pretty good turn up rate today <a href="https://twitter.com/hashtag/londonreact?src=hash">#londonreact</a> <a href="http://t.co/c360dlVVAe">pic.twitter.com/c360dlVVAe</a></p>&mdash; Alexander Savin (@karismafilms) <a href="https://twitter.com/karismafilms/status/535152580377468928">November 19, 2014</a></blockquote>
-
-<div class="skinny-row">
-  <div class="skinny-col">
-    <blockquote class="twitter-tweet" lang="en"><p>60+ attendees at the second React.js Utah meetup. <a href="https://twitter.com/ryanflorence">@ryanflorence</a> doing a great job, even without the internet. <a href="http://t.co/fV59AQTOyu">pic.twitter.com/fV59AQTOyu</a></p>&mdash; ReactJS Utah (@reactjsutah) <a href="https://twitter.com/reactjsutah/status/527259410020573184">October 29, 2014</a></blockquote>
-  </div>
-  <div class="skinny-col">
-    <blockquote class="twitter-tweet" lang="en"><p><a href="https://twitter.com/hashtag/ReactJS?src=hash">#ReactJS</a> meetup at <a href="https://twitter.com/Yahoo">@Yahoo</a> ! History of <a href="https://twitter.com/yahoomail">@yahoomail</a> and why we chose react and NodeJS <a href="http://t.co/Nm4EdTv45G">pic.twitter.com/Nm4EdTv45G</a></p>&mdash; rmsguhan (@rmsguhan) <a href="https://twitter.com/rmsguhan/status/515370950427029504">September 26, 2014</a></blockquote>
-  </div>
-</div>
-
-<div class="skinny-row">
-  <div class="skinny-col">
-    <blockquote class="twitter-tweet" data-cards="hidden" lang="en"><p>The very first ReactJS meetup in NYC tonight, I&#39;ll be speaking about the big ideas behind Om <a href="http://t.co/dvPrFqE9eP">http://t.co/dvPrFqE9eP</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/status/532190993463128064">November 11, 2014</a></blockquote>
-  </div>
-  <div class="skinny-col">
-    <blockquote class="twitter-tweet" lang="en"><p>If anyone in Sydney is curious about <a href="https://twitter.com/reactjs">@reactjs</a>, I&#39;m presenting at <a href="https://twitter.com/sydjs">@sydjs</a> tonight on how to use it and why it is the future. <a href="https://twitter.com/hashtag/javascript?src=hash">#javascript</a></p>&mdash; Jed Watson (@JedWatson) <a href="https://twitter.com/JedWatson/status/534943557568565248">November 19, 2014</a></blockquote>
-  </div>
-</div>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 </div>
 

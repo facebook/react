@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,51 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/09/03/introducing-the-jsx-specification.html">Introducing the JSX Specification</a>
+
+</h1>
+
+<p class="meta">
+  September  3, 2014
+  by
+  
+    
+      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>At Facebook we&#39;ve been using JSX for a long time. We originally introduced it to the world last year alongside React, but we actually used it in another form before that to create native DOM nodes. We&#39;ve also seen some similar efforts grow out of our work in order to be used with other libraries and in interesting ways. At this point React JSX is just one of many implementations.</p>
+
+<p>In order to make it easier to implement new versions and to make sure that the syntax remains compatible, we&#39;re now formalizing the syntax of JSX in a stand-alone spec without any semantic meaning. It&#39;s completely stand-alone from React itself.</p>
+
+<p>Read the spec now at <a href="https://facebook.github.io/jsx/">https://facebook.github.io/jsx/</a>.</p>
+
+<p>This is not a proposal to be standardized in ECMAScript. It&#39;s just a reference document that transpiler writers and syntax highlighters can agree on. It&#39;s currently in a draft stage and will probably continue to be a living document.</p>
+
+<p>Feel free to <a href="https://github.com/facebook/jsx/issues/new">open an Issue</a> or Pull Request if you find something wrong.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -487,207 +526,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.1.m
 
 <ul>
 <li>Fix duplicate variable declaration (caused issues in some browsers)</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/07/17/react-v0.11.html">React v0.11</a>
-
-</h1>
-
-<p class="meta">
-  July 17, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p><strong>Update:</strong> We missed a few important changes in our initial post and changelog. We&#39;ve updated this post with details about <a href="#descriptors">Descriptors</a> and <a href="#prop-type-validation">Prop Type Validation</a>.</p>
-
-<hr>
-
-<p>We&#39;re really happy to announce the availability of React v0.11. There seems to be a lot of excitement already and we appreciate everybody who gave the release candidate a try over the weekend. We made a couple small changes in response to the feedback and issues filed. We enabled the destructuring assignment transform when using <code>jsx --harmony</code>, fixed a small regression with <code>statics</code>, and made sure we actually exposed the new API we said we were shipping: <code>React.Children.count</code>.</p>
-
-<p>This version has been cooking for a couple months now and includes a wide array of bug fixes and features. We highlighted some of the most important changes below, along with the full changelog.</p>
-
-<p>The release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.11.0.js">https://fb.me/react-0.11.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.11.0.min.js">https://fb.me/react-0.11.0.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.11.0.js">https://fb.me/react-with-addons-0.11.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0.min.js">https://fb.me/react-with-addons-0.11.0.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.11.0.js">https://fb.me/JSXTransformer-0.11.0.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.11.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-
-<h2><code>getDefaultProps</code></h2>
-
-<p>Starting in React 0.11, <code>getDefaultProps()</code> is called only once when <code>React.createClass()</code> is called, instead of each time a component is rendered. This means that <code>getDefaultProps()</code> can no longer vary its return value based on <code>this.props</code> and any objects will be shared across all instances. This change improves performance and will make it possible in the future to do PropTypes checks earlier in the rendering process, allowing us to give better error messages.</p>
-
-<h2>Rendering to <code>null</code></h2>
-
-<p>Since React&#39;s release, people have been using work arounds to &quot;render nothing&quot;. Usually this means returning an empty <code>&lt;div/&gt;</code> or <code>&lt;span/&gt;</code>. Some people even got clever and started returning <code>&lt;noscript/&gt;</code> to avoid extraneous DOM nodes. We finally provided a &quot;blessed&quot; solution that allows developers to write meaningful code. Returning <code>null</code> is an explicit indication to React that you do not want anything rendered. Behind the scenes we make this work with a <code>&lt;noscript&gt;</code> element, though in the future we hope to not put anything in the document. In the mean time, <code>&lt;noscript&gt;</code> elements do not affect layout in any way, so you can feel safe using <code>null</code> today!</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
-<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">visible</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">/&gt;</span><span class="p">;</span>
-  <span class="p">}</span>
-  <span class="c1">// ...</span>
-<span class="p">}</span>
-
-<span class="c1">// After</span>
-<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">visible</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
-  <span class="p">}</span>
-  <span class="c1">// ...</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2>JSX Namespacing</h2>
-
-<p>Another feature request we&#39;ve been hearing for a long time is the ability to have namespaces in JSX. Given that JSX is just JavaScript, we didn&#39;t want to use XML namespacing. Instead we opted for a standard JS approach: object property access. Instead of assigning variables to access components stored in an object (such as a component library), you can now use the component directly as <code>&lt;Namespace.Component/&gt;</code>.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Before</span>
-<span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">UILayout</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">UIButton</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">UILabel</span> <span class="o">=</span> <span class="nx">UI</span><span class="p">.</span><span class="nx">Label</span><span class="p">;</span>
-
-<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">UILayout</span><span class="o">&gt;&lt;</span><span class="nx">UIButton</span> <span class="o">/&gt;&lt;</span><span class="nx">UILabel</span><span class="o">&gt;</span><span class="nx">text</span><span class="o">&lt;</span><span class="err">/UILabel&gt;&lt;/UILayout&gt;;</span>
-<span class="p">}</span>
-
-<span class="c1">// After</span>
-<span class="kd">var</span> <span class="nx">UI</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;UI&#39;</span><span class="p">);</span>
-
-<span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Layout</span><span class="o">&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Button</span> <span class="o">/&gt;&lt;</span><span class="nx">UI</span><span class="p">.</span><span class="nx">Label</span><span class="o">&gt;</span><span class="nx">text</span><span class="o">&lt;</span><span class="err">/UI.Label&gt;&lt;/UI.Layout&gt;;</span>
-<span class="p">}</span>
-</code></pre></div>
-<h2>Improved keyboard event normalization</h2>
-
-<p>Keyboard events now contain a normalized <code>e.key</code> value according to the <a href="http://www.w3.org/TR/DOM-Level-3-Events/#keys-special">DOM Level 3 Events spec</a>, allowing you to write simpler key handling code that works in all browsers, such as:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">handleKeyDown</span><span class="o">:</span> <span class="kd">function</span><span class="p">(</span><span class="nx">e</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;Enter&#39;</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Handle enter key</span>
-  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39; &#39;</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Handle spacebar</span>
-  <span class="p">}</span> <span class="k">else</span> <span class="k">if</span> <span class="p">(</span><span class="nx">e</span><span class="p">.</span><span class="nx">key</span> <span class="o">===</span> <span class="s1">&#39;ArrowLeft&#39;</span><span class="p">)</span> <span class="p">{</span>
-    <span class="c1">// Handle left arrow</span>
-  <span class="p">}</span>
-<span class="p">},</span>
-</code></pre></div>
-<p>Keyboard and mouse events also now include a normalized <code>e.getModifierState()</code> that works consistently across browsers.</p>
-
-<h2>Descriptors</h2>
-
-<p>In our <a href="/react/blog/2014/03/21/react-v0.10.html#clone-on-mount">v0.10 release notes</a>, we called out that we were deprecating the existing behavior of the component function call (eg <code>component = MyComponent(props, ...children)</code> or <code>component = &lt;MyComponent prop={...}/&gt;</code>). Previously that would create an instance and React would modify that internally. You could store that reference and then call functions on it (eg <code>component.setProps(...)</code>). This no longer works. <code>component</code> in the above examples will be a descriptor and not an instance that can be operated on. The v0.10 release notes provide a complete example along with a migration path. The development builds also provided warnings if you called functions on descriptors.</p>
-
-<p>Along with this change to descriptors, <code>React.isValidComponent</code> and <code>React.PropTypes.component</code> now actually validate that the value is a descriptor. Overwhelmingly, these functions are used to validate the value of <code>MyComponent()</code>, which as mentioned is now a descriptor, not a component instance. We opted to reduce code churn and make the migration to 0.11 as easy as possible. However, we realize this is has caused some confusion and we&#39;re working to make sure we are consistent with our terminology.</p>
-
-<h2>Prop Type Validation</h2>
-
-<p>Previously <code>React.PropTypes</code> validation worked by simply logging to the console. Internally, each validator was responsible for doing this itself. Additionally, you could write a custom validator and the expectation was that you would also simply <code>console.log</code> your error message. Very shortly into the 0.11 cycle we changed this so that our validators return (<em>not throw</em>) an <code>Error</code> object. We then log the <code>error.message</code> property in a central place in ReactCompositeComponent. Overall the result is the same, but this provides a clearer intent in validation. In addition, to better transition into our descriptor factory changes, we also currently run prop type validation twice in development builds. As a result, custom validators doing their own logging result in duplicate messages. To update, simply return an <code>Error</code> with your message instead.</p>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>Breaking Changes</h4>
-
-<ul>
-<li><code>getDefaultProps()</code> is now called once per class and shared across all instances</li>
-<li><code>MyComponent()</code> now returns a descriptor, not an instance</li>
-<li><code>React.isValidComponent</code> and <code>React.PropTypes.component</code> validate <em>descriptors</em>, not component instances.</li>
-<li>Custom <code>propType</code> validators should return an <code>Error</code> instead of logging directly</li>
-</ul>
-
-<h4>New Features</h4>
-
-<ul>
-<li>Rendering to <code>null</code></li>
-<li>Keyboard events include normalized <code>e.key</code> and <code>e.getModifierState()</code> properties</li>
-<li>New normalized <code>onBeforeInput</code> event</li>
-<li><code>React.Children.count</code> has been added as a helper for counting the number of children</li>
-</ul>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>Re-renders are batched in more cases</li>
-<li>Events: <code>e.view</code> properly normalized</li>
-<li>Added Support for more HTML attributes (<code>coords</code>, <code>crossOrigin</code>, <code>download</code>, <code>hrefLang</code>, <code>mediaGroup</code>, <code>muted</code>, <code>scrolling</code>, <code>shape</code>, <code>srcSet</code>, <code>start</code>, <code>useMap</code>)</li>
-<li>Improved SVG support
-
-<ul>
-<li>Changing <code>className</code> on a mounted SVG component now works correctly</li>
-<li>Added support for elements <code>mask</code> and <code>tspan</code></li>
-<li>Added support for attributes <code>dx</code>, <code>dy</code>, <code>fillOpacity</code>, <code>fontFamily</code>, <code>fontSize</code>, <code>markerEnd</code>, <code>markerMid</code>, <code>markerStart</code>, <code>opacity</code>, <code>patternContentUnits</code>, <code>patternUnits</code>, <code>preserveAspectRatio</code>, <code>strokeDasharray</code>, <code>strokeOpacity</code></li>
-</ul></li>
-<li>CSS property names with vendor prefixes (<code>Webkit</code>, <code>ms</code>, <code>Moz</code>, <code>O</code>) are now handled properly</li>
-<li>Duplicate keys no longer cause a hard error; now a warning is logged (and only one of the children with the same key is shown)</li>
-<li><code>img</code> event listeners are now unbound properly, preventing the error &quot;Two valid but unequal nodes with the same <code>data-reactid</code>&quot;</li>
-<li>Added explicit warning when missing polyfills</li>
-</ul>
-
-<h3>React With Addons</h3>
-
-<ul>
-<li>PureRenderMixin: a mixin which helps optimize &quot;pure&quot; components</li>
-<li>Perf: a new set of tools to help with performance analysis</li>
-<li>Update: New <code>$apply</code> command to transform values</li>
-<li>TransitionGroup bug fixes with null elements, Android</li>
-</ul>
-
-<h3>React NPM Module</h3>
-
-<ul>
-<li>Now includes the pre-built packages under <code>dist/</code>.</li>
-<li><code>envify</code> is properly listed as a dependency instead of a peer dependency</li>
-</ul>
-
-<h3>JSX</h3>
-
-<ul>
-<li>Added support for namespaces, eg <code>&lt;Components.Checkbox /&gt;</code></li>
-<li>JSXTransformer
-
-<ul>
-<li>Enable the same <code>harmony</code> features available in the command line with <code>&lt;script type=&quot;text/jsx;harmony=true&quot;&gt;</code></li>
-<li>Scripts are downloaded in parallel for more speed. They are still executed in order (as you would expect with normal script tags)</li>
-<li>Fixed a bug preventing sourcemaps from working in Firefox</li>
-</ul></li>
-</ul>
-
-<h3>React Tools Module</h3>
-
-<ul>
-<li>Improved readme with usage and API information</li>
-<li>Improved ES6 transforms available with <code>--harmony</code> option</li>
-<li>Added <code>--source-map-inline</code> option to the <code>jsx</code> executable</li>
-<li>New <code>transformWithDetails</code> API which gives access to the raw sourcemap data</li>
 </ul>
 
 </div>

@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
+      
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
       
         <li><a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a></li>
@@ -94,14 +96,67 @@
       
         <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
       
-        <li><a href="/react/blog/2016/04/08/react-v15.0.1.html">React v15.0.1</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating JSTransform and react-tools</a>
+
+</h1>
+
+<p class="meta">
+  June 12, 2015
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re announcing the deprecation of react-tools and JSTransform.</p>
+
+<p>As many people have noticed already, React and React Native have both switched their respective build systems to make use of <a href="http://babeljs.io/">Babel</a>. This replaced <a href="https://github.com/facebook/jstransform">JSTransform</a>, the source transformation tool that we wrote at Facebook. JSTransform has been really good for us over the past several years, however as the JavaScript language continues to evolve, the architecture we used has begun to show its age. We&#39;ve faced maintenance issues and lagged behind implementing new language features. Last year, Babel (previously 6to5) exploded onto the scene, implementing new features at an amazing pace. Since then it has evolved a solid plugin API, and implemented some of our non-standard language features (JSX and Flow type annotations).</p>
+
+<p>react-tools has always been a very thin wrapper around JSTransform. It has served as a great tool for the community to get up and running, but at this point we&#39;re ready to <a href="https://www.youtube.com/watch?v=moSFlvxnbgk">let it go</a>. We won&#39;t ship a new version for v0.14.</p>
+
+<h2>Migrating to Babel</h2>
+
+<p>Many people in the React and broader JavaScript community have already adopted Babel. It has <a href="http://babeljs.io/docs/setup/">integrations with a number of tools</a>. Depending on your tool, you&#39;ll want to read up on the instructions.</p>
+
+<p>We&#39;ve been working with the Babel team as we started making use of it and we&#39;re confident that it will be the right tool to use with React.</p>
+
+<h2>Other Deprecations</h2>
+
+<h3>esprima-fb</h3>
+
+<p>As a result of no longer maintaining JSTransform, we no longer have a need to maintain our Esprima fork (<a href="https://github.com/facebook/esprima/">esprima-fb</a>). The upstream Esprima and other esprima-based forks, like Espree, have been doing an excellent job of supporting new language features recently. If you have a need of an esprima-based parser, we encourage you to look into using one of those.</p>
+
+<p>Alternatively, if you need to parse JSX, take a look at <a href="https://github.com/marijnh/acorn">acorn</a> parser in combination with <a href="https://github.com/RReverser/acorn-jsx">acorn-jsx</a> plugin which is used inside of Babel and thus always supports the latest syntax.</p>
+
+<h3>JSXTransformer</h3>
+
+<p>JSXTransformer is another tool we built specifically for consuming JSX in the browser. It was always intended as a quick way to prototype code before setting up a build process. It would look for <code>&lt;script&gt;</code> tags with <code>type=&quot;text/jsx&quot;</code> and then transform and run. This ran the same code that react-tools ran on the server. Babel ships with <a href="https://babeljs.io/docs/usage/browser/">a nearly identical tool</a>, which has already been integrated into <a href="https://jsbin.com/">JS Bin</a>.</p>
+
+<p>We&#39;ll be deprecating JSXTransformer, however the current version will still be available from various CDNs and Bower.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -434,57 +489,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.2.m
 <ul>
 <li>Improve documentation for new options</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/04/17/react-native-v0.4.html">React Native v0.4</a>
-
-</h1>
-
-<p class="meta">
-  April 17, 2015
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>It&#39;s been three weeks since we open sourced React Native and there&#39;s been some insane amount of activity already: over 12.5k stars, 1000 commits, 500 issues, 380 pull requests, and 100 contributors, plus <a href="http://react.parts/native-ios">35 plugins</a> and <a href="http://herman.asia/building-a-flashcard-app-with-react-native">1 app in the app store</a>! We were expecting some buzz around the project but this is way beyond anything we imagined. Thank you!</p>
-
-<p>I&#39;d especially like to thank community members Brent Vatne and James Ide who have both already contributed meaningfully to the project and have been extremely helpful on IRC and with issues and pull requests</p>
-
-<h2>Changelog</h2>
-
-<p>The main focus of the past few weeks has been to make React Native the best possible experience for people outside of Facebook. Here&#39;s a high level summary of what&#39;s happened since we open sourced:</p>
-
-<ul>
-<li><strong>Error messages and documentation</strong>: We want React Native to be the absolute best developer experience for building mobile apps. We&#39;ve added a lot of warnings, improved the documentation, and fixed many bugs. If you encounter anything, and I really mean anything, that is not expected or clear, please create an issue - we want to hear about it and fix it.</li>
-<li><strong>NPM modules compatibility</strong>: There are a lot of libraries on NPM that do not depend on node/browser internals that would be really useful in React Native, such as superagent, underscore, parse, and many others.  The packager is now a lot more faithful to node/browserify/webpack dependency resolution. If your favorite library doesn&#39;t work out of the box, please open up an issue.</li>
-<li><strong>Infrastructure</strong>: We are refactoring the internals of React Native to make it easier to plug in to existing iOS codebases, as well as improve performance by removing redundant views and shadow views, supporting multiple root views and manually registering classes to reduce startup time.</li>
-<li><strong>Components</strong>: The API for a lot of UI components and APIs, especially the ones we&#39;re not using heavily inside of Facebook, has dramatically improved thanks to many of your pull requests.</li>
-<li><strong>Tests</strong>: We ported JavaScript tests, iOS Snapshot tests, and End to End tests to Travis CI. We have broken GitHub master a couple of times (whoops!) when syncing and we hope that with this growing suite of tests it&#39;s going to become harder and harder to do so.</li>
-<li><strong>Patent Grant</strong>: Many of you had concerns and questions around the PATENTS file. We pushed <a href="https://code.facebook.com/posts/1639473982937255/updating-our-open-source-patent-grant/">a new version of the grant</a>.</li>
-<li><strong>Per commit history</strong>: In order to synchronize from Facebook to GitHub, we used to do one giant commit every few days. We improved our tooling and now have per commit history that maintains author information (both internal and external from pull requests), and we retroactively applied this to historical diffs to provide proper attribution.</li>
-</ul>
-
-<h2>Where are we going?</h2>
-
-<p>In addition to supporting pull requests, issues, and general improvements, we&#39;re also working hard on our internal React Native integrations and on React Native for Android.</p>
 
 </div>
 

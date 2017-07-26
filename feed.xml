@@ -7,6 +7,97 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>Error Handling in React 16</title>
+				<description>&lt;p&gt;As React 16 release is getting closer, we would like to announce a few changes to how React handles JavaScript errors inside components. These changes are included in React 16 beta versions, and will be a part of React 16.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;By the way, &lt;a href=&quot;https://github.com/facebook/react/issues/10294&quot;&gt;we just released the first beta of React 16 for you to try!&lt;/a&gt;&lt;/strong&gt;&lt;/p&gt;
+
+&lt;h2&gt;Behavior in React 15 and Earlier&lt;/h2&gt;
+
+&lt;p&gt;In the past, JavaScript errors inside components used to corrupt React’s internal state and cause it to &lt;a href=&quot;https://github.com/facebook/react/issues/4026&quot;&gt;emit&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react/issues/6895&quot;&gt;cryptic&lt;/a&gt; &lt;a href=&quot;https://github.com/facebook/react/issues/8579&quot;&gt;errors&lt;/a&gt; on next renders. These errors were always caused by an earlier error in the application code, but React did not provide a way to handle them gracefully in components, and could not recover from them.&lt;/p&gt;
+
+&lt;h2&gt;Introducing Error Boundaries&lt;/h2&gt;
+
+&lt;p&gt;A JavaScript error in a part of the UI shouldn’t break the whole app. To solve this problem for React users, React 16 introduces a new concept of an “error boundary”.&lt;/p&gt;
+
+&lt;p&gt;Error boundaries are React components that &lt;strong&gt;catch JavaScript errors in their children (and grandchildren), log those errors, and display a fallback UI&lt;/strong&gt; instead of the component tree that crashed. Error boundaries catch errors during rendering, in lifecycle methods, and in constructors of the whole tree below them.&lt;/p&gt;
+
+&lt;p&gt;A class component becomes an error boundary if it defines a new lifecycle method called &lt;code&gt;componentDidCatch(error, info)&lt;/code&gt;:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ErrorBoundary&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;constructor&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+    &lt;span class=&quot;kr&quot;&gt;super&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;=&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;hasError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;};&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+
+&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;nx&quot;&gt;componentDidCatch&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;c1&quot;&gt;// Display fallback UI&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;setState&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;({&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;hasError&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;kc&quot;&gt;true&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;});&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;c1&quot;&gt;// You can also log the error to an error reporting service&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;nx&quot;&gt;logErrorToMyService&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;info&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;);&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;render&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;k&quot;&gt;if&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;state&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;hasError&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;      &lt;span class=&quot;c1&quot;&gt;// You can render any custom fallback UI&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;      &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;h1&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Something&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;went&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;wrong&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/h1&amp;gt;;&lt;/span&gt;
+&lt;/span&gt;&lt;span class=&quot;hll&quot;&gt;    &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/span&gt;    &lt;span class=&quot;k&quot;&gt;return&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;this&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;props&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;children&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;;&lt;/span&gt;
+  &lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Then you can use it as a regular component:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;ErrorBoundary&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;&amp;gt;&lt;/span&gt;
+  &lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;MyWidget&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;err&quot;&gt;/ErrorBoundary&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;The &lt;code&gt;componentDidCatch()&lt;/code&gt; method works like a JavaScript &lt;code&gt;catch {}&lt;/code&gt; block, but for components. Only class components can be error boundaries. In practice, most of the time you’ll want to declare an error boundary component once and use it throughout your application.&lt;/p&gt;
+
+&lt;p&gt;Note that &lt;strong&gt;error boundaries only catch errors in the components below them in the tree&lt;/strong&gt;. An error boundary can’t catch an error within itself. If an error boundary fails trying to render the error message, the error will propagate to the closest error boundary above it. This, too, is similar to how &lt;code&gt;catch {}&lt;/code&gt; block works in JavaScript.&lt;/p&gt;
+
+&lt;h2&gt;Live Demo&lt;/h2&gt;
+
+&lt;p&gt;Check out &lt;a href=&quot;https://codepen.io/gaearon/pen/wqvxGa?editors=0010&quot;&gt;this example of declaring and using an error boundary&lt;/a&gt; with &lt;a href=&quot;https://github.com/facebook/react/issues/10294&quot;&gt;React 16 beta&lt;/a&gt;.&lt;/p&gt;
+
+&lt;h2&gt;Where to Place Error Boundaries&lt;/h2&gt;
+
+&lt;p&gt;The granularity of error boundaries is up to you. You may wrap top-level route components to display a “Something went wrong” message to the user, just like server-side frameworks often handle crashes. You may also wrap individual widgets in an error boundary to protect them from crashing the rest of the application.&lt;/p&gt;
+
+&lt;h2&gt;New Behavior for Uncaught Errors&lt;/h2&gt;
+
+&lt;p&gt;This change has an important implication. &lt;strong&gt;As of React 16, errors that were not caught by any error boundary will result in unmounting of the whole React component tree.&lt;/strong&gt;&lt;/p&gt;
+
+&lt;p&gt;We debated this decision, but in our experience it is worse to leave corrupted UI in place than to completely remove it. For example, in a product like Messenger leaving the broken UI visible could lead to somebody sending a message to the wrong person. Similarly, it is worse for a payments app to display a wrong amount than to render nothing.&lt;/p&gt;
+
+&lt;p&gt;This change means that as you migrate to React 16, you will likely uncover existing crashes in your application that have been unnoticed before. Adding error boundaries lets you provide better user experience when something goes wrong.&lt;/p&gt;
+
+&lt;p&gt;For example, Facebook Messenger wraps content of the sidebar, the info panel, the conversation log, and the message input into separate error boundaries. If some component in one of these UI areas crashes, the rest of them remain interactive.&lt;/p&gt;
+
+&lt;p&gt;We also encourage you to use JS error reporting services (or build your own) so that you can learn about unhandled exceptions as they happen in production, and fix them.&lt;/p&gt;
+
+&lt;h2&gt;Why Not Use &lt;code&gt;try&lt;/code&gt; / &lt;code&gt;catch&lt;/code&gt;?&lt;/h2&gt;
+
+&lt;p&gt;&lt;code&gt;try&lt;/code&gt; / &lt;code&gt;catch&lt;/code&gt; is great but it only works for imperative code:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;k&quot;&gt;try&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;nx&quot;&gt;showButton&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;();&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;k&quot;&gt;catch&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;error&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
+  &lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;However, React components are declarative and specify &lt;em&gt;what&lt;/em&gt; should be rendered:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Button&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;Error boundaries preserve the declarative nature of React, and behave as you would expect. For example, even if an error occurs in a &lt;code&gt;componentDidUpdate&lt;/code&gt; hook caused by a &lt;code&gt;setState&lt;/code&gt; somewhere deep in the tree, it will still correctly propagate to the closest error boundary.&lt;/p&gt;
+
+&lt;h2&gt;Naming Changes from React 15&lt;/h2&gt;
+
+&lt;p&gt;React 15 included a very limited support for error boundaries under a different method name: &lt;code&gt;unstable_handleError&lt;/code&gt;. This method no longer works, and you will need to change it to &lt;code&gt;componentDidCatch&lt;/code&gt; in your code starting from the first 16 beta release.&lt;/p&gt;
+</description>
+				<pubDate>2017-07-26T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html</guid>
+			</item>
+		
+			<item>
 				<title>React v15.6.0</title>
 				<description>&lt;p&gt;Today we are releasing React 15.6.0. As we prepare for React 16.0, we have been fixing and cleaning up many things. This release continues to pave the way.&lt;/p&gt;
 
@@ -1709,51 +1800,6 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 				<pubDate>2016-07-11T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/07/11/introducing-reacts-error-code-system.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/07/11/introducing-reacts-error-code-system.html</guid>
-			</item>
-		
-			<item>
-				<title>React v15.0.1</title>
-				<description>&lt;p&gt;Yesterday afternoon we shipped v15.0.0 and quickly got some feedback about a couple of issues. We apologize for these problems and we&amp;#39;ve been working since then to make sure we get fixes into your hands as quickly as possible.&lt;/p&gt;
-
-&lt;p&gt;The first of these issues is related to the removal of an undocumented API. This API was added to enable &lt;a href=&quot;/react/docs/jsx-spread.html&quot;&gt;JSX Spread Attributes&lt;/a&gt; in our JS compile tools (react-tools, JSXTransformer) before &lt;code&gt;Object.assign&lt;/code&gt; was standard. When we stopped supporting these tools last year, we kept the API there to catch the longer tail of people using those tools. Meanwhile we moved to using Babel and encouraged others to do the same. Babel will typically compile the spread use to an &lt;code&gt;_extends&lt;/code&gt; helper, which will use &lt;code&gt;Object.assign&lt;/code&gt;. We did not properly research other compilation tools before deciding to remove the API in v15. Specifically, TypeScript and coffee-react are two popular packages using &lt;code&gt;React.__spread&lt;/code&gt;, as well as reactify which still makes use react-tools. In order to make sure that code compiled with these tools is not broken, we will be restoring the &lt;code&gt;React.__spread&lt;/code&gt; API and adding a warning. It will be removed in the future so if you maintain a project making using of it, we encourage you to compile to &lt;code&gt;Object.assign&lt;/code&gt; directly or a similar helper function.&lt;/p&gt;
-
-&lt;p&gt;The second issue resulted in cursor position being lost in controlled inputs. We merged a pull request earlier this week to fix a separate regression from v0.14. Our goal was to target &lt;code&gt;&amp;lt;option&amp;gt;&lt;/code&gt; elements but we ended up targeting all interactions with &lt;code&gt;value&lt;/code&gt; properties. Unfortunately we didn&amp;#39;t test it as thoroughly as we thought. We backed out the offending change and fixed the issue in different way which doesn&amp;#39;t have the same problem.&lt;/p&gt;
-
-&lt;p&gt;We apologize if you installed 15.0.0 and have encountered these issues yourselves.&lt;/p&gt;
-
-&lt;p&gt;As usual, you can get install the &lt;code&gt;react&lt;/code&gt; package via npm or download a browser bundle.&lt;/p&gt;
-
-&lt;ul&gt;
-&lt;li&gt;&lt;strong&gt;React&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-15.0.1.js&quot;&gt;https://fb.me/react-15.0.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-15.0.1.min.js&quot;&gt;https://fb.me/react-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React with Add-Ons&lt;/strong&gt;&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.1.js&quot;&gt;https://fb.me/react-with-addons-15.0.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-with-addons-15.0.1.min.js&quot;&gt;https://fb.me/react-with-addons-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;li&gt;&lt;strong&gt;React DOM&lt;/strong&gt; (include React in the page before React DOM)&lt;br&gt;
-Dev build with warnings: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.js&quot;&gt;https://fb.me/react-dom-15.0.1.js&lt;/a&gt;&lt;br&gt;
-Minified build for production: &lt;a href=&quot;https://fb.me/react-dom-15.0.1.min.js&quot;&gt;https://fb.me/react-dom-15.0.1.min.js&lt;/a&gt;&lt;br&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h2&gt;Changelog&lt;/h2&gt;
-
-&lt;h3&gt;React&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Restore &lt;code&gt;React.__spread&lt;/code&gt; API to unbreak code compiled with some tools making use of this undocumented API. It is now officially deprecated.&lt;br&gt;
-&lt;small&gt;&lt;a href=&quot;https://github.com/zpao&quot;&gt;@zpao&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6444&quot;&gt;#6444&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
-&lt;/ul&gt;
-
-&lt;h3&gt;ReactDOM&lt;/h3&gt;
-
-&lt;ul&gt;
-&lt;li&gt;Fixed issue resulting in loss of cursor position in controlled inputs.&lt;br&gt;
-&lt;small&gt;&lt;a href=&quot;https://github.com/spicyj&quot;&gt;@spicyj&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/6449&quot;&gt;#6449&lt;/a&gt;&lt;/small&gt;&lt;/li&gt;
-&lt;/ul&gt;
-</description>
-				<pubDate>2016-04-08T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/04/08/react-v15.0.1.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/04/08/react-v15.0.1.html</guid>
 			</item>
 		
 	</channel>
