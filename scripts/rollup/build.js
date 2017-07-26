@@ -9,7 +9,6 @@ const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
 const escapeStringRegexp = require('escape-string-regexp');
 const join = require('path').join;
-const resolve = require('path').resolve;
 const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
@@ -124,8 +123,6 @@ function updateBabelConfig(babelOpts, bundleType) {
     case NODE_PROD:
       return Object.assign({}, babelOpts, {
         plugins: babelOpts.plugins.concat([
-          // Use object-assign polyfill in open source
-          resolve('./scripts/babel/transform-object-assign-require'),
           // Replace __DEV__ with process.env.NODE_ENV and minify invariant messages
           require('../error-codes/dev-expression-with-codes'),
         ]),

@@ -19,8 +19,7 @@
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
     "fbjs": "^0.8.9",
-    "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.0"
+    "loose-envify": "^1.1.0"
   },
   "peerDependencies": {
     "react": "^16.0.0-alpha.13"

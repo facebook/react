@@ -88,14 +88,10 @@ function createModuleMap(paths, extractErrors, bundleType) {
 }
 
 function getNodeModules(bundleType) {
-  // rather than adding the rollup node resolve plugin,
-  // we can instead deal with the only node module that is used
-  // for UMD bundles - object-assign
   switch (bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       return {
-        'object-assign': resolve('./node_modules/object-assign/index.js'),
         // include the ART package modules directly by aliasing them from node_modules
         'art/modes/current': resolve('./node_modules/art/modes/current.js'),
         'art/modes/fast-noSideEffects': resolve(
@@ -156,8 +152,6 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case RN_DEV:
     case RN_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
-      externalModules.push('object-assign');
-
       if (isRenderer) {
         externalModules.push('react');
       }
