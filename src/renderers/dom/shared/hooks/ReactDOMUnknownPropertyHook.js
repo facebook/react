@@ -50,6 +50,7 @@ if (__DEV__) {
     onFocusOut: true,
   };
   var warnedProperties = {};
+  var EVENT_NAME_REGEX = /^on[A-Z]/;
 
   var validateProperty = function(tagName, name, debugID) {
     if (
@@ -67,7 +68,10 @@ if (__DEV__) {
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
-    if (EventPluginRegistry.plugins.length === 0 && name.indexOf('on') === 0) {
+    if (
+      EventPluginRegistry.plugins.length === 0 &&
+      EVENT_NAME_REGEX.test(name)
+    ) {
       // If no event plugins have been injected, we might be in a server environment.
       // Don't check events in this case.
       return true;
