@@ -127,16 +127,6 @@ function accumulateTwoPhaseDispatchesSkipTarget(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
 }
 
-function accumulateEnterLeaveDispatches(leave, enter, from, to) {
-  ReactTreeTraversal.traverseEnterLeave(
-    from,
-    to,
-    accumulateDispatches,
-    leave,
-    enter,
-  );
-}
-
 function accumulateDirectDispatches(events) {
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }
@@ -156,7 +146,6 @@ var EventPropagators = {
   accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
   accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
   accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
 };
 
 module.exports = EventPropagators;

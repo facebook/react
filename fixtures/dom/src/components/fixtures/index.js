@@ -4,6 +4,7 @@ import TextInputFixtures from './text-inputs';
 import SelectFixtures from './selects';
 import TextAreaFixtures from './textareas';
 import InputChangeEvents from './input-change-events';
+import MouseEventsFixtures from './mouse-events';
 import NumberInputFixtures from './number-inputs';
 import PasswordInputFixtures from './password-inputs';
 import ButtonFixtures from './buttons';
@@ -25,6 +26,8 @@ function FixturesPage() {
       return <TextAreaFixtures />;
     case '/input-change-events':
       return <InputChangeEvents />;
+    case '/mouse-events':
+      return <MouseEventsFixtures />;
     case '/number-inputs':
       return <NumberInputFixtures />;
     case '/password-inputs':

@@ -36,6 +36,11 @@ import type {
 import type {ReactInstance} from 'ReactInstanceType';
 import type {EventTypes, PluginModule} from 'PluginModuleType';
 
+const topLevelDirectDispatches = {
+  topMouseEnter: true,
+  topMouseLeave: true,
+};
+
 /**
  * Turns
  * ['abort', ...]
@@ -95,6 +100,8 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   'loadedMetadata',
   'loadStart',
   'mouseDown',
+  'mouseEnter',
+  'mouseLeave',
   'mouseMove',
   'mouseOut',
   'mouseOver',
@@ -126,14 +133,23 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   var capitalizedEvent = event[0].toUpperCase() + event.slice(1);
   var onEvent = 'on' + capitalizedEvent;
   var topEvent = 'top' + capitalizedEvent;
+  var isPhased = !topLevelDirectDispatches[topEvent];
 
   var type = {
-    phasedRegistrationNames: {
+    dependencies: [topEvent],
+    phasedRegistrationNames: null,
+    registrationName: null,
+  };
+
+  if (isPhased) {
+    type.phasedRegistrationNames = {
       bubbled: onEvent,
       captured: onEvent + 'Capture',
-    },
-    dependencies: [topEvent],
-  };
+    };
+  } else {
+    type.registrationName = onEvent;
+  }
+
   eventTypes[event] = type;
   topLevelEventsToDispatchConfig[topEvent] = type;
 });
@@ -213,6 +229,8 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       /* falls through */
       case 'topDoubleClick':
       case 'topMouseDown':
+      case 'topMouseEnter':
+      case 'topMouseLeave':
       case 'topMouseMove':
       case 'topMouseUp':
       // TODO: Disabled elements should not respond to mouse events
@@ -269,7 +287,13 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+
+    if (topLevelDirectDispatches[topLevelType]) {
+      EventPropagators.accumulateDirectDispatches(event);
+    } else {
+      EventPropagators.accumulateTwoPhaseDispatches(event);
+    }
+
     return event;
   },
 };
