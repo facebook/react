@@ -56,7 +56,7 @@ describe('ReactIncrementalScheduling', () => {
 
     ReactNoop.batchedUpdates(() => {
       ReactNoop.render(<span prop={5} />);
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         ReactNoop.render(<span prop={2} />);
         ReactNoop.render(<span prop={3} />);
         ReactNoop.render(<span prop={4} />);
@@ -213,7 +213,7 @@ describe('ReactIncrementalScheduling', () => {
       }
     }
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });
     // The cDM update should not have flushed yet because it has async priority.
@@ -268,29 +268,25 @@ describe('ReactIncrementalScheduling', () => {
   });
 
   it('can opt-out of batching using unbatchedUpdates', () => {
-    // syncUpdates gives synchronous priority to updates
-    ReactNoop.syncUpdates(() => {
-      // batchedUpdates downgrades sync updates to task priority
-      ReactNoop.batchedUpdates(() => {
-        ReactNoop.render(<span prop={0} />);
-        expect(ReactNoop.getChildren()).toEqual([]);
-        // Should not have flushed yet because we're still batching
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<span prop={0} />);
+      expect(ReactNoop.getChildren()).toEqual([]);
+      // Should not have flushed yet because we're still batching
 
-        // unbatchedUpdates reverses the effect of batchedUpdates, so sync
-        // updates are not batched
-        ReactNoop.unbatchedUpdates(() => {
-          ReactNoop.render(<span prop={1} />);
-          expect(ReactNoop.getChildren()).toEqual([span(1)]);
-          ReactNoop.render(<span prop={2} />);
-          expect(ReactNoop.getChildren()).toEqual([span(2)]);
-        });
-
-        ReactNoop.render(<span prop={3} />);
+      // unbatchedUpdates reverses the effect of batchedUpdates, so sync
+      // updates are not batched
+      ReactNoop.unbatchedUpdates(() => {
+        ReactNoop.render(<span prop={1} />);
+        expect(ReactNoop.getChildren()).toEqual([span(1)]);
+        ReactNoop.render(<span prop={2} />);
         expect(ReactNoop.getChildren()).toEqual([span(2)]);
       });
-      // Remaining update is now flushed
-      expect(ReactNoop.getChildren()).toEqual([span(3)]);
+
+      ReactNoop.render(<span prop={3} />);
+      expect(ReactNoop.getChildren()).toEqual([span(2)]);
     });
+    // Remaining update is now flushed
+    expect(ReactNoop.getChildren()).toEqual([span(3)]);
   });
 
   it('nested updates are always deferred, even inside unbatchedUpdates', () => {
@@ -320,10 +316,10 @@ describe('ReactIncrementalScheduling', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span(0)]);
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       instance.setState({step: 1});
-      expect(ReactNoop.getChildren()).toEqual([span(2)]);
     });
+    expect(ReactNoop.getChildren()).toEqual([span(2)]);
 
     expect(ops).toEqual([
       'render: 0',

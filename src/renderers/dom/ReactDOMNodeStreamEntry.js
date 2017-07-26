@@ -11,11 +11,10 @@
 
 'use strict';
 
-var ReactDOMInjection = require('ReactDOMInjection');
 var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
 var ReactVersion = require('ReactVersion');
 
-ReactDOMInjection.inject();
+require('ReactDOMInjection');
 
 module.exports = {
   renderToStream: ReactDOMNodeStreamRenderer.renderToStream,

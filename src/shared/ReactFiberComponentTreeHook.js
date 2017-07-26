@@ -19,23 +19,10 @@ var {
   ClassComponent,
   HostComponent,
 } = ReactTypeOfWork;
+var describeComponentFrame = require('describeComponentFrame');
 var getComponentName = require('getComponentName');
 
 import type {Fiber} from 'ReactFiber';
-
-function describeComponentFrame(name, source: any, ownerName) {
-  return (
-    '\n    in ' +
-    (name || 'Unknown') +
-    (source
-      ? ' (at ' +
-          source.fileName.replace(/^.*[\\\/]/, '') +
-          ':' +
-          source.lineNumber +
-          ')'
-      : ownerName ? ' (created by ' + ownerName + ')' : '')
-  );
-}
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
@@ -72,5 +59,4 @@ function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
 
 module.exports = {
   getStackAddendumByWorkInProgressFiber,
-  describeComponentFrame,
 };

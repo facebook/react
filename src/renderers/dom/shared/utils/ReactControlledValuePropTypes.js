@@ -11,17 +11,17 @@
 
 'use strict';
 
-var PropTypes = require('prop-types');
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var warning = require('fbjs/lib/warning');
-
 var ReactControlledValuePropTypes = {
-  checkPropTypes: emptyFunction,
+  checkPropTypes: null,
 };
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var emptyFunction = require('fbjs/lib/emptyFunction');
+  var PropTypes = require('prop-types');
   var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
+  ReactControlledValuePropTypes.checkPropTypes = emptyFunction;
   var hasReadOnlyValue = {
     button: true,
     checkbox: true,

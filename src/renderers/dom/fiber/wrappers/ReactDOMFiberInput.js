@@ -27,10 +27,10 @@ var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
 if (__DEV__) {
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+  var warning = require('fbjs/lib/warning');
 }
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;

@@ -20,6 +20,7 @@ describe('ReactComponentTreeHook', () => {
   var ReactDOMServer;
   var ReactInstanceMap;
   var ReactComponentTreeHook;
+  var ReactDebugCurrentFiber;
   var ReactComponentTreeTestUtils;
 
   beforeEach(() => {
@@ -29,6 +30,7 @@ describe('ReactComponentTreeHook', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactInstanceMap = require('ReactInstanceMap');
+    ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
     ReactComponentTreeHook = require('ReactComponentTreeHook');
     ReactComponentTreeTestUtils = require('ReactComponentTreeTestUtils');
   });
@@ -37,7 +39,9 @@ describe('ReactComponentTreeHook', () => {
   describe('stack addenda', () => {
     it('gets created', () => {
       function getAddendum(element) {
-        var addendum = ReactComponentTreeHook.getCurrentStackAddendum(element);
+        var addendum = ReactDOMFeatureFlags.useFiber
+          ? ReactDebugCurrentFiber.getCurrentFiberStackAddendum() || ''
+          : ReactComponentTreeHook.getCurrentStackAddendum();
         return addendum.replace(/\(at .+?:\d+\)/g, '(at **)');
       }
 
@@ -47,23 +51,23 @@ describe('ReactComponentTreeHook', () => {
       Object.defineProperty(Anon, 'name', {
         value: null,
       });
-      function Orange() {
-        return null;
-      }
+      // function Orange() {
+      //   return null;
+      // }
 
       expectDev(getAddendum()).toBe('');
-      expectDev(getAddendum(<div />)).toBe('\n    in div (at **)');
-      expectDev(getAddendum(<Anon />)).toBe('\n    in Unknown (at **)');
-      expectDev(getAddendum(<Orange />)).toBe('\n    in Orange (at **)');
-      expectDev(getAddendum(React.createElement(Orange))).toBe(
-        '\n    in Orange',
-      );
+      // expectDev(getAddendum(<div />)).toBe('\n    in div (at **)');
+      // expectDev(getAddendum(<Anon />)).toBe('\n    in Unknown (at **)');
+      // expectDev(getAddendum(<Orange />)).toBe('\n    in Orange (at **)');
+      // expectDev(getAddendum(React.createElement(Orange))).toBe(
+      //   '\n    in Orange',
+      // );
 
       var renders = 0;
-      var rOwnedByQ;
+      //var rOwnedByQ;
 
       function Q() {
-        return (rOwnedByQ = React.createElement(R));
+        return /*rOwnedByQ =*/ React.createElement(R);
       }
       function R() {
         return <div><S /></div>;
@@ -82,15 +86,15 @@ describe('ReactComponentTreeHook', () => {
               '\n    in Q (at **)',
           );
           expectDev(getAddendum(<span />)).toBe(
-            '\n    in span (at **)' +
-              '\n    in S (at **)' +
+            // '\n    in span (at **)' +
+            '\n    in S (at **)' +
               '\n    in div (at **)' +
               '\n    in R (created by Q)' +
               '\n    in Q (at **)',
           );
           expectDev(getAddendum(React.createElement('span'))).toBe(
-            '\n    in span (created by S)' +
-              '\n    in S (at **)' +
+            // '\n    in span (created by S)' +
+            '\n    in S (at **)' +
               '\n    in div (at **)' +
               '\n    in R (created by Q)' +
               '\n    in Q (at **)',
@@ -103,7 +107,7 @@ describe('ReactComponentTreeHook', () => {
       expectDev(renders).toBe(2);
 
       // Make sure owner is fetched for the top element too.
-      expectDev(getAddendum(rOwnedByQ)).toBe('\n    in R (created by Q)');
+      // expectDev(getAddendum(rOwnedByQ)).toBe('\n    in R (created by Q)');
     });
 
     // These are features and regression tests that only affect

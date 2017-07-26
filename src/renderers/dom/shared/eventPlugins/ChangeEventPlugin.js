@@ -99,7 +99,8 @@ function runEventInBatch(event) {
 }
 
 function getInstIfValueChanged(targetInst) {
-  if (inputValueTracking.updateValueIfChanged(targetInst)) {
+  const targetNode = ReactDOMComponentTree.getNodeFromInstance(targetInst);
+  if (inputValueTracking.updateValueIfChanged(targetNode)) {
     return targetInst;
   }
 }

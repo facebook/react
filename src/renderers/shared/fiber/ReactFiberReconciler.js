@@ -37,7 +37,10 @@ if (__DEV__) {
   var getComponentName = require('getComponentName');
 }
 
-var {findCurrentHostFiber} = require('ReactFiberTreeReflection');
+var {
+  findCurrentHostFiber,
+  findCurrentHostFiberWithNoPortals,
+} = require('ReactFiberTreeReflection');
 
 var getContextForSubtree = require('getContextForSubtree');
 
@@ -163,7 +166,7 @@ export type Reconciler<C, I, TI> = {
   performWithPriority(priorityLevel: PriorityLevel, fn: Function): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
-  syncUpdates<A>(fn: () => A): A,
+  flushSync<A>(fn: () => A): A,
   deferredUpdates<A>(fn: () => A): A,
 
   // Used to extract the return value from the initial render. Legacy API.
@@ -173,6 +176,9 @@ export type Reconciler<C, I, TI> = {
 
   // Use for findDOMNode/findHostNode. Legacy API.
   findHostInstance(component: Fiber): I | TI | null,
+
+  // Used internally for filtering out portals. Legacy API.
+  findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
 getContextForSubtree._injectFiber(function(fiber: Fiber) {
@@ -193,7 +199,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     performWithPriority,
     batchedUpdates,
     unbatchedUpdates,
-    syncUpdates,
+    flushSync,
     deferredUpdates,
   } = ReactFiberScheduler(config);
 
@@ -225,7 +231,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       ReactFeatureFlags.enableAsyncSubtreeAPI &&
       element != null &&
       element.type != null &&
-      (element.type: any).unstable_asyncUpdates === true;
+      element.type.prototype != null &&
+      (element.type.prototype: any).unstable_isAsyncReactComponent === true;
     const priorityLevel = getPriorityContext(current, forceAsync);
     const nextState = {element};
     callback = callback === undefined ? null : callback;
@@ -283,9 +290,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     unbatchedUpdates,
 
-    syncUpdates,
-
     deferredUpdates,
+
+    flushSync,
 
     getPublicRootInstance(
       container: OpaqueRoot,
@@ -304,6 +311,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     findHostInstance(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiber(fiber);
+      if (hostFiber === null) {
+        return null;
+      }
+      return hostFiber.stateNode;
+    },
+
+    findHostInstanceWithNoPortals(fiber: Fiber): PI | null {
+      const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
       if (hostFiber === null) {
         return null;
       }

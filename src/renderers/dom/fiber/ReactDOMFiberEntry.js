@@ -22,7 +22,6 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
@@ -42,7 +41,6 @@ var {ID_ATTRIBUTE_NAME} = require('DOMProperty');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 var {
   createElement,
@@ -60,11 +58,13 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 }
 
-ReactDOMInjection.inject();
+require('ReactDOMClientInjection');
+require('ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
@@ -73,8 +73,12 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 });
 
 type DOMContainer =
-  | (Element & {_reactRootContainer: ?Object})
-  | (Document & {_reactRootContainer: ?Object});
+  | (Element & {
+    _reactRootContainer: ?Object,
+  })
+  | (Document & {
+    _reactRootContainer: ?Object,
+  });
 
 type Container = Element | Document;
 type Props = {
@@ -531,6 +535,21 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
+    if (container._reactRootContainer && container.nodeType !== COMMENT_NODE) {
+      const hostInstance = DOMRenderer.findHostInstanceWithNoPortals(
+        container._reactRootContainer.current,
+      );
+      if (hostInstance) {
+        warning(
+          hostInstance.parentNode === container,
+          'render(...): It looks like the React-rendered content of this ' +
+            'container was removed without using React. This is not ' +
+            'supported and will cause errors. Instead, call ' +
+            'ReactDOM.unmountComponentAtNode to empty a container.',
+        );
+      }
+    }
+
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
     const hasNonRootReactChild = !!(rootEl &&
@@ -722,6 +741,8 @@ var ReactDOMFiber = {
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
+
+  flushSync: DOMRenderer.flushSync,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source

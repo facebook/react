@@ -256,12 +256,12 @@ function formatPriority(priority) {
 
 export default function Fibers({fibers, show, ...rest}) {
   const items = Object.keys(fibers.descriptions).map(
-    id => fibers.descriptions[id],
+    id => fibers.descriptions[id]
   );
 
   const isDragging = rest.className.indexOf('dragging') > -1;
   const [_, sdx, sdy] = rest.style.transform.match(
-    /translate\((-?\d+)px,(-?\d+)px\)/,
+    /translate\((-?\d+)px,(-?\d+)px\)/
   ) || [];
   const dx = Number(sdx);
   const dy = Number(sdy);

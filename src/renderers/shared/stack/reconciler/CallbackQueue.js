@@ -28,15 +28,13 @@ var validateCallback = require('validateCallback');
  * @implements PooledClass
  * @internal
  */
-class CallbackQueue<T, Targ> {
-  _callbacks: ?Array<(arg: Targ) => void>;
+class CallbackQueue<T> {
+  _callbacks: ?Array<() => void>;
   _contexts: ?Array<T>;
-  _arg: Targ;
 
-  constructor(arg) {
+  constructor() {
     this._callbacks = null;
     this._contexts = null;
-    this._arg = arg;
   }
 
   /**
@@ -62,7 +60,6 @@ class CallbackQueue<T, Targ> {
   notifyAll() {
     var callbacks = this._callbacks;
     var contexts = this._contexts;
-    var arg = this._arg;
     if (callbacks && contexts) {
       invariant(
         callbacks.length === contexts.length,
@@ -72,7 +69,7 @@ class CallbackQueue<T, Targ> {
       this._contexts = null;
       for (var i = 0; i < callbacks.length; i++) {
         validateCallback(callbacks[i]);
-        callbacks[i].call(contexts[i], arg);
+        callbacks[i].call(contexts[i]);
       }
       callbacks.length = 0;
       contexts.length = 0;

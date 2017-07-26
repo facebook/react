@@ -162,6 +162,18 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       };
       ref._stringRef = stringRef;
       return ref;
+    } else {
+      invariant(
+        typeof mixedRef === 'string',
+        'Expected ref to be a function or a string.',
+      );
+      invariant(
+        element._owner,
+        'Element ref was specified as a string (%s) but no owner was ' +
+          'set. You may have multiple copies of React loaded. ' +
+          '(details: https://fb.me/react-refs-must-have-owner).',
+        mixedRef,
+      );
     }
   }
   return mixedRef;
@@ -718,9 +730,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           }
           warning(
             false,
-            'Encountered two children with the same key, ' +
-              '`%s`. Child keys must be unique; when two children share a key, ' +
-              'only the first child will be used.%s',
+            'Encountered two children with the same key, `%s`. ' +
+              'Keys should be unique so that components maintain their identity ' +
+              'across updates. Non-unique keys may cause children to be ' +
+              'duplicated and/or omitted — the behavior is unsupported and ' +
+              'could change in a future version.%s',
             key,
             getCurrentFiberStackAddendum(),
           );

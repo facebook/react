@@ -60,7 +60,10 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.',
+      'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
     );
   });
 
@@ -92,9 +95,11 @@ describe('ReactChildReconciler', () => {
       normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
     ).toContain(
       'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
+        'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
+      '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',
@@ -114,7 +119,10 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.',
+      'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
     );
   });
 
@@ -146,9 +154,11 @@ describe('ReactChildReconciler', () => {
       normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
     ).toContain(
       'Encountered two children with the same key, `1`. ' +
-        'Child keys must be unique; when two children share a key, ' +
-        'only the first child will be used.\n' +
-        '    in div (at **)\n' +
+        'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
+      '    in div (at **)\n' +
         '    in Component (at **)\n' +
         '    in Parent (at **)\n' +
         '    in GrandParent (at **)',

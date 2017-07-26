@@ -12,6 +12,7 @@
 'use strict';
 
 const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+const {COMMENT_NODE} = require('HTMLNodeType');
 
 const invariant = require('invariant');
 
@@ -371,7 +372,7 @@ describe('ReactMount', () => {
         containerDiv = document.createElement('div');
         containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
         mountPoint = containerDiv.childNodes[1];
-        invariant(mountPoint.nodeType === 8, 'Expected comment');
+        invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
       });
 
       it('renders at a comment node', () => {

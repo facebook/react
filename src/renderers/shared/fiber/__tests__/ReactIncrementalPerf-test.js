@@ -282,7 +282,7 @@ describe('ReactDebugFiberPerf', () => {
 
   it('measures deprioritized work', () => {
     addComment('Flush the parent');
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(
         <Parent>
           <div hidden={true}>
@@ -357,7 +357,7 @@ describe('ReactDebugFiberPerf', () => {
 
     class Boundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -498,7 +498,7 @@ describe('ReactDebugFiberPerf', () => {
         return <span prop={this.state.step} />;
       }
     }
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Component />);
     });
     expect(getFlameChart()).toMatchSnapshot();

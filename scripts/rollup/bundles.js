@@ -287,10 +287,10 @@ const bundles = [
     ],
     useFiber: false,
     modulesToStub: [
-      "'createReactNativeComponentClassFiber'",
-      "'ReactNativeFiberRenderer'",
-      "'findNumericNodeHandleFiber'",
-      "'ReactNativeFiber'",
+      'createReactNativeComponentClassFiber',
+      'ReactNativeFiberRenderer',
+      'findNumericNodeHandleFiber',
+      'ReactNativeFiber',
     ],
   },
   {
@@ -329,9 +329,9 @@ const bundles = [
     ],
     useFiber: true,
     modulesToStub: [
-      "'createReactNativeComponentClassStack'",
-      "'findNumericNodeHandleStack'",
-      "'ReactNativeStack'",
+      'createReactNativeComponentClassStack',
+      'findNumericNodeHandleStack',
+      'ReactNativeStack',
     ],
   },
 
@@ -381,7 +381,11 @@ const bundles = [
     label: 'shallow-renderer',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer/shallow',
-    paths: ['src/renderers/shared/**/*.js', 'src/renderers/testing/**/*.js'],
+    paths: [
+      'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js',
+      'src/shared/**/*.js',
+    ],
   },
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/

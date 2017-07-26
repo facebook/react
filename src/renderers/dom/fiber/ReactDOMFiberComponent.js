@@ -31,9 +31,9 @@ var inputValueTracking = require('inputValueTracking');
 var isCustomComponent = require('isCustomComponent');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
@@ -65,6 +65,14 @@ var {
 } = DOMNamespaces;
 
 if (__DEV__) {
+  var warnedUnknownTags = {
+    // Chrome is the only major browser not shipping <time>. But as of July
+    // 2017 it intends to ship it due to widespread usage. We intentionally
+    // *don't* warn for <time> even if it's unrecognized by Chrome because
+    // it soon will be, and many apps have been using it anyway.
+    time: true,
+  };
+
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
@@ -414,15 +422,21 @@ var ReactDOMFiberComponent = {
 
     if (__DEV__) {
       if (namespaceURI === HTML_NAMESPACE) {
-        warning(
-          isCustomComponentTag ||
-            Object.prototype.toString.call(domElement) !==
-              '[object HTMLUnknownElement]',
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
+        if (
+          !isCustomComponentTag &&
+          Object.prototype.toString.call(domElement) ===
+            '[object HTMLUnknownElement]' &&
+          !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
+        ) {
+          warnedUnknownTags[type] = true;
+          warning(
+            false,
+            'The tag <%s> is unrecognized in this browser. ' +
+              'If you meant to render a React component, start its name with ' +
+              'an uppercase letter.',
+            type,
+          );
+        }
       }
     }
 
@@ -509,13 +523,13 @@ var ReactDOMFiberComponent = {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         break;
       case 'option':
@@ -754,6 +768,10 @@ var ReactDOMFiberComponent = {
         // happen after `updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
         ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
+
+        // We also check that we haven't missed a value update, such as a
+        // Radio group shifting the checked value to another named radio input.
+        inputValueTracking.updateValueIfChanged((domElement: any));
         break;
       case 'textarea':
         ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
@@ -963,13 +981,13 @@ var ReactDOMFiberComponent = {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         break;
       case 'select':

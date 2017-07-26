@@ -15,7 +15,6 @@
 const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
 const ReactGenericBatching = require('ReactGenericBatching');
 const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
-const ReactNativeInjection = require('ReactNativeInjection');
 const ReactPortal = require('ReactPortal');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
@@ -30,7 +29,7 @@ const {injectInternals} = require('ReactFiberDevToolsHook');
 import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
 
-ReactNativeInjection.inject();
+require('ReactNativeInjection');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeFiberRenderer.batchedUpdates,
@@ -89,6 +88,8 @@ const ReactNativeFiber: ReactNativeType = {
   },
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+
+  flushSync: ReactNativeFiberRenderer.flushSync,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components

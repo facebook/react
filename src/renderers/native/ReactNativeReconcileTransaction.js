@@ -67,7 +67,7 @@ if (__DEV__) {
  */
 function ReactNativeReconcileTransaction() {
   this.reinitializeTransaction();
-  this.reactMountReady = CallbackQueue.getPooled(null);
+  this.reactMountReady = CallbackQueue.getPooled();
 }
 
 var Mixin = {
