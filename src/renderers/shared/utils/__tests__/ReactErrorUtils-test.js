@@ -103,7 +103,9 @@ describe('ReactErrorUtils', () => {
       var callback = jest.fn();
       ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
       expect(ReactErrorUtils.hasCaughtError()).toBe(false);
-      expect(ReactErrorUtils.clearCaughtError).toThrow('no error');
+      expect(ReactErrorUtils.clearCaughtError).toThrow(
+        __DEV__ ? 'no error was captured' : 'Minified React error #198',
+      );
     });
 
     it(`can nest with same debug name (${environment})`, () => {
