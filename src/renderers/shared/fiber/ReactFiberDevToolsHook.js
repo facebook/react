@@ -12,10 +12,6 @@
 
 'use strict';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 
@@ -34,6 +30,7 @@ if (
     onCommitFiberRoot,
     onCommitFiberUnmount,
   } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  var warning = require('fbjs/lib/warning');
 
   injectInternals = function(internals: Object) {
     warning(rendererID == null, 'Cannot inject into DevTools twice.');
