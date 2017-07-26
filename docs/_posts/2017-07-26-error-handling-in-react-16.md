@@ -5,6 +5,8 @@ author: gaearon
 
 As React 16 release is getting closer, we would like to announce a few changes to how React handles JavaScript errors inside components. These changes are included in React 16 beta versions, and will be a part of React 16.
 
+**By the way, [we just released the first beta of React 16 for you to try!](https://github.com/facebook/react/issues/10294)**
+
 ## Behavior in React 15 and Earlier
 
 In the past, JavaScript errors inside components used to corrupt React’s internal state and cause it to [emit](https://github.com/facebook/react/issues/4026) [cryptic](https://github.com/facebook/react/issues/6895) [errors](https://github.com/facebook/react/issues/8579) on next renders. These errors were always caused by an earlier error in the application code, but React did not provide a way to handle them gracefully in components, and could not recover from them.
@@ -55,7 +57,7 @@ Note that **error boundaries only catch errors in the components below them in t
 
 ## Live Demo
 
-Check out [this example of declaring and using an error boundary](https://codepen.io/gaearon/pen/wqvxGa?editors=0010) with React 16 beta.
+Check out [this example of declaring and using an error boundary](https://codepen.io/gaearon/pen/wqvxGa?editors=0010) with [React 16 beta](https://github.com/facebook/react/issues/10294).
 
 ## Where to Place Error Boundaries
 
