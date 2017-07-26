@@ -822,17 +822,44 @@ describe('ReactDOMComponent', () => {
           if (this instanceof window.HTMLUnknownElement) {
             return '[object HTMLUnknownElement]';
           }
+          // Special case! Read explanation below in the test.
+          if (this instanceof window.HTMLTimeElement) {
+            return '[object HTMLUnknownElement]';
+          }
           return realToString.apply(this, arguments);
         };
         Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
-        ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
+
+        ReactTestUtils.renderIntoDocument(<bar />);
+        // Test deduplication
+        ReactTestUtils.renderIntoDocument(<foo />);
+        ReactTestUtils.renderIntoDocument(<foo />);
+        // This is a funny case.
+        // Chrome is the only major browser not shipping <time>. But as of July
+        // 2017 it intends to ship it due to widespread usage. We intentionally
+        // *don't* warn for <time> even if it's unrecognized by Chrome because
+        // it soon will be, and many apps have been using it anyway.
+        ReactTestUtils.renderIntoDocument(<time />);
+        // Corner case. Make sure out deduplication logic doesn't break with weird tag.
+        ReactTestUtils.renderIntoDocument(<hasOwnProperty />);
       } finally {
         Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
       }
 
-      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.count()).toBe(4);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'The tag <mycustomcomponent> is unrecognized in this browser',
+        'The tag <bar> is unrecognized in this browser',
+      );
+      expectDev(console.error.calls.argsFor(1)[0]).toContain(
+        'The tag <foo> is unrecognized in this browser',
+      );
+      expectDev(console.error.calls.argsFor(2)[0]).toContain(
+        '<hasOwnProperty /> is using uppercase HTML',
+      );
+      expectDev(console.error.calls.argsFor(3)[0]).toContain(
+        ReactDOMFeatureFlags.useFiber
+          ? 'The tag <hasOwnProperty> is unrecognized in this browser'
+          : 'The tag <hasownproperty> is unrecognized in this browser',
       );
     });
 
