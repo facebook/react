@@ -43,7 +43,7 @@ function restoreStateOfTarget(target) {
       fiberHostComponent &&
         typeof fiberHostComponent.restoreControlledState === 'function',
       'Fiber needs to be injected to handle a fiber target for controlled ' +
-        'events.',
+        'events. This error is likely caused by a bug in React. Please file an issue.',
     );
     const props = EventPluginUtils.getFiberCurrentPropsFromNode(
       internalInstance.stateNode,
@@ -57,7 +57,8 @@ function restoreStateOfTarget(target) {
   }
   invariant(
     typeof internalInstance.restoreControlledState === 'function',
-    'The internal instance must be a React host component.',
+    'The internal instance must be a React host component. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
   );
   // If it is not a Fiber, we can just use dynamic dispatch.
   internalInstance.restoreControlledState();

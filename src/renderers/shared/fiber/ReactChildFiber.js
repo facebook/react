@@ -49,7 +49,8 @@ if (__DEV__) {
     }
     invariant(
       typeof child._store === 'object',
-      'React Component in warnForMissingKey should have a _store',
+      'React Component in warnForMissingKey should have a _store. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
     );
     child._store.validated = true;
 

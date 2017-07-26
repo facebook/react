@@ -308,7 +308,10 @@ function createOpenTagMarkup(
 
 function resolve(child, context) {
   // TODO: We'll need to support Arrays (and strings) after Fiber is rolled out
-  invariant(!Array.isArray(child), 'Did not expect to receive an Array child');
+  invariant(
+    !Array.isArray(child),
+    'The server renderer does not implement support for array children yet.',
+  );
   while (React.isValidElement(child)) {
     if (__DEV__) {
       pushElementToDebugStack(child);
