@@ -36,6 +36,10 @@ const ReactErrorUtils = {
   /**
    * Call a function while guarding against errors that happens within it.
    * Returns an error if it throws, otherwise null.
+   * 
+   * In production, this is implemented using a try-catch. The reason we don't
+   * use a try-catch directly is so that we can swap out a different
+   * implementation in DEV mode.
    *
    * @param {String} name of the guard to use for logging or debugging
    * @param {Function} func The function to invoke
@@ -59,6 +63,7 @@ const ReactErrorUtils = {
   /**
    * Same as invokeGuardedCallback, but instead of returning an error, it stores
    * it in a global so it can be rethrown by `rethrowCaughtError` later.
+   * TODO: See if _caughtError and _rethrowError can be unified.
    *
    * @param {String} name of the guard to use for logging or debugging
    * @param {Function} func The function to invoke
@@ -127,20 +132,33 @@ let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
 };
 
 if (__DEV__) {
-  const ReactFeatureFlags = require('ReactFeatureFlags');
+  // In DEV mode, we swap out invokeGuardedCallback for a special version
+  // that plays more nicely with the browser's DevTools. The idea is to preserve
+  // "Pause on exceptions" behavior. Because React wraps all user-provided
+  // functions in invokeGuardedCallback, and the production version of
+  // invokeGuardedCallback uses a try-catch, all user exceptions are treated
+  // like caught exceptions, and the DevTools won't pause unless the developer
+  // takes the extra step of enabling pause on caught exceptions. This is
+  // untintuitive, though, because even though React has caught the error, from
+  // the developer's perspective, the error is uncaught.
+  //
+  // To preserve the expected "Pause on exceptions" behavior, we don't use a
+  // try-catch in DEV. Instead, we synchronously dispatch a fake event to a fake
+  // DOM node, and call the user-provided callback from inside an event handler
+  // for that fake event. If the callback throws, the error is "captured" using
+  // a global event handler. But because the error happens in a different
+  // event loop context, it does not interrupt the normal program flow.
+  // Effectively, this gives us try-catch behavior without actually using
+  // try-catch. Neat!
 
+  // Check that the browser supports the APIs we need to implement our special
+  // DEV version of invokeGuardedCallback
   if (
     typeof window !== 'undefined' &&
     typeof window.dispatchEvent === 'function' &&
     typeof document !== 'undefined' &&
     typeof document.createEvent === 'function'
   ) {
-    let preventDefault = true;
-
-    /**
-     * To help development we can get better devtools integration by simulating a
-     * real browser event.
-     */
     const fakeNode = document.createElement('react');
     let depth = 0;
 
@@ -155,30 +173,74 @@ if (__DEV__) {
       e,
       f,
     ) {
-      depth++;
-
-      let error;
+      // Keeps track of whether the user-provided callback threw an error. We
+      // set this to true at the beginning, then set it to false right after
+      // calling the function. If the function errors, `didError` will never be
+      // set to false. This strategy works even if the browser is flaky and
+      // fails to call our global error handler, because it doesn't rely on
+      // the error event at all.
       let didError = true;
+
+      // Create an event handler for our fake event. We will synchronously
+      // dispatch our fake event using `dispatchEvent`. Inside the handler, we
+      // call the user-provided callback.
       const funcArgs = Array.prototype.slice.call(arguments, 3);
-      const boundFunc = function() {
+      function callCallback() {
         func.apply(context, funcArgs);
         didError = false;
-      };
-      const onFakeEventError = function(event) {
+      }
+
+      // Create a global error event handler. We use this to capture the value
+      // that was thrown. It's possible that this error handler will fire more
+      // than once; for example, if non-React code also calls `dispatchEvent`
+      // and a handler for that event throws. We should be resilient to most of
+      // those cases. Even if our error event handler fires more than once, the
+      // last error event is always used. If the callback actually does error,
+      // we know that the last error event is the correct one, because it's not
+      // possible for anything else to have happened in between our callback
+      // erroring and the code that follows the `dispatchEvent` call below. If
+      // the callback doesn't error, but the error event was fired, we know to
+      // ignore it because `didError` will be false, as described above.
+      let error;
+      // Use this to track whether the error event is ever called.
+      let didSetError = false;
+
+      function onError(event) {
         error = event.error;
-        if (preventDefault) {
-          event.preventDefault();
-        }
-      };
+        didSetError = true;
+      }
 
+      // Create a fake event type. We add `depth` to the event name so that
+      // nested `invokeGuardedCallback` calls do not clash. Otherwise, a nested
+      // call would trigger the fake event handlers of any call higher in
+      // the stack.
+      depth++;
       const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
-      window.addEventListener('error', onFakeEventError);
-      fakeNode.addEventListener(evtType, boundFunc, false);
-      const evt = document.createEvent('Event');
 
+      // Attach our event handlers
+      window.addEventListener('error', onError);
+      fakeNode.addEventListener(evtType, callCallback, false);
+
+      // Synchronously dispatch our fake event. If the user-provided function
+      // errors, it will trigger our global error handler.
+      const evt = document.createEvent('Event');
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
+
       if (didError) {
+        if (!didSetError) {
+          // The callback errored, but the error event never fired.
+          error = new Error(
+            'An error was thrown inside one of your components, but React ' +
+              "doesn't know what it was. This is likely due to browser " +
+              'flakiness. React does its best to preserve the "Pause on ' +
+              'exceptions" behavior of the DevTools, which requires some ' +
+              "DEV-mode only tricks. It's possible that these don't work in " +
+              'your browser. Try triggering the error in production mode, ' +
+              'or switching to a modern browser. If you suspect that this is ' +
+              'actually an issue with React, please file an issue.',
+          );
+        }
         ReactErrorUtils._hasCaughtError = true;
         ReactErrorUtils._caughtError = error;
       } else {
@@ -186,53 +248,18 @@ if (__DEV__) {
         ReactErrorUtils._caughtError = null;
       }
 
-      fakeNode.removeEventListener(evtType, boundFunc, false);
-      window.removeEventListener('error', onFakeEventError);
+      // Remove our event listeners
+      fakeNode.removeEventListener(evtType, callCallback, false);
+      window.removeEventListener('error', onError);
 
+      // Decrement the depth. This isn't strictly necessary, because we could
+      // just keep incrementing the number; the only requirement is that no two
+      // calls to `invokeGuardedCallback` use the same event type at the same
+      // time. But this does prevent `depth` from increasing boundlessly.
       depth--;
     };
 
-    // Feature test the development version of invokeGuardedCallback
-    // before enabling.
-    let useInvokeGuardedCallbackDev;
-    if (ReactFeatureFlags.forceInvokeGuardedCallbackDev) {
-      // jsdom doesn't handle throwing null correctly (it fails when attempting
-      // to access the 'message' property) but we need the ability to test it.
-      // We use a feature flag to override the default feature test.
-      useInvokeGuardedCallbackDev = true;
-    } else {
-      try {
-        const err = new Error('test');
-        invokeGuardedCallbackDev(
-          null,
-          () => {
-            throw err;
-          },
-          null,
-        );
-        const A = ReactErrorUtils.clearCaughtError();
-
-        invokeGuardedCallbackDev(
-          null,
-          () => {
-            throw null;
-          },
-          null,
-        );
-        const B = ReactErrorUtils.clearCaughtError();
-
-        if (A === err && B === null) {
-          useInvokeGuardedCallbackDev = true;
-        }
-      } catch (e) {
-        useInvokeGuardedCallbackDev = false;
-      }
-    }
-
-    if (useInvokeGuardedCallbackDev) {
-      invokeGuardedCallback = invokeGuardedCallbackDev;
-      preventDefault = false;
-    }
+    invokeGuardedCallback = invokeGuardedCallbackDev;
   }
 }
 
