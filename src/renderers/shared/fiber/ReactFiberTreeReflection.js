@@ -206,14 +206,15 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
         invariant(
           didFindChild,
           'Child was not found in either parent set. This indicates a bug ' +
-            'related to the return pointer.',
+            'in React related to the return pointer. Please file an issue.',
         );
       }
     }
 
     invariant(
       a.alternate === b,
-      "Return fibers should always be each others' alternates.",
+      "Return fibers should always be each others' alternates. " +
+        'This error is likely caused by a bug in React. Please file an issue.',
     );
   }
   // If the root is not a host container, we're in a disconnected tree. I.e.
