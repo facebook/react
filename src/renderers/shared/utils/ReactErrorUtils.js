@@ -36,7 +36,7 @@ const ReactErrorUtils = {
   /**
    * Call a function while guarding against errors that happens within it.
    * Returns an error if it throws, otherwise null.
-   * 
+   *
    * In production, this is implemented using a try-catch. The reason we don't
    * use a try-catch directly is so that we can swap out a different
    * implementation in DEV mode.
@@ -160,7 +160,6 @@ if (__DEV__) {
     typeof document.createEvent === 'function'
   ) {
     const fakeNode = document.createElement('react');
-    let depth = 0;
 
     const invokeGuardedCallbackDev = function(
       name,
@@ -186,6 +185,11 @@ if (__DEV__) {
       // call the user-provided callback.
       const funcArgs = Array.prototype.slice.call(arguments, 3);
       function callCallback() {
+        // We immediately remove the callback from event listeners so that
+        // nested `invokeGuardedCallback` calls do not clash. Otherwise, a
+        // nested call would trigger the fake event handlers of any call higher
+        // in the stack.
+        fakeNode.removeEventListener(evtType, callCallback, false);
         func.apply(context, funcArgs);
         didError = false;
       }
@@ -210,12 +214,8 @@ if (__DEV__) {
         didSetError = true;
       }
 
-      // Create a fake event type. We add `depth` to the event name so that
-      // nested `invokeGuardedCallback` calls do not clash. Otherwise, a nested
-      // call would trigger the fake event handlers of any call higher in
-      // the stack.
-      depth++;
-      const evtType = `react-${name ? name : 'invokeguardedcallback'}-${depth}`;
+      // Create a fake event type.
+      const evtType = `react-${name ? name : 'invokeguardedcallback'}`;
 
       // Attach our event handlers
       window.addEventListener('error', onError);
@@ -249,14 +249,7 @@ if (__DEV__) {
       }
 
       // Remove our event listeners
-      fakeNode.removeEventListener(evtType, callCallback, false);
       window.removeEventListener('error', onError);
-
-      // Decrement the depth. This isn't strictly necessary, because we could
-      // just keep incrementing the number; the only requirement is that no two
-      // calls to `invokeGuardedCallback` use the same event type at the same
-      // time. But this does prevent `depth` from increasing boundlessly.
-      depth--;
     };
 
     invokeGuardedCallback = invokeGuardedCallbackDev;
