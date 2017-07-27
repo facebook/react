@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
     // You can also log the error to an error reporting service
     logErrorToMyService(error, info);
   }
-  
+
   render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
@@ -74,6 +74,18 @@ This change means that as you migrate to React 16, you will likely uncover exist
 For example, Facebook Messenger wraps content of the sidebar, the info panel, the conversation log, and the message input into separate error boundaries. If some component in one of these UI areas crashes, the rest of them remain interactive.
 
 We also encourage you to use JS error reporting services (or build your own) so that you can learn about unhandled exceptions as they happen in production, and fix them.
+
+## Component Stack Traces
+
+React 16 prints all errors to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also provides component stack traces. Now you can see where exactly in the component tree the failure has happened:
+
+<img src="/react/img/blog/error-boundaries-stack-trace.png" alt="Component stack traces in error message" style="width: 100%;">
+
+You can also see the filenames and line numbers in the component stack trace. This works by default in [Create React App](https://github.com/facebookincubator/create-react-app) projects:
+
+<img src="/react/img/blog/error-boundaries-stack-trace-line-numbers.png" alt="Component stack traces with line numbers in error message" style="width: 100%;">
+
+If you don’t use Create React App, you can add [this plugin](https://www.npmjs.com/package/babel-plugin-transform-react-jsx-source) manually to your Babel configuration. Note that it’s intended only for development and **must be disabled in production**.
 
 ## Why Not Use `try` / `catch`?
 
