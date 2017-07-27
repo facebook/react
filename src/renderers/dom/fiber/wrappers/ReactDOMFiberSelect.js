@@ -27,8 +27,6 @@ if (__DEV__) {
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
 }
 
-var didWarnValueDefaultValue = false;
-
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
@@ -149,6 +147,8 @@ var ReactDOMSelect = {
     };
 
     if (__DEV__) {
+      var didWarnValueDefaultValue = false;
+
       if (
         props.value !== undefined &&
         props.defaultValue !== undefined &&
