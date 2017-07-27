@@ -99,4 +99,4 @@ Error boundaries preserve the declarative nature of React, and behave as you wou
 
 React 15 included a very limited support for error boundaries under a different method name: `unstable_handleError`. This method no longer works, and you will need to change it to `componentDidCatch` in your code starting from the first 16 beta release.
 
-For this change, we've provided [a codemod](https://github.com/reactjs/react-codemod#error-boundaries) to automatically migrate your code.
+For this change, we’ve provided [a codemod](https://github.com/reactjs/react-codemod#error-boundaries) to automatically migrate your code.
