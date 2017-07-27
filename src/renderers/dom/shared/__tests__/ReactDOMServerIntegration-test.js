@@ -281,28 +281,47 @@ function expectMarkupMismatch(serverElement, clientElement) {
   return testMarkupMatch(serverElement, clientElement, false);
 }
 
+// TODO: this is a hack for testing dynamic injection. Remove this when we decide
+// how to do static injection instead.
+let onAfterResetModules = null;
+
 // When there is a test that renders on server and then on client and expects a logged
 // error, you want to see the error show up both on server and client. Unfortunately,
 // React refuses to issue the same error twice to avoid clogging up the console.
 // To get around this, we must reload React modules in between server and client render.
-let onAfterResetModules = null;
 function resetModules() {
+  // First, reset the modules to load the client renderer.
   jest.resetModuleRegistry();
-  PropTypes = require('prop-types');
-  React = require('react');
-  ReactDOM = require('react-dom');
-  ReactDOMServer = require('react-dom/server');
-  ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-  ReactDOMNodeStream = require('react-dom/node-stream');
-  ReactTestUtils = require('react-dom/test-utils');
-  // TODO: can we express this test with only public API?
-  ExecutionEnvironment = require('ExecutionEnvironment');
-
-  // TODO: this is a hack for testing dynamic injection. Remove this when we decide
-  // how to do static injection instead.
   if (typeof onAfterResetModules === 'function') {
     onAfterResetModules();
   }
+
+  // TODO: can we express this test with only public API?
+  ExecutionEnvironment = require('ExecutionEnvironment');
+
+  PropTypes = require('prop-types');
+  React = require('react');
+  ReactDOM = require('react-dom');
+  ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+  ReactTestUtils = require('react-dom/test-utils');
+
+  // Now we reset the modules again to load the server renderer.
+  // Resetting is important because we want to avoid any shared state
+  // influencing the tests.
+  jest.resetModuleRegistry();
+  if (typeof onAfterResetModules === 'function') {
+    onAfterResetModules();
+  }
+
+  ReactDOMServer = require('react-dom/server');
+
+  // Finally, reset modules one more time before importing the stream renderer.
+  jest.resetModuleRegistry();
+  if (typeof onAfterResetModules === 'function') {
+    onAfterResetModules();
+  }
+
+  ReactDOMNodeStream = require('react-dom/node-stream');
 }
 
 describe('ReactDOMServerIntegration', () => {

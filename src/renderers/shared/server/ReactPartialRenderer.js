@@ -306,7 +306,7 @@ function createOpenTagMarkup(
   return ret;
 }
 
-function resolve(child, context) {
+function resolve(child, context) { 
   while (React.isValidElement(child)) {
     if (__DEV__) {
       pushElementToDebugStack(child);

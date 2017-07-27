@@ -919,7 +919,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // No work left. We can exit.
           break loop;
         default:
-          invariant(false, 'Switch statement should be exhuastive.');
+          invariant(
+            false,
+            'Switch statement should be exhuastive. ' +
+              'This error is likely caused by a bug in React. Please file an issue.',
+          );
       }
     } while (true);
   }

@@ -65,6 +65,14 @@ var {
 } = DOMNamespaces;
 
 if (__DEV__) {
+  var warnedUnknownTags = {
+    // Chrome is the only major browser not shipping <time>. But as of July
+    // 2017 it intends to ship it due to widespread usage. We intentionally
+    // *don't* warn for <time> even if it's unrecognized by Chrome because
+    // it soon will be, and many apps have been using it anyway.
+    time: true,
+  };
+
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
@@ -414,15 +422,21 @@ var ReactDOMFiberComponent = {
 
     if (__DEV__) {
       if (namespaceURI === HTML_NAMESPACE) {
-        warning(
-          isCustomComponentTag ||
-            Object.prototype.toString.call(domElement) !==
-              '[object HTMLUnknownElement]',
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
+        if (
+          !isCustomComponentTag &&
+          Object.prototype.toString.call(domElement) ===
+            '[object HTMLUnknownElement]' &&
+          !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
+        ) {
+          warnedUnknownTags[type] = true;
+          warning(
+            false,
+            'The tag <%s> is unrecognized in this browser. ' +
+              'If you meant to render a React component, start its name with ' +
+              'an uppercase letter.',
+            type,
+          );
+        }
       }
     }
 
