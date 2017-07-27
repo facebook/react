@@ -23,6 +23,7 @@ var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
 if (__DEV__) {
+  var didWarnValueDefaultValue = false;
   var warning = require('fbjs/lib/warning');
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
 }
@@ -147,8 +148,6 @@ var ReactDOMSelect = {
     };
 
     if (__DEV__) {
-      var didWarnValueDefaultValue = false;
-
       if (
         props.value !== undefined &&
         props.defaultValue !== undefined &&
