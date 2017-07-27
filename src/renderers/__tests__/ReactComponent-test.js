@@ -338,6 +338,41 @@ describe('ReactComponent', () => {
     expect(callback.mock.calls.length).toBe(3);
   });
 
+  it('returns instance during synchronous render', () => {
+    function assertRenderReturnsInstance(element) {
+      var container = document.createElement('div');
+      var inst = ReactDOM.render(element, container);
+      expect(inst).not.toBe(null);
+      expect(inst).toBeInstanceOf(element.type);
+    }
+    class Child extends React.Component {
+      render() {
+        return null;
+      }
+    }
+    class Parent extends React.Component {
+      componentWillMount() {
+        assertRenderReturnsInstance(<Child />);
+      }
+      componentDidMount() {
+        assertRenderReturnsInstance(<Child />);
+      }
+      componentWillUpdate() {
+        assertRenderReturnsInstance(<Child />);
+      }
+      componentDidUpdate() {
+        assertRenderReturnsInstance(<Child />);
+      }
+      componentWillUnmount() {
+        assertRenderReturnsInstance(<Child />);
+      }
+      render() {
+        return null;
+      }
+    }
+    assertRenderReturnsInstance(<Parent />);
+  });
+
   it('throws usefully when rendering badly-typed elements', () => {
     spyOn(console, 'error');
 

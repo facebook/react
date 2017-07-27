@@ -299,4 +299,40 @@ describe('renderSubtreeIntoContainer', () => {
     ReactDOM.render(<Parent value="foo" />, container);
     expect(portal2.textContent).toBe('foo');
   });
+
+  it('returns instance during synchronous render', () => {
+    function assertRenderReturnsInstance(context, element) {
+      var container = document.createElement('div');
+      var inst = renderSubtreeIntoContainer(context, element, container);
+      expect(inst).not.toBe(null);
+      expect(inst).toBeInstanceOf(element.type);
+    }
+    class Child extends React.Component {
+      render() {
+        return null;
+      }
+    }
+    class Parent extends React.Component {
+      componentWillMount() {
+        assertRenderReturnsInstance(this, <Child />);
+      }
+      componentDidMount() {
+        assertRenderReturnsInstance(this, <Child />);
+      }
+      componentWillUpdate() {
+        assertRenderReturnsInstance(this, <Child />);
+      }
+      componentDidUpdate() {
+        assertRenderReturnsInstance(this, <Child />);
+      }
+      componentWillUnmount() {
+        assertRenderReturnsInstance(this, <Child />);
+      }
+      render() {
+        return null;
+      }
+    }
+    var container = document.createElement('div');
+    ReactDOM.render(<Parent />, container);
+  });
 });
