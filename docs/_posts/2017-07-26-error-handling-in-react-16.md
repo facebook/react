@@ -77,7 +77,7 @@ We also encourage you to use JS error reporting services (or build your own) so 
 
 ## Component Stack Traces
 
-React 16 prints all errors to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also provides component stack traces. Now you can see where exactly in the component tree the failure has happened:
+React 16 prints all errors that occurred during rendering to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also provides component stack traces. Now you can see where exactly in the component tree the failure has happened:
 
 <img src="/react/img/blog/error-boundaries-stack-trace.png" alt="Component stack traces in error message" style="width: 100%;">
 
