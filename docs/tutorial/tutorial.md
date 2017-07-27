@@ -748,20 +748,8 @@ Then change Board so that it takes `squares` via props and has its own `onClick`
 
 Now the whole Board component looks like this:
 
-```javascript{17,18}
+```javascript{4,5}
 class Board extends React.Component {
-  handleClick(i) {
-    const squares = this.state.squares.slice();
-    if (calculateWinner(squares) || squares[i]) {
-      return;
-    }
-    squares[i] = this.state.xIsNext ? 'X' : 'O';
-    this.setState({
-      squares: squares,
-      xIsNext: !this.state.xIsNext,
-    });
-  }
-
   renderSquare(i) {
     return (
       <Square
@@ -806,7 +794,19 @@ class Board extends React.Component {
 
 Game's `render` should look at the most recent history entry and can take over calculating the game status:
 
-```javascript{2-11,16-19,22}
+```javascript{1-11,28-31,34}
+  handleClick(i) {
+    const squares = this.state.squares.slice();
+    if (calculateWinner(squares) || squares[i]) {
+      return;
+    }
+    squares[i] = this.state.xIsNext ? 'X' : 'O';
+    this.setState({
+      squares: squares,
+      xIsNext: !this.state.xIsNext,
+    });
+  }
+  
   render() {
     const history = this.state.history;
     const current = history[history.length - 1];
