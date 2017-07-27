@@ -17,8 +17,10 @@ var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
 var assertValidProps = require('assertValidProps');
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var invariant = require('fbjs/lib/invariant');
 var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
@@ -26,11 +28,9 @@ var omittedCloseTags = require('omittedCloseTags');
 var toArray = React.Children.toArray;
 
 if (__DEV__) {
-  var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
   var warning = require('fbjs/lib/warning');
   var checkPropTypes = require('prop-types/checkPropTypes');
   var warnValidStyle = require('warnValidStyle');
-  var dangerousStyleValue = require('dangerousStyleValue');
   var {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');
