@@ -1064,7 +1064,7 @@ var ReactDOMFiberComponent = {
       didWarnInvalidHydration = true;
       warning(
         false,
-        'Did not find a matching <%s> in <%s>.',
+        'Expected server HTML to contain a matching <%s> in <%s>.',
         tag,
         parentNode.nodeName.toLowerCase(),
       );
@@ -1086,7 +1086,7 @@ var ReactDOMFiberComponent = {
       didWarnInvalidHydration = true;
       warning(
         false,
-        'Did not find a matching text node for "%s" in <%s>.',
+        'Expected server HTML to contain a matching text node for "%s" in <%s>.',
         text,
         parentNode.nodeName.toLowerCase(),
       );
