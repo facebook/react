@@ -91,6 +91,8 @@
 &lt;h2&gt;Naming Changes from React 15&lt;/h2&gt;
 
 &lt;p&gt;React 15 included a very limited support for error boundaries under a different method name: &lt;code&gt;unstable_handleError&lt;/code&gt;. This method no longer works, and you will need to change it to &lt;code&gt;componentDidCatch&lt;/code&gt; in your code starting from the first 16 beta release.&lt;/p&gt;
+
+&lt;p&gt;For this change, we’ve provided &lt;a href=&quot;https://github.com/reactjs/react-codemod#error-boundaries&quot;&gt;a codemod&lt;/a&gt; to automatically migrate your code.&lt;/p&gt;
 </description>
 				<pubDate>2017-07-26T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html</link>
