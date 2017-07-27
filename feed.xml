@@ -20,7 +20,7 @@
 
 &lt;p&gt;A JavaScript error in a part of the UI shouldn’t break the whole app. To solve this problem for React users, React 16 introduces a new concept of an “error boundary”.&lt;/p&gt;
 
-&lt;p&gt;Error boundaries are React components that &lt;strong&gt;catch JavaScript errors in their children (and grandchildren), log those errors, and display a fallback UI&lt;/strong&gt; instead of the component tree that crashed. Error boundaries catch errors during rendering, in lifecycle methods, and in constructors of the whole tree below them.&lt;/p&gt;
+&lt;p&gt;Error boundaries are React components that &lt;strong&gt;catch JavaScript errors in their descendants, log those errors, and display a fallback UI&lt;/strong&gt; instead of the component tree that crashed. Error boundaries catch errors during rendering, in lifecycle methods, and in constructors of the whole tree below them.&lt;/p&gt;
 
 &lt;p&gt;A class component becomes an error boundary if it defines a new lifecycle method called &lt;code&gt;componentDidCatch(error, info)&lt;/code&gt;:&lt;/p&gt;
 &lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;ErrorBoundary&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;extends&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;React&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;.&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Component&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;
