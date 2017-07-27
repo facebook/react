@@ -162,6 +162,18 @@
 
 <p>We also encourage you to use JS error reporting services (or build your own) so that you can learn about unhandled exceptions as they happen in production, and fix them.</p>
 
+<h2>Component Stack Traces</h2>
+
+<p>React 16 prints all errors to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also provides component stack traces. Now you can see where exactly in the component tree the failure has happened:</p>
+
+<p><img src="/react/img/blog/error-boundaries-stack-trace.png" alt="Component stack traces in error message" style="width: 100%;"></p>
+
+<p>You can also see the filenames and line numbers in the component stack trace. This works by default in <a href="https://github.com/facebookincubator/create-react-app">Create React App</a> projects:</p>
+
+<p><img src="/react/img/blog/error-boundaries-stack-trace-line-numbers.png" alt="Component stack traces with line numbers in error message" style="width: 100%;"></p>
+
+<p>If you don’t use Create React App, you can add <a href="https://www.npmjs.com/package/babel-plugin-transform-react-jsx-source">this plugin</a> manually to your Babel configuration. Note that it’s intended only for development and <strong>must be disabled in production</strong>.</p>
+
 <h2>Why Not Use <code>try</code> / <code>catch</code>?</h2>
 
 <p><code>try</code> / <code>catch</code> is great but it only works for imperative code:</p>
