@@ -64,7 +64,7 @@ describe('ReactDOMProduction', () => {
 
     var container = document.createElement('div');
     var inst = ReactDOM.render(
-      <div className="blue">
+      <div className="blue" style={{fontFamily: 'Helvetica'}}>
         <Component key={1}>A</Component>
         <Component key={2}>B</Component>
         <Component key={3}>C</Component>
@@ -74,10 +74,11 @@ describe('ReactDOMProduction', () => {
 
     expect(container.firstChild).toBe(inst);
     expect(inst.className).toBe('blue');
+    expect(inst.style.fontFamily).toBe('Helvetica');
     expect(inst.textContent).toBe('ABC');
 
     ReactDOM.render(
-      <div className="red">
+      <div className="red" style={{fontFamily: 'Comic Sans MS'}}>
         <Component key={2}>B</Component>
         <Component key={1}>A</Component>
         <Component key={3}>C</Component>
@@ -86,6 +87,7 @@ describe('ReactDOMProduction', () => {
     );
 
     expect(inst.className).toBe('red');
+    expect(inst.style.fontFamily).toBe('Comic Sans MS');
     expect(inst.textContent).toBe('BAC');
 
     ReactDOM.unmountComponentAtNode(container);
