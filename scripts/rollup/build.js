@@ -118,6 +118,15 @@ function getFooter(bundleType) {
 
 function updateBabelConfig(babelOpts, bundleType) {
   switch (bundleType) {
+    case FB_DEV:
+    case FB_PROD:
+      return Object.assign({}, babelOpts, {
+        plugins: babelOpts.plugins.concat([
+          // Wrap warning() calls with process.env.NODE_ENV
+          // So they are stripped from production
+          require('./plugins/wrap-warning-with-env-check'),
+        ]),
+      });
     case UMD_DEV:
     case UMD_PROD:
     case NODE_DEV:
