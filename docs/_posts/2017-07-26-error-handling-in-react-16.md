@@ -55,14 +55,17 @@ The `componentDidCatch()` method works like a JavaScript `catch {}` block, but f
 
 Note that **error boundaries only catch errors in the components below them in the tree**. An error boundary can’t catch an error within itself. If an error boundary fails trying to render the error message, the error will propagate to the closest error boundary above it. This, too, is similar to how `catch {}` block works in JavaScript.
 
-## Component stack traces
+## Component Stack Traces
 
-React 16 prints all errors to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also now provides component stacks. Now you can see where exactly in the component tree the failure has happened:
+React 16 prints all errors to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also provides component stack traces. Now you can see where exactly in the component tree the failure has happened:
 
-<figure>[![](/react/img/blog/error-boundaries-stack-trace.png)]</figure>
+<figure>[![Component stack trace in the console](/react/img/blog/error-boundaries-stack-trace.png)]</figure>
 
-You can get filenames and line numbers in the stack trace by adding https://www.npmjs.com/package/babel-plugin-transform-react-jsx-source, please note this is intended for dev environments.
-<figure>[![](/react/img/blog/error-boundaries-stack-trace-line-numbers.png)]</figure>
+You can also see the filenames and line numbers in the component stack trace. This works by default in [Create React App](https://github.com/facebookincubator/create-react-app) projects:
+
+<figure>[![Component stack trace in the console with filenames and line numbers](/react/img/blog/error-boundaries-stack-trace-line-numbers.png)]</figure>
+
+If you don’t use Create React App, you can add [this plugin](https://www.npmjs.com/package/babel-plugin-transform-react-jsx-source) manually to your Babel configuration (note: it’s intended only for development and must be disabled in production).
 
 ## Live Demo
 
