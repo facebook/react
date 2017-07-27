@@ -32,7 +32,7 @@ class ErrorBoundary extends React.Component {
     // You can also log the error to an error reporting service
     logErrorToMyService(error, info);
   }
-  
+
   render() {
     if (this.state.hasError) {
       // You can render any custom fallback UI
@@ -55,7 +55,13 @@ The `componentDidCatch()` method works like a JavaScript `catch {}` block, but f
 
 Note that **error boundaries only catch errors in the components below them in the tree**. An error boundary can’t catch an error within itself. If an error boundary fails trying to render the error message, the error will propagate to the closest error boundary above it. This, too, is similar to how `catch {}` block works in JavaScript.
 
+## Stack traces
+
+By default Error boundaries stack traces would look like this:
+<figure>[![](/react/img/blog/error-boundaries-stack-trace.png)]</figure>
+
 You can get filenames and line numbers in the stack trace by adding https://www.npmjs.com/package/babel-plugin-transform-react-jsx-source, please note this is intended for dev environments.
+<figure>[![](/react/img/blog/error-boundaries-stack-trace-line-numbers.png)]</figure>
 
 ## Live Demo
 
