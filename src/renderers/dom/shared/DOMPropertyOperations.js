@@ -131,8 +131,6 @@ var DOMPropertyOperations = {
             return stringValue;
           }
         }
-      } else if (DOMProperty.isCustomAttribute(name)) {
-        return DOMPropertyOperations.getValueForAttribute(node, name, expected);
       }
     }
   },
