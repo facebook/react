@@ -23,11 +23,10 @@ var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
 if (__DEV__) {
+  var didWarnValueDefaultValue = false;
   var warning = require('fbjs/lib/warning');
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
 }
-
-var didWarnValueDefaultValue = false;
 
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
