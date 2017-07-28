@@ -306,7 +306,7 @@ function createOpenTagMarkup(
   return ret;
 }
 
-function resolve(child, context) { 
+function resolve(child, context) {
   while (React.isValidElement(child)) {
     if (__DEV__) {
       pushElementToDebugStack(child);
@@ -482,9 +482,10 @@ class ReactDOMServerRenderer {
       if (child === null || child === false) {
         return '';
       } else {
-        if (Array.isArray(child)) {
+        var children = toArray(child);
+        if (children.length > 1) {
           var frame = {
-            children: child,
+            children,
             childIndex: 0,
             context: context,
             footer: '',
