@@ -142,7 +142,8 @@ exports.pushTopLevelContextObject = function(
 ): void {
   invariant(
     contextStackCursor.cursor == null,
-    'Unexpected context found on stack',
+    'Unexpected context found on stack. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
   );
 
   push(contextStackCursor, context, fiber);
@@ -242,7 +243,11 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
 
 exports.invalidateContextProvider = function(workInProgress: Fiber): void {
   const instance = workInProgress.stateNode;
-  invariant(instance, 'Expected to have an instance by this point.');
+  invariant(
+    instance,
+    'Expected to have an instance by this point. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
+  );
 
   // Merge parent and own context.
   const mergedContext = processChildContext(
@@ -272,7 +277,8 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
   // makes sense elsewhere
   invariant(
     isFiberMounted(fiber) && fiber.tag === ClassComponent,
-    'Expected subtree parent to be a mounted class component',
+    'Expected subtree parent to be a mounted class component. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
   );
 
   let node: Fiber = fiber;
@@ -281,7 +287,11 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
       return node.stateNode.__reactInternalMemoizedMergedChildContext;
     }
     const parent = node.return;
-    invariant(parent, 'Found unexpected detached subtree parent');
+    invariant(
+      parent,
+      'Found unexpected detached subtree parent. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
     node = parent;
   }
   return node.stateNode.context;

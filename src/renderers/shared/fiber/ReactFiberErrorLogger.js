@@ -94,9 +94,9 @@ function logCapturedError(capturedError: CapturedError): void {
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
-      // TODO Link to componentDidCatch() documentation once it exists.
       errorBoundaryMessage =
-        'Consider adding an error boundary to your tree to customize error handling behavior.';
+        'Consider adding an error boundary to your tree to customize error handling behavior. ' +
+        'See https://fb.me/react-error-boundaries for more information.';
     }
 
     console.error(

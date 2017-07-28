@@ -42,7 +42,9 @@ function isAttributeNameSafe(attributeName) {
     return true;
   }
   illegalAttributeNameCache[attributeName] = true;
-  warning(false, 'Invalid attribute name: `%s`', attributeName);
+  if (__DEV__) {
+    warning(false, 'Invalid attribute name: `%s`', attributeName);
+  }
   return false;
 }
 

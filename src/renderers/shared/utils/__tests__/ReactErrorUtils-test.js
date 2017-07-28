@@ -28,10 +28,15 @@ describe('ReactErrorUtils', () => {
     let oldProcess;
     beforeEach(() => {
       __DEV__ = false;
+
+      // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+      // wrong thing. If you change this, make sure to test with jest --no-cache.
       oldProcess = process;
       global.process = {
-        env: Object.assign({}, process.env, {NODE_ENV: 'production'}),
+        ...process,
+        env: {...process.env, NODE_ENV: 'production'},
       };
+
       jest.resetModules();
       ReactErrorUtils = require('ReactErrorUtils');
     });
@@ -103,7 +108,9 @@ describe('ReactErrorUtils', () => {
       var callback = jest.fn();
       ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
       expect(ReactErrorUtils.hasCaughtError()).toBe(false);
-      expect(ReactErrorUtils.clearCaughtError).toThrow('no error');
+      expect(ReactErrorUtils.clearCaughtError).toThrow(
+        __DEV__ ? 'no error was captured' : 'Minified React error #198',
+      );
     });
 
     it(`can nest with same debug name (${environment})`, () => {
@@ -132,7 +139,7 @@ describe('ReactErrorUtils', () => {
       expect(err4).toBe(err3);
     });
 
-    it(`does not return nested errors (${environment})`, () => {
+    it(`handles nested errors (${environment})`, () => {
       const err1 = new Error();
       let err2;
       ReactErrorUtils.invokeGuardedCallback(
@@ -153,6 +160,37 @@ describe('ReactErrorUtils', () => {
       expect(ReactErrorUtils.hasCaughtError()).toBe(false);
 
       expect(err2).toBe(err1);
+    });
+
+    it('handles nested errors in separate renderers', () => {
+      const ReactErrorUtils1 = require('ReactErrorUtils');
+      jest.resetModules();
+      const ReactErrorUtils2 = require('ReactErrorUtils');
+      expect(ReactErrorUtils1).not.toEqual(ReactErrorUtils2);
+
+      let ops = [];
+
+      ReactErrorUtils1.invokeGuardedCallback(
+        null,
+        () => {
+          ReactErrorUtils2.invokeGuardedCallback(
+            null,
+            () => {
+              throw new Error('nested error');
+            },
+            null,
+          );
+          // ReactErrorUtils2 should catch the error
+          ops.push(ReactErrorUtils2.hasCaughtError());
+          ops.push(ReactErrorUtils2.clearCaughtError().message);
+        },
+        null,
+      );
+
+      // ReactErrorUtils1 should not catch the error
+      ops.push(ReactErrorUtils1.hasCaughtError());
+
+      expect(ops).toEqual([true, 'nested error', false]);
     });
 
     if (environment === 'production') {
