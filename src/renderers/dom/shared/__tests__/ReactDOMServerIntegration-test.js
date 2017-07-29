@@ -25,6 +25,9 @@ const stream = require('stream');
 
 // Helper functions for rendering tests
 // ====================================
+function normalizeCodeLocInfo(str) {
+  return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+}
 
 // promisified version of ReactDOM.render()
 function asyncReactDOMRender(reactElement, domElement) {
@@ -149,7 +152,7 @@ const clientRenderOnServerString = async (element, errorCount = 0) => {
   return clientElement;
 };
 
-function BadMarkupExpected() {}
+function BadMarkupExpected() { }
 
 const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
   // First we render the top of bad mark up.
@@ -232,8 +235,8 @@ function itThrows(desc, testFn) {
     return testFn()
       .then(() =>
         expect(false).toBe('The promise resolved and should not have.'),
-      )
-      .catch(() => {});
+    )
+      .catch(() => { });
   });
 }
 
@@ -331,7 +334,7 @@ describe('ReactDOMServerIntegration', () => {
     ExecutionEnvironment.canUseDOM = false;
   });
 
-  describe('basic rendering', function() {
+  describe('basic rendering', function () {
     beforeEach(() => {
       onAfterResetModules = () => {
         const ReactFeatureFlags = require('ReactFeatureFlags');
@@ -376,11 +379,79 @@ describe('ReactDOMServerIntegration', () => {
         expect(parent.childNodes[1].tagName).toBe('SPAN');
         expect(parent.childNodes[2].tagName).toBe('P');
       });
+
+      itRenders('a single array element children as a child', async render => {
+        let e = await render([<div key={1}>text1</div>]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+      });
+
+      itRenders('a nested array children as a child', async render => {
+        let e = await render([[<div key={1}>text1</div>],<span key={2}>text2</span>]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('SPAN');
+      });
+
+      itRenders(
+        'throws if a plain object is used as a child on SSR',
+        async () => {
+          var children = {
+            x: <span />,
+            y: <span />,
+            z: <span />,
+          };
+          var element = <div>{[children]}</div>;
+          var ex;
+          try {
+            ReactDOMServer.renderToString(element);
+          } catch (e) {
+            ex = e;
+          }
+          expect(ex).toBeDefined();
+          expect(normalizeCodeLocInfo(ex.message)).toBe(
+            'Objects are not valid as a React child (found: object with keys ' +
+            '{x, y, z}). If you meant to render a collection of children, use ' +
+            'an array instead.' +
+            // Fiber gives a slightly better stack with the nearest host components
+            (ReactDOMFeatureFlags.useFiber ? '\n    in div (at **)' : ''),
+          );
+        },
+      );
+
+      it('throws if a plain object even if it is in an owner on SSR', async () => {
+        class Foo extends React.Component {
+          render() {
+            var children = {
+              a: <span />,
+              b: <span />,
+              c: <span />,
+            };
+            return <div>{[children]}</div>;
+          }
+        }
+        var container = document.createElement('div');
+        var ex;
+        try {
+          ReactDOMServer.renderToString(<Foo />, container);
+        } catch (e) {
+          ex = e;
+        }
+        expect(ex).toBeDefined();
+        expect(normalizeCodeLocInfo(ex.message)).toBe(
+          'Objects are not valid as a React child (found: object with keys ' +
+          '{a, b, c}). If you meant to render a collection of children, use ' +
+          'an array instead.\n' +
+          // Fiber gives a slightly better stack with the nearest host components
+          (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+          '    in Foo (at **)',
+        );
+      });
     }
   });
 
-  describe('property to attribute mapping', function() {
-    describe('string properties', function() {
+  describe('property to attribute mapping', function () {
+    describe('string properties', function () {
       itRenders('simple numbers', async render => {
         const e = await render(<div width={30} />);
         expect(e.getAttribute('width')).toBe('30');
@@ -409,7 +480,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('boolean properties', function() {
+    describe('boolean properties', function () {
       itRenders('boolean prop with true value', async render => {
         const e = await render(<div hidden={true} />);
         expect(e.getAttribute('hidden')).toBe('');
@@ -447,7 +518,7 @@ describe('ReactDOMServerIntegration', () => {
 
       // this seems like it might mask programmer error, but it's existing behavior.
       itRenders('boolean prop with object value', async render => {
-        const e = await render(<div hidden={{foo: 'bar'}} />);
+        const e = await render(<div hidden={{ foo: 'bar' }} />);
         expect(e.getAttribute('hidden')).toBe('');
       });
 
@@ -469,7 +540,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('download property (combined boolean/string attribute)', function() {
+    describe('download property (combined boolean/string attribute)', function () {
       itRenders('download prop with true value', async render => {
         const e = await render(<a download={true} />);
         expect(e.getAttribute('download')).toBe('');
@@ -511,7 +582,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('className property', function() {
+    describe('className property', function () {
       itRenders('className prop with string value', async render => {
         const e = await render(<div className="myClassName" />);
         expect(e.getAttribute('class')).toBe('myClassName');
@@ -540,7 +611,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('htmlFor property', function() {
+    describe('htmlFor property', function () {
       itRenders('htmlFor with string value', async render => {
         const e = await render(<div htmlFor="myFor" />);
         expect(e.getAttribute('for')).toBe('myFor');
@@ -569,7 +640,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('numeric properties', function() {
+    describe('numeric properties', function () {
       itRenders(
         'positive numeric property with positive value',
         async render => {
@@ -592,7 +663,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('props with special meaning in React', function() {
+    describe('props with special meaning in React', function () {
       itRenders('no ref attribute', async render => {
         class RefComponent extends React.Component {
           render() {
@@ -615,15 +686,15 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no dangerouslySetInnerHTML attribute', async render => {
         const e = await render(
-          <div dangerouslySetInnerHTML={{__html: '<foo />'}} />,
+          <div dangerouslySetInnerHTML={{ __html: '<foo />' }} />,
         );
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
       });
     });
 
-    describe('inline styles', function() {
+    describe('inline styles', function () {
       itRenders('simple styles', async render => {
-        const e = await render(<div style={{color: 'red', width: '30px'}} />);
+        const e = await render(<div style={{ color: 'red', width: '30px' }} />);
         expect(e.style.color).toBe('red');
         expect(e.style.width).toBe('30px');
       });
@@ -646,7 +717,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('custom properties', async render => {
-        const e = await render(<div style={{'--foo': 5}} />);
+        const e = await render(<div style={{ '--foo': 5 }} />);
         // This seems like an odd way computed properties are exposed in jsdom.
         // In a real browser we'd read it with e.style.getPropertyValue('--foo')
         expect(e.style.Foo).toBe('5');
@@ -654,27 +725,27 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no undefined styles', async render => {
         const e = await render(
-          <div style={{color: undefined, width: '30px'}} />,
+          <div style={{ color: undefined, width: '30px' }} />,
         );
         expect(e.style.color).toBe('');
         expect(e.style.width).toBe('30px');
       });
 
       itRenders('no null styles', async render => {
-        const e = await render(<div style={{color: null, width: '30px'}} />);
+        const e = await render(<div style={{ color: null, width: '30px' }} />);
         expect(e.style.color).toBe('');
         expect(e.style.width).toBe('30px');
       });
 
       itRenders('no empty styles', async render => {
-        const e = await render(<div style={{color: null, width: null}} />);
+        const e = await render(<div style={{ color: null, width: null }} />);
         expect(e.style.color).toBe('');
         expect(e.style.width).toBe('');
         expect(e.hasAttribute('style')).toBe(false);
       });
     });
 
-    describe('aria attributes', function() {
+    describe('aria attributes', function () {
       itRenders('simple strings', async render => {
         const e = await render(<div aria-label="hello" />);
         expect(e.getAttribute('aria-label')).toBe('hello');
@@ -692,7 +763,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('unknown attributes', function() {
+    describe('unknown attributes', function () {
       itRenders('no unknown attributes', async render => {
         const e = await render(<div foo="bar" />, 1);
         expect(e.getAttribute('foo')).toBe(null);
@@ -747,14 +818,14 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('no HTML events', async render => {
-      const e = await render(<div onClick={() => {}} />);
+      const e = await render(<div onClick={() => { }} />);
       expect(e.getAttribute('onClick')).toBe(null);
       expect(e.getAttribute('onClick')).toBe(null);
       expect(e.getAttribute('click')).toBe(null);
     });
   });
 
-  describe('elements and children', function() {
+  describe('elements and children', function () {
     // helper functions.
     const TEXT_NODE_TYPE = 3;
     const COMMENT_NODE_TYPE = 8;
@@ -785,7 +856,7 @@ describe('ReactDOMServerIntegration', () => {
       expectNode(node, COMMENT_NODE_TYPE, / react-empty: [0-9]+ /);
     }
 
-    describe('text children', function() {
+    describe('text children', function () {
       itRenders('a div with text', async render => {
         const e = await render(<div>Text</div>);
         expect(e.tagName).toBe('DIV');
@@ -967,7 +1038,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('number children', function() {
+    describe('number children', function () {
       itRenders('a number as single child', async render => {
         const e = await render(<div>{3}</div>);
         expect(e.textContent).toBe('3');
@@ -1007,7 +1078,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('null, false, and undefined children', function() {
+    describe('null, false, and undefined children', function () {
       itRenders('null single child as blank', async render => {
         const e = await render(<div>{null}</div>);
         expect(e.childNodes.length).toBe(0);
@@ -1082,7 +1153,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('elements with implicit namespaces', function() {
+    describe('elements with implicit namespaces', function () {
       itRenders('an svg element', async render => {
         const e = await render(<svg />);
         expect(e.childNodes.length).toBe(0);
@@ -1128,7 +1199,7 @@ describe('ReactDOMServerIntegration', () => {
 
     itRenders('a div with dangerouslySetInnerHTML', async render => {
       const e = await render(
-        <div dangerouslySetInnerHTML={{__html: "<span id='child'/>"}} />,
+        <div dangerouslySetInnerHTML={{ __html: "<span id='child'/>" }} />,
       );
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('SPAN');
@@ -1136,7 +1207,7 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.firstChild.childNodes.length).toBe(0);
     });
 
-    describe('newline-eating elements', function() {
+    describe('newline-eating elements', function () {
       itRenders(
         'a newline-eating tag with content not starting with \\n',
         async render => {
@@ -1157,7 +1228,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('different component implementations', function() {
+    describe('different component implementations', function () {
       function checkFooDiv(e) {
         expect(e.childNodes.length).toBe(1);
         expectNode(e.firstChild, TEXT_NODE_TYPE, 'foo');
@@ -1180,7 +1251,7 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('factory components', async render => {
         const FactoryComponent = () => {
           return {
-            render: function() {
+            render: function () {
               return <div>foo</div>;
             },
           };
@@ -1189,7 +1260,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('component hierarchies', async function() {
+    describe('component hierarchies', async function () {
       itRenders('single child hierarchies of components', async render => {
         const Component = props => <div>{props.children}</div>;
         let e = await render(
@@ -1318,7 +1389,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('escaping >, <, and &', function() {
+    describe('escaping >, <, and &', function () {
       itRenders('>,<, and & as single child', async render => {
         const e = await render(<div>{'<span>Text&quot;</span>'}</div>);
         expect(e.childNodes.length).toBe(1);
@@ -1354,7 +1425,7 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
-    describe('components that throw errors', function() {
+    describe('components that throw errors', function () {
       itThrowsWhenRendering('a string component', async render => {
         const StringComponent = () => 'foo';
         await render(<StringComponent />, 1);
@@ -1378,10 +1449,10 @@ describe('ReactDOMServerIntegration', () => {
     });
   });
 
-  describe('form controls', function() {
-    describe('inputs', function() {
+  describe('form controls', function () {
+    describe('inputs', function () {
       itRenders('an input with a value and an onChange', async render => {
-        const e = await render(<input value="foo" onChange={() => {}} />);
+        const e = await render(<input value="foo" onChange={() => { }} />);
         expect(e.value).toBe('foo');
       });
 
@@ -1432,10 +1503,10 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('checkboxes', function() {
+    describe('checkboxes', function () {
       itRenders('a checkbox that is checked with an onChange', async render => {
         const e = await render(
-          <input type="checkbox" checked={true} onChange={() => {}} />,
+          <input type="checkbox" checked={true} onChange={() => { }} />,
         );
         expect(e.checked).toBe(true);
       });
@@ -1498,11 +1569,11 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('textareas', function() {
+    describe('textareas', function () {
       // textareas
       // ---------
       itRenders('a textarea with a value and an onChange', async render => {
-        const e = await render(<textarea value="foo" onChange={() => {}} />);
+        const e = await render(<textarea value="foo" onChange={() => { }} />);
         // textarea DOM elements don't have a value **attribute**, the text is
         // a child of the element and accessible via the .value **property**.
         expect(e.getAttribute('value')).toBe(null);
@@ -1559,9 +1630,9 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('selects', function() {
+    describe('selects', function () {
       var options;
-      beforeEach(function() {
+      beforeEach(function () {
         options = [
           <option key={1} value="foo" id="foo">Foo</option>,
           <option key={2} value="bar" id="bar">Bar</option>,
@@ -1590,7 +1661,7 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('a select with a value and an onChange', async render => {
         const e = await render(
-          <select value="bar" onChange={() => {}}>{options}</select>,
+          <select value="bar" onChange={() => { }}>{options}</select>,
         );
         expectSelectValue(e, 'bar');
       });
@@ -1606,7 +1677,7 @@ describe('ReactDOMServerIntegration', () => {
         'a select with a multiple values and an onChange',
         async render => {
           const e = await render(
-            <select value={['bar', 'baz']} multiple={true} onChange={() => {}}>
+            <select value={['bar', 'baz']} multiple={true} onChange={() => { }}>
               {options}
             </select>,
           );
@@ -1665,7 +1736,7 @@ describe('ReactDOMServerIntegration', () => {
       );
     });
 
-    describe('user interaction', function() {
+    describe('user interaction', function () {
       let ControlledInput,
         ControlledTextArea,
         ControlledCheckbox,
@@ -1674,13 +1745,13 @@ describe('ReactDOMServerIntegration', () => {
         ControlledInput = class extends React.Component {
           constructor() {
             super();
-            this.state = {value: 'Hello'};
+            this.state = { value: 'Hello' };
           }
           handleChange(event) {
             if (this.props.onChange) {
               this.props.onChange(event);
             }
-            this.setState({value: event.target.value});
+            this.setState({ value: event.target.value });
           }
           render() {
             return (
@@ -1694,13 +1765,13 @@ describe('ReactDOMServerIntegration', () => {
         ControlledTextArea = class extends React.Component {
           constructor() {
             super();
-            this.state = {value: 'Hello'};
+            this.state = { value: 'Hello' };
           }
           handleChange(event) {
             if (this.props.onChange) {
               this.props.onChange(event);
             }
-            this.setState({value: event.target.value});
+            this.setState({ value: event.target.value });
           }
           render() {
             return (
@@ -1714,13 +1785,13 @@ describe('ReactDOMServerIntegration', () => {
         ControlledCheckbox = class extends React.Component {
           constructor() {
             super();
-            this.state = {value: true};
+            this.state = { value: true };
           }
           handleChange(event) {
             if (this.props.onChange) {
               this.props.onChange(event);
             }
-            this.setState({value: event.target.checked});
+            this.setState({ value: event.target.checked });
           }
           render() {
             return (
@@ -1735,13 +1806,13 @@ describe('ReactDOMServerIntegration', () => {
         ControlledSelect = class extends React.Component {
           constructor() {
             super();
-            this.state = {value: 'Hello'};
+            this.state = { value: 'Hello' };
           }
           handleChange(event) {
             if (this.props.onChange) {
               this.props.onChange(event);
             }
-            this.setState({value: event.target.value});
+            this.setState({ value: event.target.value });
           }
           render() {
             return (
@@ -1756,7 +1827,7 @@ describe('ReactDOMServerIntegration', () => {
         };
       });
 
-      describe('user interaction with controlled inputs', function() {
+      describe('user interaction with controlled inputs', function () {
         itClientRenders('a controlled text input', async render => {
           let changeCount = 0;
           const e = await render(
@@ -1822,7 +1893,7 @@ describe('ReactDOMServerIntegration', () => {
         });
       });
 
-      describe('user interaction with inputs before client render', function() {
+      describe('user interaction with inputs before client render', function () {
         // renders the element and changes the value **before** the client
         // code has a chance to render; this simulates what happens when a
         // user starts to interact with a server-rendered form before
@@ -1928,18 +1999,18 @@ describe('ReactDOMServerIntegration', () => {
     });
   });
 
-  describe('context', function() {
+  describe('context', function () {
     let PurpleContext, RedContext;
     beforeEach(() => {
       class Parent extends React.Component {
         getChildContext() {
-          return {text: this.props.text};
+          return { text: this.props.text };
         }
         render() {
           return this.props.children;
         }
       }
-      Parent.childContextTypes = {text: PropTypes.string};
+      Parent.childContextTypes = { text: PropTypes.string };
 
       PurpleContext = props => <Parent text="purple">{props.children}</Parent>;
       RedContext = props => <Parent text="red">{props.children}</Parent>;
@@ -1951,7 +2022,7 @@ describe('ReactDOMServerIntegration', () => {
           return <div>{this.context.text}</div>;
         }
       }
-      ClassChildWithContext.contextTypes = {text: PropTypes.string};
+      ClassChildWithContext.contextTypes = { text: PropTypes.string };
 
       const e = await render(
         <PurpleContext><ClassChildWithContext /></PurpleContext>,
@@ -1963,7 +2034,7 @@ describe('ReactDOMServerIntegration', () => {
       function StatelessChildWithContext(props, context) {
         return <div>{context.text}</div>;
       }
-      StatelessChildWithContext.contextTypes = {text: PropTypes.string};
+      StatelessChildWithContext.contextTypes = { text: PropTypes.string };
 
       const e = await render(
         <PurpleContext><StatelessChildWithContext /></PurpleContext>,
@@ -2004,7 +2075,7 @@ describe('ReactDOMServerIntegration', () => {
           return <div id="classWrongChild">{this.context.text}</div>;
         }
       }
-      ClassChildWithWrongContext.contextTypes = {foo: PropTypes.string};
+      ClassChildWithWrongContext.contextTypes = { foo: PropTypes.string };
 
       const e = await render(
         <PurpleContext><ClassChildWithWrongContext /></PurpleContext>,
@@ -2031,7 +2102,7 @@ describe('ReactDOMServerIntegration', () => {
       function Grandchild(props, context) {
         return <div>{context.text}</div>;
       }
-      Grandchild.contextTypes = {text: PropTypes.string};
+      Grandchild.contextTypes = { text: PropTypes.string };
 
       const Child = props => <Grandchild />;
 
@@ -2043,7 +2114,7 @@ describe('ReactDOMServerIntegration', () => {
       const Grandchild = (props, context) => {
         return <div>{context.text}</div>;
       };
-      Grandchild.contextTypes = {text: PropTypes.string};
+      Grandchild.contextTypes = { text: PropTypes.string };
 
       const e = await render(
         <PurpleContext><RedContext><Grandchild /></RedContext></PurpleContext>,
@@ -2054,23 +2125,23 @@ describe('ReactDOMServerIntegration', () => {
     itRenders('a child context merged with a parent context', async render => {
       class Parent extends React.Component {
         getChildContext() {
-          return {text1: 'purple'};
+          return { text1: 'purple' };
         }
         render() {
           return <Child />;
         }
       }
-      Parent.childContextTypes = {text1: PropTypes.string};
+      Parent.childContextTypes = { text1: PropTypes.string };
 
       class Child extends React.Component {
         getChildContext() {
-          return {text2: 'red'};
+          return { text2: 'red' };
         }
         render() {
           return <Grandchild />;
         }
       }
-      Child.childContextTypes = {text2: PropTypes.string};
+      Child.childContextTypes = { text2: PropTypes.string };
 
       const Grandchild = (props, context) => {
         return (
@@ -2095,21 +2166,21 @@ describe('ReactDOMServerIntegration', () => {
       async render => {
         class WillMountContext extends React.Component {
           getChildContext() {
-            return {text: this.state.text};
+            return { text: this.state.text };
           }
           componentWillMount() {
-            this.setState({text: 'foo'});
+            this.setState({ text: 'foo' });
           }
           render() {
             return <Child />;
           }
         }
-        WillMountContext.childContextTypes = {text: PropTypes.string};
+        WillMountContext.childContextTypes = { text: PropTypes.string };
 
         const Child = (props, context) => {
           return <div>{context.text}</div>;
         };
-        Child.contextTypes = {text: PropTypes.string};
+        Child.contextTypes = { text: PropTypes.string };
 
         const e = await render(<WillMountContext />);
         expect(e.textContent).toBe('foo');
@@ -2124,7 +2195,7 @@ describe('ReactDOMServerIntegration', () => {
             return <div />;
           }
           getChildContext() {
-            return {foo: 'bar'};
+            return { foo: 'bar' };
           }
         }
         return render(<Component />);
@@ -2139,16 +2210,16 @@ describe('ReactDOMServerIntegration', () => {
             return <div />;
           }
           getChildContext() {
-            return {value1: 'foo', value2: 'bar'};
+            return { value1: 'foo', value2: 'bar' };
           }
         }
-        Component.childContextTypes = {value1: PropTypes.string};
+        Component.childContextTypes = { value1: PropTypes.string };
         return render(<Component />);
       },
     );
   });
 
-  describe('refs', function() {
+  describe('refs', function () {
     it('should not run ref code on server', async () => {
       let refCount = 0;
       class RefsComponent extends React.Component {
@@ -2203,7 +2274,7 @@ describe('ReactDOMServerIntegration', () => {
     });
   });
 
-  describe('reconnecting to server markup', function() {
+  describe('reconnecting to server markup', function () {
     var EmptyComponent;
     beforeEach(() => {
       EmptyComponent = class extends React.Component {
@@ -2213,8 +2284,8 @@ describe('ReactDOMServerIntegration', () => {
       };
     });
 
-    describe('elements', function() {
-      describe('reconnecting different component implementations', function() {
+    describe('elements', function () {
+      describe('reconnecting different component implementations', function () {
         let ES6ClassComponent, PureComponent, bareElement;
         beforeEach(() => {
           // try each type of component on client and server.
@@ -2280,45 +2351,45 @@ describe('ReactDOMServerIntegration', () => {
         expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
     });
 
-    describe('inline styles', function() {
+    describe('inline styles', function () {
       it('should error reconnecting missing style attribute', () =>
-        expectMarkupMismatch(<div style={{width: '1px'}} />, <div />));
+        expectMarkupMismatch(<div style={{ width: '1px' }} />, <div />));
 
       it('should error reconnecting added style attribute', () =>
-        expectMarkupMismatch(<div />, <div style={{width: '1px'}} />));
+        expectMarkupMismatch(<div />, <div style={{ width: '1px' }} />));
 
       it('should error reconnecting empty style attribute', () =>
         expectMarkupMismatch(
-          <div style={{width: '1px'}} />,
+          <div style={{ width: '1px' }} />,
           <div style={{}} />,
         ));
 
       it('should error reconnecting added style values', () =>
         expectMarkupMismatch(
           <div style={{}} />,
-          <div style={{width: '1px'}} />,
+          <div style={{ width: '1px' }} />,
         ));
 
       it('should error reconnecting different style values', () =>
         expectMarkupMismatch(
-          <div style={{width: '1px'}} />,
-          <div style={{width: '2px'}} />,
+          <div style={{ width: '1px' }} />,
+          <div style={{ width: '2px' }} />,
         ));
 
       it('should reconnect number and string versions of a number', () =>
         expectMarkupMatch(
-          <div style={{width: '1px', height: 2}} />,
-          <div style={{width: 1, height: '2px'}} />,
+          <div style={{ width: '1px', height: 2 }} />,
+          <div style={{ width: 1, height: '2px' }} />,
         ));
 
       it('should error reconnecting reordered style values', () =>
         expectMarkupMismatch(
-          <div style={{width: '1px', fontSize: '2px'}} />,
-          <div style={{fontSize: '2px', width: '1px'}} />,
+          <div style={{ width: '1px', fontSize: '2px' }} />,
+          <div style={{ fontSize: '2px', width: '1px' }} />,
         ));
     });
 
-    describe('text nodes', function() {
+    describe('text nodes', function () {
       it('should error reconnecting different text', () =>
         expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
 
@@ -2338,7 +2409,7 @@ describe('ReactDOMServerIntegration', () => {
         ));
     });
 
-    describe('element trees and children', function() {
+    describe('element trees and children', function () {
       it('should error reconnecting missing children', () =>
         expectMarkupMismatch(<div><div /></div>, <div />));
 
@@ -2396,8 +2467,8 @@ describe('ReactDOMServerIntegration', () => {
     // Markup Mismatches: misc
     it('should error reconnecting a div with different dangerouslySetInnerHTML', () =>
       expectMarkupMismatch(
-        <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
-        <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
+        <div dangerouslySetInnerHTML={{ __html: "<span id='child1'/>" }} />,
+        <div dangerouslySetInnerHTML={{ __html: "<span id='child2'/>" }} />,
       ));
   });
 
@@ -2411,10 +2482,10 @@ describe('ReactDOMServerIntegration', () => {
       onAfterResetModules = () => {
         const DOMProperty = require('DOMProperty');
         DOMProperty.injection.injectDOMPropertyConfig({
-          isCustomAttribute: function(name) {
+          isCustomAttribute: function (name) {
             return name.indexOf('foo-') === 0;
           },
-          Properties: {foobar: null},
+          Properties: { foobar: null },
         });
       };
       resetModules();

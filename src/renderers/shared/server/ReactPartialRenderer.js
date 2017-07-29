@@ -413,8 +413,9 @@ function resolve(child, context) {
 
 class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
+    var children = React.isValidElement(element) ? [element] : toArray(element);
     var topFrame = {
-      children: toArray(element),
+      children,
       childIndex: 0,
       context: emptyObject,
       footer: '',
@@ -482,8 +483,10 @@ class ReactDOMServerRenderer {
       if (child === null || child === false) {
         return '';
       } else {
-        var children = toArray(child);
-        if (children.length > 1) {
+        if (React.isValidElement(child)) {
+          return this.renderDOM(child, context);
+        } else {
+          var children = toArray(child);
           var frame = {
             children,
             childIndex: 0,
@@ -496,7 +499,6 @@ class ReactDOMServerRenderer {
           this.stack.push(frame);
           return '';
         }
-        return this.renderDOM(child, context);
       }
     }
   }
