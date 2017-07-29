@@ -396,7 +396,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(parent.childNodes[1].tagName).toBe('SPAN');
       });
 
-      it('throws if a plain object is used as a child on SSR', async () => {
+      it('throws if a plain object is used as a child when using SSR', async () => {
         var children = {
           x: <span />,
           y: <span />,
@@ -419,7 +419,7 @@ describe('ReactDOMServerIntegration', () => {
         );
       });
 
-      it('throws if a plain object even if it is in an owner on SSR', async () => {
+      it('throws if a plain object even if it is in an owner when using SSR', async () => {
         class Foo extends React.Component {
           render() {
             var children = {
