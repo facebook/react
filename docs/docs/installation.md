@@ -120,6 +120,10 @@ If you want to use it for a full application, there are two popular ways to get 
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
+>**Note:**
+>
+>You'll need to have Node >= 6 on your machine.
+
 ```bash
 npm install -g create-react-app
 create-react-app my-app
@@ -155,7 +159,6 @@ While React [can be used](/react/docs/react-without-es6.html) without a build pi
 We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/) for managing front-end dependencies. If you're new to package managers, the [Yarn documentation](https://yarnpkg.com/en/docs/getting-started) is a good place to get started.
 
 To install React with Yarn, run:
-
 ```bash
 yarn init
 yarn add react react-dom
