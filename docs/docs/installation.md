@@ -122,7 +122,7 @@ If you want to use it for a full application, there are two popular ways to get 
 
 >**Note:**
 >
->You'll need to have Node >= 6 on your machine.
+>CRA works best with Node.js version 6 or above.
 
 ```bash
 npm install -g create-react-app
