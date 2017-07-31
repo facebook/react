@@ -35,7 +35,9 @@ describe('ReactDOMServer', () => {
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
+
     ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -319,13 +321,15 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
-    if (ReactFeatureFlags.disableNewFiberFeatures) {
-      it('should throw with silly args', () => {
-        expect(
-          ReactDOMServer.renderToString.bind(ReactDOMServer, 'not a component'),
-        ).toThrowError('renderToString(): You must pass a valid ReactElement.');
-      });
-    }
+    it('should throw with silly args', () => {
+      expect(
+        ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
+      ).toThrowError(
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys {x})'
+          : 'renderToString(): You must pass a valid ReactElement.',
+      );
+    });
   });
 
   describe('renderToStaticMarkup', () => {
@@ -433,18 +437,15 @@ describe('ReactDOMServer', () => {
       runTest();
     });
 
-    if (ReactFeatureFlags.disableNewFiberFeatures) {
-      it('should throw with silly args', () => {
-        expect(
-          ReactDOMServer.renderToStaticMarkup.bind(
-            ReactDOMServer,
-            'not a component',
-          ),
-        ).toThrowError(
-          'renderToStaticMarkup(): You must pass a valid ReactElement.',
-        );
-      });
-    }
+    it('should throw with silly args', () => {
+      expect(
+        ReactDOMServer.renderToStaticMarkup.bind(ReactDOMServer, {x: 123}),
+      ).toThrowError(
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys {x})'
+          : 'renderToStaticMarkup(): You must pass a valid ReactElement.',
+      );
+    });
 
     it('allows setState in componentWillMount without using DOM', () => {
       class Component extends React.Component {
