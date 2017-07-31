@@ -319,11 +319,13 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
-    it('should throw with silly args', () => {
-      expect(
-        ReactDOMServer.renderToString.bind(ReactDOMServer, 'not a component'),
-      ).toThrowError('renderToString(): You must pass a valid ReactElement.');
-    });
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      it('should throw with silly args', () => {
+        expect(
+          ReactDOMServer.renderToString.bind(ReactDOMServer, 'not a component'),
+        ).toThrowError('renderToString(): You must pass a valid ReactElement.');
+      });
+    }
   });
 
   describe('renderToStaticMarkup', () => {
@@ -431,9 +433,8 @@ describe('ReactDOMServer', () => {
       runTest();
     });
 
-    it('should throw with silly args', () => {
-      const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
-      if (disableNewFiberFeatures) {
+    if (ReactFeatureFlags.disableNewFiberFeatures) {
+      it('should throw with silly args', () => {
         expect(
           ReactDOMServer.renderToStaticMarkup.bind(
             ReactDOMServer,
@@ -442,8 +443,8 @@ describe('ReactDOMServer', () => {
         ).toThrowError(
           'renderToStaticMarkup(): You must pass a valid ReactElement.',
         );
-      }
-    });
+      });
+    }
 
     it('allows setState in componentWillMount without using DOM', () => {
       class Component extends React.Component {
