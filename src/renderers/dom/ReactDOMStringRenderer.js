@@ -26,7 +26,7 @@ function renderToString(element) {
   if (disableNewFiberFeatures) {
     invariant(
       React.isValidElement(element),
-      'renderToString(): You must pass a valid ReactElement.',
+      'renderToString(): Invalid component element.',
     );
   }
   var renderer = new ReactPartialRenderer(element, false);
@@ -44,7 +44,7 @@ function renderToStaticMarkup(element) {
   if (disableNewFiberFeatures) {
     invariant(
       React.isValidElement(element),
-      'renderToStaticMarkup(): You must pass a valid ReactElement.',
+      'renderToStaticMarkup(): Invalid component element.',
     );
   }
   var renderer = new ReactPartialRenderer(element, true);

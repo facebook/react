@@ -45,7 +45,7 @@ function renderToStream(element) {
   if (disableNewFiberFeatures) {
     invariant(
       React.isValidElement(element),
-      'renderToStream(): You must pass a valid ReactElement.',
+      'renderToStream(): Invalid component element.',
     );
   }
   return new ReactMarkupReadableStream(element, false);
@@ -61,7 +61,7 @@ function renderToStaticStream(element) {
   if (disableNewFiberFeatures) {
     invariant(
       React.isValidElement(element),
-      'renderToStaticStream(): You must pass a valid ReactElement.',
+      'renderToStaticStream(): Invalid component element.',
     );
   }
   return new ReactMarkupReadableStream(element, true);

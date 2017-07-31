@@ -327,7 +327,7 @@ describe('ReactDOMServer', () => {
       ).toThrowError(
         ReactDOMFeatureFlags.useFiber
           ? 'Objects are not valid as a React child (found: object with keys {x})'
-          : 'renderToString(): You must pass a valid ReactElement.',
+          : 'renderToString(): Invalid component element.',
       );
     });
   });
@@ -443,7 +443,7 @@ describe('ReactDOMServer', () => {
       ).toThrowError(
         ReactDOMFeatureFlags.useFiber
           ? 'Objects are not valid as a React child (found: object with keys {x})'
-          : 'renderToStaticMarkup(): You must pass a valid ReactElement.',
+          : 'renderToStaticMarkup(): Invalid component element.',
       );
     });
 

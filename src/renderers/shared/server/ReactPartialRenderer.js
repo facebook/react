@@ -309,6 +309,18 @@ function createOpenTagMarkup(
   return ret;
 }
 
+function validateRenderResult(child, type) {
+  if (child === undefined) {
+    invariant(
+      false,
+      '%s(...): Nothing was returned from render. This usually means a ' +
+        'return statement is missing. Or, to render nothing, ' +
+        'return null.',
+      getComponentName(type) || 'Component',
+    );
+  }
+}
+
 function resolve(child, context) {
   while (React.isValidElement(child)) {
     if (__DEV__) {
@@ -351,6 +363,7 @@ function resolve(child, context) {
       inst = Component(child.props, publicContext, updater);
       if (inst == null || inst.render == null) {
         child = inst;
+        validateRenderResult(child, Component);
         continue;
       }
     }
@@ -405,6 +418,7 @@ function resolve(child, context) {
         child = null;
       }
     }
+    validateRenderResult(child, Component);
 
     var childContext;
     if (typeof inst.getChildContext === 'function') {

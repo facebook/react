@@ -23,6 +23,9 @@ let ReactTestUtils;
 
 const stream = require('stream');
 
+const TEXT_NODE_TYPE = 3;
+const COMMENT_NODE_TYPE = 8;
+
 // Helper functions for rendering tests
 // ====================================
 
@@ -138,15 +141,36 @@ const clientCleanRender = (element, errorCount = 0) => {
 const clientRenderOnServerString = async (element, errorCount = 0) => {
   const markup = await renderIntoString(element, errorCount);
   resetModules();
+
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
-  const serverElement = domElement.firstChild;
-  const clientElement = await renderIntoDom(element, domElement, errorCount);
-  // assert that the DOM element hasn't been replaced.
-  // Note that we cannot use expect(serverElement).toBe(clientElement) because
-  // of jest bug #1772
-  expect(serverElement === clientElement).toBe(true);
-  return clientElement;
+  let serverNode = domElement.firstChild;
+
+  const firstClientNode = await renderIntoDom(element, domElement, errorCount);
+  let clientNode = firstClientNode;
+
+  // Make sure all top level nodes match up
+  while (serverNode || clientNode) {
+    expect(serverNode != null).toBe(true);
+    expect(clientNode != null).toBe(true);
+    expect(clientNode.nodeType).toBe(serverNode.nodeType);
+    if (clientNode.nodeType === TEXT_NODE_TYPE) {
+      // Text nodes are stateless so we can just compare values.
+      // This works around a current issue where hydration replaces top-level
+      // text node, but otherwise works.
+      // TODO: we can remove this branch if we add explicit hydration opt-in.
+      // https://github.com/facebook/react/issues/10189
+      expect(serverNode.nodeValue).toBe(clientNode.nodeValue);
+    } else {
+      // Assert that the DOM element hasn't been replaced.
+      // Note that we cannot use expect(serverNode).toBe(clientNode) because
+      // of jest bug #1772.
+      expect(serverNode === clientNode).toBe(true);
+    }
+    serverNode = serverNode.nextSibling;
+    clientNode = clientNode.nextSibling;
+  }
+  return firstClientNode;
 };
 
 function BadMarkupExpected() {}
@@ -227,21 +251,28 @@ function itClientRenders(desc, testFn) {
   });
 }
 
-function itThrows(desc, testFn) {
+function itThrows(desc, testFn, partialMessage) {
   it(`throws ${desc}`, () => {
     return testFn().then(
       () => expect(false).toBe('The promise resolved and should not have.'),
-      () => {},
+      err => {
+        expect(err).toBeInstanceOf(Error);
+        expect(err.message).toContain(partialMessage);
+      },
     );
   });
 }
 
-function itThrowsWhenRendering(desc, testFn) {
-  itThrows(`when rendering ${desc} with server string render`, () =>
-    testFn(serverRender),
+function itThrowsWhenRendering(desc, testFn, partialMessage) {
+  itThrows(
+    `when rendering ${desc} with server string render`,
+    () => testFn(serverRender),
+    partialMessage,
   );
-  itThrows(`when rendering ${desc} with clean client render`, () =>
-    testFn(clientCleanRender),
+  itThrows(
+    `when rendering ${desc} with clean client render`,
+    () => testFn(clientCleanRender),
+    partialMessage,
   );
 
   // we subtract one from the warning count here because the throw means that it won't
@@ -252,6 +283,7 @@ function itThrowsWhenRendering(desc, testFn) {
       testFn((element, warningCount = 0) =>
         clientRenderOnBadMarkup(element, warningCount - 1),
       ),
+    partialMessage,
   );
 }
 
@@ -298,6 +330,7 @@ function resetModules() {
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
 
+  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
@@ -311,7 +344,7 @@ function resetModules() {
   if (typeof onAfterResetModules === 'function') {
     onAfterResetModules();
   }
-
+  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMServer = require('react-dom/server');
 
   // Finally, reset modules one more time before importing the stream renderer.
@@ -319,7 +352,7 @@ function resetModules() {
   if (typeof onAfterResetModules === 'function') {
     onAfterResetModules();
   }
-
+  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMNodeStream = require('react-dom/node-stream');
 }
 
@@ -331,19 +364,6 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('basic rendering', function() {
-    beforeEach(() => {
-      onAfterResetModules = () => {
-        const ReactFeatureFlags = require('ReactFeatureFlags');
-        ReactFeatureFlags.disableNewFiberFeatures = false;
-      };
-
-      resetModules();
-    });
-
-    afterEach(() => {
-      onAfterResetModules = null;
-    });
-
     itRenders('a blank div', async render => {
       const e = await render(<div />);
       expect(e.tagName).toBe('DIV');
@@ -361,7 +381,25 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     if (ReactDOMFeatureFlags.useFiber) {
-      itRenders('a array type children as a child', async render => {
+      itRenders('a string', async render => {
+        let e = await render('Hello');
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('Hello');
+      });
+
+      itRenders('a number', async render => {
+        let e = await render(42);
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('42');
+      });
+
+      itRenders('an array with one child', async render => {
+        let e = await render([<div key={1}>text1</div>]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+      });
+
+      itRenders('an array with several children', async render => {
         let Header = props => {
           return <p>header</p>;
         };
@@ -382,13 +420,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(parent.childNodes[4].tagName).toBe('H3');
       });
 
-      itRenders('a single array element children as a child', async render => {
-        let e = await render([<div key={1}>text1</div>]);
-        let parent = e.parentNode;
-        expect(parent.childNodes[0].tagName).toBe('DIV');
-      });
-
-      itRenders('a nested array children as a child', async render => {
+      itRenders('a nested array', async render => {
         let e = await render([
           [<div key={1}>text1</div>],
           <span key={1}>text2</span>,
@@ -400,7 +432,7 @@ describe('ReactDOMServerIntegration', () => {
         expect(parent.childNodes[2].tagName).toBe('P');
       });
 
-      itRenders('an iterable as a child', async render => {
+      itRenders('an iterable', async render => {
         const threeDivIterable = {
           '@@iterator': function() {
             var i = 0;
@@ -801,10 +833,6 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('elements and children', function() {
-    // helper functions.
-    const TEXT_NODE_TYPE = 3;
-    const COMMENT_NODE_TYPE = 8;
-
     function expectNode(node, type, value) {
       expect(node).not.toBe(null);
       expect(node.nodeType).toBe(type);
@@ -1401,26 +1429,81 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('components that throw errors', function() {
-      itThrowsWhenRendering('a string component', async render => {
-        const StringComponent = () => 'foo';
-        await render(<StringComponent />, 1);
-      });
+      itThrowsWhenRendering(
+        'a function returning undefined',
+        async render => {
+          const UndefinedComponent = () => undefined;
+          await render(<UndefinedComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'UndefinedComponent(...): Nothing was returned from render. ' +
+              'This usually means a return statement is missing. Or, to ' +
+              'render nothing, return null.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
 
-      itThrowsWhenRendering('an undefined component', async render => {
-        const UndefinedComponent = () => undefined;
-        await render(<UndefinedComponent />, 1);
-      });
+      itThrowsWhenRendering(
+        'a class returning undefined',
+        async render => {
+          class UndefinedComponent extends React.Component {
+            render() {
+              return undefined;
+            }
+          }
+          await render(<UndefinedComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'UndefinedComponent(...): Nothing was returned from render. ' +
+              'This usually means a return statement is missing. Or, to ' +
+              'render nothing, return null.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
 
-      itThrowsWhenRendering('a number component', async render => {
-        const NumberComponent = () => 54;
-        await render(<NumberComponent />, 1);
-      });
+      itThrowsWhenRendering(
+        'a function returning an object',
+        async render => {
+          const ObjectComponent = () => ({x: 123});
+          await render(<ObjectComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys ' +
+              '{x}). If you meant to render a collection of children, use ' +
+              'an array instead.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
 
-      itThrowsWhenRendering('null', render => render(null));
-      itThrowsWhenRendering('false', render => render(false));
-      itThrowsWhenRendering('undefined', render => render(undefined));
-      itThrowsWhenRendering('number', render => render(30));
-      itThrowsWhenRendering('string', render => render('foo'));
+      itThrowsWhenRendering(
+        'a class returning an object',
+        async render => {
+          class ObjectComponent extends React.Component {
+            render() {
+              return {x: 123};
+            }
+          }
+          await render(<ObjectComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys ' +
+              '{x}). If you meant to render a collection of children, use ' +
+              'an array instead.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
+
+      itThrowsWhenRendering(
+        'top-level object',
+        async render => {
+          await render({x: 123});
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys ' +
+              '{x}). If you meant to render a collection of children, use ' +
+              'an array instead.'
+          : 'Invalid component element.',
+      );
     });
   });
 
@@ -2165,7 +2248,7 @@ describe('ReactDOMServerIntegration', () => {
     itThrowsWhenRendering(
       'if getChildContext exists without childContextTypes',
       render => {
-        class Component extends React.Component {
+        class MyComponent extends React.Component {
           render() {
             return <div />;
           }
@@ -2173,14 +2256,16 @@ describe('ReactDOMServerIntegration', () => {
             return {foo: 'bar'};
           }
         }
-        return render(<Component />);
+        return render(<MyComponent />);
       },
+      'MyComponent.getChildContext(): childContextTypes must be defined ' +
+        'in order to use getChildContext().',
     );
 
     itThrowsWhenRendering(
       'if getChildContext returns a value not in childContextTypes',
       render => {
-        class Component extends React.Component {
+        class MyComponent extends React.Component {
           render() {
             return <div />;
           }
@@ -2188,9 +2273,10 @@ describe('ReactDOMServerIntegration', () => {
             return {value1: 'foo', value2: 'bar'};
           }
         }
-        Component.childContextTypes = {value1: PropTypes.string};
-        return render(<Component />);
+        MyComponent.childContextTypes = {value1: PropTypes.string};
+        return render(<MyComponent />);
       },
+      'MyComponent.getChildContext(): key "value2" is not defined in childContextTypes.',
     );
   });
 
