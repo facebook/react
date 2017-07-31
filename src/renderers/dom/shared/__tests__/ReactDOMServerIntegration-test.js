@@ -392,11 +392,36 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('a nested array children as a child', async render => {
         let e = await render([
           [<div key={1}>text1</div>],
-          <span key={2}>text2</span>,
+          <span key={1}>text2</span>,
+          [[[null, <p key={1} />], false]],
         ]);
         let parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
         expect(parent.childNodes[1].tagName).toBe('SPAN');
+        expect(parent.childNodes[2].tagName).toBe('P');
+      });
+
+      itRenders('an iterable as a child', async render => {
+        const threeDivIterable = {
+          '@@iterator': function() {
+            var i = 0;
+            return {
+              next: function() {
+                if (i++ < 3) {
+                  return {value: <div key={i} />, done: false};
+                } else {
+                  return {value: undefined, done: true};
+                }
+              },
+            };
+          },
+        };
+        let e = await render(threeDivIterable);
+        let parent = e.parentNode;
+        expect(parent.childNodes.length).toBe(3);
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('DIV');
+        expect(parent.childNodes[2].tagName).toBe('DIV');
       });
     }
   });
