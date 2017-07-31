@@ -270,6 +270,7 @@ exports.invalidateContextProvider = function(
   pop(didPerformWorkStackCursor, workInProgress);
   if (didChange) {
     pop(contextStackCursor, workInProgress);
+    // $FlowFixMe - We know that this is always an object when didChange is true.
     push(contextStackCursor, mergedContext, workInProgress);
   }
   push(didPerformWorkStackCursor, didChange, workInProgress);
