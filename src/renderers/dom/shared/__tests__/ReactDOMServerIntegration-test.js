@@ -229,11 +229,10 @@ function itClientRenders(desc, testFn) {
 
 function itThrows(desc, testFn) {
   it(`throws ${desc}`, () => {
-    return testFn()
-      .then(() =>
-        expect(false).toBe('The promise resolved and should not have.'),
-      )
-      .catch(() => {});
+    return testFn().then(
+      () => expect(false).toBe('The promise resolved and should not have.'),
+      () => {},
+    );
   });
 }
 

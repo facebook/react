@@ -50,9 +50,7 @@ if (__DEV__) {
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
-    var name = typeof type === 'string'
-      ? type
-      : typeof type === 'function' ? type.displayName || type.name : null;
+    var name = getComponentName(type);
     var ownerName = null;
     return describeComponentFrame(name, source, ownerName);
   };
@@ -104,6 +102,12 @@ var newlineEatingTags = {
   pre: true,
   textarea: true,
 };
+
+function getComponentName(type) {
+  return typeof type === 'string'
+    ? type
+    : typeof type === 'function' ? type.displayName || type.name : null;
+}
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -162,8 +166,7 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && (constructor.displayName || constructor.name)) ||
-        'ReactClass',
+      (constructor && getComponentName(constructor)) || 'ReactClass',
     );
   }
 }
@@ -403,7 +406,25 @@ function resolve(child, context) {
       }
     }
 
-    var childContext = inst.getChildContext && inst.getChildContext();
+    var childContext;
+    if (typeof inst.getChildContext === 'function') {
+      var childContextTypes = Component.childContextTypes;
+      invariant(
+        typeof childContextTypes === 'object',
+        '%s.getChildContext(): childContextTypes must be defined in order to ' +
+          'use getChildContext().',
+        getComponentName(Component) || 'Unknown',
+      );
+      childContext = inst.getChildContext();
+      for (let contextKey in childContext) {
+        invariant(
+          contextKey in childContextTypes,
+          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+          getComponentName(Component) || 'Unknown',
+          contextKey,
+        );
+      }
+    }
     if (childContext) {
       context = Object.assign({}, context, childContext);
     }
