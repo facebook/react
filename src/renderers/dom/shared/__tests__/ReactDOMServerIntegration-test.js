@@ -25,9 +25,6 @@ const stream = require('stream');
 
 // Helper functions for rendering tests
 // ====================================
-function normalizeCodeLocInfo(str) {
-  return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
-}
 
 // promisified version of ReactDOM.render()
 function asyncReactDOMRender(reactElement, domElement) {
@@ -369,15 +366,21 @@ describe('ReactDOMServerIntegration', () => {
         let Header = props => {
           return <p>header</p>;
         };
+        let Footer = props => {
+          return [<h2 key={1}>footer</h2>, <h3 key={2}>about</h3>];
+        };
         let e = await render([
           <div key={1}>text1</div>,
           <span key={2}>text2</span>,
           <Header key={3} />,
+          <Footer key={4} />,
         ]);
         let parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
         expect(parent.childNodes[1].tagName).toBe('SPAN');
         expect(parent.childNodes[2].tagName).toBe('P');
+        expect(parent.childNodes[3].tagName).toBe('H2');
+        expect(parent.childNodes[4].tagName).toBe('H3');
       });
 
       itRenders('a single array element children as a child', async render => {
@@ -394,58 +397,6 @@ describe('ReactDOMServerIntegration', () => {
         let parent = e.parentNode;
         expect(parent.childNodes[0].tagName).toBe('DIV');
         expect(parent.childNodes[1].tagName).toBe('SPAN');
-      });
-
-      it('throws if a plain object is used as a child when using SSR', async () => {
-        var children = {
-          x: <span />,
-          y: <span />,
-          z: <span />,
-        };
-        var element = <div>{[children]}</div>;
-        var ex;
-        try {
-          ReactDOMServer.renderToString(element);
-        } catch (e) {
-          ex = e;
-        }
-        expect(ex).toBeDefined();
-        expect(normalizeCodeLocInfo(ex.message)).toBe(
-          'Objects are not valid as a React child (found: object with keys ' +
-            '{x, y, z}). If you meant to render a collection of children, use ' +
-            'an array instead.' +
-            // Fiber gives a slightly better stack with the nearest host components
-            (ReactDOMFeatureFlags.useFiber ? '\n    in div (at **)' : ''),
-        );
-      });
-
-      it('throws if a plain object even if it is in an owner when using SSR', async () => {
-        class Foo extends React.Component {
-          render() {
-            var children = {
-              a: <span />,
-              b: <span />,
-              c: <span />,
-            };
-            return <div>{[children]}</div>;
-          }
-        }
-        var container = document.createElement('div');
-        var ex;
-        try {
-          ReactDOMServer.renderToString(<Foo />, container);
-        } catch (e) {
-          ex = e;
-        }
-        expect(ex).toBeDefined();
-        expect(normalizeCodeLocInfo(ex.message)).toBe(
-          'Objects are not valid as a React child (found: object with keys ' +
-            '{a, b, c}). If you meant to render a collection of children, use ' +
-            'an array instead.\n' +
-            // Fiber gives a slightly better stack with the nearest host components
-            (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
-            '    in Foo (at **)',
-        );
       });
     }
   });
