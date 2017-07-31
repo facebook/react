@@ -161,6 +161,42 @@ describe('ReactTestUtils', () => {
     ]);
   });
 
+  it('should shallow render a component returning strings directly from render', () => {
+    const Text = ({value}) => value;
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<Text value="foo" />);
+    expect(result).toEqual('foo');
+  });
+
+  it('should shallow render a component returning numbers directly from render', () => {
+    const Text = ({value}) => value;
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<Text value={10} />);
+    expect(result).toEqual(10);
+  });
+
+  it('should shallow render a fragment', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return <div />;
+      }
+    }
+    class Fragment extends React.Component {
+      render() {
+        return [<div key="a" />, <span key="b" />, <SomeComponent />];
+      }
+    }
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<Fragment />);
+    expect(result).toEqual([
+      <div key="a" />,
+      <span key="b" />,
+      <SomeComponent />,
+    ]);
+  });
+
   it('should throw for invalid elements', () => {
     class SomeComponent extends React.Component {
       render() {
