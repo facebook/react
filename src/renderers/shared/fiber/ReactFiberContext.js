@@ -234,14 +234,22 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
     emptyObject;
 
   // Remember the parent context so we can merge with it later.
+  // Inherit the parent's did-perform-work value to avoid inadvertantly blocking updates.
   previousContext = contextStackCursor.current;
   push(contextStackCursor, memoizedMergedChildContext, workInProgress);
-  push(didPerformWorkStackCursor, false, workInProgress);
+  push(
+    didPerformWorkStackCursor,
+    didPerformWorkStackCursor.current,
+    workInProgress,
+  );
 
   return true;
 };
 
-exports.invalidateContextProvider = function(workInProgress: Fiber): void {
+exports.invalidateContextProvider = function(
+  workInProgress: Fiber,
+  didChange: boolean,
+): void {
   const instance = workInProgress.stateNode;
   invariant(
     instance,
@@ -250,20 +258,21 @@ exports.invalidateContextProvider = function(workInProgress: Fiber): void {
   );
 
   // Merge parent and own context.
-  const mergedContext = processChildContext(
-    workInProgress,
-    previousContext,
-    true,
-  );
-  instance.__reactInternalMemoizedMergedChildContext = mergedContext;
+  // Skip this if we're not updating due to sCU.
+  let mergedContext;
+  if (didChange) {
+    mergedContext = processChildContext(workInProgress, previousContext, true);
+    instance.__reactInternalMemoizedMergedChildContext = mergedContext;
+  }
 
   // Replace the old (or empty) context with the new one.
   // It is important to unwind the context in the reverse order.
   pop(didPerformWorkStackCursor, workInProgress);
-  pop(contextStackCursor, workInProgress);
-  // Now push the new context and mark that it has changed.
-  push(contextStackCursor, mergedContext, workInProgress);
-  push(didPerformWorkStackCursor, true, workInProgress);
+  if (didChange) {
+    pop(contextStackCursor, workInProgress);
+    push(contextStackCursor, mergedContext, workInProgress);
+  }
+  push(didPerformWorkStackCursor, didChange, workInProgress);
 };
 
 exports.resetContext = function(): void {
