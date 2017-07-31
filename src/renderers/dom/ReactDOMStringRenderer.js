@@ -14,6 +14,7 @@
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
 var ReactPartialRenderer = require('ReactPartialRenderer');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
@@ -21,10 +22,13 @@ var ReactPartialRenderer = require('ReactPartialRenderer');
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
  */
 function renderToString(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.',
-  );
+  const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+  if (disableNewFiberFeatures) {
+    invariant(
+      React.isValidElement(element),
+      'renderToString(): You must pass a valid ReactElement.',
+    );
+  }
   var renderer = new ReactPartialRenderer(element, false);
   var markup = renderer.read(Infinity);
   return markup;
@@ -36,10 +40,13 @@ function renderToString(element) {
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostaticmarkup
  */
 function renderToStaticMarkup(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.',
-  );
+  const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+  if (disableNewFiberFeatures) {
+    invariant(
+      React.isValidElement(element),
+      'renderToStaticMarkup(): You must pass a valid ReactElement.',
+    );
+  }
   var renderer = new ReactPartialRenderer(element, true);
   var markup = renderer.read(Infinity);
   return markup;

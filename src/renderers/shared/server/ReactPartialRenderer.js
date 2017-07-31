@@ -307,11 +307,6 @@ function createOpenTagMarkup(
 }
 
 function resolve(child, context) {
-  // TODO: We'll need to support Arrays (and strings) after Fiber is rolled out
-  invariant(
-    !Array.isArray(child),
-    'The server renderer does not implement support for array children yet.',
-  );
   while (React.isValidElement(child)) {
     if (__DEV__) {
       pushElementToDebugStack(child);
@@ -418,8 +413,9 @@ function resolve(child, context) {
 
 class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
+    var children = React.isValidElement(element) ? [element] : toArray(element);
     var topFrame = {
-      children: [element],
+      children,
       childIndex: 0,
       context: emptyObject,
       footer: '',
@@ -487,7 +483,22 @@ class ReactDOMServerRenderer {
       if (child === null || child === false) {
         return '';
       } else {
-        return this.renderDOM(child, context);
+        if (React.isValidElement(child)) {
+          return this.renderDOM(child, context);
+        } else {
+          var children = toArray(child);
+          var frame = {
+            children,
+            childIndex: 0,
+            context: context,
+            footer: '',
+          };
+          if (__DEV__) {
+            frame.debugElementStack = [];
+          }
+          this.stack.push(frame);
+          return '';
+        }
       }
     }
   }

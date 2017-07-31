@@ -13,6 +13,7 @@
 
 var React;
 var ReactDOM;
+var ReactDOMServer;
 var ReactDOMFeatureFlags;
 var ReactTestUtils;
 
@@ -24,6 +25,7 @@ describe('ReactComponent', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
@@ -426,6 +428,58 @@ describe('ReactComponent', () => {
     var ex;
     try {
       ReactDOM.render(<Foo />, container);
+    } catch (e) {
+      ex = e;
+    }
+    expect(ex).toBeDefined();
+    expect(normalizeCodeLocInfo(ex.message)).toBe(
+      'Objects are not valid as a React child (found: object with keys ' +
+        '{a, b, c}). If you meant to render a collection of children, use ' +
+        'an array instead.\n' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in Foo (at **)',
+    );
+  });
+
+  it('throws if a plain object is used as a child when using SSR', async () => {
+    var children = {
+      x: <span />,
+      y: <span />,
+      z: <span />,
+    };
+    var element = <div>{[children]}</div>;
+    var ex;
+    try {
+      ReactDOMServer.renderToString(element);
+    } catch (e) {
+      ex = e;
+    }
+    expect(ex).toBeDefined();
+    expect(normalizeCodeLocInfo(ex.message)).toBe(
+      'Objects are not valid as a React child (found: object with keys ' +
+        '{x, y, z}). If you meant to render a collection of children, use ' +
+        'an array instead.' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '\n    in div (at **)' : ''),
+    );
+  });
+
+  it('throws if a plain object even if it is in an owner when using SSR', async () => {
+    class Foo extends React.Component {
+      render() {
+        var children = {
+          a: <span />,
+          b: <span />,
+          c: <span />,
+        };
+        return <div>{[children]}</div>;
+      }
+    }
+    var container = document.createElement('div');
+    var ex;
+    try {
+      ReactDOMServer.renderToString(<Foo />, container);
     } catch (e) {
       ex = e;
     }

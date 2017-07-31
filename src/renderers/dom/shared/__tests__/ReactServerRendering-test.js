@@ -20,6 +20,7 @@ var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
 var PropTypes;
+var ReactFeatureFlags;
 
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
@@ -34,6 +35,9 @@ describe('ReactDOMServer', () => {
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
+
+    ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.disableNewFiberFeatures = false;
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -319,8 +323,12 @@ describe('ReactDOMServer', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToString.bind(ReactDOMServer, 'not a component'),
-      ).toThrowError('renderToString(): You must pass a valid ReactElement.');
+        ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
+      ).toThrowError(
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys {x})'
+          : 'renderToString(): You must pass a valid ReactElement.',
+      );
     });
   });
 
@@ -431,12 +439,11 @@ describe('ReactDOMServer', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToStaticMarkup.bind(
-          ReactDOMServer,
-          'not a component',
-        ),
+        ReactDOMServer.renderToStaticMarkup.bind(ReactDOMServer, {x: 123}),
       ).toThrowError(
-        'renderToStaticMarkup(): You must pass a valid ReactElement.',
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys {x})'
+          : 'renderToStaticMarkup(): You must pass a valid ReactElement.',
       );
     });
 

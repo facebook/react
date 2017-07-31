@@ -332,6 +332,19 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('basic rendering', function() {
+    beforeEach(() => {
+      onAfterResetModules = () => {
+        const ReactFeatureFlags = require('ReactFeatureFlags');
+        ReactFeatureFlags.disableNewFiberFeatures = false;
+      };
+
+      resetModules();
+    });
+
+    afterEach(() => {
+      onAfterResetModules = null;
+    });
+
     itRenders('a blank div', async render => {
       const e = await render(<div />);
       expect(e.tagName).toBe('DIV');
@@ -347,6 +360,70 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
     });
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      itRenders('a array type children as a child', async render => {
+        let Header = props => {
+          return <p>header</p>;
+        };
+        let Footer = props => {
+          return [<h2 key={1}>footer</h2>, <h3 key={2}>about</h3>];
+        };
+        let e = await render([
+          <div key={1}>text1</div>,
+          <span key={2}>text2</span>,
+          <Header key={3} />,
+          <Footer key={4} />,
+        ]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('SPAN');
+        expect(parent.childNodes[2].tagName).toBe('P');
+        expect(parent.childNodes[3].tagName).toBe('H2');
+        expect(parent.childNodes[4].tagName).toBe('H3');
+      });
+
+      itRenders('a single array element children as a child', async render => {
+        let e = await render([<div key={1}>text1</div>]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+      });
+
+      itRenders('a nested array children as a child', async render => {
+        let e = await render([
+          [<div key={1}>text1</div>],
+          <span key={1}>text2</span>,
+          [[[null, <p key={1} />], false]],
+        ]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('SPAN');
+        expect(parent.childNodes[2].tagName).toBe('P');
+      });
+
+      itRenders('an iterable as a child', async render => {
+        const threeDivIterable = {
+          '@@iterator': function() {
+            var i = 0;
+            return {
+              next: function() {
+                if (i++ < 3) {
+                  return {value: <div key={i} />, done: false};
+                } else {
+                  return {value: undefined, done: true};
+                }
+              },
+            };
+          },
+        };
+        let e = await render(threeDivIterable);
+        let parent = e.parentNode;
+        expect(parent.childNodes.length).toBe(3);
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('DIV');
+        expect(parent.childNodes[2].tagName).toBe('DIV');
+      });
+    }
   });
 
   describe('property to attribute mapping', function() {
