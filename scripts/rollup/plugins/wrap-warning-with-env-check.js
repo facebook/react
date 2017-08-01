@@ -39,7 +39,7 @@ module.exports = function(babel, options) {
             //
             // into this:
             //
-            // if (process.env.NODE_ENV !== "production") {
+            // if (__DEV__) {
             //   warning(condition, argument, argument);
             // }
             //
