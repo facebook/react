@@ -153,13 +153,24 @@ describe('ReactMount', () => {
     spyOn(console, 'error');
     ReactDOM.render(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Did not expect server HTML to contain the text node " " in <container>.',
+      );
+    } else {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Target node has markup rendered by React, but there are unrelated nodes as well.',
+      );
+    }
 
+    console.error.calls.reset();
     ReactDOM.unmountComponentAtNode(container);
-
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
-
     ReactDOM.render(<div />, container);
-    expectDev(console.error.calls.count()).toBe(2);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Target node has markup rendered by React, but there are unrelated nodes as well.',
+    );
   });
 
   it('should not warn if mounting into non-empty node', () => {
