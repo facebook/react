@@ -257,24 +257,28 @@ exports.invalidateContextProvider = function(
       'This error is likely caused by a bug in React. Please file an issue.',
   );
 
-  // Merge parent and own context.
-  // Skip this if we're not updating due to sCU.
-  // This avoids unnecessarily recomputing memoized values.
-  let mergedContext;
   if (didChange) {
-    mergedContext = processChildContext(workInProgress, previousContext, true);
+    // Merge parent and own context.
+    // Skip this if we're not updating due to sCU.
+    // This avoids unnecessarily recomputing memoized values.
+    const mergedContext = processChildContext(
+      workInProgress,
+      previousContext,
+      true,
+    );
     instance.__reactInternalMemoizedMergedChildContext = mergedContext;
-  }
 
-  // Replace the old (or empty) context with the new one.
-  // It is important to unwind the context in the reverse order.
-  pop(didPerformWorkStackCursor, workInProgress);
-  if (didChange) {
+    // Replace the old (or empty) context with the new one.
+    // It is important to unwind the context in the reverse order.
+    pop(didPerformWorkStackCursor, workInProgress);
     pop(contextStackCursor, workInProgress);
-    // $FlowFixMe - We know that this is always an object when didChange is true.
+    // Now push the new context and mark that it has changed.
     push(contextStackCursor, mergedContext, workInProgress);
+    push(didPerformWorkStackCursor, didChange, workInProgress);
+  } else {
+    pop(didPerformWorkStackCursor, workInProgress);
+    push(didPerformWorkStackCursor, didChange, workInProgress);
   }
-  push(didPerformWorkStackCursor, didChange, workInProgress);
 };
 
 exports.resetContext = function(): void {
