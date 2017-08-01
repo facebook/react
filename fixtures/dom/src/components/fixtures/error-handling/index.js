@@ -4,9 +4,12 @@ import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 
 function BadRender(props) {
-  throw props.error;
+  throw props.throws();
 }
 class ErrorBoundary extends React.Component {
+  static defaultProps = {
+    buttonText: 'Trigger error',
+  };
   state = {
     shouldThrow: false,
     didThrow: false,
@@ -29,9 +32,9 @@ class ErrorBoundary extends React.Component {
       }
     }
     if (this.state.shouldThrow) {
-      return <BadRender error={this.props.error} />;
+      return <BadRender throws={this.props.throws} />;
     }
-    return <button onClick={this.triggerError}>Trigger error</button>;
+    return <button onClick={this.triggerError}>{this.props.buttonText}</button>;
   }
 }
 class Example extends React.Component {
@@ -42,7 +45,11 @@ class Example extends React.Component {
   render() {
     return (
       <div>
-        <ErrorBoundary error={this.props.error} key={this.state.key} />
+        <ErrorBoundary
+          buttonText={this.props.buttonText}
+          throws={this.props.throws}
+          key={this.state.key}
+        />
         <button onClick={this.restart}>Reset</button>
       </div>
     );
@@ -69,7 +76,11 @@ export default class ErrorHandlingTestCases extends React.Component {
             should be replaced with "Captured an error: Oops!" Clicking reset
             should reset the test case.
           </TestCase.ExpectedResult>
-          <Example error={new Error('Oops!')} />
+          <Example
+            throws={() => {
+              new Error('Oops!');
+            }}
+          />
         </TestCase>
         <TestCase title="Throwing null" description="">
           <TestCase.Steps>
@@ -80,7 +91,33 @@ export default class ErrorHandlingTestCases extends React.Component {
             The "Trigger error" button should be replaced with "Captured an
             error: null". Clicking reset should reset the test case.
           </TestCase.ExpectedResult>
-          <Example error={null} />
+          <Example
+            throws={() => {
+              throw null;
+            }}
+          />
+        </TestCase>
+        <TestCase
+          title="Cross-origin errors (development mode only)"
+          description="">
+          <TestCase.Steps>
+            <li>Click the "Trigger cross-origin error" button</li>
+            <li>Click the reset button</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            The "Trigger error" button should be replaced with "Captured an
+            error: (TODO: custom error text)". The actual error message should
+            be logged to the console: "Uncaught Error: Expected true to
+            be false".
+          </TestCase.ExpectedResult>
+          <Example
+            buttonText="Trigger cross-origin error"
+            throws={() => {
+              // The `expect` module is loaded via unpkg, so that this assertion
+              // triggers a cross-origin error
+              window.expect(true).toBe(false);
+            }}
+          />
         </TestCase>
       </FixtureSet>
     );
