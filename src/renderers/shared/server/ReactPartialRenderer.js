@@ -305,7 +305,6 @@ function createOpenTagMarkup(
   if (isRootElement) {
     ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
   }
-  ret += ' ' + DOMMarkupOperations.createMarkupForID('');
   return ret;
 }
 

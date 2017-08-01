@@ -37,7 +37,7 @@ var {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } = require('HTMLNodeType');
-var {ID_ATTRIBUTE_NAME} = require('DOMProperty');
+var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
@@ -58,6 +58,7 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var lowPriorityWarning = require('lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
@@ -127,11 +128,11 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
-function shouldReuseContent(container) {
+function shouldHydrateDueToLegacyHeuristic(container) {
   const rootElement = getReactRootElementInContainer(container);
   return !!(rootElement &&
     rootElement.nodeType === ELEMENT_NODE &&
-    rootElement.hasAttribute(ID_ATTRIBUTE_NAME));
+    rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME));
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
@@ -523,10 +524,14 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
   DOMRenderer.batchedUpdates,
 );
 
+var warnedAboutHydrateAPI = false;
+var warnedAboutEmptyContainer = false;
+
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
   container: DOMContainer,
+  forceHydrate: boolean,
   callback: ?Function,
 ) {
   invariant(
@@ -577,9 +582,10 @@ function renderSubtreeIntoContainer(
 
   let root = container._reactRootContainer;
   if (!root) {
+    const shouldHydrate =
+      forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
     // First clear any existing content.
-    // TODO: Figure out the best heuristic here.
-    if (!shouldReuseContent(container)) {
+    if (!shouldHydrate) {
       let warned = false;
       let rootSibling;
       while ((rootSibling = container.lastChild)) {
@@ -587,7 +593,7 @@ function renderSubtreeIntoContainer(
           if (
             !warned &&
             rootSibling.nodeType === ELEMENT_NODE &&
-            (rootSibling: any).hasAttribute(ID_ATTRIBUTE_NAME)
+            (rootSibling: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
           ) {
             warned = true;
             warning(
@@ -599,6 +605,25 @@ function renderSubtreeIntoContainer(
           }
         }
         container.removeChild(rootSibling);
+      }
+    }
+    if (__DEV__) {
+      if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
+        warnedAboutHydrateAPI = true;
+        lowPriorityWarning(
+          false,
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+      }
+      if (forceHydrate && !container.firstChild && !warnedAboutEmptyContainer) {
+        warnedAboutEmptyContainer = true;
+        warning(
+          false,
+          'hydrate(): Expected to hydrate from server-rendered markup, but the passed ' +
+            'DOM container node was empty. React will create the DOM from scratch.',
+        );
       }
     }
     const newRoot = DOMRenderer.createContainer(container);
@@ -614,6 +639,15 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
+  hydrate(
+    element: ReactElement<any>,
+    container: DOMContainer,
+    callback: ?Function,
+  ) {
+    // TODO: throw or warn if we couldn't hydrate?
+    return renderSubtreeIntoContainer(null, element, container, true, callback);
+  },
+
   render(
     element: ReactElement<any>,
     container: DOMContainer,
@@ -651,7 +685,13 @@ var ReactDOMFiber = {
         }
       }
     }
-    return renderSubtreeIntoContainer(null, element, container, callback);
+    return renderSubtreeIntoContainer(
+      null,
+      element,
+      container,
+      false,
+      callback,
+    );
   },
 
   unstable_renderSubtreeIntoContainer(
@@ -668,6 +708,7 @@ var ReactDOMFiber = {
       parentComponent,
       element,
       containerNode,
+      false,
       callback,
     );
   },
@@ -692,7 +733,7 @@ var ReactDOMFiber = {
 
       // Unmount should not be batched.
       DOMRenderer.unbatchedUpdates(() => {
-        renderSubtreeIntoContainer(null, null, container, () => {
+        renderSubtreeIntoContainer(null, null, container, false, () => {
           container._reactRootContainer = null;
         });
       });

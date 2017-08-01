@@ -14,13 +14,14 @@
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
 var PropTypes;
 var ReactFeatureFlags;
+
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
@@ -31,7 +32,6 @@ describe('ReactDOMServer', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
@@ -55,9 +55,10 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<span ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -72,9 +73,10 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<img ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -89,9 +91,10 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<img data-attr="&gt;" ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -135,16 +138,19 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<div ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '>' +
-            '<span ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*">' +
+            '<span' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            '>' +
             (ReactDOMFeatureFlags.useFiber
               ? 'My name is <!-- -->child'
               : '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
@@ -206,9 +212,10 @@ describe('ReactDOMServer', () => {
           new RegExp(
             '<span ' +
               ROOT_ATTRIBUTE_NAME +
-              '="" ' +
-              ID_ATTRIBUTE_NAME +
-              '="[^"]*"' +
+              '=""' +
+              (ReactDOMFeatureFlags.useFiber
+                ? ''
+                : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
               (ReactDOMFeatureFlags.useFiber
                 ? ''
                 : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -234,7 +241,9 @@ describe('ReactDOMServer', () => {
       runTest();
     });
 
-    it('should have the correct mounting behavior', () => {
+    it('should have the correct mounting behavior (old hydrate API)', () => {
+      spyOn(console, 'warn');
+      spyOn(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -289,6 +298,17 @@ describe('ReactDOMServer', () => {
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
+      if (ReactDOMFeatureFlags.useFiber) {
+        expectDev(console.warn.calls.count()).toBe(1);
+        expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+      } else {
+        expectDev(console.warn.calls.count()).toBe(0);
+      }
+      console.warn.calls.reset();
 
       var expectedMarkup = lastMarkup;
       if (ReactDOMFeatureFlags.useFiber) {
@@ -308,7 +328,6 @@ describe('ReactDOMServer', () => {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
-      spyOn(console, 'error');
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expectDev(console.error.calls.count()).toBe(1);
@@ -324,6 +343,7 @@ describe('ReactDOMServer', () => {
           '(server) -- react-text: 3 -->x<!-- /react-text --',
         );
       }
+      console.error.calls.reset();
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -331,7 +351,100 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(1);
       ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(2);
+      expectDev(console.warn.calls.count()).toBe(0);
+      expectDev(console.error.calls.count()).toBe(0);
     });
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      it('should have the correct mounting behavior (new hydrate API)', () => {
+        spyOn(console, 'error');
+        // This test is testing client-side behavior.
+        ExecutionEnvironment.canUseDOM = true;
+
+        var mountCount = 0;
+        var numClicks = 0;
+
+        class TestComponent extends React.Component {
+          componentDidMount() {
+            mountCount++;
+          }
+
+          click = () => {
+            numClicks++;
+          };
+
+          render() {
+            return (
+              <span ref="span" onClick={this.click}>
+                Name: {this.props.name}
+              </span>
+            );
+          }
+        }
+
+        var element = document.createElement('div');
+        ReactDOM.render(<TestComponent />, element);
+
+        var lastMarkup = element.innerHTML;
+
+        // Exercise the update path. Markup should not change,
+        // but some lifecycle methods should be run again.
+        ReactDOM.render(<TestComponent name="x" />, element);
+        expect(mountCount).toEqual(1);
+
+        // Unmount and remount. We should get another mount event and
+        // we should get different markup, as the IDs are unique each time.
+        ReactDOM.unmountComponentAtNode(element);
+        expect(element.innerHTML).toEqual('');
+        ReactDOM.render(<TestComponent name="x" />, element);
+        expect(mountCount).toEqual(2);
+        expect(element.innerHTML).not.toEqual(lastMarkup);
+
+        // Now kill the node and render it on top of server-rendered markup, as if
+        // we used server rendering. We should mount again, but the markup should
+        // be unchanged. We will append a sentinel at the end of innerHTML to be
+        // sure that innerHTML was not changed.
+        ReactDOM.unmountComponentAtNode(element);
+        expect(element.innerHTML).toEqual('');
+
+        ExecutionEnvironment.canUseDOM = false;
+        lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
+        ExecutionEnvironment.canUseDOM = true;
+        element.innerHTML = lastMarkup;
+
+        var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
+        expect(mountCount).toEqual(3);
+
+        var expectedMarkup = lastMarkup;
+        if (ReactDOMFeatureFlags.useFiber) {
+          var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
+          expectedMarkup = expectedMarkup.replace(reactComments, '');
+        }
+        expect(element.innerHTML).toBe(expectedMarkup);
+
+        // Ensure the events system works after mount into server markup
+        expect(numClicks).toEqual(0);
+        ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+        expect(numClicks).toEqual(1);
+
+        ReactDOM.unmountComponentAtNode(element);
+        expect(element.innerHTML).toEqual('');
+
+        // Now simulate a situation where the app is not idempotent. React should
+        // warn but do the right thing.
+        element.innerHTML = lastMarkup;
+        instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
+        expect(mountCount).toEqual(4);
+        expectDev(console.error.calls.count()).toBe(1);
+        expect(element.innerHTML.length > 0).toBe(true);
+        expect(element.innerHTML).not.toEqual(lastMarkup);
+
+        // Ensure the events system works after markup mismatch.
+        expect(numClicks).toEqual(1);
+        ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+        expect(numClicks).toEqual(2);
+      });
+    }
 
     it('should throw with silly args', () => {
       expect(
