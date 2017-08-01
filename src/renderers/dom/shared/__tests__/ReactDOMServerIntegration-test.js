@@ -458,7 +458,7 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('emptyish values', async render => {
         let e = await render(0);
-        expect(e.nodeType).toBe(3);
+        expect(e.nodeType).toBe(TEXT_NODE_TYPE);
         expect(e.nodeValue).toMatch('0');
 
         // TODO: This one is broken because client renders a node
