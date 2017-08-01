@@ -196,6 +196,8 @@ function trapBubbledEventsLocal(node: Element, tag: string) {
   // the state of the tree to be corrupted, `node` here can be null.
 
   // TODO: Make sure that we check isMounted before firing any of these events.
+  // TODO: Inline these below since we're calling this from an equivalent
+  // switch statement.
   switch (tag) {
     case 'iframe':
     case 'object':
@@ -461,7 +463,6 @@ var ReactDOMFiberComponent = {
       }
     }
 
-    trapBubbledEventsLocal(domElement, tag);
     var props: Object;
     switch (tag) {
       case 'audio':
@@ -474,11 +475,13 @@ var ReactDOMFiberComponent = {
       case 'source':
       case 'video':
       case 'details':
+        trapBubbledEventsLocal(domElement, tag);
         props = rawProps;
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -490,6 +493,7 @@ var ReactDOMFiberComponent = {
       case 'select':
         ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -497,6 +501,7 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -799,7 +804,6 @@ var ReactDOMFiberComponent = {
       }
     }
 
-    trapBubbledEventsLocal(domElement, tag);
     switch (tag) {
       case 'audio':
       case 'form':
@@ -811,9 +815,11 @@ var ReactDOMFiberComponent = {
       case 'source':
       case 'video':
       case 'details':
+        trapBubbledEventsLocal(domElement, tag);
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -823,12 +829,14 @@ var ReactDOMFiberComponent = {
         break;
       case 'select':
         ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
+        trapBubbledEventsLocal(domElement, tag);
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
