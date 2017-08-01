@@ -12,47 +12,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
-  env.beforeEach(() => {
-    jasmine.addMatchers({
-      toBeReset() {
-        return {
-          compare(actual, methodName) {
-            // TODO: Catch test cases that call spyOn() but don't inspect the mock
-            // properly.
-            if (actual.__callCount === undefined && !isSpy(actual)) {
-              return {
-                pass: false,
-                message: () =>
-                  'Test did not tear down console.' +
-                  methodName +
-                  ' mock properly.',
-              };
-            }
-            return {pass: true};
-          },
-        };
-      },
-      toNotHaveBeenCalled() {
-        return {
-          compare(actual, methodName) {
-            return {
-              pass: actual.__callCount === 0,
-              message: () =>
-                'Expected test not to call console.' +
-                methodName +
-                '(). ' +
-                'If the warning is expected, mock it out using ' +
-                "spyOn(console, '" +
-                methodName +
-                "') and test that the " +
-                'warning occurs.',
-            };
-          },
-        };
-      },
-    });
-  });
-
   ['error', 'warn'].forEach(methodName => {
     var oldMethod = console[methodName];
     var newMethod = function() {
@@ -65,9 +24,25 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     env.beforeEach(() => {
       newMethod.__callCount = 0;
     });
+
     env.afterEach(() => {
-      expect(console[methodName]).toBeReset(methodName);
-      expect(console[methodName]).toNotHaveBeenCalled(methodName);
+      if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
+        throw new Error(
+          'Test did not tear down console.' + methodName + ' mock properly.'
+        );
+      }
+      if (console[methodName].__callCount !== 0) {
+        throw new Error(
+          'Expected test not to call console.' +
+            methodName +
+            '(). ' +
+            'If the warning is expected, mock it out using ' +
+            "spyOn(console, '" +
+            methodName +
+            "') and test that the " +
+            'warning occurs.'
+        );
+      }
     });
   });
 
