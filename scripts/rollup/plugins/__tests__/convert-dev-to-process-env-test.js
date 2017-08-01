@@ -35,28 +35,37 @@ describe('convert-dev-to-process-env', () => {
     process.env.NODE_ENV = oldEnv;
   });
 
-  it('should convert __DEV__ expressions', () => {
+  it('should replace __DEV__ in if', () => {
+    compare(
+      `if (__DEV__) {
+  console.log('foo')
+}`,
+      `if (process.env.NODE_ENV !== 'production') {
+  console.log('foo');
+}`
+    );
+  });
+
+  it('should replace __DEV__ in ternary', () => {
     compare(
       '__DEV__ ? 1 : 0;',
       'process.env.NODE_ENV !== "production" ? 1 : 0;'
     );
   });
 
-  it('should not modify process.env expressions', () => {
+  it('should not modify process.env in turnary', () => {
     compare(
       'process.env.NODE_ENV !== "production" ? 1 : 0;',
       'process.env.NODE_ENV !== "production" ? 1 : 0;'
     );
   });
 
-  it('should replace __DEV__ in if', () => {
+  it('should not modify process.env in turnary', () => {
     compare(
-      `
-if (__DEV__) {
+      `if (process.env.NODE_ENV !== 'production') {
   console.log('foo')
 }`,
-      `
-if (process.env.NODE_ENV !== 'production') {
+      `if (process.env.NODE_ENV !== 'production') {
   console.log('foo');
 }`
     );

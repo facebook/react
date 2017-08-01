@@ -22,8 +22,6 @@ module.exports = function(babel, options) {
     t.stringLiteral('production')
   );
 
-  var SEEN_SYMBOL = Symbol('expression.seen');
-
   return {
     pre: function() {
       this.prodInvariantIdentifier = null;
