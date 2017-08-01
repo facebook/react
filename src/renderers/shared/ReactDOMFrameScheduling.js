@@ -12,9 +12,9 @@
 
 'use strict';
 
-// This a built-in polyfill for requestIdleCallback. It works by scheduling
-// a requestAnimationFrame, store the time for the start of the frame, then
-// schedule a postMessage which gets scheduled after paint. Within the
+// This is a built-in polyfill for requestIdleCallback. It works by scheduling
+// a requestAnimationFrame, storing the time for the start of the frame, then
+// scheduling a postMessage which gets scheduled after paint. Within the
 // postMessage handler do as much work as possible until time + frame rate.
 // By separating the idle call into a separate event tick we ensure that
 // layout, paint and other browser work is counted against the available time.
