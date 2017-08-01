@@ -383,20 +383,20 @@ describe('ReactDOMServer', () => {
         }
 
         var element = document.createElement('div');
-        ReactDOM.hydrate(<TestComponent />, element);
+        ReactDOM.render(<TestComponent />, element);
 
         var lastMarkup = element.innerHTML;
 
         // Exercise the update path. Markup should not change,
         // but some lifecycle methods should be run again.
-        ReactDOM.hydrate(<TestComponent name="x" />, element);
+        ReactDOM.render(<TestComponent name="x" />, element);
         expect(mountCount).toEqual(1);
 
         // Unmount and remount. We should get another mount event and
         // we should get different markup, as the IDs are unique each time.
         ReactDOM.unmountComponentAtNode(element);
         expect(element.innerHTML).toEqual('');
-        ReactDOM.hydrate(<TestComponent name="x" />, element);
+        ReactDOM.render(<TestComponent name="x" />, element);
         expect(mountCount).toEqual(2);
         expect(element.innerHTML).not.toEqual(lastMarkup);
 
