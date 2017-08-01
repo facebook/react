@@ -142,6 +142,10 @@ function updateBabelConfig(babelOpts, bundleType) {
           // Minify invariant messages
           require('../error-codes/dev-expression-with-codes'),
 
+          // Wrap warning() calls with process.env.NODE_ENV
+          // So they are stripped from production
+          require('./plugins/wrap-warning-with-env-check'),
+
           // Convert __DEV__ statements to process.env.NODE_ENV checks
           require('./plugins/wrap-warning-with-env-check'),
         ]),
