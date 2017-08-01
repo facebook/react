@@ -2444,7 +2444,7 @@ describe('ReactIncremental', () => {
     expect(rendered).toEqual(['count:0', 'count:1']);
   });
 
-  it('updates descendants with multiple context-providing anscestors with new context values', () => {
+  it('updates descendants with multiple context-providing ancestors with new context values', () => {
     let rendered = [];
     let instance;
 
