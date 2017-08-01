@@ -35,13 +35,6 @@ describe('dev-expression', () => {
     process.env.NODE_ENV = oldEnv;
   });
 
-  it('should replace warning calls', () => {
-    compare(
-      "warning(condition, 'a %s b', 'c');",
-      "__DEV__ ? warning(condition, 'a %s b', 'c') : void 0;"
-    );
-  });
-
   it("should add `reactProdInvariant` when it finds `require('invariant')`", () => {
     compare(
       "var invariant = require('invariant');",

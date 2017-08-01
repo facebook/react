@@ -129,28 +129,6 @@ module.exports = function(babel) {
                 ])
               )
             );
-          } else if (path.get('callee').isIdentifier({name: 'warning'})) {
-            // Turns this code:
-            //
-            // warning(condition, argument, argument);
-            //
-            // into this:
-            //
-            // if ("production" !== process.env.NODE_ENV) {
-            //   warning(condition, argument, argument);
-            // }
-            //
-            // The goal is to strip out warning calls entirely in production. We
-            // don't need the same optimizations for conditions that we use for
-            // invariant because we don't care about an extra call in __DEV__
-
-            node[SEEN_SYMBOL] = true;
-            path.replaceWith(
-              t.ifStatement(
-                DEV_EXPRESSION,
-                t.blockStatement([t.expressionStatement(node)])
-              )
-            );
           }
         },
       },
