@@ -122,8 +122,7 @@ function updateBabelConfig(babelOpts, bundleType) {
     case FB_PROD:
       return Object.assign({}, babelOpts, {
         plugins: babelOpts.plugins.concat([
-          // Wrap warning() calls with process.env.NODE_ENV
-          // So they are stripped from production
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
@@ -139,8 +138,7 @@ function updateBabelConfig(babelOpts, bundleType) {
           // Minify invariant messages
           require('../error-codes/dev-expression-with-codes'),
 
-          // Wrap warning() calls with process.env.NODE_ENV
-          // So they are stripped from production
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
