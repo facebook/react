@@ -55,9 +55,10 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<span ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -72,9 +73,10 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<img ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -89,9 +91,10 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<img data-attr="&gt;" ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
@@ -135,16 +138,19 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<div ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*"' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             (ReactDOMFeatureFlags.useFiber
               ? ''
               : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '>' +
-            '<span ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]*">' +
+            '<span' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            '>' +
             (ReactDOMFeatureFlags.useFiber
               ? 'My name is <!-- -->child'
               : '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
@@ -206,9 +212,10 @@ describe('ReactDOMServer', () => {
           new RegExp(
             '<span ' +
               ROOT_ATTRIBUTE_NAME +
-              '="" ' +
-              ID_ATTRIBUTE_NAME +
-              '="[^"]*"' +
+              '=""' +
+              (ReactDOMFeatureFlags.useFiber
+                ? ''
+                : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
               (ReactDOMFeatureFlags.useFiber
                 ? ''
                 : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
