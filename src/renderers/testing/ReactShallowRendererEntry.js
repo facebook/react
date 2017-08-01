@@ -182,7 +182,7 @@ class ReactShallowRenderer {
       oldProps !== props &&
       typeof this._instance.componentWillReceiveProps === 'function'
     ) {
-      this._instance.componentWillReceiveProps(props);
+      this._instance.componentWillReceiveProps(props, context);
     }
 
     // Read state after cWRP in case it calls setState
