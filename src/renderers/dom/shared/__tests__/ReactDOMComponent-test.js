@@ -1126,6 +1126,27 @@ describe('ReactDOMComponent', () => {
       expectDev(console.log.calls.argsFor(0)[0]).toContain('onError called');
       expectDev(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
     });
+
+    it('should support onLoad and onError events on SVG element', () => {
+      var container = document.createElement('div');
+
+      spyOn(console, 'log');
+
+      ReactDOM.render(
+        <svg
+            onError={() => console.log('onError called')}
+            onLoad={() => console.log('onLoad called')}
+        />,
+        container
+      );
+
+      container.getElementsByTagName('svg')[0].dispatchEvent(new Event('error'));
+      container.getElementsByTagName('svg')[0].dispatchEvent(new Event('load'));
+
+      expectDev(console.log.calls.count()).toBe(2);
+      expectDev(console.log.calls.argsFor(0)[0]).toContain('onError called');
+      expectDev(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
+    });
   });
 
   describe('updateComponent', () => {

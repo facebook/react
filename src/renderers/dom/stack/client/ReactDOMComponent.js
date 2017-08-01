@@ -319,6 +319,7 @@ function trapBubbledEventsLocal() {
       break;
     case 'img':
     case 'image':
+    case 'svg':
       inst._wrapperState.listeners = [
         ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node),
         ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node),
@@ -449,6 +450,7 @@ ReactDOMComponent.Mixin = {
       case 'iframe':
       case 'img':
       case 'image':
+      case 'svg':
       case 'link':
       case 'object':
       case 'source':
@@ -1141,6 +1143,7 @@ ReactDOMComponent.Mixin = {
       case 'iframe':
       case 'img':
       case 'image':
+      case 'svg':
       case 'link':
       case 'object':
       case 'source':
