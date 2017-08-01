@@ -2334,7 +2334,8 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should catch errors (development)
 * should return false from clearCaughtError if no error was thrown (development)
 * can nest with same debug name (development)
-* does not return nested errors (development)
+* handles nested errors (development)
+* handles nested errors in separate renderers
 * can be shimmed (development)
 * it should rethrow caught errors (production)
 * should call the callback the passed arguments (production)
@@ -2342,7 +2343,8 @@ src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
 * should catch errors (production)
 * should return false from clearCaughtError if no error was thrown (production)
 * can nest with same debug name (production)
-* does not return nested errors (production)
+* handles nested errors (production)
+* handles nested errors in separate renderers
 * catches null values
 * can be shimmed (production)
 
