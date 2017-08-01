@@ -125,9 +125,6 @@ function updateBabelConfig(babelOpts, bundleType) {
           // Wrap warning() calls with process.env.NODE_ENV
           // So they are stripped from production
           require('./plugins/wrap-warning-with-env-check'),
-
-          // Convert __DEV__ statements to process.env.NODE_ENV checks
-          require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
     case UMD_DEV:
