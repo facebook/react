@@ -2396,10 +2396,7 @@ describe('ReactIncremental', () => {
     },
   );
 
-  // TODO bvaughn Convert new tests to use ReactNoop?
-  // TODO bvaughn Better annotate with comments?
-  // TODO bvaughn Remove any tests that overlap with above?
-  it('should update descendants with new context values', () => {
+  it('updates descendants with new context values', () => {
     let rendered = [];
     let instance;
 
@@ -2447,7 +2444,7 @@ describe('ReactIncremental', () => {
     expect(rendered).toEqual(['count:0', 'count:1']);
   });
 
-  it('should update descendants with multiple context-providing anscestors with new context values', () => {
+  it('updates descendants with multiple context-providing anscestors with new context values', () => {
     let rendered = [];
     let instance;
 

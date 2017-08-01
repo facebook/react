@@ -259,6 +259,7 @@ exports.invalidateContextProvider = function(
 
   // Merge parent and own context.
   // Skip this if we're not updating due to sCU.
+  // This avoids unnecessarily recomputing memoized values.
   let mergedContext;
   if (didChange) {
     mergedContext = processChildContext(workInProgress, previousContext, true);
