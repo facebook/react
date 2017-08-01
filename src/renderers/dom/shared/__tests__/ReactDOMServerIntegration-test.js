@@ -1391,6 +1391,34 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(textNode2, '   ');
         },
       );
+
+      if (ReactDOMFeatureFlags.useFiber) {
+        itRenders('a composite with multiple children', async render => {
+          const Component = props => props.children;
+          const e = await render(
+            <Component>{['a', 'b', [undefined], [[false, 'c']]]}</Component>,
+          );
+
+          let parent = e.parentNode;
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // For plain server markup result we have comments between.
+            // If we're able to hydrate, they remain.
+            expect(parent.childNodes.length).toBe(5);
+            expectTextNode(parent.childNodes[0], 'a');
+            expectTextNode(parent.childNodes[2], 'b');
+            expectTextNode(parent.childNodes[4], 'c');
+          } else {
+            expect(parent.childNodes.length).toBe(3);
+            expectTextNode(parent.childNodes[0], 'a');
+            expectTextNode(parent.childNodes[1], 'b');
+            expectTextNode(parent.childNodes[2], 'c');
+          }
+        });
+      }
     });
 
     describe('escaping >, <, and &', function() {
