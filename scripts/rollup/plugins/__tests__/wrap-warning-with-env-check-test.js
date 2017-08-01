@@ -38,7 +38,7 @@ describe('wrap-warning-with-env-check', () => {
   it('should wrap warning calls', () => {
     compare(
       "warning(condition, 'a %s b', 'c');",
-      "process.env.NODE_ENV !== 'production' ? warning(condition, 'a %s b', 'c') : void 0;"
+      "__DEV__ ? warning(condition, 'a %s b', 'c') : void 0;"
     );
   });
 

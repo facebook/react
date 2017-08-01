@@ -35,15 +35,7 @@ module.exports = function(babel) {
     return localState.prodInvariantIdentifier;
   }
 
-  var DEV_EXPRESSION = t.binaryExpression(
-    '!==',
-    t.memberExpression(
-      t.memberExpression(t.identifier('process'), t.identifier('env'), false),
-      t.identifier('NODE_ENV'),
-      false
-    ),
-    t.stringLiteral('production')
-  );
+  var DEV_EXPRESSION = t.identifier('__DEV__');
 
   return {
     pre: function() {

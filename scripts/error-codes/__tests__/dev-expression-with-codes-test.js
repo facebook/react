@@ -38,7 +38,7 @@ describe('dev-expression', () => {
   it('should replace warning calls', () => {
     compare(
       "warning(condition, 'a %s b', 'c');",
-      "process.env.NODE_ENV !== 'production' ? warning(condition, 'a %s b', 'c') : void 0;"
+      "__DEV__ ? warning(condition, 'a %s b', 'c') : void 0;"
     );
   });
 
@@ -56,7 +56,7 @@ var invariant = require('invariant');`
       "invariant(condition, 'Do not override existing functions.');",
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
         '!condition ? ' +
-        "process.env.NODE_ENV !== 'production' ? " +
+        "__DEV__ ? " +
         "invariant(false, 'Do not override existing functions.') : " +
         `_prodInvariant('16') : void 0;`
     );
@@ -65,7 +65,7 @@ var invariant = require('invariant');`
   it('should only add `reactProdInvariant` once', () => {
     var expectedInvariantTransformResult =
       '!condition ? ' +
-      "process.env.NODE_ENV !== 'production' ? " +
+      "__DEV__ ? " +
       "invariant(false, 'Do not override existing functions.') : " +
       `_prodInvariant('16') : void 0;`;
 
@@ -86,7 +86,7 @@ ${expectedInvariantTransformResult}`
       "invariant(condition, 'Expected %s target to be an array; got %s', 'foo', 'bar');",
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
         '!condition ? ' +
-        "process.env.NODE_ENV !== 'production' ? " +
+        "__DEV__ ? " +
         "invariant(false, 'Expected %s target to be an array; got %s', 'foo', 'bar') : " +
         `_prodInvariant('7', 'foo', 'bar') : void 0;`
     );
@@ -97,7 +97,7 @@ ${expectedInvariantTransformResult}`
       "invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', 'Foo', 'Bar');",
       "var _prodInvariant = require('reactProdInvariant');\n\n" +
         '!condition ? ' +
-        "process.env.NODE_ENV !== 'production' ? " +
+        "__DEV__ ? " +
         "invariant(false, 'Expected a component class, got %s.%s', 'Foo', 'Bar') : " +
         `_prodInvariant('18', 'Foo', 'Bar') : void 0;`
     );
