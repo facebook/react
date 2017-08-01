@@ -118,7 +118,7 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     var markup = ReactDOMServer.renderToString(<Parent />);
 
     // Old API based on heuristic
@@ -126,23 +126,23 @@ describe('ReactCompositeComponent', () => {
     container.innerHTML = markup;
     ReactDOM.render(<Parent />, container);
     if (ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      expectDev(console.warn.calls.count()).toBe(1);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
         'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
           'will stop working in React v17. Replace the ReactDOM.render() call ' +
           'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
       );
     } else {
-      expectDev(console.error.calls.count()).toBe(0);
+      expectDev(console.warn.calls.count()).toBe(0);
     }
 
     // New explicit API
-    console.error.calls.reset();
+    console.warn.calls.reset();
     if (ReactDOMFeatureFlags.useFiber) {
       container = document.createElement('div');
       container.innerHTML = markup;
       ReactDOM.hydrate(<Parent />, container);
-      expectDev(console.error.calls.count()).toBe(0);
+      expectDev(console.warn.calls.count()).toBe(0);
     }
   });
 

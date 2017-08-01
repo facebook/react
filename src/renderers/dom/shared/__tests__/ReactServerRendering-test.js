@@ -242,6 +242,7 @@ describe('ReactDOMServer', () => {
     });
 
     it('should have the correct mounting behavior (old hydrate API)', () => {
+      spyOn(console, 'warn');
       spyOn(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
@@ -298,16 +299,16 @@ describe('ReactDOMServer', () => {
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
       if (ReactDOMFeatureFlags.useFiber) {
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        expectDev(console.warn.calls.count()).toBe(1);
+        expectDev(console.warn.calls.argsFor(0)[0]).toContain(
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
         );
       } else {
-        expectDev(console.error.calls.count()).toBe(0);
+        expectDev(console.warn.calls.count()).toBe(0);
       }
-      console.error.calls.reset();
+      console.warn.calls.reset();
 
       var expectedMarkup = lastMarkup;
       if (ReactDOMFeatureFlags.useFiber) {
@@ -350,6 +351,7 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(1);
       ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(2);
+      expectDev(console.warn.calls.count()).toBe(0);
       expectDev(console.error.calls.count()).toBe(0);
     });
 

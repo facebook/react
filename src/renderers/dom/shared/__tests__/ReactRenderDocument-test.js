@@ -39,19 +39,19 @@ describe('rendering React components at document', () => {
   describe('with old implicit hydration API', () => {
     function expectDeprecationWarningWithFiber() {
       if (ReactDOMFeatureFlags.useFiber) {
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        expectDev(console.warn.calls.count()).toBe(1);
+        expectDev(console.warn.calls.argsFor(0)[0]).toContain(
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
         );
       } else {
-        expectDev(console.error.calls.count()).toBe(0);
+        expectDev(console.warn.calls.count()).toBe(0);
       }
     }
 
     it('should be able to adopt server markup', () => {
-      spyOn(console, 'error');
+      spyOn(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -82,7 +82,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should not be able to unmount component from document node', () => {
-      spyOn(console, 'error');
+      spyOn(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -119,7 +119,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should not be able to switch root constructors', () => {
-      spyOn(console, 'error');
+      spyOn(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -175,7 +175,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should be able to mount into document', () => {
-      spyOn(console, 'error');
+      spyOn(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -234,16 +234,18 @@ describe('rendering React components at document', () => {
       var testDocument = getTestDocument(markup);
 
       if (ReactDOMFeatureFlags.useFiber) {
+        spyOn(console, 'warn');
         spyOn(console, 'error');
         ReactDOM.render(<Component text="Hello world" />, testDocument);
         expect(testDocument.body.innerHTML).toBe('Hello world');
-        expectDev(console.error.calls.count()).toBe(2);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        expectDev(console.warn.calls.count()).toBe(1);
+        expectDev(console.warn.calls.argsFor(0)[0]).toContain(
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
         );
-        expectDev(console.error.calls.argsFor(1)[0]).toContain(
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
           'Warning: Text content did not match.',
         );
       } else {
@@ -302,7 +304,7 @@ describe('rendering React components at document', () => {
     });
 
     it('supports findDOMNode on full-page components', () => {
-      spyOn(console, 'error');
+      spyOn(console, 'warn');
       var tree = (
         <html>
           <head>

@@ -58,6 +58,7 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var lowPriorityWarning = require('lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
@@ -608,7 +609,7 @@ function renderSubtreeIntoContainer(
     if (__DEV__) {
       if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
         warnedAboutHydrateAPI = true;
-        warning(
+        lowPriorityWarning(
           false,
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
