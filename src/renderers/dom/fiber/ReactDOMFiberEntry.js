@@ -525,7 +525,6 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 );
 
 var warnedAboutHydrateAPI = false;
-var warnedAboutEmptyContainer = false;
 
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
@@ -615,14 +614,6 @@ function renderSubtreeIntoContainer(
           'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
             'will stop working in React v17. Replace the ReactDOM.render() call ' +
             'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-        );
-      }
-      if (forceHydrate && !container.firstChild && !warnedAboutEmptyContainer) {
-        warnedAboutEmptyContainer = true;
-        warning(
-          false,
-          'hydrate(): Expected to hydrate from server-rendered markup, but the passed ' +
-            'DOM container node was empty. React will create the DOM from scratch.',
         );
       }
     }

@@ -455,6 +455,22 @@ describe('ReactDOMServerIntegration', () => {
         expect(parent.childNodes[1].tagName).toBe('DIV');
         expect(parent.childNodes[2].tagName).toBe('DIV');
       });
+
+      itRenders('emptyish values', async render => {
+        let e = await render(0);
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('0');
+
+        // TODO: This one is broken because client renders a node
+        // but server returns empty HTML.
+        // expect(await render('')).toBe(null);
+
+        expect(await render([])).toBe(null);
+        expect(await render(false)).toBe(null);
+        expect(await render(true)).toBe(null);
+        expect(await render(undefined)).toBe(null);
+        expect(await render([[[false]], undefined])).toBe(null);
+      });
     }
   });
 
