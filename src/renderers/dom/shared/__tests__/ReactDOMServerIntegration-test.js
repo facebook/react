@@ -1972,7 +1972,11 @@ describe('ReactDOMServerIntegration', () => {
 
           resetModules();
           // client render on top of the server markup.
-          const clientField = await renderIntoDom(element, field.parentNode);
+          const clientField = await renderIntoDom(
+            element,
+            field.parentNode,
+            true,
+          );
           // verify that the input field was not replaced.
           // Note that we cannot use expect(clientField).toBe(field) because
           // of jest bug #1772
@@ -2331,6 +2335,7 @@ describe('ReactDOMServerIntegration', () => {
       await asyncReactDOMRender(
         <RefsComponent ref={e => (component = e)} />,
         root,
+        true,
       );
       expect(component.refs.myDiv).toBe(root.firstChild);
     });

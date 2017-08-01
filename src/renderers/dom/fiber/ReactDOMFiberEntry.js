@@ -523,6 +523,8 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
   DOMRenderer.batchedUpdates,
 );
 
+var warnedAboutHydrateAPI = false;
+
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
@@ -581,7 +583,6 @@ function renderSubtreeIntoContainer(
     const shouldHydrate =
       forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
     // First clear any existing content.
-    // TODO: warn if we're hydrating based on heuristic and suggest using hydrate().
     if (!shouldHydrate) {
       let warned = false;
       let rootSibling;
@@ -602,6 +603,17 @@ function renderSubtreeIntoContainer(
           }
         }
         container.removeChild(rootSibling);
+      }
+    }
+    if (__DEV__) {
+      if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
+        warnedAboutHydrateAPI = true;
+        warning(
+          false,
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
       }
     }
     const newRoot = DOMRenderer.createContainer(container);
