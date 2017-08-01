@@ -11,7 +11,15 @@
 module.exports = function(babel, options) {
   var t = babel.types;
 
-  var DEV_EXPRESSION = t.identifier('__DEV__');
+  const PROCESS_ENV_EXPRESSION = t.binaryExpression(
+    '!==',
+    t.memberExpression(
+      t.memberExpression(t.identifier('process'), t.identifier('env'), false),
+      t.identifier('NODE_ENV'),
+      false
+    ),
+    t.stringLiteral('production')
+  );
 
   var SEEN_SYMBOL = Symbol('expression.seen');
 
@@ -46,7 +54,7 @@ module.exports = function(babel, options) {
             // The goal is to strip out warning calls entirely in production.
             path.replaceWith(
               t.ifStatement(
-                DEV_EXPRESSION,
+                PROCESS_ENV_EXPRESSION,
                 t.blockStatement([t.expressionStatement(node)])
               )
             );

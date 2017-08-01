@@ -51,18 +51,6 @@ module.exports = function(babel) {
     },
 
     visitor: {
-      Identifier: {
-        enter: function(path) {
-          // Do nothing when testing
-          if (process.env.NODE_ENV === 'test') {
-            return;
-          }
-          // Replace __DEV__ with process.env.NODE_ENV !== 'production'
-          if (path.isIdentifier({name: '__DEV__'})) {
-            path.replaceWith(DEV_EXPRESSION);
-          }
-        },
-      },
       CallExpression: {
         exit: function(path) {
           var node = path.node;

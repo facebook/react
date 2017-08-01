@@ -125,6 +125,9 @@ function updateBabelConfig(babelOpts, bundleType) {
           // Wrap warning() calls with process.env.NODE_ENV
           // So they are stripped from production
           require('./plugins/wrap-warning-with-env-check'),
+
+          // Convert __DEV__ statements to process.env.NODE_ENV checks
+          require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
     case UMD_DEV:
@@ -135,8 +138,12 @@ function updateBabelConfig(babelOpts, bundleType) {
         plugins: babelOpts.plugins.concat([
           // Use object-assign polyfill in open source
           resolve('./scripts/babel/transform-object-assign-require'),
-          // Replace __DEV__ with process.env.NODE_ENV and minify invariant messages
+
+          // Minify invariant messages
           require('../error-codes/dev-expression-with-codes'),
+
+          // Convert __DEV__ statements to process.env.NODE_ENV checks
+          require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
     default:

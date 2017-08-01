@@ -35,19 +35,6 @@ describe('dev-expression', () => {
     process.env.NODE_ENV = oldEnv;
   });
 
-  it('should replace __DEV__ in if', () => {
-    compare(
-      `
-if (__DEV__) {
-  console.log('foo')
-}`,
-      `
-if (process.env.NODE_ENV !== 'production') {
-  console.log('foo');
-}`
-    );
-  });
-
   it('should replace warning calls', () => {
     compare(
       "warning(condition, 'a %s b', 'c');",
