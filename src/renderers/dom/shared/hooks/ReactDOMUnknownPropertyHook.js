@@ -37,14 +37,7 @@ function getStackAddendum(debugID) {
 if (__DEV__) {
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
-
-  var possibleStandardNames = {
-    autofocus: 'autoFocus',
-    class: 'className',
-    for: 'htmlFor',
-    'accept-charset': 'acceptCharset',
-    'http-equiv': 'httpEquiv',
-  };
+  var possibleStandardNames = require('possibleStandardNames');
 
   for (var key in DOMProperty.attributeName) {
     possibleStandardNames[key.toLowerCase()] = key;

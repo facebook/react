@@ -765,6 +765,8 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should gracefully handle various style value types
 * should not update styles when mutating a proxy style object
 * should throw when mutating style objects
+* should warn for unknown prop
+* should group multiple unknown prop warnings together
 * should warn for onDblClick prop
 * should not warn for "0" as a unitless style value
 * should warn nicely about NaN in style
@@ -852,13 +854,10 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition
-* gives source code refs for unknown prop warning for exact elements in composition (ssr)
 * should suggest property name if available
 * should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
 * render and then updates innerHTML and preserves whitespace
-* allows assignment of custom attributes to elements
-* warns on bad casing
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
@@ -871,6 +870,12 @@ src/renderers/dom/shared/__tests__/ReactDOMEventListener-test.js
 * should not get confused by disappearing elements
 * should batch between handlers from different roots
 * should not fire duplicate events for a React DOM tree
+
+src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
+* should allow valid aria-* props
+* should warn for one invalid aria-* prop
+* should warn for many invalid aria-* props
+* should warn for an improperly cased aria-* prop
 
 src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates initial namespaced markup
@@ -1125,11 +1130,26 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no empty styles with clean client render
 * renders no empty styles with client render on top of good server markup
 * renders no empty styles with client render on top of bad server markup
-* renders unknown attributes with server string render
-* renders unknown attributes with server stream render
-* renders unknown attributes with clean client render
-* renders unknown attributes with client render on top of good server markup
-* renders unknown attributes with client render on top of bad server markup
+* renders simple strings with server string render
+* renders simple strings with server stream render
+* renders simple strings with clean client render
+* renders simple strings with client render on top of good server markup
+* renders simple strings with client render on top of bad server markup
+* renders aria string prop with false value with server string render
+* renders aria string prop with false value with server stream render
+* renders aria string prop with false value with clean client render
+* renders aria string prop with false value with client render on top of good server markup
+* renders aria string prop with false value with client render on top of bad server markup
+* renders no aria prop with null value with server string render
+* renders no aria prop with null value with server stream render
+* renders no aria prop with null value with clean client render
+* renders no aria prop with null value with client render on top of good server markup
+* renders no aria prop with null value with client render on top of bad server markup
+* renders no unknown attributes with server string render
+* renders no unknown attributes with server stream render
+* renders no unknown attributes with clean client render
+* renders no unknown attributes with client render on top of good server markup
+* renders no unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with server stream render
 * renders unknown data- attributes with clean client render
