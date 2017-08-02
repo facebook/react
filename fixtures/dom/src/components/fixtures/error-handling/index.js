@@ -26,9 +26,9 @@ class ErrorBoundary extends React.Component {
   render() {
     if (this.state.didThrow) {
       if (this.state.error) {
-        return `Captured an error: ${this.state.error.message}`;
+        return <p>Captured an error: {this.state.error.message}</p>;
       } else {
-        return `Captured an error: ${this.state.error}`;
+        return <p>Captured an error: {'' + this.state.error}</p>;
       }
     }
     if (this.state.shouldThrow) {
@@ -45,12 +45,12 @@ class Example extends React.Component {
   render() {
     return (
       <div>
+        <button onClick={this.restart}>Reset</button>
         <ErrorBoundary
           buttonText={this.props.buttonText}
           throws={this.props.throws}
           key={this.state.key}
         />
-        <button onClick={this.restart}>Reset</button>
       </div>
     );
   }
@@ -93,7 +93,7 @@ export default class ErrorHandlingTestCases extends React.Component {
           </TestCase.ExpectedResult>
           <Example
             throws={() => {
-              throw null;
+              throw null; // eslint-disable-line no-throw-literal
             }}
           />
         </TestCase>
@@ -106,7 +106,7 @@ export default class ErrorHandlingTestCases extends React.Component {
           </TestCase.Steps>
           <TestCase.ExpectedResult>
             The "Trigger error" button should be replaced with "Captured an
-            error: (TODO: custom error text)". The actual error message should
+            error: A cross-origin error was thrown [...]". The actual error message should
             be logged to the console: "Uncaught Error: Expected true to
             be false".
           </TestCase.ExpectedResult>

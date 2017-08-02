@@ -26,6 +26,7 @@ export type CapturedError = {
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
   willRetry: boolean,
+  shouldIgnoreErrorMessage: boolean,
 };
 
 export type HandleErrorInfo = {
@@ -1188,15 +1189,32 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (capturedErrors === null) {
         capturedErrors = new Map();
       }
-      capturedErrors.set(boundary, {
-        componentName,
-        componentStack,
-        error,
-        errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
-        errorBoundaryFound,
-        errorBoundaryName,
-        willRetry,
-      });
+
+      if (__DEV__) {
+        capturedErrors.set(boundary, {
+          componentName,
+          componentStack,
+          error,
+          errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
+          errorBoundaryFound,
+          errorBoundaryName,
+          willRetry,
+          shouldIgnoreErrorMessage: error != null &&
+            typeof error.__reactShouldIgnoreErrorMessage === 'boolean' &&
+            error.__reactShouldIgnoreErrorMessage,
+        });
+      } else {
+        capturedErrors.set(boundary, {
+          componentName,
+          componentStack,
+          error,
+          errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
+          errorBoundaryFound,
+          errorBoundaryName,
+          willRetry,
+          shouldIgnoreErrorMessage: false,
+        });
+      }
 
       // If we're in the commit phase, defer scheduling an update on the
       // boundary until after the commit is complete

@@ -59,6 +59,7 @@ function logCapturedError(capturedError: CapturedError): void {
       errorBoundaryName,
       errorBoundaryFound,
       willRetry,
+      shouldIgnoreErrorMessage,
     } = capturedError;
 
     const errorSummary = message ? `${name}: ${message}` : name;
@@ -99,12 +100,15 @@ function logCapturedError(capturedError: CapturedError): void {
         'See https://fb.me/react-error-boundaries for more information.';
     }
 
-    console.error(
-      `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
-        `${errorSummary}\n\n` +
-        `The error is located at: ${componentStack}\n\n` +
-        `The error was thrown at: ${formattedCallStack}`,
-    );
+    let combinedMessage = `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n`;
+    if (!shouldIgnoreErrorMessage) {
+      combinedMessage += `${errorSummary}\n\n`;
+    }
+    combinedMessage +=
+      `The error is located at: ${componentStack}\n\n` +
+      `The error was thrown at: ${formattedCallStack}`;
+
+    console.error(combinedMessage);
   } else {
     console.error(
       `React caught an error thrown by one of your components.\n\n${error.stack}`,
