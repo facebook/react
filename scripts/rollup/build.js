@@ -118,6 +118,14 @@ function getFooter(bundleType) {
 
 function updateBabelConfig(babelOpts, bundleType) {
   switch (bundleType) {
+    case FB_DEV:
+    case FB_PROD:
+      return Object.assign({}, babelOpts, {
+        plugins: babelOpts.plugins.concat([
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
+          require('./plugins/wrap-warning-with-env-check'),
+        ]),
+      });
     case UMD_DEV:
     case UMD_PROD:
     case NODE_DEV:
@@ -126,8 +134,12 @@ function updateBabelConfig(babelOpts, bundleType) {
         plugins: babelOpts.plugins.concat([
           // Use object-assign polyfill in open source
           resolve('./scripts/babel/transform-object-assign-require'),
-          // Replace __DEV__ with process.env.NODE_ENV and minify invariant messages
-          require('../error-codes/dev-expression-with-codes'),
+
+          // Minify invariant messages
+          require('../error-codes/replace-invariant-error-codes'),
+
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
+          require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
     default:

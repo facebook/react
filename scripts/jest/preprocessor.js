@@ -25,7 +25,7 @@ var pathToBabel = path.join(
 );
 var pathToModuleMap = require.resolve('fbjs/module-map');
 var pathToBabelPluginDevWithCode = require.resolve(
-  '../error-codes/dev-expression-with-codes'
+  '../error-codes/replace-invariant-error-codes'
 );
 var pathToBabelPluginModules = require.resolve(
   'fbjs-scripts/babel-6/rewrite-modules'
