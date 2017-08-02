@@ -34,8 +34,10 @@ var setTextContent = require('setTextContent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
   var {
     validateProperties: validateInputPropertes,
   } = ReactDOMNullInputValuePropHook;
@@ -72,6 +74,7 @@ if (__DEV__) {
   };
 
   var validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
   };
