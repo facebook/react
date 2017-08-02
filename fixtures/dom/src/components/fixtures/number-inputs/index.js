@@ -1,10 +1,10 @@
-const React = window.React;
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import NumberTestCase from './NumberTestCase';
 import NumberInputDecimal from './NumberInputDecimal';
 import NumberInputExtraZeroes from './NumberInputExtraZeroes';
+
+const React = window.React;
 
 function NumberInputs() {
   return (

@@ -1,7 +1,7 @@
-const React = window.React;
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
+
+const React = window.React;
 
 function BadRender(props) {
   throw props.error;
