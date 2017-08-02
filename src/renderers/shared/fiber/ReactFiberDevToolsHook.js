@@ -22,53 +22,65 @@ if (__DEV__) {
 }
 
 let rendererID = null;
-let injectInternals = null;
-let onCommitRoot = null;
-let onCommitUnmount = null;
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
-) {
-  let {
-    inject,
-    onCommitFiberRoot,
-    onCommitFiberUnmount,
-  } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
 
-  injectInternals = function(internals: Object) {
+function injectInternals(internals: Object): boolean {
+  if (__DEV__) {
+    warning(rendererID == null, 'Cannot inject into DevTools twice.');
+  }
+  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+    // No DevTools
+    return false;
+  }
+  if (!__REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber) {
     if (__DEV__) {
-      warning(rendererID == null, 'Cannot inject into DevTools twice.');
+      warning(
+        false,
+        'The installed version of React DevTools is too old and will not work ' +
+          'with the current version of React. Please update React DevTools. ' +
+          'https://fb.me/react-devtools#installation',
+      );
     }
-    rendererID = inject(internals);
-  };
+    // DevTools exists, even though it doesn't support Fiber.
+    return true;
+  }
+  try {
+    rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject(internals);
+  } catch (err) {
+    // Catch all errors because it is unsafe to throw during initialization.
+    if (__DEV__) {
+      warning(false, 'React DevTools encountered an error: %s.', err);
+    }
+  }
+  // DevTools exists
+  return true;
+}
 
-  onCommitRoot = function(root: FiberRoot) {
-    if (rendererID == null) {
-      return;
+function onCommitRoot(root: FiberRoot) {
+  if (rendererID == null) {
+    return;
+  }
+  try {
+    __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot(rendererID, root);
+  } catch (err) {
+    // Catch all errors because it is unsafe to throw in the commit phase.
+    if (__DEV__) {
+      warning(false, 'React DevTools encountered an error: %s', err);
     }
-    try {
-      onCommitFiberRoot(rendererID, root);
-    } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      if (__DEV__) {
-        warning(false, 'React DevTools encountered an error: %s', err);
-      }
-    }
-  };
+  }
+}
 
-  onCommitUnmount = function(fiber: Fiber) {
-    if (rendererID == null) {
-      return;
+function onCommitUnmount(fiber: Fiber) {
+  if (rendererID == null) {
+    return;
+  }
+  try {
+    __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount(rendererID, fiber);
+  } catch (err) {
+    // Catch all errors because it is unsafe to throw in the commit phase.
+    if (__DEV__) {
+      warning(false, 'React DevTools encountered an error: %s', err);
     }
-    try {
-      onCommitFiberUnmount(rendererID, fiber);
-    } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      if (__DEV__) {
-        warning(false, 'React DevTools encountered an error: %s', err);
-      }
-    }
-  };
+  }
 }
 
 exports.injectInternals = injectInternals;

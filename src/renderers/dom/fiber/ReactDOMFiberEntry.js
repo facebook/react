@@ -15,6 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -788,14 +789,38 @@ var ReactDOMFiber = {
   },
 };
 
-if (typeof injectInternals === 'function') {
-  injectInternals({
-    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
-    findHostInstanceByFiber: DOMRenderer.findHostInstance,
-    // This is an enum because we may add more (e.g. profiler build)
-    bundleType: __DEV__ ? 1 : 0,
-    version: ReactVersion,
-  });
+const foundDevTools = injectInternals({
+  findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+  findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  // This is an enum because we may add more (e.g. profiler build)
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+});
+
+if (__DEV__) {
+  if (
+    !foundDevTools &&
+    ExecutionEnvironment.canUseDOM &&
+    window.top === window.self
+  ) {
+    // If we're in Chrome or Firefox, provide a download link if not installed.
+    if (
+      (navigator.userAgent.indexOf('Chrome') > -1 &&
+        navigator.userAgent.indexOf('Edge') === -1) ||
+      navigator.userAgent.indexOf('Firefox') > -1
+    ) {
+      var showFileUrlMessage = window.location.protocol.indexOf('http') === -1;
+      console.info(
+        '%cDownload the React DevTools ' +
+          (showFileUrlMessage
+            ? 'and use an HTTP server (instead of a file: URL) '
+            : '') +
+          'for a better development experience: ' +
+          'https://fb.me/react-devtools',
+        'font-weight:bold',
+      );
+    }
+  }
 }
 
 module.exports = ReactDOMFiber;
