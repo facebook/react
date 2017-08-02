@@ -812,11 +812,12 @@ if (__DEV__) {
       var showFileUrlMessage = window.location.protocol.indexOf('http') === -1;
       console.info(
         '%cDownload the React DevTools ' +
-          (showFileUrlMessage
-            ? 'and use an HTTP server (instead of a file: URL) '
-            : '') +
           'for a better development experience: ' +
-          'https://fb.me/react-devtools',
+          'https://fb.me/react-devtools' +
+          (showFileUrlMessage
+            ? '\nYou might need to use a local HTTP server (instead of file://): ' +
+                'https://fb.me/react-devtools-faq'
+            : ''),
         'font-weight:bold',
       );
     }
