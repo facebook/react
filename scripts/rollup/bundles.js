@@ -179,7 +179,7 @@ const bundles = [
     isRenderer: true,
     label: 'dom-server-browser',
     manglePropertiesOnProd: false,
-    name: 'react-dom/server-browser',
+    name: 'react-dom/server.browser',
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
@@ -204,7 +204,7 @@ const bundles = [
     isRenderer: true,
     label: 'dom-server-server-node',
     manglePropertiesOnProd: false,
-    name: 'react-dom/server-node',
+    name: 'react-dom/server.node',
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
