@@ -37,7 +37,7 @@ function injectInternals(internals: Object): boolean {
         false,
         'The installed version of React DevTools is too old and will not work ' +
           'with the current version of React. Please update React DevTools. ' +
-          'https://fb.me/react-devtools#installation',
+          'https://fb.me/react-devtools',
       );
     }
     // DevTools exists, even though it doesn't support Fiber.
@@ -56,7 +56,10 @@ function injectInternals(internals: Object): boolean {
 }
 
 function onCommitRoot(root: FiberRoot) {
-  if (rendererID == null) {
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
+    rendererID == null
+  ) {
     return;
   }
   try {
@@ -70,7 +73,10 @@ function onCommitRoot(root: FiberRoot) {
 }
 
 function onCommitUnmount(fiber: Fiber) {
-  if (rendererID == null) {
+  if (
+    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
+    rendererID == null
+  ) {
     return;
   }
   try {
