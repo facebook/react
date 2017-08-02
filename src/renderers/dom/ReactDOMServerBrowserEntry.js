@@ -13,11 +13,26 @@
 
 var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
 var ReactVersion = require('ReactVersion');
+var invariant = require('invariant');
 
 require('ReactDOMInjection');
 
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,
   renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
+  renderToStream() {
+    invariant(
+      false,
+      'ReactDOMServer.renderToStream(): The streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToString() instead.',
+    );
+  },
+  renderToStaticStream() {
+    invariant(
+      false,
+      'ReactDOMServer.renderToStaticStream(): The streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+    );
+  },
   version: ReactVersion,
 };
