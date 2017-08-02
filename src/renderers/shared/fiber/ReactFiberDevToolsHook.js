@@ -21,17 +21,30 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-let rendererID = null;
+let onCommitFiberRoot = null;
+let onCommitFiberUnmount = null;
+let hasLoggedError = false;
+
+function catchErrors(fn) {
+  return function(arg) {
+    try {
+      return fn(arg);
+    } catch (err) {
+      if (__DEV__ && !hasLoggedError) {
+        hasLoggedError = true;
+        warning(false, 'React DevTools encountered an error: %s', err);
+      }
+    }
+  };
+}
 
 function injectInternals(internals: Object): boolean {
-  if (__DEV__) {
-    warning(rendererID == null, 'Cannot inject into DevTools twice.');
-  }
   if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
     // No DevTools
     return false;
   }
-  if (!__REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber) {
+  const hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (!hook.supportsFiber) {
     if (__DEV__) {
       warning(
         false,
@@ -44,7 +57,14 @@ function injectInternals(internals: Object): boolean {
     return true;
   }
   try {
-    rendererID = __REACT_DEVTOOLS_GLOBAL_HOOK__.inject(internals);
+    const rendererID = hook.inject(internals);
+    // We have successfully injected, so now it is safe to set up hooks.
+    onCommitFiberRoot = catchErrors(root =>
+      hook.onCommitFiberRoot(rendererID, root),
+    );
+    onCommitFiberUnmount = catchErrors(fiber =>
+      hook.onCommitFiberUnmount(rendererID, fiber),
+    );
   } catch (err) {
     // Catch all errors because it is unsafe to throw during initialization.
     if (__DEV__) {
@@ -56,36 +76,14 @@ function injectInternals(internals: Object): boolean {
 }
 
 function onCommitRoot(root: FiberRoot) {
-  if (
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
-    rendererID == null
-  ) {
-    return;
-  }
-  try {
-    __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberRoot(rendererID, root);
-  } catch (err) {
-    // Catch all errors because it is unsafe to throw in the commit phase.
-    if (__DEV__) {
-      warning(false, 'React DevTools encountered an error: %s', err);
-    }
+  if (typeof onCommitFiberRoot === 'function') {
+    onCommitFiberRoot(root);
   }
 }
 
 function onCommitUnmount(fiber: Fiber) {
-  if (
-    typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined' ||
-    rendererID == null
-  ) {
-    return;
-  }
-  try {
-    __REACT_DEVTOOLS_GLOBAL_HOOK__.onCommitFiberUnmount(rendererID, fiber);
-  } catch (err) {
-    // Catch all errors because it is unsafe to throw in the commit phase.
-    if (__DEV__) {
-      warning(false, 'React DevTools encountered an error: %s', err);
-    }
+  if (typeof onCommitFiberUnmount === 'function') {
+    onCommitFiberUnmount(fiber);
   }
 }
 
