@@ -10,7 +10,7 @@
 'use strict';
 
 let babel = require('babel-core');
-let devExpressionWithCodes = require('../dev-expression-with-codes');
+let devExpressionWithCodes = require('../replace-invariant-error-codes');
 
 function transform(input) {
   return babel.transform(input, {

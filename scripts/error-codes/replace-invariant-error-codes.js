@@ -17,7 +17,7 @@ var errorMap = invertObject(existingErrorMap);
 module.exports = function(babel) {
   var t = babel.types;
 
-  var SEEN_SYMBOL = Symbol('dev-expression-with-codes.seen');
+  var SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
   // Generate a hygienic identifier
   function getProdInvariantIdentifier(path, localState) {

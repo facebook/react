@@ -136,7 +136,7 @@ function updateBabelConfig(babelOpts, bundleType) {
           resolve('./scripts/babel/transform-object-assign-require'),
 
           // Minify invariant messages
-          require('../error-codes/dev-expression-with-codes'),
+          require('../error-codes/replace-invariant-error-codes'),
 
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('./plugins/wrap-warning-with-env-check'),
