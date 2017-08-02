@@ -12,7 +12,6 @@
 'use strict';
 
 var DOMMarkupOperations = require('DOMMarkupOperations');
-var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
@@ -272,27 +271,22 @@ function createOpenTagMarkup(
     if (propValue == null) {
       continue;
     }
-    if (!registrationNameModules.hasOwnProperty(propKey)) {
-      if (propKey === STYLE) {
-        propValue = createMarkupForStyles(propValue, instForDebug);
-      }
-      var markup = null;
-      if (isCustomComponent(tagLowercase, props)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = DOMMarkupOperations.createMarkupForCustomAttribute(
-            propKey,
-            propValue,
-          );
-        }
-      } else {
-        markup = DOMMarkupOperations.createMarkupForProperty(
+    if (propKey === STYLE) {
+      propValue = createMarkupForStyles(propValue, instForDebug);
+    }
+    var markup = null;
+    if (isCustomComponent(tagLowercase, props)) {
+      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        markup = DOMMarkupOperations.createMarkupForCustomAttribute(
           propKey,
           propValue,
         );
       }
-      if (markup) {
-        ret += ' ' + markup;
-      }
+    } else {
+      markup = DOMMarkupOperations.createMarkupForProperty(propKey, propValue);
+    }
+    if (markup) {
+      ret += ' ' + markup;
     }
   }
 
