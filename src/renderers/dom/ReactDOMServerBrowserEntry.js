@@ -6,18 +6,33 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactDOMServerEntry
+ * @providesModule ReactDOMServerBrowserEntry
  */
 
 'use strict';
 
 var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
 var ReactVersion = require('ReactVersion');
+var invariant = require('fbjs/lib/invariant');
 
 require('ReactDOMInjection');
 
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,
   renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
+  renderToStream() {
+    invariant(
+      false,
+      'ReactDOMServer.renderToStream(): The streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToString() instead.',
+    );
+  },
+  renderToStaticStream() {
+    invariant(
+      false,
+      'ReactDOMServer.renderToStaticStream(): The streaming API is not available ' +
+        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+    );
+  },
   version: ReactVersion,
 };

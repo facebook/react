@@ -18,7 +18,6 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactDOMNodeStream;
 let ReactTestUtils;
 
 const stream = require('stream');
@@ -120,7 +119,7 @@ async function renderIntoStream(reactElement, errorCount = 0) {
     () =>
       new Promise(resolve => {
         let writable = new DrainWritable();
-        ReactDOMNodeStream.renderToStream(reactElement).pipe(writable);
+        ReactDOMServer.renderToStream(reactElement).pipe(writable);
         writable.on('finish', () => resolve(writable.buffer));
       }),
     errorCount,
@@ -347,14 +346,6 @@ function resetModules() {
   }
   require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMServer = require('react-dom/server');
-
-  // Finally, reset modules one more time before importing the stream renderer.
-  jest.resetModuleRegistry();
-  if (typeof onAfterResetModules === 'function') {
-    onAfterResetModules();
-  }
-  require('ReactFeatureFlags').disableNewFiberFeatures = false;
-  ReactDOMNodeStream = require('react-dom/node-stream');
 }
 
 describe('ReactDOMServerIntegration', () => {
