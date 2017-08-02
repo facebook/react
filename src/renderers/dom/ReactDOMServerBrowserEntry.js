@@ -13,7 +13,7 @@
 
 var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
 var ReactVersion = require('ReactVersion');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 
 require('ReactDOMInjection');
 
