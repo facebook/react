@@ -178,7 +178,7 @@ var DOMProperty = {
     xmlBase: 'xml:base',
     xmlnsXlink: 'xmlns:xlink',
     xmlLang: 'xml:lang',
-    xmlSpace: 'xml:space'
+    xmlSpace: 'xml:space',
   },
 
   attributeNamespace: {
@@ -336,6 +336,12 @@ var DOMProperty = {
     return DOMProperty.hasPositiveNumericValue.hasOwnProperty(name);
   },
 
+  // Do not assign reserved properties or functions. Event handlers should
+  // not exist in markup.
+  isWriteable(name, value) {
+    return !DOMProperty.isReservedProp(name) && typeof value !== 'function';
+  },
+
   useProperty(name) {
     return DOMProperty.mustUseProperty.hasOwnProperty(name);
   },
@@ -344,12 +350,12 @@ var DOMProperty = {
     return DOMProperty.mutationMethod.hasOwnProperty(name);
   },
 
-  needsEmptyStringValue (name, value) {
+  needsEmptyStringValue(name, value) {
     return (
       DOMProperty.isBooleanValue(name) ||
       (DOMProperty.isOverloadedBooleanValue(name) && value === true)
-    )
-  }
+    );
+  },
 };
 
 module.exports = DOMProperty;

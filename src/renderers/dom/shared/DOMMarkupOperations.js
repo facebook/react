@@ -88,18 +88,17 @@ var DOMMarkupOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    if (DOMProperty.isReservedProp(name)) {
-      return null
-    } else if (shouldIgnoreValue(name, value)) {
+    if (!DOMProperty.isWriteable(name, value)) {
+      return null;
+    }
+
+    if (shouldIgnoreValue(name, value)) {
       return '';
     }
 
     var attributeName = DOMProperty.getAttributeName(name);
-
     if (DOMProperty.needsEmptyStringValue(name, value)) {
       return attributeName + '=""';
-    } else if (value == null) {
-      return '';
     }
 
     return attributeName + '=' + quoteAttributeValueForBrowser(value);

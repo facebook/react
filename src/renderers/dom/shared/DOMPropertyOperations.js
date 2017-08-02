@@ -84,55 +84,50 @@ var DOMPropertyOperations = {
         DOMProperty.useProperty(name)
       ) {
         return node[name];
-      } else if (DOMProperty.hasAttributeName(name)) {
-        var attributeName = DOMProperty.getAttributeName(name);
-        var stringValue = null;
+      }
 
-        if (DOMProperty.isOverloadedBooleanValue(name)) {
-          if (node.hasAttribute(attributeName)) {
-            var value = node.getAttribute(attributeName);
-            if (value === '') {
-              return true;
-            }
-            if (shouldIgnoreValue(name, expected)) {
-              return value;
-            }
-            if (value === '' + expected) {
-              return expected;
-            }
+      var attributeName = DOMProperty.getAttributeName(name);
+      var stringValue = null;
+
+      if (DOMProperty.isOverloadedBooleanValue(name)) {
+        if (node.hasAttribute(attributeName)) {
+          var value = node.getAttribute(attributeName);
+          if (value === '') {
+            return true;
+          }
+          if (shouldIgnoreValue(name, expected)) {
             return value;
           }
-        } else if (node.hasAttribute(attributeName)) {
-          if (shouldIgnoreValue(name, expected)) {
-            // We had an attribute but shouldn't have had one, so read it
-            // for the error message.
-            return node.getAttribute(attributeName);
-          }
-          if (DOMProperty.isBooleanValue(name)) {
-            // If this was a boolean, it doesn't matter what the value is
-            // the fact that we have it is the same as the expected.
+          if (value === '' + expected) {
             return expected;
           }
-          // Even if this property uses a namespace we use getAttribute
-          // because we assume its namespaced name is the same as our config.
-          // To use getAttributeNS we need the local name which we don't have
-          // in our config atm.
-          stringValue = node.getAttribute(attributeName);
+          return value;
         }
-
+      }
+      if (node.hasAttribute(attributeName)) {
         if (shouldIgnoreValue(name, expected)) {
-          return stringValue === null ? expected : stringValue;
-        } else if (stringValue === '' + expected) {
-          return expected;
-        } else {
-          return stringValue;
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return node.getAttribute(attributeName);
         }
-      } else if (!DOMProperty.isReservedProp(name)) {
-        return DOMPropertyOperations.getValueForAttribute(
-          node,
-          name,
-          expected,
-        );
+        if (DOMProperty.isBooleanValue(name)) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          return expected;
+        }
+        // Even if this property uses a namespace we use getAttribute
+        // because we assume its namespaced name is the same as our config.
+        // To use getAttributeNS we need the local name which we don't have
+        // in our config atm.
+        stringValue = node.getAttribute(attributeName);
+      }
+
+      if (shouldIgnoreValue(name, expected)) {
+        return stringValue === null ? expected : stringValue;
+      } else if (stringValue === '' + expected) {
+        return expected;
+      } else {
+        return stringValue;
       }
     }
   },

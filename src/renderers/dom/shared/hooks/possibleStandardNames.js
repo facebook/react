@@ -303,7 +303,7 @@ var possibleStandardNames = {
   'xml:space': 'xmlSpace',
   xmlspace: 'xmlSpace',
   ychannelselector: 'yChannelSelector',
-  zoomandpan: 'zoomAndPan'
-}
+  zoomandpan: 'zoomAndPan',
+};
 
-module.exports = possibleStandardNames
+module.exports = possibleStandardNames;

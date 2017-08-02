@@ -152,7 +152,11 @@ describe('DOMPropertyOperations', () => {
     });
 
     it('should remove property properly even with different name', () => {
-      DOMPropertyOperations.setValueForProperty(stubNode, 'className', 'selected');
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'className',
+        'selected',
+      );
       expect(stubNode.className).toBe('selected');
 
       DOMPropertyOperations.setValueForProperty(stubNode, 'class', null);

@@ -39,8 +39,8 @@ if (__DEV__) {
   var EVENT_NAME_REGEX = /^on[A-Z]/;
   var possibleStandardNames = require('possibleStandardNames');
 
-  for (var key in DOMProperty.attributeName) {
-    possibleStandardNames[key.toLowerCase()] = key;
+  for (var attributeName in DOMProperty.attributeName) {
+    possibleStandardNames[attributeName.toLowerCase()] = attributeName;
   }
 
   var validateProperty = function(tagName, name, debugID) {

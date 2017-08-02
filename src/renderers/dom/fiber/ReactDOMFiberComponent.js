@@ -983,7 +983,6 @@ var ReactDOMFiberComponent = {
       } else if (__DEV__) {
         // Validate that the properties correspond to their expected values.
         var serverValue;
-        var propertyInfo;
         if (
           propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
           // Controlled attributes are not validated
