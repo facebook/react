@@ -43,7 +43,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   invariant(
     false,
     'React depends on requestAnimationFrame. Make sure that you load a ' +
-      'polyfill in older browsers.',
+      'polyfill in older browsers. http://fb.me/react-polyfills',
   );
 } else if (typeof requestIdleCallback !== 'function') {
   // Polyfill requestIdleCallback.
