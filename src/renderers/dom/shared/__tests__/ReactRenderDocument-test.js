@@ -327,17 +327,6 @@ describe('rendering React components at document', () => {
 
   if (ReactDOMFeatureFlags.useFiber) {
     describe('with new explicit hydration API', () => {
-      it('warns if there is no server rendered markup to hydrate', () => {
-        spyOn(console, 'error');
-        const container = document.createElement('div');
-        ReactDOM.hydrate(<div />, container);
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'hydrate(): Expected to hydrate from server-rendered markup, but the passed ' +
-            'DOM container node was empty. React will create the DOM from scratch.',
-        );
-      });
-
       it('should be able to adopt server markup', () => {
         class Root extends React.Component {
           render() {
