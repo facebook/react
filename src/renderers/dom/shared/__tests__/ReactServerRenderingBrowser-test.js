@@ -12,7 +12,6 @@
 'use strict';
 
 var React;
-var ReactDOM;
 var ReactDOMServer;
 var ReactDOMServerBrowser;
 
@@ -27,13 +26,15 @@ describe('ReactServerRenderingBrowser', () => {
   });
 
   it('provides the same top-level API as react-dom/server', () => {
-    expect(Object.keys(ReactDOMServerBrowser)).toEqual(Object.keys(ReactDOMServer));
+    expect(Object.keys(ReactDOMServerBrowser)).toEqual(
+      Object.keys(ReactDOMServer),
+    );
   });
 
   it('returns the same results as react-dom/server', () => {
     class Nice extends React.Component {
       render() {
-        return <h2>I am feeling very good today, thanks, how are you?</h2>
+        return <h2>I am feeling very good today, thanks, how are you?</h2>;
       }
     }
     function Greeting() {
@@ -44,31 +45,23 @@ describe('ReactServerRenderingBrowser', () => {
         </div>
       );
     }
-    expect(
-      ReactDOMServerBrowser.renderToString(<Greeting />)
-    ).toEqual(
-      ReactDOMServer.renderToString(<Greeting />)
+    expect(ReactDOMServerBrowser.renderToString(<Greeting />)).toEqual(
+      ReactDOMServer.renderToString(<Greeting />),
     );
-    expect(
-      ReactDOMServerBrowser.renderToStaticMarkup(<Greeting />)
-    ).toEqual(
-      ReactDOMServer.renderToStaticMarkup(<Greeting />)
+    expect(ReactDOMServerBrowser.renderToStaticMarkup(<Greeting />)).toEqual(
+      ReactDOMServer.renderToStaticMarkup(<Greeting />),
     );
   });
 
   if (ReactDOMFeatureFlags.useFiber) {
     it('throws meaningfully for server-only APIs', () => {
-      expect(() => 
-        ReactDOMServerBrowser.renderToStream(<div />)
-      ).toThrow(
+      expect(() => ReactDOMServerBrowser.renderToStream(<div />)).toThrow(
         'ReactDOMServer.renderToStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToString() instead.'
+          'in the browser. Use ReactDOMServer.renderToString() instead.',
       );
-      expect(() => 
-        ReactDOMServerBrowser.renderToStaticStream(<div />)
-      ).toThrow(
+      expect(() => ReactDOMServerBrowser.renderToStaticStream(<div />)).toThrow(
         'ReactDOMServer.renderToStaticStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.'
+          'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
       );
     });
   }
