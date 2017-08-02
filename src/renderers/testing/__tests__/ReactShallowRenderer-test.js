@@ -15,7 +15,7 @@ let createRenderer;
 let PropTypes;
 let React;
 
-describe('ReactTestUtils', () => {
+describe('ReactShallowRenderer', () => {
   beforeEach(() => {
     createRenderer = require('react-test-renderer/shallow').createRenderer;
     PropTypes = require('prop-types');
