@@ -461,9 +461,9 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.nodeType).toBe(TEXT_NODE_TYPE);
         expect(e.nodeValue).toMatch('0');
 
-        // TODO: This one is broken because client renders a node
-        // but server returns empty HTML.
-        // expect(await render('')).toBe(null);
+        // Empty string is special because client renders a node
+        // but server returns empty HTML. So we compare parent text.
+        expect((await render(<div>{''}</div>)).textContent).toBe('');
 
         expect(await render([])).toBe(null);
         expect(await render(false)).toBe(null);
