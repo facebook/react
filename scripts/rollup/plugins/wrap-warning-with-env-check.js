@@ -16,10 +16,6 @@ module.exports = function(babel, options) {
   var SEEN_SYMBOL = Symbol('expression.seen');
 
   return {
-    pre: function() {
-      this.prodInvariantIdentifier = null;
-    },
-
     visitor: {
       CallExpression: {
         exit: function(path) {
