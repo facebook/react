@@ -825,17 +825,20 @@ if (__DEV__) {
         navigator.userAgent.indexOf('Edge') === -1) ||
       navigator.userAgent.indexOf('Firefox') > -1
     ) {
-      var showFileUrlMessage = window.location.protocol.indexOf('http') === -1;
-      console.info(
-        '%cDownload the React DevTools ' +
-          'for a better development experience: ' +
-          'https://fb.me/react-devtools' +
-          (showFileUrlMessage
-            ? '\nYou might need to use a local HTTP server (instead of file://): ' +
-                'https://fb.me/react-devtools-faq'
-            : ''),
-        'font-weight:bold',
-      );
+      const protocol = window.location.protocol;
+      // Don't warn in exotic cases like chrome-extension://.
+      if (/^(https?|file):$/.test(protocol)) {
+        console.info(
+          '%cDownload the React DevTools ' +
+            'for a better development experience: ' +
+            'https://fb.me/react-devtools' +
+            (protocol === 'file:'
+              ? '\nYou might need to use a local HTTP server (instead of file://): ' +
+                  'https://fb.me/react-devtools-faq'
+              : ''),
+          'font-weight:bold',
+        );
+      }
     }
   }
 }
