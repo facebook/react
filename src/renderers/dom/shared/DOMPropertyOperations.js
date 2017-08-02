@@ -50,13 +50,13 @@ function isAttributeNameSafe(attributeName) {
 
 // shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
+function shouldIgnoreValue(name, value) {
   return (
     value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
+    (DOMProperty.isBooleanValue(name) && !value) ||
+    (DOMProperty.isNumericValue(name) && isNaN(value)) ||
+    (DOMProperty.isPositiveNumericValue(name) && value < 1) ||
+    (DOMProperty.isOverloadedBooleanValue(name) && value === false)
   );
 }
 
@@ -79,64 +79,55 @@ var DOMPropertyOperations = {
    */
   getValueForProperty: function(node, name, expected) {
     if (__DEV__) {
-      var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-        ? DOMProperty.properties[name]
-        : null;
-      if (propertyInfo) {
-        var mutationMethod = propertyInfo.mutationMethod;
-        if (mutationMethod || propertyInfo.mustUseProperty) {
-          return node[propertyInfo.propertyName];
-        } else {
-          var attributeName = propertyInfo.attributeName;
+      if (
+        DOMProperty.useMutationMethod(name) ||
+        DOMProperty.useProperty(name)
+      ) {
+        return node[name];
+      }
 
-          var stringValue = null;
+      var attributeName = DOMProperty.getAttributeName(name);
+      var stringValue = null;
 
-          if (propertyInfo.hasOverloadedBooleanValue) {
-            if (node.hasAttribute(attributeName)) {
-              var value = node.getAttribute(attributeName);
-              if (value === '') {
-                return true;
-              }
-              if (shouldIgnoreValue(propertyInfo, expected)) {
-                return value;
-              }
-              if (value === '' + expected) {
-                return expected;
-              }
-              return value;
-            }
-          } else if (node.hasAttribute(attributeName)) {
-            if (shouldIgnoreValue(propertyInfo, expected)) {
-              // We had an attribute but shouldn't have had one, so read it
-              // for the error message.
-              return node.getAttribute(attributeName);
-            }
-            if (propertyInfo.hasBooleanValue) {
-              // If this was a boolean, it doesn't matter what the value is
-              // the fact that we have it is the same as the expected.
-              return expected;
-            }
-            // Even if this property uses a namespace we use getAttribute
-            // because we assume its namespaced name is the same as our config.
-            // To use getAttributeNS we need the local name which we don't have
-            // in our config atm.
-            stringValue = node.getAttribute(attributeName);
+      if (DOMProperty.isOverloadedBooleanValue(name)) {
+        if (node.hasAttribute(attributeName)) {
+          var value = node.getAttribute(attributeName);
+          if (value === '') {
+            return true;
           }
-
-          if (shouldIgnoreValue(propertyInfo, expected)) {
-            return stringValue === null ? expected : stringValue;
-          } else if (stringValue === '' + expected) {
+          if (shouldIgnoreValue(name, expected)) {
+            return value;
+          }
+          if (value === '' + expected) {
             return expected;
-          } else {
-            return stringValue;
           }
+          return value;
         }
-      } else if (DOMProperty.isCustomAttribute(name)) {
-        return DOMPropertyOperations.diffValueForAttribute(
-          node,
-          name,
-          expected,
-        );
+      }
+      if (node.hasAttribute(attributeName)) {
+        if (shouldIgnoreValue(name, expected)) {
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return node.getAttribute(attributeName);
+        }
+        if (DOMProperty.isBooleanValue(name)) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          return expected;
+        }
+        // Even if this property uses a namespace we use getAttribute
+        // because we assume its namespaced name is the same as our config.
+        // To use getAttributeNS we need the local name which we don't have
+        // in our config atm.
+        stringValue = node.getAttribute(attributeName);
+      }
+
+      if (shouldIgnoreValue(name, expected)) {
+        return stringValue === null ? expected : stringValue;
+      } else if (stringValue === '' + expected) {
+        return expected;
+      } else {
+        return stringValue;
       }
     }
   },
@@ -170,39 +161,20 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
-    if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod) {
-        mutationMethod(node, value);
-      } else if (shouldIgnoreValue(propertyInfo, value)) {
+    if (!DOMProperty.isReservedProp(name)) {
+      if (DOMProperty.useMutationMethod(name)) {
+        DOMProperty.mutationMethod[name](node, value);
+      } else if (shouldIgnoreValue(name, value)) {
         DOMPropertyOperations.deleteValueForProperty(node, name);
         return;
-      } else if (propertyInfo.mustUseProperty) {
+      } else if (DOMProperty.useProperty(name)) {
         // Contrary to `setAttribute`, object properties are properly
         // `toString`ed by IE8/9.
-        node[propertyInfo.propertyName] = value;
+        node[name] = value;
       } else {
-        var attributeName = propertyInfo.attributeName;
-        var namespace = propertyInfo.attributeNamespace;
-        // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
-        if (namespace) {
-          node.setAttributeNS(namespace, attributeName, '' + value);
-        } else if (
-          propertyInfo.hasBooleanValue ||
-          (propertyInfo.hasOverloadedBooleanValue && value === true)
-        ) {
-          node.setAttribute(attributeName, '');
-        } else {
-          node.setAttribute(attributeName, '' + value);
-        }
+        DOMPropertyOperations.setValueForAttribute(node, name, value);
+        return;
       }
-    } else if (DOMProperty.isCustomAttribute(name)) {
-      DOMPropertyOperations.setValueForAttribute(node, name, value);
-      return;
     }
 
     if (__DEV__) {
@@ -217,13 +189,24 @@ var DOMPropertyOperations = {
   },
 
   setValueForAttribute: function(node, name, value) {
-    if (!isAttributeNameSafe(name)) {
+    var attributeName = DOMProperty.getAttributeName(name);
+
+    if (!isAttributeNameSafe(attributeName)) {
       return;
     }
-    if (value == null) {
-      node.removeAttribute(name);
+
+    if (DOMProperty.hasAttributeNamespace(name)) {
+      node.setAttributeNS(
+        DOMProperty.attributeNamespace[name],
+        attributeName,
+        '' + value,
+      );
+    } else if (DOMProperty.needsEmptyStringValue(name, value)) {
+      node.setAttribute(attributeName, '');
+    } else if (value == null) {
+      node.removeAttribute(attributeName);
     } else {
-      node.setAttribute(name, '' + value);
+      node.setAttribute(attributeName, '' + value);
     }
 
     if (__DEV__) {
@@ -244,7 +227,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForAttribute: function(node, name) {
-    node.removeAttribute(name);
+    node.removeAttribute(DOMProperty.getAttributeName(name));
     if (__DEV__) {
       ReactInstrumentation.debugTool.onHostOperation({
         instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
@@ -261,25 +244,14 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
-    if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod) {
-        mutationMethod(node, undefined);
-      } else if (propertyInfo.mustUseProperty) {
-        var propName = propertyInfo.propertyName;
-        if (propertyInfo.hasBooleanValue) {
-          node[propName] = false;
-        } else {
-          node[propName] = '';
-        }
+    if (!DOMProperty.isReservedProp(name)) {
+      if (DOMProperty.useMutationMethod(name)) {
+        DOMProperty.mutationMethod[name](node, undefined);
+      } else if (DOMProperty.useProperty(name)) {
+        node[name] = DOMProperty.isBooleanValue(name) ? false : '';
       } else {
-        node.removeAttribute(propertyInfo.attributeName);
+        node.removeAttribute(DOMProperty.getAttributeName(name));
       }
-    } else if (DOMProperty.isCustomAttribute(name)) {
-      node.removeAttribute(name);
     }
 
     if (__DEV__) {

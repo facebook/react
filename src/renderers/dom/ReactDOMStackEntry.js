@@ -27,7 +27,6 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-require('ReactDOMInjection');
 require('ReactDOMClientInjection');
 require('ReactDOMStackInjection');
 

@@ -14,8 +14,6 @@
 var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
 var ReactVersion = require('ReactVersion');
 
-require('ReactDOMInjection');
-
 module.exports = {
   renderToStream: ReactDOMNodeStreamRenderer.renderToStream,
   renderToStaticStream: ReactDOMNodeStreamRenderer.renderToStaticStream,

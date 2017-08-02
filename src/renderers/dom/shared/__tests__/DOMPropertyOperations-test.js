@@ -18,7 +18,6 @@ describe('DOMPropertyOperations', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    require('ReactDOMInjection');
 
     // TODO: can we express this test with only public API?
     DOMPropertyOperations = require('DOMPropertyOperations');
@@ -116,12 +115,7 @@ describe('DOMPropertyOperations', () => {
     it('should use mutation method where applicable', () => {
       var foobarSetter = jest.fn();
       // inject foobar DOM property
-      DOMProperty.injection.injectDOMPropertyConfig({
-        Properties: {foobar: null},
-        DOMMutationMethods: {
-          foobar: foobarSetter,
-        },
-      });
+      DOMProperty.mutationMethod.foobar = foobarSetter;
 
       DOMPropertyOperations.setValueForProperty(
         stubNode,
@@ -158,22 +152,14 @@ describe('DOMPropertyOperations', () => {
     });
 
     it('should remove property properly even with different name', () => {
-      // Suppose 'foobar' is a property that corresponds to the underlying
-      // 'className' property:
-      DOMProperty.injection.injectDOMPropertyConfig({
-        Properties: {foobar: DOMProperty.injection.MUST_USE_PROPERTY},
-        DOMPropertyNames: {
-          foobar: 'className',
-        },
-        DOMAttributeNames: {
-          foobar: 'class',
-        },
-      });
-
-      DOMPropertyOperations.setValueForProperty(stubNode, 'foobar', 'selected');
+      DOMPropertyOperations.setValueForProperty(
+        stubNode,
+        'className',
+        'selected',
+      );
       expect(stubNode.className).toBe('selected');
 
-      DOMPropertyOperations.setValueForProperty(stubNode, 'foobar', null);
+      DOMPropertyOperations.setValueForProperty(stubNode, 'class', null);
       // className should be '', not 'null' or null (which becomes 'null' in
       // some browsers)
       expect(stubNode.className).toBe('');

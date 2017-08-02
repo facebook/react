@@ -788,9 +788,14 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('unknown attributes', function() {
-      itRenders('no unknown attributes', async render => {
-        const e = await render(<div foo="bar" />, 1);
-        expect(e.getAttribute('foo')).toBe(null);
+      itRenders('unknown attributes', async render => {
+        const e = await render(
+          <div foo="bar" />,
+          ReactDOMFeatureFlags.allowCustomAttributes ? 0 : 1,
+        );
+        expect(e.getAttribute('foo')).toBe(
+          ReactDOMFeatureFlags.allowCustomAttributes ? 'bar' : null,
+        );
       });
 
       itRenders('unknown data- attributes', async render => {
@@ -806,8 +811,13 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'no unknown attributes for non-standard elements',
         async render => {
-          const e = await render(<nonstandard foo="bar" />, 1);
-          expect(e.getAttribute('foo')).toBe(null);
+          const e = await render(
+            <nonstandard foo="bar" />,
+            ReactDOMFeatureFlags.allowCustomAttributes ? 0 : 1,
+          );
+          expect(e.getAttribute('foo')).toBe(
+            ReactDOMFeatureFlags.allowCustomAttributes ? 'bar' : null,
+          );
         },
       );
 
@@ -2585,20 +2595,6 @@ describe('ReactDOMServerIntegration', () => {
 
   describe('dynamic injection', () => {
     beforeEach(() => {
-      // HACK: we reset modules several times during the test which breaks
-      // dynamic injection. So we resort to telling resetModules() to run
-      // our custom init code every time after resetting. We could have a nicer
-      // way to do this, but this is the only test that needs it, and it will
-      // be removed anyway when we switch to static injection.
-      onAfterResetModules = () => {
-        const DOMProperty = require('DOMProperty');
-        DOMProperty.injection.injectDOMPropertyConfig({
-          isCustomAttribute: function(name) {
-            return name.indexOf('foo-') === 0;
-          },
-          Properties: {foobar: null},
-        });
-      };
       resetModules();
     });
 

@@ -11,134 +11,23 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+var RESERVED_PROPS = {
+  children: true,
+  dangerouslySetInnerHTML: true,
+  key: true,
+  ref: true,
 
-function checkMask(value, bitmask) {
-  return (value & bitmask) === bitmask;
-}
-
-var DOMPropertyInjection = {
-  /**
-   * Mapping from normalized, camelcased property names to a configuration that
-   * specifies how the associated DOM property should be accessed or rendered.
-   */
-  MUST_USE_PROPERTY: 0x1,
-  HAS_BOOLEAN_VALUE: 0x4,
-  HAS_NUMERIC_VALUE: 0x8,
-  HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
-  HAS_OVERLOADED_BOOLEAN_VALUE: 0x20,
-
-  /**
-   * Inject some specialized knowledge about the DOM. This takes a config object
-   * with the following properties:
-   *
-   * isCustomAttribute: function that given an attribute name will return true
-   * if it can be inserted into the DOM verbatim. Useful for data-* or aria-*
-   * attributes where it's impossible to enumerate all of the possible
-   * attribute names,
-   *
-   * Properties: object mapping DOM property name to one of the
-   * DOMPropertyInjection constants or null. If your attribute isn't in here,
-   * it won't get written to the DOM.
-   *
-   * DOMAttributeNames: object mapping React attribute name to the DOM
-   * attribute name. Attribute names not specified use the **lowercase**
-   * normalized name.
-   *
-   * DOMAttributeNamespaces: object mapping React attribute name to the DOM
-   * attribute namespace URL. (Attribute names not specified use no namespace.)
-   *
-   * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
-   * Property names not specified use the normalized name.
-   *
-   * DOMMutationMethods: Properties that require special mutation methods. If
-   * `value` is undefined, the mutation method should unset the property.
-   *
-   * @param {object} domPropertyConfig the config as described above.
-   */
-  injectDOMPropertyConfig: function(domPropertyConfig) {
-    var Injection = DOMPropertyInjection;
-    var Properties = domPropertyConfig.Properties || {};
-    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-    var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
-
-    if (domPropertyConfig.isCustomAttribute) {
-      DOMProperty._isCustomAttributeFunctions.push(
-        domPropertyConfig.isCustomAttribute,
-      );
-    }
-
-    for (var propName in Properties) {
-      invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
-        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-          "'%s' which has already been injected. You may be accidentally " +
-          'injecting the same DOM property config twice, or you may be ' +
-          'injecting two configs that have conflicting property names.',
-        propName,
-      );
-
-      var lowerCased = propName.toLowerCase();
-      var propConfig = Properties[propName];
-
-      var propertyInfo = {
-        attributeName: lowerCased,
-        attributeNamespace: null,
-        propertyName: propName,
-        mutationMethod: null,
-
-        mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
-        hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
-        hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
-        hasPositiveNumericValue: checkMask(
-          propConfig,
-          Injection.HAS_POSITIVE_NUMERIC_VALUE,
-        ),
-        hasOverloadedBooleanValue: checkMask(
-          propConfig,
-          Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
-        ),
-      };
-      invariant(
-        propertyInfo.hasBooleanValue +
-          propertyInfo.hasNumericValue +
-          propertyInfo.hasOverloadedBooleanValue <=
-          1,
-        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-          'numeric value, but not a combination: %s',
-        propName,
-      );
-
-      if (__DEV__) {
-        DOMProperty.getPossibleStandardName[lowerCased] = propName;
-      }
-
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
-        var attributeName = DOMAttributeNames[propName];
-        propertyInfo.attributeName = attributeName;
-        if (__DEV__) {
-          DOMProperty.getPossibleStandardName[attributeName] = propName;
-        }
-      }
-
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-        propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-      }
-
-      if (DOMPropertyNames.hasOwnProperty(propName)) {
-        propertyInfo.propertyName = DOMPropertyNames[propName];
-      }
-
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        propertyInfo.mutationMethod = DOMMutationMethods[propName];
-      }
-
-      DOMProperty.properties[propName] = propertyInfo;
-    }
-  },
+  autoFocus: true,
+  defaultValue: true,
+  defaultChecked: true,
+  innerHTML: true,
+  suppressContentEditableWarning: true,
+  onFocusIn: true,
+  onFocusOut: true,
 };
+
+var XLINK_NAMESPACE = 'http://www.w3.org/1999/xlink';
+var XML_NAMESPACE = 'http://www.w3.org/XML/1998/namespace';
 
 /* eslint-disable max-len */
 var ATTRIBUTE_NAME_START_CHAR =
@@ -173,9 +62,6 @@ var DOMProperty = {
    * attributeName:
    *   Used when rendering markup or with `*Attribute()`.
    * attributeNamespace
-   * propertyName:
-   *   Used on DOM node instances. (This includes properties that mutate due to
-   *   external factors.)
    * mutationMethod:
    *   If non-null, used instead of the property or `setAttribute()` after
    *   initial render.
@@ -194,7 +80,201 @@ var DOMProperty = {
    *   Removed when strictly equal to false; present without a value when
    *   strictly equal to true; present with a value otherwise.
    */
-  properties: {},
+  attributeName: {
+    acceptCharset: 'accept-charset',
+    allowFullScreen: 'allowfullscreen',
+    autoPlay: 'autoplay',
+    className: 'class',
+    formNoValidate: 'formnovalidate',
+    htmlFor: 'for',
+    httpEquiv: 'http-equiv',
+    noValidate: 'novalidate',
+    playsInline: 'playsinline',
+    readOnly: 'readonly',
+    rowSpan: 'rowspan',
+    itemScope: 'itemscope',
+    accentHeight: 'accent-height',
+    alignmentBaseline: 'alignment-baseline',
+    arabicForm: 'arabic-form',
+    baselineShift: 'baseline-shift',
+    capHeight: 'cap-height',
+    clipPath: 'clip-path',
+    clipRule: 'clip-rule',
+    colorInterpolation: 'color-interpolation',
+    colorInterpolationFilters: 'color-interpolation-filters',
+    colorProfile: 'color-profile',
+    colorRendering: 'color-rendering',
+    dominantBaseline: 'dominant-baseline',
+    enableBackground: 'enable-background',
+    fillOpacity: 'fill-opacity',
+    fillRule: 'fill-rule',
+    filterRes: 'filterRes',
+    filterUnits: 'filterUnits',
+    floodColor: 'flood-color',
+    floodOpacity: 'flood-opacity',
+    fontFamily: 'font-family',
+    fontSize: 'font-size',
+    fontSizeAdjust: 'font-size-adjust',
+    fontStretch: 'font-stretch',
+    fontStyle: 'font-style',
+    fontVariant: 'font-variant',
+    fontWeight: 'font-weight',
+    glyphName: 'glyph-name',
+    glyphOrientationHorizontal: 'glyph-orientation-horizontal',
+    glyphOrientationVertical: 'glyph-orientation-vertical',
+    glyphRef: 'glyphRef',
+    horizAdvX: 'horiz-adv-x',
+    horizOriginX: 'horiz-origin-x',
+    imageRendering: 'image-rendering',
+    letterSpacing: 'letter-spacing',
+    lightingColor: 'lighting-color',
+    markerEnd: 'marker-end',
+    markerMid: 'marker-mid',
+    markerStart: 'marker-start',
+    overlinePosition: 'overline-position',
+    overlineThickness: 'overline-thickness',
+    paintOrder: 'paint-order',
+    panose1: 'panose-1',
+    pointerEvents: 'pointer-events',
+    renderingIntent: 'rendering-intent',
+    shapeRendering: 'shape-rendering',
+    stopColor: 'stop-color',
+    stopOpacity: 'stop-opacity',
+    strikethroughPosition: 'strikethrough-position',
+    strikethroughThickness: 'strikethrough-thickness',
+    strokeDasharray: 'stroke-dasharray',
+    strokeDashoffset: 'stroke-dashoffset',
+    strokeLinecap: 'stroke-linecap',
+    strokeLinejoin: 'stroke-linejoin',
+    strokeMiterlimit: 'stroke-miterlimit',
+    strokeOpacity: 'stroke-opacity',
+    strokeWidth: 'stroke-width',
+    textAnchor: 'text-anchor',
+    textDecoration: 'text-decoration',
+    textRendering: 'text-rendering',
+    underlinePosition: 'underline-position',
+    underlineThickness: 'underline-thickness',
+    unicodeBidi: 'unicode-bidi',
+    unicodeRange: 'unicode-range',
+    unitsPerEm: 'units-per-em',
+    vAlphabetic: 'v-alphabetic',
+    vHanging: 'v-hanging',
+    vIdeographic: 'v-ideographic',
+    vMathematical: 'v-mathematical',
+    vectorEffect: 'vector-effect',
+    vertAdvY: 'vert-adv-y',
+    vertOriginX: 'vert-origin-x',
+    vertOriginY: 'vert-origin-y',
+    wordSpacing: 'word-spacing',
+    writingMode: 'writing-mode',
+    xHeight: 'x-height',
+    xlinkActuate: 'xlink:actuate',
+    xlinkArcrole: 'xlink:arcrole',
+    xlinkHref: 'xlink:href',
+    xlinkRole: 'xlink:role',
+    xlinkShow: 'xlink:show',
+    xlinkTitle: 'xlink:title',
+    xlinkType: 'xlink:type',
+    xmlBase: 'xml:base',
+    xmlnsXlink: 'xmlns:xlink',
+    xmlLang: 'xml:lang',
+    xmlSpace: 'xml:space',
+  },
+
+  attributeNamespace: {
+    xlinkActuate: XLINK_NAMESPACE,
+    xlinkArcrole: XLINK_NAMESPACE,
+    xlinkHref: XLINK_NAMESPACE,
+    xlinkRole: XLINK_NAMESPACE,
+    xlinkShow: XLINK_NAMESPACE,
+    xlinkTitle: XLINK_NAMESPACE,
+    xlinkType: XLINK_NAMESPACE,
+    xmlBase: XML_NAMESPACE,
+    xmlLang: XML_NAMESPACE,
+    xmlSpace: XML_NAMESPACE,
+  },
+
+  mustUseProperty: {
+    checked: true,
+    multiple: true,
+    muted: true,
+    selected: true,
+  },
+
+  hasBooleanValue: {
+    allowFullScreen: true,
+    async: true,
+    autoPlay: true,
+    capture: true,
+    checked: true,
+    controls: true,
+    default: true,
+    defer: true,
+    disabled: true,
+    formNoValidate: true,
+    hidden: true,
+    loop: true,
+    multiple: true,
+    muted: true,
+    noValidate: true,
+    open: true,
+    playsInline: true,
+    readOnly: true,
+    required: true,
+    reversed: true,
+    scoped: true,
+    seamless: true,
+    selected: true,
+    itemScope: true,
+  },
+
+  hasOverloadedBooleanValue: {
+    download: true,
+  },
+
+  hasNumericValue: {
+    cols: true,
+    rows: true,
+    rowSpan: true,
+    size: true,
+    span: true,
+    start: true,
+  },
+
+  hasPositiveNumericValue: {
+    rows: true,
+    size: true,
+    span: true,
+  },
+
+  mutationMethod: {
+    value: function(node, value) {
+      if (value == null) {
+        return node.removeAttribute('value');
+      }
+
+      // Number inputs get special treatment due to some edge cases in
+      // Chrome. Let everything else assign the value attribute as normal.
+      // https://github.com/facebook/react/issues/7253#issuecomment-236074326
+      if (node.type !== 'number' || node.hasAttribute('value') === false) {
+        node.setAttribute('value', '' + value);
+      } else if (
+        node.validity &&
+        !node.validity.badInput &&
+        node.ownerDocument.activeElement !== node
+      ) {
+        // Don't assign an attribute if validation reports bad
+        // input. Chrome will clear the value. Additionally, don't
+        // operate on inputs that have focus, otherwise Chrome might
+        // strip off trailing decimal places and cause the user's
+        // cursor position to jump to the beginning of the input.
+        //
+        // In ReactDOMInput, we have an onBlur event that will trigger
+        // this function again when focus is lost.
+        node.setAttribute('value', '' + value);
+      }
+    },
+  },
 
   /**
    * Mapping from lowercase property names to the properly cased version, used
@@ -208,25 +288,74 @@ var DOMProperty = {
   getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
 
   /**
-   * All of the isCustomAttribute() functions that have been injected.
+   * Checks to see if a property name is within the list of properties
+   * reserved for internal React operations. These properties should
+   * not be set on an HTML element.
+   *
+   * @private
+   * @param {string} name
+   * @return {boolean} If the name is within reserved props
    */
-  _isCustomAttributeFunctions: [],
-
-  /**
-   * Checks whether a property name is a custom attribute.
-   * @method
-   */
-  isCustomAttribute: function(attributeName) {
-    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
-      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
-      if (isCustomAttributeFn(attributeName)) {
-        return true;
-      }
-    }
-    return false;
+  isReservedProp(name) {
+    return RESERVED_PROPS.hasOwnProperty(name);
   },
 
-  injection: DOMPropertyInjection,
+  hasAttributeName(name) {
+    return DOMProperty.attributeName.hasOwnProperty(name);
+  },
+
+  hasAttributeNamespace(name) {
+    return DOMProperty.attributeNamespace.hasOwnProperty(name);
+  },
+
+  getAttributeName(name) {
+    return DOMProperty.hasAttributeName(name)
+      ? DOMProperty.attributeName[name]
+      : name;
+  },
+
+  getAttributeNamespace(name) {
+    return DOMProperty.hasAttributeNamespace(name)
+      ? DOMProperty.attributeNamespace[name]
+      : null;
+  },
+
+  isBooleanValue(name) {
+    return DOMProperty.hasBooleanValue.hasOwnProperty(name);
+  },
+
+  isOverloadedBooleanValue(name) {
+    return DOMProperty.hasOverloadedBooleanValue.hasOwnProperty(name);
+  },
+
+  isNumericValue(name) {
+    return DOMProperty.hasNumericValue.hasOwnProperty(name);
+  },
+
+  isPositiveNumericValue(name) {
+    return DOMProperty.hasPositiveNumericValue.hasOwnProperty(name);
+  },
+
+  // Do not assign reserved properties or functions. Event handlers should
+  // not exist in markup.
+  isWriteable(name, value) {
+    return !DOMProperty.isReservedProp(name) && typeof value !== 'function';
+  },
+
+  useProperty(name) {
+    return DOMProperty.mustUseProperty.hasOwnProperty(name);
+  },
+
+  useMutationMethod(name) {
+    return DOMProperty.mutationMethod.hasOwnProperty(name);
+  },
+
+  needsEmptyStringValue(name, value) {
+    return (
+      DOMProperty.isBooleanValue(name) ||
+      (DOMProperty.isOverloadedBooleanValue(name) && value === true)
+    );
+  },
 };
 
 module.exports = DOMProperty;

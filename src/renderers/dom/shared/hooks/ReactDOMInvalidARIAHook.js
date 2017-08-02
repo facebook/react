@@ -18,6 +18,7 @@ var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+  var ariaProperties = require('./ariaProperties');
   var {
     ReactComponentTreeHook,
     ReactDebugCurrentFrame,
@@ -43,10 +44,8 @@ function validateProperty(tagName, name, debugID) {
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
-      lowerCasedName,
-    )
-      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+    var standardName = ariaProperties.hasOwnProperty(lowerCasedName)
+      ? lowerCasedName
       : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM

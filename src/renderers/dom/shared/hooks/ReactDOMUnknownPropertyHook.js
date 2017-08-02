@@ -35,39 +35,27 @@ function getStackAddendum(debugID) {
 }
 
 if (__DEV__) {
-  var reactProps = {
-    children: true,
-    dangerouslySetInnerHTML: true,
-    key: true,
-    ref: true,
-
-    autoFocus: true,
-    defaultValue: true,
-    defaultChecked: true,
-    innerHTML: true,
-    suppressContentEditableWarning: true,
-    onFocusIn: true,
-    onFocusOut: true,
-  };
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
+  var possibleStandardNames = require('possibleStandardNames');
+
+  for (var attributeName in DOMProperty.attributeName) {
+    possibleStandardNames[attributeName.toLowerCase()] = attributeName;
+  }
 
   var validateProperty = function(tagName, name, debugID) {
-    if (
-      DOMProperty.properties.hasOwnProperty(name) ||
-      DOMProperty.isCustomAttribute(name)
-    ) {
+    var lowerCasedName = name.toLowerCase();
+
+    if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return true;
     }
-    if (
-      (reactProps.hasOwnProperty(name) && reactProps[name]) ||
-      (warnedProperties.hasOwnProperty(name) && warnedProperties[name])
-    ) {
-      return true;
-    }
+
+    warnedProperties[name] = true;
+
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
+
     if (
       EventPluginRegistry.plugins.length === 0 &&
       EVENT_NAME_REGEX.test(name)
@@ -76,21 +64,34 @@ if (__DEV__) {
       // Don't check events in this case.
       return true;
     }
-    warnedProperties[name] = true;
-    var lowerCasedName = name.toLowerCase();
-
-    // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
-      ? lowerCasedName
-      : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
-          ? DOMProperty.getPossibleStandardName[lowerCasedName]
-          : null;
 
     var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
       ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
       : null;
+
+    if (registrationName != null) {
+      warning(
+        false,
+        'Unknown event handler property %s. Did you mean `%s`?%s',
+        name,
+        registrationName,
+        getStackAddendum(debugID),
+      );
+      return true;
+    }
+
+    // data-* attributes should be lowercase; suggest the lowercase version
+    var standardName = possibleStandardNames.hasOwnProperty(name)
+      ? possibleStandardNames[name]
+      : null;
+
+    var hasBadCasing = standardName != null && standardName !== name;
+
+    if (!hasBadCasing) {
+      return true;
+    }
 
     if (standardName != null) {
       warning(
@@ -101,22 +102,9 @@ if (__DEV__) {
         getStackAddendum(debugID),
       );
       return true;
-    } else if (registrationName != null) {
-      warning(
-        false,
-        'Unknown event handler property %s. Did you mean `%s`?%s',
-        name,
-        registrationName,
-        getStackAddendum(debugID),
-      );
-      return true;
-    } else {
-      // We were unable to guess which prop the user intended.
-      // It is likely that the user was just blindly spreading/forwarding props
-      // Components should be careful to only render valid props/attributes.
-      // Warning will be invoked in warnUnknownProperties to allow grouping.
-      return false;
     }
+
+    return DOMProperty.isReservedProp(name);
   };
 }
 
