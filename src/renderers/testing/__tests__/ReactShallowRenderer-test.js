@@ -333,6 +333,83 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div />);
   });
 
+  it('passes expected params to component lifecycle methods', () => {
+    const componentDidUpdateParams = [];
+    const componentWillReceivePropsParams = [];
+    const componentWillUpdateParams = [];
+    const setStateParams = [];
+    const shouldComponentUpdateParams = [];
+
+    const initialProp = {prop: 'init prop'};
+    const initialState = {state: 'init state'};
+    const initialContext = {context: 'init context'};
+    const updatedState = {state: 'updated state'};
+    const updatedProp = {prop: 'updated prop'};
+    const updatedContext = {context: 'updated context'};
+
+    class SimpleComponent extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = initialState;
+      }
+      componentDidUpdate(...args) {
+        componentDidUpdateParams.push(...args);
+      }
+      componentWillReceiveProps(...args) {
+        componentWillReceivePropsParams.push(...args);
+        this.setState((...innerArgs) => {
+          setStateParams.push(...innerArgs);
+          return updatedState;
+        });
+      }
+      componentWillUpdate(...args) {
+        componentWillUpdateParams.push(...args);
+      }
+      shouldComponentUpdate(...args) {
+        shouldComponentUpdateParams.push(...args);
+        return true;
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+
+    // No lifecycle hooks should be invoked on initial render
+    shallowRenderer.render(
+      React.createElement(SimpleComponent, initialProp),
+      initialContext,
+    );
+    expect(componentDidUpdateParams).toEqual([]);
+    expect(componentWillReceivePropsParams).toEqual([]);
+    expect(componentWillUpdateParams).toEqual([]);
+    expect(setStateParams).toEqual([]);
+    expect(shouldComponentUpdateParams).toEqual([]);
+
+    // Lifecycle hooks should be invoked with the correct prev/next params on update.
+    shallowRenderer.render(
+      React.createElement(SimpleComponent, updatedProp),
+      updatedContext,
+    );
+    expect(componentWillReceivePropsParams).toEqual([
+      updatedProp,
+      updatedContext,
+    ]);
+    expect(setStateParams).toEqual([initialState, initialProp]);
+    expect(shouldComponentUpdateParams).toEqual([
+      updatedProp,
+      updatedState,
+      updatedContext,
+    ]);
+    expect(componentWillUpdateParams).toEqual([
+      updatedProp,
+      updatedState,
+      updatedContext,
+    ]);
+    expect(componentDidUpdateParams).toEqual([initialProp, initialState]);
+  });
+
   it('can shallowly render components with ref as function', () => {
     class SimpleComponent extends React.Component {
       state = {clicked: false};
