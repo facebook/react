@@ -12,9 +12,6 @@
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
-  "peerDependencies": {
-    "react": "^15.6.0-rc.1"
-  },
   "files": [
     "LICENSE",
     "PATENTS",
