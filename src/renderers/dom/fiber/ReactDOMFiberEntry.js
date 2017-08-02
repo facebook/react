@@ -62,6 +62,22 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
+
+  if (
+    typeof Map !== 'function' ||
+    Map.prototype == null ||
+    typeof Map.prototype.forEach !== 'function' ||
+    typeof Set !== 'function' ||
+    Set.prototype == null ||
+    typeof Set.prototype.clear !== 'function' ||
+    typeof Set.prototype.forEach !== 'function'
+  ) {
+    warning(
+      false,
+      'React depends on Map and Set built-in types. Make sure that you load a ' +
+        'polyfill in older browsers. http://fb.me/react-polyfills',
+    );
+  }
 }
 
 require('ReactDOMClientInjection');
