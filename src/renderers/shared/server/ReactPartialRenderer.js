@@ -31,12 +31,16 @@ if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
   var warnValidStyle = require('warnValidStyle');
   var {
+    validateProperties: validateARIAProperties,
+  } = require('ReactDOMInvalidARIAHook');
+  var {
     validateProperties: validateInputPropertes,
   } = require('ReactDOMNullInputValuePropHook');
   var {
     validateProperties: validateUnknownPropertes,
   } = require('ReactDOMUnknownPropertyHook');
   var validatePropertiesInDevelopment = function(type, props) {
+    validateARIAProperties(type, props);
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
   };
