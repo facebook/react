@@ -22,7 +22,6 @@
 
 import type {Deadline} from 'ReactFiberReconciler';
 
-var invariant = require('fbjs/lib/invariant');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
 if (__DEV__) {
