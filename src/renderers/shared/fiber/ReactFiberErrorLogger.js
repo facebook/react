@@ -59,14 +59,13 @@ function logCapturedError(capturedError: CapturedError): void {
       errorBoundaryName,
       errorBoundaryFound,
       willRetry,
-      shouldIgnoreErrorMessage,
     } = capturedError;
 
     const errorSummary = message ? `${name}: ${message}` : name;
 
     const componentNameMessage = componentName
-      ? `React caught an error thrown by ${componentName}.`
-      : 'React caught an error thrown by one of your components.';
+      ? `An error was thrown by ${componentName}.`
+      : 'An error was thrown by one of your components.';
 
     // Error stack varies by browser, eg:
     // Chrome prepends the Error name and type.
@@ -101,7 +100,7 @@ function logCapturedError(capturedError: CapturedError): void {
     }
 
     let combinedMessage = `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n`;
-    if (!shouldIgnoreErrorMessage) {
+    if (!__DEV__) {
       combinedMessage += `${errorSummary}\n\n`;
     }
     combinedMessage +=

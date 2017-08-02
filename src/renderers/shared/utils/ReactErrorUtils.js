@@ -254,7 +254,6 @@ if (__DEV__) {
               "It's recommended to serve JavaScript files from the same " +
               'origin as your application.',
           );
-          (error: any).__reactShouldIgnoreErrorMessage = true;
         }
         ReactErrorUtils._hasCaughtError = true;
         ReactErrorUtils._caughtError = error;
