@@ -1,4 +1,5 @@
 const React = window.React;
+const ReactDOM = window.ReactDOM;
 
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
@@ -52,6 +53,33 @@ class Example extends React.Component {
           key={this.state.key}
         />
       </div>
+    );
+  }
+}
+
+class TriggerErrorAndCatch extends React.Component {
+  container = document.createElement('div');
+
+  triggerErrorAndCatch = () => {
+    try {
+      ReactDOM.flushSync(() => {
+        ReactDOM.render(
+          <BadRender
+            throws={() => {
+              throw new Error('Caught error');
+            }}
+          />,
+          this.container,
+        );
+      });
+    } catch (e) {}
+  };
+
+  render() {
+    return (
+      <button onClick={this.triggerErrorAndCatch}>
+        Trigger error and catch
+      </button>
     );
   }
 }
@@ -118,6 +146,17 @@ export default class ErrorHandlingTestCases extends React.Component {
               window.expect(true).toBe(false);
             }}
           />
+        </TestCase>
+        <TestCase
+          title="Errors are logged even if they're caught (development mode only)"
+          description="">
+          <TestCase.Steps>
+            <li>Click the "Trigger render error and catch" button</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            Open the console. "Uncaught Error: Caught error" should have been logged by the browser.
+          </TestCase.ExpectedResult>
+          <TriggerErrorAndCatch />
         </TestCase>
       </FixtureSet>
     );
