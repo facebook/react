@@ -146,7 +146,6 @@ class ReactShallowRenderer {
 
   _updateClassComponent(props, context) {
     const oldProps = this._instance.props;
-    const oldState = this._instance.state;
 
     if (
       oldProps !== props &&
