@@ -314,7 +314,7 @@ export default function Fibers({fibers, show, ...rest}) {
                       </span>,
                       <br key="br" />,
                     ]}
-                    {fiber.progressedPriority !== 0 && [
+                    {fiber.progressedPriority && [
                       `Finished: ${formatPriority(fiber.progressedPriority)}`,
                       <br key="br" />,
                     ]}
