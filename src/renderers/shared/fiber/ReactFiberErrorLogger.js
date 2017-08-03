@@ -43,12 +43,10 @@ function logCapturedError(capturedError: CapturedError): void {
   ) {
     message = error.message;
     name = error.name;
-    stack = error.stack;
   } else {
     // A non-error was thrown.
     message = '' + error;
     name = 'Error';
-    stack = '';
   }
 
   if (__DEV__) {
