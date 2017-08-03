@@ -907,7 +907,7 @@ describe('ReactIncrementalErrorHandling', () => {
           'You can find its details in an earlier log.\n',
       );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'React has captured the component hierarchy: \n' +
+        'The component hierarchy was: \n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
@@ -942,7 +942,7 @@ describe('ReactIncrementalErrorHandling', () => {
           'You can find its details in an earlier log.\n',
       );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'React has captured the component hierarchy: \n' +
+        'The component hierarchy was: \n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
