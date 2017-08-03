@@ -1189,7 +1189,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         capturedErrors = new Map();
       }
 
-      capturedErrors.set(boundary, {
+      const capturedError = {
         componentName,
         componentStack,
         error,
@@ -1197,7 +1197,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         errorBoundaryFound,
         errorBoundaryName,
         willRetry,
-      });
+      };
+
+      capturedErrors.set(boundary, capturedError);
+
+      try {
+        logCapturedError(capturedError);
+      } catch (e) {
+        // Prevent cycle if logCapturedError() throws.
+        // A cycle may still occur if logCapturedError renders a component that throws.
+        console.error(e);
+      }
 
       // If we're in the commit phase, defer scheduling an update on the
       // boundary until after the commit is complete
@@ -1261,15 +1271,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'bug in React. Please file an issue.',
     );
 
-    const error = capturedError.error;
-    try {
-      logCapturedError(capturedError);
-    } catch (e) {
-      // Prevent cycle if logCapturedError() throws.
-      // A cycle may still occur if logCapturedError renders a component that throws.
-      console.error(e);
-    }
-
     switch (effectfulFiber.tag) {
       case ClassComponent:
         const instance = effectfulFiber.stateNode;
@@ -1280,14 +1281,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
         // Allow the boundary to handle the error, usually by scheduling
         // an update to itself
-        instance.componentDidCatch(error, info);
+        instance.componentDidCatch(capturedError.error, info);
         return;
       case HostRoot:
         if (firstUncaughtError === null) {
           // If this is the host container, we treat it as a no-op error
           // boundary. We'll throw the first uncaught error once it's safe to
           // do so, at the end of the batch.
-          firstUncaughtError = error;
+          firstUncaughtError = capturedError.error;
         }
         return;
       default:
