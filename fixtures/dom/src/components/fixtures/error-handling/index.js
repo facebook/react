@@ -5,7 +5,7 @@ const React = window.React;
 const ReactDOM = window.ReactDOM;
 
 function BadRender(props) {
-  throw props.throws();
+  props.doThrow();
 }
 class ErrorBoundary extends React.Component {
   static defaultProps = {
@@ -33,7 +33,7 @@ class ErrorBoundary extends React.Component {
       }
     }
     if (this.state.shouldThrow) {
-      return <BadRender throws={this.props.throws} />;
+      return <BadRender doThrow={this.props.doThrow} />;
     }
     return <button onClick={this.triggerError}>{this.props.buttonText}</button>;
   }
@@ -49,7 +49,7 @@ class Example extends React.Component {
         <button onClick={this.restart}>Reset</button>
         <ErrorBoundary
           buttonText={this.props.buttonText}
-          throws={this.props.throws}
+          doThrow={this.props.doThrow}
           key={this.state.key}
         />
       </div>
@@ -65,7 +65,7 @@ class TriggerErrorAndCatch extends React.Component {
       ReactDOM.flushSync(() => {
         ReactDOM.render(
           <BadRender
-            throws={() => {
+            doThrow={() => {
               throw new Error('Caught error');
             }}
           />,
@@ -105,8 +105,8 @@ export default class ErrorHandlingTestCases extends React.Component {
             should reset the test case.
           </TestCase.ExpectedResult>
           <Example
-            throws={() => {
-              new Error('Oops!');
+            doThrow={() => {
+              throw new Error('Oops!');
             }}
           />
         </TestCase>
@@ -120,7 +120,7 @@ export default class ErrorHandlingTestCases extends React.Component {
             error: null". Clicking reset should reset the test case.
           </TestCase.ExpectedResult>
           <Example
-            throws={() => {
+            doThrow={() => {
               throw null; // eslint-disable-line no-throw-literal
             }}
           />
@@ -140,7 +140,7 @@ export default class ErrorHandlingTestCases extends React.Component {
           </TestCase.ExpectedResult>
           <Example
             buttonText="Trigger cross-origin error"
-            throws={() => {
+            doThrow={() => {
               // The `expect` module is loaded via unpkg, so that this assertion
               // triggers a cross-origin error
               window.expect(true).toBe(false);
