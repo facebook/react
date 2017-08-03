@@ -84,7 +84,7 @@ if (__DEV__) {
 
     var hasBadCasing = standardName != null && standardName !== name;
 
-    if (DOMProperty.isWriteable(name, value) && !hasBadCasing) {
+    if (DOMProperty.shouldSetAttribute(name, value) && !hasBadCasing) {
       return true;
     }
 
