@@ -215,7 +215,7 @@ var DOMProperty = {
    * Checks whether a property name is a writeable attribute.
    * @method
    */
-  isWriteable: function(name, value) {
+  shouldSetAttribute: function(name, value) {
     if (DOMProperty.isReservedProp(name)) {
       return false;
     }
