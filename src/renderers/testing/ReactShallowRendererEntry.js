@@ -136,12 +136,8 @@ class ReactShallowRenderer {
     }
 
     this._rendered = this._instance.render();
-
-    // Calling cDU might lead to problems with host component references.
-    // Since our components aren't really mounted, refs won't be available.
-    // if (typeof this._instance.componentDidMount === 'function') {
-    //   this._instance.componentDidMount();
-    // }
+    // Intentionally do not call componentDidMount()
+    // because DOM refs are not available.
   }
 
   _updateClassComponent(props, context) {
@@ -179,6 +175,8 @@ class ReactShallowRenderer {
     this._instance.state = state;
 
     this._rendered = this._instance.render();
+    // Intentionally do not call componentDidUpdate()
+    // because DOM refs are not available.
   }
 }
 
