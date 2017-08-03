@@ -208,10 +208,14 @@ if (__DEV__) {
       let error;
       // Use this to track whether the error event is ever called.
       let didSetError = false;
+      let isCrossOriginError = false;
 
       function onError(event) {
         error = event.error;
         didSetError = true;
+        if (error === null && event.colno === 0 && event.lineno === 0) {
+          isCrossOriginError = true;
+        }
       }
 
       // Create a fake event type.
@@ -239,6 +243,18 @@ if (__DEV__) {
               'your browser. Try triggering the error in production mode, ' +
               'or switching to a modern browser. If you suspect that this is ' +
               'actually an issue with React, please file an issue.',
+          );
+        } else if (isCrossOriginError) {
+          error = new Error(
+            "A cross-origin error was thrown. React doesn't have access to " +
+              'the actual error because it catches errors using a global ' +
+              'error handler, in order to preserve the "Pause on exceptions" ' +
+              'behavior of the DevTools. This is only an issue in DEV-mode; ' +
+              'in production, React uses a normal try-catch statement.\n\n' +
+              'If you are using React from a CDN, ensure that the <script> tag ' +
+              'has a `crossorigin` attribute, and that it is served with the ' +
+              '`Access-Control-Allow-Origin: *` HTTP header. ' +
+              'See https://fb.me/react-cdn-crossorigin',
           );
         }
         ReactErrorUtils._hasCaughtError = true;

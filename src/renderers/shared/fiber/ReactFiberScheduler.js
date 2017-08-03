@@ -1188,6 +1188,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (capturedErrors === null) {
         capturedErrors = new Map();
       }
+
       capturedErrors.set(boundary, {
         componentName,
         componentStack,
