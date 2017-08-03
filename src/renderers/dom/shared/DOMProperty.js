@@ -74,12 +74,6 @@ var DOMPropertyInjection = {
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
-    if (domPropertyConfig.isCustomAttribute) {
-      DOMProperty._isCustomAttributeFunctions.push(
-        domPropertyConfig.isCustomAttribute,
-      );
-    }
-
     for (var propName in Properties) {
       invariant(
         !DOMProperty.properties.hasOwnProperty(propName),
@@ -218,25 +212,6 @@ var DOMProperty = {
   getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
 
   /**
-   * All of the isCustomAttribute() functions that have been injected.
-   */
-  _isCustomAttributeFunctions: [],
-
-  /**
-   * Checks whether a property name is a custom attribute.
-   * @method
-   */
-  isCustomAttribute: function(attributeName) {
-    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
-      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
-      if (isCustomAttributeFn(attributeName)) {
-        return true;
-      }
-    }
-    return false;
-  },
-
-  /**
    * Checks whether a property name is a writeable attribute.
    * @method
    */
@@ -249,11 +224,9 @@ var DOMProperty = {
       return true;
     }
 
-    if (DOMProperty.isCustomAttribute(name)) {
-      return true;
-    }
+    let type = typeof value;
 
-    return typeof value === 'string';
+    return type !== 'function' && type !== 'object';
   },
 
   /**
