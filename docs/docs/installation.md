@@ -218,20 +218,34 @@ Learn [how to tell if your website is serving the right version of React](/react
 If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide single-file distributions in `dist` folders, which are hosted on a CDN:
 
 ```html
-<script src="https://unpkg.com/react@15/dist/react.js"></script>
-<script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+<script crossorigin src="https://unpkg.com/react@15/dist/react.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
 ```
 
 The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:
 
 ```html
-<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
-<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@15/dist/react.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
 ```
 
 To load a specific version of `react` and `react-dom`, replace `15` with the version number.
 
 If you use Bower, React is available via the `react` package.
+
+#### Why the `crossorigin` Attribute?
+
+If you serve React from a CDN, we recommend to keep the [`crossorigin`](https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes) attribute set:
+
+```html
+<script crossorigin src="..."></script>
+```
+
+We also recommend to verify that the CDN you are using sets the `Access-Control-Allow-Origin: *` HTTP header:
+
+![Access-Control-Allow-Origin: *](/react/img/docs/cdn-cors-header.png)
+
+This enables better [error handling experience](/react/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
 
 <script>
 /**
