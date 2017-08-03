@@ -63,8 +63,8 @@ function logCapturedError(capturedError: CapturedError): void {
 
     const errorSummary = message ? `${name}: ${message}` : name;
     const componentNameMessage = componentName
-      ? `An error was thrown by ${componentName}.`
-      : 'An error was thrown by one of your components.';
+      ? `There was an error in the <${componentName}> component.`
+      : 'There was an error in one of your React components.';
 
     let errorBoundaryMessage;
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
@@ -75,17 +75,18 @@ function logCapturedError(capturedError: CapturedError): void {
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
         errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
+          `This error was initially handled by the error boundary ${errorBoundaryName}.\n` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
       errorBoundaryMessage =
-        'Consider adding an error boundary to your tree to customize error handling behavior. ' +
-        'See https://fb.me/react-error-boundaries for more information.';
+        'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+        'You can learn more about error boundaries at https://fb.me/react-error-boundaries.';
     }
     const combinedMessage =
-      `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
-      `The error is located at: ${componentStack}\n\n`;
+      `${componentNameMessage}\nYou can find its details in an earlier log.\n\n` +
+      `React has captured the component hierarchy when it was thrown: ${componentStack}\n\n` +
+      `${errorBoundaryMessage}`;
 
     // In development, we provide our own message with just the component stack.
     // We don't include the original error message and JS stack because the browser

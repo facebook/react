@@ -903,15 +903,17 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(console.error.calls.count()).toBe(1);
       const errorMessage = console.error.calls.argsFor(0)[0];
       expect(errorMessage).toContain(
-        'An error was thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'Consider adding an error boundary to your tree to customize error handling behavior.',
+        'There was an error in the <ErrorThrowingComponent> component.\n' +
+          'You can find its details in an earlier log.\n',
       );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error is located at: \n' +
+        'React has captured the component hierarchy when it was thrown: \n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
+      );
+      expect(errorMessage).toContain(
+        'Consider adding an error boundary to your tree to customize error handling behavior.',
       );
     });
 
@@ -936,15 +938,17 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(console.error.calls.count()).toBe(1);
       const errorMessage = console.error.calls.argsFor(0)[0];
       expect(errorMessage).toContain(
-        'An error was thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'Consider adding an error boundary to your tree to customize error handling behavior.',
+        'There was an error in the <ErrorThrowingComponent> component.\n' +
+          'You can find its details in an earlier log.\n',
       );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error is located at: \n' +
+        'React has captured the component hierarchy when it was thrown: \n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
+      );
+      expect(errorMessage).toContain(
+        'Consider adding an error boundary to your tree to customize error handling behavior.',
       );
     });
 
@@ -1024,15 +1028,19 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(handleErrorCalls.length).toBe(1);
       expect(console.error.calls.count()).toBe(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'An error was thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'React will try to recreate this component tree from scratch ' +
+        'There was an error in the <ErrorThrowingComponent> component.\n' +
+          'You can find its details in an earlier log.\n',
+      );
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'React will try to recreate this component tree from scratch ' +
           'using the error boundary you provided, ErrorBoundaryComponent.',
       );
       expect(console.error.calls.argsFor(1)[0]).toContain(
-        'An error was thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'This error was initially handled by the error boundary ErrorBoundaryComponent. ' +
+        'There was an error in the <ErrorThrowingComponent> component.\n' +
+          'You can find its details in an earlier log.\n',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'This error was initially handled by the error boundary ErrorBoundaryComponent.\n' +
           'Recreating the tree from scratch failed so React will unmount the tree.',
       );
     });
