@@ -34,7 +34,6 @@ function logCapturedError(capturedError: CapturedError): void {
   // Duck-typing
   let message;
   let name;
-  let stack;
 
   if (
     error !== null &&
@@ -61,7 +60,6 @@ function logCapturedError(capturedError: CapturedError): void {
       willRetry,
     } = capturedError;
 
-    const errorSummary = message ? `${name}: ${message}` : name;
     const componentNameMessage = componentName
       ? `There was an error in the <${componentName}> component.`
       : 'There was an error in one of your React components.';
