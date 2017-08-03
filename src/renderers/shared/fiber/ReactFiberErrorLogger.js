@@ -85,7 +85,7 @@ function logCapturedError(capturedError: CapturedError): void {
     }
     const combinedMessage =
       `${componentNameMessage}\nYou can find its details in an earlier log.\n\n` +
-      `React has captured the component hierarchy when it was thrown: ${componentStack}\n\n` +
+      `React has captured the component hierarchy: ${componentStack}\n\n` +
       `${errorBoundaryMessage}`;
 
     // In development, we provide our own message with just the component stack.
