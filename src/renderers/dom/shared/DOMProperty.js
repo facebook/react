@@ -220,13 +220,24 @@ var DOMProperty = {
       return false;
     }
 
-    if (value == null || DOMProperty.properties.hasOwnProperty(name)) {
+    let type = typeof value;
+
+    if (
+      value === null ||
+      type === 'undefined' ||
+      DOMProperty.properties.hasOwnProperty(name)
+    ) {
       return true;
     }
 
-    let type = typeof value;
-
-    return type !== 'function' && type !== 'object';
+    switch (type) {
+      case 'boolean':
+      case 'number':
+      case 'string':
+        return true;
+      default:
+        return false;
+    }
   },
 
   /**
