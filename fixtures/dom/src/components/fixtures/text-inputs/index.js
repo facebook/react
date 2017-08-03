@@ -1,9 +1,9 @@
-const React = window.React;
-
 import Fixture from '../../Fixture';
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import InputTestCase from './InputTestCase';
+
+const React = window.React;
 
 class TextInputFixtures extends React.Component {
   render() {
@@ -93,4 +93,4 @@ class TextInputFixtures extends React.Component {
   }
 }
 
-module.exports = TextInputFixtures;
+export default TextInputFixtures;

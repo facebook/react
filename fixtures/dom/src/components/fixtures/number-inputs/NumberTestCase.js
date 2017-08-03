@@ -1,6 +1,6 @@
-const React = window.React;
-
 import Fixture from '../../Fixture';
+
+const React = window.React;
 
 class NumberTestCase extends React.Component {
   state = {value: ''};
