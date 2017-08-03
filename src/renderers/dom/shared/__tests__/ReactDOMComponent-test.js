@@ -156,7 +156,7 @@ describe('ReactDOMComponent', () => {
     it('should group multiple unknown prop warnings together', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
+      ReactDOM.render(<div foo={() => {}} baz={{}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
