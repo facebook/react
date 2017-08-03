@@ -148,8 +148,10 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div foo={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
-          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+        'Warning: Unknown prop `foo` on <div> tag. Either remove this prop ' +
+          'from the element, or pass a string, number, or boolean value to keep ' +
+          'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          '\n    in div (at **)',
       );
     });
 
@@ -159,8 +161,10 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div foo={() => {}} baz={{}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
-          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+        'Warning: Unknown props `foo`, `baz` on <div> tag. Either remove these ' +
+          'props from the element, or pass a string, number, or boolean value to keep ' +
+          'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          '\n    in div (at **)',
       );
     });
 
