@@ -277,16 +277,27 @@ npm install --save react react-dom
 <h3>Using a CDN</h3>
 
 <p>If you don&#39;t want to use npm to manage client packages, the <code>react</code> and <code>react-dom</code> npm packages also provide single-file distributions in <code>dist</code> folders, which are hosted on a CDN:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>To load a specific version of <code>react</code> and <code>react-dom</code>, replace <code>15</code> with the version number.</p>
 
 <p>If you use Bower, React is available via the <code>react</code> package.</p>
+
+<h4>Why the <code>crossorigin</code> Attribute?</h4>
+
+<p>If you serve React from a CDN, we recommend to keep the <a href="https://developer.mozilla.org/en-US/docs/Web/HTML/CORS_settings_attributes"><code>crossorigin</code></a> attribute set:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;...&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>We also recommend to verify that the CDN you are using sets the <code>Access-Control-Allow-Origin: *</code> HTTP header:</p>
+
+<p><img src="/react/img/docs/cdn-cors-header.png" alt="Access-Control-Allow-Origin: *"></p>
+
+<p>This enables better <a href="/react/blog/2017/07/26/error-handling-in-react-16.html">error handling experience</a> in React 16 and later.</p>
 
 <script>
 /**
