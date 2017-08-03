@@ -38,7 +38,7 @@ if (__DEV__) {
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
 
-  var validateProperty = function(tagName, name, debugID) {
+  var validateProperty = function(tagName, name, value, debugID) {
     var lowerCasedName = name.toLowerCase();
 
     if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
@@ -84,7 +84,7 @@ if (__DEV__) {
 
     var hasBadCasing = standardName != null && standardName !== name;
 
-    if (DOMProperty.isWriteableAttribute(name) && !hasBadCasing) {
+    if (DOMProperty.isWriteable(name, value) && !hasBadCasing) {
       return true;
     }
 
@@ -106,7 +106,7 @@ if (__DEV__) {
 var warnUnknownProperties = function(type, props, debugID) {
   var unknownProps = [];
   for (var key in props) {
-    var isValid = validateProperty(type, key, debugID);
+    var isValid = validateProperty(type, key, props[key], debugID);
     if (!isValid) {
       unknownProps.push(key);
     }
