@@ -59,8 +59,8 @@ function logCapturedError(capturedError: CapturedError): void {
     } = capturedError;
 
     const componentNameMessage = componentName
-      ? `There was an error in the <${componentName}> component.`
-      : 'There was an error in one of your React components.';
+      ? `The above error occurred in the <${componentName}> component:`
+      : 'The above error occurred in one of your React components:';
 
     let errorBoundaryMessage;
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
@@ -80,8 +80,7 @@ function logCapturedError(capturedError: CapturedError): void {
         'You can learn more about error boundaries at https://fb.me/react-error-boundaries.';
     }
     const combinedMessage =
-      `${componentNameMessage}\nYou can find its details in an earlier log.\n\n` +
-      `The component hierarchy was: ${componentStack}\n\n` +
+      `${componentNameMessage}${componentStack}\n\n` +
       `${errorBoundaryMessage}`;
 
     // In development, we provide our own message with just the component stack.

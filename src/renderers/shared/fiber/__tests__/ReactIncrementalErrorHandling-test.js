@@ -902,12 +902,8 @@ describe('ReactIncrementalErrorHandling', () => {
 
       expect(console.error.calls.count()).toBe(1);
       const errorMessage = console.error.calls.argsFor(0)[0];
-      expect(errorMessage).toContain(
-        'There was an error in the <ErrorThrowingComponent> component.\n' +
-          'You can find its details in an earlier log.\n',
-      );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The component hierarchy was: \n' +
+        'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
@@ -937,12 +933,8 @@ describe('ReactIncrementalErrorHandling', () => {
 
       expect(console.error.calls.count()).toBe(1);
       const errorMessage = console.error.calls.argsFor(0)[0];
-      expect(errorMessage).toContain(
-        'There was an error in the <ErrorThrowingComponent> component.\n' +
-          'You can find its details in an earlier log.\n',
-      );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The component hierarchy was: \n' +
+        'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
@@ -1028,16 +1020,14 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(handleErrorCalls.length).toBe(1);
       expect(console.error.calls.count()).toBe(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'There was an error in the <ErrorThrowingComponent> component.\n' +
-          'You can find its details in an earlier log.\n',
+        'The above error occurred in the <ErrorThrowingComponent> component:',
       );
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'React will try to recreate this component tree from scratch ' +
           'using the error boundary you provided, ErrorBoundaryComponent.',
       );
       expect(console.error.calls.argsFor(1)[0]).toContain(
-        'There was an error in the <ErrorThrowingComponent> component.\n' +
-          'You can find its details in an earlier log.\n',
+        'The above error occurred in the <ErrorThrowingComponent> component:',
       );
       expect(console.error.calls.argsFor(1)[0]).toContain(
         'This error was initially handled by the error boundary ErrorBoundaryComponent.\n' +
