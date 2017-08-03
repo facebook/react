@@ -11,7 +11,6 @@
 
 'use strict';
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var invariant = require('fbjs/lib/invariant');
 
 var RESERVED_PROPS = {
@@ -47,11 +46,6 @@ var DOMPropertyInjection = {
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
    * with the following properties:
-   *
-   * isCustomAttribute: function that given an attribute name will return true
-   * if it can be inserted into the DOM verbatim. Useful for data-* or aria-*
-   * attributes where it's impossible to enumerate all of the possible
-   * attribute names,
    *
    * Properties: object mapping DOM property name to one of the
    * DOMPropertyInjection constants or null. If your attribute isn't in here,
@@ -246,19 +240,20 @@ var DOMProperty = {
    * Checks whether a property name is a writeable attribute.
    * @method
    */
-  isWriteableAttribute: function(attributeName) {
-    if (DOMProperty.isReservedProp(attributeName)) {
+  isWriteable: function(name, value) {
+    if (DOMProperty.isReservedProp(name)) {
       return false;
     }
 
-    if (
-      ReactDOMFeatureFlags.allowCustomAttributes ||
-      DOMProperty.properties[attributeName]
-    ) {
+    if (value == null || DOMProperty.properties.hasOwnProperty(name)) {
       return true;
     }
 
-    return this.isCustomAttribute(attributeName);
+    if (DOMProperty.isCustomAttribute(name)) {
+      return true;
+    }
+
+    return typeof value === 'string';
   },
 
   /**

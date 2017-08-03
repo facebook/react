@@ -142,29 +142,27 @@ describe('ReactDOMComponent', () => {
       expectDev(() => (style.position = 'absolute')).toThrow();
     });
 
-    if (ReactDOMFeatureFlags.allowCustomAttributes !== true) {
-      it('should warn for unknown prop', () => {
-        spyOn(console, 'error');
-        var container = document.createElement('div');
-        ReactDOM.render(<div foo="bar" />, container);
-        expectDev(console.error.calls.count(0)).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
-            'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
-        );
-      });
+    it('should warn for unknown prop', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div foo={() => {}} />, container);
+      expectDev(console.error.calls.count(0)).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
+          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+      );
+    });
 
-      it('should group multiple unknown prop warnings together', () => {
-        spyOn(console, 'error');
-        var container = document.createElement('div');
-        ReactDOM.render(<div foo="bar" baz="qux" />, container);
-        expectDev(console.error.calls.count(0)).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
-            'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
-        );
-      });
-    }
+    it('should group multiple unknown prop warnings together', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
+      expectDev(console.error.calls.count(0)).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
+          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+      );
+    });
 
     it('should warn for onDblClick prop', () => {
       spyOn(console, 'error');
@@ -1877,52 +1875,101 @@ describe('ReactDOMComponent', () => {
     });
   });
 
-  describe('allowCustomAttributes feature flag', function() {
-    const originalValue = ReactDOMFeatureFlags.allowCustomAttributes;
+  describe('Custom attributes', function() {
+    it('allows assignment of custom attributes with string values', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
 
-    afterEach(function() {
-      ReactDOMFeatureFlags.allowCustomAttributes = originalValue;
+      expect(el.hasAttribute('whatever')).toBe(true);
     });
 
-    describe('when set to false', function() {
-      beforeEach(function() {
-        ReactDOMFeatureFlags.allowCustomAttributes = false;
+    it('removes custom attributes', function() {
+      const container = document.createElement('div');
+
+      ReactDOM.render(<div whatever="30" />, container);
+
+      expect(container.firstChild.getAttribute('whatever')).toBe('30');
+
+      ReactDOM.render(<div whatever={null} />, container);
+
+      expect(container.firstChild.hasAttribute('whatever')).toBe(false);
+    });
+
+    it('will not assign a boolean custom attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Unknown prop `whatever` on <div> tag',
+      );
+    });
+
+    it('will not assign a numeric custom attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={3} />);
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Unknown prop `whatever` on <div> tag',
+      );
+    });
+
+    it('will not assign an implicit boolean custom attributes', function() {
+      spyOn(console, 'error');
+
+      // eslint-disable-next-line react/jsx-boolean-value
+      var el = ReactTestUtils.renderIntoDocument(<div whatever />);
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Unknown prop `whatever` on <div> tag',
+      );
+    });
+
+    describe('data attributes', function() {
+      it('allows boolean data-attributes', function() {
+        var el = ReactTestUtils.renderIntoDocument(<div data-test={true} />);
+
+        expect(el.getAttribute('data-test')).toBe('true');
       });
 
-      it('does not allow assignment of custom attributes to elements', function() {
-        spyOn(console, 'error');
+      it('allows numeric data-attributes', function() {
+        var el = ReactTestUtils.renderIntoDocument(<div data-test={1} />);
 
-        var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
-
-        expect(el.hasAttribute('whatever')).toBe(false);
-
-        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(el.getAttribute('data-test')).toBe('1');
       });
 
-      it('allows data attributes', function() {
-        var el = ReactTestUtils.renderIntoDocument(<div data-whatever="30" />);
+      it('allows implicit boolean data-attributes', function() {
+        // eslint-disable-next-line react/jsx-boolean-value
+        var el = ReactTestUtils.renderIntoDocument(<div data-test />);
 
-        expect(el.hasAttribute('data-whatever')).toBe(true);
+        expect(el.getAttribute('data-test')).toBe('true');
       });
     });
 
-    describe('when set to true', function() {
-      beforeEach(function() {
-        ReactDOMFeatureFlags.allowCustomAttributes = true;
+    describe('aria attributes', function() {
+      it('allows boolean aria-attributes', function() {
+        var el = ReactTestUtils.renderIntoDocument(<div aria-hidden={true} />);
+
+        expect(el.getAttribute('aria-hidden')).toBe('true');
       });
 
-      it('allows assignment of custom attributes to elements', function() {
-        var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
+      it('allows numeric aria-attributes', function() {
+        var el = ReactTestUtils.renderIntoDocument(<div aria-hidden={1} />);
 
-        expect(el.hasAttribute('whatever')).toBe(true);
+        expect(el.getAttribute('aria-hidden')).toBe('1');
       });
 
-      it('warns on bad casing', function() {
-        spyOn(console, 'error');
+      it('allows implicit boolean aria-attributes', function() {
+        // eslint-disable-next-line react/jsx-boolean-value
+        var el = ReactTestUtils.renderIntoDocument(<div aria-hidden />);
 
-        ReactTestUtils.renderIntoDocument(<div autofocus="30" />);
-
-        expect(console.error).toHaveBeenCalledTimes(1);
+        expect(el.getAttribute('aria-hidden')).toBe('true');
       });
     });
   });

@@ -960,12 +960,12 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
-      } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!DOMProperty.isReservedProp(propKey)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
+        if (isCustomComponent(this._tag, lastProps)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
+        } else {
+          DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
         }
-      } else if (DOMProperty.isWriteableAttribute(propKey)) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
@@ -1021,7 +1021,7 @@ ReactDOMComponent.Mixin = {
             nextProp,
           );
         }
-      } else if (DOMProperty.isWriteableAttribute(propKey)) {
+      } else if (DOMProperty.isWriteable(propKey, nextProp)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This

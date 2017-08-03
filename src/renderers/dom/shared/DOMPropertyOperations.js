@@ -194,7 +194,7 @@ var DOMPropertyOperations = {
           node.setAttribute(attributeName, '' + value);
         }
       }
-    } else if (DOMProperty.isWriteableAttribute(name)) {
+    } else if (DOMProperty.isWriteable(name, value)) {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
       return;
     }
@@ -272,7 +272,7 @@ var DOMPropertyOperations = {
       } else {
         node.removeAttribute(propertyInfo.attributeName);
       }
-    } else if (DOMProperty.isWriteableAttribute(name)) {
+    } else {
       node.removeAttribute(name);
     }
 
