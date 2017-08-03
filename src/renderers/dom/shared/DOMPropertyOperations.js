@@ -194,7 +194,7 @@ var DOMPropertyOperations = {
           node.setAttribute(attributeName, '' + value);
         }
       }
-    } else if (DOMProperty.isWriteable(name, value)) {
+    } else if (DOMProperty.shouldSetAttribute(name, value)) {
       DOMPropertyOperations.setValueForAttribute(node, name, value);
       return;
     }

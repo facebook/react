@@ -103,7 +103,7 @@ var DOMMarkupOperations = {
         return attributeName + '=""';
       }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
-    } else if (DOMProperty.isWriteable(name, value)) {
+    } else if (DOMProperty.shouldSetAttribute(name, value)) {
       if (value == null) {
         return '';
       }
