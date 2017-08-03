@@ -51,12 +51,7 @@ describe('ReactShallowRenderer', () => {
     const instance = shallowRenderer.getMountedInstance();
     instance.setState({});
 
-    // The previous shallow renderer triggered cDU for setState() calls.
-    expect(logs).toEqual([
-      'shouldComponentUpdate',
-      'componentWillUpdate',
-      'componentDidUpdate',
-    ]);
+    expect(logs).toEqual(['shouldComponentUpdate', 'componentWillUpdate']);
 
     logs.splice(0);
 
@@ -407,7 +402,7 @@ describe('ReactShallowRenderer', () => {
       updatedState,
       updatedContext,
     ]);
-    expect(componentDidUpdateParams).toEqual([initialProp, initialState]);
+    expect(componentDidUpdateParams).toEqual([]);
   });
 
   it('can shallowly render components with ref as function', () => {
