@@ -30,25 +30,6 @@ function logCapturedError(capturedError: CapturedError): void {
   }
 
   const error = (capturedError.error: any);
-
-  // Duck-typing
-  let message;
-  let name;
-
-  if (
-    error !== null &&
-    typeof error.message === 'string' &&
-    typeof error.name === 'string' &&
-    typeof error.stack === 'string'
-  ) {
-    message = error.message;
-    name = error.name;
-  } else {
-    // A non-error was thrown.
-    message = '' + error;
-    name = 'Error';
-  }
-
   if (__DEV__) {
     const {
       componentName,
