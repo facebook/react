@@ -1,8 +1,8 @@
-const React = window.React;
-const ReactDOM = window.ReactDOM;
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
+
+const React = window.React;
+const ReactDOM = window.ReactDOM;
 
 function BadRender(props) {
   throw props.throws();

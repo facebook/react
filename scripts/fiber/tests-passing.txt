@@ -20,7 +20,7 @@ eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'error!');
 * warning(true, '%s %s, %s %s: %s (%s)', 1, 2, 3, 4, 5, 6);
 
-scripts/error-codes/__tests__/dev-expression-with-codes-test.js
+scripts/error-codes/__tests__/replace-invariant-error-codes-test.js
 * should replace __DEV__ in if
 * should replace warning calls
 * should add `reactProdInvariant` when it finds `require('invariant')`

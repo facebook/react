@@ -1,4 +1,3 @@
-const React = window.React;
 import RangeInputFixtures from './range-inputs';
 import TextInputFixtures from './text-inputs';
 import SelectFixtures from './selects';
@@ -9,6 +8,8 @@ import PasswordInputFixtures from './password-inputs';
 import ButtonFixtures from './buttons';
 import DateInputFixtures from './date-inputs';
 import ErrorHandling from './error-handling';
+
+const React = window.React;
 
 /**
  * A simple routing component that renders the appropriate
@@ -41,4 +42,4 @@ function FixturesPage() {
   }
 }
 
-module.exports = FixturesPage;
+export default FixturesPage;

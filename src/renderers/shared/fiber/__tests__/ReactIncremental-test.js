@@ -2395,4 +2395,258 @@ describe('ReactIncremental', () => {
       expect(cduNextProps).toEqual([{children: 'B'}]);
     },
   );
+
+  it('updates descendants with new context values', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class Middle extends React.Component {
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider><Middle><Child /></Middle></TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0', 'count:1']);
+  });
+
+  it('updates descendants with multiple context-providing ancestors with new context values', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      getChildContext = () => ({
+        name: 'brian',
+      });
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleContextProvider>
+          <Child />
+        </MiddleContextProvider>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0', 'count:1']);
+  });
+
+  it('should not update descendants with new context values if shouldComponentUpdate returns false', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleScu extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render = () => this.props.children;
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      getChildContext = () => ({
+        name: 'brian',
+      });
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleScu>
+          <MiddleContextProvider><Child /></MiddleContextProvider>
+        </MiddleScu>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+  });
+
+  it('should update descendants with new context values if setState() is called in the middle of the tree', () => {
+    let rendered = [];
+    let middleInstance;
+    let topInstance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        topInstance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleScu extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render = () => this.props.children;
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      constructor() {
+        super();
+        this.state = {name: 'brian'};
+        middleInstance = this;
+      }
+      getChildContext = () => ({
+        name: this.state.name,
+      });
+      updateName = name => {
+        this.setState({name});
+      };
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+        name: PropTypes.string,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}, name:${this.context.name}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleScu>
+          <MiddleContextProvider>
+            <Child />
+          </MiddleContextProvider>
+        </MiddleScu>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0, name:brian']);
+    topInstance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0, name:brian']);
+    middleInstance.updateName('not brian');
+    ReactNoop.flush();
+    expect(rendered).toEqual([
+      'count:0, name:brian',
+      'count:1, name:not brian',
+    ]);
+  });
 });

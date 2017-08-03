@@ -277,6 +277,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     markRef(current, workInProgress);
 
     if (!shouldUpdate) {
+      // Context providers should defer to sCU for rendering
+      if (hasContext) {
+        invalidateContextProvider(workInProgress, false);
+      }
+
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -302,8 +307,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // The context might have changed so we need to recalculate it.
     if (hasContext) {
-      invalidateContextProvider(workInProgress);
+      invalidateContextProvider(workInProgress, true);
     }
+
     return workInProgress.child;
   }
 
