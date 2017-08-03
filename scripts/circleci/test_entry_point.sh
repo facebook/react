@@ -9,7 +9,6 @@ if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
 fi
 
 if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
-  COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/test_print_warnings.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
@@ -17,6 +16,7 @@ fi
 
 if [ $((3 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('node ./scripts/tasks/eslint')
+  COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
 fi
 
 # These seem out of order but extract-errors must be run after jest.
