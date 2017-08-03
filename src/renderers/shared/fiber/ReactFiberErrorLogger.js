@@ -62,24 +62,9 @@ function logCapturedError(capturedError: CapturedError): void {
     } = capturedError;
 
     const errorSummary = message ? `${name}: ${message}` : name;
-
     const componentNameMessage = componentName
       ? `An error was thrown by ${componentName}.`
       : 'An error was thrown by one of your components.';
-
-    // Error stack varies by browser, eg:
-    // Chrome prepends the Error name and type.
-    // Firefox, Safari, and IE don't indent the stack lines.
-    // Format it in a consistent way for error logging.
-    let formattedCallStack = stack.slice(0, errorSummary.length) ===
-      errorSummary
-      ? stack.slice(errorSummary.length)
-      : stack;
-    formattedCallStack = formattedCallStack
-      .trim()
-      .split('\n')
-      .map(line => `\n    ${line.trim()}`)
-      .join();
 
     let errorBoundaryMessage;
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
@@ -98,20 +83,20 @@ function logCapturedError(capturedError: CapturedError): void {
         'Consider adding an error boundary to your tree to customize error handling behavior. ' +
         'See https://fb.me/react-error-boundaries for more information.';
     }
+    const combinedMessage =
+      `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
+      `The error is located at: ${componentStack}\n\n`;
 
-    let combinedMessage = `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n`;
-    if (!__DEV__) {
-      combinedMessage += `${errorSummary}\n\n`;
-    }
-    combinedMessage +=
-      `The error is located at: ${componentStack}\n\n` +
-      `The error was thrown at: ${formattedCallStack}`;
-
+    // In development, we provide our own message with just the component stack.
+    // We don't include the original error message and JS stack because the browser
+    // has already printed it. Even if the application swallows the error, it is still
+    // displayed by the browser thanks to the DEV-only fake event trick in ReactErrorUtils.
     console.error(combinedMessage);
   } else {
-    console.error(
-      `An error was thrown by one of your components.\n\n${error.stack}`,
-    );
+    // In production, we print the error directly.
+    // This will include the message, the JS stack, and anything the browser wants to show.
+    // We pass the error object instead of custom message so that the browser displays the error natively.
+    console.error(error);
   }
 }
 

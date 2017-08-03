@@ -908,10 +908,6 @@ describe('ReactIncrementalErrorHandling', () => {
           'Consider adding an error boundary to your tree to customize error handling behavior.',
       );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error was thrown at:\n' +
-          '    at ErrorThrowingComponent.componentWillMount (**)'
-      );
-      expect(normalizeCodeLocInfo(errorMessage)).toContain(
         'The error is located at: \n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
@@ -943,10 +939,6 @@ describe('ReactIncrementalErrorHandling', () => {
         'An error was thrown by ErrorThrowingComponent. ' +
           'You should fix this error in your code. ' +
           'Consider adding an error boundary to your tree to customize error handling behavior.',
-      );
-      expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error was thrown at:\n' +
-          '    at ErrorThrowingComponent.componentDidMount (**)'
       );
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
         'The error is located at: \n' +

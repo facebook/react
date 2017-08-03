@@ -251,8 +251,10 @@ if (__DEV__) {
               'error handler, in order to preserve the "Pause on exceptions" ' +
               'behavior of the DevTools. This is only an issue in DEV-mode; ' +
               'in production, React uses a normal try-catch statement.\n\n' +
-              "It's recommended to serve JavaScript files from the same " +
-              'origin as your application.',
+              'If you are using React from a CDN, ensure that the <script> tag ' +
+              'has a `crossorigin` attribute, and that it is served with the ' +
+              '`Access-Control-Allow-Origin: *` HTTP header. ' +
+              'See https://fb.me/react-cdn-crossorigin',
           );
         }
         ReactErrorUtils._hasCaughtError = true;

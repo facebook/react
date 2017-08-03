@@ -69,7 +69,7 @@ class TriggerErrorAndCatch extends React.Component {
               throw new Error('Caught error');
             }}
           />,
-          this.container,
+          this.container
         );
       });
     } catch (e) {}
