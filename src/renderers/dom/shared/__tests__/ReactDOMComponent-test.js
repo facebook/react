@@ -1894,36 +1894,30 @@ describe('ReactDOMComponent', () => {
       expect(container.firstChild.hasAttribute('whatever')).toBe(false);
     });
 
-    it('will not assign a boolean custom attributes', function() {
-      spyOn(console, 'error');
-
+    it('assigns a boolean custom attributes as a string', function() {
       var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
 
-      expect(el.hasAttribute('whatever')).toBe(false);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Unknown prop `whatever` on <div> tag',
-      );
+      expect(el.getAttribute('whatever')).toBe('true');
     });
 
-    it('will not assign a numeric custom attributes', function() {
-      spyOn(console, 'error');
-
-      var el = ReactTestUtils.renderIntoDocument(<div whatever={3} />);
-
-      expect(el.hasAttribute('whatever')).toBe(false);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Unknown prop `whatever` on <div> tag',
-      );
-    });
-
-    it('will not assign an implicit boolean custom attributes', function() {
-      spyOn(console, 'error');
-
+    it('assigns an implicit boolean custom attributes as a string', function() {
       // eslint-disable-next-line react/jsx-boolean-value
       var el = ReactTestUtils.renderIntoDocument(<div whatever />);
 
+      expect(el.getAttribute('whatever')).toBe('true');
+    });
+
+    it('assigns a numeric custom attributes as a string', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={3} />);
+
+      expect(el.getAttribute('whatever')).toBe('3');
+    });
+
+    it('will not assign a function custom attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={() => {}} />);
+
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -1931,46 +1925,16 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    describe('data attributes', function() {
-      it('allows boolean data-attributes', function() {
-        var el = ReactTestUtils.renderIntoDocument(<div data-test={true} />);
+    it('will not assign an object custom attributes', function() {
+      spyOn(console, 'error');
 
-        expect(el.getAttribute('data-test')).toBe('true');
-      });
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={{}} />);
 
-      it('allows numeric data-attributes', function() {
-        var el = ReactTestUtils.renderIntoDocument(<div data-test={1} />);
+      expect(el.hasAttribute('whatever')).toBe(false);
 
-        expect(el.getAttribute('data-test')).toBe('1');
-      });
-
-      it('allows implicit boolean data-attributes', function() {
-        // eslint-disable-next-line react/jsx-boolean-value
-        var el = ReactTestUtils.renderIntoDocument(<div data-test />);
-
-        expect(el.getAttribute('data-test')).toBe('true');
-      });
-    });
-
-    describe('aria attributes', function() {
-      it('allows boolean aria-attributes', function() {
-        var el = ReactTestUtils.renderIntoDocument(<div aria-hidden={true} />);
-
-        expect(el.getAttribute('aria-hidden')).toBe('true');
-      });
-
-      it('allows numeric aria-attributes', function() {
-        var el = ReactTestUtils.renderIntoDocument(<div aria-hidden={1} />);
-
-        expect(el.getAttribute('aria-hidden')).toBe('1');
-      });
-
-      it('allows implicit boolean aria-attributes', function() {
-        // eslint-disable-next-line react/jsx-boolean-value
-        var el = ReactTestUtils.renderIntoDocument(<div aria-hidden />);
-
-        expect(el.getAttribute('aria-hidden')).toBe('true');
-      });
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Unknown prop `whatever` on <div> tag',
+      );
     });
   });
 });
