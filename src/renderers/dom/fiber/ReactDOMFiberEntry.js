@@ -15,6 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -62,6 +63,22 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
+
+  if (
+    typeof Map !== 'function' ||
+    Map.prototype == null ||
+    typeof Map.prototype.forEach !== 'function' ||
+    typeof Set !== 'function' ||
+    Set.prototype == null ||
+    typeof Set.prototype.clear !== 'function' ||
+    typeof Set.prototype.forEach !== 'function'
+  ) {
+    warning(
+      false,
+      'React depends on Map and Set built-in types. Make sure that you load a ' +
+        'polyfill in older browsers. http://fb.me/react-polyfills',
+    );
+  }
 }
 
 require('ReactDOMClientInjection');
@@ -788,14 +805,42 @@ var ReactDOMFiber = {
   },
 };
 
-if (typeof injectInternals === 'function') {
-  injectInternals({
-    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
-    findHostInstanceByFiber: DOMRenderer.findHostInstance,
-    // This is an enum because we may add more (e.g. profiler build)
-    bundleType: __DEV__ ? 1 : 0,
-    version: ReactVersion,
-  });
+const foundDevTools = injectInternals({
+  findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+  findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  // This is an enum because we may add more (e.g. profiler build)
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+});
+
+if (__DEV__) {
+  if (
+    !foundDevTools &&
+    ExecutionEnvironment.canUseDOM &&
+    window.top === window.self
+  ) {
+    // If we're in Chrome or Firefox, provide a download link if not installed.
+    if (
+      (navigator.userAgent.indexOf('Chrome') > -1 &&
+        navigator.userAgent.indexOf('Edge') === -1) ||
+      navigator.userAgent.indexOf('Firefox') > -1
+    ) {
+      const protocol = window.location.protocol;
+      // Don't warn in exotic cases like chrome-extension://.
+      if (/^(https?|file):$/.test(protocol)) {
+        console.info(
+          '%cDownload the React DevTools ' +
+            'for a better development experience: ' +
+            'https://fb.me/react-devtools' +
+            (protocol === 'file:'
+              ? '\nYou might need to use a local HTTP server (instead of file://): ' +
+                  'https://fb.me/react-devtools-faq'
+              : ''),
+          'font-weight:bold',
+        );
+      }
+    }
+  }
 }
 
 module.exports = ReactDOMFiber;

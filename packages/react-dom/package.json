@@ -27,12 +27,15 @@
     "README.md",
     "index.js",
     "server.js",
-    "node-stream.js",
+    "server.browser.js",
     "test-utils.js",
     "unstable-native-dependencies.js",
     "cjs/",
     "umd/"
   ],
+  "browser": {
+    "./server.js": "./server.browser.js"
+  },
   "browserify": {
     "transform": [
       "loose-envify"

@@ -18,38 +18,8 @@ const React = require('react');
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-if (__DEV__) {
-  var describeComponentFrame = require('describeComponentFrame');
-  var getComponentName = require('getComponentName');
-
-  var currentlyValidatingElement = null;
-
-  var getDisplayName = function(element: ?ReactElement): string {
-    if (element == null) {
-      return '#empty';
-    } else if (typeof element === 'string' || typeof element === 'number') {
-      return '#text';
-    } else if (typeof element.type === 'string') {
-      return element.type;
-    } else {
-      return element.type.displayName || element.type.name || 'Unknown';
-    }
-  };
-
-  var getStackAddendum = function(): string {
-    var stack = '';
-    if (currentlyValidatingElement) {
-      var name = getDisplayName(currentlyValidatingElement);
-      var owner = currentlyValidatingElement._owner;
-      stack += describeComponentFrame(
-        name,
-        currentlyValidatingElement._source,
-        owner && getComponentName(owner),
-      );
-    }
-    return stack;
-  };
-}
+const describeComponentFrame = require('describeComponentFrame');
+const getComponentName = require('getComponentName');
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -263,6 +233,34 @@ class Updater {
       callback.call(publicInstance);
     }
   }
+}
+
+var currentlyValidatingElement = null;
+
+function getDisplayName(element) {
+  if (element == null) {
+    return '#empty';
+  } else if (typeof element === 'string' || typeof element === 'number') {
+    return '#text';
+  } else if (typeof element.type === 'string') {
+    return element.type;
+  } else {
+    return element.type.displayName || element.type.name || 'Unknown';
+  }
+}
+
+function getStackAddendum() {
+  var stack = '';
+  if (currentlyValidatingElement) {
+    var name = getDisplayName(currentlyValidatingElement);
+    var owner = currentlyValidatingElement._owner;
+    stack += describeComponentFrame(
+      name,
+      currentlyValidatingElement._source,
+      owner && getComponentName(owner),
+    );
+  }
+  return stack;
 }
 
 function getName(type, instance) {
