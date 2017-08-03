@@ -180,14 +180,6 @@ class ReactShallowRenderer {
     this._instance.state = state;
 
     this._rendered = this._instance.render();
-
-    // The 15.x shallow renderer triggered cDU for setState() calls only.
-    if (
-      oldState !== state &&
-      typeof this._instance.componentDidUpdate === 'function'
-    ) {
-      this._instance.componentDidUpdate(oldProps, oldState);
-    }
   }
 }
 
