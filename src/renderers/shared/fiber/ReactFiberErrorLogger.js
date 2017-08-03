@@ -110,7 +110,7 @@ function logCapturedError(capturedError: CapturedError): void {
     console.error(combinedMessage);
   } else {
     console.error(
-      `React caught an error thrown by one of your components.\n\n${error.stack}`,
+      `An error was thrown by one of your components.\n\n${error.stack}`,
     );
   }
 }
