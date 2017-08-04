@@ -621,8 +621,13 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('class for custom elements', async render => {
-        const e = await render(<x-custom class="test" />, 0);
+        const e = await render(<div is="custom-element" class="test" />, 0);
         expect(e.getAttribute('class')).toBe('test');
+      });
+
+      itRenders('className for custom elements', async render => {
+        const e = await render(<div is="custom-element" className="test" />, 0);
+        expect(e.getAttribute('className')).toBe('test');
       });
     });
 
@@ -652,6 +657,16 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no htmlFor prop with null value', async render => {
         const e = await render(<div htmlFor={null} />);
         expect(e.hasAttribute('htmlFor')).toBe(false);
+      });
+
+      itRenders('htmlFor attribute on custom elements', async render => {
+        const e = await render(<div is="custom-element" htmlFor="test" />);
+        expect(e.getAttribute('htmlFor')).toBe('test');
+      });
+
+      itRenders('for attribute on custom elements', async render => {
+        const e = await render(<div is="custom-element" for="test" />);
+        expect(e.getAttribute('for')).toBe('test');
       });
     });
 
