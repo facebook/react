@@ -1007,10 +1007,20 @@ var ReactDOMFiberComponent = {
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
-        } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
-          propertyInfo = DOMProperty.properties[propKey];
+        } else if (isCustomComponentTag) {
+          // $FlowFixMe - Should be inferred as not undefined.
+          extraAttributeNames.delete(propKey);
+          serverValue = DOMPropertyOperations.getValueForAttribute(
+            domElement,
+            propKey,
+            nextProp,
+          );
 
-          if (!isCustomComponentTag && propertyInfo) {
+          if (nextProp !== serverValue) {
+            warnForPropDifference(propKey, serverValue, nextProp);
+          }
+        } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+          if ((propertyInfo = DOMProperty.properties[propKey])) {
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propertyInfo.attributeName);
             serverValue = DOMPropertyOperations.getValueForProperty(
