@@ -2573,4 +2573,34 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
   });
+
+  describe('dynamic injection', () => {
+    beforeEach(() => {
+      // HACK: we reset modules several times during the test which breaks
+      // dynamic injection. So we resort to telling resetModules() to run
+      // our custom init code every time after resetting. We could have a nicer
+      // way to do this, but this is the only test that needs it, and it will
+      // be removed anyway when we switch to static injection.
+      onAfterResetModules = () => {
+        const DOMProperty = require('DOMProperty');
+        DOMProperty.injection.injectDOMPropertyConfig({
+          Properties: {foobar: 0},
+          DOMAttributeNames: {
+            foobar: 'foo-bar',
+          },
+        });
+      };
+      resetModules();
+    });
+
+    afterEach(() => {
+      onAfterResetModules = null;
+    });
+
+    itRenders('injected attributes', async render => {
+      const e = await render(<div foobar="test" />);
+
+      expect(e.getAttribute('foo-bar')).toEqual('test');
+    });
+  });
 });
