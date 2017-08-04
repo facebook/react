@@ -23,7 +23,7 @@ describe('ReactJSXElement', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     Component = class extends React.Component {
       render() {
         return <div />;

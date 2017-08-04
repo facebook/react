@@ -76,12 +76,9 @@ if (__DEV__) {
     return null;
   };
 
-  var stripTopSecret = str =>
-    typeof str === 'string' && str.replace('topsecret-', '');
-
   var createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
-      name: stripTopSecret(getComponentName(fiber)),
+      name: getComponentName(fiber),
       getInspectorData: findNodeHandle => ({
         measure: callback =>
           UIManager.measure(getHostNode(fiber, findNodeHandle), callback),
@@ -92,9 +89,19 @@ if (__DEV__) {
   };
 
   getInspectorDataForViewTag = function(viewTag: number): Object {
-    const fiber = findCurrentFiberUsingSlowPath(
-      getClosestInstanceFromNode(viewTag),
-    );
+    const closestInstance = getClosestInstanceFromNode(viewTag);
+
+    // Handle case where user clicks outside of ReactNative
+    if (!closestInstance) {
+      return {
+        hierarchy: [],
+        props: emptyObject,
+        selection: null,
+        source: null,
+      };
+    }
+
+    const fiber = findCurrentFiberUsingSlowPath(closestInstance);
     const fiberHierarchy = getOwnerHierarchy(fiber);
     const instance = lastNonHostInstance(fiberHierarchy);
     const hierarchy = createHierarchy(fiberHierarchy);
@@ -104,7 +111,6 @@ if (__DEV__) {
 
     return {
       hierarchy,
-      instance,
       props,
       selection,
       source,

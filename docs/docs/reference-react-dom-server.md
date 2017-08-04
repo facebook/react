@@ -10,7 +10,7 @@ If you load React from a `<script>` tag, these top-level APIs are available on t
 
 ## Overview
 
-The `ReactDOMServer` class allows you to render your components on the server.
+The `ReactDOMServer` object allows you to render your components on the server.
 
  - [`renderToString()`](#rendertostring)
  - [`renderToStaticMarkup()`](#rendertostaticmarkup)

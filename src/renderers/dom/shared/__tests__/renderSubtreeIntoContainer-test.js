@@ -14,8 +14,9 @@
 var React = require('react');
 var PropTypes = require('prop-types');
 var ReactDOM = require('react-dom');
-var ReactTestUtils = require('ReactTestUtils');
-var renderSubtreeIntoContainer = require('renderSubtreeIntoContainer');
+var ReactTestUtils = require('react-dom/test-utils');
+var renderSubtreeIntoContainer = require('react-dom')
+  .unstable_renderSubtreeIntoContainer;
 
 describe('renderSubtreeIntoContainer', () => {
   it('should pass context when rendering subtree elsewhere', () => {

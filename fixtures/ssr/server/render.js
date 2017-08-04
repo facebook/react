@@ -19,4 +19,4 @@ export default function render() {
   // There's no way to render a doctype in React so prepend manually.
   // Also append a bootstrap script tag.
   return '<!DOCTYPE html>' + html;
-};
+}

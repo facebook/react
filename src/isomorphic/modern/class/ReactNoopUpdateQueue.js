@@ -11,7 +11,9 @@
 
 'use strict';
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {

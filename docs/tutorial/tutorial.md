@@ -877,7 +877,7 @@ We also need to change it a little, since Game state is structured differently. 
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       history: history.concat([{
-        squares: squares
+        squares: squares,
       }]),
       xIsNext: !this.state.xIsNext,
     });
@@ -1029,7 +1029,7 @@ Add a method called `jumpTo` to the Game class:
   jumpTo(step) {
     this.setState({
       stepNumber: step,
-      xIsNext: (step % 2) ? false : true,
+      xIsNext: (step % 2) === 0,
     });
   }
 

@@ -17,6 +17,7 @@ describe('EventPluginRegistry', () => {
 
   beforeEach(() => {
     jest.resetModuleRegistry();
+    // TODO: can we express this test with only public API?
     EventPluginRegistry = require('EventPluginRegistry');
 
     createPlugin = function(properties) {

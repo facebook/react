@@ -19,7 +19,6 @@ var ReactGenericBatching = require('ReactGenericBatching');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var getEventTarget = require('getEventTarget');
-var getUnboundedScrollPosition = require('fbjs/lib/getUnboundedScrollPosition');
 
 var {HostRoot} = ReactTypeOfWork;
 
@@ -102,11 +101,6 @@ function handleTopLevelImpl(bookKeeping) {
   }
 }
 
-function scrollValueMonitor(cb) {
-  var scrollPosition = getUnboundedScrollPosition(window);
-  cb(scrollPosition);
-}
-
 var ReactDOMEventListener = {
   _enabled: true,
   _handleTopLevel: null,
@@ -163,11 +157,6 @@ var ReactDOMEventListener = {
       handlerBaseName,
       ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
     );
-  },
-
-  monitorScrollValue: function(refresh) {
-    var callback = scrollValueMonitor.bind(null, refresh);
-    EventListener.listen(window, 'scroll', callback);
   },
 
   dispatchEvent: function(topLevelType, nativeEvent) {

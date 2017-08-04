@@ -16,6 +16,7 @@ describe('CSSProperty', () => {
 
   beforeEach(() => {
     jest.resetModules();
+    // TODO: can we express this test with only public API?
     CSSProperty = require('CSSProperty');
   });
 

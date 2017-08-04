@@ -17,23 +17,23 @@ import type {HostConfig} from 'ReactFiberReconciler';
 
 var invariant = require('fbjs/lib/invariant');
 
-const {HostComponent, HostRoot} = require('ReactTypeOfWork');
+const {HostComponent, HostText, HostRoot} = require('ReactTypeOfWork');
 const {Deletion, Placement} = require('ReactTypeOfSideEffect');
 
 const {createFiberFromHostInstanceForDeletion} = require('ReactFiber');
 
-export type HydrationContext<I, TI> = {
+export type HydrationContext<C> = {
   enterHydrationState(fiber: Fiber): boolean,
   resetHydrationState(): void,
   tryToClaimNextHydratableInstance(fiber: Fiber): void,
-  hydrateHostInstance(fiber: Fiber): I,
-  hydrateHostTextInstance(fiber: Fiber): TI,
+  prepareToHydrateHostInstance(fiber: Fiber, rootContainerInstance: C): boolean,
+  prepareToHydrateHostTextInstance(fiber: Fiber): boolean,
   popHydrationState(fiber: Fiber): boolean,
 };
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
-): HydrationContext<I, TI> {
+): HydrationContext<C> {
   const {
     shouldSetTextContent,
     canHydrateInstance,
@@ -42,6 +42,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getFirstHydratableChild,
     hydrateInstance,
     hydrateTextInstance,
+    didNotHydrateInstance,
+    didNotFindHydratableInstance,
+    didNotFindHydratableTextInstance,
   } = config;
 
   // If this doesn't have hydration mode.
@@ -51,7 +54,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       getNextHydratableSibling &&
       getFirstHydratableChild &&
       hydrateInstance &&
-      hydrateTextInstance)
+      hydrateTextInstance &&
+      didNotHydrateInstance &&
+      didNotFindHydratableInstance &&
+      didNotFindHydratableTextInstance)
   ) {
     return {
       enterHydrationState() {
@@ -59,11 +65,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       },
       resetHydrationState() {},
       tryToClaimNextHydratableInstance() {},
-      hydrateHostInstance() {
-        invariant(false, 'React bug.');
+      prepareToHydrateHostInstance() {
+        invariant(
+          false,
+          'Expected prepareToHydrateHostInstance() to never be called. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
       },
-      hydrateHostTextInstance() {
-        invariant(false, 'React bug.');
+      prepareToHydrateHostTextInstance() {
+        invariant(
+          false,
+          'Expected prepareToHydrateHostTextInstance() to never be called. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
       },
       popHydrationState(fiber: Fiber) {
         return false;
@@ -86,24 +100,80 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function deleteHydratableInstance(returnFiber: Fiber, instance: I | TI) {
+    if (__DEV__) {
+      switch (returnFiber.tag) {
+        case HostRoot:
+          didNotHydrateInstance(returnFiber.stateNode.containerInfo, instance);
+          break;
+        case HostComponent:
+          didNotHydrateInstance(returnFiber.stateNode, instance);
+          break;
+      }
+    }
+
     const childToDelete = createFiberFromHostInstanceForDeletion();
     childToDelete.stateNode = instance;
     childToDelete.return = returnFiber;
-    // Deletions are added in reversed order so we add it to the front.
-    const last = returnFiber.progressedLastDeletion;
-    if (last !== null) {
-      last.nextEffect = childToDelete;
-      returnFiber.progressedLastDeletion = childToDelete;
-    } else {
-      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
-    }
     childToDelete.effectTag = Deletion;
 
+    // This might seem like it belongs on progressedFirstDeletion. However,
+    // these children are not part of the reconciliation list of children.
+    // Even if we abort and rereconcile the children, that will try to hydrate
+    // again and the nodes are still in the host tree so these will be
+    // recreated.
     if (returnFiber.lastEffect !== null) {
       returnFiber.lastEffect.nextEffect = childToDelete;
       returnFiber.lastEffect = childToDelete;
     } else {
       returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
+    }
+  }
+
+  function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
+    fiber.effectTag |= Placement;
+    if (__DEV__) {
+      var parentInstance;
+      switch (returnFiber.tag) {
+        // TODO: Currently we don't warn for insertions into the root because
+        // we always insert into the root in the non-hydrating case. We just
+        // delete the existing content. Reenable this once we have a better
+        // strategy for determining if we're hydrating or not.
+        // case HostRoot:
+        //   parentInstance = returnFiber.stateNode.containerInfo;
+        //   break;
+        case HostComponent:
+          parentInstance = returnFiber.stateNode;
+          break;
+        default:
+          return;
+      }
+      switch (fiber.tag) {
+        case HostComponent:
+          const type = fiber.type;
+          const props = fiber.pendingProps;
+          didNotFindHydratableInstance(parentInstance, type, props);
+          break;
+        case HostText:
+          const text = fiber.pendingProps;
+          didNotFindHydratableTextInstance(parentInstance, text);
+          break;
+      }
+    }
+  }
+
+  function canHydrate(fiber, nextInstance) {
+    switch (fiber.tag) {
+      case HostComponent: {
+        const type = fiber.type;
+        const props = fiber.pendingProps;
+        return canHydrateInstance(nextInstance, type, props);
+      }
+      case HostText: {
+        const text = fiber.pendingProps;
+        return canHydrateTextInstance(nextInstance, text);
+      }
+      default:
+        return false;
     }
   }
 
@@ -114,21 +184,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let nextInstance = nextHydratableInstance;
     if (!nextInstance) {
       // Nothing to hydrate. Make it an insertion.
-      fiber.effectTag |= Placement;
+      insertNonHydratedInstance((hydrationParentFiber: any), fiber);
       isHydrating = false;
       hydrationParentFiber = fiber;
       return;
     }
-    const type = fiber.type;
-    const props = fiber.memoizedProps;
-    if (!canHydrateInstance(nextInstance, type, props)) {
+    if (!canHydrate(fiber, nextInstance)) {
       // If we can't hydrate this instance let's try the next one.
       // We use this as a heuristic. It's based on intuition and not data so it
       // might be flawed or unnecessary.
       nextInstance = getNextHydratableSibling(nextInstance);
-      if (!nextInstance || !canHydrateInstance(nextInstance, type, props)) {
+      if (!nextInstance || !canHydrate(fiber, nextInstance)) {
         // Nothing to hydrate. Make it an insertion.
-        fiber.effectTag |= Placement;
+        insertNonHydratedInstance((hydrationParentFiber: any), fiber);
         isHydrating = false;
         hydrationParentFiber = fiber;
         return;
@@ -147,22 +215,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextHydratableInstance = getFirstHydratableChild(nextInstance);
   }
 
-  function hydrateHostInstance(fiber: Fiber, rootContainerInstance: any): I {
+  function prepareToHydrateHostInstance(
+    fiber: Fiber,
+    rootContainerInstance: C,
+  ): boolean {
     const instance: I = fiber.stateNode;
-    hydrateInstance(
+    const updatePayload = hydrateInstance(
       instance,
       fiber.type,
       fiber.memoizedProps,
       rootContainerInstance,
       fiber,
     );
-    return instance;
+    // TODO: Type this specific to this type of component.
+    fiber.updateQueue = (updatePayload: any);
+    // If the update payload indicates that there is a change or if there
+    // is a new ref we mark this as an update.
+    if (updatePayload !== null) {
+      return true;
+    }
+    return false;
   }
 
-  function hydrateHostTextInstance(fiber: Fiber): TI {
+  function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
     const textInstance: TI = fiber.stateNode;
-    hydrateTextInstance(textInstance, fiber);
-    return textInstance;
+    const shouldUpdate = hydrateTextInstance(
+      textInstance,
+      fiber.memoizedProps,
+      fiber,
+    );
+    return shouldUpdate;
   }
 
   function popToNextHostParent(fiber: Fiber): void {
@@ -192,6 +274,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return false;
     }
 
+    const type = fiber.type;
+
     // If we have any remaining hydratable nodes, we need to delete them now.
     // We only do this deeper than head and body since they tend to have random
     // other nodes in them. We also ignore components with pure text content in
@@ -199,9 +283,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // TODO: Better heuristic.
     if (
       fiber.tag !== HostComponent ||
-      (fiber.type !== 'head' &&
-        fiber.type !== 'body' &&
-        !shouldSetTextContent(fiber.memoizedProps))
+      (type !== 'head' &&
+        type !== 'body' &&
+        !shouldSetTextContent(type, fiber.memoizedProps))
     ) {
       let nextInstance = nextHydratableInstance;
       while (nextInstance) {
@@ -227,8 +311,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     enterHydrationState,
     resetHydrationState,
     tryToClaimNextHydratableInstance,
-    hydrateHostInstance,
-    hydrateHostTextInstance,
+    prepareToHydrateHostInstance,
+    prepareToHydrateHostTextInstance,
     popHydrationState,
   };
 };

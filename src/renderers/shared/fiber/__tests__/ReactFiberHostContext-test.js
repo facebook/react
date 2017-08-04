@@ -17,7 +17,8 @@ var ReactFiberReconciler;
 describe('ReactFiberHostContext', () => {
   beforeEach(() => {
     jest.resetModules();
-    React = require('React');
+    React = require('react');
+    // TODO: can we express this test with only public API?
     ReactFiberReconciler = require('ReactFiberReconciler');
   });
 
@@ -44,7 +45,7 @@ describe('ReactFiberHostContext', () => {
       appendInitialChild: function() {
         return null;
       },
-      appendChild: function() {
+      appendChildToContainer: function() {
         return null;
       },
       useSyncScheduling: true,

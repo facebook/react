@@ -1,106 +1,71 @@
 'use strict';
 
-// We want to globally mock this but jest doesn't let us do that by default
-// for a file that already exists. So we have to explicitly mock it.
-jest.mock('ReactDOM');
-jest.mock('ReactDOMServer');
-jest.mock('ReactNative');
-jest.mock('ReactDOMFeatureFlags', () => {
-  const flags = require.requireActual('ReactDOMFeatureFlags');
-  return Object.assign({}, flags, {
-    useFiber: false || !!process.env.REACT_DOM_JEST_USE_FIBER,
-  });
-});
-jest.mock('ReactFeatureFlags', () => {
-  const flags = require.requireActual('ReactFeatureFlags');
-  return Object.assign({}, flags, {
-    disableNewFiberFeatures: true,
-  });
-});
-jest.mock('ReactNativeFeatureFlags', () => {
-  const flags = require.requireActual('ReactNativeFeatureFlags');
-  return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
-  });
-});
-jest.mock('ReactTestRendererFeatureFlags', () => {
-  const flags = require.requireActual('ReactTestRendererFeatureFlags');
-  return Object.assign({}, flags, {
-    useFiber: flags.useFiber || !!process.env.REACT_DOM_JEST_USE_FIBER,
-  });
-});
+if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
+  // Inside the class equivalence tester, we have a custom environment, let's
+  // require that instead.
+  require('./setupSpecEquivalenceReporter.js');
+} else {
+  var env = jasmine.getEnv();
 
-// Error logging varies between Fiber and Stack;
-// Rather than fork dozens of tests, mock the error-logging file by default.
-jest.mock('ReactFiberErrorLogger');
+  // TODO: Stop using spyOn in all the test since that seem deprecated.
+  // This is a legacy upgrade path strategy from:
+  // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
+  const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
-var env = jasmine.getEnv();
+  ['error', 'warn'].forEach(methodName => {
+    var oldMethod = console[methodName];
+    var newMethod = function() {
+      newMethod.__callCount++;
+      oldMethod.apply(this, arguments);
+    };
+    newMethod.__callCount = 0;
+    console[methodName] = newMethod;
 
-var callCount = 0;
-var oldError = console.error;
-var newError = function() {
-  callCount++;
-  oldError.apply(this, arguments);
-};
-
-console.error = newError;
-
-env.beforeEach(() => {
-  callCount = 0;
-  jasmine.addMatchers({
-    toBeReset() {
-      return {
-        compare(actual) {
-          // TODO: Catch test cases that call spyOn() but don't inspect the mock
-          // properly.
-          if (actual !== newError && !jasmine.isSpy(actual)) {
-            return {
-              pass: false,
-              message: 'Test did not tear down console.error mock properly.',
-            };
-          }
-          return {pass: true};
-        },
-      };
-    },
-    toNotHaveBeenCalled() {
-      return {
-        compare(actual) {
-          return {
-            pass: callCount === 0,
-            message: 'Expected test not to warn. If the warning is expected, mock ' +
-              "it out using spyOn(console, 'error'); and test that the " +
-              'warning occurs.',
-          };
-        },
-      };
-    },
-  });
-});
-env.afterEach(() => {
-  expect(console.error).toBeReset();
-  expect(console.error).toNotHaveBeenCalled();
-});
-
-function wrapDevMatcher(obj, name) {
-  const original = obj[name];
-  obj[name] = function devMatcher() {
-    try {
-      original.apply(this, arguments);
-    } catch (e) {
-      global.__hadDevFailures = e.stack;
-    }
-  };
-}
-
-const expectDev = function expectDev(actual) {
-  const expectation = expect(actual);
-  if (global.__suppressDevFailures) {
-    Object.keys(expectation).forEach(name => {
-      wrapDevMatcher(expectation, name);
-      wrapDevMatcher(expectation.not, name);
+    env.beforeEach(() => {
+      newMethod.__callCount = 0;
     });
-  }
-  return expectation;
-};
-global.expectDev = expectDev;
+
+    env.afterEach(() => {
+      if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
+        throw new Error(
+          'Test did not tear down console.' + methodName + ' mock properly.'
+        );
+      }
+      if (console[methodName].__callCount !== 0) {
+        throw new Error(
+          'Expected test not to call console.' +
+            methodName +
+            '(). ' +
+            'If the warning is expected, mock it out using ' +
+            "spyOn(console, '" +
+            methodName +
+            "') and test that the " +
+            'warning occurs.'
+        );
+      }
+    });
+  });
+
+  var wrapDevMatcher = function(obj, name) {
+    const original = obj[name];
+    obj[name] = function devMatcher() {
+      try {
+        original.apply(this, arguments);
+      } catch (e) {
+        global.__hadDevFailures = e.stack;
+      }
+    };
+  };
+
+  const expectDev = function expectDev(actual) {
+    const expectation = expect(actual);
+    if (global.__suppressDevFailures) {
+      Object.keys(expectation).forEach(name => {
+        wrapDevMatcher(expectation, name);
+        wrapDevMatcher(expectation.not, name);
+      });
+    }
+    return expectation;
+  };
+  global.expectDev = expectDev;
+}

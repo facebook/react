@@ -116,11 +116,12 @@ describe('ReactDebugFiberPerf', () => {
     global.performance = createUserTimingPolyfill();
 
     // Import after the polyfill is set up:
-    React = require('React');
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    // TODO: can we express this test with only public API?
     ReactCoroutine = require('ReactCoroutine');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactNoop = require('ReactNoop');
     ReactPortal = require('ReactPortal');
+    ReactFeatureFlags = require('ReactFeatureFlags');
     ReactFeatureFlags.disableNewFiberFeatures = false;
     PropTypes = require('prop-types');
   });
@@ -280,7 +281,8 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('measures deprioritized work', () => {
-    ReactNoop.performAnimationWork(() => {
+    addComment('Flush the parent');
+    ReactNoop.flushSync(() => {
       ReactNoop.render(
         <Parent>
           <div hidden={true}>
@@ -289,10 +291,8 @@ describe('ReactDebugFiberPerf', () => {
         </Parent>,
       );
     });
-    addComment('Flush the parent');
-    ReactNoop.flushAnimationPri();
     addComment('Flush the child');
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -357,7 +357,7 @@ describe('ReactDebugFiberPerf', () => {
 
     class Boundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -485,6 +485,22 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
+    class Component extends React.Component {
+      state = {step: 1};
+      componentDidMount() {
+        this.setState({step: 2});
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Component />);
+    });
     expect(getFlameChart()).toMatchSnapshot();
   });
 });

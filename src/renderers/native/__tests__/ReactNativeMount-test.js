@@ -21,7 +21,7 @@ describe('ReactNative', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactNative = require('ReactNative');
+    ReactNative = require('react-native');
     UIManager = require('UIManager');
     createReactNativeComponentClass = require('createReactNativeComponentClass');
   });
@@ -107,5 +107,20 @@ describe('ReactNative', () => {
 
     ReactNative.render(<Component chars={after} />, 11);
     expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  });
+
+  it('calls setState with no arguments', () => {
+    var mockArgs;
+    class Component extends React.Component {
+      componentDidMount() {
+        this.setState({}, (...args) => (mockArgs = args));
+      }
+      render() {
+        return false;
+      }
+    }
+
+    ReactNative.render(<Component />, 11);
+    expect(mockArgs.length).toEqual(0);
   });
 });

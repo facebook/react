@@ -42,7 +42,7 @@ describeStack('ReactPerf', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactPerf = require('ReactPerf');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     emptyFunction = require('fbjs/lib/emptyFunction');
 
     App = class extends React.Component {

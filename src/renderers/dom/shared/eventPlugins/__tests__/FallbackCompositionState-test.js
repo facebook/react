@@ -17,6 +17,7 @@ describe('FallbackCompositionState', () => {
   var TEXT = 'Hello world';
 
   beforeEach(() => {
+    // TODO: can we express this test with only public API?
     FallbackCompositionState = require('FallbackCompositionState');
   });
 

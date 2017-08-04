@@ -19,13 +19,12 @@ const RN_PROD = Bundles.bundleTypes.RN_PROD;
 const facebookWWW = 'facebook-www';
 // these files need to be copied to the facebook-www build
 const facebookWWWSrcDependencies = [
-  'src/test/reactComponentExpect.js',
   'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
 ];
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
-  'src/shared/utils/PooledClass.js',
+  'src/renderers/shared/utils/PooledClass.js',
   'src/renderers/shared/fiber/isomorphic/ReactTypes.js',
   'src/renderers/native/ReactNativeTypes.js',
 ];

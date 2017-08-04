@@ -12,7 +12,6 @@
 'use strict';
 
 var KeyEscapeUtils = require('KeyEscapeUtils');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactReconciler = require('ReactReconciler');
 
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -47,10 +46,13 @@ function instantiateChild(childInstances, child, name, selfDebugID) {
     if (!keyUnique) {
       warning(
         false,
-        'flattenChildren(...): Encountered two children with the same key, ' +
-          '`%s`. Child keys must be unique; when two children share a key, only ' +
-          'the first child will be used.%s',
-        KeyEscapeUtils.unescape(name),
+        'flattenChildren(...): ' +
+          'Encountered two children with the same key, `%s`. ' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.%s',
+        KeyEscapeUtils.unescapeInDev(name),
         ReactComponentTreeHook.getStackAddendumByID(selfDebugID),
       );
     }
@@ -148,17 +150,6 @@ var ReactChildReconciler = {
         );
         nextChildren[name] = prevChild;
       } else {
-        if (
-          !ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
-        ) {
-          removedNodes[name] = ReactReconciler.getHostNode(prevChild);
-          ReactReconciler.unmountComponent(
-            prevChild,
-            false /* safely */,
-            false /* skipLifecycle */,
-          );
-        }
         // The child must be instantiated before it's mounted.
         var nextChildInstance = instantiateReactComponent(nextElement, true);
         nextChildren[name] = nextChildInstance;
@@ -173,10 +164,7 @@ var ReactChildReconciler = {
           selfDebugID,
         );
         mountImages.push(nextChildMountImage);
-        if (
-          ReactFeatureFlags.prepareNewChildrenBeforeUnmountInStack &&
-          prevChild
-        ) {
+        if (prevChild) {
           removedNodes[name] = ReactReconciler.getHostNode(prevChild);
           ReactReconciler.unmountComponent(
             prevChild,

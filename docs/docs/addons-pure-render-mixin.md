@@ -7,6 +7,7 @@ category: Add-Ons
 ---
 
 > Note:
+>
 > `PureRenderMixin` is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
 
 **Importing**

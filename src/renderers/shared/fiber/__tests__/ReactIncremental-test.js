@@ -20,7 +20,7 @@ describe('ReactIncremental', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
+    ReactNoop = require('react-noop-renderer');
     PropTypes = require('prop-types');
 
     ReactFeatureFlags = require('ReactFeatureFlags');
@@ -234,7 +234,13 @@ describe('ReactIncremental', () => {
     // Flush the rest of the work which now includes the low priority
     ReactNoop.flush();
 
-    expect(ops).toEqual(['setState1', 'setState2', 'callback1', 'callback2']);
+    expect(ops).toEqual([
+      'setState1',
+      'setState1',
+      'setState2',
+      'callback1',
+      'callback2',
+    ]);
     expect(inst.state).toEqual({text: 'bar', text2: 'baz'});
   });
 
@@ -320,33 +326,29 @@ describe('ReactIncremental', () => {
     }
 
     // Init
-    ReactNoop.performAnimationWork(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
     ReactNoop.flush();
-
     expect(ops).toEqual(['Foo', 'Bar', 'Bar', 'Middle', 'Middle']);
 
     ops = [];
 
     // Render the high priority work (everying except the hidden trees).
-    ReactNoop.performAnimationWork(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
-    ReactNoop.flushAnimationPri();
-
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
 
     ops = [];
 
     // The hidden content was deprioritized from high to low priority. A low
     // priority callback should have been scheduled. Flush it now.
-    ReactNoop.flushDeferredPri();
-
+    ReactNoop.flush();
     expect(ops).toEqual(['Middle', 'Middle']);
   });
 
-  it('can resume work in a subtree even when a parent bails out', () => {
+  xit('can resume work in a subtree even when a parent bails out', () => {
     var ops = [];
 
     function Bar(props) {
@@ -409,7 +411,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  it('can resume work in a bailed subtree within one pass', () => {
+  xit('can resume work in a bailed subtree within one pass', () => {
     var ops = [];
 
     function Bar(props) {
@@ -507,7 +509,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
   });
 
-  it('can resume mounting a class component', () => {
+  xit('can resume mounting a class component', () => {
     let ops = [];
     let foo;
     class Parent extends React.Component {
@@ -548,7 +550,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar']);
   });
 
-  it('reuses the same instance when resuming a class instance', () => {
+  xit('reuses the same instance when resuming a class instance', () => {
     let ops = [];
     let foo;
     class Parent extends React.Component {
@@ -617,7 +619,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('can reuse work done after being preempted', () => {
+  xit('can reuse work done after being preempted', () => {
     var ops = [];
 
     function Bar(props) {
@@ -710,166 +712,171 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Middle']);
   });
 
-  it('can reuse work that began but did not complete, after being preempted', () => {
-    let ops = [];
-    let child;
-    let sibling;
+  xit(
+    'can reuse work that began but did not complete, after being preempted',
+    () => {
+      let ops = [];
+      let child;
+      let sibling;
 
-    function GreatGrandchild() {
-      ops.push('GreatGrandchild');
-      return <div />;
-    }
-
-    function Grandchild() {
-      ops.push('Grandchild');
-      return <GreatGrandchild />;
-    }
-
-    class Child extends React.Component {
-      state = {step: 0};
-      render() {
-        child = this;
-        ops.push('Child');
-        return <Grandchild />;
-      }
-    }
-
-    class Sibling extends React.Component {
-      render() {
-        ops.push('Sibling');
-        sibling = this;
+      function GreatGrandchild() {
+        ops.push('GreatGrandchild');
         return <div />;
       }
-    }
 
-    function Parent() {
-      ops.push('Parent');
-      return [
-        // The extra div is necessary because when Parent bails out during the
-        // high priority update, its progressedPriority is set to high.
-        // So its direct children cannot be reused when we resume at
-        // low priority. I think this would be fixed by changing
-        // pendingWorkPriority and progressedPriority to be the priority of
-        // the children only, not including the fiber itself.
-        <div key="a"><Child /></div>,
-        <Sibling key="b" />,
-      ];
-    }
-
-    ReactNoop.render(<Parent />);
-    ReactNoop.flush();
-    ops = [];
-
-    // Begin working on a low priority update to Child, but stop before
-    // GreatGrandchild. Child and Grandchild begin but don't complete.
-    child.setState({step: 1});
-    ReactNoop.flushDeferredPri(30);
-    expect(ops).toEqual(['Child', 'Grandchild']);
-
-    // Interrupt the current low pri work with a high pri update elsewhere in
-    // the tree.
-    ops = [];
-    ReactNoop.performAnimationWork(() => {
-      sibling.setState({});
-    });
-    ReactNoop.flushAnimationPri();
-    expect(ops).toEqual(['Sibling']);
-
-    // Continue the low pri work. The work on Child and GrandChild was memoized
-    // so they should not be worked on again.
-    ops = [];
-    ReactNoop.flush();
-    expect(ops).toEqual([
-      // No Child
-      // No Grandchild
-      'GreatGrandchild',
-    ]);
-  });
-
-  it('can reuse work if shouldComponentUpdate is false, after being preempted', () => {
-    var ops = [];
-
-    function Bar(props) {
-      ops.push('Bar');
-      return <div>{props.children}</div>;
-    }
-
-    class Middle extends React.Component {
-      shouldComponentUpdate(nextProps) {
-        return this.props.children !== nextProps.children;
+      function Grandchild() {
+        ops.push('Grandchild');
+        return <GreatGrandchild />;
       }
-      render() {
-        ops.push('Middle');
-        return <span>{this.props.children}</span>;
-      }
-    }
 
-    class Content extends React.Component {
-      shouldComponentUpdate(nextProps) {
-        return this.props.step !== nextProps.step;
+      class Child extends React.Component {
+        state = {step: 0};
+        render() {
+          child = this;
+          ops.push('Child');
+          return <Grandchild />;
+        }
       }
-      render() {
-        ops.push('Content');
+
+      class Sibling extends React.Component {
+        render() {
+          ops.push('Sibling');
+          sibling = this;
+          return <div />;
+        }
+      }
+
+      function Parent() {
+        ops.push('Parent');
+        return [
+          // The extra div is necessary because when Parent bails out during the
+          // high priority update, its progressedPriority is set to high.
+          // So its direct children cannot be reused when we resume at
+          // low priority. I think this would be fixed by changing
+          // pendingWorkPriority and progressedPriority to be the priority of
+          // the children only, not including the fiber itself.
+          <div key="a"><Child /></div>,
+          <Sibling key="b" />,
+        ];
+      }
+
+      ReactNoop.render(<Parent />);
+      ReactNoop.flush();
+      ops = [];
+
+      // Begin working on a low priority update to Child, but stop before
+      // GreatGrandchild. Child and Grandchild begin but don't complete.
+      child.setState({step: 1});
+      ReactNoop.flushDeferredPri(30);
+      expect(ops).toEqual(['Child', 'Grandchild']);
+
+      // Interrupt the current low pri work with a high pri update elsewhere in
+      // the tree.
+      ops = [];
+      ReactNoop.flushSync(() => {
+        sibling.setState({});
+      });
+      expect(ops).toEqual(['Sibling']);
+
+      // Continue the low pri work. The work on Child and GrandChild was memoized
+      // so they should not be worked on again.
+      ops = [];
+      ReactNoop.flush();
+      expect(ops).toEqual([
+        // No Child
+        // No Grandchild
+        'GreatGrandchild',
+      ]);
+    },
+  );
+
+  xit(
+    'can reuse work if shouldComponentUpdate is false, after being preempted',
+    () => {
+      var ops = [];
+
+      function Bar(props) {
+        ops.push('Bar');
+        return <div>{props.children}</div>;
+      }
+
+      class Middle extends React.Component {
+        shouldComponentUpdate(nextProps) {
+          return this.props.children !== nextProps.children;
+        }
+        render() {
+          ops.push('Middle');
+          return <span>{this.props.children}</span>;
+        }
+      }
+
+      class Content extends React.Component {
+        shouldComponentUpdate(nextProps) {
+          return this.props.step !== nextProps.step;
+        }
+        render() {
+          ops.push('Content');
+          return (
+            <div>
+              <Middle>{this.props.step === 0 ? 'Hi' : 'Hello'}</Middle>
+              <Bar>{this.props.step === 0 ? this.props.text : '-'}</Bar>
+              <Middle>{this.props.step === 0 ? 'There' : 'World'}</Middle>
+            </div>
+          );
+        }
+      }
+
+      function Foo(props) {
+        ops.push('Foo');
         return (
           <div>
-            <Middle>{this.props.step === 0 ? 'Hi' : 'Hello'}</Middle>
-            <Bar>{this.props.step === 0 ? this.props.text : '-'}</Bar>
-            <Middle>{this.props.step === 0 ? 'There' : 'World'}</Middle>
+            <Bar>{props.text}</Bar>
+            <div hidden={true}>
+              <Content step={props.step} text={props.text} />
+            </div>
           </div>
         );
       }
-    }
 
-    function Foo(props) {
-      ops.push('Foo');
-      return (
-        <div>
-          <Bar>{props.text}</Bar>
-          <div hidden={true}>
-            <Content step={props.step} text={props.text} />
-          </div>
-        </div>
-      );
-    }
+      // Init
+      ReactNoop.render(<Foo text="foo" step={0} />);
+      ReactNoop.flush();
 
-    // Init
-    ReactNoop.render(<Foo text="foo" step={0} />);
-    ReactNoop.flush();
+      expect(ops).toEqual(['Foo', 'Bar', 'Content', 'Middle', 'Bar', 'Middle']);
 
-    expect(ops).toEqual(['Foo', 'Bar', 'Content', 'Middle', 'Bar', 'Middle']);
+      ops = [];
 
-    ops = [];
+      // Make a quick update which will schedule low priority work to
+      // update the middle content.
+      ReactNoop.render(<Foo text="bar" step={1} />);
+      ReactNoop.flushDeferredPri(30 + 5);
 
-    // Make a quick update which will schedule low priority work to
-    // update the middle content.
-    ReactNoop.render(<Foo text="bar" step={1} />);
-    ReactNoop.flushDeferredPri(30 + 5);
+      expect(ops).toEqual(['Foo', 'Bar']);
 
-    expect(ops).toEqual(['Foo', 'Bar']);
+      ops = [];
 
-    ops = [];
+      // The middle content is now pending rendering...
+      ReactNoop.flushDeferredPri(30 + 25 + 5);
+      expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
 
-    // The middle content is now pending rendering...
-    ReactNoop.flushDeferredPri(30 + 25 + 5);
-    expect(ops).toEqual(['Content', 'Middle', 'Bar']); // One more Middle left.
+      ops = [];
 
-    ops = [];
+      // but we'll interrupt it to render some higher priority work.
+      // The middle content will bailout so it remains untouched.
+      ReactNoop.render(<Foo text="foo" step={1} />);
+      ReactNoop.flushDeferredPri(30);
 
-    // but we'll interrupt it to render some higher priority work.
-    // The middle content will bailout so it remains untouched.
-    ReactNoop.render(<Foo text="foo" step={1} />);
-    ReactNoop.flushDeferredPri(30);
+      expect(ops).toEqual(['Foo', 'Bar']);
 
-    expect(ops).toEqual(['Foo', 'Bar']);
+      ops = [];
 
-    ops = [];
-
-    // Since we did nothing to the middle subtree during the interuption,
-    // we should be able to reuse the reconciliation work that we already did
-    // without restarting.
-    ReactNoop.flush();
-    expect(ops).toEqual(['Middle']);
-  });
+      // Since we did nothing to the middle subtree during the interuption,
+      // we should be able to reuse the reconciliation work that we already did
+      // without restarting.
+      ReactNoop.flush();
+      expect(ops).toEqual(['Middle']);
+    },
+  );
 
   it('memoizes work even if shouldComponentUpdate returns false', () => {
     let ops = [];
@@ -1108,7 +1115,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz', 'Bar', 'Baz']);
   });
 
-  it('can call sCU while resuming a partly mounted component', () => {
+  xit('can call sCU while resuming a partly mounted component', () => {
     var ops = [];
 
     var instances = new Set();
@@ -1157,7 +1164,7 @@ describe('ReactIncremental', () => {
     expect(instances.size).toBe(4);
   });
 
-  it('gets new props when setting state on a partly updated component', () => {
+  xit('gets new props when setting state on a partly updated component', () => {
     var ops = [];
     var instances = [];
 
@@ -1213,7 +1220,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['Bar:A-1', 'Baz']);
   });
 
-  it('calls componentWillMount twice if the initial render is aborted', () => {
+  xit('calls componentWillMount twice if the initial render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1269,54 +1276,57 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('uses state set in componentWillMount even if initial render was aborted', () => {
-    var ops = [];
+  xit(
+    'uses state set in componentWillMount even if initial render was aborted',
+    () => {
+      var ops = [];
 
-    class LifeCycle extends React.Component {
-      constructor(props) {
-        super(props);
-        this.state = {x: this.props.x + '(ctor)'};
+      class LifeCycle extends React.Component {
+        constructor(props) {
+          super(props);
+          this.state = {x: this.props.x + '(ctor)'};
+        }
+        componentWillMount() {
+          ops.push('componentWillMount:' + this.state.x);
+          this.setState({x: this.props.x + '(willMount)'});
+        }
+        componentDidMount() {
+          ops.push('componentDidMount:' + this.state.x);
+        }
+        render() {
+          ops.push('render:' + this.state.x);
+          return <span />;
+        }
       }
-      componentWillMount() {
-        ops.push('componentWillMount:' + this.state.x);
-        this.setState({x: this.props.x + '(willMount)'});
+
+      function App(props) {
+        ops.push('App');
+        return <LifeCycle x={props.x} />;
       }
-      componentDidMount() {
-        ops.push('componentDidMount:' + this.state.x);
-      }
-      render() {
-        ops.push('render:' + this.state.x);
-        return <span />;
-      }
-    }
 
-    function App(props) {
-      ops.push('App');
-      return <LifeCycle x={props.x} />;
-    }
+      ReactNoop.render(<App x={0} />);
+      ReactNoop.flushDeferredPri(20);
 
-    ReactNoop.render(<App x={0} />);
-    ReactNoop.flushDeferredPri(20);
+      expect(ops).toEqual([
+        'App',
+        'componentWillMount:0(ctor)',
+        'render:0(willMount)',
+      ]);
 
-    expect(ops).toEqual([
-      'App',
-      'componentWillMount:0(ctor)',
-      'render:0(willMount)',
-    ]);
+      ops = [];
+      ReactNoop.render(<App x={1} />);
+      ReactNoop.flush();
 
-    ops = [];
-    ReactNoop.render(<App x={1} />);
-    ReactNoop.flush();
+      expect(ops).toEqual([
+        'App',
+        'componentWillMount:0(willMount)',
+        'render:1(willMount)',
+        'componentDidMount:1(willMount)',
+      ]);
+    },
+  );
 
-    expect(ops).toEqual([
-      'App',
-      'componentWillMount:0(willMount)',
-      'render:1(willMount)',
-      'componentDidMount:1(willMount)',
-    ]);
-  });
-
-  it('calls componentWill* twice if an update render is aborted', () => {
+  xit('calls componentWill* twice if an update render is aborted', () => {
     var ops = [];
 
     class LifeCycle extends React.Component {
@@ -1403,7 +1413,7 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('does not call componentWillReceiveProps for state-only updates', () => {
+  xit('does not call componentWillReceiveProps for state-only updates', () => {
     var ops = [];
 
     var instances = [];
@@ -1552,137 +1562,104 @@ describe('ReactIncremental', () => {
     // incomplete parents.
   });
 
-  it('skips will/DidUpdate when bailing unless an update was already in progress', () => {
-    var ops = [];
+  xit(
+    'skips will/DidUpdate when bailing unless an update was already in progress',
+    () => {
+      var ops = [];
 
-    class LifeCycle extends React.Component {
-      componentWillMount() {
-        ops.push('componentWillMount');
+      class LifeCycle extends React.Component {
+        componentWillMount() {
+          ops.push('componentWillMount');
+        }
+        componentDidMount() {
+          ops.push('componentDidMount');
+        }
+        componentWillReceiveProps(nextProps) {
+          ops.push('componentWillReceiveProps');
+        }
+        shouldComponentUpdate(nextProps) {
+          ops.push('shouldComponentUpdate');
+          // Bail
+          return this.props.x !== nextProps.x;
+        }
+        componentWillUpdate(nextProps) {
+          ops.push('componentWillUpdate');
+        }
+        componentDidUpdate(prevProps) {
+          ops.push('componentDidUpdate');
+        }
+        render() {
+          ops.push('render');
+          return <span />;
+        }
       }
-      componentDidMount() {
-        ops.push('componentDidMount');
-      }
-      componentWillReceiveProps(nextProps) {
-        ops.push('componentWillReceiveProps');
-      }
-      shouldComponentUpdate(nextProps) {
-        ops.push('shouldComponentUpdate');
-        // Bail
-        return this.props.x !== nextProps.x;
-      }
-      componentWillUpdate(nextProps) {
-        ops.push('componentWillUpdate');
-      }
-      componentDidUpdate(prevProps) {
-        ops.push('componentDidUpdate');
-      }
-      render() {
-        ops.push('render');
+
+      function Sibling() {
+        ops.push('render sibling');
         return <span />;
       }
-    }
 
-    function Sibling() {
-      ops.push('render sibling');
-      return <span />;
-    }
-
-    function App(props) {
-      return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
-    }
-
-    ReactNoop.render(<App x={0} />);
-    ReactNoop.flush();
-
-    expect(ops).toEqual([
-      'componentWillMount',
-      'render',
-      'render sibling',
-      'componentDidMount',
-    ]);
-
-    ops = [];
-
-    // Update to same props
-    ReactNoop.render(<App x={0} />);
-    ReactNoop.flush();
-
-    expect(ops).toEqual([
-      'componentWillReceiveProps',
-      'shouldComponentUpdate',
-      // no componentWillUpdate
-      // no render
-      'render sibling',
-      // no componentDidUpdate
-    ]);
-
-    ops = [];
-
-    // Begin updating to new props...
-    ReactNoop.render(<App x={1} />);
-    ReactNoop.flushDeferredPri(30);
-
-    expect(ops).toEqual([
-      'componentWillReceiveProps',
-      'shouldComponentUpdate',
-      'componentWillUpdate',
-      'render',
-      'render sibling',
-      // no componentDidUpdate yet
-    ]);
-
-    ops = [];
-
-    // ...but we'll interrupt it to rerender the same props.
-    ReactNoop.render(<App x={1} />);
-    ReactNoop.flush();
-
-    // We can bail out this time, but we must call componentDidUpdate.
-    expect(ops).toEqual([
-      'componentWillReceiveProps',
-      'shouldComponentUpdate',
-      // no componentWillUpdate
-      // no render
-      'render sibling',
-      'componentDidUpdate',
-    ]);
-  });
-
-  it('performs batched updates at the end of the batch', () => {
-    var ops = [];
-    var instance;
-
-    class Foo extends React.Component {
-      state = {n: 0};
-      render() {
-        instance = this;
-        return <div />;
+      function App(props) {
+        return [<LifeCycle key="a" x={props.x} />, <Sibling key="b" />];
       }
-    }
 
-    ReactNoop.render(<Foo />);
-    ReactNoop.flush();
-    ops = [];
+      ReactNoop.render(<App x={0} />);
+      ReactNoop.flush();
 
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        instance.setState({n: 1}, () => ops.push('setState 1'));
-        instance.setState({n: 2}, () => ops.push('setState 2'));
-        ops.push('end batchedUpdates');
-      });
-      ops.push('end syncUpdates');
-    });
+      expect(ops).toEqual([
+        'componentWillMount',
+        'render',
+        'render sibling',
+        'componentDidMount',
+      ]);
 
-    // ReactNoop.flush() not needed because updates are synchronous
+      ops = [];
 
-    expect(ops).toEqual([
-      'end batchedUpdates',
-      'setState 1',
-      'setState 2',
-      'end syncUpdates',
-    ]);
-    expect(instance.state.n).toEqual(2);
-  });
+      // Update to same props
+      ReactNoop.render(<App x={0} />);
+      ReactNoop.flush();
+
+      expect(ops).toEqual([
+        'componentWillReceiveProps',
+        'shouldComponentUpdate',
+        // no componentWillUpdate
+        // no render
+        'render sibling',
+        // no componentDidUpdate
+      ]);
+
+      ops = [];
+
+      // Begin updating to new props...
+      ReactNoop.render(<App x={1} />);
+      ReactNoop.flushDeferredPri(30);
+
+      expect(ops).toEqual([
+        'componentWillReceiveProps',
+        'shouldComponentUpdate',
+        'componentWillUpdate',
+        'render',
+        'render sibling',
+        // no componentDidUpdate yet
+      ]);
+
+      ops = [];
+
+      // ...but we'll interrupt it to rerender the same props.
+      ReactNoop.render(<App x={1} />);
+      ReactNoop.flush();
+
+      // We can bail out this time, but we must call componentDidUpdate.
+      expect(ops).toEqual([
+        'componentWillReceiveProps',
+        'shouldComponentUpdate',
+        // no componentWillUpdate
+        // no render
+        'render sibling',
+        'componentDidUpdate',
+      ]);
+    },
+  );
 
   it('can nest batchedUpdates', () => {
     var ops = [];
@@ -1700,7 +1677,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     ops = [];
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.batchedUpdates(() => {
         instance.setState({n: 1}, () => ops.push('setState 1'));
         instance.setState({n: 2}, () => ops.push('setState 2'));
@@ -1711,7 +1688,6 @@ describe('ReactIncremental', () => {
         });
         ops.push('end outer batchedUpdates');
       });
-      ops.push('end syncUpdates');
     });
 
     // ReactNoop.flush() not needed because updates are synchronous
@@ -1723,7 +1699,6 @@ describe('ReactIncremental', () => {
       'setState 2',
       'setState 3',
       'setState 4',
-      'end syncUpdates',
     ]);
     expect(instance.state.n).toEqual(4);
   });
@@ -2244,7 +2219,7 @@ describe('ReactIncremental', () => {
 
   it('maintains the correct context when unwinding due to an error in render', () => {
     class Root extends React.Component {
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         // If context is pushed/popped correctly,
         // This method will be used to handle the intentionally-thrown Error.
       }
@@ -2335,86 +2310,343 @@ describe('ReactIncremental', () => {
     ]);
   });
 
-  it('should reuse memoized work if pointers are updated before calling lifecycles', () => {
-    let cduNextProps = [];
-    let cduPrevProps = [];
-    let scuNextProps = [];
-    let scuPrevProps = [];
-    let renderCounter = 0;
+  xit(
+    'should reuse memoized work if pointers are updated before calling lifecycles',
+    () => {
+      let cduNextProps = [];
+      let cduPrevProps = [];
+      let scuNextProps = [];
+      let scuPrevProps = [];
+      let renderCounter = 0;
 
-    function SecondChild(props) {
-      return <span>{props.children}</span>;
-    }
+      function SecondChild(props) {
+        return <span>{props.children}</span>;
+      }
 
-    class FirstChild extends React.Component {
-      componentDidUpdate(prevProps, prevState) {
-        cduNextProps.push(this.props);
-        cduPrevProps.push(prevProps);
+      class FirstChild extends React.Component {
+        componentDidUpdate(prevProps, prevState) {
+          cduNextProps.push(this.props);
+          cduPrevProps.push(prevProps);
+        }
+        shouldComponentUpdate(nextProps, nextState) {
+          scuNextProps.push(nextProps);
+          scuPrevProps.push(this.props);
+          return this.props.children !== nextProps.children;
+        }
+        render() {
+          renderCounter++;
+          return <span>{this.props.children}</span>;
+        }
       }
-      shouldComponentUpdate(nextProps, nextState) {
-        scuNextProps.push(nextProps);
-        scuPrevProps.push(this.props);
-        return this.props.children !== nextProps.children;
-      }
-      render() {
-        renderCounter++;
-        return <span>{this.props.children}</span>;
-      }
-    }
 
-    class Middle extends React.Component {
-      render() {
+      class Middle extends React.Component {
+        render() {
+          return (
+            <div>
+              <FirstChild>{this.props.children}</FirstChild>
+              <SecondChild>{this.props.children}</SecondChild>
+            </div>
+          );
+        }
+      }
+
+      function Root(props) {
         return (
-          <div>
-            <FirstChild>{this.props.children}</FirstChild>
-            <SecondChild>{this.props.children}</SecondChild>
+          <div hidden={true}>
+            <Middle {...props} />
           </div>
         );
       }
+
+      // Initial render of the entire tree.
+      // Renders: Root, Middle, FirstChild, SecondChild
+      ReactNoop.render(<Root>A</Root>);
+      ReactNoop.flush();
+
+      expect(renderCounter).toBe(1);
+
+      // Schedule low priority work to update children.
+      // Give it enough time to partially render.
+      // Renders: Root, Middle, FirstChild
+      ReactNoop.render(<Root>B</Root>);
+      ReactNoop.flushDeferredPri(20 + 30 + 5);
+
+      // At this point our FirstChild component has rendered a second time,
+      // But since the render is not completed cDU should not be called yet.
+      expect(renderCounter).toBe(2);
+      expect(scuPrevProps).toEqual([{children: 'A'}]);
+      expect(scuNextProps).toEqual([{children: 'B'}]);
+      expect(cduPrevProps).toEqual([]);
+      expect(cduNextProps).toEqual([]);
+
+      // Next interrupt the partial render with higher priority work.
+      // The in-progress child content will bailout.
+      // Renders: Root, Middle, FirstChild, SecondChild
+      ReactNoop.render(<Root>B</Root>);
+      ReactNoop.flush();
+
+      // At this point the higher priority render has completed.
+      // Since FirstChild props didn't change, sCU returned false.
+      // The previous memoized copy should be used.
+      expect(renderCounter).toBe(2);
+      expect(scuPrevProps).toEqual([{children: 'A'}, {children: 'B'}]);
+      expect(scuNextProps).toEqual([{children: 'B'}, {children: 'B'}]);
+      expect(cduPrevProps).toEqual([{children: 'A'}]);
+      expect(cduNextProps).toEqual([{children: 'B'}]);
+    },
+  );
+
+  it('updates descendants with new context values', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
     }
 
-    function Root(props) {
-      return (
-        <div hidden={true}>
-          <Middle {...props} />
-        </div>
-      );
+    class Middle extends React.Component {
+      render = () => this.props.children;
     }
 
-    // Initial render of the entire tree.
-    // Renders: Root, Middle, FirstChild, SecondChild
-    ReactNoop.render(<Root>A</Root>);
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider><Middle><Child /></Middle></TopContextProvider>,
+    );
+
     ReactNoop.flush();
-
-    expect(renderCounter).toBe(1);
-
-    // Schedule low priority work to update children.
-    // Give it enough time to partially render.
-    // Renders: Root, Middle, FirstChild
-    ReactNoop.render(<Root>B</Root>);
-    ReactNoop.flushDeferredPri(20 + 30 + 5);
-
-    // At this point our FirstChild component has rendered a second time,
-    // But since the render is not completed cDU should not be called yet.
-    expect(renderCounter).toBe(2);
-    expect(scuPrevProps).toEqual([{children: 'A'}]);
-    expect(scuNextProps).toEqual([{children: 'B'}]);
-    expect(cduPrevProps).toEqual([]);
-    expect(cduNextProps).toEqual([]);
-
-    // Next interrupt the partial render with higher priority work.
-    // The in-progress child content will bailout.
-    // Renders: Root, Middle, FirstChild, SecondChild
-    ReactNoop.render(<Root>B</Root>);
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
     ReactNoop.flush();
+    expect(rendered).toEqual(['count:0', 'count:1']);
+  });
 
-    // At this point the higher priority render has completed.
-    // Since FirstChild props didn't change, sCU returned false.
-    // The previous memoized copy should be used.
-    expect(renderCounter).toBe(2);
-    expect(scuPrevProps).toEqual([{children: 'A'}, {children: 'B'}]);
-    expect(scuNextProps).toEqual([{children: 'B'}, {children: 'B'}]);
-    expect(cduPrevProps).toEqual([{children: 'A'}]);
-    expect(cduNextProps).toEqual([{children: 'B'}]);
+  it('updates descendants with multiple context-providing ancestors with new context values', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      getChildContext = () => ({
+        name: 'brian',
+      });
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleContextProvider>
+          <Child />
+        </MiddleContextProvider>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0', 'count:1']);
+  });
+
+  it('should not update descendants with new context values if shouldComponentUpdate returns false', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleScu extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render = () => this.props.children;
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      getChildContext = () => ({
+        name: 'brian',
+      });
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleScu>
+          <MiddleContextProvider><Child /></MiddleContextProvider>
+        </MiddleScu>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+  });
+
+  it('should update descendants with new context values if setState() is called in the middle of the tree', () => {
+    let rendered = [];
+    let middleInstance;
+    let topInstance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        topInstance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleScu extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render = () => this.props.children;
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      constructor() {
+        super();
+        this.state = {name: 'brian'};
+        middleInstance = this;
+      }
+      getChildContext = () => ({
+        name: this.state.name,
+      });
+      updateName = name => {
+        this.setState({name});
+      };
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+        name: PropTypes.string,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}, name:${this.context.name}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleScu>
+          <MiddleContextProvider>
+            <Child />
+          </MiddleContextProvider>
+        </MiddleScu>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0, name:brian']);
+    topInstance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0, name:brian']);
+    middleInstance.updateName('not brian');
+    ReactNoop.flush();
+    expect(rendered).toEqual([
+      'count:0, name:brian',
+      'count:1, name:not brian',
+    ]);
   });
 });

@@ -21,17 +21,46 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-var canDefineProperty = require('canDefineProperty');
-var getComponentName = require('getComponentName');
-var getIteratorFn = require('getIteratorFn');
-
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
   var lowPriorityWarning = require('lowPriorityWarning');
   var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var warning = require('fbjs/lib/warning');
-  var {getCurrentStackAddendum} = require('ReactComponentTreeHook');
+  var describeComponentFrame = require('describeComponentFrame');
+  var getComponentName = require('getComponentName');
+
+  var currentlyValidatingElement = null;
+
+  var getDisplayName = function(element: ?ReactElement): string {
+    if (element == null) {
+      return '#empty';
+    } else if (typeof element === 'string' || typeof element === 'number') {
+      return '#text';
+    } else if (typeof element.type === 'string') {
+      return element.type;
+    } else {
+      return element.type.displayName || element.type.name || 'Unknown';
+    }
+  };
+
+  var getStackAddendum = function(): string {
+    var stack = '';
+    if (currentlyValidatingElement) {
+      var name = getDisplayName(currentlyValidatingElement);
+      var owner = currentlyValidatingElement._owner;
+      stack += describeComponentFrame(
+        name,
+        currentlyValidatingElement._source,
+        owner && getComponentName(owner),
+      );
+    }
+    stack += ReactDebugCurrentFrame.getStackAddendum() || '';
+    return stack;
+  };
 }
+
+var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getDeclarationErrorAddendum() {
   if (ReactCurrentOwner.current) {
@@ -114,14 +143,16 @@ function validateExplicitKey(element, parentType) {
     childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
   }
 
+  currentlyValidatingElement = element;
   warning(
     false,
     'Each child in an array or iterator should have a unique "key" prop.' +
       '%s%s See https://fb.me/react-warning-keys for more information.%s',
     currentComponentErrorInfo,
     childOwner,
-    getCurrentStackAddendum(element),
+    getStackAddendum(),
   );
+  currentlyValidatingElement = null;
 }
 
 /**
@@ -150,9 +181,11 @@ function validateChildKeys(node, parentType) {
       node._store.validated = true;
     }
   } else if (node) {
-    var iteratorFn = getIteratorFn(node);
-    // Entry iterators provide implicit keys.
-    if (iteratorFn) {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && node[ITERATOR_SYMBOL]) || node[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
+      // Entry iterators used to provide implicit keys,
+      // but now we print a separate warning for them later.
       if (iteratorFn !== node.entries) {
         var iterator = iteratorFn.call(node);
         var step;
@@ -190,13 +223,9 @@ function validatePropTypes(element) {
     : componentClass.propTypes;
 
   if (propTypes) {
-    checkPropTypes(
-      propTypes,
-      element.props,
-      'prop',
-      name,
-      ReactDebugCurrentFrame.getStackAddendum,
-    );
+    currentlyValidatingElement = element;
+    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
+    currentlyValidatingElement = null;
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
@@ -232,7 +261,7 @@ var ReactElementValidator = {
         info += getDeclarationErrorAddendum();
       }
 
-      info += getCurrentStackAddendum();
+      info += ReactDebugCurrentFrame.getStackAddendum() || '';
 
       warning(
         false,
@@ -252,10 +281,6 @@ var ReactElementValidator = {
       return element;
     }
 
-    if (__DEV__) {
-      ReactDebugCurrentFrame.element = element;
-    }
-
     // Skip key warning if the type isn't valid since our key validation logic
     // doesn't expect a non-string/function type and can throw confusing errors.
     // We don't want exception behavior to differ between dev and prod.
@@ -269,10 +294,6 @@ var ReactElementValidator = {
 
     validatePropTypes(element);
 
-    if (__DEV__) {
-      ReactDebugCurrentFrame.element = null;
-    }
-
     return element;
   },
 
@@ -282,22 +303,20 @@ var ReactElementValidator = {
     validatedFactory.type = type;
 
     if (__DEV__) {
-      if (canDefineProperty) {
-        Object.defineProperty(validatedFactory, 'type', {
-          enumerable: false,
-          get: function() {
-            lowPriorityWarning(
-              false,
-              'Factory.type is deprecated. Access the class directly ' +
-                'before passing it to createFactory.',
-            );
-            Object.defineProperty(this, 'type', {
-              value: type,
-            });
-            return type;
-          },
-        });
-      }
+      Object.defineProperty(validatedFactory, 'type', {
+        enumerable: false,
+        get: function() {
+          lowPriorityWarning(
+            false,
+            'Factory.type is deprecated. Access the class directly ' +
+              'before passing it to createFactory.',
+          );
+          Object.defineProperty(this, 'type', {
+            value: type,
+          });
+          return type;
+        },
+      });
     }
 
     return validatedFactory;
@@ -305,16 +324,10 @@ var ReactElementValidator = {
 
   cloneElement: function(element, props, children) {
     var newElement = ReactElement.cloneElement.apply(this, arguments);
-    if (__DEV__) {
-      ReactDebugCurrentFrame.element = newElement;
-    }
     for (var i = 2; i < arguments.length; i++) {
       validateChildKeys(arguments[i], newElement.type);
     }
     validatePropTypes(newElement);
-    if (__DEV__) {
-      ReactDebugCurrentFrame.element = null;
-    }
     return newElement;
   },
 };

@@ -21,13 +21,12 @@ type SelectWithWrapperState = HTMLSelectElement & {
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
+  var didWarnValueDefaultValue = false;
+  var warning = require('fbjs/lib/warning');
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
 }
-
-var didWarnValueDefaultValue = false;
 
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();
@@ -136,7 +135,7 @@ var ReactDOMSelect = {
     });
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     var node = ((element: any): SelectWithWrapperState);
     if (__DEV__) {
       checkSelectPropTypes(props);
@@ -148,23 +147,29 @@ var ReactDOMSelect = {
       wasMultiple: !!props.multiple,
     };
 
-    if (
-      props.value !== undefined &&
-      props.defaultValue !== undefined &&
-      !didWarnValueDefaultValue
-    ) {
-      warning(
-        false,
-        'Select elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled select ' +
-          'element and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components',
-      );
-      didWarnValueDefaultValue = true;
+    if (__DEV__) {
+      if (
+        props.value !== undefined &&
+        props.defaultValue !== undefined &&
+        !didWarnValueDefaultValue
+      ) {
+        warning(
+          false,
+          'Select elements must be either controlled or uncontrolled ' +
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled select ' +
+            'element and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
+        );
+        didWarnValueDefaultValue = true;
+      }
     }
+  },
 
+  postMountWrapper: function(element: Element, props: Object) {
+    var node = ((element: any): SelectWithWrapperState);
     node.multiple = !!props.multiple;
+    var value = props.value;
     if (value != null) {
       updateOptions(node, !!props.multiple, value);
     } else if (props.defaultValue != null) {

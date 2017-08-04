@@ -11,6 +11,8 @@
 
 'use strict';
 
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+
 describe('ReactDOMComponentTree', () => {
   var React;
   var ReactDOM;
@@ -21,7 +23,11 @@ describe('ReactDOMComponentTree', () => {
     var container = document.createElement('div');
     // Force server-rendering path:
     container.innerHTML = ReactDOMServer.renderToString(elt);
-    return ReactDOM.render(elt, container);
+    if (ReactDOMFeatureFlags.useFiber) {
+      return ReactDOM.hydrate(elt, container);
+    } else {
+      return ReactDOM.render(elt, container);
+    }
   }
 
   function getTypeOf(instance) {
@@ -41,6 +47,7 @@ describe('ReactDOMComponentTree', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     ReactDOMServer = require('react-dom/server');
   });

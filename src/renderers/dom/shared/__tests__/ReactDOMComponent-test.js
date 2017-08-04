@@ -29,7 +29,8 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
+    // TODO: can we express this test with only public API?
     inputValueTracking = require('inputValueTracking');
   });
 
@@ -56,6 +57,7 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
+      expect(stubStyle.top).toEqual('2px');
       expect(stubStyle.fontFamily).toEqual('Arial');
 
       // reset the style to their default state
@@ -125,7 +127,7 @@ describe('ReactDOMComponent', () => {
       expect(stubStyle.lineHeight).toBe('');
     });
 
-    it('should throw when mutating style objectsd', () => {
+    it('should throw when mutating style objects', () => {
       var style = {border: '1px solid black'};
 
       class App extends React.Component {
@@ -810,30 +812,55 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn if the tag is unrecognized', () => {
-      if (ReactDOMFeatureFlags.useCreateElement) {
-        spyOn(console, 'error');
+      spyOn(console, 'error');
 
-        let realToString;
-        try {
-          realToString = Object.prototype.toString;
-          let wrappedToString = function() {
-            // Emulate browser behavior which is missing in jsdom
-            if (this instanceof window.HTMLUnknownElement) {
-              return '[object HTMLUnknownElement]';
-            }
-            return realToString.apply(this, arguments);
-          };
-          Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
-          ReactTestUtils.renderIntoDocument(<mycustomcomponent />);
-        } finally {
-          Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
-        }
+      let realToString;
+      try {
+        realToString = Object.prototype.toString;
+        let wrappedToString = function() {
+          // Emulate browser behavior which is missing in jsdom
+          if (this instanceof window.HTMLUnknownElement) {
+            return '[object HTMLUnknownElement]';
+          }
+          // Special case! Read explanation below in the test.
+          if (this instanceof window.HTMLTimeElement) {
+            return '[object HTMLUnknownElement]';
+          }
+          return realToString.apply(this, arguments);
+        };
+        Object.prototype.toString = wrappedToString; // eslint-disable-line no-extend-native
 
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'The tag <mycustomcomponent> is unrecognized in this browser',
-        );
+        ReactTestUtils.renderIntoDocument(<bar />);
+        // Test deduplication
+        ReactTestUtils.renderIntoDocument(<foo />);
+        ReactTestUtils.renderIntoDocument(<foo />);
+        // This is a funny case.
+        // Chrome is the only major browser not shipping <time>. But as of July
+        // 2017 it intends to ship it due to widespread usage. We intentionally
+        // *don't* warn for <time> even if it's unrecognized by Chrome because
+        // it soon will be, and many apps have been using it anyway.
+        ReactTestUtils.renderIntoDocument(<time />);
+        // Corner case. Make sure out deduplication logic doesn't break with weird tag.
+        ReactTestUtils.renderIntoDocument(<hasOwnProperty />);
+      } finally {
+        Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
       }
+
+      expectDev(console.error.calls.count()).toBe(4);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'The tag <bar> is unrecognized in this browser',
+      );
+      expectDev(console.error.calls.argsFor(1)[0]).toContain(
+        'The tag <foo> is unrecognized in this browser',
+      );
+      expectDev(console.error.calls.argsFor(2)[0]).toContain(
+        '<hasOwnProperty /> is using uppercase HTML',
+      );
+      expectDev(console.error.calls.argsFor(3)[0]).toContain(
+        ReactDOMFeatureFlags.useFiber
+          ? 'The tag <hasOwnProperty> is unrecognized in this browser'
+          : 'The tag <hasownproperty> is unrecognized in this browser',
+      );
     });
 
     it('should warn against children for void elements', () => {
@@ -884,62 +911,58 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should emit a warning once for a named custom component using shady DOM', () => {
-      if (ReactDOMFeatureFlags.useCreateElement) {
-        spyOn(console, 'error');
+      spyOn(console, 'error');
 
-        var defaultCreateElement = document.createElement.bind(document);
+      var defaultCreateElement = document.createElement.bind(document);
 
-        try {
-          document.createElement = element => {
-            var container = defaultCreateElement(element);
-            container.shadyRoot = {};
-            return container;
-          };
-          class ShadyComponent extends React.Component {
-            render() {
-              return <polymer-component />;
-            }
+      try {
+        document.createElement = element => {
+          var container = defaultCreateElement(element);
+          container.shadyRoot = {};
+          return container;
+        };
+        class ShadyComponent extends React.Component {
+          render() {
+            return <polymer-component />;
           }
-          var node = document.createElement('div');
-          ReactDOM.render(<ShadyComponent />, node);
-          expectDev(console.error.calls.count()).toBe(1);
-          expectDev(console.error.calls.argsFor(0)[0]).toContain(
-            'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
-              'cause things to break subtly.',
-          );
-          mountComponent({is: 'custom-shady-div2'});
-          expectDev(console.error.calls.count()).toBe(1);
-        } finally {
-          document.createElement = defaultCreateElement;
         }
+        var node = document.createElement('div');
+        ReactDOM.render(<ShadyComponent />, node);
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
+            'cause things to break subtly.',
+        );
+        mountComponent({is: 'custom-shady-div2'});
+        expectDev(console.error.calls.count()).toBe(1);
+      } finally {
+        document.createElement = defaultCreateElement;
       }
     });
 
     it('should emit a warning once for an unnamed custom component using shady DOM', () => {
-      if (ReactDOMFeatureFlags.useCreateElement) {
-        spyOn(console, 'error');
+      spyOn(console, 'error');
 
-        var defaultCreateElement = document.createElement.bind(document);
+      var defaultCreateElement = document.createElement.bind(document);
 
-        try {
-          document.createElement = element => {
-            var container = defaultCreateElement(element);
-            container.shadyRoot = {};
-            return container;
-          };
+      try {
+        document.createElement = element => {
+          var container = defaultCreateElement(element);
+          container.shadyRoot = {};
+          return container;
+        };
 
-          mountComponent({is: 'custom-shady-div'});
-          expectDev(console.error.calls.count()).toBe(1);
-          expectDev(console.error.calls.argsFor(0)[0]).toContain(
-            'A component is using shady DOM. Using shady DOM with React can ' +
-              'cause things to break subtly.',
-          );
+        mountComponent({is: 'custom-shady-div'});
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'A component is using shady DOM. Using shady DOM with React can ' +
+            'cause things to break subtly.',
+        );
 
-          mountComponent({is: 'custom-shady-div2'});
-          expectDev(console.error.calls.count()).toBe(1);
-        } finally {
-          document.createElement = defaultCreateElement;
-        }
+        mountComponent({is: 'custom-shady-div2'});
+        expectDev(console.error.calls.count()).toBe(1);
+      } finally {
+        document.createElement = defaultCreateElement;
       }
     });
 
@@ -1068,18 +1091,12 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should support custom elements which extend native elements', () => {
-      if (ReactDOMFeatureFlags.useCreateElement) {
-        var container = document.createElement('div');
-        spyOn(document, 'createElement').and.callThrough();
-        ReactDOM.render(<div is="custom-div" />, container);
-        expect(document.createElement).toHaveBeenCalledWith('div', {
-          is: 'custom-div',
-        });
-      } else {
-        expect(
-          ReactDOMServer.renderToString(<div is="custom-div" />),
-        ).toContain('is="custom-div"');
-      }
+      var container = document.createElement('div');
+      spyOn(document, 'createElement').and.callThrough();
+      ReactDOM.render(<div is="custom-div" />, container);
+      expect(document.createElement).toHaveBeenCalledWith('div', {
+        is: 'custom-div',
+      });
     });
 
     it('should work load and error events on <image> element in SVG', () => {
@@ -1206,7 +1223,7 @@ describe('ReactDOMComponent', () => {
           ),
         ),
       ).toBe(
-        '<div title="&#x27;&quot;&lt;&gt;&amp;" style="text-align:&#x27;&quot;&lt;&gt;&amp;;">' +
+        '<div title="&#x27;&quot;&lt;&gt;&amp;" style="text-align:&#x27;&quot;&lt;&gt;&amp;">' +
           '&#x27;&quot;&lt;&gt;&amp;' +
           '</div>',
       );

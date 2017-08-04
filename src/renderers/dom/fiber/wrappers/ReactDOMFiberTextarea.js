@@ -21,9 +21,9 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
 }
 
@@ -66,7 +66,7 @@ var ReactDOMTextarea = {
     return hostProps;
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     var node = ((element: any): TextAreaWithWrapperState);
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(

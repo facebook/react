@@ -91,7 +91,7 @@ describe('ReactComponentLifeCycle', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
   });
 

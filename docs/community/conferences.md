@@ -9,11 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### Chain React 2017
-July 10-11 in Portland, Oregon USA
-
-[Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
-
 ### React Rally
 August 24-25 in Salt Lake City, Utah USA
 
@@ -24,10 +19,30 @@ September 6-7 in Wroclaw, Poland
 
 [Website](http://react-native.eu/)
 
+### ReactNext 2017
+September 8-10 in Tel Aviv, Israel
+
+[Website](http://react-next.com/) - [Twitter](https://twitter.com/ReactNext)
+
+### React Boston 2017
+September 23-24 in Boston, Massachusetts USA
+
+[Website](http://www.reactboston.com/) - [Twitter](https://twitter.com/ReactBoston)
+
+### React Alicante 2017
+September 28-30 in Alicante, Spain
+
+[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
+
 ### ReactJS Day 2017
-October 6th in Verona, Italy
+October 6 in Verona, Italy
 
 [Website](http://2017.reactjsday.it) - [Twitter](https://twitter.com/reactjsday)
+
+### React Conf Brasil 2017
+October 7 in Sao Paulo, Brazil
+
+[Website](http://reactconfbr.com.br) - [Twitter](https://twitter.com/reactconfbr) - [Facebook](https://www.facebook.com/reactconf/)
 
 ### State.js Conference 2017
 October 13 in Stockholm, Sweden
@@ -124,3 +139,8 @@ April 21st in Amsterdam, The Netherlands
 May 18th & 19th in Paris, France
 
 [Website](http://www.react-europe.org/) - [Schedule](http://www.react-europe.org/#schedule) - [Videos](https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A/playlists)
+
+### Chain React 2017
+July 10-11 in Portland, Oregon USA
+
+[Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)

@@ -25,7 +25,7 @@ describe('ReactChildren', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should support identity for simple', () => {
@@ -838,6 +838,25 @@ describe('ReactChildren', () => {
     expect(React.Children.toArray([1, 'two', null, undefined, true])).toEqual([
       1,
       'two',
+    ]);
+  });
+
+  it('should escape keys', () => {
+    var zero = <div key="1" />;
+    var one = <div key="1=::=2" />;
+    var instance = (
+      <div>
+        {zero}
+        {one}
+      </div>
+    );
+    var mappedChildren = React.Children.map(
+      instance.props.children,
+      kid => kid,
+    );
+    expect(mappedChildren).toEqual([
+      <div key=".$1" />,
+      <div key=".$1=0=2=2=02" />,
     ]);
   });
 

@@ -18,7 +18,6 @@ import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
 var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
 var {REACT_PORTAL_TYPE} = require('ReactPortal');
 
@@ -27,7 +26,6 @@ var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getIteratorFn = require('getIteratorFn');
 var invariant = require('fbjs/lib/invariant');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
@@ -51,7 +49,8 @@ if (__DEV__) {
     }
     invariant(
       typeof child._store === 'object',
-      'React Component in warnForMissingKey should have a _store',
+      'React Component in warnForMissingKey should have a _store. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
     );
     child._store.validated = true;
 
@@ -76,7 +75,7 @@ if (__DEV__) {
 }
 
 const {
-  cloneFiber,
+  createWorkInProgress,
   createFiberFromElement,
   createFiberFromFragment,
   createFiberFromText,
@@ -98,6 +97,27 @@ const {
 } = ReactTypeOfWork;
 
 const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
+
+const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
+const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+const REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
+
+function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
+  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
+    return null;
+  }
+  const iteratorFn =
+    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
+    maybeIterable[FAUX_ITERATOR_SYMBOL];
+  if (typeof iteratorFn === 'function') {
+    return iteratorFn;
+  }
+  return null;
+}
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
@@ -143,6 +163,18 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
       };
       ref._stringRef = stringRef;
       return ref;
+    } else {
+      invariant(
+        typeof mixedRef === 'string',
+        'Expected ref to be a function or a string.',
+      );
+      invariant(
+        element._owner,
+        'Element ref was specified as a string (%s) but no owner was ' +
+          'set. You may have multiple copies of React loaded. ' +
+          '(details: https://fb.me/react-refs-must-have-owner).',
+        mixedRef,
+      );
     }
   }
   return mixedRef;
@@ -188,12 +220,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       childToDelete = childToDelete.alternate;
     }
     // Deletions are added in reversed order so we add it to the front.
-    const last = returnFiber.progressedLastDeletion;
+    // At this point, the return fiber's effect list is empty except for
+    // deletions, so we can just append the deletion to the list. The remaining
+    // effects aren't added until the complete phase. Once we implement
+    // resuming, this may not be true.
+    const last = returnFiber.lastEffect;
     if (last !== null) {
       last.nextEffect = childToDelete;
-      returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.lastEffect = childToDelete;
     } else {
-      returnFiber.progressedFirstDeletion = returnFiber.progressedLastDeletion = childToDelete;
+      returnFiber.firstEffect = returnFiber.lastEffect = childToDelete;
     }
     childToDelete.nextEffect = null;
     childToDelete.effectTag = Deletion;
@@ -243,7 +279,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
-      const clone = cloneFiber(fiber, priority);
+      const clone = createWorkInProgress(fiber, priority);
       clone.index = 0;
       clone.sibling = null;
       return clone;
@@ -695,9 +731,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           }
           warning(
             false,
-            'Encountered two children with the same key, ' +
-              '`%s`. Child keys must be unique; when two children share a key, ' +
-              'only the first child will be used.%s',
+            'Encountered two children with the same key, `%s`. ' +
+              'Keys should be unique so that components maintain their identity ' +
+              'across updates. Non-unique keys may cause children to be ' +
+              'duplicated and/or omitted — the behavior is unsupported and ' +
+              'could change in a future version.%s',
             key,
             getCurrentFiberStackAddendum(),
           );
@@ -1427,43 +1465,33 @@ exports.cloneChildFibers = function(
   current: Fiber | null,
   workInProgress: Fiber,
 ): void {
-  if (!workInProgress.child) {
+  invariant(
+    current === null || workInProgress.child === current.child,
+    'Resuming work not yet implemented.',
+  );
+
+  if (workInProgress.child === null) {
     return;
   }
-  if (current !== null && workInProgress.child === current.child) {
-    // We use workInProgress.child since that lets Flow know that it can't be
-    // null since we validated that already. However, as the line above suggests
-    // they're actually the same thing.
-    let currentChild = workInProgress.child;
-    // TODO: This used to reset the pending priority. Not sure if that is needed.
-    // workInProgress.pendingWorkPriority = current.pendingWorkPriority;
-    // TODO: The below priority used to be set to NoWork which would've
-    // dropped work. This is currently unobservable but will become
-    // observable when the first sibling has lower priority work remaining
-    // than the next sibling. At that point we should add tests that catches
-    // this.
-    let newChild = cloneFiber(currentChild, currentChild.pendingWorkPriority);
-    workInProgress.child = newChild;
 
+  let currentChild = workInProgress.child;
+  let newChild = createWorkInProgress(
+    currentChild,
+    currentChild.pendingWorkPriority,
+  );
+  // TODO: Pass this as an argument, since it's easy to forget.
+  newChild.pendingProps = currentChild.pendingProps;
+  workInProgress.child = newChild;
+
+  newChild.return = workInProgress;
+  while (currentChild.sibling !== null) {
+    currentChild = currentChild.sibling;
+    newChild = newChild.sibling = createWorkInProgress(
+      currentChild,
+      currentChild.pendingWorkPriority,
+    );
+    newChild.pendingProps = currentChild.pendingProps;
     newChild.return = workInProgress;
-    while (currentChild.sibling !== null) {
-      currentChild = currentChild.sibling;
-      newChild = newChild.sibling = cloneFiber(
-        currentChild,
-        currentChild.pendingWorkPriority,
-      );
-      newChild.return = workInProgress;
-    }
-    newChild.sibling = null;
-  } else {
-    // If there is no alternate, then we don't need to clone the children.
-    // If the children of the alternate fiber is a different set, then we don't
-    // need to clone. We need to reset the return fiber though since we'll
-    // traverse down into them.
-    let child = workInProgress.child;
-    while (child !== null) {
-      child.return = workInProgress;
-      child = child.sibling;
-    }
   }
+  newChild.sibling = null;
 };

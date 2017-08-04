@@ -130,6 +130,8 @@ function ignoreReactNativeModules() {
     // This imports NativeMethodsMixin, causing
     // a circular dependency.
     'View',
+    // We have a shim for this file.
+    'ReactNativeFeatureFlags',
   ];
 }
 
@@ -272,7 +274,7 @@ function replaceBundleStubModules(bundleModulesToStub) {
 
   if (Array.isArray(bundleModulesToStub)) {
     bundleModulesToStub.forEach(module => {
-      stubbedModules[module] = devOnlyModuleStub;
+      stubbedModules[`'${module}'`] = devOnlyModuleStub;
     });
   }
 

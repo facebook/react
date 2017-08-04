@@ -46,7 +46,7 @@ React itself was extracted from Facebook's codebase and uses Haste for historica
 * When you add a new file, make sure you include a [license header](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js#L1-L10). You can copy it from any existing file. A license header always includes [a line like this](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/dom/client/utils/setInnerHTML.js#L9). Change it to match the name of the file you created.
 * Don’t use relative paths when importing. Instead of `require('./setInnerHTML')`, write `require('setInnerHTML')`.
 
-When we compile React for npm, a script copies all the modules into [a single flat directory called `lib`](https://unpkg.com/react@15/lib/) and prepends all `require()` paths with `./`. This way Node, Browserify, Webpack, and other tools can understand React build output without being aware of Haste.
+When we compile React for npm, a script copies all the modules into [a single flat directory called `lib`](https://unpkg.com/react@15/lib/) and prepends all `require()` paths with `./`. This way Node, Browserify, webpack, and other tools can understand React build output without being aware of Haste.
 
 **If you're reading React source on GitHub and want to jump to a file, press "t".**
 
@@ -191,7 +191,7 @@ ReactRef.detachRefs = function(
 }
 ```
 
-When possible, new code should use Flow annotations.  
+When possible, new code should use Flow annotations.
 You can run `npm run flow` locally to check your code with Flow.
 
 ### Classes and Mixins

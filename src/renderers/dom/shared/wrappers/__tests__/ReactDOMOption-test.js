@@ -25,7 +25,7 @@ describe('ReactDOMOption', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should flatten children to a string', () => {

@@ -22,6 +22,7 @@ describe('SyntheticKeyboardEvent', () => {
     jest.mock('getEventCharCode');
     getEventCharCode = require('getEventCharCode');
 
+    // TODO: can we express this test with only public API?
     SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
     createEvent = function(nativeEvent) {
       var target = require('getEventTarget')(nativeEvent);

@@ -38,7 +38,8 @@ describe('ReactDOMInput', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
+    // TODO: can we express this test with only public API?
     inputValueTracking = require('inputValueTracking');
     spyOn(console, 'error');
   });
@@ -231,6 +232,40 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('2.0');
       expect(node.value).toBe('2.0');
     });
+  });
+
+  it('does change the string ".98" to "0.98" with no change handler', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '.98',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '0.98'});
+
+    expect(node.value).toEqual('0.98');
+  });
+
+  it('distinguishes precision for extra zeroes in string number values', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '3.0000',
+      };
+      render() {
+        return <input type="number" value={this.state.value} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: '3'});
+
+    expect(node.value).toEqual('3');
   });
 
   it('should display `defaultValue` of number 0', () => {
@@ -1132,9 +1167,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('sets type, step, min, max before value always', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
     var log = [];
     var originalCreateElement = document.createElement;
     spyOn(document, 'createElement').and.callFake(function(type) {
@@ -1196,11 +1228,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('resets value of date/time input to fix bugs in iOS Safari', () => {
-    // https://github.com/facebook/react/issues/7233
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      return;
-    }
-
     function strify(x) {
       return JSON.stringify(x, null, 2);
     }

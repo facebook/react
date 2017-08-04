@@ -11,6 +11,11 @@
 
 'use strict';
 
+const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+const {COMMENT_NODE} = require('HTMLNodeType');
+
+const invariant = require('invariant');
+
 var React;
 var ReactDOM;
 var ReactDOMServer;
@@ -24,7 +29,7 @@ describe('ReactMount', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     try {
       if (WebComponents === undefined && typeof jest !== 'undefined') {
@@ -141,18 +146,48 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
-  it('should warn if mounting into dirty rendered markup', () => {
+  it('should warn if mounting into left padded rendered markup', () => {
     var container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     spyOn(console, 'error');
-    ReactDOM.render(<div />, container);
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(<div />, container);
+    } else {
+      ReactDOM.render(<div />, container);
+    }
     expectDev(console.error.calls.count()).toBe(1);
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Did not expect server HTML to contain the text node " " in <container>.',
+      );
+    } else {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Target node has markup rendered by React, but there are unrelated nodes as well.',
+      );
+    }
+  });
 
+  it('should warn if mounting into right padded rendered markup', () => {
+    var container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
-    ReactDOM.render(<div />, container);
-    expectDev(console.error.calls.count()).toBe(2);
+    spyOn(console, 'error');
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(<div />, container);
+    } else {
+      ReactDOM.render(<div />, container);
+    }
+    expectDev(console.error.calls.count()).toBe(1);
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Did not expect server HTML to contain the text node " " in <container>.',
+      );
+    } else {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Target node has markup rendered by React, but there are unrelated nodes as well.',
+      );
+    }
   });
 
   it('should not warn if mounting into non-empty node', () => {
@@ -185,15 +220,29 @@ describe('ReactMount', () => {
     div.innerHTML = markup;
 
     spyOn(console, 'error');
-    ReactDOM.render(
-      <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-      div,
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(
+        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+        div,
+      );
+    } else {
+      ReactDOM.render(
+        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+        div,
+      );
+    }
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      ' (client) nbsp entity: &nbsp; client text</div>\n' +
-        ' (server) nbsp entity: &nbsp; server text</div>',
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Server: "This markup contains an nbsp entity:   server text" ' +
+          'Client: "This markup contains an nbsp entity:   client text"',
+      );
+    } else {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        ' (client) nbsp entity: &nbsp; client text</div>\n' +
+          ' (server) nbsp entity: &nbsp; server text</div>',
+      );
+    }
   });
 
   if (WebComponents !== undefined) {
@@ -311,34 +360,79 @@ describe('ReactMount', () => {
     expect(calls).toBe(5);
   });
 
-  it('marks top-level mounts', () => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
+  it('initial mount is sync inside batchedUpdates, but task work is deferred until the end of the batch', () => {
+    var container1 = document.createElement('div');
+    var container2 = document.createElement('div');
 
     class Foo extends React.Component {
+      state = {active: false};
+      componentDidMount() {
+        this.setState({active: true});
+      }
       render() {
-        return <Bar />;
+        return (
+          <div>{this.props.children + (this.state.active ? '!' : '')}</div>
+        );
       }
     }
 
-    class Bar extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
+    ReactDOM.render(<div>1</div>, container1);
 
-    try {
-      ReactFeatureFlags.logTopLevelRenders = true;
-      spyOn(console, 'time');
-      spyOn(console, 'timeEnd');
+    ReactDOM.unstable_batchedUpdates(() => {
+      // Update. Does not flush yet.
+      ReactDOM.render(<div>2</div>, container1);
+      expect(container1.textContent).toEqual('1');
 
-      ReactTestUtils.renderIntoDocument(<Foo />);
-
-      expect(console.time.calls.count()).toBe(1);
-      expect(console.time.calls.argsFor(0)[0]).toBe('React mount: Foo');
-      expect(console.timeEnd.calls.count()).toBe(1);
-      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React mount: Foo');
-    } finally {
-      ReactFeatureFlags.logTopLevelRenders = false;
-    }
+      // Initial mount on another root. Should flush immediately.
+      ReactDOM.render(<Foo>a</Foo>, container2);
+      // The update did not flush yet.
+      expect(container1.textContent).toEqual('1');
+      // The initial mount flushed, but not the update scheduled in cDU.
+      expect(container2.textContent).toEqual('a');
+    });
+    // All updates have flushed.
+    expect(container1.textContent).toEqual('2');
+    expect(container2.textContent).toEqual('a!');
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    describe('mount point is a comment node', () => {
+      let containerDiv;
+      let mountPoint;
+
+      beforeEach(() => {
+        const ReactFeatureFlags = require('ReactFeatureFlags');
+        ReactFeatureFlags.disableNewFiberFeatures = false;
+
+        containerDiv = document.createElement('div');
+        containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
+        mountPoint = containerDiv.childNodes[1];
+        invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
+      });
+
+      it('renders at a comment node', () => {
+        function Char(props) {
+          return props.children;
+        }
+        function list(chars) {
+          return chars.split('').map(c => <Char key={c}>{c}</Char>);
+        }
+
+        ReactDOM.render(list('aeiou'), mountPoint);
+        expect(containerDiv.innerHTML).toBe(
+          'Aaeiou<!-- react-mount-point-unstable -->B',
+        );
+
+        ReactDOM.render(list('yea'), mountPoint);
+        expect(containerDiv.innerHTML).toBe(
+          'Ayea<!-- react-mount-point-unstable -->B',
+        );
+
+        ReactDOM.render(list(''), mountPoint);
+        expect(containerDiv.innerHTML).toBe(
+          'A<!-- react-mount-point-unstable -->B',
+        );
+      });
+    });
+  }
 });

@@ -1,15 +1,15 @@
-const React = window.React;
-
 import Fixture from '../../Fixture';
 
-class NumberTestCase extends React.Component {
-  state = { value: '' };
-  onChange = (event) => {
-    const parsed = parseFloat(event.target.value, 10)
-    const value = isNaN(parsed) ? '' : parsed
+const React = window.React;
 
-    this.setState({ value })
-  }
+class NumberTestCase extends React.Component {
+  state = {value: ''};
+  onChange = event => {
+    const parsed = parseFloat(event.target.value, 10);
+    const value = isNaN(parsed) ? '' : parsed;
+
+    this.setState({value});
+  };
   render() {
     return (
       <Fixture>
@@ -18,8 +18,14 @@ class NumberTestCase extends React.Component {
         <div className="control-box">
           <fieldset>
             <legend>Controlled</legend>
-            <input type="number" value={this.state.value} onChange={this.onChange} />
-            <span className="hint"> Value: {JSON.stringify(this.state.value)}</span>
+            <input
+              type="number"
+              value={this.state.value}
+              onChange={this.onChange}
+            />
+            <span className="hint">
+              {' '}Value: {JSON.stringify(this.state.value)}
+            </span>
           </fieldset>
 
           <fieldset>

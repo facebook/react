@@ -11,6 +11,7 @@
 
 'use strict';
 
+// TODO: can we express this test with only public API?
 var setInnerHTML = require('setInnerHTML');
 var DOMNamespaces = require('DOMNamespaces');
 

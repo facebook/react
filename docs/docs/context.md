@@ -4,8 +4,11 @@ title: Context
 permalink: docs/context.html
 ---
 
->Note:
-> As of React v15.5 the `React.PropTypes` helper is deprecated, and we recommend using the [`prop-types` library](https://www.npmjs.com/package/prop-types) to define `contextTypes`.
+> Note:
+>
+> `React.PropTypes` has moved into a different package since React v15.5. Please use [the `prop-types` library instead](https://www.npmjs.com/package/prop-types) to define `contextTypes`.
+>
+>We provide [a codemod script](/react/blog/2017/04/07/react-v15.5.0.html#migrating-from-react.proptypes) to automate the conversion.
 
 With React, it's easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.
 

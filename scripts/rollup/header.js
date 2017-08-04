@@ -1,8 +1,6 @@
-const Bundles = require('./bundles');
+'use strict';
 
-const FB_DEV = Bundles.bundleTypes.FB_DEV;
-
-function getProvidesHeader(hasteFinalName, bundleType, fbDevCode) {
+function getProvidesHeader(hasteFinalName) {
   return `/**
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
@@ -13,7 +11,7 @@ function getProvidesHeader(hasteFinalName, bundleType, fbDevCode) {
  *
  * @noflow
  * @providesModule ${hasteFinalName}
- */${bundleType === FB_DEV ? fbDevCode : ''}
+ */
 `;
 }
 

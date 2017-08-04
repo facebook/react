@@ -14,7 +14,9 @@
 
 var React = require('react');
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 function flattenChildren(children) {
   var content = '';
@@ -39,7 +41,7 @@ function flattenChildren(children) {
  * Implements an <option> host component that warns when `selected` is set.
  */
 var ReactDOMOption = {
-  mountWrapper: function(element: Element, props: Object) {
+  validateProps: function(element: Element, props: Object) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(

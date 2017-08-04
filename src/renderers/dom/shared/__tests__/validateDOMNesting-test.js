@@ -137,6 +137,7 @@ describe('ReactContextValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    // TODO: can we express this test with only public API?
     validateDOMNesting = require('validateDOMNesting');
   });
 

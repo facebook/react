@@ -7,7 +7,8 @@ category: Add-Ons
 ---
 
 > Note:
-> `update` is a legacy add-on. Use [kolodny/immutability-helper](https://github.com/kolodny/immutability-helper) instead.
+>
+> `update` is a legacy add-on. Use [`immutability-helper`](https://github.com/kolodny/immutability-helper) instead.
 
 **Importing**
 

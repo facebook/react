@@ -16,7 +16,7 @@ redirect_from:
 
 React implements a browser-independent DOM system for performance and cross-browser compatibility. We took the opportunity to clean up a few rough edges in browser DOM implementations.
 
-In React, all DOM properties and attributes (including event handlers) should be camelCased. For example, the HTML attribute `tabindex` corresponds to the attribute `tabIndex` in React. The exception is `aria-*` and `data-*` attributes, which should be lowercased.
+In React, all DOM properties and attributes (including event handlers) should be camelCased. For example, the HTML attribute `tabindex` corresponds to the attribute `tabIndex` in React. The exception is `aria-*` and `data-*` attributes, which should be lowercased. For example, you can keep `aria-label` as `aria-label`.
 
 ## Differences In Attributes
 
@@ -104,8 +104,8 @@ React supports all `data-*` and `aria-*` attributes as well as these attributes:
 accept acceptCharset accessKey action allowFullScreen allowTransparency alt
 async autoComplete autoFocus autoPlay capture cellPadding cellSpacing challenge
 charSet checked cite classID className colSpan cols content contentEditable
-contextMenu controls coords crossOrigin data dateTime default defer dir
-disabled download draggable encType form formAction formEncType formMethod
+contextMenu controls controlsList coords crossOrigin data dateTime default defer
+dir disabled download draggable encType form formAction formEncType formMethod
 formNoValidate formTarget frameBorder headers height hidden high href hrefLang
 htmlFor httpEquiv icon id inputMode integrity is keyParams keyType kind label
 lang list loop low manifest marginHeight marginWidth max maxLength media
