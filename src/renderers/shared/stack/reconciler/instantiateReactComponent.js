@@ -92,13 +92,13 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
     }
 
     // Special case string values
-    if (typeof element.type === 'string') {
+    if (typeof type === 'string') {
       instance = ReactHostComponent.createInternalComponent(element);
-    } else if (isInternalComponentType(element.type)) {
+    } else if (isInternalComponentType(type)) {
       // This is temporarily available for custom components that are not string
       // representations. I.e. ART. Once those are updated to use the string
       // representation, we can drop this code path.
-      instance = new element.type(element);
+      instance = new type(element);
 
       // We renamed this. Allow the old name for compat. :(
       if (!instance.getHostNode) {
