@@ -202,6 +202,9 @@ var HTMLDOMPropertyConfig = {
     security: 0,
     // IE-only attribute that controls focus behavior
     unselectable: 0,
+    // Facebook internal attribute. Listed to avoid dependency on custom
+    // property injections
+    ajaxify: MUST_USE_PROPERTY,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
