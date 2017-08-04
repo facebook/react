@@ -495,7 +495,7 @@ describe('ReactComponent', () => {
   });
 
   if (ReactDOMFeatureFlags.useFiber) {
-    fdescribe('with new features', () => {
+    describe('with new features', () => {
       beforeEach(() => {
         require('ReactFeatureFlags').disableNewFiberFeatures = false;
       });
