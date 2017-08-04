@@ -27,53 +27,25 @@ var HTMLDOMPropertyConfig = {
      * Standard Properties
      */
     acceptCharset: 0,
-    accessKey: 0,
     allowFullScreen: HAS_BOOLEAN_VALUE,
-    allowTransparency: 0,
     // specifies target context for links with `preload` type
     async: HAS_BOOLEAN_VALUE,
-    autoComplete: 0,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
     // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
     capture: HAS_BOOLEAN_VALUE,
-    cellPadding: 0,
-    cellSpacing: 0,
-    charSet: 0,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    classID: 0,
-    className: 0,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
-    colSpan: 0,
-    contentEditable: 0,
-    contextMenu: 0,
     controls: HAS_BOOLEAN_VALUE,
-    controlsList: 0,
-    crossOrigin: 0,
-    dateTime: 0,
+    className: 0,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
     disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
-    encType: 0,
-    formAction: 0,
-    formEncType: 0,
-    formMethod: 0,
     formNoValidate: HAS_BOOLEAN_VALUE,
-    formTarget: 0,
-    frameBorder: 0,
     hidden: HAS_BOOLEAN_VALUE,
-    hrefLang: 0,
     htmlFor: 0,
     httpEquiv: 0,
-    inputMode: 0,
-    keyParams: 0,
-    keyType: 0,
-    marginHeight: 0,
-    marginWidth: 0,
-    maxLength: 0,
-    mediaGroup: 0,
-    minLength: 0,
     // Caution; `option.selected` is not updated if `select.multiple` is
     // disabled with `removeAttribute`.
     multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
@@ -81,9 +53,7 @@ var HTMLDOMPropertyConfig = {
     noValidate: HAS_BOOLEAN_VALUE,
     open: HAS_BOOLEAN_VALUE,
     playsInline: HAS_BOOLEAN_VALUE,
-    radioGroup: 0,
     readOnly: HAS_BOOLEAN_VALUE,
-    referrerPolicy: 0,
     required: HAS_BOOLEAN_VALUE,
     reversed: HAS_BOOLEAN_VALUE,
     rows: HAS_POSITIVE_NUMERIC_VALUE,
@@ -94,37 +64,12 @@ var HTMLDOMPropertyConfig = {
     size: HAS_POSITIVE_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
-    spellCheck: 0,
-    srcDoc: 0,
-    srcLang: 0,
-    srcSet: 0,
     // Style must be explicitely set in the attribute list. React components
     // expect a style object
-    style: 0,
     start: HAS_NUMERIC_VALUE,
-    tabIndex: 0,
-    useMap: 0,
-    value: 0,
-
-    /**
-     * Non-standard Properties
-     */
-    // autoCapitalize and autoCorrect are supported in Mobile Safari for
-    // keyboard hints.
-    autoCapitalize: 0,
-    autoCorrect: 0,
-    // autoSave allows WebKit/Blink to persist values of input fields on page reloads
-    autoSave: 0,
-    // itemProp, itemScope, itemType are for
-    // Microdata support. See http://schema.org/docs/gs.html
-    itemProp: 0,
+    // itemScope is for for Microdata support.
+    // See http://schema.org/docs/gs.html
     itemScope: HAS_BOOLEAN_VALUE,
-    itemType: 0,
-    // itemID and itemRef are for Microdata support as well but
-    // only specified in the WHATWG spec document. See
-    // https://html.spec.whatwg.org/multipage/microdata.html#microdata-dom-api
-    itemID: 0,
-    itemRef: 0,
     // Facebook internal attribute. This is an object attribute that
     // impliments a custom toString() method
     ajaxify: 0,
