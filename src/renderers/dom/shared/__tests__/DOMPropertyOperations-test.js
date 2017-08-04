@@ -70,6 +70,7 @@ describe('DOMPropertyOperations', () => {
           return '<html>';
         },
       };
+
       var container = document.createElement('div');
       ReactDOM.render(<div role={obj} />, container);
       expect(container.firstChild.getAttribute('role')).toBe('<html>');
