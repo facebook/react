@@ -15,16 +15,16 @@ const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 const describeFiber = ReactDOMFeatureFlags.useFiber ? describe : xdescribe;
 
 describeFiber('ReactDOMFrameScheduling', () => {
-  it('throws when requestAnimationFrame is not polyfilled in the browser', () => {
+  it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
     const previousRAF = global.requestAnimationFrame;
     try {
       global.requestAnimationFrame = undefined;
       jest.resetModules();
-      expect(() => {
-        require('react-dom');
-      }).toThrow(
-        'React depends on requestAnimationFrame. Make sure that you load a ' +
-          'polyfill in older browsers.',
+      spyOn(console, 'error');
+      require('react-dom');
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'React depends on requestAnimationFrame.',
       );
     } finally {
       global.requestAnimationFrame = previousRAF;

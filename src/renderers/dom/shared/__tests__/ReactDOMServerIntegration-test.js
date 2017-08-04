@@ -18,7 +18,6 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactDOMNodeStream;
 let ReactTestUtils;
 
 const stream = require('stream');
@@ -30,9 +29,13 @@ const COMMENT_NODE_TYPE = 8;
 // ====================================
 
 // promisified version of ReactDOM.render()
-function asyncReactDOMRender(reactElement, domElement) {
+function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
   return new Promise(resolve => {
-    ReactDOM.render(reactElement, domElement);
+    if (forceHydrate && ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(reactElement, domElement);
+    } else {
+      ReactDOM.render(reactElement, domElement);
+    }
     // We can't use the callback for resolution because that will not catch
     // errors. They're thrown.
     resolve();
@@ -68,10 +71,10 @@ async function expectErrors(fn, count) {
 
 // renders the reactElement into domElement, and expects a certain number of errors.
 // returns a Promise that resolves when the render is complete.
-function renderIntoDom(reactElement, domElement, errorCount = 0) {
+function renderIntoDom(reactElement, domElement, forceHydrate, errorCount = 0) {
   return expectErrors(async () => {
     ExecutionEnvironment.canUseDOM = true;
-    await asyncReactDOMRender(reactElement, domElement);
+    await asyncReactDOMRender(reactElement, domElement, forceHydrate);
     ExecutionEnvironment.canUseDOM = false;
     return domElement.firstChild;
   }, errorCount);
@@ -116,7 +119,7 @@ async function renderIntoStream(reactElement, errorCount = 0) {
     () =>
       new Promise(resolve => {
         let writable = new DrainWritable();
-        ReactDOMNodeStream.renderToStream(reactElement).pipe(writable);
+        ReactDOMServer.renderToStream(reactElement).pipe(writable);
         writable.on('finish', () => resolve(writable.buffer));
       }),
     errorCount,
@@ -135,7 +138,7 @@ async function streamRender(reactElement, errorCount = 0) {
 
 const clientCleanRender = (element, errorCount = 0) => {
   const div = document.createElement('div');
-  return renderIntoDom(element, div, errorCount);
+  return renderIntoDom(element, div, false, errorCount);
 };
 
 const clientRenderOnServerString = async (element, errorCount = 0) => {
@@ -146,7 +149,12 @@ const clientRenderOnServerString = async (element, errorCount = 0) => {
   domElement.innerHTML = markup;
   let serverNode = domElement.firstChild;
 
-  const firstClientNode = await renderIntoDom(element, domElement, errorCount);
+  const firstClientNode = await renderIntoDom(
+    element,
+    domElement,
+    true,
+    errorCount,
+  );
   let clientNode = firstClientNode;
 
   // Make sure all top level nodes match up
@@ -154,19 +162,10 @@ const clientRenderOnServerString = async (element, errorCount = 0) => {
     expect(serverNode != null).toBe(true);
     expect(clientNode != null).toBe(true);
     expect(clientNode.nodeType).toBe(serverNode.nodeType);
-    if (clientNode.nodeType === TEXT_NODE_TYPE) {
-      // Text nodes are stateless so we can just compare values.
-      // This works around a current issue where hydration replaces top-level
-      // text node, but otherwise works.
-      // TODO: we can remove this branch if we add explicit hydration opt-in.
-      // https://github.com/facebook/react/issues/10189
-      expect(serverNode.nodeValue).toBe(clientNode.nodeValue);
-    } else {
-      // Assert that the DOM element hasn't been replaced.
-      // Note that we cannot use expect(serverNode).toBe(clientNode) because
-      // of jest bug #1772.
-      expect(serverNode === clientNode).toBe(true);
-    }
+    // Assert that the DOM element hasn't been replaced.
+    // Note that we cannot use expect(serverNode).toBe(clientNode) because
+    // of jest bug #1772.
+    expect(serverNode === clientNode).toBe(true);
     serverNode = serverNode.nextSibling;
     clientNode = clientNode.nextSibling;
   }
@@ -180,7 +179,7 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
   var domElement = document.createElement('div');
   domElement.innerHTML =
     '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
-  await renderIntoDom(element, domElement, errorCount + 1);
+  await renderIntoDom(element, domElement, true, errorCount + 1);
 
   // This gives us the resulting text content.
   var hydratedTextContent = domElement.textContent;
@@ -188,7 +187,7 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
   // Next we render the element into a clean DOM node client side.
   const cleanDomElement = document.createElement('div');
   ExecutionEnvironment.canUseDOM = true;
-  await asyncReactDOMRender(element, cleanDomElement);
+  await asyncReactDOMRender(element, cleanDomElement, true);
   ExecutionEnvironment.canUseDOM = false;
   // This gives us the expected text content.
   const cleanTextContent = cleanDomElement.textContent;
@@ -296,6 +295,7 @@ async function testMarkupMatch(serverElement, clientElement, shouldMatch) {
   return renderIntoDom(
     clientElement,
     domElement.parentNode,
+    true,
     shouldMatch ? 0 : 1,
   );
 }
@@ -346,14 +346,6 @@ function resetModules() {
   }
   require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMServer = require('react-dom/server');
-
-  // Finally, reset modules one more time before importing the stream renderer.
-  jest.resetModuleRegistry();
-  if (typeof onAfterResetModules === 'function') {
-    onAfterResetModules();
-  }
-  require('ReactFeatureFlags').disableNewFiberFeatures = false;
-  ReactDOMNodeStream = require('react-dom/node-stream');
 }
 
 describe('ReactDOMServerIntegration', () => {
@@ -453,6 +445,22 @@ describe('ReactDOMServerIntegration', () => {
         expect(parent.childNodes[0].tagName).toBe('DIV');
         expect(parent.childNodes[1].tagName).toBe('DIV');
         expect(parent.childNodes[2].tagName).toBe('DIV');
+      });
+
+      itRenders('emptyish values', async render => {
+        let e = await render(0);
+        expect(e.nodeType).toBe(TEXT_NODE_TYPE);
+        expect(e.nodeValue).toMatch('0');
+
+        // Empty string is special because client renders a node
+        // but server returns empty HTML. So we compare parent text.
+        expect((await render(<div>{''}</div>)).textContent).toBe('');
+
+        expect(await render([])).toBe(null);
+        expect(await render(false)).toBe(null);
+        expect(await render(true)).toBe(null);
+        expect(await render(undefined)).toBe(null);
+        expect(await render([[[false]], undefined])).toBe(null);
       });
     }
   });
@@ -1390,6 +1398,34 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(textNode2, '   ');
         },
       );
+
+      if (ReactDOMFeatureFlags.useFiber) {
+        itRenders('a composite with multiple children', async render => {
+          const Component = props => props.children;
+          const e = await render(
+            <Component>{['a', 'b', [undefined], [[false, 'c']]]}</Component>,
+          );
+
+          let parent = e.parentNode;
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // For plain server markup result we have comments between.
+            // If we're able to hydrate, they remain.
+            expect(parent.childNodes.length).toBe(5);
+            expectTextNode(parent.childNodes[0], 'a');
+            expectTextNode(parent.childNodes[2], 'b');
+            expectTextNode(parent.childNodes[4], 'c');
+          } else {
+            expect(parent.childNodes.length).toBe(3);
+            expectTextNode(parent.childNodes[0], 'a');
+            expectTextNode(parent.childNodes[1], 'b');
+            expectTextNode(parent.childNodes[2], 'c');
+          }
+        });
+      }
     });
 
     describe('escaping >, <, and &', function() {
@@ -1971,7 +2007,11 @@ describe('ReactDOMServerIntegration', () => {
 
           resetModules();
           // client render on top of the server markup.
-          const clientField = await renderIntoDom(element, field.parentNode);
+          const clientField = await renderIntoDom(
+            element,
+            field.parentNode,
+            true,
+          );
           // verify that the input field was not replaced.
           // Note that we cannot use expect(clientField).toBe(field) because
           // of jest bug #1772
@@ -2330,6 +2370,7 @@ describe('ReactDOMServerIntegration', () => {
       await asyncReactDOMRender(
         <RefsComponent ref={e => (component = e)} />,
         root,
+        true,
       );
       expect(component.refs.myDiv).toBe(root.firstChild);
     });

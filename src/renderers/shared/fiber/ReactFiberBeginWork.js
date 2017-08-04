@@ -198,16 +198,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (nextProps === null || memoizedProps === nextProps) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
-      // TODO: Disable this before release, since it is not part of the public API
-      // I use this for testing to compare the relative overhead of classes.
-      if (
-        typeof fn.shouldComponentUpdate === 'function' &&
-        !fn.shouldComponentUpdate(memoizedProps, nextProps)
-      ) {
-        // Memoize props even if shouldComponentUpdate returns false
-        memoizeProps(workInProgress, nextProps);
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
+      // TODO: consider bringing fn.shouldComponentUpdate() back.
+      // It used to be here.
     }
 
     var unmaskedContext = getUnmaskedContext(workInProgress);

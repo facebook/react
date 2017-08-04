@@ -131,12 +131,6 @@ var DOMPropertyOperations = {
             return stringValue;
           }
         }
-      } else if (DOMProperty.isCustomAttribute(name)) {
-        return DOMPropertyOperations.diffValueForAttribute(
-          node,
-          name,
-          expected,
-        );
       }
     }
   },

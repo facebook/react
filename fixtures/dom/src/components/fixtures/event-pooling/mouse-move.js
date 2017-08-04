@@ -1,23 +1,23 @@
-const React = window.React
+const React = window.React;
 
-import TestCase from '../../TestCase'
-import HitBox from './hit-box'
+import TestCase from '../../TestCase';
+import HitBox from './hit-box';
 
 class MouseMove extends React.Component {
   state = {
-    events: []
-  }
+    events: [],
+  };
 
   checkEvent = event => {
-    let { events } = this.state
+    let {events} = this.state;
 
     if (event.type === 'mousemove' && events.indexOf(event) === -1) {
-      this.setState({ events: events.concat(event) })
+      this.setState({events: events.concat(event)});
     }
-  }
+  };
 
   render() {
-    const { events } = this.state
+    const {events} = this.state;
 
     return (
       <TestCase title="Mouse Move" description="">
@@ -35,13 +35,17 @@ class MouseMove extends React.Component {
         <p>
           Was the event pooled?{' '}
           <b>
-            {events.length ? (events.length <= 1 ? 'Yes' : 'No') : 'Unsure'} ({events.length}{' '}
+            {events.length ? events.length <= 1 ? 'Yes' : 'No' : 'Unsure'}
+            {' '}
+            (
+            {events.length}
+            {' '}
             events)
           </b>
         </p>
       </TestCase>
-    )
+    );
   }
 }
 
-export default MouseMove
+export default MouseMove;

@@ -200,6 +200,16 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
   }
 }
 
+function warnOnFunctionType() {
+  warning(
+    false,
+    'Functions are not valid as a React child. This may happen if ' +
+      'you return a Component instead of <Component /> from render. ' +
+      'Or maybe you meant to call this function rather than return it.%s',
+    getCurrentFiberStackAddendum() || '',
+  );
+}
+
 // This wrapper function exists because I expect to clone the code in each path
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
@@ -565,6 +575,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
+    if (__DEV__) {
+      const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+      if (!disableNewFiberFeatures && typeof newChild === 'function') {
+        warnOnFunctionType();
+      }
+    }
+
     return null;
   }
 
@@ -638,6 +655,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
+    if (__DEV__) {
+      const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+      if (!disableNewFiberFeatures && typeof newChild === 'function') {
+        warnOnFunctionType();
+      }
+    }
+
     return null;
   }
 
@@ -695,6 +719,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
+    }
+
+    if (__DEV__) {
+      const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+      if (!disableNewFiberFeatures && typeof newChild === 'function') {
+        warnOnFunctionType();
+      }
     }
 
     return null;
@@ -1418,6 +1449,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
+    if (__DEV__) {
+      if (!disableNewFiberFeatures && typeof newChild === 'function') {
+        warnOnFunctionType();
+      }
+    }
     if (!disableNewFiberFeatures && typeof newChild === 'undefined') {
       // If the new child is undefined, and the return fiber is a composite
       // component, throw an error. If Fiber return types are disabled,

@@ -40,10 +40,15 @@ module.exports = function(opts) {
   var errorMapFilePath = opts.errorMapFilePath;
   var existingErrorMap;
   try {
-    existingErrorMap = require(path.join(
-      __dirname,
-      path.basename(errorMapFilePath)
-    ));
+    // Using `fs.readFileSync` instead of `require` here, because `require()`
+    // calls are cached, and the cache map is not properly invalidated after
+    // file changes.
+    existingErrorMap = JSON.parse(
+      fs.readFileSync(
+        path.join(__dirname, path.basename(errorMapFilePath)),
+        'utf8'
+      )
+    );
   } catch (e) {
     existingErrorMap = {};
   }

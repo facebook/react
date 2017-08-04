@@ -146,12 +146,16 @@ describe('ReactMount', () => {
     expect(instance1 === instance2).toBe(true);
   });
 
-  it('should warn if mounting into dirty rendered markup', () => {
+  it('should warn if mounting into left padded rendered markup', () => {
     var container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     spyOn(console, 'error');
-    ReactDOM.render(<div />, container);
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(<div />, container);
+    } else {
+      ReactDOM.render(<div />, container);
+    }
     expectDev(console.error.calls.count()).toBe(1);
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -162,15 +166,28 @@ describe('ReactMount', () => {
         'Target node has markup rendered by React, but there are unrelated nodes as well.',
       );
     }
+  });
 
-    console.error.calls.reset();
-    ReactDOM.unmountComponentAtNode(container);
+  it('should warn if mounting into right padded rendered markup', () => {
+    var container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
-    ReactDOM.render(<div />, container);
+
+    spyOn(console, 'error');
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(<div />, container);
+    } else {
+      ReactDOM.render(<div />, container);
+    }
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Target node has markup rendered by React, but there are unrelated nodes as well.',
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Did not expect server HTML to contain the text node " " in <container>.',
+      );
+    } else {
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Target node has markup rendered by React, but there are unrelated nodes as well.',
+      );
+    }
   });
 
   it('should not warn if mounting into non-empty node', () => {
@@ -203,10 +220,17 @@ describe('ReactMount', () => {
     div.innerHTML = markup;
 
     spyOn(console, 'error');
-    ReactDOM.render(
-      <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-      div,
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(
+        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+        div,
+      );
+    } else {
+      ReactDOM.render(
+        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+        div,
+      );
+    }
     expectDev(console.error.calls.count()).toBe(1);
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
