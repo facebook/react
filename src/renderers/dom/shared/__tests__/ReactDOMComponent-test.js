@@ -1942,10 +1942,10 @@ describe('ReactDOMComponent', () => {
     });
 
     it('assigns ajaxify (an important internal FB attribute)', function() {
-      var options = {};
+      var options = {toString: () => 'ajaxy'};
       var el = ReactTestUtils.renderIntoDocument(<div ajaxify={options} />);
 
-      expect(el.ajaxify).toBe(options);
+      expect(el.getAttribute('ajaxify')).toBe('ajaxy');
     });
   });
 });
