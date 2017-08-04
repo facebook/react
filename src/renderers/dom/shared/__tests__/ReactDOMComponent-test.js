@@ -1879,6 +1879,35 @@ describe('ReactDOMComponent', () => {
     });
   });
 
+  describe('Attributes with aliases', function() {
+    it('does not set aliased attributes on DOM elements', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div class="test" />);
+
+      expect(el.className).toBe('');
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Unknown DOM property class. Did you mean className?',
+      );
+    });
+
+    it('does not set aliased attributes on SVG elements', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(
+        <svg><text arabic-form="initial" /></svg>,
+      );
+      var text = el.querySelector('text');
+
+      expect(text.getAttribute('arabic-form')).toBe(null);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Unknown DOM property arabic-form. Did you mean arabicForm?',
+      );
+    });
+  });
+
   describe('Custom attributes', function() {
     it('allows assignment of custom attributes with string values', function() {
       var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);

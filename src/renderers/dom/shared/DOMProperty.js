@@ -118,6 +118,9 @@ var DOMPropertyInjection = {
 
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
+
+        DOMProperty.aliases[attributeName] = true;
+
         propertyInfo.attributeName = attributeName;
         if (__DEV__) {
           DOMProperty.getPossibleStandardName[attributeName] = propName;
@@ -198,6 +201,13 @@ var DOMProperty = {
   properties: {},
 
   /**
+   * Some attributes are aliased for easier use within React. We don't
+   * allow direct use of these attributes. See DOMAttributeNames in
+   * HTMLPropertyConfig and SVGPropertyConfig.
+   */
+  aliases: {},
+
+  /**
    * Mapping from lowercase property names to the properly cased version, used
    * to warn in the case of missing properties. Available only in __DEV__.
    *
@@ -213,7 +223,10 @@ var DOMProperty = {
    * @method
    */
   shouldSetAttribute: function(name, value) {
-    if (DOMProperty.isReservedProp(name)) {
+    if (
+      DOMProperty.isReservedProp(name) ||
+      DOMProperty.aliases.hasOwnProperty(name)
+    ) {
       return false;
     }
 
