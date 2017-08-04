@@ -794,13 +794,10 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('data-foo')).toBe(false);
       });
 
-      itRenders(
-        'custom attributes for non-standard elements',
-        async render => {
-          const e = await render(<nonstandard foo="bar" />, 0);
-          expect(e.getAttribute('foo')).toBe('bar');
-        },
-      );
+      itRenders('custom attributes for non-standard elements', async render => {
+        const e = await render(<nonstandard foo="bar" />, 0);
+        expect(e.getAttribute('foo')).toBe('bar');
+      });
 
       itRenders('unknown attributes for custom elements', async render => {
         const e = await render(<custom-element foo="bar" />);
@@ -2572,35 +2569,5 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
-  });
-
-  describe('dynamic injection', () => {
-    beforeEach(() => {
-      // HACK: we reset modules several times during the test which breaks
-      // dynamic injection. So we resort to telling resetModules() to run
-      // our custom init code every time after resetting. We could have a nicer
-      // way to do this, but this is the only test that needs it, and it will
-      // be removed anyway when we switch to static injection.
-      onAfterResetModules = () => {
-        const DOMProperty = require('DOMProperty');
-        DOMProperty.injection.injectDOMPropertyConfig({
-          Properties: {foobar: 0},
-          DOMAttributeNames: {
-            foobar: 'foo-bar',
-          },
-        });
-      };
-      resetModules();
-    });
-
-    afterEach(() => {
-      onAfterResetModules = null;
-    });
-
-    itRenders('injected attributes', async render => {
-      const e = await render(<div foobar="test" />);
-
-      expect(e.getAttribute('foo-bar')).toEqual('test');
-    });
   });
 });
