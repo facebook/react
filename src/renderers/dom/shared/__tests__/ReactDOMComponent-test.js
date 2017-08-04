@@ -1912,7 +1912,7 @@ describe('ReactDOMComponent', () => {
     it('allows assignment of custom attributes with string values', function() {
       var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
 
-      expect(el.hasAttribute('whatever')).toBe(true);
+      expect(el.getAttribute('whatever')).toBe("30");
     });
 
     it('removes custom attributes', function() {
