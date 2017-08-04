@@ -1940,5 +1940,12 @@ describe('ReactDOMComponent', () => {
         'Warning: Unknown prop `whatever` on <div> tag',
       );
     });
+
+    it('assigns ajaxify (an important internal FB attribute)', function() {
+      var options = {};
+      var el = ReactTestUtils.renderIntoDocument(<div ajaxify={options} />);
+
+      expect(el.ajaxify).toBe(options);
+    });
   });
 });
