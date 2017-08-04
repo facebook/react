@@ -38,6 +38,7 @@ if (__DEV__) {
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
   var ARIA_NAME_REGEX = /^aria-/i;
+  var possibleStandardNames = require('possibleStandardNames');
 
   var validateProperty = function(tagName, name, value, debugID) {
     if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
@@ -87,8 +88,8 @@ if (__DEV__) {
     }
 
     // Known attributes should match the casing specified in the property config.
-    if (DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)) {
-      var standardName = DOMProperty.getPossibleStandardName[lowerCasedName];
+    if (possibleStandardNamesName.hasOwnProperty(lowerCasedName)) {
+      var standardName = getpossibleStandardNames[lowerCasedName];
       if (standardName !== name) {
         warning(
           false,
