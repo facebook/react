@@ -23,10 +23,6 @@ var HAS_OVERLOADED_BOOLEAN_VALUE =
 
 var HTMLDOMPropertyConfig = {
   Properties: {
-    /**
-     * Standard Properties
-     */
-    acceptCharset: 0,
     allowFullScreen: HAS_BOOLEAN_VALUE,
     // specifies target context for links with `preload` type
     async: HAS_BOOLEAN_VALUE,
@@ -37,15 +33,12 @@ var HTMLDOMPropertyConfig = {
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
     controls: HAS_BOOLEAN_VALUE,
-    className: 0,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
     disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
     formNoValidate: HAS_BOOLEAN_VALUE,
     hidden: HAS_BOOLEAN_VALUE,
-    htmlFor: 0,
-    httpEquiv: 0,
     // Caution; `option.selected` is not updated if `select.multiple` is
     // disabled with `removeAttribute`.
     multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
@@ -67,12 +60,23 @@ var HTMLDOMPropertyConfig = {
     // Style must be explicitely set in the attribute list. React components
     // expect a style object
     start: HAS_NUMERIC_VALUE,
+    // Style must be explicitely set in the attribute list. React components
+    // expect a style object
+    style: 0,
     // itemScope is for for Microdata support.
     // See http://schema.org/docs/gs.html
     itemScope: HAS_BOOLEAN_VALUE,
     // Facebook internal attribute. This is an object attribute that
     // impliments a custom toString() method
     ajaxify: 0,
+    // These attributes must stay in the white-list because they have
+    // different attribute names (see DOMAttributeNames below)
+    acceptCharset: 0,
+    className: 0,
+    htmlFor: 0,
+    httpEquiv: 0,
+    // Attributes with mutation methods must be specified in the whitelist
+    value: 0,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
