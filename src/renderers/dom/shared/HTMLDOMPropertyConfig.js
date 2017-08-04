@@ -60,7 +60,7 @@ var HTMLDOMPropertyConfig = {
     // Style must be explicitely set in the attribute list. React components
     // expect a style object
     start: HAS_NUMERIC_VALUE,
-    // Style must be explicitely set in the attribute list. React components
+    // Style must be explicitly set in the attribute list. React components
     // expect a style object
     style: 0,
     // itemScope is for for Microdata support.
