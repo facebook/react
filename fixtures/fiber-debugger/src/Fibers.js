@@ -163,8 +163,6 @@ const strokes = {
   sibling: 'darkgreen',
   return: 'red',
   fx: 'purple',
-  progressedChild: 'cyan',
-  progressedDel: 'brown',
 };
 
 function Edge(props) {
@@ -242,12 +240,10 @@ function formatPriority(priority) {
     case 2:
       return 'task';
     case 3:
-      return 'animation';
-    case 4:
       return 'hi-pri work';
-    case 5:
+    case 4:
       return 'lo-pri work';
-    case 6:
+    case 5:
       return 'offscreen work';
     default:
       throw new Error('Unknown priority.');
@@ -302,20 +298,9 @@ export default function Fibers({fibers, show, ...rest}) {
               {fibers.currentIDs.indexOf(fiber.id) === -1
                 ? <small>
                     {fiber.pendingWorkPriority !== 0 && [
-                      <span
-                        style={{
-                          fontWeight: fiber.pendingWorkPriority <=
-                            fiber.progressedPriority
-                            ? 'bold'
-                            : 'normal',
-                        }}
-                        key="span">
+                      <span key="span">
                         Needs: {formatPriority(fiber.pendingWorkPriority)}
                       </span>,
-                      <br key="br" />,
-                    ]}
-                    {fiber.progressedPriority !== 0 && [
-                      `Finished: ${formatPriority(fiber.progressedPriority)}`,
                       <br key="br" />,
                     ]}
                     {fiber.memoizedProps !== null &&
@@ -323,7 +308,7 @@ export default function Fibers({fibers, show, ...rest}) {
                       fiber.memoizedProps === fiber.pendingProps
                         ? 'Can reuse memoized.'
                         : 'Cannot reuse memoized.',
-                      <br />,
+                      <br key="br" />,
                     ]}
                   </small>
                 : <small>
@@ -340,16 +325,6 @@ export default function Fibers({fibers, show, ...rest}) {
               weight={1000}
               key={`${fiber.id}-${fiber.child}-child`}>
               child
-            </Edge>,
-          fiber.progressedChild &&
-            show.progressedChild &&
-            <Edge
-              source={fiber.id}
-              target={fiber.progressedChild}
-              kind="progressedChild"
-              weight={1000}
-              key={`${fiber.id}-${fiber.progressedChild}-pChild`}>
-              pChild
             </Edge>,
           fiber.sibling &&
             show.sibling &&
@@ -400,26 +375,6 @@ export default function Fibers({fibers, show, ...rest}) {
               weight={100}
               key={`${fiber.id}-${fiber.lastEffect}-lastEffect`}>
               lastFx
-            </Edge>,
-          fiber.progressedFirstDeletion &&
-            show.progressedDel &&
-            <Edge
-              source={fiber.id}
-              target={fiber.progressedFirstDeletion}
-              kind="progressedDel"
-              weight={100}
-              key={`${fiber.id}-${fiber.progressedFirstDeletion}-pFD`}>
-              pFDel
-            </Edge>,
-          fiber.progressedLastDeletion &&
-            show.progressedDel &&
-            <Edge
-              source={fiber.id}
-              target={fiber.progressedLastDeletion}
-              kind="progressedDel"
-              weight={100}
-              key={`${fiber.id}-${fiber.progressedLastDeletion}-pLD`}>
-              pLDel
             </Edge>,
           fiber.alternate &&
             show.alt &&

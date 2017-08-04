@@ -63,9 +63,6 @@ export default function describeFibers(rootFiber, workInProgress) {
       nextEffect: acknowledgeFiber(fiber.nextEffect),
       firstEffect: acknowledgeFiber(fiber.firstEffect),
       lastEffect: acknowledgeFiber(fiber.lastEffect),
-      progressedChild: acknowledgeFiber(fiber.progressedChild),
-      progressedFirstDeletion: acknowledgeFiber(fiber.progressedFirstDeletion),
-      progressedLastDeletion: acknowledgeFiber(fiber.progressedLastDeletion),
       alternate: acknowledgeFiber(fiber.alternate),
     });
     return id;
