@@ -1009,7 +1009,7 @@ var ReactDOMFiberComponent = {
           }
         } else if (isCustomComponentTag) {
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
+          extraAttributeNames.delete(propKey.toLowerCase());
           serverValue = DOMPropertyOperations.getValueForAttribute(
             domElement,
             propKey,
