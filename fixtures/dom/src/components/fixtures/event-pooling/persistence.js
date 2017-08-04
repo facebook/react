@@ -1,7 +1,7 @@
-const React = window.React;
-
 import TestCase from '../../TestCase';
 import HitBox from './hit-box';
+
+const React = window.React;
 
 class Persistence extends React.Component {
   state = {
