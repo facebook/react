@@ -614,6 +614,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={null} />);
         expect(e.hasAttribute('className')).toBe(false);
       });
+
+      itRenders('no className prop when given the alias', async render => {
+        const e = await render(<div class="test" />, 1);
+        expect(e.className).toBe('');
+      });
+
+      itRenders('class for custom elements', async render => {
+        const e = await render(<x-custom class="test" />, 0);
+        expect(e.getAttribute('class')).toBe('test');
+      });
     });
 
     describe('htmlFor property', function() {
