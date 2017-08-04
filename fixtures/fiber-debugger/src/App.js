@@ -41,8 +41,6 @@ class App extends Component {
         sibling: true,
         return: false,
         fx: false,
-        progressedChild: false,
-        progressedDel: false,
       },
     };
   }
