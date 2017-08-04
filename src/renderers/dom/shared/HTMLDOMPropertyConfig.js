@@ -56,6 +56,7 @@ var HTMLDOMPropertyConfig = {
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     size: HAS_POSITIVE_NUMERIC_VALUE,
     start: HAS_NUMERIC_VALUE,
+    loop: HAS_BOOLEAN_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
     // Style must be explicitly set in the attribute list. React components
