@@ -112,10 +112,6 @@ var DOMPropertyInjection = {
         propName,
       );
 
-      if (__DEV__) {
-        DOMProperty.getPossibleStandardName[lowerCased] = propName;
-      }
-
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
 
@@ -126,9 +122,6 @@ var DOMPropertyInjection = {
         }
 
         propertyInfo.attributeName = attributeName;
-        if (__DEV__) {
-          DOMProperty.getPossibleStandardName[attributeName] = propName;
-        }
       }
 
       if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
@@ -210,17 +203,6 @@ var DOMProperty = {
    * HTMLPropertyConfig and SVGPropertyConfig.
    */
   aliases: {},
-
-  /**
-   * Mapping from lowercase property names to the properly cased version, used
-   * to warn in the case of missing properties. Available only in __DEV__.
-   *
-   * autofocus is predefined, because adding it to the property whitelist
-   * causes unintended side effects.
-   *
-   * @type {Object}
-   */
-  getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
 
   /**
    * Checks whether a property name is a writeable attribute.
