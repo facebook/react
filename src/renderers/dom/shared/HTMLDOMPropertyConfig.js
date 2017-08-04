@@ -55,11 +55,9 @@ var HTMLDOMPropertyConfig = {
     seamless: HAS_BOOLEAN_VALUE,
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     size: HAS_POSITIVE_NUMERIC_VALUE,
+    start: HAS_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
-    // Style must be explicitely set in the attribute list. React components
-    // expect a style object
-    start: HAS_NUMERIC_VALUE,
     // Style must be explicitly set in the attribute list. React components
     // expect a style object
     style: 0,
