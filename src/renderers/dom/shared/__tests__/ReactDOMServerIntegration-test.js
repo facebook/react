@@ -842,6 +842,11 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.hasAttribute('foo')).toBe(false);
         },
       );
+
+      itRenders('custom attributes with special casing', async render => {
+        const e = await render(<div fooBar="test" />);
+        expect(e.getAttribute('fooBar')).toBe('test');
+      });
     });
 
     itRenders('no HTML events', async render => {
