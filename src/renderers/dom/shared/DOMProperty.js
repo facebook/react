@@ -230,17 +230,20 @@ var DOMProperty = {
       return false;
     }
 
-    let type = typeof value;
-
-    if (
-      value === null ||
-      type === 'undefined' ||
-      DOMProperty.properties.hasOwnProperty(name)
-    ) {
+    if (DOMProperty.properties.hasOwnProperty(name)) {
       return true;
     }
 
-    switch (type) {
+    if (value === null) {
+      return true;
+    }
+
+    if (name.toLowerCase() !== name) {
+      return false;
+    }
+
+    switch (typeof value) {
+      case 'undefined':
       case 'boolean':
       case 'number':
       case 'string':
