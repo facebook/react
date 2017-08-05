@@ -37,10 +37,9 @@ function getStackAddendum(debugID) {
 if (__DEV__) {
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
+  var ARIA_NAME_REGEX = /^aria-/i;
 
   var validateProperty = function(tagName, name, value, debugID) {
-    var lowerCasedName = name.toLowerCase();
-
     if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return true;
     }
@@ -60,6 +59,7 @@ if (__DEV__) {
       return true;
     }
 
+    var lowerCasedName = name.toLowerCase();
     var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
@@ -69,7 +69,7 @@ if (__DEV__) {
     if (registrationName != null) {
       warning(
         false,
-        'Unknown event handler property %s. Did you mean `%s`?%s',
+        'Unknown event handler property `%s`. Did you mean `%s`?%s',
         name,
         registrationName,
         getStackAddendum(debugID),
@@ -77,29 +77,45 @@ if (__DEV__) {
       return true;
     }
 
-    // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(name)
-      ? DOMProperty.getPossibleStandardName[name]
-      : null;
-
-    var hasBadCasing = standardName != null && standardName !== name;
-
-    if (DOMProperty.shouldSetAttribute(name, value) && !hasBadCasing) {
+    if (DOMProperty.isReservedProp(name)) {
       return true;
     }
 
-    if (standardName != null) {
+    // Let the ARIA attribute hook validate ARIA attributes
+    if (ARIA_NAME_REGEX.test(name)) {
+      return true;
+    }
+
+    // Known attributes should match the casing specified in the property config.
+    if (DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)) {
+      var standardName = DOMProperty.getPossibleStandardName[lowerCasedName];
+      if (standardName !== name) {
+        warning(
+          false,
+          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          name,
+          standardName,
+          getStackAddendum(debugID),
+        );
+      }
+      return true;
+    }
+
+    // Otherwise, we have a custom attribute. Custom attributes should always
+    // be lowercase.
+    if (lowerCasedName !== name) {
       warning(
         false,
-        'Unknown DOM property %s. Did you mean %s?%s',
+        'Invalid DOM property `%s`. Custom attributes and data attributes ' +
+          'must be lower case. Instead use `%s`.%s',
         name,
-        standardName,
+        lowerCasedName,
         getStackAddendum(debugID),
       );
       return true;
     }
 
-    return DOMProperty.isReservedProp(name);
+    return DOMProperty.shouldSetAttribute(name, value);
   };
 }
 
@@ -117,7 +133,7 @@ var warnUnknownProperties = function(type, props, debugID) {
   if (unknownProps.length === 1) {
     warning(
       false,
-      'Unknown prop %s on <%s> tag. Either remove this prop from the element, ' +
+      'Invalid prop %s on <%s> tag. Either remove this prop from the element, ' +
         'or pass a string, number, or boolean value to keep it in the DOM. ' +
         'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
@@ -127,7 +143,7 @@ var warnUnknownProperties = function(type, props, debugID) {
   } else if (unknownProps.length > 1) {
     warning(
       false,
-      'Unknown props %s on <%s> tag. Either remove these props from the element, ' +
+      'Invalid props %s on <%s> tag. Either remove these props from the element, ' +
         'or pass a string, number, or boolean value to keep them in the DOM. ' +
         'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
