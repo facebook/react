@@ -789,6 +789,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('data-foo')).toBe('bar');
       });
 
+      itRenders('unknown data- attributes with casing', async render => {
+        const e = await render(<div data-myAttribute="test" />, 0);
+        expect(e.getAttribute('data-myAttribute')).toBe('test');
+      });
+
       itRenders('no unknown data- attributes with null value', async render => {
         const e = await render(<div data-foo={null} />);
         expect(e.hasAttribute('data-foo')).toBe(false);
