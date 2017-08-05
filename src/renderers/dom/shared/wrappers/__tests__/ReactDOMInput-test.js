@@ -207,7 +207,7 @@ describe('ReactDOMInput', () => {
       expect(node.value).toBe('2');
     });
 
-    it('changes the number 2 to "2.0" using a change handler', () => {
+    it('changes the value property from number 2 to "2.0" using a change handler', () => {
       class Stub extends React.Component {
         state = {
           value: 2,
@@ -229,7 +229,7 @@ describe('ReactDOMInput', () => {
 
       ReactTestUtils.Simulate.change(node);
 
-      expect(node.getAttribute('value')).toBe('2.0');
+      expect(node.getAttribute('value')).toBe('2');
       expect(node.value).toBe('2.0');
     });
   });
@@ -1283,67 +1283,14 @@ describe('ReactDOMInput', () => {
       };
     }
 
-    it('always sets the attribute when values change on text inputs', function() {
+    it('does not set the attribute when values change on text inputs', function() {
       var Input = getTestInput();
       var stub = ReactTestUtils.renderIntoDocument(<Input type="text" />);
       var node = ReactDOM.findDOMNode(stub);
 
       ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
 
-      expect(node.getAttribute('value')).toBe('2');
-    });
-
-    it('does not set the value attribute on number inputs if focused', () => {
-      var Input = getTestInput();
-      var stub = ReactTestUtils.renderIntoDocument(
-        <Input type="number" value="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      node.focus();
-
-      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
-
-      expect(node.getAttribute('value')).toBe('1');
-    });
-
-    it('sets the value attribute on number inputs on blur', () => {
-      var Input = getTestInput();
-      var stub = ReactTestUtils.renderIntoDocument(
-        <Input type="number" value="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      ReactTestUtils.Simulate.change(node, {target: {value: '2'}});
-      ReactTestUtils.SimulateNative.blur(node);
-
-      expect(node.getAttribute('value')).toBe('2');
-    });
-
-    it('an uncontrolled number input will not update the value attribute on blur', () => {
-      var stub = ReactTestUtils.renderIntoDocument(
-        <input type="number" defaultValue="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      node.value = 4;
-
-      ReactTestUtils.SimulateNative.blur(node);
-
-      expect(node.getAttribute('value')).toBe('1');
-    });
-
-    it('an uncontrolled text input will not update the value attribute on blur', () => {
-      var stub = ReactTestUtils.renderIntoDocument(
-        <input type="text" defaultValue="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      node.value = 4;
-
-      ReactTestUtils.SimulateNative.blur(node);
-
-      expect(node.getAttribute('value')).toBe('1');
+      expect(node.getAttribute('value')).toBe('');
     });
   });
 });

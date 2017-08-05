@@ -132,6 +132,7 @@ var ReactDOMSelect = {
   getHostProps: function(element: Element, props: Object) {
     return Object.assign({}, props, {
       value: undefined,
+      defaultValue: undefined,
     });
   },
 

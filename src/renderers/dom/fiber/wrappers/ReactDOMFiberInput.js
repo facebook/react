@@ -79,10 +79,14 @@ var ReactDOMInput = {
       },
       props,
       {
-        defaultChecked: undefined,
-        defaultValue: undefined,
-        value: value != null ? value : node._wrapperState.initialValue,
-        checked: checked != null ? checked : node._wrapperState.initialChecked,
+        defaultValue: value == null
+          ? props.defaultValue
+          : node._wrapperState.initialValue,
+        defaultChecked: checked == null
+          ? props.defaultChecked
+          : node._wrapperState.initialChecked,
+        value: undefined,
+        checked: undefined,
       },
     );
 

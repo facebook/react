@@ -719,8 +719,6 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should set className to empty string instead of null
 * should remove property properly for boolean properties
 * should remove property properly even with different name
-* should update an empty attribute to zero
-* should always assign the value attribute for non-inputs
 * should remove attributes for normal properties
 * should not remove attributes for special properties
 * should not leave all options selected when deleting multiple
@@ -1925,7 +1923,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control values in reentrant events with different targets
 * does change the number 2 to "2.0" with no change handler
 * does change the string "2" to "2.0" with no change handler
-* changes the number 2 to "2.0" using a change handler
+* changes the value property from number 2 to "2.0" using a change handler
 * does change the string ".98" to "0.98" with no change handler
 * distinguishes precision for extra zeroes in string number values
 * should display `defaultValue` of number 0
@@ -1987,11 +1985,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * sets value properly with type coming later in props
 * does not raise a validation warning when it switches types
 * resets value of date/time input to fix bugs in iOS Safari
-* always sets the attribute when values change on text inputs
-* does not set the value attribute on number inputs if focused
-* sets the value attribute on number inputs on blur
-* an uncontrolled number input will not update the value attribute on blur
-* an uncontrolled text input will not update the value attribute on blur
+* does not set the attribute when values change on text inputs
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMOption-test.js
 * should flatten children to a string
