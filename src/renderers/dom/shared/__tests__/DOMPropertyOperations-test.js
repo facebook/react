@@ -54,6 +54,12 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.getAttribute('disabled')).toBe('');
       ReactDOM.render(<div disabled={false} />, container);
       expect(container.firstChild.getAttribute('disabled')).toBe(null);
+      ReactDOM.render(<div disabled={true} />, container);
+      ReactDOM.render(<div disabled={null} />, container);
+      expect(container.firstChild.getAttribute('disabled')).toBe(null);
+      ReactDOM.render(<div disabled={true} />, container);
+      ReactDOM.render(<div disabled={undefined} />, container);
+      expect(container.firstChild.getAttribute('disabled')).toBe(null);
     });
 
     it('should convert attribute values to string first', () => {
@@ -140,10 +146,8 @@ describe('DOMPropertyOperations', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div title="foo" />, container);
       expect(container.firstChild.getAttribute('title')).toBe('foo');
-      expect(container.firstChild.title).toBe('foo');
       ReactDOM.render(<div />, container);
       expect(container.firstChild.getAttribute('title')).toBe(null);
-      expect(container.firstChild.title).toBe('');
     });
 
     it('should not remove attributes for special properties', () => {
