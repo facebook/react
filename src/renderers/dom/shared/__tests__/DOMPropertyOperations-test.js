@@ -72,8 +72,7 @@ describe('DOMPropertyOperations', () => {
     it('should not remove empty attributes for special properties', () => {
       var container = document.createElement('div');
       ReactDOM.render(<input value="" />, container);
-      // JSDOM does not behave correctly for attributes/properties
-      //expect(container.firstChild.getAttribute('value')).toBe('');
+      expect(container.firstChild.getAttribute('value')).toBe('');
       expect(container.firstChild.value).toBe('');
     });
 
@@ -144,8 +143,7 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.title).toBe('foo');
       ReactDOM.render(<div />, container);
       expect(container.firstChild.getAttribute('title')).toBe(null);
-      // JSDOM does not behave correctly for attributes/properties
-      //expect(container.firstChild.title).toBe('');
+      expect(container.firstChild.title).toBe('');
     });
 
     it('should not remove attributes for special properties', () => {
@@ -155,11 +153,14 @@ describe('DOMPropertyOperations', () => {
         <input type="text" value="foo" onChange={function() {}} />,
         container,
       );
+      expect(container.firstChild.getAttribute('value')).toBe('foo');
+      expect(container.firstChild.value).toBe('foo');
       ReactDOM.render(
         <input type="text" onChange={function() {}} />,
         container,
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
+      expect(container.firstChild.value).toBe('foo');
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'A component is changing a controlled input of type text to be uncontrolled',
