@@ -1908,29 +1908,19 @@ describe('ReactDOMComponent', () => {
     });
 
     it('sets aliased attributes on custom elements', function() {
-      spyOn(console, 'error');
-
       var el = ReactTestUtils.renderIntoDocument(
         <div is="custom-element" class="test" />,
       );
 
       expect(el.getAttribute('class')).toBe('test');
-
-      expectDev(console.error).not.toHaveBeenCalled();
     });
 
     it('updates aliased attributes on custom elements', function() {
       var container = document.createElement('div');
-
-      spyOn(console, 'error');
-
       ReactDOM.render(<div is="custom-element" class="foo" />, container);
-
       ReactDOM.render(<div is="custom-element" class="bar" />, container);
 
       expect(container.firstChild.getAttribute('class')).toBe('bar');
-
-      expectDev(console.error).not.toHaveBeenCalled();
     });
   });
 
@@ -1943,7 +1933,6 @@ describe('ReactDOMComponent', () => {
 
     it('removes custom attributes', function() {
       const container = document.createElement('div');
-
       ReactDOM.render(<div whatever="30" />, container);
 
       expect(container.firstChild.getAttribute('whatever')).toBe('30');
