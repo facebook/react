@@ -245,7 +245,7 @@ We also recommend to verify that the CDN you are using sets the `Access-Control-
 
 ![Access-Control-Allow-Origin: *](/react/img/docs/cdn-cors-header.png)
 
-This enables better [error handling experience](/react/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
+This enables a better [error handling experience](/react/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
 
 <script>
 /**
