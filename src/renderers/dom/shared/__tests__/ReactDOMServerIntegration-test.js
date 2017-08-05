@@ -809,6 +809,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('data-foo')).toBe(false);
       });
 
+      itRenders('no unknown data- attributes with casing', async render => {
+        const e = await render(<div data-fooBar={null} />, 1);
+        expect(e.hasAttribute('data-foobar')).toBe(false);
+      });
+
       itRenders('custom attributes for non-standard elements', async render => {
         const e = await render(<nonstandard foo="bar" />, 0);
         expect(e.getAttribute('foo')).toBe('bar');
@@ -843,9 +848,9 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      itRenders('custom attributes with special casing', async render => {
-        const e = await render(<div fooBar="test" />);
-        expect(e.getAttribute('fooBar')).toBe('test');
+      itRenders('no cased custom attributes', async render => {
+        const e = await render(<div fooBar="test" />, 1);
+        expect(e.hasAttribute('fooBar')).toBe(false);
       });
     });
 
