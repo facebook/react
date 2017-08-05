@@ -314,6 +314,10 @@ export default function Fibers({fibers, show, ...rest}) {
                 : <small>
                     Committed
                   </small>}
+              {fiber.effectTag && [
+                <br key="br" />,
+                <small key="small">Effect: {fiber.effectTag}</small>,
+              ]}
             </div>
           </Vertex>,
           fiber.child &&
