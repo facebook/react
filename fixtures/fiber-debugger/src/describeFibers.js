@@ -38,30 +38,20 @@ function getFriendlyTag(tag) {
 }
 
 function getFriendlyEffect(effectTag) {
-  switch (effectTag) {
-    case 0:
-      return null;
-    case 1:
-      return 'Performed Work';
-    case 2:
-      return 'Placement';
-    case 4:
-      return 'Update';
-    case 6:
-      return 'Placement and Update';
-    case 8:
-      return 'Deletion';
-    case 16:
-      return 'Content reset';
-    case 32:
-      return 'Callback';
-    case 64:
-      return 'Err';
-    case 128:
-      return 'Ref';
-    default:
-      throw new Error('Unknown effect tag.');
-  }
+  const effects = {
+    1: 'Performed Work',
+    2: 'Placement',
+    4: 'Update',
+    8: 'Deletion',
+    16: 'Content reset',
+    32: 'Callback',
+    64: 'Err',
+    128: 'Ref',
+  };
+  return Object.keys(effects)
+    .filter(flag => flag & effectTag)
+    .map(flag => effects[flag])
+    .join(' & ');
 }
 
 export default function describeFibers(rootFiber, workInProgress) {
