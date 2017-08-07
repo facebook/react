@@ -13,16 +13,18 @@
 
 var invariant = require('fbjs/lib/invariant');
 
+// These attributes should be all lowercase to allow for
+// case insensitive checks
 var RESERVED_PROPS = {
   children: true,
-  dangerouslySetInnerHTML: true,
-  autoFocus: true,
-  defaultValue: true,
-  defaultChecked: true,
-  innerHTML: true,
-  suppressContentEditableWarning: true,
-  onFocusIn: true,
-  onFocusOut: true,
+  dangerouslysetinnerhtml: true,
+  autofocus: true,
+  defaultvalue: true,
+  defaultchecked: true,
+  innerhtml: true,
+  suppresscontenteditablewarning: true,
+  onfocusin: true,
+  onfocusout: true,
 };
 
 function checkMask(value, bitmask) {
@@ -117,10 +119,6 @@ var DOMPropertyInjection = {
 
         DOMProperty.aliases[attributeName.toLowerCase()] = true;
 
-        if (lowerCased !== attributeName) {
-          DOMProperty.aliases[lowerCased] = true;
-        }
-
         propertyInfo.attributeName = attributeName;
       }
 
@@ -136,7 +134,7 @@ var DOMPropertyInjection = {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 
-      DOMProperty.properties[propName] = propertyInfo;
+      DOMProperty.properties[lowerCased] = propertyInfo;
     }
   },
 };
@@ -209,14 +207,16 @@ var DOMProperty = {
    * @method
    */
   shouldSetAttribute: function(name, value) {
+    let lowerCased = name.toLowerCase();
+
     if (
       DOMProperty.isReservedProp(name) ||
-      DOMProperty.aliases.hasOwnProperty(name)
+      DOMProperty.aliases.hasOwnProperty(lowerCased)
     ) {
       return false;
     }
 
-    if (DOMProperty.properties.hasOwnProperty(name)) {
+    if (DOMProperty.properties.hasOwnProperty(lowerCased)) {
       return true;
     }
 
@@ -235,6 +235,14 @@ var DOMProperty = {
     }
   },
 
+  getPropertyInfo(name) {
+    var lowerCased = name.toLowerCase();
+
+    return DOMProperty.properties.hasOwnProperty(lowerCased)
+      ? DOMProperty.properties[lowerCased]
+      : null;
+  },
+
   /**
    * Checks to see if a property name is within the list of properties
    * reserved for internal React operations. These properties should
@@ -245,7 +253,7 @@ var DOMProperty = {
    * @return {boolean} If the name is within reserved props
    */
   isReservedProp(name) {
-    return RESERVED_PROPS.hasOwnProperty(name);
+    return RESERVED_PROPS.hasOwnProperty(name.toLowerCase());
   },
 
   injection: DOMPropertyInjection,

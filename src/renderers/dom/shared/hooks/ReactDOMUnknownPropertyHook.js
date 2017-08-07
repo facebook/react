@@ -88,8 +88,8 @@ if (__DEV__) {
     }
 
     // Known attributes should match the casing specified in the property config.
-    if (possibleStandardNamesName.hasOwnProperty(lowerCasedName)) {
-      var standardName = getpossibleStandardNames[lowerCasedName];
+    if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
+      var standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
         warning(
           false,

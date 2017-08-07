@@ -1019,7 +1019,7 @@ var ReactDOMFiberComponent = {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
-          if ((propertyInfo = DOMProperty.properties[propKey])) {
+          if ((propertyInfo = DOMProperty.getPropertyInfo(propKey))) {
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(propertyInfo.attributeName);
             serverValue = DOMPropertyOperations.getValueForProperty(
