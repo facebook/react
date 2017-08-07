@@ -145,22 +145,26 @@ describe('ReactDOMComponent', () => {
     it('should warn for unknown prop', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<div foo="bar" />, container);
+      ReactDOM.render(<div foo={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown prop `foo` on <div> tag. Remove this prop from the element. ' +
-          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+        'Warning: Invalid prop `foo` on <div> tag. Either remove this prop ' +
+          'from the element, or pass a string, number, or boolean value to keep ' +
+          'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          '\n    in div (at **)',
       );
     });
 
     it('should group multiple unknown prop warnings together', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<div foo="bar" baz="qux" />, container);
+      ReactDOM.render(<div foo={() => {}} baz={{}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown props `foo`, `baz` on <div> tag. Remove these props from the element. ' +
-          'For details, see https://fb.me/react-unknown-prop\n    in div (at **)',
+        'Warning: Invalid props `foo`, `baz` on <div> tag. Either remove these ' +
+          'props from the element, or pass a string, number, or boolean value to keep ' +
+          'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          '\n    in div (at **)',
       );
     });
 
@@ -170,7 +174,7 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div onDblClick={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown event handler property onDblClick. Did you mean `onDoubleClick`?\n    in div (at **)',
+        'Warning: Unknown event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
       );
     });
 
@@ -1611,10 +1615,10 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property onclick. Did you mean ' +
+        'Warning: Unknown event handler property `onclick`. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
     });
@@ -1625,10 +1629,10 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property onclick. Did you mean ' +
+        'Warning: Unknown event handler property `onclick`. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
     });
@@ -1643,7 +1647,7 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown DOM property class. Did you mean className?\n    in div (at **)',
+        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
     });
 
@@ -1821,11 +1825,11 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label',
+        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input',
+        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
     });
 
@@ -1842,11 +1846,11 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Unknown DOM property for. Did you mean htmlFor?\n    in label',
+        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Unknown DOM property autofocus. Did you mean autoFocus?\n    in input',
+        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
     });
   });
@@ -1872,6 +1876,130 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(elem2, container);
 
       expect(container.firstChild.innerHTML).toBe(html2);
+    });
+  });
+
+  describe('Attributes with aliases', function() {
+    it('does not set aliased attributes on DOM elements', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div class="test" />);
+
+      expect(el.className).toBe('');
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid DOM property `class`. Did you mean `className`?',
+      );
+    });
+
+    it('does not set aliased attributes on SVG elements', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(
+        <svg><text arabic-form="initial" /></svg>,
+      );
+      var text = el.querySelector('text');
+
+      expect(text.getAttribute('arabic-form')).toBe(null);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
+      );
+    });
+
+    it('sets aliased attributes on custom elements', function() {
+      var el = ReactTestUtils.renderIntoDocument(
+        <div is="custom-element" class="test" />,
+      );
+
+      expect(el.getAttribute('class')).toBe('test');
+    });
+
+    it('updates aliased attributes on custom elements', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<div is="custom-element" class="foo" />, container);
+      ReactDOM.render(<div is="custom-element" class="bar" />, container);
+
+      expect(container.firstChild.getAttribute('class')).toBe('bar');
+    });
+  });
+
+  describe('Custom attributes', function() {
+    it('allows assignment of custom attributes with string values', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div whatever="30" />);
+
+      expect(el.getAttribute('whatever')).toBe('30');
+    });
+
+    it('removes custom attributes', function() {
+      const container = document.createElement('div');
+      ReactDOM.render(<div whatever="30" />, container);
+
+      expect(container.firstChild.getAttribute('whatever')).toBe('30');
+
+      ReactDOM.render(<div whatever={null} />, container);
+
+      expect(container.firstChild.hasAttribute('whatever')).toBe(false);
+    });
+
+    it('assigns a boolean custom attributes as a string', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
+
+      expect(el.getAttribute('whatever')).toBe('true');
+    });
+
+    it('assigns an implicit boolean custom attributes as a string', function() {
+      // eslint-disable-next-line react/jsx-boolean-value
+      var el = ReactTestUtils.renderIntoDocument(<div whatever />);
+
+      expect(el.getAttribute('whatever')).toBe('true');
+    });
+
+    it('assigns a numeric custom attributes as a string', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={3} />);
+
+      expect(el.getAttribute('whatever')).toBe('3');
+    });
+
+    it('will not assign a function custom attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={() => {}} />);
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `whatever` on <div> tag',
+      );
+    });
+
+    it('will not assign an object custom attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={{}} />);
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `whatever` on <div> tag.',
+      );
+    });
+
+    it('assigns ajaxify (an important internal FB attribute)', function() {
+      var options = {toString: () => 'ajaxy'};
+      var el = ReactTestUtils.renderIntoDocument(<div ajaxify={options} />);
+
+      expect(el.getAttribute('ajaxify')).toBe('ajaxy');
+    });
+
+    it('allows cased data attributes', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
+      expect(el.getAttribute('data-foobar')).toBe('true');
+    });
+
+    it('allows cased custom attributes', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
+      expect(el.getAttribute('foobar')).toBe('true');
     });
   });
 });

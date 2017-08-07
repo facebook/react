@@ -3,7 +3,7 @@ title: Unknown Prop Warning
 layout: single
 permalink: warnings/unknown-prop.html
 ---
-The unknown-prop warning will fire if you attempt to render a DOM element with a prop that is not recognized by React as a legal DOM attribute/property. You should ensure that your DOM elements do not have spurious props floating around.
+The unknown-prop warning will fire if you attempt to render a DOM element with a prop that is either unrecognized by React as a legal DOM attribute/property, or is not a string, number, or boolean value. You should ensure that your DOM elements do not have spurious props floating around.
 
 There are a couple of likely reasons this warning could be appearing:
 
