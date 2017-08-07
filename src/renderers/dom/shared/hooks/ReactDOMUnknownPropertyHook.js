@@ -39,6 +39,10 @@ if (__DEV__) {
   var EVENT_NAME_REGEX = /^on[A-Z]/;
   var ARIA_NAME_REGEX = /^aria-/i;
   var possibleStandardNames = require('possibleStandardNames');
+  var unsupportedProps = {
+    onfocusin: true,
+    onfocusout: true,
+  };
 
   var validateProperty = function(tagName, name, value, debugID) {
     if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
@@ -78,7 +82,8 @@ if (__DEV__) {
       return true;
     }
 
-    if (DOMProperty.isReservedProp(name)) {
+    // Unsupported props are handled by another validation
+    if (unsupportedProps.hasOwnProperty(lowerCasedName)) {
       return true;
     }
 
