@@ -101,20 +101,6 @@ if (__DEV__) {
       return true;
     }
 
-    // Otherwise, we have a custom attribute. Custom attributes should always
-    // be lowercase.
-    if (lowerCasedName !== name) {
-      warning(
-        false,
-        'Invalid DOM property `%s`. Custom attributes and data attributes ' +
-          'must be lower case. Instead use `%s`.%s',
-        name,
-        lowerCasedName,
-        getStackAddendum(debugID),
-      );
-      return true;
-    }
-
     return DOMProperty.shouldSetAttribute(name, value);
   };
 }

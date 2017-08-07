@@ -1992,30 +1992,14 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('ajaxify')).toBe('ajaxy');
     });
 
-    it('only allows lower-case data attributes', function() {
-      spyOn(console, 'error');
-
+    it('allows cased data attributes', function() {
       var el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
-
-      expect(el.hasAttribute('data-foobar')).toBe(false);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `data-fooBar`. Custom attributes ' +
-          'and data attributes must be lower case. Instead use `data-foobar`',
-      );
+      expect(el.getAttribute('data-foobar')).toBe('true');
     });
 
-    it('only allows lower-case custom attributes', function() {
-      spyOn(console, 'error');
-
+    it('allows cased custom attributes', function() {
       var el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
-
-      expect(el.hasAttribute('foobar')).toBe(false);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `fooBar`. Custom attributes ' +
-          'and data attributes must be lower case. Instead use `foobar`',
-      );
+      expect(el.getAttribute('foobar')).toBe('true');
     });
   });
 });
