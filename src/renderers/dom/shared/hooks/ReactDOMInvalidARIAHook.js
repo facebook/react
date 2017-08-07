@@ -23,6 +23,8 @@ if (__DEV__) {
     ReactDebugCurrentFrame,
   } = require('ReactGlobalSharedState');
   var {getStackAddendumByID} = ReactComponentTreeHook;
+
+  var validAriaProperties = require('./validAriaProperties');
 }
 
 function getStackAddendum(debugID) {
@@ -43,10 +45,8 @@ function validateProperty(tagName, name, debugID) {
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
-      lowerCasedName,
-    )
-      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+    var standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
+      ? lowerCasedName
       : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM
