@@ -119,7 +119,11 @@ var DOMPropertyInjection = {
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
 
-        DOMProperty.aliases[attributeName] = true;
+        DOMProperty.aliases[attributeName.toLowerCase()] = true;
+
+        if (lowerCased !== attributeName) {
+          DOMProperty.aliases[lowerCased] = true;
+        }
 
         propertyInfo.attributeName = attributeName;
         if (__DEV__) {
@@ -236,10 +240,6 @@ var DOMProperty = {
 
     if (value === null) {
       return true;
-    }
-
-    if (name.toLowerCase() !== name) {
-      return false;
     }
 
     switch (typeof value) {

@@ -922,8 +922,7 @@ var ReactDOMFiberComponent = {
       var extraAttributeNames: Set<string> = new Set();
       var attributes = domElement.attributes;
       for (var i = 0; i < attributes.length; i++) {
-        // TODO: Do we need to lower case this to get case insensitive matches?
-        var name = attributes[i].name;
+        var name = attributes[i].name.toLowerCase();
         switch (name) {
           // Built-in attributes are whitelisted
           // TODO: Once these are gone from the server renderer, we don't need
