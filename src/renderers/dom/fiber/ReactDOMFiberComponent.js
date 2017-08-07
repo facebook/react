@@ -922,8 +922,7 @@ var ReactDOMFiberComponent = {
       var extraAttributeNames: Set<string> = new Set();
       var attributes = domElement.attributes;
       for (var i = 0; i < attributes.length; i++) {
-        // TODO: Do we need to lower case this to get case insensitive matches?
-        var name = attributes[i].name;
+        var name = attributes[i].name.toLowerCase();
         switch (name) {
           // Built-in SSR attribute is whitelisted
           case 'data-reactroot':

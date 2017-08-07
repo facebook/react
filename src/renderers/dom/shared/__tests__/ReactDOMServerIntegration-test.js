@@ -615,6 +615,12 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('className')).toBe(false);
       });
 
+      itRenders('no classname prop', async render => {
+        const e = await render(<div classname="test" />, 1);
+        expect(e.hasAttribute('class')).toBe(false);
+        expect(e.hasAttribute('classname')).toBe(false);
+      });
+
       itRenders('no className prop when given the alias', async render => {
         const e = await render(<div class="test" />, 1);
         expect(e.className).toBe('');
@@ -793,9 +799,35 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
+    describe('cased attributes', function() {
+      itRenders('no badly cased aliased HTML attribute', async render => {
+        const e = await render(<meta httpequiv="refresh" />, 1);
+        expect(e.hasAttribute('http-equiv')).toBe(false);
+        expect(e.hasAttribute('httpequiv')).toBe(false);
+      });
+
+      itRenders('no badly cased SVG attribute', async render => {
+        const e = await render(<text textlength="10" />, 1);
+        expect(e.hasAttribute('textLength')).toBe(false);
+      });
+
+      itRenders('no badly cased aliased SVG attribute', async render => {
+        const e = await render(<text strokedasharray="10 10" />, 1);
+        expect(e.hasAttribute('strokedasharray')).toBe(false);
+      });
+
+      itRenders(
+        'no badly cased original SVG attribute that is aliased',
+        async render => {
+          const e = await render(<text stroke-dasharray="10 10" />, 1);
+          expect(e.hasAttribute('stroke-dasharray')).toBe(false);
+        },
+      );
+    });
+
     describe('unknown attributes', function() {
       itRenders('unknown attributes', async render => {
-        const e = await render(<div foo="bar" />, 0);
+        const e = await render(<div foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
@@ -809,13 +841,21 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('data-foo')).toBe(false);
       });
 
-      itRenders('no unknown data- attributes with casing', async render => {
-        const e = await render(<div data-fooBar={null} />, 1);
-        expect(e.hasAttribute('data-foobar')).toBe(false);
+      itRenders('unknown data- attributes with casing', async render => {
+        const e = await render(<div data-fooBar="true" />);
+        expect(e.getAttribute('data-fooBar')).toBe('true');
       });
 
+      itRenders(
+        'no unknown data- attributes with casing and null value',
+        async render => {
+          const e = await render(<div data-fooBar={null} />);
+          expect(e.hasAttribute('data-fooBar')).toBe(false);
+        },
+      );
+
       itRenders('custom attributes for non-standard elements', async render => {
-        const e = await render(<nonstandard foo="bar" />, 0);
+        const e = await render(<nonstandard foo="bar" />);
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
@@ -848,9 +888,9 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      itRenders('no cased custom attributes', async render => {
-        const e = await render(<div fooBar="test" />, 1);
-        expect(e.hasAttribute('fooBar')).toBe(false);
+      itRenders('cased custom attributes', async render => {
+        const e = await render(<div fooBar="test" />);
+        expect(e.getAttribute('fooBar')).toBe('test');
       });
     });
 
