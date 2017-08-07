@@ -16,108 +16,91 @@ var NS = {
   xml: 'http://www.w3.org/XML/1998/namespace',
 };
 
-// We use attributes for everything SVG so let's avoid some duplication and run
-// code instead.
-// The following are all specified in the HTML config already so we exclude here.
-// - class (as className)
-// - color
-// - height
-// - id
-// - lang
-// - max
-// - media
-// - method
-// - min
-// - name
-// - style
-// - target
-// - type
-// - width
-var ATTRS = {
-  accentHeight: 'accent-height',
-  alignmentBaseline: 'alignment-baseline',
-  arabicForm: 'arabic-form',
-  baselineShift: 'baseline-shift',
-  capHeight: 'cap-height',
-  clipPath: 'clip-path',
-  clipRule: 'clip-rule',
-  colorInterpolation: 'color-interpolation',
-  colorInterpolationFilters: 'color-interpolation-filters',
-  colorProfile: 'color-profile',
-  colorRendering: 'color-rendering',
-  dominantBaseline: 'dominant-baseline',
-  enableBackground: 'enable-background',
-  fillOpacity: 'fill-opacity',
-  fillRule: 'fill-rule',
-  floodColor: 'flood-color',
-  floodOpacity: 'flood-opacity',
-  fontFamily: 'font-family',
-  fontSize: 'font-size',
-  fontSizeAdjust: 'font-size-adjust',
-  fontStretch: 'font-stretch',
-  fontStyle: 'font-style',
-  fontVariant: 'font-variant',
-  fontWeight: 'font-weight',
-  glyphName: 'glyph-name',
-  glyphOrientationHorizontal: 'glyph-orientation-horizontal',
-  glyphOrientationVertical: 'glyph-orientation-vertical',
-  horizAdvX: 'horiz-adv-x',
-  horizOriginX: 'horiz-origin-x',
-  imageRendering: 'image-rendering',
-  letterSpacing: 'letter-spacing',
-  lightingColor: 'lighting-color',
-  markerEnd: 'marker-end',
-  markerMid: 'marker-mid',
-  markerStart: 'marker-start',
-  overlinePosition: 'overline-position',
-  overlineThickness: 'overline-thickness',
-  paintOrder: 'paint-order',
-  panose1: 'panose-1',
-  pointerEvents: 'pointer-events',
-  renderingIntent: 'rendering-intent',
-  shapeRendering: 'shape-rendering',
-  stopColor: 'stop-color',
-  stopOpacity: 'stop-opacity',
-  strikethroughPosition: 'strikethrough-position',
-  strikethroughThickness: 'strikethrough-thickness',
-  strokeDasharray: 'stroke-dasharray',
-  strokeDashoffset: 'stroke-dashoffset',
-  strokeLinecap: 'stroke-linecap',
-  strokeLinejoin: 'stroke-linejoin',
-  strokeMiterlimit: 'stroke-miterlimit',
-  strokeOpacity: 'stroke-opacity',
-  strokeWidth: 'stroke-width',
-  textAnchor: 'text-anchor',
-  textDecoration: 'text-decoration',
-  textRendering: 'text-rendering',
-  underlinePosition: 'underline-position',
-  underlineThickness: 'underline-thickness',
-  unicodeBidi: 'unicode-bidi',
-  unicodeRange: 'unicode-range',
-  unitsPerEm: 'units-per-em',
-  vAlphabetic: 'v-alphabetic',
-  vHanging: 'v-hanging',
-  vIdeographic: 'v-ideographic',
-  vMathematical: 'v-mathematical',
-  vectorEffect: 'vector-effect',
-  vertAdvY: 'vert-adv-y',
-  vertOriginX: 'vert-origin-x',
-  vertOriginY: 'vert-origin-y',
-  wordSpacing: 'word-spacing',
-  writingMode: 'writing-mode',
-  xHeight: 'x-height',
-  xlinkActuate: 'xlink:actuate',
-  xlinkArcrole: 'xlink:arcrole',
-  xlinkHref: 'xlink:href',
-  xlinkRole: 'xlink:role',
-  xlinkShow: 'xlink:show',
-  xlinkTitle: 'xlink:title',
-  xlinkType: 'xlink:type',
-  xmlBase: 'xml:base',
-  xmlnsXlink: 'xmlns:xlink',
-  xmlLang: 'xml:lang',
-  xmlSpace: 'xml:space',
-};
+var ATTRS = [
+  'accent-height',
+  'alignment-baseline',
+  'arabic-form',
+  'baseline-shift',
+  'cap-height',
+  'clip-path',
+  'clip-rule',
+  'color-interpolation',
+  'color-interpolation-filters',
+  'color-profile',
+  'color-rendering',
+  'dominant-baseline',
+  'enable-background',
+  'fill-opacity',
+  'fill-rule',
+  'flood-color',
+  'flood-opacity',
+  'font-family',
+  'font-size',
+  'font-size-adjust',
+  'font-stretch',
+  'font-style',
+  'font-variant',
+  'font-weight',
+  'glyph-name',
+  'glyph-orientation-horizontal',
+  'glyph-orientation-vertical',
+  'horiz-adv-x',
+  'horiz-origin-x',
+  'image-rendering',
+  'letter-spacing',
+  'lighting-color',
+  'marker-end',
+  'marker-mid',
+  'marker-start',
+  'overline-position',
+  'overline-thickness',
+  'paint-order',
+  'panose-1',
+  'pointer-events',
+  'rendering-intent',
+  'shape-rendering',
+  'stop-color',
+  'stop-opacity',
+  'strikethrough-position',
+  'strikethrough-thickness',
+  'stroke-dasharray',
+  'stroke-dashoffset',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-miterlimit',
+  'stroke-opacity',
+  'stroke-width',
+  'text-anchor',
+  'text-decoration',
+  'text-rendering',
+  'underline-position',
+  'underline-thickness',
+  'unicode-bidi',
+  'unicode-range',
+  'units-per-em',
+  'v-alphabetic',
+  'v-hanging',
+  'v-ideographic',
+  'v-mathematical',
+  'vector-effect',
+  'vert-adv-y',
+  'vert-origin-x',
+  'vert-origin-y',
+  'word-spacing',
+  'writing-mode',
+  'x-height',
+  'xlink:actuate',
+  'xlink:arcrole',
+  'xlink:href',
+  'xlink:role',
+  'xlink:show',
+  'xlink:title',
+  'xlink:type',
+  'xml:base',
+  'xmlns:xlink',
+  'xml:lang',
+  'xml:space',
+];
 
 var SVGDOMPropertyConfig = {
   Properties: {},
@@ -136,11 +119,14 @@ var SVGDOMPropertyConfig = {
   DOMAttributeNames: {},
 };
 
-Object.keys(ATTRS).forEach(key => {
-  SVGDOMPropertyConfig.Properties[key] = 0;
-  if (ATTRS[key]) {
-    SVGDOMPropertyConfig.DOMAttributeNames[key] = ATTRS[key];
-  }
+var CAMELIZE = /[\-\:]([a-z])/g;
+var capitalize = token => token[1].toUpperCase();
+
+ATTRS.forEach(original => {
+  var reactName = original.replace(CAMELIZE, capitalize);
+
+  SVGDOMPropertyConfig.Properties[reactName] = 0;
+  SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
 });
 
 module.exports = SVGDOMPropertyConfig;
