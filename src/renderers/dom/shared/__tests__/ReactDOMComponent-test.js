@@ -1880,7 +1880,7 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('Attributes with aliases', function() {
-    it('does not set aliased attributes on DOM elements', function() {
+    it('does not set aliased attributes on HTML attributes', function() {
       spyOn(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div class="test" />);
@@ -1892,7 +1892,20 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('does not set aliased attributes on SVG elements', function() {
+    it('does not set incorrectly cased aliased attributes on HTML attributes with a warning', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div cLASS="test" />);
+
+      expect(el.className).toBe('');
+      expect(el.hasAttribute('class')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid DOM property `cLASS`. Did you mean `className`?',
+      );
+    });
+
+    it('does not set aliased attributes on SVG elements with a warning', function() {
       spyOn(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(
@@ -1900,7 +1913,7 @@ describe('ReactDOMComponent', () => {
       );
       var text = el.querySelector('text');
 
-      expect(text.getAttribute('arabic-form')).toBe(null);
+      expect(text.hasAttribute('arabic-form')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
@@ -1910,6 +1923,14 @@ describe('ReactDOMComponent', () => {
     it('sets aliased attributes on custom elements', function() {
       var el = ReactTestUtils.renderIntoDocument(
         <div is="custom-element" class="test" />,
+      );
+
+      expect(el.getAttribute('class')).toBe('test');
+    });
+
+    it('aliased attributes on custom elements with bad casing', function() {
+      var el = ReactTestUtils.renderIntoDocument(
+        <div is="custom-element" claSS="test" />,
       );
 
       expect(el.getAttribute('class')).toBe('test');
