@@ -66,7 +66,7 @@ var HTMLDOMPropertyConfig = {
     // See http://schema.org/docs/gs.html
     itemScope: HAS_BOOLEAN_VALUE,
     // Facebook internal attribute. This is an object attribute that
-    // impliments a custom toString() method. Objects are not allowed as
+    // implements a custom toString() method. Objects are not allowed as
     // custom attributes unless they are specified by an attribute config
     ajaxify: 0,
     // These attributes must stay in the white-list because they have
