@@ -931,14 +931,8 @@ var ReactDOMFiberComponent = {
         // TODO: Do we need to lower case this to get case insensitive matches?
         var name = attributes[i].name;
         switch (name) {
-          // Built-in attributes are whitelisted
-          // TODO: Once these are gone from the server renderer, we don't need
-          // this whitelist aynymore.
+          // Built-in SSR attribute is whitelisted
           case 'data-reactroot':
-            break;
-          case 'data-reactid':
-            break;
-          case 'data-react-checksum':
             break;
           // Controlled attributes are not validated
           // TODO: Only ignore them on controlled tags.
