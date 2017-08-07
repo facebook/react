@@ -117,7 +117,7 @@ var DOMPropertyInjection = {
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
 
-        // Track as lowercase to prevent assignment for aliasesd attitibutes
+        // Track as lowercase to prevent assignment for aliased attributes
         // like `http-equiv`. This covers cases like `hTTp-equiv`, which
         // should not write `http-equiv` to the DOM.
         DOMProperty.aliases[attributeName.toLowerCase()] = true;
