@@ -312,10 +312,6 @@ function expectMarkupMismatch(serverElement, clientElement) {
   return testMarkupMatch(serverElement, clientElement, false);
 }
 
-// TODO: this is a hack for testing dynamic injection. Remove this when we decide
-// how to do static injection instead.
-let onAfterResetModules = null;
-
 // When there is a test that renders on server and then on client and expects a logged
 // error, you want to see the error show up both on server and client. Unfortunately,
 // React refuses to issue the same error twice to avoid clogging up the console.
@@ -323,9 +319,6 @@ let onAfterResetModules = null;
 function resetModules() {
   // First, reset the modules to load the client renderer.
   jest.resetModuleRegistry();
-  if (typeof onAfterResetModules === 'function') {
-    onAfterResetModules();
-  }
 
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
@@ -341,9 +334,6 @@ function resetModules() {
   // Resetting is important because we want to avoid any shared state
   // influencing the tests.
   jest.resetModuleRegistry();
-  if (typeof onAfterResetModules === 'function') {
-    onAfterResetModules();
-  }
   require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMServer = require('react-dom/server');
 }
@@ -624,6 +614,27 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={null} />);
         expect(e.hasAttribute('className')).toBe(false);
       });
+
+      itRenders('no classname prop', async render => {
+        const e = await render(<div classname="test" />, 1);
+        expect(e.hasAttribute('class')).toBe(false);
+        expect(e.hasAttribute('classname')).toBe(false);
+      });
+
+      itRenders('no className prop when given the alias', async render => {
+        const e = await render(<div class="test" />, 1);
+        expect(e.className).toBe('');
+      });
+
+      itRenders('class for custom elements', async render => {
+        const e = await render(<div is="custom-element" class="test" />, 0);
+        expect(e.getAttribute('class')).toBe('test');
+      });
+
+      itRenders('className for custom elements', async render => {
+        const e = await render(<div is="custom-element" className="test" />, 0);
+        expect(e.getAttribute('className')).toBe('test');
+      });
     });
 
     describe('htmlFor property', function() {
@@ -652,6 +663,16 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no htmlFor prop with null value', async render => {
         const e = await render(<div htmlFor={null} />);
         expect(e.hasAttribute('htmlFor')).toBe(false);
+      });
+
+      itRenders('htmlFor attribute on custom elements', async render => {
+        const e = await render(<div is="custom-element" htmlFor="test" />);
+        expect(e.getAttribute('htmlFor')).toBe('test');
+      });
+
+      itRenders('for attribute on custom elements', async render => {
+        const e = await render(<div is="custom-element" for="test" />);
+        expect(e.getAttribute('for')).toBe('test');
       });
     });
 
@@ -778,10 +799,36 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
+    describe('cased attributes', function() {
+      itRenders('no badly cased aliased HTML attribute', async render => {
+        const e = await render(<meta httpequiv="refresh" />, 1);
+        expect(e.hasAttribute('http-equiv')).toBe(false);
+        expect(e.hasAttribute('httpequiv')).toBe(false);
+      });
+
+      itRenders('no badly cased SVG attribute', async render => {
+        const e = await render(<text textlength="10" />, 1);
+        expect(e.hasAttribute('textLength')).toBe(false);
+      });
+
+      itRenders('no badly cased aliased SVG attribute', async render => {
+        const e = await render(<text strokedasharray="10 10" />, 1);
+        expect(e.hasAttribute('strokedasharray')).toBe(false);
+      });
+
+      itRenders(
+        'no badly cased original SVG attribute that is aliased',
+        async render => {
+          const e = await render(<text stroke-dasharray="10 10" />, 1);
+          expect(e.hasAttribute('stroke-dasharray')).toBe(false);
+        },
+      );
+    });
+
     describe('unknown attributes', function() {
-      itRenders('no unknown attributes', async render => {
-        const e = await render(<div foo="bar" />, 1);
-        expect(e.getAttribute('foo')).toBe(null);
+      itRenders('unknown attributes', async render => {
+        const e = await render(<div foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
       });
 
       itRenders('unknown data- attributes', async render => {
@@ -794,13 +841,23 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('data-foo')).toBe(false);
       });
 
+      itRenders('unknown data- attributes with casing', async render => {
+        const e = await render(<div data-fooBar="true" />);
+        expect(e.getAttribute('data-fooBar')).toBe('true');
+      });
+
       itRenders(
-        'no unknown attributes for non-standard elements',
+        'no unknown data- attributes with casing and null value',
         async render => {
-          const e = await render(<nonstandard foo="bar" />, 1);
-          expect(e.getAttribute('foo')).toBe(null);
+          const e = await render(<div data-fooBar={null} />);
+          expect(e.hasAttribute('data-fooBar')).toBe(false);
         },
       );
+
+      itRenders('custom attributes for non-standard elements', async render => {
+        const e = await render(<nonstandard foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
+      });
 
       itRenders('unknown attributes for custom elements', async render => {
         const e = await render(<custom-element foo="bar" />);
@@ -830,6 +887,11 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.hasAttribute('foo')).toBe(false);
         },
       );
+
+      itRenders('cased custom attributes', async render => {
+        const e = await render(<div fooBar="test" />);
+        expect(e.getAttribute('fooBar')).toBe('test');
+      });
     });
 
     itRenders('no HTML events', async render => {
@@ -2572,35 +2634,5 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
-  });
-
-  describe('dynamic injection', () => {
-    beforeEach(() => {
-      // HACK: we reset modules several times during the test which breaks
-      // dynamic injection. So we resort to telling resetModules() to run
-      // our custom init code every time after resetting. We could have a nicer
-      // way to do this, but this is the only test that needs it, and it will
-      // be removed anyway when we switch to static injection.
-      onAfterResetModules = () => {
-        const DOMProperty = require('DOMProperty');
-        DOMProperty.injection.injectDOMPropertyConfig({
-          isCustomAttribute: function(name) {
-            return name.indexOf('foo-') === 0;
-          },
-          Properties: {foobar: null},
-        });
-      };
-      resetModules();
-    });
-
-    afterEach(() => {
-      onAfterResetModules = null;
-    });
-
-    itRenders('injected attributes', async render => {
-      const e = await render(<div foobar="simple" foo-xyz="simple" />, 0);
-      expect(e.getAttribute('foobar')).toBe('simple');
-      expect(e.getAttribute('foo-xyz')).toBe('simple');
-    });
   });
 });

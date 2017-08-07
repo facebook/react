@@ -13,6 +13,18 @@
 
 var invariant = require('fbjs/lib/invariant');
 
+var RESERVED_PROPS = {
+  children: true,
+  dangerouslySetInnerHTML: true,
+  autoFocus: true,
+  defaultValue: true,
+  defaultChecked: true,
+  innerHTML: true,
+  suppressContentEditableWarning: true,
+  onFocusIn: true,
+  onFocusOut: true,
+};
+
 function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
@@ -31,11 +43,6 @@ var DOMPropertyInjection = {
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
    * with the following properties:
-   *
-   * isCustomAttribute: function that given an attribute name will return true
-   * if it can be inserted into the DOM verbatim. Useful for data-* or aria-*
-   * attributes where it's impossible to enumerate all of the possible
-   * attribute names,
    *
    * Properties: object mapping DOM property name to one of the
    * DOMPropertyInjection constants or null. If your attribute isn't in here,
@@ -63,12 +70,6 @@ var DOMPropertyInjection = {
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
-
-    if (domPropertyConfig.isCustomAttribute) {
-      DOMProperty._isCustomAttributeFunctions.push(
-        domPropertyConfig.isCustomAttribute,
-      );
-    }
 
     for (var propName in Properties) {
       invariant(
@@ -117,6 +118,13 @@ var DOMPropertyInjection = {
 
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
+
+        DOMProperty.aliases[attributeName.toLowerCase()] = true;
+
+        if (lowerCased !== attributeName) {
+          DOMProperty.aliases[lowerCased] = true;
+        }
+
         propertyInfo.attributeName = attributeName;
         if (__DEV__) {
           DOMProperty.getPossibleStandardName[attributeName] = propName;
@@ -197,6 +205,13 @@ var DOMProperty = {
   properties: {},
 
   /**
+   * Some attributes are aliased for easier use within React. We don't
+   * allow direct use of these attributes. See DOMAttributeNames in
+   * HTMLPropertyConfig and SVGPropertyConfig.
+   */
+  aliases: {},
+
+  /**
    * Mapping from lowercase property names to the properly cased version, used
    * to warn in the case of missing properties. Available only in __DEV__.
    *
@@ -208,22 +223,47 @@ var DOMProperty = {
   getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
 
   /**
-   * All of the isCustomAttribute() functions that have been injected.
-   */
-  _isCustomAttributeFunctions: [],
-
-  /**
-   * Checks whether a property name is a custom attribute.
+   * Checks whether a property name is a writeable attribute.
    * @method
    */
-  isCustomAttribute: function(attributeName) {
-    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
-      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
-      if (isCustomAttributeFn(attributeName)) {
-        return true;
-      }
+  shouldSetAttribute: function(name, value) {
+    if (
+      DOMProperty.isReservedProp(name) ||
+      DOMProperty.aliases.hasOwnProperty(name)
+    ) {
+      return false;
     }
-    return false;
+
+    if (DOMProperty.properties.hasOwnProperty(name)) {
+      return true;
+    }
+
+    if (value === null) {
+      return true;
+    }
+
+    switch (typeof value) {
+      case 'undefined':
+      case 'boolean':
+      case 'number':
+      case 'string':
+        return true;
+      default:
+        return false;
+    }
+  },
+
+  /**
+   * Checks to see if a property name is within the list of properties
+   * reserved for internal React operations. These properties should
+   * not be set on an HTML element.
+   *
+   * @private
+   * @param {string} name
+   * @return {boolean} If the name is within reserved props
+   */
+  isReservedProp(name) {
+    return RESERVED_PROPS.hasOwnProperty(name);
   },
 
   injection: DOMPropertyInjection,

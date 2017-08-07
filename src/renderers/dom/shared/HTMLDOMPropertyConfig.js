@@ -22,9 +22,6 @@ var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
 
 var HTMLDOMPropertyConfig = {
-  isCustomAttribute: RegExp.prototype.test.bind(
-    new RegExp('^(data|aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$'),
-  ),
   Properties: {
     /**
      * Standard Properties
@@ -205,6 +202,9 @@ var HTMLDOMPropertyConfig = {
     security: 0,
     // IE-only attribute that controls focus behavior
     unselectable: 0,
+    // Facebook internal attribute. This is an object attribute that
+    // impliments a custom toString() method
+    ajaxify: 0,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',

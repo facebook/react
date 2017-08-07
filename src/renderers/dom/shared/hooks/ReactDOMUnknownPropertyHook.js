@@ -35,39 +35,21 @@ function getStackAddendum(debugID) {
 }
 
 if (__DEV__) {
-  var reactProps = {
-    children: true,
-    dangerouslySetInnerHTML: true,
-    key: true,
-    ref: true,
-
-    autoFocus: true,
-    defaultValue: true,
-    defaultChecked: true,
-    innerHTML: true,
-    suppressContentEditableWarning: true,
-    onFocusIn: true,
-    onFocusOut: true,
-  };
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
+  var ARIA_NAME_REGEX = /^aria-/i;
 
-  var validateProperty = function(tagName, name, debugID) {
-    if (
-      DOMProperty.properties.hasOwnProperty(name) ||
-      DOMProperty.isCustomAttribute(name)
-    ) {
+  var validateProperty = function(tagName, name, value, debugID) {
+    if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return true;
     }
-    if (
-      (reactProps.hasOwnProperty(name) && reactProps[name]) ||
-      (warnedProperties.hasOwnProperty(name) && warnedProperties[name])
-    ) {
-      return true;
-    }
+
+    warnedProperties[name] = true;
+
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
+
     if (
       EventPluginRegistry.plugins.length === 0 &&
       EVENT_NAME_REGEX.test(name)
@@ -76,54 +58,57 @@ if (__DEV__) {
       // Don't check events in this case.
       return true;
     }
-    warnedProperties[name] = true;
+
     var lowerCasedName = name.toLowerCase();
-
-    // data-* attributes should be lowercase; suggest the lowercase version
-    var standardName = DOMProperty.isCustomAttribute(lowerCasedName)
-      ? lowerCasedName
-      : DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)
-          ? DOMProperty.getPossibleStandardName[lowerCasedName]
-          : null;
-
     var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
       ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
       : null;
 
-    if (standardName != null) {
+    if (registrationName != null) {
       warning(
         false,
-        'Unknown DOM property %s. Did you mean %s?%s',
-        name,
-        standardName,
-        getStackAddendum(debugID),
-      );
-      return true;
-    } else if (registrationName != null) {
-      warning(
-        false,
-        'Unknown event handler property %s. Did you mean `%s`?%s',
+        'Unknown event handler property `%s`. Did you mean `%s`?%s',
         name,
         registrationName,
         getStackAddendum(debugID),
       );
       return true;
-    } else {
-      // We were unable to guess which prop the user intended.
-      // It is likely that the user was just blindly spreading/forwarding props
-      // Components should be careful to only render valid props/attributes.
-      // Warning will be invoked in warnUnknownProperties to allow grouping.
-      return false;
     }
+
+    if (DOMProperty.isReservedProp(name)) {
+      return true;
+    }
+
+    // Let the ARIA attribute hook validate ARIA attributes
+    if (ARIA_NAME_REGEX.test(name)) {
+      return true;
+    }
+
+    // Known attributes should match the casing specified in the property config.
+    if (DOMProperty.getPossibleStandardName.hasOwnProperty(lowerCasedName)) {
+      var standardName = DOMProperty.getPossibleStandardName[lowerCasedName];
+      if (standardName !== name) {
+        warning(
+          false,
+          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          name,
+          standardName,
+          getStackAddendum(debugID),
+        );
+      }
+      return true;
+    }
+
+    return DOMProperty.shouldSetAttribute(name, value);
   };
 }
 
 var warnUnknownProperties = function(type, props, debugID) {
   var unknownProps = [];
   for (var key in props) {
-    var isValid = validateProperty(type, key, debugID);
+    var isValid = validateProperty(type, key, props[key], debugID);
     if (!isValid) {
       unknownProps.push(key);
     }
@@ -134,7 +119,8 @@ var warnUnknownProperties = function(type, props, debugID) {
   if (unknownProps.length === 1) {
     warning(
       false,
-      'Unknown prop %s on <%s> tag. Remove this prop from the element. ' +
+      'Invalid prop %s on <%s> tag. Either remove this prop from the element, ' +
+        'or pass a string, number, or boolean value to keep it in the DOM. ' +
         'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       type,
@@ -143,7 +129,8 @@ var warnUnknownProperties = function(type, props, debugID) {
   } else if (unknownProps.length > 1) {
     warning(
       false,
-      'Unknown props %s on <%s> tag. Remove these props from the element. ' +
+      'Invalid props %s on <%s> tag. Either remove these props from the element, ' +
+        'or pass a string, number, or boolean value to keep them in the DOM. ' +
         'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       type,
