@@ -117,6 +117,9 @@ var DOMPropertyInjection = {
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
 
+        // Track as lowercase to prevent assignment for aliasesd attitibutes
+        // like `http-equiv`. This covers cases like `hTTp-equiv`, which
+        // should not write `http-equiv` to the DOM.
         DOMProperty.aliases[attributeName.toLowerCase()] = true;
 
         propertyInfo.attributeName = attributeName;
@@ -126,14 +129,14 @@ var DOMPropertyInjection = {
         propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
       }
 
-      if (DOMPropertyNames.hasOwnProperty(propName)) {
-        propertyInfo.propertyName = DOMPropertyNames[propName];
-      }
-
       if (DOMMutationMethods.hasOwnProperty(propName)) {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 
+      // Downcase references to whitelist properties to check for membership
+      // without case-sensitivity. This allows the whitelist to pick up
+      // `allowfullscreen`, which should be written using the property configuration
+      // for `allowFullscreen`
       DOMProperty.properties[lowerCased] = propertyInfo;
     }
   },
