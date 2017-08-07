@@ -79,9 +79,7 @@ var DOMPropertyOperations = {
    */
   getValueForProperty: function(node, name, expected) {
     if (__DEV__) {
-      var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-        ? DOMProperty.properties[name]
-        : null;
+      var propertyInfo = DOMProperty.getPropertyInfo(name);
       if (propertyInfo) {
         var mutationMethod = propertyInfo.mutationMethod;
         if (mutationMethod || propertyInfo.mustUseProperty) {
@@ -164,9 +162,7 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
+    var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
@@ -255,9 +251,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
+    var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {

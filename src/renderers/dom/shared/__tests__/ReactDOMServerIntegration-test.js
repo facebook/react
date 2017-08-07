@@ -615,9 +615,9 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('className')).toBe(false);
       });
 
-      itRenders('no classname prop', async render => {
+      itRenders('badly cased className with a warning', async render => {
         const e = await render(<div classname="test" />, 1);
-        expect(e.hasAttribute('class')).toBe(false);
+        expect(e.getAttribute('class')).toBe('test');
         expect(e.hasAttribute('classname')).toBe(false);
       });
 
@@ -625,6 +625,14 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div class="test" />, 1);
         expect(e.className).toBe('');
       });
+
+      itRenders(
+        'no className prop when given a badly cased alias',
+        async render => {
+          const e = await render(<div cLASs="test" />, 1);
+          expect(e.className).toBe('');
+        },
+      );
 
       itRenders('class for custom elements', async render => {
         const e = await render(<div is="custom-element" class="test" />, 0);
@@ -640,6 +648,11 @@ describe('ReactDOMServerIntegration', () => {
     describe('htmlFor property', function() {
       itRenders('htmlFor with string value', async render => {
         const e = await render(<div htmlFor="myFor" />);
+        expect(e.getAttribute('for')).toBe('myFor');
+      });
+
+      itRenders('htmlfor with warning', async render => {
+        const e = await render(<div htmlfor="myFor" />, 1);
         expect(e.getAttribute('for')).toBe('myFor');
       });
 
@@ -800,21 +813,27 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('cased attributes', function() {
-      itRenders('no badly cased aliased HTML attribute', async render => {
-        const e = await render(<meta httpequiv="refresh" />, 1);
-        expect(e.hasAttribute('http-equiv')).toBe(false);
-        expect(e.hasAttribute('httpequiv')).toBe(false);
-      });
+      itRenders(
+        'badly cased aliased HTML attribute with a warning',
+        async render => {
+          const e = await render(<meta httpequiv="refresh" />, 1);
+          expect(e.getAttribute('http-equiv')).toBe('refresh');
+          expect(e.hasAttribute('httpequiv')).toBe(false);
+        },
+      );
 
-      itRenders('no badly cased SVG attribute', async render => {
+      itRenders('badly cased SVG attribute with a warning', async render => {
         const e = await render(<text textlength="10" />, 1);
-        expect(e.hasAttribute('textLength')).toBe(false);
+        expect(e.getAttribute('textLength')).toBe('10');
       });
 
-      itRenders('no badly cased aliased SVG attribute', async render => {
-        const e = await render(<text strokedasharray="10 10" />, 1);
-        expect(e.hasAttribute('strokedasharray')).toBe(false);
-      });
+      itRenders(
+        'badly cased aliased SVG attribute with a warning',
+        async render => {
+          const e = await render(<text strokedasharray="10 10" />, 1);
+          expect(e.getAttribute('stroke-dasharray')).toBe('10 10');
+        },
+      );
 
       itRenders(
         'no badly cased original SVG attribute that is aliased',
@@ -1246,6 +1265,23 @@ describe('ReactDOMServerIntegration', () => {
           'http://i.imgur.com/w7GCRPb.png',
         );
       });
+
+      itRenders(
+        'svg element with a badly cased xlink with a warning',
+        async render => {
+          let e = await render(
+            <svg><image xlinkhref="http://i.imgur.com/w7GCRPb.png" /></svg>,
+            1,
+          );
+          e = e.firstChild;
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName).toBe('image');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+          expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
+            'http://i.imgur.com/w7GCRPb.png',
+          );
+        },
+      );
 
       itRenders('a math element', async render => {
         const e = await render(<math />);
