@@ -761,7 +761,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // The loop stops once the children have unmounted and error lifecycles are
     // called. Then we return to the regular flow.
 
-    if (capturedErrors !== null && capturedErrors.size > 0) {
+    if (
+      capturedErrors !== null &&
+      capturedErrors.size > 0 &&
+      nextPriorityLevel === TaskPriority
+    ) {
       while (nextUnitOfWork !== null) {
         if (hasCapturedError(nextUnitOfWork)) {
           // Use a forked version of performUnitOfWork
@@ -780,19 +784,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           commitAllWork(pendingCommit);
           priorityContext = nextPriorityLevel;
 
-          if (capturedErrors === null || capturedErrors.size === 0) {
+          if (
+            capturedErrors === null ||
+            capturedErrors.size === 0 ||
+            nextPriorityLevel !== TaskPriority
+          ) {
             // There are no more unhandled errors. We can exit this special
             // work loop. If there's still additional work, we'll perform it
             // using one of the normal work loops.
             break;
           }
           // The commit phase produced additional errors. Continue working.
-          invariant(
-            nextPriorityLevel === TaskPriority,
-            'Commit phase errors should be scheduled to recover with task ' +
-              'priority. This error is likely caused by a bug in React. ' +
-              'Please file an issue.',
-          );
         }
       }
     }

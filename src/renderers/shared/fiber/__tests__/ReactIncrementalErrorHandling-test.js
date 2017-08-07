@@ -512,6 +512,42 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.render(<Parent />);
   });
 
+  it('can unmount an error boundary before it is handled', () => {
+    let parent;
+
+    class Parent extends React.Component {
+      state = {step: 0};
+      render() {
+        parent = this;
+        return this.state.step === 0 ? <Boundary /> : null;
+      }
+    }
+
+    class Boundary extends React.Component {
+      componentDidCatch() {}
+      render() {
+        return <Child />;
+      }
+    }
+
+    class Child extends React.Component {
+      componentDidUpdate() {
+        parent.setState({step: 1});
+        throw new Error('update error');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Parent />);
+    });
+  });
+
   it('continues work on other roots despite caught errors', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
