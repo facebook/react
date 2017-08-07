@@ -116,12 +116,11 @@ var DOMPropertyInjection = {
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
 
-        // Track as lowercase to prevent assignment for aliased attributes
-        // like `http-equiv`. This covers cases like `hTTp-equiv`, which
-        // should not write `http-equiv` to the DOM.
-        DOMProperty.aliases[attributeName.toLowerCase()] = true;
-
         propertyInfo.attributeName = attributeName;
+
+        // Use the lowercase form of the attribute name to prevent
+        // badly cased React attribute alises from writing to the DOM.
+        DOMProperty.aliases[attributeName.toLowerCase()] = true;
       }
 
       if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
@@ -136,7 +135,7 @@ var DOMPropertyInjection = {
       // without case-sensitivity. This allows the whitelist to pick up
       // `allowfullscreen`, which should be written using the property configuration
       // for `allowFullscreen`
-      DOMProperty.properties[lowerCased] = propertyInfo;
+      DOMProperty.properties[propName] = propertyInfo;
     }
   },
 };
@@ -209,21 +208,18 @@ var DOMProperty = {
    * @method
    */
   shouldSetAttribute: function(name, value) {
-    let lowerCased = name.toLowerCase();
-
-    if (
-      DOMProperty.isReservedProp(name) ||
-      DOMProperty.aliases.hasOwnProperty(lowerCased)
-    ) {
+    if (DOMProperty.isReservedProp(name)) {
       return false;
     }
 
-    if (DOMProperty.properties.hasOwnProperty(lowerCased)) {
+    if (value === null || DOMProperty.properties.hasOwnProperty(name)) {
       return true;
     }
 
-    if (value === null) {
-      return true;
+    // Prevent aliases, and badly cased aliases like `class` or `cLASS`
+    // from showing up in the DOM
+    if (DOMProperty.aliases.hasOwnProperty(name.toLowerCase())) {
+      return false;
     }
 
     switch (typeof value) {
@@ -238,10 +234,8 @@ var DOMProperty = {
   },
 
   getPropertyInfo(name) {
-    var lowerCased = name.toLowerCase();
-
-    return DOMProperty.properties.hasOwnProperty(lowerCased)
-      ? DOMProperty.properties[lowerCased]
+    return DOMProperty.properties.hasOwnProperty(name)
+      ? DOMProperty.properties[name]
       : null;
   },
 
