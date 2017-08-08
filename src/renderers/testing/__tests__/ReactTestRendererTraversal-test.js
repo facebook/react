@@ -20,8 +20,6 @@ const View = props => <RCTView {...props} />;
 describe('ReactTestRendererTraversal', () => {
   beforeEach(() => {
     jest.resetModules();
-    const ReactTestRendererFeatureFlags = require('ReactTestRendererFeatureFlags');
-    ReactTestRendererFeatureFlags.enableTraversal = true;
     ReactTestRenderer = require('react-test-renderer');
   });
 
