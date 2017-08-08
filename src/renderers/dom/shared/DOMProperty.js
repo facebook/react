@@ -12,6 +12,10 @@
 'use strict';
 
 var invariant = require('fbjs/lib/invariant');
+if (__DEV__) {
+  var lowPriorityWarning = require('lowPriorityWarning');
+  var warnedAboutImplicitToString = {};
+}
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
@@ -243,16 +247,40 @@ var DOMProperty = {
         if (propertyInfo && propertyInfo.hasBooleanValue) {
           return true;
         }
-        if (name === 'value') {
-          // Value is a special prop.
-          // Allow arrays or objects with custom toString.
-          return value.toString !== Object.prototype.toString;
+        // Only value prop allows arrays.
+        if (name === 'value' && Array.isArray(value)) {
+          return true;
         }
-        // For everything else, allow only objects with custom toString.
-        if (Array.isArray(value)) {
+        // This could be a custom class, e.g. URI, that's intentionally string-ish.
+        // TODO: consider other heuristics.
+        if (value instanceof String) {
+          return true;
+        }
+        // If it didn't define a custom toString (an array doesn't count), skip.
+        if (
+          value.toString === Object.prototype.toString ||
+          Array.isArray(value)
+        ) {
           return false;
         }
-        return value.toString !== Object.prototype.toString;
+        // Allow objects with custom toString.
+        // This is not ideal and added for backward compat.
+        if (__DEV__) {
+          if (!warnedAboutImplicitToString[name]) {
+            warnedAboutImplicitToString[name] = true;
+            lowPriorityWarning(
+              false,
+              'The `' +
+                name +
+                '` prop was given an object with a custom toString() method. ' +
+                'This works in React 16, but will stop working in React 17. Instead, you ' +
+                'can pass the result of calling toString() on it manually. Alternatively, ' +
+                'you can make the passed object extend String, and define a valueOf() method ' +
+                'on it, which React will call to get the string value.',
+            );
+          }
+        }
+        return true;
       default:
         return false;
     }

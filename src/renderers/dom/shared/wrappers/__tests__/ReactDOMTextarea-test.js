@@ -21,6 +21,15 @@ describe('ReactDOMTextarea', () => {
 
   var renderTextarea;
 
+  class Stringish extends String {
+    valueOf() {
+      return 'foobar';
+    }
+    toString() {
+      return 'foobar';
+    }
+  }
+
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
@@ -71,11 +80,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should display "foobar" for `defaultValue` of `objToString`', () => {
-    var objToString = {
-      toString: function() {
-        return 'foobar';
-      },
-    };
+    var objToString = new Stringish();
 
     var stub = <textarea defaultValue={objToString} />;
     var node = renderTextarea(stub);
@@ -178,16 +183,12 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('giraffe');
 
-    var objToString = {
-      toString: function() {
-        return 'foo';
-      },
-    };
+    var objToString = new Stringish();
     stub = ReactDOM.render(
       <textarea value={objToString} onChange={emptyFunction} />,
       container,
     );
-    expect(node.value).toEqual('foo');
+    expect(node.value).toEqual('foobar');
   });
 
   it('should take updates to `defaultValue` for uncontrolled textarea', () => {
@@ -316,14 +317,10 @@ describe('ReactDOMTextarea', () => {
 
   it('should allow objects as children', () => {
     spyOn(console, 'error');
-    var obj = {
-      toString: function() {
-        return 'sharkswithlasers';
-      },
-    };
+    var obj = new Stringish();
     var node = renderTextarea(<textarea>{obj}</textarea>);
     expectDev(console.error.calls.count()).toBe(1);
-    expect(node.value).toBe('sharkswithlasers');
+    expect(node.value).toBe('foobar');
   });
 
   it('should throw with multiple or invalid children', () => {

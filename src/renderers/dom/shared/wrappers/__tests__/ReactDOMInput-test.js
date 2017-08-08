@@ -32,6 +32,12 @@ describe('ReactDOMInput', () => {
     tracker.setValue(current);
   }
 
+  class Stringish extends String {
+    valueOf() {
+      return 'foobar';
+    }
+  }
+
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -415,11 +421,7 @@ describe('ReactDOMInput', () => {
   });
 
   it('should display "foobar" for `defaultValue` of `objToString`', () => {
-    var objToString = {
-      toString: function() {
-        return 'foobar';
-      },
-    };
+    var objToString = new Stringish();
 
     var stub = <input type="text" defaultValue={objToString} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
@@ -471,11 +473,7 @@ describe('ReactDOMInput', () => {
 
     expect(node.value).toBe('foo');
 
-    var objToString = {
-      toString: function() {
-        return 'foobar';
-      },
-    };
+    var objToString = new Stringish();
     stub = ReactDOM.render(
       <input type="text" value={objToString} onChange={emptyFunction} />,
       container,
