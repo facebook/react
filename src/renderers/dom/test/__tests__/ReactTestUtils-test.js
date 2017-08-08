@@ -265,6 +265,31 @@ describe('ReactTestUtils', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
+  it('should throw when attempting to use a composite component', () => {
+    class SomeComponent extends React.Component {
+      render() {
+        return (
+          <div onClick={this.props.handleClick}>
+            hello, world.
+          </div>
+        );
+      }
+    }
+
+    const handler = jasmine.createSpy('spy');
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(
+      <SomeComponent handleClick={handler} />,
+      container,
+    );
+
+    expect(() => ReactTestUtils.Simulate.click(instance)).toThrowError(
+      'TestUtils.Simulate does not support a composite component instance.' +
+        'TestUtils.Simulate only works with DOM component instance or a DOM node.',
+    );
+    expect(handler).not.toHaveBeenCalled();
+  });
+
   it('should not warn when simulating events with extra properties', () => {
     spyOn(console, 'error');
 
