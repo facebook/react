@@ -16,7 +16,6 @@
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactGenericBatching = require('ReactGenericBatching');
-var ReactTestRendererFeatureFlags = require('ReactTestRendererFeatureFlags');
 var emptyObject = require('fbjs/lib/emptyObject');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var invariant = require('fbjs/lib/invariant');
@@ -568,11 +567,6 @@ var ReactTestRendererFiber = {
 
     return {
       get root() {
-        if (!ReactTestRendererFeatureFlags.enableTraversal) {
-          throw new Error(
-            'Test renderer traversal is experimental and not enabled',
-          );
-        }
         if (root === null || root.current.child === null) {
           throw new Error("Can't access .root on unmounted test renderer");
         }
