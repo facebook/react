@@ -125,6 +125,40 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+  /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+      },
+      moduleName: 'ReactDOMUnstableNativeDependencies',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
+    externals: [
+      'react-dom',
+      'ReactDOM',
+      'prop-types',
+      'prop-types/checkPropTypes',
+    ],
+    fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
+    hasteName: 'ReactDOMUnstableNativeDependencies',
+    isRenderer: false,
+    label: 'dom-unstable-native-dependencies',
+    manglePropertiesOnProd: false,
+    name: 'react-dom/unstable-native-dependencies',
+    paths: [
+      'src/renderers/dom/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 
   /******* React DOM Server *******/
   {
@@ -138,14 +172,14 @@ const bundles = [
       moduleName: 'ReactDOMServer',
       sourceMap: false,
     },
-    entry: 'src/renderers/dom/ReactDOMServerEntry',
+    entry: 'src/renderers/dom/ReactDOMServerBrowserEntry',
     externals: ['prop-types', 'prop-types/checkPropTypes'],
-    fbEntry: 'src/renderers/dom/ReactDOMServerEntry',
+    fbEntry: 'src/renderers/dom/ReactDOMServerBrowserEntry',
     hasteName: 'ReactDOMServer',
     isRenderer: true,
-    label: 'dom-server-string',
+    label: 'dom-server-browser',
     manglePropertiesOnProd: false,
-    name: 'react-dom/server',
+    name: 'react-dom/server.browser',
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
@@ -165,12 +199,12 @@ const bundles = [
       moduleName: 'ReactDOMNodeStream',
       sourceMap: false,
     },
-    entry: 'src/renderers/dom/ReactDOMNodeStreamEntry',
+    entry: 'src/renderers/dom/ReactDOMServerNodeEntry',
     externals: ['prop-types', 'prop-types/checkPropTypes', 'stream'],
     isRenderer: true,
-    label: 'dom-server-node-stream',
+    label: 'dom-server-server-node',
     manglePropertiesOnProd: false,
-    name: 'react-dom/node-stream',
+    name: 'react-dom/server.node',
     paths: [
       'src/renderers/dom/**/*.js',
       'src/renderers/shared/**/*.js',
@@ -253,10 +287,10 @@ const bundles = [
     ],
     useFiber: false,
     modulesToStub: [
-      "'createReactNativeComponentClassFiber'",
-      "'ReactNativeFiberRenderer'",
-      "'findNumericNodeHandleFiber'",
-      "'ReactNativeFiber'",
+      'createReactNativeComponentClassFiber',
+      'ReactNativeFiberRenderer',
+      'findNumericNodeHandleFiber',
+      'ReactNativeFiber',
     ],
   },
   {
@@ -295,9 +329,9 @@ const bundles = [
     ],
     useFiber: true,
     modulesToStub: [
-      "'createReactNativeComponentClassStack'",
-      "'findNumericNodeHandleStack'",
-      "'ReactNativeStack'",
+      'createReactNativeComponentClassStack',
+      'findNumericNodeHandleStack',
+      'ReactNativeStack',
     ],
   },
 
@@ -347,7 +381,11 @@ const bundles = [
     label: 'shallow-renderer',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer/shallow',
-    paths: ['src/renderers/shared/**/*.js', 'src/renderers/testing/**/*.js'],
+    paths: [
+      'src/renderers/shared/**/*.js',
+      'src/renderers/testing/**/*.js',
+      'src/shared/**/*.js',
+    ],
   },
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/

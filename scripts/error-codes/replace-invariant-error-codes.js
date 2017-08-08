@@ -17,7 +17,7 @@ var errorMap = invertObject(existingErrorMap);
 module.exports = function(babel) {
   var t = babel.types;
 
-  var SEEN_SYMBOL = Symbol('dev-expression-with-codes.seen');
+  var SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
   // Generate a hygienic identifier
   function getProdInvariantIdentifier(path, localState) {
@@ -35,15 +35,7 @@ module.exports = function(babel) {
     return localState.prodInvariantIdentifier;
   }
 
-  var DEV_EXPRESSION = t.binaryExpression(
-    '!==',
-    t.memberExpression(
-      t.memberExpression(t.identifier('process'), t.identifier('env'), false),
-      t.identifier('NODE_ENV'),
-      false
-    ),
-    t.stringLiteral('production')
-  );
+  var DEV_EXPRESSION = t.identifier('__DEV__');
 
   return {
     pre: function() {
@@ -51,18 +43,6 @@ module.exports = function(babel) {
     },
 
     visitor: {
-      Identifier: {
-        enter: function(path) {
-          // Do nothing when testing
-          if (process.env.NODE_ENV === 'test') {
-            return;
-          }
-          // Replace __DEV__ with process.env.NODE_ENV !== 'production'
-          if (path.isIdentifier({name: '__DEV__'})) {
-            path.replaceWith(DEV_EXPRESSION);
-          }
-        },
-      },
       CallExpression: {
         exit: function(path) {
           var node = path.node;
@@ -147,28 +127,6 @@ module.exports = function(babel) {
                     t.blockStatement([t.expressionStatement(prodInvariant)])
                   ),
                 ])
-              )
-            );
-          } else if (path.get('callee').isIdentifier({name: 'warning'})) {
-            // Turns this code:
-            //
-            // warning(condition, argument, argument);
-            //
-            // into this:
-            //
-            // if ("production" !== process.env.NODE_ENV) {
-            //   warning(condition, argument, argument);
-            // }
-            //
-            // The goal is to strip out warning calls entirely in production. We
-            // don't need the same optimizations for conditions that we use for
-            // invariant because we don't care about an extra call in __DEV__
-
-            node[SEEN_SYMBOL] = true;
-            path.replaceWith(
-              t.ifStatement(
-                DEV_EXPRESSION,
-                t.blockStatement([t.expressionStatement(node)])
               )
             );
           }

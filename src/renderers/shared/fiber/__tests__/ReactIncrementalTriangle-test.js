@@ -79,17 +79,13 @@ describe('ReactIncrementalTriangle', () => {
         if (this.props.depth !== 0) {
           throw new Error('Cannot activate non-leaf component');
         }
-        ReactNoop.syncUpdates(() => {
-          this.setState({isActive: true});
-        });
+        this.setState({isActive: true});
       }
       deactivate() {
         if (this.props.depth !== 0) {
           throw new Error('Cannot deactivate non-leaf component');
         }
-        ReactNoop.syncUpdates(() => {
-          this.setState({isActive: false});
-        });
+        this.setState({isActive: false});
       }
       shouldComponentUpdate(nextProps, nextState) {
         return (
@@ -121,9 +117,7 @@ describe('ReactIncrementalTriangle', () => {
       state = {counter: 0};
       interrupt() {
         // Triggers a restart from the top.
-        ReactNoop.syncUpdates(() => {
-          this.forceUpdate();
-        });
+        this.forceUpdate();
       }
       setCounter(counter) {
         const currentCounter = this.state.counter;
@@ -165,7 +159,7 @@ describe('ReactIncrementalTriangle', () => {
         // first child.
         if (counter === undefined) {
           if (typeof num === 'string') {
-            counter = num.substr(1, num.length - 2);
+            counter = parseInt(num.substr(1, num.length - 2), 10);
           } else {
             counter = num;
           }
@@ -192,16 +186,18 @@ describe('ReactIncrementalTriangle', () => {
       let expectedCounterAtEnd = app.state.counter;
 
       let activeTriangle = null;
-      ReactNoop.batchedUpdates(() => {
-        for (let i = 0; i < actions.length; i++) {
+      for (var i = 0; i < actions.length; i++) {
+        ReactNoop.flushSync(() => {
           const action = actions[i];
           switch (action.type) {
             case FLUSH:
               ReactNoop.flushUnitsOfWork(action.unitsOfWork);
               break;
             case STEP:
-              app.setCounter(action.counter);
-              expectedCounterAtEnd = action.counter;
+              ReactNoop.deferredUpdates(() => {
+                app.setCounter(action.counter);
+                expectedCounterAtEnd = action.counter;
+              });
               break;
             case INTERRUPT:
               app.interrupt();
@@ -225,8 +221,9 @@ describe('ReactIncrementalTriangle', () => {
             default:
               break;
           }
-        }
-      });
+        });
+        assertConsistentTree(activeTriangle);
+      }
       // Flush remaining work
       ReactNoop.flush();
       assertConsistentTree(activeTriangle, expectedCounterAtEnd);

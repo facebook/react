@@ -15,6 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
@@ -22,7 +23,6 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactDOMInjection = require('ReactDOMInjection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInputSelection = require('ReactInputSelection');
@@ -38,11 +38,10 @@ var {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } = require('HTMLNodeType');
-var {ID_ATTRIBUTE_NAME} = require('DOMProperty');
+var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
 
 var findDOMNode = require('findDOMNode');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 var {
   createElement,
@@ -60,11 +59,30 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var lowPriorityWarning = require('lowPriorityWarning');
+  var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
+
+  if (
+    typeof Map !== 'function' ||
+    Map.prototype == null ||
+    typeof Map.prototype.forEach !== 'function' ||
+    typeof Set !== 'function' ||
+    Set.prototype == null ||
+    typeof Set.prototype.clear !== 'function' ||
+    typeof Set.prototype.forEach !== 'function'
+  ) {
+    warning(
+      false,
+      'React depends on Map and Set built-in types. Make sure that you load a ' +
+        'polyfill in older browsers. http://fb.me/react-polyfills',
+    );
+  }
 }
 
-ReactDOMInjection.inject();
+require('ReactDOMClientInjection');
+require('ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
@@ -73,8 +91,12 @@ findDOMNode._injectFiber(function(fiber: Fiber) {
 });
 
 type DOMContainer =
-  | (Element & {_reactRootContainer: ?Object})
-  | (Document & {_reactRootContainer: ?Object});
+  | (Element & {
+    _reactRootContainer: ?Object,
+  })
+  | (Document & {
+    _reactRootContainer: ?Object,
+  });
 
 type Container = Element | Document;
 type Props = {
@@ -123,11 +145,11 @@ function getReactRootElementInContainer(container: any) {
   }
 }
 
-function shouldReuseContent(container) {
+function shouldHydrateDueToLegacyHeuristic(container) {
   const rootElement = getReactRootElementInContainer(container);
   return !!(rootElement &&
     rootElement.nodeType === ELEMENT_NODE &&
-    rootElement.hasAttribute(ID_ATTRIBUTE_NAME));
+    rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME));
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
@@ -519,10 +541,13 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
   DOMRenderer.batchedUpdates,
 );
 
+var warnedAboutHydrateAPI = false;
+
 function renderSubtreeIntoContainer(
   parentComponent: ?ReactComponent<any, any, any>,
   children: ReactNodeList,
   container: DOMContainer,
+  forceHydrate: boolean,
   callback: ?Function,
 ) {
   invariant(
@@ -531,6 +556,21 @@ function renderSubtreeIntoContainer(
   );
 
   if (__DEV__) {
+    if (container._reactRootContainer && container.nodeType !== COMMENT_NODE) {
+      const hostInstance = DOMRenderer.findHostInstanceWithNoPortals(
+        container._reactRootContainer.current,
+      );
+      if (hostInstance) {
+        warning(
+          hostInstance.parentNode === container,
+          'render(...): It looks like the React-rendered content of this ' +
+            'container was removed without using React. This is not ' +
+            'supported and will cause errors. Instead, call ' +
+            'ReactDOM.unmountComponentAtNode to empty a container.',
+        );
+      }
+    }
+
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
     const hasNonRootReactChild = !!(rootEl &&
@@ -558,9 +598,10 @@ function renderSubtreeIntoContainer(
 
   let root = container._reactRootContainer;
   if (!root) {
+    const shouldHydrate =
+      forceHydrate || shouldHydrateDueToLegacyHeuristic(container);
     // First clear any existing content.
-    // TODO: Figure out the best heuristic here.
-    if (!shouldReuseContent(container)) {
+    if (!shouldHydrate) {
       let warned = false;
       let rootSibling;
       while ((rootSibling = container.lastChild)) {
@@ -568,7 +609,7 @@ function renderSubtreeIntoContainer(
           if (
             !warned &&
             rootSibling.nodeType === ELEMENT_NODE &&
-            (rootSibling: any).hasAttribute(ID_ATTRIBUTE_NAME)
+            (rootSibling: any).hasAttribute(ROOT_ATTRIBUTE_NAME)
           ) {
             warned = true;
             warning(
@@ -580,6 +621,17 @@ function renderSubtreeIntoContainer(
           }
         }
         container.removeChild(rootSibling);
+      }
+    }
+    if (__DEV__) {
+      if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
+        warnedAboutHydrateAPI = true;
+        lowPriorityWarning(
+          false,
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
       }
     }
     const newRoot = DOMRenderer.createContainer(container);
@@ -595,6 +647,15 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
+  hydrate(
+    element: ReactElement<any>,
+    container: DOMContainer,
+    callback: ?Function,
+  ) {
+    // TODO: throw or warn if we couldn't hydrate?
+    return renderSubtreeIntoContainer(null, element, container, true, callback);
+  },
+
   render(
     element: ReactElement<any>,
     container: DOMContainer,
@@ -632,7 +693,13 @@ var ReactDOMFiber = {
         }
       }
     }
-    return renderSubtreeIntoContainer(null, element, container, callback);
+    return renderSubtreeIntoContainer(
+      null,
+      element,
+      container,
+      false,
+      callback,
+    );
   },
 
   unstable_renderSubtreeIntoContainer(
@@ -649,6 +716,7 @@ var ReactDOMFiber = {
       parentComponent,
       element,
       containerNode,
+      false,
       callback,
     );
   },
@@ -673,7 +741,7 @@ var ReactDOMFiber = {
 
       // Unmount should not be batched.
       DOMRenderer.unbatchedUpdates(() => {
-        renderSubtreeIntoContainer(null, null, container, () => {
+        renderSubtreeIntoContainer(null, null, container, false, () => {
           container._reactRootContainer = null;
         });
       });
@@ -723,6 +791,8 @@ var ReactDOMFiber = {
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
+  flushSync: DOMRenderer.flushSync,
+
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
     EventPluginHub: require('EventPluginHub'),
@@ -735,14 +805,42 @@ var ReactDOMFiber = {
   },
 };
 
-if (typeof injectInternals === 'function') {
-  injectInternals({
-    findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
-    findHostInstanceByFiber: DOMRenderer.findHostInstance,
-    // This is an enum because we may add more (e.g. profiler build)
-    bundleType: __DEV__ ? 1 : 0,
-    version: ReactVersion,
-  });
+const foundDevTools = injectInternals({
+  findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+  findHostInstanceByFiber: DOMRenderer.findHostInstance,
+  // This is an enum because we may add more (e.g. profiler build)
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+});
+
+if (__DEV__) {
+  if (
+    !foundDevTools &&
+    ExecutionEnvironment.canUseDOM &&
+    window.top === window.self
+  ) {
+    // If we're in Chrome or Firefox, provide a download link if not installed.
+    if (
+      (navigator.userAgent.indexOf('Chrome') > -1 &&
+        navigator.userAgent.indexOf('Edge') === -1) ||
+      navigator.userAgent.indexOf('Firefox') > -1
+    ) {
+      const protocol = window.location.protocol;
+      // Don't warn in exotic cases like chrome-extension://.
+      if (/^(https?|file):$/.test(protocol)) {
+        console.info(
+          '%cDownload the React DevTools ' +
+            'for a better development experience: ' +
+            'https://fb.me/react-devtools' +
+            (protocol === 'file:'
+              ? '\nYou might need to use a local HTTP server (instead of file://): ' +
+                  'https://fb.me/react-devtools-faq'
+              : ''),
+          'font-weight:bold',
+        );
+      }
+    }
+  }
 }
 
 module.exports = ReactDOMFiber;

@@ -8,8 +8,8 @@ if [ -z $CI_PULL_REQUEST ] && [ -n "$BUILD_SERVER_ENDPOINT" ]; then
     -F "react.production.min=@build/dist/react.production.min.js" \
     -F "react-dom.development=@build/dist/react-dom.development.js" \
     -F "react-dom.production.min=@build/dist/react-dom.production.min.js" \
-    -F "react-dom-server.development=@build/dist/react-dom-server.development.js" \
-    -F "react-dom-server.production.min=@build/dist/react-dom-server.production.min.js" \
+    -F "react-dom-server.browser.development=@build/dist/react-dom-server.browser.development.js" \
+    -F "react-dom-server.browser.production.min=@build/dist/react-dom-server.browser.production.min.js" \
     -F "commit=$CIRCLE_SHA1" \
     -F "date=`git log --format='%ct' -1`" \
     -F "pull_request=false" \

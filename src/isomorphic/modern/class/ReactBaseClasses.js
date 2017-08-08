@@ -138,13 +138,33 @@ function ReactPureComponent(props, context, updater) {
 
 function ComponentDummy() {}
 ComponentDummy.prototype = ReactComponent.prototype;
-ReactPureComponent.prototype = new ComponentDummy();
-ReactPureComponent.prototype.constructor = ReactPureComponent;
+var pureComponentPrototype = (ReactPureComponent.prototype = new ComponentDummy());
+pureComponentPrototype.constructor = ReactPureComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(ReactPureComponent.prototype, ReactComponent.prototype);
-ReactPureComponent.prototype.isPureReactComponent = true;
+Object.assign(pureComponentPrototype, ReactComponent.prototype);
+pureComponentPrototype.isPureReactComponent = true;
+
+function ReactAsyncComponent(props, context, updater) {
+  // Duplicated from ReactComponent.
+  this.props = props;
+  this.context = context;
+  this.refs = emptyObject;
+  // We initialize the default updater but the real one gets injected by the
+  // renderer.
+  this.updater = updater || ReactNoopUpdateQueue;
+}
+
+var asyncComponentPrototype = (ReactAsyncComponent.prototype = new ComponentDummy());
+asyncComponentPrototype.constructor = ReactAsyncComponent;
+// Avoid an extra prototype jump for these methods.
+Object.assign(asyncComponentPrototype, ReactComponent.prototype);
+asyncComponentPrototype.unstable_isAsyncReactComponent = true;
+asyncComponentPrototype.render = function() {
+  return this.props.children;
+};
 
 module.exports = {
   Component: ReactComponent,
   PureComponent: ReactPureComponent,
+  AsyncComponent: ReactAsyncComponent,
 };

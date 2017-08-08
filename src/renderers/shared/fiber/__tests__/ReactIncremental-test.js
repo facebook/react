@@ -326,7 +326,7 @@ describe('ReactIncremental', () => {
     }
 
     // Init
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
     ReactNoop.flush();
@@ -335,7 +335,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // Render the high priority work (everying except the hidden trees).
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo text="foo" />);
     });
     expect(ops).toEqual(['Foo', 'Bar', 'Bar']);
@@ -773,7 +773,7 @@ describe('ReactIncremental', () => {
       // Interrupt the current low pri work with a high pri update elsewhere in
       // the tree.
       ops = [];
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         sibling.setState({});
       });
       expect(ops).toEqual(['Sibling']);
@@ -1661,42 +1661,6 @@ describe('ReactIncremental', () => {
     },
   );
 
-  it('performs batched updates at the end of the batch', () => {
-    var ops = [];
-    var instance;
-
-    class Foo extends React.Component {
-      state = {n: 0};
-      render() {
-        instance = this;
-        return <div />;
-      }
-    }
-
-    ReactNoop.render(<Foo />);
-    ReactNoop.flush();
-    ops = [];
-
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        instance.setState({n: 1}, () => ops.push('setState 1'));
-        instance.setState({n: 2}, () => ops.push('setState 2'));
-        ops.push('end batchedUpdates');
-      });
-      ops.push('end syncUpdates');
-    });
-
-    // ReactNoop.flush() not needed because updates are synchronous
-
-    expect(ops).toEqual([
-      'end batchedUpdates',
-      'setState 1',
-      'setState 2',
-      'end syncUpdates',
-    ]);
-    expect(instance.state.n).toEqual(2);
-  });
-
   it('can nest batchedUpdates', () => {
     var ops = [];
     var instance;
@@ -1713,7 +1677,7 @@ describe('ReactIncremental', () => {
     ReactNoop.flush();
     ops = [];
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.batchedUpdates(() => {
         instance.setState({n: 1}, () => ops.push('setState 1'));
         instance.setState({n: 2}, () => ops.push('setState 2'));
@@ -1724,7 +1688,6 @@ describe('ReactIncremental', () => {
         });
         ops.push('end outer batchedUpdates');
       });
-      ops.push('end syncUpdates');
     });
 
     // ReactNoop.flush() not needed because updates are synchronous
@@ -1736,7 +1699,6 @@ describe('ReactIncremental', () => {
       'setState 2',
       'setState 3',
       'setState 4',
-      'end syncUpdates',
     ]);
     expect(instance.state.n).toEqual(4);
   });
@@ -2257,7 +2219,7 @@ describe('ReactIncremental', () => {
 
   it('maintains the correct context when unwinding due to an error in render', () => {
     class Root extends React.Component {
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         // If context is pushed/popped correctly,
         // This method will be used to handle the intentionally-thrown Error.
       }
@@ -2433,4 +2395,258 @@ describe('ReactIncremental', () => {
       expect(cduNextProps).toEqual([{children: 'B'}]);
     },
   );
+
+  it('updates descendants with new context values', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class Middle extends React.Component {
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider><Middle><Child /></Middle></TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0', 'count:1']);
+  });
+
+  it('updates descendants with multiple context-providing ancestors with new context values', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      getChildContext = () => ({
+        name: 'brian',
+      });
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleContextProvider>
+          <Child />
+        </MiddleContextProvider>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0', 'count:1']);
+  });
+
+  it('should not update descendants with new context values if shouldComponentUpdate returns false', () => {
+    let rendered = [];
+    let instance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        instance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleScu extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render = () => this.props.children;
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      getChildContext = () => ({
+        name: 'brian',
+      });
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleScu>
+          <MiddleContextProvider><Child /></MiddleContextProvider>
+        </MiddleScu>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+    instance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0']);
+  });
+
+  it('should update descendants with new context values if setState() is called in the middle of the tree', () => {
+    let rendered = [];
+    let middleInstance;
+    let topInstance;
+
+    class TopContextProvider extends React.Component {
+      static childContextTypes = {
+        count: PropTypes.number,
+      };
+      constructor() {
+        super();
+        this.state = {count: 0};
+        topInstance = this;
+      }
+      getChildContext = () => ({
+        count: this.state.count,
+      });
+      render = () => this.props.children;
+      updateCount = () =>
+        this.setState(state => ({
+          count: state.count + 1,
+        }));
+    }
+
+    class MiddleScu extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render = () => this.props.children;
+    }
+
+    class MiddleContextProvider extends React.Component {
+      static childContextTypes = {
+        name: PropTypes.string,
+      };
+      constructor() {
+        super();
+        this.state = {name: 'brian'};
+        middleInstance = this;
+      }
+      getChildContext = () => ({
+        name: this.state.name,
+      });
+      updateName = name => {
+        this.setState({name});
+      };
+      render = () => this.props.children;
+    }
+
+    class Child extends React.Component {
+      static contextTypes = {
+        count: PropTypes.number,
+        name: PropTypes.string,
+      };
+      render = () => {
+        rendered.push(`count:${this.context.count}, name:${this.context.name}`);
+        return null;
+      };
+    }
+
+    ReactNoop.render(
+      <TopContextProvider>
+        <MiddleScu>
+          <MiddleContextProvider>
+            <Child />
+          </MiddleContextProvider>
+        </MiddleScu>
+      </TopContextProvider>,
+    );
+
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0, name:brian']);
+    topInstance.updateCount();
+    ReactNoop.flush();
+    expect(rendered).toEqual(['count:0, name:brian']);
+    middleInstance.updateName('not brian');
+    ReactNoop.flush();
+    expect(rendered).toEqual([
+      'count:0, name:brian',
+      'count:1, name:not brian',
+    ]);
+  });
 });

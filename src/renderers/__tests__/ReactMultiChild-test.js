@@ -189,9 +189,11 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'Child keys must be unique; when two children share a key, ' +
-          'only the first child will be used.\n' +
-          '    in div (at **)\n' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.',
+        '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -254,9 +256,11 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'Child keys must be unique; when two children share a key, ' +
-          'only the first child will be used.\n' +
-          '    in div (at **)\n' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.',
+        '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',

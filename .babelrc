@@ -4,7 +4,7 @@
   "plugins": [
     "transform-class-properties",
     "syntax-trailing-function-commas",
-    "transform-object-rest-spread",
+    ["transform-object-rest-spread", { "useBuiltIns": true }],
     "transform-es2015-template-literals",
     "transform-es2015-literals",
     "transform-es2015-arrow-functions",

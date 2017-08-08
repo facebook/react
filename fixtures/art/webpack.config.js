@@ -16,19 +16,19 @@ module.exports = {
             require.resolve('babel-preset-react'),
           ],
         },
-      }
-    ]
+      },
+    ],
   },
   plugins: [
     new webpack.DefinePlugin({
       'process.env': {
         NODE_ENV: JSON.stringify('development'),
       },
-    })
+    }),
   ],
   resolve: {
     alias: {
-      react: require.resolve('react')
-    }
-  }
+      react: require.resolve('react'),
+    },
+  },
 };

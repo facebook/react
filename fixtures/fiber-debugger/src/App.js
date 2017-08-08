@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, {Component} from 'react';
 import Draggable from 'react-draggable';
 import ReactNoop from 'react-noop-renderer';
 import Editor from './Editor';
@@ -6,7 +6,9 @@ import Fibers from './Fibers';
 import describeFibers from './describeFibers';
 
 // The only place where we use it.
-const ReactFiberInstrumentation = ReactNoop.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactFiberInstrumentation;
+const ReactFiberInstrumentation =
+  ReactNoop.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
+    .ReactFiberInstrumentation;
 
 function getFiberState(root, workInProgress) {
   if (!root) {
@@ -39,9 +41,11 @@ class App extends Component {
         sibling: true,
         return: false,
         fx: false,
-        progressedChild: false,
-        progressedDel: false
-      }
+      },
+      graphSettings: {
+        rankdir: 'TB',
+        trackActive: true,
+      },
     };
   }
 
@@ -57,49 +61,52 @@ class App extends Component {
     ReactNoop.render(null);
     ReactNoop.flush();
     ReactFiberInstrumentation.debugTool = {
-      onMountContainer: (root) => {
+      onMountContainer: root => {
         currentRoot = root;
       },
-      onUpdateContainer: (root) => {
+      onUpdateContainer: root => {
         currentRoot = root;
       },
-      onBeginWork: (fiber) => {
+      onBeginWork: fiber => {
         const fibers = getFiberState(currentRoot, fiber);
         const stage = currentStage;
-        this.setState(({ history }) => ({
+        this.setState(({history}) => ({
           history: [
-            ...history, {
+            ...history,
+            {
               action: 'BEGIN',
               fibers,
-              stage
-            }
-          ]
+              stage,
+            },
+          ],
         }));
       },
-      onCompleteWork: (fiber) => {
+      onCompleteWork: fiber => {
         const fibers = getFiberState(currentRoot, fiber);
         const stage = currentStage;
-        this.setState(({ history }) => ({
+        this.setState(({history}) => ({
           history: [
-            ...history, {
+            ...history,
+            {
               action: 'COMPLETE',
               fibers,
-              stage
-            }
-          ]
+              stage,
+            },
+          ],
         }));
       },
-      onCommitWork: (fiber) => {
+      onCommitWork: fiber => {
         const fibers = getFiberState(currentRoot, fiber);
         const stage = currentStage;
-        this.setState(({ history }) => ({
+        this.setState(({history}) => ({
           history: [
-            ...history, {
+            ...history,
+            {
               action: 'COMMIT',
               fibers,
-              stage
-            }
-          ]
+              stage,
+            },
+          ],
         }));
       },
     };
@@ -110,38 +117,40 @@ class App extends Component {
       toContain() {},
       toEqual() {},
     });
-    window.log = s => currentStage = s;
+    window.log = s => (currentStage = s);
     // eslint-disable-next-line
-    eval(window.Babel.transform(code, {
-      presets: ['react', 'es2015']
-    }).code);
+    eval(
+      window.Babel.transform(code, {
+        presets: ['react', 'es2015'],
+      }).code
+    );
   }
 
-  handleEdit = (e) => {
+  handleEdit = e => {
     e.preventDefault();
     this.setState({
-      isEditing: true
+      isEditing: true,
     });
-  }
+  };
 
-  handleCloseEdit = (nextCode) => {
+  handleCloseEdit = nextCode => {
     localStorage.setItem('fiber-debugger-code', nextCode);
     this.setState({
       isEditing: false,
       history: [],
       currentStep: 0,
-      code: nextCode
+      code: nextCode,
     });
     this.runCode(nextCode);
-  }
+  };
 
   render() {
-    const { history, currentStep, isEditing, code } = this.state;
+    const {history, currentStep, isEditing, code} = this.state;
     if (isEditing) {
       return <Editor code={code} onClose={this.handleCloseEdit} />;
     }
 
-    const { fibers, action, stage } = history[currentStep] || {};
+    const {fibers, action, stage} = history[currentStep] || {};
     let friendlyAction;
     if (fibers) {
       let wipFiber = fibers.descriptions[fibers.workInProgressID];
@@ -150,45 +159,103 @@ class App extends Component {
     }
 
     return (
-      <div style={{ height: '100%' }}>
+      <div style={{height: '100%'}}>
         {fibers &&
           <Draggable>
-            <Fibers fibers={fibers} show={this.state.show} />
-          </Draggable>
-        }
-        <div style={{
-          width: '100%',
-          textAlign: 'center',
-          position: 'fixed',
-          bottom: 0,
-          padding: 10,
-          zIndex: 1,
-          backgroundColor: '#fafafa',
-          border: '1px solid #ccc'
-        }}>
-          <input
-            type="range"
-            style={{ width: '25%' }}
-            min={0}
-            max={history.length - 1}
-            value={currentStep}
-            onChange={e => this.setState({ currentStep: Number(e.target.value) })}
-          />
-          <p>Step {currentStep}: {friendlyAction} (<a style={{ color: 'gray' }} onClick={this.handleEdit} href='#'>Edit</a>)</p>
-          {stage && <p>Stage: {stage}</p>}
-          {Object.keys(this.state.show).map(key =>
-            <label style={{ marginRight: '10px' }} key={key}>
-              <input
-                type="checkbox"
-                checked={this.state.show[key]}
-                onChange={e => {
-                  this.setState(({ show }) => ({
-                    show: {...show, [key]: !show[key]}
-                  }));
-                }} />
-              {key}
-            </label>
-          )}
+            <Fibers
+              fibers={fibers}
+              show={this.state.show}
+              graphSettings={this.state.graphSettings}
+            />
+          </Draggable>}
+        <div
+          style={{
+            width: '100%',
+            textAlign: 'center',
+            position: 'fixed',
+            bottom: 0,
+            padding: 10,
+            zIndex: 1,
+            backgroundColor: '#fafafa',
+            border: '1px solid #ccc',
+          }}>
+          <div style={{width: '50%', float: 'left'}}>
+            <input
+              type="range"
+              style={{width: '25%'}}
+              min={0}
+              max={history.length - 1}
+              value={currentStep}
+              onChange={e =>
+                this.setState({currentStep: Number(e.target.value)})}
+            />
+            <p>
+              Step
+              {' '}
+              {currentStep}
+              :
+              {' '}
+              {friendlyAction}
+              {' '}
+              (
+              <a style={{color: 'gray'}} onClick={this.handleEdit} href="#">
+                Edit
+              </a>
+              )
+            </p>
+            {stage && <p>Stage: {stage}</p>}
+            {Object.keys(this.state.show).map(key => (
+              <label style={{marginRight: '10px'}} key={key}>
+                <input
+                  type="checkbox"
+                  checked={this.state.show[key]}
+                  onChange={e => {
+                    this.setState(({show}) => ({
+                      show: {...show, [key]: !show[key]},
+                    }));
+                  }}
+                />
+                {key}
+              </label>
+            ))}
+          </div>
+          <div style={{width: '50%', float: 'right'}}>
+            <h5>Graph Settings</h5>
+            <p>
+              <label style={{display: ''}}>
+                Direction:
+                <select
+                  onChange={e => {
+                    const rankdir = e.target.value;
+                    this.setState(({graphSettings}) => ({
+                      graphSettings: {...graphSettings, rankdir},
+                    }));
+                  }}>
+                  <option value="TB">top-down</option>
+                  <option value="BT">down-top</option>
+                  <option value="LR">left-right</option>
+                  <option value="RL">right-left</option>
+                </select>
+              </label>
+            </p>
+            <p>
+              <label style={{marginRight: '10px'}}>
+                <input
+                  type="checkbox"
+                  checked={this.state.graphSettings.trackActive}
+                  onChange={e => {
+                    this.setState(({graphSettings}) => ({
+                      graphSettings: {
+                        ...graphSettings,
+                        trackActive: !graphSettings.trackActive,
+                      },
+                    }));
+                  }}
+                />
+                Track active fiber
+              </label>
+            </p>
+          </div>
         </div>
       </div>
     );

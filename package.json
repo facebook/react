@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "16.0.0-alpha.13",
+  "version": "16.0.0-beta.3",
   "devDependencies": {
     "aliasify": "^2.0.0",
     "art": "^0.10.1",
@@ -9,7 +9,7 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "^19.0.0",
+    "babel-jest": "20.1.0-delta.1",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
@@ -57,7 +57,7 @@
     "fbjs": "^0.8.9",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
-    "flow-bin": "^0.48.0",
+    "flow-bin": "^0.50.0",
     "git-branch": "^0.3.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",
@@ -65,11 +65,11 @@
     "gzip-size": "^3.0.0",
     "http-server": "^0.9.0",
     "http2": "^3.3.6",
-    "jest": "^19.0.1",
-    "jest-config": "^19.0.1",
-    "jest-jasmine2": "^19.0.1",
-    "jest-matchers": "^19.0.0",
-    "jest-runtime": "^19.0.1",
+    "jest": "20.1.0-delta.1",
+    "jest-config": "20.1.0-delta.1",
+    "jest-jasmine2": "20.1.0-delta.1",
+    "jest-matchers": "20.1.0-delta.1",
+    "jest-runtime": "20.1.0-delta.1",
     "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
     "mime": "^1.3.4",
@@ -102,7 +102,7 @@
     "nodegit": "^0.18.0"
   },
   "devEngines": {
-    "node": "4.x || 5.x || 6.x || 7.x",
+    "node": "4.x || 5.x || 6.x || 7.x || 8.x",
     "npm": "2.x || 3.x || 4.x || 5.x"
   },
   "commonerConfig": {
@@ -121,41 +121,10 @@
     "version-check": "node ./scripts/tasks/version-check.js"
   },
   "jest": {
-    "modulePathIgnorePatterns": [
-      "/.module-cache/",
-      "<rootDir>/build/",
-      "<rootDir>/scripts/rollup/shims/",
-      "<rootDir>/scripts/bench/"
+    "projects": [
+      "<rootDir>/scripts/jest/stack.config.json",
+      "<rootDir>/scripts/jest/fiber.config.json"
     ],
-    "rootDir": "",
-    "transform": {
-      ".*": "./scripts/jest/preprocessor.js"
-    },
-    "setupFiles": [
-      "./scripts/jest/environment.js"
-    ],
-    "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
-    "testRegex": "/__tests__/.*(\\.js|coffee|ts)$",
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "node",
-      "coffee",
-      "ts"
-    ],
-    "roots": [
-      "<rootDir>/eslint-rules",
-      "<rootDir>/mocks",
-      "<rootDir>/scripts",
-      "<rootDir>/src",
-      "node_modules/fbjs"
-    ],
-    "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/__mocks__/vendor/third_party/*.js",
-      "!src/test/*.js"
-    ],
-    "timers": "fake"
   },
   "bundlesize": [
     {

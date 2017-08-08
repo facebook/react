@@ -16,11 +16,14 @@ var ReactTreeTraversal = require('ReactTreeTraversal');
 
 var accumulateInto = require('accumulateInto');
 var forEachAccumulated = require('forEachAccumulated');
-var warning = require('fbjs/lib/warning');
 
 type PropagationPhases = 'bubbled' | 'captured';
 
 var getListener = EventPluginHub.getListener;
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Some event types have a notion of different registration names for different

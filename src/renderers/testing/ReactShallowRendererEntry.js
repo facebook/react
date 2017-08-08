@@ -18,7 +18,8 @@ const React = require('react');
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-const {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+const describeComponentFrame = require('describeComponentFrame');
+const getComponentName = require('getComponentName');
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -79,17 +80,17 @@ class ReactShallowRenderer {
         );
 
         if (element.type.hasOwnProperty('contextTypes')) {
-          ReactDebugCurrentFrame.element = element;
+          currentlyValidatingElement = element;
 
           checkPropTypes(
             element.type.contextTypes,
             context,
             'context',
             getName(element.type, this._instance),
-            ReactDebugCurrentFrame.getStackAddendum,
+            getStackAddendum,
           );
 
-          ReactDebugCurrentFrame.element = null;
+          currentlyValidatingElement = null;
         }
 
         this._mountClassComponent(element.props, context);
@@ -135,23 +136,18 @@ class ReactShallowRenderer {
     }
 
     this._rendered = this._instance.render();
-
-    // Calling cDU might lead to problems with host component references.
-    // Since our components aren't really mounted, refs won't be available.
-    // if (typeof this._instance.componentDidMount === 'function') {
-    //   this._instance.componentDidMount();
-    // }
+    // Intentionally do not call componentDidMount()
+    // because DOM refs are not available.
   }
 
   _updateClassComponent(props, context) {
     const oldProps = this._instance.props;
-    const oldState = this._instance.state;
 
     if (
       oldProps !== props &&
       typeof this._instance.componentWillReceiveProps === 'function'
     ) {
-      this._instance.componentWillReceiveProps(props);
+      this._instance.componentWillReceiveProps(props, context);
     }
 
     // Read state after cWRP in case it calls setState
@@ -179,14 +175,8 @@ class ReactShallowRenderer {
     this._instance.state = state;
 
     this._rendered = this._instance.render();
-
-    // The 15.x shallow renderer triggered cDU for setState() calls only.
-    if (
-      oldState !== state &&
-      typeof this._instance.componentDidUpdate === 'function'
-    ) {
-      this._instance.componentDidUpdate(oldProps, oldState);
-    }
+    // Intentionally do not call componentDidUpdate()
+    // because DOM refs are not available.
   }
 }
 
@@ -201,11 +191,19 @@ class Updater {
 
   enqueueForceUpdate(publicInstance, callback, callerName) {
     this._renderer.render(this._renderer._element, this._renderer._context);
+
+    if (typeof callback === 'function') {
+      callback.call(publicInstance);
+    }
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
     this._renderer._newState = completeState;
     this._renderer.render(this._renderer._element, this._renderer._context);
+
+    if (typeof callback === 'function') {
+      callback.call(publicInstance);
+    }
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
@@ -219,7 +217,39 @@ class Updater {
     };
 
     this._renderer.render(this._renderer._element, this._renderer._context);
+
+    if (typeof callback === 'function') {
+      callback.call(publicInstance);
+    }
   }
+}
+
+var currentlyValidatingElement = null;
+
+function getDisplayName(element) {
+  if (element == null) {
+    return '#empty';
+  } else if (typeof element === 'string' || typeof element === 'number') {
+    return '#text';
+  } else if (typeof element.type === 'string') {
+    return element.type;
+  } else {
+    return element.type.displayName || element.type.name || 'Unknown';
+  }
+}
+
+function getStackAddendum() {
+  var stack = '';
+  if (currentlyValidatingElement) {
+    var name = getDisplayName(currentlyValidatingElement);
+    var owner = currentlyValidatingElement._owner;
+    stack += describeComponentFrame(
+      name,
+      currentlyValidatingElement._source,
+      owner && getComponentName(owner),
+    );
+  }
+  return stack;
 }
 
 function getName(type, instance) {

@@ -4,6 +4,8 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 
 var ReactDOM;
 
+var AsyncComponent = React.unstable_AsyncComponent;
+
 describe('ReactDOMFiberAsync', () => {
   var container;
 
@@ -25,16 +27,16 @@ describe('ReactDOMFiberAsync', () => {
 
   if (ReactDOMFeatureFlags.useFiber) {
     it('renders synchronously when feature flag is disabled', () => {
-      class Async extends React.Component {
-        static unstable_asyncUpdates = true;
-        render() {
-          return this.props.children;
-        }
-      }
-      ReactDOM.render(<Async><div>Hi</div></Async>, container);
+      ReactDOM.render(
+        <AsyncComponent><div>Hi</div></AsyncComponent>,
+        container,
+      );
       expect(container.textContent).toEqual('Hi');
 
-      ReactDOM.render(<Async><div>Bye</div></Async>, container);
+      ReactDOM.render(
+        <AsyncComponent><div>Bye</div></AsyncComponent>,
+        container,
+      );
       expect(container.textContent).toEqual('Bye');
     });
 
@@ -47,32 +49,25 @@ describe('ReactDOMFiberAsync', () => {
         ReactDOM = require('react-dom');
       });
 
-      it('unstable_asyncUpdates at the root makes the entire tree async', () => {
-        class Async extends React.Component {
-          static unstable_asyncUpdates = true;
-          render() {
-            return this.props.children;
-          }
-        }
-        ReactDOM.render(<Async><div>Hi</div></Async>, container);
+      it('AsyncComponent at the root makes the entire tree async', () => {
+        ReactDOM.render(
+          <AsyncComponent><div>Hi</div></AsyncComponent>,
+          container,
+        );
         expect(container.textContent).toEqual('');
         jest.runAllTimers();
         expect(container.textContent).toEqual('Hi');
 
-        ReactDOM.render(<Async><div>Bye</div></Async>, container);
+        ReactDOM.render(
+          <AsyncComponent><div>Bye</div></AsyncComponent>,
+          container,
+        );
         expect(container.textContent).toEqual('Hi');
         jest.runAllTimers();
         expect(container.textContent).toEqual('Bye');
       });
 
       it('updates inside an async tree are async by default', () => {
-        class Async extends React.Component {
-          static unstable_asyncUpdates = true;
-          render() {
-            return this.props.children;
-          }
-        }
-
         let instance;
         class Component extends React.Component {
           state = {step: 0};
@@ -82,7 +77,10 @@ describe('ReactDOMFiberAsync', () => {
           }
         }
 
-        ReactDOM.render(<Async><Component /></Async>, container);
+        ReactDOM.render(
+          <AsyncComponent><Component /></AsyncComponent>,
+          container,
+        );
         expect(container.textContent).toEqual('');
         jest.runAllTimers();
         expect(container.textContent).toEqual('0');
@@ -93,11 +91,10 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('1');
       });
 
-      it('unstable_asyncUpdates creates an async subtree', () => {
+      it('AsyncComponent creates an async subtree', () => {
         let instance;
-        class Component extends React.Component {
+        class Component extends React.unstable_AsyncComponent {
           state = {step: 0};
-          static unstable_asyncUpdates = true;
           render() {
             instance = this;
             return <div>{this.state.step}</div>;
@@ -114,8 +111,7 @@ describe('ReactDOMFiberAsync', () => {
       });
 
       it('updates inside an async subtree are async by default', () => {
-        class Component extends React.Component {
-          static unstable_asyncUpdates = true;
+        class Component extends React.unstable_AsyncComponent {
           render() {
             return <Child />;
           }
@@ -137,6 +133,151 @@ describe('ReactDOMFiberAsync', () => {
         expect(container.textContent).toEqual('0');
         jest.runAllTimers();
         expect(container.textContent).toEqual('1');
+      });
+
+      it('flushSync batches sync updates and flushes them at the end of the batch', () => {
+        let ops = [];
+        let instance;
+
+        class Component extends React.Component {
+          state = {text: ''};
+          push(val) {
+            this.setState(state => ({text: state.text + val}));
+          }
+          componentDidUpdate() {
+            ops.push(this.state.text);
+          }
+          render() {
+            instance = this;
+            return <span>{this.state.text}</span>;
+          }
+        }
+
+        ReactDOM.render(<Component />, container);
+
+        instance.push('A');
+        expect(ops).toEqual(['A']);
+        expect(container.textContent).toEqual('A');
+
+        ReactDOM.flushSync(() => {
+          instance.push('B');
+          instance.push('C');
+          // Not flushed yet
+          expect(container.textContent).toEqual('A');
+          expect(ops).toEqual(['A']);
+        });
+        expect(container.textContent).toEqual('ABC');
+        expect(ops).toEqual(['A', 'ABC']);
+        instance.push('D');
+        expect(container.textContent).toEqual('ABCD');
+        expect(ops).toEqual(['A', 'ABC', 'ABCD']);
+      });
+
+      it('flushSync flushes updates even if nested inside another flushSync', () => {
+        let ops = [];
+        let instance;
+
+        class Component extends React.Component {
+          state = {text: ''};
+          push(val) {
+            this.setState(state => ({text: state.text + val}));
+          }
+          componentDidUpdate() {
+            ops.push(this.state.text);
+          }
+          render() {
+            instance = this;
+            return <span>{this.state.text}</span>;
+          }
+        }
+
+        ReactDOM.render(<Component />, container);
+
+        instance.push('A');
+        expect(ops).toEqual(['A']);
+        expect(container.textContent).toEqual('A');
+
+        ReactDOM.flushSync(() => {
+          instance.push('B');
+          instance.push('C');
+          // Not flushed yet
+          expect(container.textContent).toEqual('A');
+          expect(ops).toEqual(['A']);
+
+          ReactDOM.flushSync(() => {
+            instance.push('D');
+          });
+          // The nested flushSync caused everything to flush.
+          expect(container.textContent).toEqual('ABCD');
+          expect(ops).toEqual(['A', 'ABCD']);
+        });
+        expect(container.textContent).toEqual('ABCD');
+        expect(ops).toEqual(['A', 'ABCD']);
+      });
+
+      it('flushSync throws if already performing work', () => {
+        class Component extends React.Component {
+          componentDidUpdate() {
+            ReactDOM.flushSync(() => {});
+          }
+          render() {
+            return null;
+          }
+        }
+
+        // Initial mount
+        ReactDOM.render(<Component />, container);
+        // Update
+        expect(() => ReactDOM.render(<Component />, container)).toThrow(
+          'flushSync was called from inside a lifecycle method',
+        );
+      });
+
+      it('flushSync flushes updates before end of the tick', () => {
+        let ops = [];
+        let instance;
+
+        class Component extends React.unstable_AsyncComponent {
+          state = {text: ''};
+          push(val) {
+            this.setState(state => ({text: state.text + val}));
+          }
+          componentDidUpdate() {
+            ops.push(this.state.text);
+          }
+          render() {
+            instance = this;
+            return <span>{this.state.text}</span>;
+          }
+        }
+
+        ReactDOM.render(<Component />, container);
+        jest.runAllTimers();
+
+        // Updates are async by default
+        instance.push('A');
+        expect(ops).toEqual([]);
+        expect(container.textContent).toEqual('');
+
+        ReactDOM.flushSync(() => {
+          instance.push('B');
+          instance.push('C');
+          // Not flushed yet
+          expect(container.textContent).toEqual('');
+          expect(ops).toEqual([]);
+        });
+        // Only the active updates have flushed
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+
+        instance.push('D');
+        expect(container.textContent).toEqual('BC');
+        expect(ops).toEqual(['BC']);
+
+        // Flush the async updates
+        jest.runAllTimers();
+        expect(container.textContent).toEqual('BCAD');
+        expect(ops).toEqual(['BC', 'BCAD']);
       });
     });
   }

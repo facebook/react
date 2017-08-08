@@ -14,7 +14,9 @@
 
 var React = require('react');
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 function flattenChildren(children) {
   var content = '';

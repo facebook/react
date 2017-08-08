@@ -15,6 +15,7 @@ var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
 var DOMNamespaces = require('DOMNamespaces');
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
@@ -30,15 +31,19 @@ var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var inputValueTracking = require('inputValueTracking');
 var invariant = require('fbjs/lib/invariant');
 var isCustomComponent = require('isCustomComponent');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
 var voidElementTags = require('voidElementTags');
 var warning = require('fbjs/lib/warning');
+var warnValidStyle = require('warnValidStyle');
 
 var didWarnShadyDOM = false;
 
@@ -162,6 +167,38 @@ function optionPostMount() {
   ReactDOMOption.postMountWrapper(inst);
 }
 
+var processStyleName = memoizeStringOnly(function(styleName) {
+  return hyphenateStyleName(styleName);
+});
+
+function createMarkupForStyles(styles, component) {
+  var serialized = '';
+  var delimiter = '';
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+    var isCustomProperty = styleName.indexOf('--') === 0;
+    var styleValue = styles[styleName];
+    if (__DEV__) {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+    }
+    if (styleValue != null) {
+      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
+    }
+  }
+  return serialized || null;
+}
+
 var setAndValidateContentChildDev = emptyFunction;
 if (__DEV__) {
   setAndValidateContentChildDev = function(content) {
@@ -227,7 +264,7 @@ var mediaEvents = {
 };
 
 function trackInputValue() {
-  inputValueTracking.track(this);
+  inputValueTracking.track(getNode(this));
 }
 
 function trapClickOnNonInteractiveElement() {
@@ -337,6 +374,13 @@ function validateDangerousTag(tag) {
 }
 
 var globalIdCounter = 1;
+var warnedUnknownTags = {
+  // Chrome is the only major browser not shipping <time>. But as of July
+  // 2017 it intends to ship it due to widespread usage. We intentionally
+  // *don't* warn for <time> even if it's unrecognized by Chrome because
+  // it soon will be, and many apps have been using it anyway.
+  time: true,
+};
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -541,15 +585,21 @@ ReactDOMComponent.Mixin = {
           didWarnShadyDOM = true;
         }
         if (this._namespaceURI === DOMNamespaces.html) {
-          warning(
-            isCustomComponentTag ||
-              Object.prototype.toString.call(el) !==
-                '[object HTMLUnknownElement]',
-            'The tag <%s> is unrecognized in this browser. ' +
-              'If you meant to render a React component, start its name with ' +
-              'an uppercase letter.',
-            this._tag,
-          );
+          if (
+            !isCustomComponentTag &&
+            Object.prototype.toString.call(el) ===
+              '[object HTMLUnknownElement]' &&
+            !Object.prototype.hasOwnProperty.call(warnedUnknownTags, this._tag)
+          ) {
+            warnedUnknownTags[this._tag] = true;
+            warning(
+              false,
+              'The tag <%s> is unrecognized in this browser. ' +
+                'If you meant to render a React component, start its name with ' +
+                'an uppercase letter.',
+              this._tag,
+            );
+          }
         }
       }
       ReactDOMComponentTree.precacheNode(this, el);
@@ -656,21 +706,18 @@ ReactDOMComponent.Mixin = {
               Object.freeze(propValue);
             }
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(
-            propValue,
-            this,
-          );
+          propValue = createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
           if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+            markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
             );
           }
         } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(
+          markup = DOMMarkupOperations.createMarkupForProperty(
             propKey,
             propValue,
           );
@@ -688,9 +735,9 @@ ReactDOMComponent.Mixin = {
     }
 
     if (!this._hostParent) {
-      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+      ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
     }
-    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    ret += ' ' + DOMMarkupOperations.createMarkupForID(this._domID);
     return ret;
   },
 
@@ -860,6 +907,9 @@ ReactDOMComponent.Mixin = {
         // happen after `_updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
         ReactDOMInput.updateWrapper(this);
+        // We also check that we haven't missed a value update, such as a
+        // Radio group shifting the checked value to another named radio input.
+        inputValueTracking.updateValueIfChanged(getNode(this));
         break;
       case 'textarea':
         ReactDOMTextarea.updateWrapper(this);
@@ -1104,7 +1154,7 @@ ReactDOMComponent.Mixin = {
         break;
       case 'input':
       case 'textarea':
-        inputValueTracking.stopTracking(this);
+        inputValueTracking.stopTracking(getNode(this));
         break;
       case 'html':
       case 'head':

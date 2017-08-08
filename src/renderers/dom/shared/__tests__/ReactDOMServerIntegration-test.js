@@ -18,18 +18,24 @@ let PropTypes;
 let React;
 let ReactDOM;
 let ReactDOMServer;
-let ReactDOMNodeStream;
 let ReactTestUtils;
 
 const stream = require('stream');
+
+const TEXT_NODE_TYPE = 3;
+const COMMENT_NODE_TYPE = 8;
 
 // Helper functions for rendering tests
 // ====================================
 
 // promisified version of ReactDOM.render()
-function asyncReactDOMRender(reactElement, domElement) {
+function asyncReactDOMRender(reactElement, domElement, forceHydrate) {
   return new Promise(resolve => {
-    ReactDOM.render(reactElement, domElement);
+    if (forceHydrate && ReactDOMFeatureFlags.useFiber) {
+      ReactDOM.hydrate(reactElement, domElement);
+    } else {
+      ReactDOM.render(reactElement, domElement);
+    }
     // We can't use the callback for resolution because that will not catch
     // errors. They're thrown.
     resolve();
@@ -65,10 +71,10 @@ async function expectErrors(fn, count) {
 
 // renders the reactElement into domElement, and expects a certain number of errors.
 // returns a Promise that resolves when the render is complete.
-function renderIntoDom(reactElement, domElement, errorCount = 0) {
+function renderIntoDom(reactElement, domElement, forceHydrate, errorCount = 0) {
   return expectErrors(async () => {
     ExecutionEnvironment.canUseDOM = true;
-    await asyncReactDOMRender(reactElement, domElement);
+    await asyncReactDOMRender(reactElement, domElement, forceHydrate);
     ExecutionEnvironment.canUseDOM = false;
     return domElement.firstChild;
   }, errorCount);
@@ -113,7 +119,7 @@ async function renderIntoStream(reactElement, errorCount = 0) {
     () =>
       new Promise(resolve => {
         let writable = new DrainWritable();
-        ReactDOMNodeStream.renderToStream(reactElement).pipe(writable);
+        ReactDOMServer.renderToStream(reactElement).pipe(writable);
         writable.on('finish', () => resolve(writable.buffer));
       }),
     errorCount,
@@ -132,21 +138,38 @@ async function streamRender(reactElement, errorCount = 0) {
 
 const clientCleanRender = (element, errorCount = 0) => {
   const div = document.createElement('div');
-  return renderIntoDom(element, div, errorCount);
+  return renderIntoDom(element, div, false, errorCount);
 };
 
 const clientRenderOnServerString = async (element, errorCount = 0) => {
   const markup = await renderIntoString(element, errorCount);
   resetModules();
+
   var domElement = document.createElement('div');
   domElement.innerHTML = markup;
-  const serverElement = domElement.firstChild;
-  const clientElement = await renderIntoDom(element, domElement, errorCount);
-  // assert that the DOM element hasn't been replaced.
-  // Note that we cannot use expect(serverElement).toBe(clientElement) because
-  // of jest bug #1772
-  expect(serverElement === clientElement).toBe(true);
-  return clientElement;
+  let serverNode = domElement.firstChild;
+
+  const firstClientNode = await renderIntoDom(
+    element,
+    domElement,
+    true,
+    errorCount,
+  );
+  let clientNode = firstClientNode;
+
+  // Make sure all top level nodes match up
+  while (serverNode || clientNode) {
+    expect(serverNode != null).toBe(true);
+    expect(clientNode != null).toBe(true);
+    expect(clientNode.nodeType).toBe(serverNode.nodeType);
+    // Assert that the DOM element hasn't been replaced.
+    // Note that we cannot use expect(serverNode).toBe(clientNode) because
+    // of jest bug #1772.
+    expect(serverNode === clientNode).toBe(true);
+    serverNode = serverNode.nextSibling;
+    clientNode = clientNode.nextSibling;
+  }
+  return firstClientNode;
 };
 
 function BadMarkupExpected() {}
@@ -156,7 +179,7 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
   var domElement = document.createElement('div');
   domElement.innerHTML =
     '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
-  await renderIntoDom(element, domElement, errorCount + 1);
+  await renderIntoDom(element, domElement, true, errorCount + 1);
 
   // This gives us the resulting text content.
   var hydratedTextContent = domElement.textContent;
@@ -164,7 +187,7 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
   // Next we render the element into a clean DOM node client side.
   const cleanDomElement = document.createElement('div');
   ExecutionEnvironment.canUseDOM = true;
-  await asyncReactDOMRender(element, cleanDomElement);
+  await asyncReactDOMRender(element, cleanDomElement, true);
   ExecutionEnvironment.canUseDOM = false;
   // This gives us the expected text content.
   const cleanTextContent = cleanDomElement.textContent;
@@ -227,22 +250,28 @@ function itClientRenders(desc, testFn) {
   });
 }
 
-function itThrows(desc, testFn) {
+function itThrows(desc, testFn, partialMessage) {
   it(`throws ${desc}`, () => {
-    return testFn()
-      .then(() =>
-        expect(false).toBe('The promise resolved and should not have.'),
-      )
-      .catch(() => {});
+    return testFn().then(
+      () => expect(false).toBe('The promise resolved and should not have.'),
+      err => {
+        expect(err).toBeInstanceOf(Error);
+        expect(err.message).toContain(partialMessage);
+      },
+    );
   });
 }
 
-function itThrowsWhenRendering(desc, testFn) {
-  itThrows(`when rendering ${desc} with server string render`, () =>
-    testFn(serverRender),
+function itThrowsWhenRendering(desc, testFn, partialMessage) {
+  itThrows(
+    `when rendering ${desc} with server string render`,
+    () => testFn(serverRender),
+    partialMessage,
   );
-  itThrows(`when rendering ${desc} with clean client render`, () =>
-    testFn(clientCleanRender),
+  itThrows(
+    `when rendering ${desc} with clean client render`,
+    () => testFn(clientCleanRender),
+    partialMessage,
   );
 
   // we subtract one from the warning count here because the throw means that it won't
@@ -253,6 +282,7 @@ function itThrowsWhenRendering(desc, testFn) {
       testFn((element, warningCount = 0) =>
         clientRenderOnBadMarkup(element, warningCount - 1),
       ),
+    partialMessage,
   );
 }
 
@@ -265,6 +295,7 @@ async function testMarkupMatch(serverElement, clientElement, shouldMatch) {
   return renderIntoDom(
     clientElement,
     domElement.parentNode,
+    true,
     shouldMatch ? 0 : 1,
   );
 }
@@ -281,21 +312,40 @@ function expectMarkupMismatch(serverElement, clientElement) {
   return testMarkupMatch(serverElement, clientElement, false);
 }
 
+// TODO: this is a hack for testing dynamic injection. Remove this when we decide
+// how to do static injection instead.
+let onAfterResetModules = null;
+
 // When there is a test that renders on server and then on client and expects a logged
 // error, you want to see the error show up both on server and client. Unfortunately,
 // React refuses to issue the same error twice to avoid clogging up the console.
 // To get around this, we must reload React modules in between server and client render.
 function resetModules() {
+  // First, reset the modules to load the client renderer.
   jest.resetModuleRegistry();
+  if (typeof onAfterResetModules === 'function') {
+    onAfterResetModules();
+  }
+
+  // TODO: can we express this test with only public API?
+  ExecutionEnvironment = require('ExecutionEnvironment');
+
+  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
-  ReactDOMServer = require('react-dom/server');
   ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-  ReactDOMNodeStream = require('react-dom/node-stream');
   ReactTestUtils = require('react-dom/test-utils');
-  // TODO: can we express this test with only public API?
-  ExecutionEnvironment = require('ExecutionEnvironment');
+
+  // Now we reset the modules again to load the server renderer.
+  // Resetting is important because we want to avoid any shared state
+  // influencing the tests.
+  jest.resetModuleRegistry();
+  if (typeof onAfterResetModules === 'function') {
+    onAfterResetModules();
+  }
+  require('ReactFeatureFlags').disableNewFiberFeatures = false;
+  ReactDOMServer = require('react-dom/server');
 }
 
 describe('ReactDOMServerIntegration', () => {
@@ -311,12 +361,6 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.tagName).toBe('DIV');
     });
 
-    itRenders('a div with inline styles', async render => {
-      const e = await render(<div style={{color: 'red', width: '30px'}} />);
-      expect(e.style.color).toBe('red');
-      expect(e.style.width).toBe('30px');
-    });
-
     itRenders('a self-closing tag', async render => {
       const e = await render(<br />);
       expect(e.tagName).toBe('BR');
@@ -327,6 +371,98 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
     });
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      itRenders('a string', async render => {
+        let e = await render('Hello');
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('Hello');
+      });
+
+      itRenders('a number', async render => {
+        let e = await render(42);
+        expect(e.nodeType).toBe(3);
+        expect(e.nodeValue).toMatch('42');
+      });
+
+      itRenders('an array with one child', async render => {
+        let e = await render([<div key={1}>text1</div>]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+      });
+
+      itRenders('an array with several children', async render => {
+        let Header = props => {
+          return <p>header</p>;
+        };
+        let Footer = props => {
+          return [<h2 key={1}>footer</h2>, <h3 key={2}>about</h3>];
+        };
+        let e = await render([
+          <div key={1}>text1</div>,
+          <span key={2}>text2</span>,
+          <Header key={3} />,
+          <Footer key={4} />,
+        ]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('SPAN');
+        expect(parent.childNodes[2].tagName).toBe('P');
+        expect(parent.childNodes[3].tagName).toBe('H2');
+        expect(parent.childNodes[4].tagName).toBe('H3');
+      });
+
+      itRenders('a nested array', async render => {
+        let e = await render([
+          [<div key={1}>text1</div>],
+          <span key={1}>text2</span>,
+          [[[null, <p key={1} />], false]],
+        ]);
+        let parent = e.parentNode;
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('SPAN');
+        expect(parent.childNodes[2].tagName).toBe('P');
+      });
+
+      itRenders('an iterable', async render => {
+        const threeDivIterable = {
+          '@@iterator': function() {
+            var i = 0;
+            return {
+              next: function() {
+                if (i++ < 3) {
+                  return {value: <div key={i} />, done: false};
+                } else {
+                  return {value: undefined, done: true};
+                }
+              },
+            };
+          },
+        };
+        let e = await render(threeDivIterable);
+        let parent = e.parentNode;
+        expect(parent.childNodes.length).toBe(3);
+        expect(parent.childNodes[0].tagName).toBe('DIV');
+        expect(parent.childNodes[1].tagName).toBe('DIV');
+        expect(parent.childNodes[2].tagName).toBe('DIV');
+      });
+
+      itRenders('emptyish values', async render => {
+        let e = await render(0);
+        expect(e.nodeType).toBe(TEXT_NODE_TYPE);
+        expect(e.nodeValue).toMatch('0');
+
+        // Empty string is special because client renders a node
+        // but server returns empty HTML. So we compare parent text.
+        expect((await render(<div>{''}</div>)).textContent).toBe('');
+
+        expect(await render([])).toBe(null);
+        expect(await render(false)).toBe(null);
+        expect(await render(true)).toBe(null);
+        expect(await render(undefined)).toBe(null);
+        expect(await render([[[false]], undefined])).toBe(null);
+      });
+    }
   });
 
   describe('property to attribute mapping', function() {
@@ -351,6 +487,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('string prop with false value', async render => {
         const e = await render(<a href={false} />);
         expect(e.getAttribute('href')).toBe('false');
+      });
+
+      itRenders('no string prop with null value', async render => {
+        const e = await render(<div width={null} />);
+        expect(e.hasAttribute('width')).toBe(false);
       });
     });
 
@@ -407,6 +548,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div hidden={0} />);
         expect(e.getAttribute('hidden')).toBe(null);
       });
+
+      itRenders('no boolean prop with null value', async render => {
+        const e = await render(<div hidden={null} />);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
     });
 
     describe('download property (combined boolean/string attribute)', function() {
@@ -425,9 +571,29 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('download')).toBe('myfile');
       });
 
+      itRenders('download prop with string "false" value', async render => {
+        const e = await render(<a download="false" />);
+        expect(e.getAttribute('download')).toBe('false');
+      });
+
       itRenders('download prop with string "true" value', async render => {
         const e = await render(<a download={'true'} />);
         expect(e.getAttribute('download')).toBe('true');
+      });
+
+      itRenders('download prop with number 0 value', async render => {
+        const e = await render(<a download={0} />);
+        expect(e.getAttribute('download')).toBe('0');
+      });
+
+      itRenders('no download prop with null value', async render => {
+        const e = await render(<div download={null} />);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with undefined value', async render => {
+        const e = await render(<div download={undefined} />);
+        expect(e.hasAttribute('download')).toBe(false);
       });
     });
 
@@ -453,6 +619,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={false} />);
         expect(e.getAttribute('class')).toBe('false');
       });
+
+      itRenders('no className prop with null value', async render => {
+        const e = await render(<div className={null} />);
+        expect(e.hasAttribute('className')).toBe(false);
+      });
     });
 
     describe('htmlFor property', function() {
@@ -467,15 +638,43 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with true value', async render => {
+      itRenders('htmlFor prop with true value', async render => {
         const e = await render(<div htmlFor={true} />);
         expect(e.getAttribute('for')).toBe('true');
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
+      itRenders('htmlFor prop with false value', async render => {
         const e = await render(<div htmlFor={false} />);
         expect(e.getAttribute('for')).toBe('false');
+      });
+
+      itRenders('no htmlFor prop with null value', async render => {
+        const e = await render(<div htmlFor={null} />);
+        expect(e.hasAttribute('htmlFor')).toBe(false);
+      });
+    });
+
+    describe('numeric properties', function() {
+      itRenders(
+        'positive numeric property with positive value',
+        async render => {
+          const e = await render(<input size={2} />);
+          expect(e.getAttribute('size')).toBe('2');
+        },
+      );
+
+      itRenders(
+        'no positive numeric property with zero value',
+        async render => {
+          const e = await render(<input size={0} />);
+          expect(e.hasAttribute('size')).toBe(false);
+        },
+      );
+
+      itRenders('numeric property with zero value', async render => {
+        const e = await render(<ol start={0} />);
+        expect(e.getAttribute('start')).toBe('0');
       });
     });
 
@@ -508,6 +707,77 @@ describe('ReactDOMServerIntegration', () => {
       });
     });
 
+    describe('inline styles', function() {
+      itRenders('simple styles', async render => {
+        const e = await render(<div style={{color: 'red', width: '30px'}} />);
+        expect(e.style.color).toBe('red');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('relevant styles with px', async render => {
+        const e = await render(
+          <div
+            style={{
+              left: 0,
+              margin: 16,
+              opacity: 0.5,
+              padding: '4px',
+            }}
+          />,
+        );
+        expect(e.style.left).toBe('0px');
+        expect(e.style.margin).toBe('16px');
+        expect(e.style.opacity).toBe('0.5');
+        expect(e.style.padding).toBe('4px');
+      });
+
+      itRenders('custom properties', async render => {
+        const e = await render(<div style={{'--foo': 5}} />);
+        // This seems like an odd way computed properties are exposed in jsdom.
+        // In a real browser we'd read it with e.style.getPropertyValue('--foo')
+        expect(e.style.Foo).toBe('5');
+      });
+
+      itRenders('no undefined styles', async render => {
+        const e = await render(
+          <div style={{color: undefined, width: '30px'}} />,
+        );
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('no null styles', async render => {
+        const e = await render(<div style={{color: null, width: '30px'}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('30px');
+      });
+
+      itRenders('no empty styles', async render => {
+        const e = await render(<div style={{color: null, width: null}} />);
+        expect(e.style.color).toBe('');
+        expect(e.style.width).toBe('');
+        expect(e.hasAttribute('style')).toBe(false);
+      });
+    });
+
+    describe('aria attributes', function() {
+      itRenders('simple strings', async render => {
+        const e = await render(<div aria-label="hello" />);
+        expect(e.getAttribute('aria-label')).toBe('hello');
+      });
+
+      // this probably is just masking programmer error, but it is existing behavior.
+      itRenders('aria string prop with false value', async render => {
+        const e = await render(<div aria-label={false} />);
+        expect(e.getAttribute('aria-label')).toBe('false');
+      });
+
+      itRenders('no aria prop with null value', async render => {
+        const e = await render(<div aria-label={null} />);
+        expect(e.hasAttribute('aria-label')).toBe(false);
+      });
+    });
+
     describe('unknown attributes', function() {
       itRenders('no unknown attributes', async render => {
         const e = await render(<div foo="bar" />, 1);
@@ -517,6 +787,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('unknown data- attributes', async render => {
         const e = await render(<div data-foo="bar" />);
         expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders('no unknown data- attributes with null value', async render => {
+        const e = await render(<div data-foo={null} />);
+        expect(e.hasAttribute('data-foo')).toBe(false);
       });
 
       itRenders(
@@ -533,10 +808,26 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders(
+        'no unknown attributes for custom elements with null value',
+        async render => {
+          const e = await render(<custom-element foo={null} />);
+          expect(e.hasAttribute('foo')).toBe(false);
+        },
+      );
+
+      itRenders(
         'unknown attributes for custom elements using is',
         async render => {
           const e = await render(<div is="custom-element" foo="bar" />);
           expect(e.getAttribute('foo')).toBe('bar');
+        },
+      );
+
+      itRenders(
+        'no unknown attributes for custom elements using is with null value',
+        async render => {
+          const e = await render(<div is="custom-element" foo={null} />);
+          expect(e.hasAttribute('foo')).toBe(false);
         },
       );
     });
@@ -550,10 +841,6 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('elements and children', function() {
-    // helper functions.
-    const TEXT_NODE_TYPE = 3;
-    const COMMENT_NODE_TYPE = 8;
-
     function expectNode(node, type, value) {
       expect(node).not.toBe(null);
       expect(node.nodeType).toBe(type);
@@ -1111,6 +1398,34 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(textNode2, '   ');
         },
       );
+
+      if (ReactDOMFeatureFlags.useFiber) {
+        itRenders('a composite with multiple children', async render => {
+          const Component = props => props.children;
+          const e = await render(
+            <Component>{['a', 'b', [undefined], [[false, 'c']]]}</Component>,
+          );
+
+          let parent = e.parentNode;
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // For plain server markup result we have comments between.
+            // If we're able to hydrate, they remain.
+            expect(parent.childNodes.length).toBe(5);
+            expectTextNode(parent.childNodes[0], 'a');
+            expectTextNode(parent.childNodes[2], 'b');
+            expectTextNode(parent.childNodes[4], 'c');
+          } else {
+            expect(parent.childNodes.length).toBe(3);
+            expectTextNode(parent.childNodes[0], 'a');
+            expectTextNode(parent.childNodes[1], 'b');
+            expectTextNode(parent.childNodes[2], 'c');
+          }
+        });
+      }
     });
 
     describe('escaping >, <, and &', function() {
@@ -1150,26 +1465,81 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('components that throw errors', function() {
-      itThrowsWhenRendering('a string component', async render => {
-        const StringComponent = () => 'foo';
-        await render(<StringComponent />, 1);
-      });
+      itThrowsWhenRendering(
+        'a function returning undefined',
+        async render => {
+          const UndefinedComponent = () => undefined;
+          await render(<UndefinedComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'UndefinedComponent(...): Nothing was returned from render. ' +
+              'This usually means a return statement is missing. Or, to ' +
+              'render nothing, return null.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
 
-      itThrowsWhenRendering('an undefined component', async render => {
-        const UndefinedComponent = () => undefined;
-        await render(<UndefinedComponent />, 1);
-      });
+      itThrowsWhenRendering(
+        'a class returning undefined',
+        async render => {
+          class UndefinedComponent extends React.Component {
+            render() {
+              return undefined;
+            }
+          }
+          await render(<UndefinedComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'UndefinedComponent(...): Nothing was returned from render. ' +
+              'This usually means a return statement is missing. Or, to ' +
+              'render nothing, return null.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
 
-      itThrowsWhenRendering('a number component', async render => {
-        const NumberComponent = () => 54;
-        await render(<NumberComponent />, 1);
-      });
+      itThrowsWhenRendering(
+        'a function returning an object',
+        async render => {
+          const ObjectComponent = () => ({x: 123});
+          await render(<ObjectComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys ' +
+              '{x}). If you meant to render a collection of children, use ' +
+              'an array instead.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
 
-      itThrowsWhenRendering('null', render => render(null));
-      itThrowsWhenRendering('false', render => render(false));
-      itThrowsWhenRendering('undefined', render => render(undefined));
-      itThrowsWhenRendering('number', render => render(30));
-      itThrowsWhenRendering('string', render => render('foo'));
+      itThrowsWhenRendering(
+        'a class returning an object',
+        async render => {
+          class ObjectComponent extends React.Component {
+            render() {
+              return {x: 123};
+            }
+          }
+          await render(<ObjectComponent />, 1);
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys ' +
+              '{x}). If you meant to render a collection of children, use ' +
+              'an array instead.'
+          : 'A valid React element (or null) must be returned. ' +
+              'You may have returned undefined, an array or some other invalid object.',
+      );
+
+      itThrowsWhenRendering(
+        'top-level object',
+        async render => {
+          await render({x: 123});
+        },
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys ' +
+              '{x}). If you meant to render a collection of children, use ' +
+              'an array instead.'
+          : 'Invalid component element.',
+      );
     });
   });
 
@@ -1637,7 +2007,11 @@ describe('ReactDOMServerIntegration', () => {
 
           resetModules();
           // client render on top of the server markup.
-          const clientField = await renderIntoDom(element, field.parentNode);
+          const clientField = await renderIntoDom(
+            element,
+            field.parentNode,
+            true,
+          );
           // verify that the input field was not replaced.
           // Note that we cannot use expect(clientField).toBe(field) because
           // of jest bug #1772
@@ -1914,7 +2288,7 @@ describe('ReactDOMServerIntegration', () => {
     itThrowsWhenRendering(
       'if getChildContext exists without childContextTypes',
       render => {
-        class Component extends React.Component {
+        class MyComponent extends React.Component {
           render() {
             return <div />;
           }
@@ -1922,14 +2296,16 @@ describe('ReactDOMServerIntegration', () => {
             return {foo: 'bar'};
           }
         }
-        return render(<Component />);
+        return render(<MyComponent />);
       },
+      'MyComponent.getChildContext(): childContextTypes must be defined ' +
+        'in order to use getChildContext().',
     );
 
     itThrowsWhenRendering(
       'if getChildContext returns a value not in childContextTypes',
       render => {
-        class Component extends React.Component {
+        class MyComponent extends React.Component {
           render() {
             return <div />;
           }
@@ -1937,9 +2313,10 @@ describe('ReactDOMServerIntegration', () => {
             return {value1: 'foo', value2: 'bar'};
           }
         }
-        Component.childContextTypes = {value1: PropTypes.string};
-        return render(<Component />);
+        MyComponent.childContextTypes = {value1: PropTypes.string};
+        return render(<MyComponent />);
       },
+      'MyComponent.getChildContext(): key "value2" is not defined in childContextTypes.',
     );
   });
 
@@ -1993,6 +2370,7 @@ describe('ReactDOMServerIntegration', () => {
       await asyncReactDOMRender(
         <RefsComponent ref={e => (component = e)} />,
         root,
+        true,
       );
       expect(component.refs.myDiv).toBe(root.firstChild);
     });
@@ -2194,5 +2572,35 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
+  });
+
+  describe('dynamic injection', () => {
+    beforeEach(() => {
+      // HACK: we reset modules several times during the test which breaks
+      // dynamic injection. So we resort to telling resetModules() to run
+      // our custom init code every time after resetting. We could have a nicer
+      // way to do this, but this is the only test that needs it, and it will
+      // be removed anyway when we switch to static injection.
+      onAfterResetModules = () => {
+        const DOMProperty = require('DOMProperty');
+        DOMProperty.injection.injectDOMPropertyConfig({
+          isCustomAttribute: function(name) {
+            return name.indexOf('foo-') === 0;
+          },
+          Properties: {foobar: null},
+        });
+      };
+      resetModules();
+    });
+
+    afterEach(() => {
+      onAfterResetModules = null;
+    });
+
+    itRenders('injected attributes', async render => {
+      const e = await render(<div foobar="simple" foo-xyz="simple" />, 0);
+      expect(e.getAttribute('foobar')).toBe('simple');
+      expect(e.getAttribute('foo-xyz')).toBe('simple');
+    });
   });
 });

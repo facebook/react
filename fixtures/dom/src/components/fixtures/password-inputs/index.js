@@ -1,8 +1,8 @@
-const React = window.React;
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
-import PasswordTestCase from './PasswordTestCase'
+import PasswordTestCase from './PasswordTestCase';
+
+const React = window.React;
 
 function NumberInputs() {
   return (
