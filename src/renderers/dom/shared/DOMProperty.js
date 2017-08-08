@@ -31,8 +31,6 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
-var isDataOrAriaAttribute = /^(data|aria)/i;
-
 var DOMPropertyInjection = {
   /**
    * Mapping from normalized, camelcased property names to a configuration that
@@ -218,15 +216,18 @@ var DOMProperty = {
       return true;
     }
 
+    var lowerCased = name.toLowerCase();
+
     // Prevent aliases, and badly cased aliases like `class` or `cLASS`
     // from showing up in the DOM
-    if (DOMProperty.aliases.hasOwnProperty(name.toLowerCase())) {
+    if (DOMProperty.aliases.hasOwnProperty(lowerCased)) {
       return false;
     }
 
     switch (typeof value) {
       case 'boolean':
-        return isDataOrAriaAttribute.test(name);
+        var prefix = lowerCased.slice(0, 5);
+        return prefix === 'data-' || prefix === 'aria-';
       case 'undefined':
       case 'number':
       case 'string':
