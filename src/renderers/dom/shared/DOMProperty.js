@@ -25,6 +25,7 @@ var RESERVED_PROPS = {
   suppresscontenteditablewarning: true,
   onfocusin: true,
   onfocusout: true,
+  style: true,
 };
 
 function checkMask(value, bitmask) {
@@ -212,7 +213,7 @@ var DOMProperty = {
       return false;
     }
 
-    if (value === null || DOMProperty.properties.hasOwnProperty(name)) {
+    if (value === null) {
       return true;
     }
 
@@ -224,14 +225,26 @@ var DOMProperty = {
       return false;
     }
 
+    var propertyInfo = DOMProperty.properties[name];
+
     switch (typeof value) {
       case 'boolean':
+        if (propertyInfo) {
+          return true;
+        }
         var prefix = lowerCased.slice(0, 5);
         return prefix === 'data-' || prefix === 'aria-';
       case 'undefined':
       case 'number':
       case 'string':
         return true;
+      case 'object':
+        // Allow HAS_BOOLEAN_VALUE to coerce to true
+        if (propertyInfo && propertyInfo.hasBooleanValue) {
+          return true;
+        }
+
+        return value.toString !== Object.prototype.toString;
       default:
         return false;
     }

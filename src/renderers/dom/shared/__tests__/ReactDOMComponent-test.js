@@ -2051,13 +2051,6 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('assigns ajaxify (an important internal FB attribute)', function() {
-      var options = {toString: () => 'ajaxy'};
-      var el = ReactTestUtils.renderIntoDocument(<div ajaxify={options} />);
-
-      expect(el.getAttribute('ajaxify')).toBe('ajaxy');
-    });
-
     it('allows cased data attributes', function() {
       var el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
       expect(el.getAttribute('data-foobar')).toBe('true');
@@ -2094,6 +2087,81 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid prop `whatever` on <div> tag.',
       );
+    });
+  });
+
+  describe('Object stringification', function() {
+    it('does not allow objects without a toString method for members of the whitelist', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(
+        <div allowTransparency={{}} />,
+      );
+
+      expect(el.hasAttribute('allowtransparency')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `allowTransparency` on <div> tag.',
+      );
+    });
+
+    it('should pass objects as attributes if they define toString', () => {
+      var obj = {
+        toString() {
+          return 'hello';
+        },
+      };
+      var container = document.createElement('div');
+
+      ReactDOM.render(<img src={obj} />, container);
+      expect(container.firstChild.src).toBe('hello');
+
+      ReactDOM.render(<svg arabicForm={obj} />, container);
+      expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
+
+      ReactDOM.render(<div customAttribute={obj} />, container);
+      expect(container.firstChild.getAttribute('customAttribute')).toBe(
+        'hello',
+      );
+    });
+
+    it('should not pass objects on known SVG attributes if they do not define toString', () => {
+      spyOn(console, 'error');
+      var obj = {};
+      var container = document.createElement('div');
+
+      ReactDOM.render(<svg arabicForm={obj} />, container);
+      expect(container.firstChild.getAttribute('arabic-form')).toBe(null);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `arabicForm` on <svg> tag.',
+      );
+    });
+
+    it('should not pass objects on custom attributes if they do not define toString', () => {
+      spyOn(console, 'error');
+      var obj = {};
+      var container = document.createElement('div');
+
+      ReactDOM.render(<div customAttribute={obj} />, container);
+      expect(container.firstChild.getAttribute('customAttribute')).toBe(null);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `customAttribute` on <div> tag.',
+      );
+    });
+
+    it('allows objects that inherit a custom toString method', function() {
+      var parent = {toString: () => 'hello.jpg'};
+      var child = Object.create(parent);
+      var img = ReactTestUtils.renderIntoDocument(<img src={child} />);
+
+      expect(img.src).toBe('hello.jpg');
+    });
+
+    it('allows objects when a property uses the HAS_BOOLEAN_VALUE flag', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div hidden={{}} />);
+      expect(el.hasAttribute('hidden')).toBe(true);
     });
   });
 });
