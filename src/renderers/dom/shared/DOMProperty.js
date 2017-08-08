@@ -31,6 +31,8 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
+var isDataOrAriaAttribute = /^(data|aria)/i
+
 var DOMPropertyInjection = {
   /**
    * Mapping from normalized, camelcased property names to a configuration that
@@ -223,8 +225,9 @@ var DOMProperty = {
     }
 
     switch (typeof value) {
-      case 'undefined':
       case 'boolean':
+        return isDataOrAriaAttribute.test(name)
+      case 'undefined':
       case 'number':
       case 'string':
         return true;

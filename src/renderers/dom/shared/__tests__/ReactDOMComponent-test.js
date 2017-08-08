@@ -149,7 +149,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid prop `foo` on <div> tag. Either remove this prop ' +
-          'from the element, or pass a string, number, or boolean value to keep ' +
+          'from the element, or pass a string or number value to keep ' +
           'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
           '\n    in div (at **)',
       );
@@ -162,7 +162,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid props `foo`, `baz` on <div> tag. Either remove these ' +
-          'props from the element, or pass a string, number, or boolean value to keep ' +
+          'props from the element, or pass a string or number value to keep ' +
           'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
           '\n    in div (at **)',
       );
@@ -1963,17 +1963,29 @@ describe('ReactDOMComponent', () => {
       expect(container.firstChild.hasAttribute('whatever')).toBe(false);
     });
 
-    it('assigns a boolean custom attributes as a string', function() {
+    it('does not assign a boolean custom attributes as a string', function() {
+      spyOn(console, 'error');
+
       var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
 
-      expect(el.getAttribute('whatever')).toBe('true');
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `whatever` on <div> tag',
+      );
     });
 
-    it('assigns an implicit boolean custom attributes as a string', function() {
+    it('does not assign an implicit boolean custom attributes', function() {
+      spyOn(console, 'error');
+
       // eslint-disable-next-line react/jsx-boolean-value
       var el = ReactTestUtils.renderIntoDocument(<div whatever />);
 
-      expect(el.getAttribute('whatever')).toBe('true');
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `whatever` on <div> tag',
+      );
     });
 
     it('assigns a numeric custom attributes as a string', function() {
