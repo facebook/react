@@ -126,7 +126,7 @@ var warnUnknownProperties = function(type, props, debugID) {
     warning(
       false,
       'Invalid prop %s on <%s> tag. Either remove this prop from the element, ' +
-        'or pass a string, number, or boolean value to keep it in the DOM. ' +
+        'or pass a string or number value to keep it in the DOM. ' +
         'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       type,
@@ -136,7 +136,7 @@ var warnUnknownProperties = function(type, props, debugID) {
     warning(
       false,
       'Invalid props %s on <%s> tag. Either remove these props from the element, ' +
-        'or pass a string, number, or boolean value to keep them in the DOM. ' +
+        'or pass a string or number value to keep them in the DOM. ' +
         'For details, see https://fb.me/react-unknown-prop%s',
       unknownPropString,
       type,

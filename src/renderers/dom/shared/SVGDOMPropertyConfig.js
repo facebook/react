@@ -16,6 +16,15 @@ var NS = {
   xml: 'http://www.w3.org/XML/1998/namespace',
 };
 
+/**
+ * This is a list of all SVG attributes that need special
+ * casing, namespacing, or boolean value assignment.
+ *
+ * SVG Attributes List:
+ * https://www.w3.org/TR/SVG/attindex.html
+ * SMIL Spec:
+ * https://www.w3.org/TR/smil
+ */
 var ATTRS = [
   'accent-height',
   'alignment-baseline',
@@ -100,6 +109,11 @@ var ATTRS = [
   'xmlns:xlink',
   'xml:lang',
   'xml:space',
+  // The following attributes expect boolean values. They must be in
+  // the whitelist to allow boolean attribute assignment:
+  'autoReverse',
+  'externalResourcesRequired',
+  'preserveAlpha'
 ];
 
 var SVGDOMPropertyConfig = {

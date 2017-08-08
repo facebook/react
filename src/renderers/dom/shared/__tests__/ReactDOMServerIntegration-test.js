@@ -467,16 +467,14 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('width')).toBe('30');
       });
 
-      // this seems like it might mask programmer error, but it's existing behavior.
-      itRenders('string prop with true value', async render => {
-        const e = await render(<a href={true} />);
-        expect(e.getAttribute('href')).toBe('true');
+      itRenders('no string prop with true value', async render => {
+        const e = await render(<a href={true} />, 1);
+        expect(e.hasAttribute('href')).toBe(false);
       });
 
-      // this seems like it might mask programmer error, but it's existing behavior.
-      itRenders('string prop with false value', async render => {
-        const e = await render(<a href={false} />);
-        expect(e.getAttribute('href')).toBe('false');
+      itRenders('no string prop with false value', async render => {
+        const e = await render(<a href={false} />, 1);
+        expect(e.hasAttribute('href')).toBe(false);
       });
 
       itRenders('no string prop with null value', async render => {
@@ -862,6 +860,16 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('unknown data- attributes with casing', async render => {
         const e = await render(<div data-fooBar="true" />);
         expect(e.getAttribute('data-fooBar')).toBe('true');
+      });
+
+      itRenders('unknown data- attributes with boolean true', async render => {
+        const e = await render(<div data-fooBar={true} />);
+        expect(e.getAttribute('data-fooBar')).toBe('true');
+      });
+
+      itRenders('unknown data- attributes with boolean false', async render => {
+        const e = await render(<div data-fooBar={false} />);
+        expect(e.getAttribute('data-fooBar')).toBe('false');
       });
 
       itRenders(
