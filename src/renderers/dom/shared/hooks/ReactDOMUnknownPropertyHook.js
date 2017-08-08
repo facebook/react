@@ -107,6 +107,17 @@ if (__DEV__) {
       return true;
     }
 
+    if (typeof value === 'number' && isNaN(value)) {
+      warning(
+        false,
+        'Received NaN for numeric attribute `%s`. If this is expected, cast ' +
+          'the value to a string.%s',
+        name,
+        getStackAddendum(debugID),
+      );
+      return true;
+    }
+
     return DOMProperty.shouldSetAttribute(name, value);
   };
 }
