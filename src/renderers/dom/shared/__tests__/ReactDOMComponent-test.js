@@ -2034,5 +2034,18 @@ describe('ReactDOMComponent', () => {
       var el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
       expect(el.getAttribute('foobar')).toBe('true');
     });
+
+    it('warns on NaN attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={NaN} />);
+
+      expect(el.getAttribute('whatever')).toBe('NaN');
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Received NaN for numeric attribute `whatever`. If this is ' +
+          'expected, cast the value to a string.\n    in div',
+      );
+    });
   });
 });

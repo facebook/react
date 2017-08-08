@@ -113,7 +113,7 @@ var ATTRS = [
   // the whitelist to allow boolean attribute assignment:
   'autoReverse',
   'externalResourcesRequired',
-  'preserveAlpha'
+  'preserveAlpha',
 ];
 
 var SVGDOMPropertyConfig = {

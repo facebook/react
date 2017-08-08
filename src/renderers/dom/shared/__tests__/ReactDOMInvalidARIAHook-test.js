@@ -63,5 +63,27 @@ describe('ReactDOMInvalidARIAHook', () => {
           'Did you mean aria-haspopup?',
       );
     });
+
+    it('should warn for use of recognized camel case aria attributes', () => {
+      spyOn(console, 'error');
+      // The valid attribute name is aria-haspopup.
+      mountComponent({ariaHasPopup: 'true'});
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid ARIA attribute ariaHasPopup. ' +
+          'Did you mean aria-haspopup?',
+      );
+    });
+
+    it('should warn for use of unrecognized camel case aria attributes', () => {
+      spyOn(console, 'error');
+      // The valid attribute name is aria-haspopup.
+      mountComponent({ariaSomethingInvalid: 'true'});
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid ARIA attribute ariaSomethingInvalid. ARIA ' +
+          'attributes follow the pattern aria-* and must be lowercase.',
+      );
+    });
   });
 });

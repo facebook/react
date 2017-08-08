@@ -31,7 +31,7 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
-var isDataOrAriaAttribute = /^(data|aria)/i
+var isDataOrAriaAttribute = /^(data|aria)/i;
 
 var DOMPropertyInjection = {
   /**
@@ -226,7 +226,7 @@ var DOMProperty = {
 
     switch (typeof value) {
       case 'boolean':
-        return isDataOrAriaAttribute.test(name)
+        return isDataOrAriaAttribute.test(name);
       case 'undefined':
       case 'number':
       case 'string':
