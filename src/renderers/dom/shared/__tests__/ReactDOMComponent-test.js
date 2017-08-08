@@ -1006,6 +1006,15 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should validate against use of innerHTML without case sensitivity', () => {
+      spyOn(console, 'error');
+      mountComponent({innerhtml: '<span>Hi Jim!</span>'});
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Directly setting property `innerHTML` is not permitted. ',
+      );
+    });
+
     it('should validate use of dangerouslySetInnerHTML', () => {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
@@ -1597,6 +1606,18 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
     });
 
+    it('should warn about props that are no longer supported without case sensitivity', () => {
+      spyOn(console, 'error');
+      ReactTestUtils.renderIntoDocument(<div />);
+      expectDev(console.error.calls.count()).toBe(0);
+
+      ReactTestUtils.renderIntoDocument(<div onfocusin={() => {}} />);
+      expectDev(console.error.calls.count()).toBe(1);
+
+      ReactTestUtils.renderIntoDocument(<div onfocusout={() => {}} />);
+      expectDev(console.error.calls.count()).toBe(2);
+    });
+
     it('should warn about props that are no longer supported (ssr)', () => {
       spyOn(console, 'error');
       ReactDOMServer.renderToString(<div />);
@@ -1606,6 +1627,18 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(1);
 
       ReactDOMServer.renderToString(<div onFocusOut={() => {}} />);
+      expectDev(console.error.calls.count()).toBe(2);
+    });
+
+    it('should warn about props that are no longer supported without case sensitivity (ssr)', () => {
+      spyOn(console, 'error');
+      ReactDOMServer.renderToString(<div />);
+      expectDev(console.error.calls.count()).toBe(0);
+
+      ReactDOMServer.renderToString(<div onfocusin={() => {}} />);
+      expectDev(console.error.calls.count()).toBe(1);
+
+      ReactDOMServer.renderToString(<div onfocusout={() => {}} />);
       expectDev(console.error.calls.count()).toBe(2);
     });
 
