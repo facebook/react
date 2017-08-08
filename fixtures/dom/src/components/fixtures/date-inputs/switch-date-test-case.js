@@ -1,5 +1,6 @@
 const React = window.React;
 
+const startDate = new Date();
 /**
  * This test case was originally provided by @richsoni,
  * https://github.com/facebook/react/issues/8116
@@ -7,7 +8,7 @@ const React = window.React;
 class SwitchDateTestCase extends React.Component {
   state = {
     fullDate: false,
-    date: new Date(),
+    date: startDate,
   };
 
   render() {
@@ -50,10 +51,9 @@ class SwitchDateTestCase extends React.Component {
     }
   }
 
-  onInputChange = event => {
-    this.setState({
-      date: new Date(Date.parse(event.target.value)),
-    });
+  onInputChange = ({target: {value}}) => {
+    const date = value ? new Date(Date.parse(value)) : startDate;
+    this.setState({date});
   };
 
   updateFullDate = () => {
