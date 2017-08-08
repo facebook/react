@@ -149,9 +149,9 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid prop `foo` on <div> tag. Either remove this prop ' +
-        'from the element, or pass a string or number value to keep ' +
-        'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
-        '\n    in div (at **)',
+          'from the element, or pass a string or number value to keep ' +
+          'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          '\n    in div (at **)',
       );
     });
 
@@ -162,9 +162,9 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid props `foo`, `baz` on <div> tag. Either remove these ' +
-        'props from the element, or pass a string or number value to keep ' +
-        'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
-        '\n    in div (at **)',
+          'props from the element, or pass a string or number value to keep ' +
+          'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          '\n    in div (at **)',
       );
     });
 
@@ -862,8 +862,8 @@ describe('ReactDOMComponent', () => {
       );
       expectDev(console.error.calls.argsFor(3)[0]).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? 'The tag <hasOwnProperty> is unrecognized in this browser'
-        : 'The tag <hasownproperty> is unrecognized in this browser',
+          ? 'The tag <hasOwnProperty> is unrecognized in this browser'
+          : 'The tag <hasownproperty> is unrecognized in this browser',
       );
     });
 
@@ -874,7 +874,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor ' +
-        'use `dangerouslySetInnerHTML`.',
+          'use `dangerouslySetInnerHTML`.',
       );
     });
 
@@ -888,7 +888,7 @@ describe('ReactDOMComponent', () => {
         );
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
-        '`dangerouslySetInnerHTML`.',
+          '`dangerouslySetInnerHTML`.',
       );
     });
 
@@ -935,7 +935,7 @@ describe('ReactDOMComponent', () => {
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
           'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
+            'cause things to break subtly.',
         );
         mountComponent({is: 'custom-shady-div2'});
         expectDev(console.error.calls.count()).toBe(1);
@@ -960,7 +960,7 @@ describe('ReactDOMComponent', () => {
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
           'A component is using shady DOM. Using shady DOM with React can ' +
-          'cause things to break subtly.',
+            'cause things to break subtly.',
         );
 
         mountComponent({is: 'custom-shady-div2'});
@@ -985,7 +985,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
       }).toThrowError(
         'menuitem is a void element tag and must neither have `children` nor use ' +
-        '`dangerouslySetInnerHTML`.',
+          '`dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1020,7 +1020,7 @@ describe('ReactDOMComponent', () => {
         mountComponent({dangerouslySetInnerHTML: '<span>Hi Jim!</span>'});
       }).toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
+          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1029,7 +1029,7 @@ describe('ReactDOMComponent', () => {
         mountComponent({dangerouslySetInnerHTML: {foo: 'bar'}});
       }).toThrowError(
         '`props.dangerouslySetInnerHTML` must be in the form `{__html: ...}`. ' +
-        'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
+          'Please visit https://fb.me/react-invariant-dangerously-set-inner-html for more information.',
       );
     });
 
@@ -1061,8 +1061,8 @@ describe('ReactDOMComponent', () => {
         mountComponent({style: 'display: none'});
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
-        "not a string. For example, style={{marginRight: spacing + 'em'}} " +
-        'when using JSX.',
+          "not a string. For example, style={{marginRight: spacing + 'em'}} " +
+          'when using JSX.',
       );
     });
 
@@ -1099,7 +1099,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<X />, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` ' +
-        'nor use `dangerouslySetInnerHTML`.\n\nThis DOM node was rendered by `X`.',
+          'nor use `dangerouslySetInnerHTML`.\n\nThis DOM node was rendered by `X`.',
       );
     });
 
@@ -1155,7 +1155,7 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<input>children</input>, container);
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
-        '`dangerouslySetInnerHTML`.',
+          '`dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1169,7 +1169,7 @@ describe('ReactDOMComponent', () => {
         );
       }).toThrowError(
         'input is a void element tag and must neither have `children` nor use ' +
-        '`dangerouslySetInnerHTML`.',
+          '`dangerouslySetInnerHTML`.',
       );
     });
 
@@ -1200,8 +1200,8 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<div style={1} />, container);
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
-        "not a string. For example, style={{marginRight: spacing + 'em'}} " +
-        'when using JSX.',
+          "not a string. For example, style={{marginRight: spacing + 'em'}} " +
+          'when using JSX.',
       );
     });
 
@@ -1216,8 +1216,8 @@ describe('ReactDOMComponent', () => {
         ReactDOM.render(<Animal />, container);
       }).toThrowError(
         'The `style` prop expects a mapping from style properties to values, ' +
-        "not a string. For example, style={{marginRight: spacing + 'em'}} " +
-        'when using JSX.\n\nThis DOM node was rendered by `Animal`.',
+          "not a string. For example, style={{marginRight: spacing + 'em'}} " +
+          'when using JSX.\n\nThis DOM node was rendered by `Animal`.',
       );
     });
 
@@ -1237,8 +1237,8 @@ describe('ReactDOMComponent', () => {
         ),
       ).toBe(
         '<div title="&#x27;&quot;&lt;&gt;&amp;" style="text-align:&#x27;&quot;&lt;&gt;&amp;">' +
-        '&#x27;&quot;&lt;&gt;&amp;' +
-        '</div>',
+          '&#x27;&quot;&lt;&gt;&amp;' +
+          '</div>',
       );
     });
   });
@@ -1324,14 +1324,14 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<div><tr /><tr /></div>);
 
       var addendum = ReactDOMFeatureFlags.useFiber
-                   ? '\n    in tr (at **)' + '\n    in div (at **)'
-                   : ' See div > tr.';
+        ? '\n    in tr (at **)' + '\n    in div (at **)'
+        : ' See div > tr.';
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-        '<div>.' +
-        addendum,
+          '<div>.' +
+          addendum,
       );
     });
 
@@ -1341,15 +1341,15 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<span><p /></span>, p);
 
       var addendum = ReactDOMFeatureFlags.useFiber
-                   ? // There is no outer `p` here because root container is not part of the stack.
-                     '\n    in p (at **)' + '\n    in span (at **)'
-                   : ' See p > ... > p.';
+        ? // There is no outer `p` here because root container is not part of the stack.
+          '\n    in p (at **)' + '\n    in span (at **)'
+        : ' See p > ... > p.';
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
-        'of <p>.' +
-        addendum,
+          'of <p>.' +
+          addendum,
       );
     });
 
@@ -1372,38 +1372,38 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(3);
 
       var addendum1 = ReactDOMFeatureFlags.useFiber
-                    ? '\n    in tr (at **)' +
-                      '\n    in Row (at **)' +
-                      '\n    in table (at **)' +
-                      '\n    in Foo (at **)'
-          : ' See Foo > table > Row > tr.';
+        ? '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Foo (at **)'
+        : ' See Foo > table > Row > tr.';
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-        '<table>. Add a <tbody> to your code to match the DOM tree generated ' +
-        'by the browser.' +
-        addendum1,
+          '<table>. Add a <tbody> to your code to match the DOM tree generated ' +
+          'by the browser.' +
+          addendum1,
       );
 
       var addendum2 = ReactDOMFeatureFlags.useFiber
-                    ? '\n    in tr (at **)' +
-                      '\n    in Row (at **)' +
-                      '\n    in table (at **)' +
-                      '\n    in Foo (at **)'
-          : ' See Row > tr > #text.';
+        ? '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Foo (at **)'
+        : ' See Row > tr > #text.';
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
-        'child of <tr>.' +
-        addendum2,
+          'child of <tr>.' +
+          addendum2,
       );
 
       var addendum3 = ReactDOMFeatureFlags.useFiber
-                    ? '\n    in table (at **)' + '\n    in Foo (at **)'
-                    : ' See Foo > table > #text.';
+        ? '\n    in table (at **)' + '\n    in Foo (at **)'
+        : ' See Foo > table > #text.';
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
         'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
-        "appear as a child of <table>. Make sure you don't have any extra " +
-        'whitespace between tags on each line of your source code.' +
-        addendum3,
+          "appear as a child of <table>. Make sure you don't have any extra " +
+          'whitespace between tags on each line of your source code.' +
+          addendum3,
       );
     });
 
@@ -1440,12 +1440,12 @@ describe('ReactDOMComponent', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Viz1 (at **)'
-            : 'See Viz1 > table > FancyRow > Row > tr.',
+          ? '\n    in tr (at **)' +
+              '\n    in Row (at **)' +
+              '\n    in FancyRow (at **)' +
+              '\n    in table (at **)' +
+              '\n    in Viz1 (at **)'
+          : 'See Viz1 > table > FancyRow > Row > tr.',
       );
 
       function Viz2() {
@@ -1460,14 +1460,14 @@ describe('ReactDOMComponent', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(1)[0]),
       ).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)' +
-          '\n    in Viz2 (at **)'
-            : 'See Viz2 > FancyTable > Table > table > FancyRow > Row > tr.',
+          ? '\n    in tr (at **)' +
+              '\n    in Row (at **)' +
+              '\n    in FancyRow (at **)' +
+              '\n    in table (at **)' +
+              '\n    in Table (at **)' +
+              '\n    in FancyTable (at **)' +
+              '\n    in Viz2 (at **)'
+          : 'See Viz2 > FancyTable > Table > table > FancyRow > Row > tr.',
       );
 
       ReactTestUtils.renderIntoDocument(<FancyTable><FancyRow /></FancyTable>);
@@ -1476,13 +1476,13 @@ describe('ReactDOMComponent', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(2)[0]),
       ).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)'
-            : 'See FancyTable > Table > table > FancyRow > Row > tr.',
+          ? '\n    in tr (at **)' +
+              '\n    in Row (at **)' +
+              '\n    in FancyRow (at **)' +
+              '\n    in table (at **)' +
+              '\n    in Table (at **)' +
+              '\n    in FancyTable (at **)'
+          : 'See FancyTable > Table > table > FancyRow > Row > tr.',
       );
 
       ReactTestUtils.renderIntoDocument(<table><FancyRow /></table>);
@@ -1491,11 +1491,11 @@ describe('ReactDOMComponent', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(3)[0]),
       ).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)'
-            : 'See table > FancyRow > Row > tr.',
+          ? '\n    in tr (at **)' +
+              '\n    in Row (at **)' +
+              '\n    in FancyRow (at **)' +
+              '\n    in table (at **)'
+          : 'See table > FancyRow > Row > tr.',
       );
 
       ReactTestUtils.renderIntoDocument(<FancyTable><tr /></FancyTable>);
@@ -1504,11 +1504,11 @@ describe('ReactDOMComponent', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(4)[0]),
       ).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? '\n    in tr (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)'
-            : 'See FancyTable > Table > table > tr.',
+          ? '\n    in tr (at **)' +
+              '\n    in table (at **)' +
+              '\n    in Table (at **)' +
+              '\n    in FancyTable (at **)'
+          : 'See FancyTable > Table > table > tr.',
       );
 
       class Link extends React.Component {
@@ -1523,12 +1523,12 @@ describe('ReactDOMComponent', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(5)[0]),
       ).toContain(
         ReactDOMFeatureFlags.useFiber
-        ? '\n    in a (at **)' +
-          '\n    in Link (at **)' +
-          '\n    in div (at **)' +
-          '\n    in a (at **)' +
-          '\n    in Link (at **)'
-            : 'See Link > a > ... > Link > a.',
+          ? '\n    in a (at **)' +
+              '\n    in Link (at **)' +
+              '\n    in div (at **)' +
+              '\n    in a (at **)' +
+              '\n    in Link (at **)'
+          : 'See Link > a > ... > Link > a.',
       );
     });
 
@@ -1652,7 +1652,7 @@ describe('ReactDOMComponent', () => {
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property `onclick`. Did you mean ' +
-        '`onClick`?\n    in input (at **)',
+          '`onClick`?\n    in input (at **)',
       );
     });
 
@@ -1666,7 +1666,7 @@ describe('ReactDOMComponent', () => {
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property `onclick`. Did you mean ' +
-        '`onClick`?\n    in input (at **)',
+          '`onClick`?\n    in input (at **)',
       );
     });
 
@@ -2070,7 +2070,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Received NaN for numeric attribute `whatever`. If this is ' +
-        'expected, cast the value to a string.\n    in div',
+          'expected, cast the value to a string.\n    in div',
       );
     });
 
@@ -2091,7 +2091,6 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('Object stringification', function() {
-
     it('does not allow objects without a toString method for members of the whitelist', function() {
       spyOn(console, 'error');
 
@@ -2107,7 +2106,11 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should pass objects as attributes if they define toString', () => {
-      var obj = {toString() { return 'hello' }};
+      var obj = {
+        toString() {
+          return 'hello';
+        },
+      };
       var container = document.createElement('div');
 
       ReactDOM.render(<img src={obj} />, container);
@@ -2117,7 +2120,9 @@ describe('ReactDOMComponent', () => {
       expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
 
       ReactDOM.render(<div customAttribute={obj} />, container);
-      expect(container.firstChild.getAttribute('customAttribute')).toBe('hello');
+      expect(container.firstChild.getAttribute('customAttribute')).toBe(
+        'hello',
+      );
     });
 
     it('should not pass objects on known SVG attributes if they do not define toString', () => {
@@ -2131,7 +2136,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid prop `arabicForm` on <svg> tag.',
       );
-    })
+    });
 
     it('should not pass objects on custom attributes if they do not define toString', () => {
       spyOn(console, 'error');
@@ -2147,13 +2152,11 @@ describe('ReactDOMComponent', () => {
     });
 
     it('allows objects that inherit a custom toString method', function() {
-      var parent = {toString: () => 'hello.jpg' }
-      var child = Object.create(parent)
-      var el = ReactTestUtils.renderIntoDocument(
-        <img src={child} />,
-      );
+      var parent = {toString: () => 'hello.jpg'};
+      var child = Object.create(parent);
+      var el = ReactTestUtils.renderIntoDocument(<img src={child} />);
 
-      expect(img.src).toBe('hello.jpg');
+      expect(el.src).toBe('hello.jpg');
     });
 
     it('assigns ajaxify (an important internal FB attribute)', function() {
