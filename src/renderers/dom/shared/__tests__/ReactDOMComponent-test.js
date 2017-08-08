@@ -2080,5 +2080,20 @@ describe('ReactDOMComponent', () => {
           'expected, cast the value to a string.\n    in div',
       );
     });
+
+    it('removes a property when it becomes invalid', function() {
+      spyOn(console, 'error');
+
+      var container = document.createElement('div');
+      ReactDOM.render(<div whatever={0} />, container);
+      ReactDOM.render(<div whatever={{}} />, container);
+      var el = container.firstChild;
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `whatever` on <div> tag.',
+      );
+    });
   });
 });

@@ -190,8 +190,12 @@ var DOMPropertyOperations = {
           node.setAttribute(attributeName, '' + value);
         }
       }
-    } else if (DOMProperty.shouldSetAttribute(name, value)) {
-      DOMPropertyOperations.setValueForAttribute(node, name, value);
+    } else {
+      DOMPropertyOperations.setValueForAttribute(
+        node,
+        name,
+        DOMProperty.shouldSetAttribute(name, value) ? value : null,
+      );
       return;
     }
 

@@ -1010,7 +1010,7 @@ ReactDOMComponent.Mixin = {
             nextProp,
           );
         }
-      } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
