@@ -231,17 +231,11 @@ function setInitialDOMProperties(
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
-    } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+    } else if (nextProp != null) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (nextProp != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          nextProp,
-        );
-      }
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
     }
   }
 }
@@ -272,19 +266,13 @@ function updateDOMProperties(
       } else {
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
-    } else if (DOMProperty.shouldSetAttribute(propKey, propValue)) {
+    } else if (propValue != null) {
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
+    } else {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
-      }
+      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
     }
   }
 }
