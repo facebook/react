@@ -39,17 +39,11 @@ if (__DEV__) {
   var EVENT_NAME_REGEX = /^on[A-Z]/;
   var ARIA_NAME_REGEX = /^aria-/i;
   var possibleStandardNames = require('possibleStandardNames');
-  var unsupportedProps = {
-    onfocusin: true,
-    onfocusout: true,
-  };
 
   var validateProperty = function(tagName, name, value, debugID) {
     if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
       return true;
     }
-
-    warnedProperties[name] = true;
 
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
       return true;
@@ -79,16 +73,33 @@ if (__DEV__) {
         registrationName,
         getStackAddendum(debugID),
       );
-      return true;
-    }
-
-    // Unsupported props are handled by another validation
-    if (unsupportedProps.hasOwnProperty(lowerCasedName)) {
+      warnedProperties[name] = true;
       return true;
     }
 
     // Let the ARIA attribute hook validate ARIA attributes
     if (ARIA_NAME_REGEX.test(name)) {
+      return true;
+    }
+
+    if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
+      warning(
+        false,
+        'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
+          'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
+          'are not needed/supported by React.',
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    if (lowerCasedName === 'innerhtml') {
+      warning(
+        false,
+        'Directly setting property `innerHTML` is not permitted. ' +
+          'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
+      );
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -104,6 +115,7 @@ if (__DEV__) {
           getStackAddendum(debugID),
         );
       }
+      warnedProperties[name] = true;
       return true;
     }
 
@@ -115,10 +127,16 @@ if (__DEV__) {
         name,
         getStackAddendum(debugID),
       );
+      warnedProperties[name] = true;
       return true;
     }
 
-    return DOMProperty.shouldSetAttribute(name, value);
+    if (!DOMProperty.shouldSetAttribute(name, value)) {
+      warnedProperties[name] = true;
+      return false;
+    }
+
+    return true;
   };
 }
 
