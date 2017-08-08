@@ -42,6 +42,10 @@ class App extends Component {
         return: false,
         fx: false,
       },
+      graphSettings: {
+        rankdir: 'TB',
+        trackActive: true,
+      },
     };
   }
 
@@ -158,7 +162,11 @@ class App extends Component {
       <div style={{height: '100%'}}>
         {fibers &&
           <Draggable>
-            <Fibers fibers={fibers} show={this.state.show} />
+            <Fibers
+              fibers={fibers}
+              show={this.state.show}
+              graphSettings={this.state.graphSettings}
+            />
           </Draggable>}
         <div
           style={{
@@ -171,43 +179,83 @@ class App extends Component {
             backgroundColor: '#fafafa',
             border: '1px solid #ccc',
           }}>
-          <input
-            type="range"
-            style={{width: '25%'}}
-            min={0}
-            max={history.length - 1}
-            value={currentStep}
-            onChange={e => this.setState({currentStep: Number(e.target.value)})}
-          />
-          <p>
-            Step
-            {' '}
-            {currentStep}
-            :
-            {' '}
-            {friendlyAction}
-            {' '}
-            (
-            <a style={{color: 'gray'}} onClick={this.handleEdit} href="#">
-              Edit
-            </a>
-            )
-          </p>
-          {stage && <p>Stage: {stage}</p>}
-          {Object.keys(this.state.show).map(key => (
-            <label style={{marginRight: '10px'}} key={key}>
-              <input
-                type="checkbox"
-                checked={this.state.show[key]}
-                onChange={e => {
-                  this.setState(({show}) => ({
-                    show: {...show, [key]: !show[key]},
-                  }));
-                }}
-              />
-              {key}
-            </label>
-          ))}
+          <div style={{width: '50%', float: 'left'}}>
+            <input
+              type="range"
+              style={{width: '25%'}}
+              min={0}
+              max={history.length - 1}
+              value={currentStep}
+              onChange={e =>
+                this.setState({currentStep: Number(e.target.value)})}
+            />
+            <p>
+              Step
+              {' '}
+              {currentStep}
+              :
+              {' '}
+              {friendlyAction}
+              {' '}
+              (
+              <a style={{color: 'gray'}} onClick={this.handleEdit} href="#">
+                Edit
+              </a>
+              )
+            </p>
+            {stage && <p>Stage: {stage}</p>}
+            {Object.keys(this.state.show).map(key => (
+              <label style={{marginRight: '10px'}} key={key}>
+                <input
+                  type="checkbox"
+                  checked={this.state.show[key]}
+                  onChange={e => {
+                    this.setState(({show}) => ({
+                      show: {...show, [key]: !show[key]},
+                    }));
+                  }}
+                />
+                {key}
+              </label>
+            ))}
+          </div>
+          <div style={{width: '50%', float: 'right'}}>
+            <h5>Graph Settings</h5>
+            <p>
+              <label style={{display: ''}}>
+                Direction:
+                <select
+                  onChange={e => {
+                    const rankdir = e.target.value;
+                    this.setState(({graphSettings}) => ({
+                      graphSettings: {...graphSettings, rankdir},
+                    }));
+                  }}>
+                  <option value="TB">top-down</option>
+                  <option value="BT">down-top</option>
+                  <option value="LR">left-right</option>
+                  <option value="RL">right-left</option>
+                </select>
+              </label>
+            </p>
+            <p>
+              <label style={{marginRight: '10px'}}>
+                <input
+                  type="checkbox"
+                  checked={this.state.graphSettings.trackActive}
+                  onChange={e => {
+                    this.setState(({graphSettings}) => ({
+                      graphSettings: {
+                        ...graphSettings,
+                        trackActive: !graphSettings.trackActive,
+                      },
+                    }));
+                  }}
+                />
+                Track active fiber
+              </label>
+            </p>
+          </div>
         </div>
       </div>
     );

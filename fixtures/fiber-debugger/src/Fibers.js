@@ -15,15 +15,17 @@ function getFiberColor(fibers, id) {
 }
 
 function Graph(props) {
+  const {rankdir, trackActive} = props.settings;
   var g = new dagre.graphlib.Graph();
   g.setGraph({
     width: 1000,
     height: 1000,
     nodesep: 50,
     edgesep: 150,
-    ranksep: 150,
+    ranksep: 100,
     marginx: 100,
     marginy: 100,
+    rankdir,
   });
 
   var edgeLabels = {};
@@ -63,8 +65,8 @@ function Graph(props) {
     .map(v => g.node(v))
     .find(node => node.label.props.isActive);
   const [winX, winY] = [window.innerWidth / 2, window.innerHeight / 2];
-  var focusDx = activeNode ? winX - activeNode.x : 0;
-  var focusDy = activeNode ? winY - activeNode.y : 0;
+  var focusDx = trackActive && activeNode ? winX - activeNode.x : 0;
+  var focusDy = trackActive && activeNode ? winY - activeNode.y : 0;
 
   var nodes = g.nodes().map(v => {
     var node = g.node(v);
@@ -250,7 +252,7 @@ function formatPriority(priority) {
   }
 }
 
-export default function Fibers({fibers, show, ...rest}) {
+export default function Fibers({fibers, show, graphSettings, ...rest}) {
   const items = Object.keys(fibers.descriptions).map(
     id => fibers.descriptions[id]
   );
@@ -274,11 +276,16 @@ export default function Fibers({fibers, show, ...rest}) {
         ...rest.style,
         transform: null,
       }}>
-      <Graph className="graph" dx={dx} dy={dy} isDragging={isDragging}>
+      <Graph
+        className="graph"
+        dx={dx}
+        dy={dy}
+        isDragging={isDragging}
+        settings={graphSettings}>
         {items.map(fiber => [
           <Vertex
             key={fiber.id}
-            width={200}
+            width={150}
             height={100}
             isActive={fiber.id === fibers.workInProgressID}>
             <div
@@ -314,6 +321,10 @@ export default function Fibers({fibers, show, ...rest}) {
                 : <small>
                     Committed
                   </small>}
+              {fiber.effectTag && [
+                <br key="br" />,
+                <small key="small">Effect: {fiber.effectTag}</small>,
+              ]}
             </div>
           </Vertex>,
           fiber.child &&
