@@ -103,22 +103,6 @@ if (__DEV__) {
       return true;
     }
 
-    // Known attributes should match the casing specified in the property config.
-    if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
-      var standardName = possibleStandardNames[lowerCasedName];
-      if (standardName !== name) {
-        warning(
-          false,
-          'Invalid DOM property `%s`. Did you mean `%s`?%s',
-          name,
-          standardName,
-          getStackAddendum(debugID),
-        );
-      }
-      warnedProperties[name] = true;
-      return true;
-    }
-
     if (typeof value === 'number' && isNaN(value)) {
       warning(
         false,
@@ -131,6 +115,29 @@ if (__DEV__) {
       return true;
     }
 
+    // Known attributes should match the casing specified in the property config.
+    if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
+      var standardName = possibleStandardNames[lowerCasedName];
+      if (standardName !== name) {
+        warning(
+          false,
+          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          name,
+          standardName,
+          getStackAddendum(debugID),
+        );
+        warnedProperties[name] = true;
+        return true;
+      }
+    }
+
+    // Now that we've validated casing, do not validate
+    // data types for reserved props
+    if (DOMProperty.isReservedProp(name)) {
+      return true;
+    }
+
+    // Warn when a known attribute is a bad type
     if (!DOMProperty.shouldSetAttribute(name, value)) {
       warnedProperties[name] = true;
       return false;

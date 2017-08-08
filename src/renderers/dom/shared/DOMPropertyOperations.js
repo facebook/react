@@ -163,7 +163,8 @@ var DOMPropertyOperations = {
    */
   setValueForProperty: function(node, name, value) {
     var propertyInfo = DOMProperty.getPropertyInfo(name);
-    if (propertyInfo) {
+
+    if (propertyInfo && DOMProperty.shouldSetAttribute(name, value)) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, value);
