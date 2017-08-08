@@ -243,7 +243,15 @@ var DOMProperty = {
         if (propertyInfo && propertyInfo.hasBooleanValue) {
           return true;
         }
-
+        if (name === 'value') {
+          // Value is a special prop.
+          // Allow arrays or objects with custom toString.
+          return value.toString !== Object.prototype.toString;
+        }
+        // For everything else, allow only objects with custom toString.
+        if (Array.isArray(value)) {
+          return false;
+        }
         return value.toString !== Object.prototype.toString;
       default:
         return false;

@@ -2105,6 +2105,29 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('does not allow arrays', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(
+        <div allowTransparency={[]} myCustomProp={[]} />,
+      );
+
+      expect(el.hasAttribute('allowtransparency')).toBe(false);
+      expect(el.hasAttribute('mycustomprop')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid props `allowTransparency`, `myCustomProp` on <div> tag.',
+      );
+    });
+
+    it('allows arrays for value and defaultValue', function() {
+      // These shouldn't warn.
+      ReactTestUtils.renderIntoDocument(
+        <select value={[]} onChange={function() {}} multiple />,
+      );
+      ReactTestUtils.renderIntoDocument(<select defaultValue={[]} multiple />);
+    });
+
     it('should pass objects as attributes if they define toString', () => {
       var obj = {
         toString() {
