@@ -2123,9 +2123,11 @@ describe('ReactDOMComponent', () => {
     it('allows arrays for value and defaultValue', function() {
       // These shouldn't warn.
       ReactTestUtils.renderIntoDocument(
-        <select value={[]} onChange={function() {}} multiple />,
+        <select value={[]} onChange={function() {}} multiple={true} />,
       );
-      ReactTestUtils.renderIntoDocument(<select defaultValue={[]} multiple />);
+      ReactTestUtils.renderIntoDocument(
+        <select defaultValue={[]} multiple={true} />,
+      );
     });
 
     it('should pass objects as attributes if they define toString', () => {
