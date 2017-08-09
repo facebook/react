@@ -17,6 +17,7 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {
   mountChildFibersInPlace,
@@ -73,6 +74,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   hydrationContext: HydrationContext<C, CX>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   const {
     shouldSetTextContent,
@@ -99,6 +101,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getPriorityContext,
     memoizeProps,
     memoizeState,
+    recalculateCurrentTime,
   );
 
   function reconcileChildren(current, workInProgress, nextChildren) {

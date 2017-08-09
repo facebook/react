@@ -247,6 +247,11 @@ var TestRenderer = ReactFiberReconciler({
   useSyncScheduling: true,
 
   getPublicInstance,
+
+  now(): number {
+    // Test renderer does not use expiration
+    return 0;
+  },
 });
 
 var defaultTestOptions = {
