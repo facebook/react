@@ -22,6 +22,9 @@ function isInDocument(node) {
   return containsNode(document.documentElement, node);
 }
 
+var nodeNameGetter = Object.getOwnPropertyDescriptor(Node.prototype, 'nodeName')
+  .get;
+
 /**
  * @ReactInputSelection: React input selection module. Based on Selection.js,
  * but modified to be suitable for react and has a couple of bug fixes (doesn't
@@ -30,9 +33,15 @@ function isInDocument(node) {
  */
 var ReactInputSelection = {
   hasSelectionCapabilities: function(elem) {
+    if (elem === window) {
+      return false;
+    }
+
+    var nodeName = nodeNameGetter.call(elem);
+
     return (
-      (elem instanceof HTMLInputElement && elem.type === 'text') ||
-      elem instanceof HTMLTextAreaElement ||
+      (nodeName === 'INPUT' && elem.type === 'text') ||
+      nodeName === 'TEXTAREA' ||
       elem.contentEditable === 'true'
     );
   },
