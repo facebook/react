@@ -3,7 +3,6 @@
   "private": true,
   "version": "16.0.0-beta.5",
   "devDependencies": {
-    "aliasify": "^2.0.0",
     "art": "^0.10.1",
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
@@ -36,7 +35,6 @@
     "babel-preset-react": "^6.5.0",
     "babel-traverse": "^6.9.0",
     "babylon": "6.15.0",
-    "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
@@ -62,16 +60,12 @@
     "glob-stream": "^6.1.0",
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
-    "http-server": "^0.9.0",
-    "http2": "^3.3.6",
     "jest": "20.1.0-delta.1",
     "jest-config": "20.1.0-delta.1",
     "jest-jasmine2": "20.1.0-delta.1",
     "jest-matchers": "20.1.0-delta.1",
     "jest-runtime": "20.1.0-delta.1",
-    "loose-envify": "^1.1.0",
     "merge-stream": "^1.0.0",
-    "mime": "^1.3.4",
     "minimist": "^1.2.0",
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
@@ -88,17 +82,11 @@
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-uglify": "^1.0.1",
     "run-sequence": "^1.1.4",
-    "stats-analysis": "^2.0.0",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
     "uglify-js": "^2.5.0",
-    "uglifyify": "^3.0.1",
     "yargs": "^6.3.0"
-  },
-  "optionalDependencies": {
-    "lighthouse": "^1.6.3",
-    "nodegit": "^0.18.0"
   },
   "devEngines": {
     "node": "4.x || 5.x || 6.x || 7.x || 8.x",
@@ -108,7 +96,6 @@
     "version": 7
   },
   "scripts": {
-    "bench": "npm run version-check && node scripts/bench/runner.js",
     "build": "npm run version-check && node scripts/rollup/build.js",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "node ./scripts/tasks/eslint.js",
