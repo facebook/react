@@ -11,62 +11,46 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
-
 var getTextContentAccessor = require('getTextContentAccessor');
 
 /**
- * This helper class stores information about text content of a target node,
+ * This helper object stores information about text content of a target node,
  * allowing comparison of content before and after a given event.
  *
  * Identify the node where selection currently begins, then observe
  * both its text content and its current position in the DOM. Since the
  * browser may natively replace the target node during composition, we can
  * use its position to find its replacement.
+ * 
  *
- * @param {DOMEventTarget} root
  */
-function FallbackCompositionState(root) {
-  this._root = root;
-  this._startText = this.getText();
-  this._fallbackText = null;
-}
+var compositionState = {
+  _root: null,
+  _startText: null,
+  _fallbackText: null,
+};
 
-Object.assign(FallbackCompositionState.prototype, {
-  destructor: function() {
-    this._root = null;
-    this._startText = null;
-    this._fallbackText = null;
+var FallbackCompositionState = {
+  initialize(nativeEventTarget) {
+    compositionState._root = nativeEventTarget;
+    compositionState._startText = FallbackCompositionState.getText();
+    return true;
   },
-
-  /**
-   * Get current text of input.
-   *
-   * @return {string}
-   */
-  getText: function() {
-    if ('value' in this._root) {
-      return this._root.value;
-    }
-    return this._root[getTextContentAccessor()];
+  reset() {
+    compositionState._root = null;
+    compositionState._startText = null;
+    compositionState._fallbackText = null;
   },
-
-  /**
-   * Determine the differing substring between the initially stored
-   * text content and the current content.
-   *
-   * @return {string}
-   */
-  getData: function() {
-    if (this._fallbackText) {
-      return this._fallbackText;
+  getData() {
+    if (compositionState._fallbackText) {
+      return compositionState._fallbackText;
     }
 
     var start;
-    var startValue = this._startText;
+    var startValue = compositionState._startText;
     var startLength = startValue.length;
     var end;
-    var endValue = this.getText();
+    var endValue = FallbackCompositionState.getText();
     var endLength = endValue.length;
 
     for (start = 0; start < startLength; start++) {
@@ -83,11 +67,15 @@ Object.assign(FallbackCompositionState.prototype, {
     }
 
     var sliceTail = end > 1 ? 1 - end : undefined;
-    this._fallbackText = endValue.slice(start, sliceTail);
-    return this._fallbackText;
+    compositionState._fallbackText = endValue.slice(start, sliceTail);
+    return compositionState._fallbackText;
   },
-});
-
-PooledClass.addPoolingTo(FallbackCompositionState);
+  getText() {
+    if ('value' in compositionState._root) {
+      return compositionState._root.value;
+    }
+    return compositionState._root[getTextContentAccessor()];
+  },
+};
 
 module.exports = FallbackCompositionState;

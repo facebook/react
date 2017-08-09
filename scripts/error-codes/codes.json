@@ -221,5 +221,9 @@
   "219": "getInspectorDataForViewTag() is not available in production",
   "220": "Container does not support insertBefore operation",
   "221": "Tried to register two views with the same name %s",
-  "222": "View config not found for name %s"
+  "222": "View config not found for name %s",
+  "223": "Trying to release an event instance  into a pool of a different type.",
+  "224": "Can't read from currently-mounting component. This error is likely caused by a bug in React. Please file an issue.",
+  "225": "Unexpected object passed to ReactTestInstance constructor (tag: %s). This is probably a bug in React.",
+  "226": "Unsupported component type %s in test renderer. This is probably a bug in React."
 }

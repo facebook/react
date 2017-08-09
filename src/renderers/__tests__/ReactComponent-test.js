@@ -14,8 +14,9 @@
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactDOMFeatureFlags;
 var ReactTestUtils;
+
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactComponent', () => {
   function normalizeCodeLocInfo(str) {
@@ -26,7 +27,6 @@ describe('ReactComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -493,4 +493,78 @@ describe('ReactComponent', () => {
         '    in Foo (at **)',
     );
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    describe('with new features', () => {
+      beforeEach(() => {
+        require('ReactFeatureFlags').disableNewFiberFeatures = false;
+      });
+
+      it('warns on function as a return value from a function', () => {
+        function Foo() {
+          return Foo;
+        }
+        spyOn(console, 'error');
+        var container = document.createElement('div');
+        ReactDOM.render(<Foo />, container);
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Functions are not valid as a React child. This may happen if ' +
+            'you return a Component instead of <Component /> from render. ' +
+            'Or maybe you meant to call this function rather than return it.\n' +
+            '    in Foo (at **)',
+        );
+      });
+
+      it('warns on function as a return value from a class', () => {
+        class Foo extends React.Component {
+          render() {
+            return Foo;
+          }
+        }
+        spyOn(console, 'error');
+        var container = document.createElement('div');
+        ReactDOM.render(<Foo />, container);
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Functions are not valid as a React child. This may happen if ' +
+            'you return a Component instead of <Component /> from render. ' +
+            'Or maybe you meant to call this function rather than return it.\n' +
+            '    in Foo (at **)',
+        );
+      });
+
+      it('warns on function as a child to host component', () => {
+        function Foo() {
+          return <div><span>{Foo}</span></div>;
+        }
+        spyOn(console, 'error');
+        var container = document.createElement('div');
+        ReactDOM.render(<Foo />, container);
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Functions are not valid as a React child. This may happen if ' +
+            'you return a Component instead of <Component /> from render. ' +
+            'Or maybe you meant to call this function rather than return it.\n' +
+            '    in span (at **)\n' +
+            '    in div (at **)\n' +
+            '    in Foo (at **)',
+        );
+      });
+
+      it('does not warn for function-as-a-child that gets resolved', () => {
+        function Bar(props) {
+          return props.children();
+        }
+        function Foo() {
+          return <Bar>{() => 'Hello'}</Bar>;
+        }
+        spyOn(console, 'error');
+        var container = document.createElement('div');
+        ReactDOM.render(<Foo />, container);
+        expect(container.innerHTML).toBe('Hello');
+        expectDev(console.error.calls.count()).toBe(0);
+      });
+    });
+  }
 });
