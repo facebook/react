@@ -46,7 +46,7 @@ var nodeNameGetter = Object.getOwnPropertyDescriptor(
 ).get;
 
 function shouldUseChangeEvent(elem) {
-  var nodeName = nodeNameGetter.call(element);
+  var nodeName = nodeNameGetter.call(elem);
 
   return (
     nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
