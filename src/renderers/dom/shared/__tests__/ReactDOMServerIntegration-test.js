@@ -119,7 +119,7 @@ async function renderIntoStream(reactElement, errorCount = 0) {
     () =>
       new Promise(resolve => {
         let writable = new DrainWritable();
-        ReactDOMServer.renderToStream(reactElement).pipe(writable);
+        ReactDOMServer.renderToNodeStream(reactElement).pipe(writable);
         writable.on('finish', () => resolve(writable.buffer));
       }),
     errorCount,

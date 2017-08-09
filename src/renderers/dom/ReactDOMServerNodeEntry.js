@@ -20,7 +20,7 @@ require('ReactDOMInjection');
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,
   renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToStream: ReactDOMNodeStreamRenderer.renderToStream,
-  renderToStaticStream: ReactDOMNodeStreamRenderer.renderToStaticStream,
+  renderToNodeStream: ReactDOMNodeStreamRenderer.renderToNodeStream,
+  renderToStaticNodeStream: ReactDOMNodeStreamRenderer.renderToStaticNodeStream,
   version: ReactVersion,
 };

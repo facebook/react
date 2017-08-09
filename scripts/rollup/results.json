@@ -1,8 +1,8 @@
 {
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 65980,
-      "gzip": 16788
+      "size": 65895,
+      "gzip": 16725
     },
     "react.production.min.js (UMD_PROD)": {
       "size": 6734,
@@ -25,40 +25,40 @@
       "gzip": 6703
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 634292,
-      "gzip": 144575
+      "size": 635059,
+      "gzip": 144541
     },
     "react-dom.production.min.js (UMD_PROD)": {
       "size": 119041,
       "gzip": 37995
     },
     "react-dom.development.js (NODE_DEV)": {
-      "size": 593703,
-      "gzip": 134999
+      "size": 593871,
+      "gzip": 135054
     },
     "react-dom.production.min.js (NODE_PROD)": {
       "size": 116323,
       "gzip": 37033
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 590523,
-      "gzip": 134461
+      "size": 590691,
+      "gzip": 134515
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
       "size": 423907,
       "gzip": 94912
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
-      "size": 53332,
-      "gzip": 13396
+      "size": 53359,
+      "gzip": 13402
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 53124,
-      "gzip": 13357
+      "size": 53151,
+      "gzip": 13364
     },
     "react-dom-unstable-native-dependencies.development.js (UMD_DEV)": {
-      "size": 88275,
-      "gzip": 22341
+      "size": 88186,
+      "gzip": 22325
     },
     "react-dom-unstable-native-dependencies.production.min.js (UMD_PROD)": {
       "size": 17748,
@@ -81,56 +81,56 @@
       "gzip": 15736
     },
     "react-dom-server.browser.development.js (UMD_DEV)": {
-      "size": 122873,
-      "gzip": 31036
+      "size": 124076,
+      "gzip": 31288
     },
     "react-dom-server.browser.production.min.js (UMD_PROD)": {
-      "size": 21199,
-      "gzip": 8114
+      "size": 21207,
+      "gzip": 8118
     },
     "react-dom-server.browser.development.js (NODE_DEV)": {
-      "size": 92049,
-      "gzip": 23628
+      "size": 92358,
+      "gzip": 23695
     },
     "react-dom-server.browser.production.min.js (NODE_PROD)": {
-      "size": 19962,
-      "gzip": 7604
+      "size": 19970,
+      "gzip": 7609
     },
     "ReactDOMServer-dev.js (FB_DEV)": {
-      "size": 91242,
-      "gzip": 23555
+      "size": 91551,
+      "gzip": 23617
     },
     "ReactDOMServer-prod.js (FB_PROD)": {
-      "size": 49636,
-      "gzip": 13862
+      "size": 49652,
+      "gzip": 13866
     },
     "react-dom-server.node.development.js (NODE_DEV)": {
-      "size": 94782,
-      "gzip": 24195
+      "size": 95135,
+      "gzip": 24258
     },
     "react-dom-server.node.production.min.js (NODE_PROD)": {
-      "size": 21053,
-      "gzip": 7964
+      "size": 21077,
+      "gzip": 7968
     },
     "react-art.development.js (UMD_DEV)": {
-      "size": 373518,
-      "gzip": 82706
+      "size": 307667,
+      "gzip": 66584
     },
     "react-art.production.min.js (UMD_PROD)": {
-      "size": 93115,
-      "gzip": 28802
+      "size": 56773,
+      "gzip": 17592
     },
     "react-art.development.js (NODE_DEV)": {
-      "size": 294907,
-      "gzip": 62698
+      "size": 294998,
+      "gzip": 62730
     },
     "react-art.production.min.js (NODE_PROD)": {
       "size": 55055,
       "gzip": 16989
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 293848,
-      "gzip": 62755
+      "size": 293939,
+      "gzip": 62784
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
       "size": 219245,
@@ -153,12 +153,12 @@
       "gzip": 38548
     },
     "react-test-renderer.development.js (NODE_DEV)": {
-      "size": 299343,
-      "gzip": 63142
+      "size": 299466,
+      "gzip": 63178
     },
     "ReactTestRendererFiber-dev.js (FB_DEV)": {
-      "size": 298269,
-      "gzip": 63216
+      "size": 298392,
+      "gzip": 63252
     },
     "react-test-renderer-shallow.development.js (NODE_DEV)": {
       "size": 9556,
@@ -169,8 +169,8 @@
       "gzip": 2338
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 286618,
-      "gzip": 60007
+      "size": 286709,
+      "gzip": 60040
     }
   }
 }

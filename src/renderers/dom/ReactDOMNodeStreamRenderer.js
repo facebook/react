@@ -38,36 +38,36 @@ class ReactMarkupReadableStream extends Readable {
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
- * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostream
+ * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertonodestream
  */
-function renderToStream(element) {
+function renderToNodeStream(element) {
   const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
   if (disableNewFiberFeatures) {
     invariant(
       React.isValidElement(element),
-      'renderToStream(): Invalid component element.',
+      'renderToNodeStream(): Invalid component element.',
     );
   }
   return new ReactMarkupReadableStream(element, false);
 }
 
 /**
- * Similar to renderToStream, except this doesn't create extra DOM attributes
+ * Similar to renderToNodeStream, except this doesn't create extra DOM attributes
  * such as data-react-id that React uses internally.
- * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostaticstream
+ * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostaticnodestream
  */
-function renderToStaticStream(element) {
+function renderToStaticNodeStream(element) {
   const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
   if (disableNewFiberFeatures) {
     invariant(
       React.isValidElement(element),
-      'renderToStaticStream(): Invalid component element.',
+      'renderToStaticNodeStream(): Invalid component element.',
     );
   }
   return new ReactMarkupReadableStream(element, true);
 }
 
 module.exports = {
-  renderToStream: renderToStream,
-  renderToStaticStream: renderToStaticStream,
+  renderToNodeStream: renderToNodeStream,
+  renderToStaticNodeStream: renderToStaticNodeStream,
 };

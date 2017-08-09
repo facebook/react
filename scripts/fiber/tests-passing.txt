@@ -20,9 +20,7 @@ eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'error!');
 * warning(true, '%s %s, %s %s: %s (%s)', 1, 2, 3, 4, 5, 6);
 
-scripts/error-codes/__tests__/replace-invariant-error-codes-test.js
-* should replace __DEV__ in if
-* should replace warning calls
+scripts/error-codes/__tests__/dev-expression-with-codes-test.js
 * should add `reactProdInvariant` when it finds `require('invariant')`
 * should replace simple invariant calls
 * should only add `reactProdInvariant` once
@@ -34,6 +32,10 @@ scripts/error-codes/__tests__/invertObject-test.js
 * should invert key-values
 * should take the last value when there're duplications in vals
 * should preserve the original order
+
+scripts/rollup/plugins/__tests__/wrap-warning-with-env-check-test.js
+* should wrap warning calls
+* should not wrap invariant calls
 
 scripts/shared/__tests__/evalToString-test.js
 * should support StringLiteral
@@ -336,6 +338,12 @@ src/renderers/__tests__/ReactComponent-test.js
 * includes owner name in the error about badly-typed elements
 * throws if a plain object is used as a child
 * throws if a plain object even if it is in an owner
+* throws if a plain object is used as a child when using SSR
+* throws if a plain object even if it is in an owner when using SSR
+* warns on function as a return value from a function
+* warns on function as a return value from a class
+* warns on function as a child to host component
+* does not warn for function-as-a-child that gets resolved
 
 src/renderers/__tests__/ReactComponentLifeCycle-test.js
 * should not reuse an instance when it has been unmounted
@@ -633,6 +641,7 @@ src/renderers/dom/__tests__/ReactDOMProduction-test.js
 * should use prod fbjs
 * should use prod React
 * should handle a simple flow
+* should handle a simple flow (ssr)
 * should call lifecycle methods
 * should throw with an error code in production
 * should not crash with devtools installed
@@ -715,15 +724,12 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should not remove empty attributes for special properties
 * should remove for falsey boolean properties
 * should remove when setting custom attr to null
-* should use mutation method where applicable
 * should set className to empty string instead of null
 * should remove property properly for boolean properties
-* should remove property properly even with different name
 * should update an empty attribute to zero
 * should always assign the value attribute for non-inputs
 * should remove attributes for normal properties
 * should not remove attributes for special properties
-* should not leave all options selected when deleting multiple
 
 src/renderers/dom/shared/__tests__/ReactBrowserEventEmitter-test.js
 * should store a listener correctly
@@ -855,6 +861,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * gives source code refs for unknown prop warning for exact elements
 * gives source code refs for unknown prop warning for exact elements (ssr)
 * gives source code refs for unknown prop warning for exact elements in composition
+* gives source code refs for unknown prop warning for exact elements in composition (ssr)
 * should suggest property name if available
 * should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
@@ -901,6 +908,41 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a self-closing tag as a child with clean client render
 * renders a self-closing tag as a child with client render on top of good server markup
 * renders a self-closing tag as a child with client render on top of bad server markup
+* renders a string with server string render
+* renders a string with server stream render
+* renders a string with clean client render
+* renders a string with client render on top of good server markup
+* renders a string with client render on top of bad server markup
+* renders a number with server string render
+* renders a number with server stream render
+* renders a number with clean client render
+* renders a number with client render on top of good server markup
+* renders a number with client render on top of bad server markup
+* renders an array with one child with server string render
+* renders an array with one child with server stream render
+* renders an array with one child with clean client render
+* renders an array with one child with client render on top of good server markup
+* renders an array with one child with client render on top of bad server markup
+* renders an array with several children with server string render
+* renders an array with several children with server stream render
+* renders an array with several children with clean client render
+* renders an array with several children with client render on top of good server markup
+* renders an array with several children with client render on top of bad server markup
+* renders a nested array with server string render
+* renders a nested array with server stream render
+* renders a nested array with clean client render
+* renders a nested array with client render on top of good server markup
+* renders a nested array with client render on top of bad server markup
+* renders an iterable with server string render
+* renders an iterable with server stream render
+* renders an iterable with clean client render
+* renders an iterable with client render on top of good server markup
+* renders an iterable with client render on top of bad server markup
+* renders emptyish values with server string render
+* renders emptyish values with server stream render
+* renders emptyish values with clean client render
+* renders emptyish values with client render on top of good server markup
+* renders emptyish values with client render on top of bad server markup
 * renders simple numbers with server string render
 * renders simple numbers with server stream render
 * renders simple numbers with clean client render
@@ -1391,6 +1433,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders a div with a single child surrounded by whitespace with clean client render
 * renders a div with a single child surrounded by whitespace with client render on top of good server markup
 * renders a div with a single child surrounded by whitespace with client render on top of bad server markup
+* renders a composite with multiple children with server string render
+* renders a composite with multiple children with server stream render
+* renders a composite with multiple children with clean client render
+* renders a composite with multiple children with client render on top of good server markup
+* renders a composite with multiple children with client render on top of bad server markup
 * renders >,<, and & as single child with server string render
 * renders >,<, and & as single child with server stream render
 * renders >,<, and & as single child with clean client render
@@ -1401,30 +1448,21 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders >,<, and & as multiple children with clean client render
 * renders >,<, and & as multiple children with client render on top of good server markup
 * renders >,<, and & as multiple children with client render on top of bad server markup
-* throws when rendering a string component with server string render
-* throws when rendering a string component with clean client render
-* throws when rendering a string component with client render on top of bad server markup
-* throws when rendering an undefined component with server string render
-* throws when rendering an undefined component with clean client render
-* throws when rendering an undefined component with client render on top of bad server markup
-* throws when rendering a number component with server string render
-* throws when rendering a number component with clean client render
-* throws when rendering a number component with client render on top of bad server markup
-* throws when rendering null with server string render
-* throws when rendering null with clean client render
-* throws when rendering null with client render on top of bad server markup
-* throws when rendering false with server string render
-* throws when rendering false with clean client render
-* throws when rendering false with client render on top of bad server markup
-* throws when rendering undefined with server string render
-* throws when rendering undefined with clean client render
-* throws when rendering undefined with client render on top of bad server markup
-* throws when rendering number with server string render
-* throws when rendering number with clean client render
-* throws when rendering number with client render on top of bad server markup
-* throws when rendering string with server string render
-* throws when rendering string with clean client render
-* throws when rendering string with client render on top of bad server markup
+* throws when rendering a function returning undefined with server string render
+* throws when rendering a function returning undefined with clean client render
+* throws when rendering a function returning undefined with client render on top of bad server markup
+* throws when rendering a class returning undefined with server string render
+* throws when rendering a class returning undefined with clean client render
+* throws when rendering a class returning undefined with client render on top of bad server markup
+* throws when rendering a function returning an object with server string render
+* throws when rendering a function returning an object with clean client render
+* throws when rendering a function returning an object with client render on top of bad server markup
+* throws when rendering a class returning an object with server string render
+* throws when rendering a class returning an object with clean client render
+* throws when rendering a class returning an object with client render on top of bad server markup
+* throws when rendering top-level object with server string render
+* throws when rendering top-level object with clean client render
+* throws when rendering top-level object with client render on top of bad server markup
 * renders an input with a value and an onChange with server string render
 * renders an input with a value and an onChange with server stream render
 * renders an input with a value and an onChange with clean client render
@@ -1694,7 +1732,8 @@ src/renderers/dom/shared/__tests__/ReactMount-test.js
 * should render different components in same root
 * should unmount and remount if the key changes
 * should reuse markup if rendering to the same target twice
-* should warn if mounting into dirty rendered markup
+* should warn if mounting into left padded rendered markup
+* should warn if mounting into right padded rendered markup
 * should not warn if mounting into non-empty node
 * should warn when mounting into document.body
 * should account for escaping on a checksum mismatch
@@ -1718,6 +1757,14 @@ src/renderers/dom/shared/__tests__/ReactRenderDocument-test.js
 * should give helpful errors on state desync
 * should throw on full document render w/ no markup
 * supports findDOMNode on full-page components
+* should be able to adopt server markup
+* should not be able to unmount component from document node
+* should not be able to switch root constructors
+* should be able to mount into document
+* renders over an existing text child without throwing
+* should give helpful errors on state desync
+* should render w/ no markup to full document
+* supports findDOMNode on full-page components
 
 src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should generate simple markup
@@ -1726,7 +1773,8 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * should generate comment markup for component returns null
 * should render composite components
 * should only execute certain lifecycle methods
-* should have the correct mounting behavior
+* should have the correct mounting behavior (old hydrate API)
+* should have the correct mounting behavior (new hydrate API)
 * should throw with silly args
 * should not put checksum and React ID on components
 * should not put checksum and React ID on text components
@@ -1741,6 +1789,11 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * warns with a no-op when an async setState is triggered
 * warns with a no-op when an async forceUpdate is triggered
 * should warn when children are mutated during render
+
+src/renderers/dom/shared/__tests__/ReactServerRenderingBrowser-test.js
+* provides the same top-level API as react-dom/server
+* returns the same results as react-dom/server
+* throws meaningfully for server-only APIs
 
 src/renderers/dom/shared/__tests__/escapeTextContentForBrowser-test.js
 * should escape boolean to string
@@ -2060,29 +2113,6 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should warn if value and defaultValue are specified
 
 src/renderers/dom/test/__tests__/ReactTestUtils-test.js
-* should call all of the lifecycle hooks
-* should only render 1 level deep
-* should have shallow rendering
-* should enable shouldComponentUpdate to prevent a re-render
-* should shallow render a functional component
-* should throw for invalid elements
-* should have shallow unmounting
-* can shallow render to null
-* can shallow render with a ref
-* lets you update shallowly rendered components
-* can access the mounted component instance
-* can shallowly render components with contextTypes
-* can shallowly render components with ref as function
-* can setState in componentWillMount when shallow rendering
-* can setState in componentWillReceiveProps when shallow rendering
-* can setState with an updater function
-* can setState with a callback
-* can replaceState with a callback
-* can forceUpdate with a callback
-* can pass context when shallowly rendering
-* should track context across updates
-* can fail context when shallowly rendering
-* should warn about propTypes (but only once)
 * can scryRenderedDOMComponentsWithClass with TextComponent
 * can scryRenderedDOMComponentsWithClass with className contains \n
 * can scryRenderedDOMComponentsWithClass with multiple classes
@@ -2093,7 +2123,6 @@ src/renderers/dom/test/__tests__/ReactTestUtils-test.js
 * should throw when attempting to use ReactTestUtils.Simulate with shallow rendering
 * should not warn when simulating events with extra properties
 * can scry with stateless components involved
-* should enable rendering of cloned element
 * should set the type of the event
 * should work with renderIntoDocument
 * should call setState callback with no arguments
@@ -2133,7 +2162,7 @@ src/renderers/native/__tests__/createReactNativeComponentClass-test.js
 * should not allow viewConfigs with duplicate uiViewClassNames to be registered
 
 src/renderers/shared/__tests__/ReactDOMFrameScheduling-test.js
-* throws when requestAnimationFrame is not polyfilled in the browser
+* warns when requestAnimationFrame is not polyfilled in the browser
 * can import findDOMNode in Node environment
 
 src/renderers/shared/__tests__/ReactDebugTool-test.js
@@ -2175,6 +2204,10 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * maintains the correct context when providers bail out due to low priority
 * maintains the correct context when unwinding due to an error in render
 * should not recreate masked context unless inputs have changed
+* updates descendants with new context values
+* updates descendants with multiple context-providing ancestors with new context values
+* should not update descendants with new context values if shouldComponentUpdate returns false
+* should update descendants with new context values if setState() is called in the middle of the tree
 
 src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * catches render error in a boundary during full deferred mounting
@@ -2191,6 +2224,8 @@ src/renderers/shared/fiber/__tests__/ReactIncrementalErrorHandling-test.js
 * can schedule updates after uncaught error in render on mount
 * can schedule updates after uncaught error in render on update
 * can schedule updates after uncaught error during umounting
+* should not attempt to recover an unmounting error boundary
+* can unmount an error boundary before it is handled
 * continues work on other roots despite caught errors
 * continues work on other roots despite uncaught errors
 * unwinds the context stack correctly on error
@@ -2321,6 +2356,18 @@ src/renderers/shared/shared/event/eventPlugins/__tests__/ResponderEventPlugin-te
 * should negotiate scroll
 * should cancel correctly
 
+src/renderers/shared/stack/__tests__/PooledClass-test.js
+* should initialize a pool correctly
+* should return a new instance when the pool is empty
+* should return the instance back into the pool when it gets released
+* should return an old instance if available in the pool
+* should call the destructor when instance gets released
+* should accept poolers with different arguments
+* should call a new constructor with arguments
+* should call an old constructor with arguments
+* should throw when the class releases an instance of a different type
+* should throw if no destructor is defined
+
 src/renderers/shared/stack/reconciler/__tests__/Transaction-test.js
 * should invoke closers with/only-with init returns
 * should invoke closers and wrapped method when inits success
@@ -2362,6 +2409,36 @@ src/renderers/shared/utils/__tests__/adler32-test.js
 * doesn't barf on large inputs
 * doesn't barf on international inputs
 
+src/renderers/testing/__tests__/ReactShallowRenderer-test.js
+* should call all of the lifecycle hooks
+* should only render 1 level deep
+* should have shallow rendering
+* should enable shouldComponentUpdate to prevent a re-render
+* should shallow render a functional component
+* should shallow render a component returning strings directly from render
+* should shallow render a component returning numbers directly from render
+* should shallow render a fragment
+* should throw for invalid elements
+* should have shallow unmounting
+* can shallow render to null
+* can shallow render with a ref
+* lets you update shallowly rendered components
+* can access the mounted component instance
+* can shallowly render components with contextTypes
+* passes expected params to component lifecycle methods
+* can shallowly render components with ref as function
+* can setState in componentWillMount when shallow rendering
+* can setState in componentWillReceiveProps when shallow rendering
+* can setState with an updater function
+* can setState with a callback
+* can replaceState with a callback
+* can forceUpdate with a callback
+* can pass context when shallowly rendering
+* should track context across updates
+* can fail context when shallowly rendering
+* should warn about propTypes (but only once)
+* should enable rendering of cloned element
+
 src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * renders a simple component
 * renders a top-level empty component
@@ -2387,17 +2464,11 @@ src/renderers/testing/__tests__/ReactTestRenderer-test.js
 * can update text nodes when rendered as root
 * can render and update root fragments
 
-src/shared/utils/__tests__/PooledClass-test.js
-* should initialize a pool correctly
-* should return a new instance when the pool is empty
-* should return the instance back into the pool when it gets released
-* should return an old instance if available in the pool
-* should call the destructor when instance gets released
-* should accept poolers with different arguments
-* should call a new constructor with arguments
-* should call an old constructor with arguments
-* should throw when the class releases an instance of a different type
-* should throw if no destructor is defined
+src/renderers/testing/__tests__/ReactTestRendererTraversal-test.js
+* initializes
+* searches via .find() / .findAll()
+* searches via .findByType() / .findAllByType()
+* searches via .findByProps() / .findAllByProps()
 
 src/shared/utils/__tests__/reactProdInvariant-test.js
 * should throw with the correct number of `%s`s in the URL
