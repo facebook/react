@@ -38,6 +38,7 @@
     "babylon": "6.15.0",
     "browserify": "^13.0.0",
     "bundle-collapser": "^1.1.1",
+    "bundlesize": "0.6.0",
     "chalk": "^1.1.3",
     "cli-table": "^0.3.1",
     "coffee-script": "^1.8.0",
@@ -123,6 +124,24 @@
     "projects": [
       "<rootDir>/scripts/jest/stack.config.json",
       "<rootDir>/scripts/jest/fiber.config.json"
-    ]
-  }
+    ],
+  },
+  "bundlesize": [
+    {
+      "path": "./build/dist/react.production.min.js",
+      "threshold": "3kB"
+    },
+    {
+      "path": "./build/dist/react-dom.production.min.js",
+      "threshold": "40kB"
+    },
+    {
+      "path": "./build/dist/react-dom-server.production.min.js",
+      "threshold": "22kB"
+    },
+    {
+      "path": "./build/dist/react-art.production.min.js",
+      "threshold": "30kB"
+    }
+  ]
 }
