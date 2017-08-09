@@ -1,4 +1,5 @@
 {
+  "name": "react-fiber",
   "modulePathIgnorePatterns": [
     "/.module-cache/",
     "<rootDir>/build/",
