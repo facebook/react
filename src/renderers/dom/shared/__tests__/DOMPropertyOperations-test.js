@@ -63,13 +63,15 @@ describe('DOMPropertyOperations', () => {
     });
 
     it('should convert attribute values to string first', () => {
+      class Stringish extends String {
+        valueOf() {
+          return 'css-class';
+        }
+      }
+
       // Browsers default to this behavior, but some test environments do not.
       // This ensures that we have consistent behavior.
-      var obj = {
-        toString: function() {
-          return 'css-class';
-        },
-      };
+      var obj = new Stringish();
 
       var container = document.createElement('div');
       ReactDOM.render(<div className={obj} />, container);

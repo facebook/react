@@ -2130,7 +2130,30 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should pass objects as attributes if they define toString', () => {
+    it('should pass plain objects as attributes if they extend String', () => {
+      spyOn(console, 'warn');
+      class MyString extends String {
+        valueOf() {
+          return 'hello';
+        }
+      }
+      var obj = new MyString();
+      var container = document.createElement('div');
+
+      ReactDOM.render(<img src={obj} />, container);
+      expect(container.firstChild.src).toBe('hello');
+
+      ReactDOM.render(<svg arabicForm={obj} />, container);
+      expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
+
+      ReactDOM.render(<div customAttribute={obj} />, container);
+      expect(container.firstChild.getAttribute('customAttribute')).toBe(
+        'hello',
+      );
+    });
+
+    it('should pass plain objects as attributes if they define toString', () => {
+      spyOn(console, 'warn');
       var obj = {
         toString() {
           return 'hello';
@@ -2147,6 +2170,28 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div customAttribute={obj} />, container);
       expect(container.firstChild.getAttribute('customAttribute')).toBe(
         'hello',
+      );
+      expectDev(console.warn.calls.count()).toBe(3);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+        'The `src` prop was given an object with a custom toString() method. ' +
+          'This works in React 16, but will stop working in React 17. Instead, you ' +
+          'can pass the result of calling toString() on it manually. Alternatively, ' +
+          'you can make the passed object extend String, and define a valueOf() method ' +
+          'on it, which React will call to get the string value.',
+      );
+      expectDev(console.warn.calls.argsFor(1)[0]).toContain(
+        'The `arabicForm` prop was given an object with a custom toString() method. ' +
+          'This works in React 16, but will stop working in React 17. Instead, you ' +
+          'can pass the result of calling toString() on it manually. Alternatively, ' +
+          'you can make the passed object extend String, and define a valueOf() method ' +
+          'on it, which React will call to get the string value.',
+      );
+      expectDev(console.warn.calls.argsFor(2)[0]).toContain(
+        'The `customAttribute` prop was given an object with a custom toString() method. ' +
+          'This works in React 16, but will stop working in React 17. Instead, you ' +
+          'can pass the result of calling toString() on it manually. Alternatively, ' +
+          'you can make the passed object extend String, and define a valueOf() method ' +
+          'on it, which React will call to get the string value.',
       );
     });
 
@@ -2177,18 +2222,37 @@ describe('ReactDOMComponent', () => {
     });
 
     it('allows objects that inherit a custom toString method', function() {
+      spyOn(console, 'warn');
       var parent = {toString: () => 'hello.jpg'};
       var child = Object.create(parent);
       var el = ReactTestUtils.renderIntoDocument(<img src={child} />);
 
       expect(el.src).toBe('hello.jpg');
+      expectDev(console.warn.calls.count()).toBe(1);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+        'The `src` prop was given an object with a custom toString() method. ' +
+          'This works in React 16, but will stop working in React 17. Instead, you ' +
+          'can pass the result of calling toString() on it manually. Alternatively, ' +
+          'you can make the passed object extend String, and define a valueOf() method ' +
+          'on it, which React will call to get the string value.',
+      );
     });
 
     it('assigns ajaxify (an important internal FB attribute)', function() {
+      spyOn(console, 'warn');
       var options = {toString: () => 'ajaxy'};
       var el = ReactTestUtils.renderIntoDocument(<div ajaxify={options} />);
 
       expect(el.getAttribute('ajaxify')).toBe('ajaxy');
+      // At FB, we'll disable this warning initially.
+      expectDev(console.warn.calls.count()).toBe(1);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+        'The `ajaxify` prop was given an object with a custom toString() method. ' +
+          'This works in React 16, but will stop working in React 17. Instead, you ' +
+          'can pass the result of calling toString() on it manually. Alternatively, ' +
+          'you can make the passed object extend String, and define a valueOf() method ' +
+          'on it, which React will call to get the string value.',
+      );
     });
   });
 });
