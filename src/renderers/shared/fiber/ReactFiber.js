@@ -152,7 +152,7 @@ export type Fiber = {|
   _debugID?: DebugID,
   _debugSource?: Source | null,
   _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
-  _debugIsCurrentlyTiming?: boolean,  
+  _debugIsCurrentlyTiming?: boolean,
 |};
 
 if (__DEV__) {
