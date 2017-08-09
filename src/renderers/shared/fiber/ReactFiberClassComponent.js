@@ -12,6 +12,7 @@
 
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {Update} = require('ReactTypeOfSideEffect');
 
@@ -81,6 +82,7 @@ module.exports = function(
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
+  recalculateCurrentTime: () => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
@@ -88,31 +90,34 @@ module.exports = function(
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext(fiber, false);
+      const currentTime = recalculateCurrentTime();
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(fiber, partialState, callback, priorityLevel);
+      addUpdate(fiber, partialState, callback, priorityLevel, currentTime);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext(fiber, false);
+      const currentTime = recalculateCurrentTime();
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(fiber, state, callback, priorityLevel);
+      addReplaceUpdate(fiber, state, callback, priorityLevel, currentTime);
       scheduleUpdate(fiber, priorityLevel);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext(fiber, false);
+      const currentTime = recalculateCurrentTime();
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(fiber, callback, priorityLevel);
+      addForceUpdate(fiber, callback, priorityLevel, currentTime);
       scheduleUpdate(fiber, priorityLevel);
     },
   };

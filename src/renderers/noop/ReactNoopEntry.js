@@ -201,6 +201,11 @@ var NoopRenderer = ReactFiberReconciler({
   prepareForCommit(): void {},
 
   resetAfterCommit(): void {},
+
+  now(): number {
+    // TODO: Add an API to advance time.
+    return 0;
+  },
 });
 
 var rootContainers = new Map();

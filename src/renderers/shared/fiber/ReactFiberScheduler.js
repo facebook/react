@@ -15,6 +15,7 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 export type CapturedError = {
   componentName: ?string,
@@ -61,6 +62,8 @@ var {
   LowPriority,
   OffscreenPriority,
 } = require('ReactPriorityLevel');
+
+var {msToExpirationTime} = require('ReactFiberExpirationTime');
 
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 
@@ -166,6 +169,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hydrationContext,
     scheduleUpdate,
     getPriorityContext,
+    recalculateCurrentTime,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -181,11 +185,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     commitDetachRef,
   } = ReactFiberCommitWork(config, captureError);
   const {
+    now,
     scheduleDeferredCallback,
     useSyncScheduling,
     prepareForCommit,
     resetAfterCommit,
   } = config;
+
+  // Represents the current time in ms.
+  let currentTime: ExpirationTime = msToExpirationTime(now());
 
   // The priority level to use when scheduling an update. We use NoWork to
   // represent the default priority.
@@ -1513,6 +1521,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     scheduleUpdateImpl(fiber, TaskPriority, true);
   }
 
+  function recalculateCurrentTime(): ExpirationTime {
+    currentTime = msToExpirationTime(now());
+    return currentTime;
+  }
+
   function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
     const previousIsBatchingUpdates = isBatchingUpdates;
     isBatchingUpdates = true;
@@ -1575,6 +1588,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   return {
     scheduleUpdate: scheduleUpdate,
     getPriorityContext: getPriorityContext,
+    recalculateCurrentTime: recalculateCurrentTime,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,
