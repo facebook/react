@@ -20,7 +20,7 @@ eslint-rules/__tests__/warning-and-invariant-args-test.js
 * warning(true, 'error!');
 * warning(true, '%s %s, %s %s: %s (%s)', 1, 2, 3, 4, 5, 6);
 
-scripts/error-codes/__tests__/dev-expression-with-codes-test.js
+scripts/error-codes/__tests__/replace-invariant-error-codes-test.js
 * should replace __DEV__ in if
 * should replace warning calls
 * should add `reactProdInvariant` when it finds `require('invariant')`
@@ -667,6 +667,10 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * should not onMouseLeave when staying in the portal
 * should not update event handlers until commit
 * should not crash encountering low-priority tree
+* should not warn when rendering into an empty container
+* should warn when replacing a container which was manually updated outside of React
+* should warn when doing an update to a container manually updated outside of React
+* should warn when doing an update to a container manually cleared outside of React
 * throws if non-element passed to top-level render
 * throws if something other than false, null, or an element is returned from render
 * treats mocked render functions as if they return null
@@ -678,6 +682,10 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
 * updates inside an async tree are async by default
 * AsyncComponent creates an async subtree
 * updates inside an async subtree are async by default
+* flushSync batches sync updates and flushes them at the end of the batch
+* flushSync flushes updates even if nested inside another flushSync
+* flushSync throws if already performing work
+* flushSync flushes updates before end of the tick
 
 src/renderers/dom/shared/__tests__/CSSProperty-test.js
 * should generate browser prefixes for its `isUnitlessNumber`
@@ -751,6 +759,7 @@ src/renderers/dom/shared/__tests__/ReactDOM-test.js
 * throws in render() if the update callback is not a function
 * preserves focus
 * calls focus() on autoFocus elements after they have been mounted to the DOM
+* shouldn't fire duplicate event handler while handling other nested dispatch
 
 src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should handle className
@@ -2156,7 +2165,6 @@ src/renderers/shared/fiber/__tests__/ReactIncremental-test.js
 * can call setState inside update callback
 * can replaceState
 * can forceUpdate
-* performs batched updates at the end of the batch
 * can nest batchedUpdates
 * can handle if setState callback throws
 * merges and masks context
@@ -2321,21 +2329,24 @@ src/renderers/shared/stack/reconciler/__tests__/Transaction-test.js
 * should allow nesting of transactions
 
 src/renderers/shared/utils/__tests__/ReactErrorUtils-test.js
-* it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (development)
+* it should rethrow caught errors (development)
 * should call the callback the passed arguments (development)
 * should call the callback with the provided context (development)
-* should return a caught error (development)
-* should return null if no error is thrown (development)
+* should catch errors (development)
+* should return false from clearCaughtError if no error was thrown (development)
 * can nest with same debug name (development)
-* does not return nested errors (development)
+* handles nested errors (development)
+* handles nested errors in separate renderers
 * can be shimmed (development)
-* it should rethrow errors caught by invokeGuardedCallbackAndCatchFirstError (production)
+* it should rethrow caught errors (production)
 * should call the callback the passed arguments (production)
 * should call the callback with the provided context (production)
-* should return a caught error (production)
-* should return null if no error is thrown (production)
+* should catch errors (production)
+* should return false from clearCaughtError if no error was thrown (production)
 * can nest with same debug name (production)
-* does not return nested errors (production)
+* handles nested errors (production)
+* handles nested errors in separate renderers
+* catches null values
 * can be shimmed (production)
 
 src/renderers/shared/utils/__tests__/accumulateInto-test.js

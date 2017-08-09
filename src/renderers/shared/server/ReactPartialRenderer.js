@@ -12,13 +12,14 @@
 'use strict';
 
 var DOMMarkupOperations = require('DOMMarkupOperations');
-var {registrationNameModules} = require('EventPluginRegistry');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
 var assertValidProps = require('assertValidProps');
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var invariant = require('fbjs/lib/invariant');
 var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
@@ -26,11 +27,9 @@ var omittedCloseTags = require('omittedCloseTags');
 var toArray = React.Children.toArray;
 
 if (__DEV__) {
-  var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
   var warning = require('fbjs/lib/warning');
   var checkPropTypes = require('prop-types/checkPropTypes');
   var warnValidStyle = require('warnValidStyle');
-  var dangerousStyleValue = require('dangerousStyleValue');
   var {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');
@@ -50,9 +49,7 @@ if (__DEV__) {
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
-    var name = typeof type === 'string'
-      ? type
-      : typeof type === 'function' ? type.displayName || type.name : null;
+    var name = getComponentName(type);
     var ownerName = null;
     return describeComponentFrame(name, source, ownerName);
   };
@@ -104,6 +101,12 @@ var newlineEatingTags = {
   pre: true,
   textarea: true,
 };
+
+function getComponentName(type) {
+  return typeof type === 'string'
+    ? type
+    : typeof type === 'function' ? type.displayName || type.name : null;
+}
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -162,8 +165,7 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && (constructor.displayName || constructor.name)) ||
-        'ReactClass',
+      (constructor && getComponentName(constructor)) || 'ReactClass',
     );
   }
 }
@@ -269,27 +271,22 @@ function createOpenTagMarkup(
     if (propValue == null) {
       continue;
     }
-    if (!registrationNameModules.hasOwnProperty(propKey)) {
-      if (propKey === STYLE) {
-        propValue = createMarkupForStyles(propValue, instForDebug);
-      }
-      var markup = null;
-      if (isCustomComponent(tagLowercase, props)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-          markup = DOMMarkupOperations.createMarkupForCustomAttribute(
-            propKey,
-            propValue,
-          );
-        }
-      } else {
-        markup = DOMMarkupOperations.createMarkupForProperty(
+    if (propKey === STYLE) {
+      propValue = createMarkupForStyles(propValue, instForDebug);
+    }
+    var markup = null;
+    if (isCustomComponent(tagLowercase, props)) {
+      if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        markup = DOMMarkupOperations.createMarkupForCustomAttribute(
           propKey,
           propValue,
         );
       }
-      if (markup) {
-        ret += ' ' + markup;
-      }
+    } else {
+      markup = DOMMarkupOperations.createMarkupForProperty(propKey, propValue);
+    }
+    if (markup) {
+      ret += ' ' + markup;
     }
   }
 
@@ -302,13 +299,22 @@ function createOpenTagMarkup(
   if (isRootElement) {
     ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
   }
-  ret += ' ' + DOMMarkupOperations.createMarkupForID('');
   return ret;
 }
 
+function validateRenderResult(child, type) {
+  if (child === undefined) {
+    invariant(
+      false,
+      '%s(...): Nothing was returned from render. This usually means a ' +
+        'return statement is missing. Or, to render nothing, ' +
+        'return null.',
+      getComponentName(type) || 'Component',
+    );
+  }
+}
+
 function resolve(child, context) {
-  // TODO: We'll need to support Arrays (and strings) after Fiber is rolled out
-  invariant(!Array.isArray(child), 'Did not expect to receive an Array child');
   while (React.isValidElement(child)) {
     if (__DEV__) {
       pushElementToDebugStack(child);
@@ -350,6 +356,7 @@ function resolve(child, context) {
       inst = Component(child.props, publicContext, updater);
       if (inst == null || inst.render == null) {
         child = inst;
+        validateRenderResult(child, Component);
         continue;
       }
     }
@@ -404,8 +411,27 @@ function resolve(child, context) {
         child = null;
       }
     }
+    validateRenderResult(child, Component);
 
-    var childContext = inst.getChildContext && inst.getChildContext();
+    var childContext;
+    if (typeof inst.getChildContext === 'function') {
+      var childContextTypes = Component.childContextTypes;
+      invariant(
+        typeof childContextTypes === 'object',
+        '%s.getChildContext(): childContextTypes must be defined in order to ' +
+          'use getChildContext().',
+        getComponentName(Component) || 'Unknown',
+      );
+      childContext = inst.getChildContext();
+      for (let contextKey in childContext) {
+        invariant(
+          contextKey in childContextTypes,
+          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+          getComponentName(Component) || 'Unknown',
+          contextKey,
+        );
+      }
+    }
     if (childContext) {
       context = Object.assign({}, context, childContext);
     }
@@ -415,8 +441,9 @@ function resolve(child, context) {
 
 class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
+    var children = React.isValidElement(element) ? [element] : toArray(element);
     var topFrame = {
-      children: [element],
+      children,
       childIndex: 0,
       context: emptyObject,
       footer: '',
@@ -484,7 +511,22 @@ class ReactDOMServerRenderer {
       if (child === null || child === false) {
         return '';
       } else {
-        return this.renderDOM(child, context);
+        if (React.isValidElement(child)) {
+          return this.renderDOM(child, context);
+        } else {
+          var children = toArray(child);
+          var frame = {
+            children,
+            childIndex: 0,
+            context: context,
+            footer: '',
+          };
+          if (__DEV__) {
+            frame.debugElementStack = [];
+          }
+          this.stack.push(frame);
+          return '';
+        }
       }
     }
   }

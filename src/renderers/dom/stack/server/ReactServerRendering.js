@@ -79,7 +79,7 @@ function renderToStringImpl(element, makeStaticMarkup) {
 function renderToString(element) {
   invariant(
     React.isValidElement(element),
-    'renderToString(): You must pass a valid ReactElement.',
+    'renderToString(): Invalid component element.',
   );
   return renderToStringImpl(element, false);
 }
@@ -92,7 +92,7 @@ function renderToString(element) {
 function renderToStaticMarkup(element) {
   invariant(
     React.isValidElement(element),
-    'renderToStaticMarkup(): You must pass a valid ReactElement.',
+    'renderToStaticMarkup(): Invalid component element.',
   );
   return renderToStringImpl(element, true);
 }

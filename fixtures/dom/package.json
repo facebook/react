@@ -3,12 +3,13 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "react-scripts": "0.9.5"
+    "react-scripts": "1.0.0"
   },
   "dependencies": {
     "classnames": "^2.2.5",
-    "query-string": "^4.2.3",
+    "core-js": "^2.4.1",
     "prop-types": "^15.5.6",
+    "query-string": "^4.2.3",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
     "semver": "^5.3.0"

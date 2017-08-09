@@ -96,18 +96,16 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.render(<Foo />);
     ReactNoop.flush();
 
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        ReactNoop.deferredUpdates(() => {
-          instance.setState({x: 'x'});
-          instance.setState({y: 'y'});
-        });
-        instance.setState({a: 'a'});
-        instance.setState({b: 'b'});
-        ReactNoop.deferredUpdates(() => {
-          instance.updater.enqueueReplaceState(instance, {c: 'c'});
-          instance.setState({d: 'd'});
-        });
+    ReactNoop.flushSync(() => {
+      ReactNoop.deferredUpdates(() => {
+        instance.setState({x: 'x'});
+        instance.setState({y: 'y'});
+      });
+      instance.setState({a: 'a'});
+      instance.setState({b: 'b'});
+      ReactNoop.deferredUpdates(() => {
+        instance.updater.enqueueReplaceState(instance, {c: 'c'});
+        instance.setState({d: 'd'});
       });
     });
 
@@ -160,15 +158,13 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    // Schedule some more updates at different priorities
-    ReactNoop.batchedUpdates(() => {
-      instance.setState(createUpdate('f'));
-      ReactNoop.syncUpdates(() => {
-        instance.setState(createUpdate('d'));
-        instance.setState(createUpdate('e'));
-      });
-      instance.setState(createUpdate('g'));
+    // Schedule some more updates at different priorities{
+    instance.setState(createUpdate('f'));
+    ReactNoop.flushSync(() => {
+      instance.setState(createUpdate('d'));
+      instance.setState(createUpdate('e'));
     });
+    instance.setState(createUpdate('g'));
 
     // The sync updates should have flushed, but not the async ones
     expect(ReactNoop.getChildren()).toEqual([span('de')]);
@@ -210,17 +206,15 @@ describe('ReactIncrementalUpdates', () => {
     ReactNoop.flushThrough(['a', 'b', 'c']);
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
-    // Schedule some more updates at different priorities
-    ReactNoop.batchedUpdates(() => {
-      instance.setState(createUpdate('f'));
-      ReactNoop.syncUpdates(() => {
-        instance.setState(createUpdate('d'));
-        // No longer a public API, but we can test that it works internally by
-        // reaching into the updater.
-        instance.updater.enqueueReplaceState(instance, createUpdate('e'));
-      });
-      instance.setState(createUpdate('g'));
+    // Schedule some more updates at different priorities{
+    instance.setState(createUpdate('f'));
+    ReactNoop.flushSync(() => {
+      instance.setState(createUpdate('d'));
+      // No longer a public API, but we can test that it works internally by
+      // reaching into the updater.
+      instance.updater.enqueueReplaceState(instance, createUpdate('e'));
     });
+    instance.setState(createUpdate('g'));
 
     // The sync updates should have flushed, but not the async ones. Update d
     // was dropped and replaced by e.
@@ -307,11 +301,9 @@ describe('ReactIncrementalUpdates', () => {
 
     ops = [];
 
-    ReactNoop.batchedUpdates(() => {
-      ReactNoop.syncUpdates(() => {
-        instance.setState({a: 'a'});
-        ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
-      });
+    ReactNoop.flushSync(() => {
+      instance.setState({a: 'a'});
+      ReactNoop.render(<Foo />); // Trigger componentWillReceiveProps
     });
 
     expect(instance.state).toEqual({a: 'a', b: 'b'});
