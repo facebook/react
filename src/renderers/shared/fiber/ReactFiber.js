@@ -63,7 +63,7 @@ if (__DEV__) {
 
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
-export type Fiber = {
+export type Fiber = {|
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
   // but until Flow fixes its intersection bugs, we've merged them into a
@@ -153,7 +153,7 @@ export type Fiber = {
   _debugSource?: Source | null,
   _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
   _debugIsCurrentlyTiming?: boolean,  
-};
+|};
 
 if (__DEV__) {
   var debugCounter = 1;
@@ -225,6 +225,7 @@ var createFiber = function(
   key: null | string,
   internalContextTag: TypeOfInternalContext,
 ): Fiber {
+  // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
   return new FiberNode(tag, key, internalContextTag);
 };
 
