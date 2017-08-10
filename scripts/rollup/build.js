@@ -21,6 +21,7 @@ const Stats = require('./stats');
 const syncReactNative = require('./sync').syncReactNative;
 const Packaging = require('./packaging');
 const Header = require('./header');
+const closure = require('rollup-plugin-closure-compiler-js');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -123,6 +124,8 @@ function updateBabelConfig(babelOpts, bundleType) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
       return Object.assign({}, babelOpts, {
         plugins: babelOpts.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
@@ -333,6 +336,23 @@ function getPlugins(
       break;
     case UMD_PROD:
     case NODE_PROD:
+      plugins.push(
+        replace(stripEnvVariables(true)),
+        // needs to happen after strip env
+        commonjs(getCommonJsConfig(bundleType)),
+        closure({
+          compilationLevel: 'SIMPLE',
+          languageIn: 'ES5',
+          languageOut: 'ES5',
+          env: 'CUSTOM',
+          warningLevel: 'QUIET',
+          assumeFunctionWrapper: true,
+          applyInputSourceMaps: false,
+          useTypesForOptimization: false,
+          processCommonJsModules: false,
+        })
+      );
+      break;
     case FB_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),

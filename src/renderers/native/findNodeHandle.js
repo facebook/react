@@ -18,7 +18,10 @@ var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 import type {Fiber} from 'ReactFiber';
 import type {ReactInstance} from 'ReactInstanceType';

@@ -144,14 +144,16 @@ function validateExplicitKey(element, parentType) {
   }
 
   currentlyValidatingElement = element;
-  warning(
-    false,
-    'Each child in an array or iterator should have a unique "key" prop.' +
-      '%s%s See https://fb.me/react-warning-keys for more information.%s',
-    currentComponentErrorInfo,
-    childOwner,
-    getStackAddendum(),
-  );
+  if (__DEV__) {
+    warning(
+      false,
+      'Each child in an array or iterator should have a unique "key" prop.' +
+        '%s%s See https://fb.me/react-warning-keys for more information.%s',
+      currentComponentErrorInfo,
+      childOwner,
+      getStackAddendum(),
+    );
+  }
   currentlyValidatingElement = null;
 }
 

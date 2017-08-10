@@ -42,8 +42,11 @@ var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
 var voidElementTags = require('voidElementTags');
-var warning = require('fbjs/lib/warning');
 var warnValidStyle = require('warnValidStyle');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var didWarnShadyDOM = false;
 

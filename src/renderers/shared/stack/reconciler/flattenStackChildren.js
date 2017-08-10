@@ -14,7 +14,10 @@
 
 var KeyEscapeUtils = require('KeyEscapeUtils');
 var traverseStackChildren = require('traverseStackChildren');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var ReactComponentTreeHook;
 
