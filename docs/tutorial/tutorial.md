@@ -1074,7 +1074,7 @@ Now you can modify Game's `render` to read from that step in the history:
 
 If you click any move link now, the board should immediately update to show what the game looked like at that time.
 
-You may also want to update `handleClick` to be aware of `stepNumber` when reading the current board state so that you can go back in time then click in the board to create a new entry. (Hint: It's easiest to `.slice()` off the extra elements from `history` at the very top of `handleClick`.)
+It's worth noting that we updated `handleClick` to be aware of `stepNumber` by slicing off the extra elements from `history`. This means that we can go back in time, then click the board to create a new entry.
 
 ### Wrapping Up
 
