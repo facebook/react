@@ -12,26 +12,31 @@
 'use strict';
 
 describe('CSSProperty', () => {
-  var CSSProperty;
-
-  beforeEach(() => {
-    jest.resetModules();
-    // TODO: can we express this test with only public API?
-    CSSProperty = require('CSSProperty');
-  });
+  var React = require('react');
+  var ReactDOMServer = require('react-dom/server');
 
   it('should generate browser prefixes for its `isUnitlessNumber`', () => {
-    expect(CSSProperty.isUnitlessNumber.lineClamp).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.WebkitLineClamp).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msFlexGrow).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.MozFlexGrow).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridRow).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridRowEnd).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridRowSpan).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridRowStart).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridColumn).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridColumnEnd).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridColumnSpan).toBeTruthy();
-    expect(CSSProperty.isUnitlessNumber.msGridColumnStart).toBeTruthy();
+    var styles = {
+      lineClamp: 10,
+      WebkitLineClamp: 10,
+      msFlexGrow: 10,
+      MozFlexGrow: 10,
+      msGridRow: 10,
+      msGridRowEnd: 10,
+      msGridRowSpan: 10,
+      msGridRowStart: 10,
+      msGridColumn: 10,
+      msGridColumnEnd: 10,
+      msGridColumnSpan: 10,
+      msGridColumnStart: 10,
+    };
+    var div = <div style={styles} />;
+    var html = ReactDOMServer.renderToString(div);
+
+    expect(html).toContain(
+      '"line-clamp:10;-webkit-line-clamp:10;-ms-flex-grow:10;-moz-flex-grow:10;-ms-grid-row:10;' +
+        '-ms-grid-row-end:10;-ms-grid-row-span:10;-ms-grid-row-start:10;-ms-grid-column:10;' +
+        '-ms-grid-column-end:10;-ms-grid-column-span:10;-ms-grid-column-start:10"',
+    );
   });
 });
