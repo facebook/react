@@ -14,17 +14,17 @@ Unlike other packages in React, `ReactDOMNodeStream` depends on a package (`stre
 
 The `ReactDOMNodeStream` object allows you to render your components in Node.js and stream the resulting markup.
 
- - [`renderToStream()`](#rendertostream)
- - [`renderToStaticStream()`](#rendertostaticstream)
+ - [`renderToNodeStream()`](#rendertonodestream)
+ - [`renderToStaticNodeStream()`](#rendertostaticnodestream)
 
 * * *
 
 ## Reference
 
-### `renderToStream()`
+### `renderToNodeStream()`
 
 ```javascript
-ReactDOMNodeStream.renderToStream(element)
+ReactDOMNodeStream.renderToNodeStream(element)
 ```
 
 Render a React element to its initial HTML. This should only be used in Node.js; it will not work in the browser, since the browser does not support Node.js streams. React will return a [Readable stream](https://nodejs.org/api/stream.html#stream_readable_streams) that outputs an HTML string. The HTML output by this stream will be exactly equal to what [`ReactDOMServer.renderToString`](https://facebook.github.io/react/docs/react-dom-server.html#rendertostring) would return. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.
@@ -35,12 +35,12 @@ Note that the stream returned from this method will return a byte stream encoded
 
 * * *
 
-### `renderToStaticStream()`
+### `renderToStaticNodeStream()`
 
 ```javascript
-ReactDOMNodeStream.renderToStaticStream(element)
+ReactDOMNodeStream.renderToStaticNodeStream(element)
 ```
 
-Similar to [`renderToStream`](#rendertostream), except this doesn't create extra DOM attributes such as `data-reactid`, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
+Similar to [`renderToNodeStream`](#rendertonodestream), except this doesn't create extra DOM attributes such as `data-reactid`, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.
 
 Note that the stream returned from this method will return a byte stream encoded in utf-8. If you need a stream in another encoding, take a look a project like [iconv-lite](https://www.npmjs.com/package/iconv-lite), which provides transform streams for transcoding text.

@@ -20,17 +20,17 @@ require('ReactDOMInjection');
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,
   renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToStream() {
+  renderToNodeStream() {
     invariant(
       false,
-      'ReactDOMServer.renderToStream(): The streaming API is not available ' +
+      'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
         'in the browser. Use ReactDOMServer.renderToString() instead.',
     );
   },
-  renderToStaticStream() {
+  renderToStaticNodeStream() {
     invariant(
       false,
-      'ReactDOMServer.renderToStaticStream(): The streaming API is not available ' +
+      'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
         'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
     );
   },
