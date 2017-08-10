@@ -66,10 +66,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       resetHydrationState() {},
       tryToClaimNextHydratableInstance() {},
       prepareToHydrateHostInstance() {
-        invariant(false, 'React bug.');
+        invariant(
+          false,
+          'Expected prepareToHydrateHostInstance() to never be called. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
       },
       prepareToHydrateHostTextInstance() {
-        invariant(false, 'React bug.');
+        invariant(
+          false,
+          'Expected prepareToHydrateHostTextInstance() to never be called. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
       },
       popHydrationState(fiber: Fiber) {
         return false;

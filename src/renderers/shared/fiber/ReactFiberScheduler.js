@@ -21,7 +21,7 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 export type CapturedError = {
   componentName: ?string,
   componentStack: string,
-  error: Error,
+  error: mixed,
   errorBoundary: ?Object,
   errorBoundaryFound: boolean,
   errorBoundaryName: string | null,
@@ -38,7 +38,11 @@ var {
   getStackAddendumByWorkInProgressFiber,
 } = require('ReactFiberComponentTreeHook');
 var {logCapturedError} = require('ReactFiberErrorLogger');
-var {invokeGuardedCallback} = require('ReactErrorUtils');
+var {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = require('ReactErrorUtils');
 
 var ReactFiberBeginWork = require('ReactFiberBeginWork');
 var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
@@ -222,7 +226,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let failedBoundaries: Set<Fiber> | null = null;
   // Error boundaries that captured an error during the current commit.
   let commitPhaseBoundaries: Set<Fiber> | null = null;
-  let firstUncaughtError: Error | null = null;
+  let firstUncaughtError: mixed | null = null;
   let didFatal: boolean = false;
 
   let isCommitting: boolean = false;
@@ -468,17 +472,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       startCommitHostEffectsTimer();
     }
     while (nextEffect !== null) {
-      let error = null;
+      let didError = false;
+      let error;
       if (__DEV__) {
-        error = invokeGuardedCallback(null, commitAllHostEffects, null);
+        invokeGuardedCallback(null, commitAllHostEffects, null);
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+        }
       } else {
         try {
           commitAllHostEffects();
         } catch (e) {
+          didError = true;
           error = e;
         }
       }
-      if (error !== null) {
+      if (didError) {
         invariant(
           nextEffect !== null,
           'Should have next effect. This error is likely caused by a bug ' +
@@ -512,17 +522,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       startCommitLifeCyclesTimer();
     }
     while (nextEffect !== null) {
-      let error = null;
+      let didError = false;
+      let error;
       if (__DEV__) {
-        error = invokeGuardedCallback(null, commitAllLifeCycles, null);
+        invokeGuardedCallback(null, commitAllLifeCycles, null);
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+        }
       } else {
         try {
           commitAllLifeCycles();
         } catch (e) {
+          didError = true;
           error = e;
         }
       }
-      if (error !== null) {
+      if (didError) {
         invariant(
           nextEffect !== null,
           'Should have next effect. This error is likely caused by a bug ' +
@@ -745,7 +761,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // The loop stops once the children have unmounted and error lifecycles are
     // called. Then we return to the regular flow.
 
-    if (capturedErrors !== null && capturedErrors.size > 0) {
+    if (
+      capturedErrors !== null &&
+      capturedErrors.size > 0 &&
+      nextPriorityLevel === TaskPriority
+    ) {
       while (nextUnitOfWork !== null) {
         if (hasCapturedError(nextUnitOfWork)) {
           // Use a forked version of performUnitOfWork
@@ -764,19 +784,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           commitAllWork(pendingCommit);
           priorityContext = nextPriorityLevel;
 
-          if (capturedErrors === null || capturedErrors.size === 0) {
+          if (
+            capturedErrors === null ||
+            capturedErrors.size === 0 ||
+            nextPriorityLevel !== TaskPriority
+          ) {
             // There are no more unhandled errors. We can exit this special
             // work loop. If there's still additional work, we'll perform it
             // using one of the normal work loops.
             break;
           }
           // The commit phase produced additional errors. Continue working.
-          invariant(
-            nextPriorityLevel === TaskPriority,
-            'Commit phase errors should be scheduled to recover with task ' +
-              'priority. This error is likely caused by a bug in React. ' +
-              'Please file an issue.',
-          );
         }
       }
     }
@@ -903,7 +921,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // No work left. We can exit.
           break loop;
         default:
-          invariant(false, 'Switch statement should be exhuastive.');
+          invariant(
+            false,
+            'Switch statement should be exhuastive. ' +
+              'This error is likely caused by a bug in React. Please file an issue.',
+          );
       }
     } while (true);
   }
@@ -951,26 +973,25 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // reset it at the end.
     const previousPriorityContext = priorityContext;
 
-    let error;
+    let didError = false;
+    let error = null;
     if (__DEV__) {
-      error = invokeGuardedCallback(
-        null,
-        workLoop,
-        null,
-        minPriorityLevel,
-        deadline,
-      );
+      invokeGuardedCallback(null, workLoop, null, minPriorityLevel, deadline);
+      if (hasCaughtError()) {
+        didError = true;
+        error = clearCaughtError();
+      }
     } else {
       try {
         workLoop(minPriorityLevel, deadline);
-        error = null;
       } catch (e) {
+        didError = true;
         error = e;
       }
     }
 
     // An error was thrown during the render phase.
-    while (error !== null) {
+    while (didError) {
       if (didFatal) {
         // This was a fatal error. Don't attempt to recover from it.
         firstUncaughtError = error;
@@ -1000,8 +1021,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         continue;
       }
 
+      didError = false;
+      error = null;
       if (__DEV__) {
-        error = invokeGuardedCallback(
+        invokeGuardedCallback(
           null,
           performWorkCatchBlock,
           null,
@@ -1010,6 +1033,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           minPriorityLevel,
           deadline,
         );
+        if (hasCaughtError()) {
+          didError = true;
+          error = clearCaughtError();
+          continue;
+        }
       } else {
         try {
           performWorkCatchBlock(
@@ -1020,16 +1048,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           );
           error = null;
         } catch (e) {
+          didError = true;
           error = e;
+          continue;
         }
       }
-
-      if (error !== null) {
-        // Another error was thrown during the render phase. Continue the
-        // loop to handle the new error.
-        continue;
-      }
-
       // We're finished working. Exit the error loop.
       break;
     }
@@ -1067,7 +1090,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   // Returns the boundary that captured the error, or null if the error is ignored
-  function captureError(failedWork: Fiber, error: Error): Fiber | null {
+  function captureError(failedWork: Fiber, error: mixed): Fiber | null {
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     if (__DEV__) {
@@ -1108,7 +1131,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             willRetry = true;
           }
         } else if (node.tag === HostRoot) {
-          // Treat the root like a no-op error boundary.
+          // Treat the root like a no-op error boundary
           boundary = node;
         }
 
@@ -1167,7 +1190,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (capturedErrors === null) {
         capturedErrors = new Map();
       }
-      capturedErrors.set(boundary, {
+
+      const capturedError = {
         componentName,
         componentStack,
         error,
@@ -1175,7 +1199,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         errorBoundaryFound,
         errorBoundaryName,
         willRetry,
-      });
+      };
+
+      capturedErrors.set(boundary, capturedError);
+
+      try {
+        logCapturedError(capturedError);
+      } catch (e) {
+        // Prevent cycle if logCapturedError() throws.
+        // A cycle may still occur if logCapturedError renders a component that throws.
+        console.error(e);
+      }
 
       // If we're in the commit phase, defer scheduling an update on the
       // boundary until after the commit is complete
@@ -1239,15 +1273,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'bug in React. Please file an issue.',
     );
 
-    const error = capturedError.error;
-    try {
-      logCapturedError(capturedError);
-    } catch (e) {
-      // Prevent cycle if logCapturedError() throws.
-      // A cycle may still occur if logCapturedError renders a component that throws.
-      console.error(e);
-    }
-
     switch (effectfulFiber.tag) {
       case ClassComponent:
         const instance = effectfulFiber.stateNode;
@@ -1258,14 +1283,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
         // Allow the boundary to handle the error, usually by scheduling
         // an update to itself
-        instance.componentDidCatch(error, info);
+        instance.componentDidCatch(capturedError.error, info);
         return;
       case HostRoot:
         if (firstUncaughtError === null) {
           // If this is the host container, we treat it as a no-op error
           // boundary. We'll throw the first uncaught error once it's safe to
           // do so, at the end of the batch.
-          firstUncaughtError = error;
+          firstUncaughtError = capturedError.error;
         }
         return;
       default:
@@ -1326,6 +1351,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function scheduleUpdate(fiber: Fiber, priorityLevel: PriorityLevel) {
+    return scheduleUpdateImpl(fiber, priorityLevel, false);
+  }
+
+  function scheduleUpdateImpl(
+    fiber: Fiber,
+    priorityLevel: PriorityLevel,
+    isErrorRecovery: boolean,
+  ) {
     if (__DEV__) {
       recordScheduleUpdate();
     }
@@ -1349,7 +1382,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (__DEV__) {
-      if (fiber.tag === ClassComponent) {
+      if (!isErrorRecovery && fiber.tag === ClassComponent) {
         const instance = fiber.stateNode;
         warnAboutInvalidUpdates(instance);
       }
@@ -1415,7 +1448,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         } else {
           if (__DEV__) {
-            if (fiber.tag === ClassComponent) {
+            if (!isErrorRecovery && fiber.tag === ClassComponent) {
               warnAboutUpdateOnUnmounted(fiber.stateNode);
             }
           }
@@ -1455,7 +1488,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleUpdate(fiber, TaskPriority);
+    scheduleUpdateImpl(fiber, TaskPriority, true);
   }
 
   function performWithPriority(priorityLevel: PriorityLevel, fn: Function) {
@@ -1497,13 +1530,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function syncUpdates<A>(fn: () => A): A {
+  function flushSync<A>(batch: () => A): A {
+    const previousIsBatchingUpdates = isBatchingUpdates;
     const previousPriorityContext = priorityContext;
+    isBatchingUpdates = true;
     priorityContext = SynchronousPriority;
     try {
-      return fn();
+      return batch();
     } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
       priorityContext = previousPriorityContext;
+
+      invariant(
+        !isPerformingWork,
+        'flushSync was called from inside a lifecycle method. It cannot be ' +
+          'called when React is already rendering.',
+      );
+      performWork(TaskPriority, null);
     }
   }
 
@@ -1523,7 +1566,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
-    syncUpdates: syncUpdates,
+    flushSync: flushSync,
     deferredUpdates: deferredUpdates,
   };
 };

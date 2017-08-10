@@ -1004,6 +1004,81 @@ describe('ReactDOMFiber', () => {
         container,
       );
     });
+
+    it('should not warn when rendering into an empty container', () => {
+      spyOn(console, 'error');
+      ReactDOM.render(<div>foo</div>, container);
+      expect(container.innerHTML).toBe('<div>foo</div>');
+      ReactDOM.render(null, container);
+      expect(container.innerHTML).toBe('');
+      expectDev(console.error.calls.count()).toBe(0);
+      ReactDOM.render(<div>bar</div>, container);
+      expect(container.innerHTML).toBe('<div>bar</div>');
+      expectDev(console.error.calls.count()).toBe(0);
+    });
+
+    it('should warn when replacing a container which was manually updated outside of React', () => {
+      spyOn(console, 'error');
+      // when not messing with the DOM outside of React
+      ReactDOM.render(<div key="1">foo</div>, container);
+      ReactDOM.render(<div key="1">bar</div>, container);
+      expect(container.innerHTML).toBe('<div>bar</div>');
+      // then we mess with the DOM before an update
+      // we know this will error - that is expected right now
+      // It's an error of type 'NotFoundError' with no message
+      expect(() => {
+        container.innerHTML = '<div>MEOW.</div>';
+        ReactDOM.render(<div key="2">baz</div>, container);
+      }).toThrowError();
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    });
+
+    it('should warn when doing an update to a container manually updated outside of React', () => {
+      spyOn(console, 'error');
+      // when not messing with the DOM outside of React
+      ReactDOM.render(<div>foo</div>, container);
+      ReactDOM.render(<div>bar</div>, container);
+      expect(container.innerHTML).toBe('<div>bar</div>');
+      // then we mess with the DOM before an update
+      container.innerHTML = '<div>MEOW.</div>';
+      ReactDOM.render(<div>baz</div>, container);
+      // silently fails to update
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    });
+
+    it('should warn when doing an update to a container manually cleared outside of React', () => {
+      spyOn(console, 'error');
+      // when not messing with the DOM outside of React
+      ReactDOM.render(<div>foo</div>, container);
+      ReactDOM.render(<div>bar</div>, container);
+      expect(container.innerHTML).toBe('<div>bar</div>');
+      // then we mess with the DOM before an update
+      container.innerHTML = '';
+      ReactDOM.render(<div>baz</div>, container);
+      // silently fails to update
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    });
   }
 });
 

@@ -49,12 +49,12 @@
       "gzip": 96450
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
-      "size": 54887,
-      "gzip": 14087
+      "size": 53332,
+      "gzip": 13396
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 54766,
-      "gzip": 14049
+      "size": 53124,
+      "gzip": 13357
     },
     "react-dom-unstable-native-dependencies.development.js (UMD_DEV)": {
       "size": 84047,
@@ -137,12 +137,12 @@
       "gzip": 45301
     },
     "ReactNativeStack-dev.js (RN_DEV)": {
-      "size": 186585,
-      "gzip": 36205
+      "size": 201024,
+      "gzip": 37385
     },
     "ReactNativeStack-prod.js (RN_PROD)": {
-      "size": 136231,
-      "gzip": 26184
+      "size": 137686,
+      "gzip": 26481
     },
     "ReactNativeFiber-dev.js (RN_DEV)": {
       "size": 284667,
@@ -161,12 +161,12 @@
       "gzip": 59382
     },
     "react-test-renderer-shallow.development.js (NODE_DEV)": {
-      "size": 10302,
-      "gzip": 2587
+      "size": 9556,
+      "gzip": 2379
     },
     "ReactShallowRenderer-dev.js (FB_DEV)": {
-      "size": 10208,
-      "gzip": 2541
+      "size": 9464,
+      "gzip": 2338
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
       "size": 275726,

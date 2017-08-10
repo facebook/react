@@ -209,8 +209,8 @@ function getDataFromCustomEvent(nativeEvent) {
   return null;
 }
 
-// Track the current IME composition fallback object, if any.
-var currentComposition = null;
+// Track the current IME composition status, if any.
+var isComposing = false;
 
 /**
  * @return {?object} A SyntheticCompositionEvent.
@@ -226,7 +226,7 @@ function extractCompositionEvent(
 
   if (canUseCompositionEvent) {
     eventType = getCompositionEventType(topLevelType);
-  } else if (!currentComposition) {
+  } else if (!isComposing) {
     if (isFallbackCompositionStart(topLevelType, nativeEvent)) {
       eventType = eventTypes.compositionStart;
     }
@@ -241,13 +241,11 @@ function extractCompositionEvent(
   if (useFallbackCompositionData) {
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
-    if (!currentComposition && eventType === eventTypes.compositionStart) {
-      currentComposition = FallbackCompositionState.getPooled(
-        nativeEventTarget,
-      );
+    if (!isComposing && eventType === eventTypes.compositionStart) {
+      isComposing = FallbackCompositionState.initialize(nativeEventTarget);
     } else if (eventType === eventTypes.compositionEnd) {
-      if (currentComposition) {
-        fallbackData = currentComposition.getData();
+      if (isComposing) {
+        fallbackData = FallbackCompositionState.getData();
       }
     }
   }
@@ -338,15 +336,15 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
   // try to extract the composed characters from the fallback object.
   // If composition event is available, we extract a string only at
   // compositionevent, otherwise extract it at fallback events.
-  if (currentComposition) {
+  if (isComposing) {
     if (
       topLevelType === 'topCompositionEnd' ||
       (!canUseCompositionEvent &&
         isFallbackCompositionEnd(topLevelType, nativeEvent))
     ) {
-      var chars = currentComposition.getData();
-      FallbackCompositionState.release(currentComposition);
-      currentComposition = null;
+      var chars = FallbackCompositionState.getData();
+      FallbackCompositionState.reset();
+      isComposing = false;
       return chars;
     }
     return null;

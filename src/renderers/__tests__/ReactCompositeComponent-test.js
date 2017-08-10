@@ -15,6 +15,7 @@ var ChildUpdates;
 var MorphingComponent;
 var React;
 var ReactDOM;
+var ReactDOMFeatureFlags;
 var ReactDOMServer;
 var ReactCurrentOwner;
 var ReactTestUtils;
@@ -27,6 +28,7 @@ describe('ReactCompositeComponent', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
     ReactCurrentOwner = require('react')
       .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner;
@@ -116,11 +118,32 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
+    spyOn(console, 'warn');
     var markup = ReactDOMServer.renderToString(<Parent />);
+
+    // Old API based on heuristic
     var container = document.createElement('div');
     container.innerHTML = markup;
-
     ReactDOM.render(<Parent />, container);
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.warn.calls.count()).toBe(1);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+      );
+    } else {
+      expectDev(console.warn.calls.count()).toBe(0);
+    }
+
+    // New explicit API
+    console.warn.calls.reset();
+    if (ReactDOMFeatureFlags.useFiber) {
+      container = document.createElement('div');
+      container.innerHTML = markup;
+      ReactDOM.hydrate(<Parent />, container);
+      expectDev(console.warn.calls.count()).toBe(0);
+    }
   });
 
   it('should react to state changes from callbacks', () => {

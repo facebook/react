@@ -83,22 +83,24 @@ function getBanner(bundleType, hasteName, filename) {
       return Header.getUMDHeader(filename, reactVersion);
     // CommonJS DEV bundle is guarded to help weak dead code elimination.
     case NODE_DEV:
-      return `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n`;
+      // Wrap the contents of the if-DEV check with an IIFE.
+      // Block-level function definitions can cause problems for strict mode.
+      return `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
     case NODE_PROD:
       return '';
     // All FB and RN bundles need Haste headers.
-    // FB DEV bundles are also guarded;
-    // RN bundles are not b'c of an older JSC packaged for Android.
-    // See github.com/facebook/react-native/issues/14995
+    // DEV bundle is guarded to help weak dead code elimination.
     case FB_DEV:
     case FB_PROD:
     case RN_DEV:
     case RN_PROD:
       const isDev = bundleType === FB_DEV || bundleType === RN_DEV;
       const hasteFinalName = hasteName + (isDev ? '-dev' : '-prod');
+      // Wrap the contents of the if-DEV check with an IIFE.
+      // Block-level function definitions can cause problems for strict mode.
       return (
         Header.getProvidesHeader(hasteFinalName) +
-        (bundleType === FB_DEV ? `\n\n'use strict';\n\n\nif (__DEV__) {\n` : '')
+        (isDev ? `\n\n'use strict';\n\n\nif (__DEV__) {\n(function() {\n` : '')
       );
     default:
       throw new Error('Unknown type.');
@@ -111,7 +113,8 @@ function getFooter(bundleType) {
     // Non-UMD DEV bundles need conditions to help weak dead code elimination.
     case NODE_DEV:
     case FB_DEV:
-      return '\n}\n';
+    case RN_DEV:
+      return '\n})();\n}\n';
     default:
       return '';
   }
@@ -119,6 +122,14 @@ function getFooter(bundleType) {
 
 function updateBabelConfig(babelOpts, bundleType) {
   switch (bundleType) {
+    case FB_DEV:
+    case FB_PROD:
+      return Object.assign({}, babelOpts, {
+        plugins: babelOpts.plugins.concat([
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
+          require('./plugins/wrap-warning-with-env-check'),
+        ]),
+      });
     case UMD_DEV:
     case UMD_PROD:
     case NODE_DEV:
@@ -127,8 +138,12 @@ function updateBabelConfig(babelOpts, bundleType) {
         plugins: babelOpts.plugins.concat([
           // Use object-assign polyfill in open source
           resolve('./scripts/babel/transform-object-assign-require'),
-          // Replace __DEV__ with process.env.NODE_ENV and minify invariant messages
-          require('../error-codes/dev-expression-with-codes'),
+
+          // Minify invariant messages
+          require('../error-codes/replace-invariant-error-codes'),
+
+          // Wrap warning() calls in a __DEV__ check so they are stripped from production.
+          require('./plugins/wrap-warning-with-env-check'),
         ]),
       });
     default:

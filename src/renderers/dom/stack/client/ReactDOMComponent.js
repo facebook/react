@@ -374,6 +374,13 @@ function validateDangerousTag(tag) {
 }
 
 var globalIdCounter = 1;
+var warnedUnknownTags = {
+  // Chrome is the only major browser not shipping <time>. But as of July
+  // 2017 it intends to ship it due to widespread usage. We intentionally
+  // *don't* warn for <time> even if it's unrecognized by Chrome because
+  // it soon will be, and many apps have been using it anyway.
+  time: true,
+};
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -578,15 +585,21 @@ ReactDOMComponent.Mixin = {
           didWarnShadyDOM = true;
         }
         if (this._namespaceURI === DOMNamespaces.html) {
-          warning(
-            isCustomComponentTag ||
-              Object.prototype.toString.call(el) !==
-                '[object HTMLUnknownElement]',
-            'The tag <%s> is unrecognized in this browser. ' +
-              'If you meant to render a React component, start its name with ' +
-              'an uppercase letter.',
-            this._tag,
-          );
+          if (
+            !isCustomComponentTag &&
+            Object.prototype.toString.call(el) ===
+              '[object HTMLUnknownElement]' &&
+            !Object.prototype.hasOwnProperty.call(warnedUnknownTags, this._tag)
+          ) {
+            warnedUnknownTags[this._tag] = true;
+            warning(
+              false,
+              'The tag <%s> is unrecognized in this browser. ' +
+                'If you meant to render a React component, start its name with ' +
+                'an uppercase letter.',
+              this._tag,
+            );
+          }
         }
       }
       ReactDOMComponentTree.precacheNode(this, el);

@@ -7,57 +7,43 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 } else {
   var env = jasmine.getEnv();
 
-  var callCount = 0;
-  var oldError = console.error;
-  var newError = function() {
-    callCount++;
-    oldError.apply(this, arguments);
-  };
-
-  console.error = newError;
-
   // TODO: Stop using spyOn in all the test since that seem deprecated.
   // This is a legacy upgrade path strategy from:
   // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
-  env.beforeEach(() => {
-    callCount = 0;
-    jasmine.addMatchers({
-      toBeReset() {
-        return {
-          compare(actual) {
-            // TODO: Catch test cases that call spyOn() but don't inspect the mock
-            // properly.
-            if (actual !== newError && !isSpy(actual)) {
-              return {
-                pass: false,
-                message: () =>
-                  'Test did not tear down console.error mock properly.',
-              };
-            }
-            return {pass: true};
-          },
-        };
-      },
-      toNotHaveBeenCalled() {
-        return {
-          compare(actual) {
-            return {
-              pass: callCount === 0,
-              message: () =>
-                'Expected test not to warn. If the warning is expected, mock ' +
-                "it out using spyOn(console, 'error'); and test that the " +
-                'warning occurs.',
-            };
-          },
-        };
-      },
+  ['error', 'warn'].forEach(methodName => {
+    var oldMethod = console[methodName];
+    var newMethod = function() {
+      newMethod.__callCount++;
+      oldMethod.apply(this, arguments);
+    };
+    newMethod.__callCount = 0;
+    console[methodName] = newMethod;
+
+    env.beforeEach(() => {
+      newMethod.__callCount = 0;
     });
-  });
-  env.afterEach(() => {
-    expect(console.error).toBeReset();
-    expect(console.error).toNotHaveBeenCalled();
+
+    env.afterEach(() => {
+      if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
+        throw new Error(
+          'Test did not tear down console.' + methodName + ' mock properly.'
+        );
+      }
+      if (console[methodName].__callCount !== 0) {
+        throw new Error(
+          'Expected test not to call console.' +
+            methodName +
+            '(). ' +
+            'If the warning is expected, mock it out using ' +
+            "spyOn(console, '" +
+            methodName +
+            "') and test that the " +
+            'warning occurs.'
+        );
+      }
+    });
   });
 
   var wrapDevMatcher = function(obj, name) {
