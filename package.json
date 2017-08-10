@@ -76,6 +76,7 @@
     "rollup": "^0.41.6",
     "rollup-plugin-alias": "^1.2.1",
     "rollup-plugin-babel": "^2.7.1",
+    "rollup-plugin-closure-compiler-js": "^1.0.4",
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-inject": "^2.0.0",
     "rollup-plugin-node-resolve": "^2.0.0",
