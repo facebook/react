@@ -16,7 +16,10 @@ var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var nextDebugID = 1;
 

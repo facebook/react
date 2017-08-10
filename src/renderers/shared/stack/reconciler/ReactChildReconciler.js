@@ -17,7 +17,10 @@ var ReactReconciler = require('ReactReconciler');
 var instantiateReactComponent = require('instantiateReactComponent');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var traverseStackChildren = require('traverseStackChildren');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var ReactComponentTreeHook;
 
