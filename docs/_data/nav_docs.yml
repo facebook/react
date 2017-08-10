@@ -65,8 +65,6 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
-    - id: react-dom-node-stream
-      title: ReactDOMNodeStream
     - id: dom-elements
       title: DOM Elements
     - id: events
