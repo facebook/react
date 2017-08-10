@@ -124,6 +124,8 @@ function updateBabelConfig(babelOpts, bundleType) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
       return Object.assign({}, babelOpts, {
         plugins: babelOpts.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.

@@ -24,6 +24,7 @@ var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 if (__DEV__) {
   var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var ReactDebugCurrentStack = require('ReactDebugCurrentStack');
+  var warning = require('fbjs/lib/warning');
   var warningAboutMissingGetChildContext = {};
 }
 
@@ -32,7 +33,6 @@ var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
-var warning = require('fbjs/lib/warning');
 
 function StatelessComponent(Component) {}
 StatelessComponent.prototype.render = function() {
