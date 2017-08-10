@@ -16,13 +16,7 @@ import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
 
-const {
-  NoWork,
-  SynchronousPriority,
-  TaskPriority,
-} = require('ReactPriorityLevel');
-
-const {Done, priorityToExpirationTime} = require('ReactFiberExpirationTime');
+const {Done} = require('ReactFiberExpirationTime');
 
 const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 
@@ -39,7 +33,7 @@ type PartialState<State, Props> =
 type Callback = mixed;
 
 export type Update = {
-  priorityLevel: PriorityLevel,
+  priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
   partialState: PartialState<any, any>,
   callback: Callback | null,
@@ -72,25 +66,6 @@ export type UpdateQueue = {
 
 let _queue1;
 let _queue2;
-
-function comparePriority(a: PriorityLevel, b: PriorityLevel): number {
-  // When comparing update priorities, treat sync and Task work as equal.
-  // TODO: Could we avoid the need for this by always coercing sync priority
-  // to Task when scheduling an update?
-  if (
-    (a === TaskPriority || a === SynchronousPriority) &&
-    (b === TaskPriority || b === SynchronousPriority)
-  ) {
-    return 0;
-  }
-  if (a === NoWork && b !== NoWork) {
-    return -255;
-  }
-  if (a !== NoWork && b === NoWork) {
-    return 255;
-  }
-  return a - b;
-}
 
 function createUpdateQueue(): UpdateQueue {
   const queue: UpdateQueue = {
@@ -127,9 +102,6 @@ function insertUpdateIntoQueue(
   insertBefore: Update | null,
   currentTime: ExpirationTime,
 ) {
-  const priorityLevel = update.priorityLevel;
-
-  let coalescedTime: ExpirationTime | null = null;
   if (insertAfter !== null) {
     insertAfter.next = update;
     // If we receive multiple updates to the same fiber at the same priority
@@ -137,10 +109,13 @@ function insertUpdateIntoQueue(
     // they all flush at the same time. Because this causes an interruption, it
     // could lead to starvation, so we stop coalescing once the time until the
     // expiration time reaches a certain threshold.
-    if (insertAfter !== null && insertAfter.priorityLevel === priorityLevel) {
-      const expirationTime = insertAfter.expirationTime;
-      if (expirationTime - currentTime > COALESCENCE_THRESHOLD) {
-        coalescedTime = expirationTime;
+    if (
+      insertAfter !== null &&
+      insertAfter.priorityLevel === update.priorityLevel
+    ) {
+      const coalescedTime = insertAfter.expirationTime;
+      if (coalescedTime - currentTime > COALESCENCE_THRESHOLD) {
+        update.expirationTime = coalescedTime;
       }
     }
   } else {
@@ -148,11 +123,6 @@ function insertUpdateIntoQueue(
     update.next = queue.first;
     queue.first = update;
   }
-  update.expirationTime = coalescedTime !== null
-    ? coalescedTime
-    : // If we don't coalesce, calculate the expiration time using the
-      // current time.
-      priorityToExpirationTime(currentTime, priorityLevel);
 
   if (insertBefore !== null) {
     update.next = insertBefore;
@@ -165,13 +135,10 @@ function insertUpdateIntoQueue(
 // Returns the update after which the incoming update should be inserted into
 // the queue, or null if it should be inserted at beginning.
 function findInsertionPosition(queue, update): Update | null {
-  const priorityLevel = update.priorityLevel;
+  const expirationTime = update.expirationTime;
   let insertAfter = null;
   let insertBefore = null;
-  if (
-    queue.last !== null &&
-    comparePriority(queue.last.priorityLevel, priorityLevel) <= 0
-  ) {
+  if (queue.last !== null && queue.last.expirationTime <= expirationTime) {
     // Fast path for the common case where the update should be inserted at
     // the end of the queue.
     insertAfter = queue.last;
@@ -179,7 +146,7 @@ function findInsertionPosition(queue, update): Update | null {
     insertBefore = queue.first;
     while (
       insertBefore !== null &&
-      comparePriority(insertBefore.priorityLevel, priorityLevel) <= 0
+      insertBefore.expirationTime <= expirationTime
     ) {
       insertAfter = insertBefore;
       insertBefore = insertBefore.next;
@@ -333,12 +300,13 @@ function addUpdate(
   fiber: Fiber,
   partialState: PartialState<any, any> | null,
   callback: mixed,
-  priorityLevel: PriorityLevel,
+  priorityLevel: PriorityLevel | null,
+  expirationTime: ExpirationTime,
   currentTime: ExpirationTime,
 ): void {
   const update = {
     priorityLevel,
-    expirationTime: Done,
+    expirationTime,
     partialState,
     callback,
     isReplace: false,
@@ -354,12 +322,13 @@ function addReplaceUpdate(
   fiber: Fiber,
   state: any | null,
   callback: Callback | null,
-  priorityLevel: PriorityLevel,
+  priorityLevel: PriorityLevel | null,
+  expirationTime: ExpirationTime,
   currentTime: ExpirationTime,
 ): void {
   const update = {
     priorityLevel,
-    expirationTime: Done,
+    expirationTime,
     partialState: state,
     callback,
     isReplace: true,
@@ -374,12 +343,13 @@ exports.addReplaceUpdate = addReplaceUpdate;
 function addForceUpdate(
   fiber: Fiber,
   callback: Callback | null,
-  priorityLevel: PriorityLevel,
+  priorityLevel: PriorityLevel | null,
+  expirationTime: ExpirationTime,
   currentTime: ExpirationTime,
 ): void {
   const update = {
     priorityLevel,
-    expirationTime: Done,
+    expirationTime,
     partialState: null,
     callback,
     isReplace: false,
@@ -391,30 +361,31 @@ function addForceUpdate(
 }
 exports.addForceUpdate = addForceUpdate;
 
-function getUpdatePriority(fiber: Fiber): PriorityLevel {
+function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
-    return NoWork;
+    return Done;
   }
   if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
-    return NoWork;
+    return Done;
   }
-  return updateQueue.first !== null ? updateQueue.first.priorityLevel : NoWork;
+  return updateQueue.first !== null ? updateQueue.first.expirationTime : Done;
 }
-exports.getUpdatePriority = getUpdatePriority;
+exports.getUpdateExpirationTime = getUpdateExpirationTime;
 
 function addTopLevelUpdate(
   fiber: Fiber,
   partialState: PartialState<any, any>,
   callback: Callback | null,
-  priorityLevel: PriorityLevel,
+  priorityLevel: PriorityLevel | null,
+  expirationTime: ExpirationTime,
   currentTime: ExpirationTime,
 ): void {
   const isTopLevelUnmount = partialState.element === null;
 
   const update = {
     priorityLevel,
-    expirationTime: Done,
+    expirationTime,
     partialState,
     callback,
     isReplace: false,
@@ -461,7 +432,7 @@ function beginUpdateQueue(
   instance: any,
   prevState: any,
   props: any,
-  priorityLevel: PriorityLevel,
+  renderExpirationTime: ExpirationTime,
 ): any {
   if (current !== null && current.updateQueue === queue) {
     // We need to create a work-in-progress queue, by cloning the current queue.
@@ -491,10 +462,7 @@ function beginUpdateQueue(
   let state = prevState;
   let dontMutatePrevState = true;
   let update = queue.first;
-  while (
-    update !== null &&
-    comparePriority(update.priorityLevel, priorityLevel) <= 0
-  ) {
+  while (update !== null && update.expirationTime <= renderExpirationTime) {
     // Remove each update from the queue right before it is processed. That way
     // if setState is called from inside an updater function, the new update
     // will be inserted in the correct position.
