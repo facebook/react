@@ -9,4 +9,4 @@
 
 'use strict';
 
-module.exports = '15.6.1';
+module.exports = '15.6.2';

@@ -1,6 +1,6 @@
 {
   "name": "react-dom-factories",
-  "version": "15.6.0",
+  "version": "15.6.2",
   "description": "React package for DOM factory methods.",
   "main": "index.js",
   "repository": "facebook/react",
