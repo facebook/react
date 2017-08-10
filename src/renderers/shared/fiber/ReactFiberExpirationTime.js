@@ -28,13 +28,15 @@ export type ExpirationTime = number;
 const Done = 0;
 exports.Done = Done;
 
+const MAGIC_NUMBER_OFFSET = 2;
+
 const Never = Number.MAX_SAFE_INTEGER;
 exports.Never = Never;
 
 // 1 unit of expiration time represents 10ms.
 function msToExpirationTime(ms: number): ExpirationTime {
-  // Always add 1 so that we don't clash with the magic number for Done.
-  return Math.round(ms / 10) + 1;
+  // Always add an offset so that we don't clash with the magic number for Done.
+  return Math.round(ms / 10) + MAGIC_NUMBER_OFFSET;
 }
 exports.msToExpirationTime = msToExpirationTime;
 
@@ -56,7 +58,7 @@ function priorityToExpirationTime(
       return Done;
     case SynchronousPriority:
       // Return a number lower than the current time, but higher than Done.
-      return 1;
+      return MAGIC_NUMBER_OFFSET - 1;
     case TaskPriority:
       // Return the current time, so that this work completes in this batch.
       return currentTime;
@@ -69,6 +71,7 @@ function priorityToExpirationTime(
     case OffscreenPriority:
       return Never;
     default:
+      console.log(priorityLevel);
       invariant(
         false,
         'Switch statement should be exhuastive. ' +
@@ -102,3 +105,11 @@ function expirationTimeToPriorityLevel(
   return LowPriority;
 }
 exports.expirationTimeToPriorityLevel = expirationTimeToPriorityLevel;
+
+function earlierExpirationTime(
+  t1: ExpirationTime,
+  t2: ExpirationTime,
+): ExpirationTime {
+  return t1 !== Done && (t2 === Done || t2 > t1) ? t1 : t2;
+}
+exports.earlierExpirationTime = earlierExpirationTime;

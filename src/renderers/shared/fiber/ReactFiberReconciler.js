@@ -237,6 +237,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {
     scheduleUpdate,
     getPriorityContext,
+    getExpirationTimeForPriority,
     recalculateCurrentTime,
     batchedUpdates,
     unbatchedUpdates,
@@ -278,6 +279,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       (element.type.prototype: any).unstable_isAsyncReactComponent === true;
     const priorityLevel = getPriorityContext(current, forceAsync);
     const currentTime = recalculateCurrentTime();
+    const expirationTime = getExpirationTimeForPriority(
+      currentTime,
+      priorityLevel,
+    );
     const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
@@ -288,8 +293,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback,
       );
     }
-    addTopLevelUpdate(current, nextState, callback, priorityLevel, currentTime);
-    scheduleUpdate(current, priorityLevel);
+    addTopLevelUpdate(
+      current,
+      nextState,
+      callback,
+      priorityLevel,
+      expirationTime,
+      currentTime,
+    );
+    scheduleUpdate(current, expirationTime);
   }
 
   return {
