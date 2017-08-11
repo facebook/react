@@ -37,6 +37,20 @@ if (__DEV__) {
   }
 }
 
+const hasNativePerformanceNow =
+  typeof performance === 'object' && typeof performance.now === 'function';
+
+let now;
+if (hasNativePerformanceNow) {
+  now = function() {
+    return performance.now();
+  };
+} else {
+  now = function() {
+    return Date.now();
+  };
+}
+
 // TODO: There's no way to cancel, because Fiber doesn't atm.
 let rIC: (callback: (deadline: Deadline) => void) => number;
 
@@ -67,19 +81,23 @@ if (!ExecutionEnvironment.canUseDOM) {
   var previousFrameTime = 33;
   var activeFrameTime = 33;
 
-  var frameDeadlineObject = {
-    timeRemaining: typeof performance === 'object' &&
-      typeof performance.now === 'function'
-      ? function() {
-          // We assume that if we have a performance timer that the rAF callback
-          // gets a performance timer value. Not sure if this is always true.
-          return frameDeadline - performance.now();
-        }
-      : function() {
-          // As a fallback we use Date.now.
-          return frameDeadline - Date.now();
-        },
-  };
+  var frameDeadlineObject;
+  if (hasNativePerformanceNow) {
+    frameDeadlineObject = {
+      timeRemaining() {
+        // We assume that if we have a performance timer that the rAF callback
+        // gets a performance timer value. Not sure if this is always true.
+        return frameDeadline - performance.now();
+      },
+    };
+  } else {
+    frameDeadlineObject = {
+      timeRemaining() {
+        // Fallback to Date.now()
+        return frameDeadline - Date.now();
+      },
+    };
+  }
 
   // We use the postMessage trick to defer idle work until after the repaint.
   var messageKey = '__reactIdleCallback$' + Math.random().toString(36).slice(2);
@@ -153,4 +171,5 @@ if (!ExecutionEnvironment.canUseDOM) {
   rIC = requestIdleCallback;
 }
 
+exports.now = now;
 exports.rIC = rIC;

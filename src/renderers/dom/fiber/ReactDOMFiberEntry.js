@@ -162,22 +162,6 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
-// TODO: Better polyfill
-let now;
-if (
-  typeof window !== 'undefined' &&
-  window.performance &&
-  typeof window.performance.now === 'function'
-) {
-  now = function() {
-    return performance.now();
-  };
-} else {
-  now = function() {
-    return Date.now();
-  };
-}
-
 var DOMRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
@@ -453,7 +437,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
   },
 
-  now,
+  now: ReactDOMFrameScheduling.now,
 
   canHydrateInstance(
     instance: Instance | TextInstance,
