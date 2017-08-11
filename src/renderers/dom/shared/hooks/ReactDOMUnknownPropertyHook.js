@@ -127,16 +127,11 @@ var warnUnknownProperties = function(type, props, debugID) {
     if (!isValid) {
       unknownProps.push(key);
       var value = props[key];
-      if (
-        typeof value === 'object' &&
-        value !== null &&
-        !Array.isArray(value) &&
-        value.toString !== Object.prototype.toString
-      ) {
+      if (typeof value === 'object' && value !== null) {
         warning(
           false,
-          'The %s prop on <%s> is not a known property, and was given an object ' +
-            'with a custom toString() method. Remove it, or it will appear in the ' +
+          'The %s prop on <%s> is not a known property, and was given an object.' +
+            'Remove it, or it will appear in the ' +
             'DOM after a future React update.%s',
           key,
           type,
