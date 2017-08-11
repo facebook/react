@@ -1007,7 +1007,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Read the current time from the host environment.
     const currentTime = recalculateCurrentTime();
-    const minExpirationTime = priorityToExpirationTime(
+    const minExpirationTime = getExpirationTimeForPriority(
       currentTime,
       minPriorityLevel,
     );
@@ -1465,30 +1465,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           const root: FiberRoot = (node.stateNode: any);
           scheduleRoot(root, expirationTime);
           if (!isPerformingWork) {
-            if (expirationTime < mostRecentCurrentTime) {
-              // This update is synchronous. Perform it now.
-              if (isUnbatchingUpdates) {
-                // We're inside unbatchedUpdates, which is inside either
-                // batchedUpdates or a lifecycle. We should only flush
-                // synchronous work, not task work.
-                performWork(SynchronousPriority, null);
-              } else {
-                // Flush both synchronous and task work.
-                performWork(TaskPriority, null);
-              }
-            } else if (expirationTime === mostRecentCurrentTime) {
-              invariant(
-                isBatchingUpdates,
-                'Task updates can only be scheduled as a nested update or ' +
-                  'inside batchedUpdates. This error is likely caused by a ' +
-                  'bug in React. Please file an issue.',
-              );
-            } else {
-              // This update is async. Schedule a callback.
-              if (!isCallbackScheduled) {
-                scheduleDeferredCallback(performDeferredWork);
-                isCallbackScheduled = true;
-              }
+            const priorityLevel = expirationTimeToPriorityLevel(
+              mostRecentCurrentTime,
+              expirationTime,
+            );
+            switch (priorityLevel) {
+              case SynchronousPriority:
+                if (isUnbatchingUpdates) {
+                  // We're inside unbatchedUpdates, which is inside either
+                  // batchedUpdates or a lifecycle. We should only flush
+                  // synchronous work, not task work.
+                  performWork(SynchronousPriority, null);
+                } else {
+                  // Flush both synchronous and task work.
+                  performWork(TaskPriority, null);
+                }
+                break;
+              case TaskPriority:
+                invariant(
+                  isBatchingUpdates,
+                  'Task updates can only be scheduled as a nested update or ' +
+                    'inside batchedUpdates. This error is likely caused by a ' +
+                    'bug in React. Please file an issue.',
+                );
+                break;
+              default:
+                // This update is async. Schedule a callback.
+                if (!isCallbackScheduled) {
+                  scheduleDeferredCallback(performDeferredWork);
+                  isCallbackScheduled = true;
+                }
             }
           }
         } else {
@@ -1551,11 +1557,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleUpdateImpl(
-      fiber,
-      priorityToExpirationTime(mostRecentCurrentTime, TaskPriority),
-      true,
+    const taskTime = getExpirationTimeForPriority(
+      mostRecentCurrentTime,
+      TaskPriority,
     );
+    scheduleUpdateImpl(fiber, taskTime, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
