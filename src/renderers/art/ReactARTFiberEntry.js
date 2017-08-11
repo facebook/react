@@ -532,10 +532,7 @@ const ARTRenderer = ReactFiberReconciler({
     );
   },
 
-  now(): number {
-    // TODO: Enable expiration by implementing this method.
-    return 0;
-  },
+  now: ReactDOMFrameScheduling.now,
 
   useSyncScheduling: true,
 });
