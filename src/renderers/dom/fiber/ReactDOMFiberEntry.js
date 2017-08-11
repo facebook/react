@@ -453,11 +453,7 @@ var DOMRenderer = ReactFiberReconciler({
     }
   },
 
-  now() {
-    // TODO: Use performance.now to enable expiration
-    // return 0;
-    return now();
-  },
+  now,
 
   canHydrateInstance(
     instance: Instance | TextInstance,
