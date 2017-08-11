@@ -67,7 +67,6 @@ var {
   Done,
   Never,
   msToExpirationTime,
-  earlierExpirationTime,
   priorityToExpirationTime,
   expirationTimeToPriorityLevel,
 } = require('ReactFiberExpirationTime');
@@ -608,10 +607,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Bubble up the earliest expiration time.
     let child = workInProgress.child;
     while (child !== null) {
-      newExpirationTime = earlierExpirationTime(
-        newExpirationTime,
-        child.expirationTime,
-      );
+      if (
+        child.expirationTime !== Done &&
+        (newExpirationTime === Done || newExpirationTime > child.expirationTime)
+      ) {
+        newExpirationTime = child.expirationTime;
+      }
       child = child.sibling;
     }
     workInProgress.expirationTime = newExpirationTime;
