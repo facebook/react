@@ -163,20 +163,20 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
 }
 
 // TODO: Better polyfill
-// let now;
-// if (
-//   typeof window !== 'undefined' &&
-//   window.performance &&
-//   typeof window.performance.now === 'function'
-// ) {
-//   now = function() {
-//     return performance.now();
-//   };
-// } else {
-//   now = function() {
-//     return Date.now();
-//   };
-// }
+let now;
+if (
+  typeof window !== 'undefined' &&
+  window.performance &&
+  typeof window.performance.now === 'function'
+) {
+  now = function() {
+    return performance.now();
+  };
+} else {
+  now = function() {
+    return Date.now();
+  };
+}
 
 var DOMRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance: Container): HostContext {
@@ -455,7 +455,8 @@ var DOMRenderer = ReactFiberReconciler({
 
   now() {
     // TODO: Use performance.now to enable expiration
-    return 0;
+    // return 0;
+    return now();
   },
 
   canHydrateInstance(
