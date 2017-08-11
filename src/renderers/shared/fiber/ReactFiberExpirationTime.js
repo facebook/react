@@ -30,6 +30,7 @@ const Sync = 1;
 const Task = 2;
 const Never = Number.MAX_SAFE_INTEGER;
 
+const UNIT_SIZE = 10;
 const MAGIC_NUMBER_OFFSET = 10;
 
 exports.Done = Done;
@@ -38,12 +39,23 @@ exports.Never = Never;
 // 1 unit of expiration time represents 10ms.
 function msToExpirationTime(ms: number): ExpirationTime {
   // Always add an offset so that we don't clash with the magic number for Done.
-  return Math.round(ms / 10) + MAGIC_NUMBER_OFFSET;
+  return Math.round(ms / UNIT_SIZE) + MAGIC_NUMBER_OFFSET;
 }
 exports.msToExpirationTime = msToExpirationTime;
 
-function ceiling(time: ExpirationTime, precision: number): ExpirationTime {
-  return Math.ceil(Math.ceil(time * precision) / precision);
+function ceiling(num: number, precision: number): number {
+  return Math.ceil(Math.ceil(num * precision) / precision);
+}
+
+function bucket(
+  currentTime: ExpirationTime,
+  expirationInMs: number,
+  precisionInMs: number,
+): ExpirationTime {
+  return ceiling(
+    currentTime + expirationInMs / UNIT_SIZE,
+    precisionInMs / UNIT_SIZE,
+  );
 }
 
 // Given the current clock time and a priority level, returns an expiration time
@@ -62,12 +74,14 @@ function priorityToExpirationTime(
       return Sync;
     case TaskPriority:
       return Task;
-    case HighPriority:
+    case HighPriority: {
       // Should complete within ~100ms. 120ms max.
-      return msToExpirationTime(ceiling(100, 20));
-    case LowPriority:
+      return bucket(currentTime, 100, 20);
+    }
+    case LowPriority: {
       // Should complete within ~1000ms. 1200ms max.
-      return msToExpirationTime(ceiling(1000, 200));
+      return bucket(currentTime, 1000, 200);
+    }
     case OffscreenPriority:
       return Never;
     default:
