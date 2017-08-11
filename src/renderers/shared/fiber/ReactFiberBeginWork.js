@@ -330,7 +330,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostRoot(current, workInProgress, renderExpirationTime) {
-    const root = (workInProgress.stateNode: FiberRoot);
     pushHostRootContext(workInProgress);
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {

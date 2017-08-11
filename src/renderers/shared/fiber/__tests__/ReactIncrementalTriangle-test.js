@@ -54,6 +54,14 @@ describe('ReactIncrementalTriangle', () => {
     };
   }
 
+  const EXPIRE = 'EXPIRE';
+  function expire(ms) {
+    return {
+      type: EXPIRE,
+      ms,
+    };
+  }
+
   function TriangleSimulator() {
     let triangles = [];
     let leafTriangles = [];
@@ -212,6 +220,9 @@ describe('ReactIncrementalTriangle', () => {
                 targetTriangle.activate();
               }
               break;
+            case EXPIRE:
+              ReactNoop.expire(action.ms);
+              break;
             default:
               break;
           }
@@ -251,7 +262,7 @@ describe('ReactIncrementalTriangle', () => {
     }
 
     function randomAction() {
-      switch (randomInteger(0, 4)) {
+      switch (randomInteger(0, 5)) {
         case 0:
           return flush(randomInteger(0, totalTriangles * 1.5));
         case 1:
@@ -260,6 +271,8 @@ describe('ReactIncrementalTriangle', () => {
           return interrupt();
         case 3:
           return toggle(randomInteger(0, totalChildren));
+        case 4:
+          return expire(randomInteger(0, 1500));
         default:
           throw new Error('Switch statement should be exhaustive');
       }
@@ -289,6 +302,9 @@ describe('ReactIncrementalTriangle', () => {
             break;
           case TOGGLE:
             result += `toggle(${action.childIndex})`;
+            break;
+          case EXPIRE:
+            result += `expire(${action.ms})`;
             break;
           default:
             throw new Error('Switch statement should be exhaustive');
