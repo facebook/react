@@ -13,6 +13,7 @@
 
 'use strict';
 
+require('checkReact');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactMount = require('ReactMount');

@@ -1136,4 +1136,13 @@ describe('disableNewFiberFeatures', () => {
     ReactDOM.render(<Mocked />, container);
     expect(container.textContent).toEqual('');
   });
+
+  it('throws if the React package cannot be loaded', () => {
+    jest.resetModules();
+    jest.mock('react', () => undefined);
+    expect(() => require('react-dom')).toThrow(
+      'ReactDOM was loaded before React.',
+    );
+    jest.resetModules();
+  });
 });

@@ -15,6 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
+require('checkReact');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
