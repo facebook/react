@@ -16,7 +16,7 @@ var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-
+var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -76,7 +76,7 @@ function findNodeHandle(componentOrHandle: any): any {
           'never access something that requires stale data from the previous ' +
           'render, such as refs. Move this logic to componentDidMount and ' +
           'componentDidUpdate instead.',
-        owner.getName() || 'A component',
+        getComponentName(owner) || 'A component',
       );
 
       owner._warnedAboutRefsInRender = true;
