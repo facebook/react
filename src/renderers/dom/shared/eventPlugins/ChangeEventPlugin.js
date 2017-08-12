@@ -174,7 +174,7 @@ var ChangeEventPlugin = {
         var event = createAndAccumulateChangeEvent(
           inst,
           nativeEvent,
-          nativeEventTarget,
+          targetNode,
         );
         return event;
       }
