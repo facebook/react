@@ -589,4 +589,68 @@ describe('ReactDOMSelect', () => {
     expect(node.options[1].selected).toBe(true); // b
     expect(node.options[2].selected).toBe(false); // c
   });
+
+  it('should allow controlling `value` in a nested render', () => {
+    var selectNode;
+
+    class Parent extends React.Component {
+      state = {
+        value: 'giraffe',
+      };
+
+      componentDidMount() {
+        this._renderNested();
+      }
+
+      componentDidUpdate() {
+        this._renderNested();
+      }
+
+      _handleChange(event) {
+        this.setState({value: event.target.value});
+      }
+
+      _renderNested() {
+        ReactDOM.render(
+          <select
+            onChange={this._handleChange.bind(this)}
+            ref={n => (selectNode = n)}
+            value={this.state.value}>
+            <option value="monkey">A monkey!</option>
+            <option value="giraffe">A giraffe!</option>
+            <option value="gorilla">A gorilla!</option>
+          </select>,
+          this._nestingContainer,
+        );
+      }
+
+      render() {
+        return <div ref={n => (this._nestingContainer = n)} />;
+      }
+    }
+
+    var container = document.createElement('div');
+
+    document.body.appendChild(container);
+
+    ReactDOM.render(<Parent />, container);
+
+    expect(selectNode.value).toBe('giraffe');
+
+    selectNode.value = 'gorilla';
+
+    let nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('input', true, true);
+    selectNode.dispatchEvent(nativeEvent);
+
+    expect(selectNode.value).toEqual('gorilla');
+
+    nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('change', true, true);
+    selectNode.dispatchEvent(nativeEvent);
+
+    expect(selectNode.value).toEqual('gorilla');
+
+    document.body.removeChild(container);
+  });
 });

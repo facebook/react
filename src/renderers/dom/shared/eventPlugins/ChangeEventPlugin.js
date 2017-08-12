@@ -47,16 +47,21 @@ function shouldUseChangeEvent(elem) {
   );
 }
 
-function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
+function createAndAccumulateChangeEvent(
+  inst,
+  nativeEvent,
+  nativeEventTarget,
+  virtualTarget,
+) {
   var event = SyntheticEvent.getPooled(
     eventTypes.change,
     inst,
     nativeEvent,
-    target,
+    nativeEventTarget,
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(target);
+  ReactControlledComponent.enqueueStateRestore(virtualTarget);
   EventPropagators.accumulateTwoPhaseDispatches(event);
   return event;
 }
@@ -175,6 +180,7 @@ var ChangeEventPlugin = {
           inst,
           nativeEvent,
           nativeEventTarget,
+          targetNode,
         );
         return event;
       }
