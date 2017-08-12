@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "devDependencies": {
-    "react-scripts": "1.0.0"
+    "react-scripts": "^1.0.11"
   },
   "dependencies": {
     "classnames": "^2.2.5",
