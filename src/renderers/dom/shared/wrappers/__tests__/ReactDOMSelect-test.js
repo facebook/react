@@ -591,7 +591,6 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should allow controlling `value` in a nested render', () => {
-
     var selectNode;
 
     class Parent extends React.Component {
@@ -608,25 +607,25 @@ describe('ReactDOMSelect', () => {
       }
 
       _handleChange(event) {
-        this.setState({ value: event.target.value });
+        this.setState({value: event.target.value});
       }
 
       _renderNested() {
         ReactDOM.render(
           <select
             onChange={this._handleChange.bind(this)}
-            ref={n => selectNode = n}
+            ref={n => (selectNode = n)}
             value={this.state.value}>
             <option value="monkey">A monkey!</option>
             <option value="giraffe">A giraffe!</option>
             <option value="gorilla">A gorilla!</option>
           </select>,
-          this._nestingContainer
+          this._nestingContainer,
         );
       }
 
       render() {
-        return <div ref={n => this._nestingContainer = n} />;
+        return <div ref={n => (this._nestingContainer = n)} />;
       }
     }
 
@@ -640,13 +639,13 @@ describe('ReactDOMSelect', () => {
 
     selectNode.value = 'gorilla';
 
-    var nativeEvent = document.createEvent('Event');
+    let nativeEvent = document.createEvent('Event');
     nativeEvent.initEvent('input', true, true);
     selectNode.dispatchEvent(nativeEvent);
 
     expect(selectNode.value).toEqual('gorilla');
 
-    var nativeEvent = document.createEvent('Event');
+    nativeEvent = document.createEvent('Event');
     nativeEvent.initEvent('change', true, true);
     selectNode.dispatchEvent(nativeEvent);
 

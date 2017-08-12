@@ -26,7 +26,7 @@ class SelectFixture extends React.Component {
         <option value="green">Green</option>
       </select>,
       this._nestedDOMNode
-    )
+    );
   }
 
   render() {
@@ -50,12 +50,14 @@ class SelectFixture extends React.Component {
             <option value="blue">Blue</option>
             <option value="green">Green</option>
           </select>
-          <span className="hint"></span>
+          <span className="hint" />
         </fieldset>
         <fieldset>
           <legend>Controlled in nested subtree</legend>
-          <div ref={node => this._nestedDOMNode = node} />
-          <span className="hint">This should synchronize in both direction with the one above.</span>
+          <div ref={node => (this._nestedDOMNode = node)} />
+          <span className="hint">
+            This should synchronize in both direction with the one above.
+          </span>
         </fieldset>
       </form>
     );
