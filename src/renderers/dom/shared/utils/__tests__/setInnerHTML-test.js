@@ -13,7 +13,7 @@
 
 // TODO: can we express this test with only public API?
 var setInnerHTML = require('setInnerHTML');
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
 
 describe('setInnerHTML', () => {
   describe('when the node has innerHTML property', () => {
@@ -31,7 +31,7 @@ describe('setInnerHTML', () => {
     xit('sets innerHTML on it', () => {
       // Create a mock node that looks like an SVG in IE (without innerHTML)
       var node = {
-        namespaceURI: DOMNamespaces.svg,
+        namespaceURI: Namespaces.svg,
         appendChild: jasmine.createSpy(),
       };
 

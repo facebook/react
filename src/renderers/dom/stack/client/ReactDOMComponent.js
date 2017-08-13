@@ -14,7 +14,7 @@
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
 var DOMMarkupOperations = require('DOMMarkupOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
@@ -512,11 +512,11 @@ ReactDOMComponent.Mixin = {
     }
     if (
       namespaceURI == null ||
-      (namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject')
+      (namespaceURI === Namespaces.svg && parentTag === 'foreignobject')
     ) {
-      namespaceURI = DOMNamespaces.html;
+      namespaceURI = Namespaces.html;
     }
-    if (namespaceURI === DOMNamespaces.html) {
+    if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
         warning(
           isCustomComponentTag || this._tag === this._currentElement.type,
@@ -526,9 +526,9 @@ ReactDOMComponent.Mixin = {
         );
       }
       if (this._tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
+        namespaceURI = Namespaces.svg;
       } else if (this._tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
+        namespaceURI = Namespaces.mathml;
       }
     }
     this._namespaceURI = namespaceURI;
@@ -557,7 +557,7 @@ ReactDOMComponent.Mixin = {
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
-      if (namespaceURI === DOMNamespaces.html) {
+      if (namespaceURI === Namespaces.html) {
         if (this._tag === 'script') {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
@@ -587,7 +587,7 @@ ReactDOMComponent.Mixin = {
           );
           didWarnShadyDOM = true;
         }
-        if (this._namespaceURI === DOMNamespaces.html) {
+        if (this._namespaceURI === Namespaces.html) {
           if (
             !isCustomComponentTag &&
             Object.prototype.toString.call(el) ===
