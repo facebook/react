@@ -124,7 +124,7 @@ if (__DEV__) {
 
   var warnForInvalidEventListener = function(registrationName, listener) {
     warning(
-      !listener || typeof listener === 'function',
+      typeof listener === 'function',
       'Expected %s listener to be a function, instead got type %s',
       registrationName,
       typeof listener,
