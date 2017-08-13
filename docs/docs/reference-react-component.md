@@ -343,7 +343,7 @@ If `props.color` is set to null, it will remain null:
 
 ### `displayName`
 
-The `displayName` string is used in debugging messages. JSX sets this value automatically; see [JSX in Depth](/react/docs/jsx-in-depth.html).
+The `displayName` string is used in debugging messages. Usually you don't need to set it explicitly because it's inferred from the function or class name that creates the component. You might want to set it explicitly if you want to display a different name for debugging purposes or when you create a Higher-Order Component, see [Wrap the Display Name for Easy Debugging](/react/docs/higher-order-components.html#convention-wrap-the-display-name-for-easy-debugging) for details.
 
 * * *
 
