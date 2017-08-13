@@ -913,6 +913,20 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
+    it('should warn for non-functional event listeners', () => {
+      spyOn(console, 'error');
+      class Example extends React.Component {
+        render() {
+          return <div onClick="woops" />;
+        }
+      }
+      ReactDOM.render(<Example />, container);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Expected onClick listener to be a function, instead got type string',
+      );
+    });
+
     it('should not update event handlers until commit', () => {
       let ops = [];
       const handlerA = () => ops.push('A');

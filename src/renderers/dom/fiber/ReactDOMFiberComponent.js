@@ -122,6 +122,15 @@ if (__DEV__) {
     warning(false, 'Extra attributes from the server: %s', names);
   };
 
+  var warnForInvalidEventListener = function(registrationName, listener) {
+    warning(
+      !listener || typeof listener === 'function',
+      'Expected %s listener to be a function, instead got type %s',
+      registrationName,
+      typeof listener,
+    );
+  };
+
   var testDocument;
   // Parse the HTML and read it back to normalize the HTML string so that it
   // can be used for comparison.
@@ -227,6 +236,9 @@ function setInitialDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
+        if (__DEV__) {
+          warnForInvalidEventListener(propKey, nextProp);
+        }
         ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (isCustomComponentTag) {
@@ -740,6 +752,9 @@ var ReactDOMFiberComponent = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
           // We eagerly listen to this even though we haven't committed yet.
+          if (__DEV__) {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           ensureListeningTo(rootContainerElement, propKey);
         }
         if (!updatePayload && lastProp !== nextProp) {
@@ -980,6 +995,9 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
+        if (__DEV__) {
+          warnForInvalidEventListener(propKey, nextProp);
+        }
         if (nextProp) {
           ensureListeningTo(rootContainerElement, propKey);
         }
