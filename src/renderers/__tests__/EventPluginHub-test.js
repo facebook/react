@@ -24,6 +24,8 @@ describe('EventPluginHub', () => {
   });
 
   it('should prevent non-function listeners, at dispatch', () => {
+    // ReactDOMFiberComponent warns for non-function event listeners
+    spyOn(console, 'error');
     var node = ReactTestUtils.renderIntoDocument(
       <div onClick="not a function" />,
     );
