@@ -11,6 +11,11 @@
 
 'use strict';
 
+var {
+  Namespaces,
+  getIntrinsicNamespace,
+  getChildNamespace,
+} = require('DOMNamespaces');
 var DOMMarkupOperations = require('DOMMarkupOperations');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
@@ -443,6 +448,9 @@ class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
     var children = React.isValidElement(element) ? [element] : toArray(element);
     var topFrame = {
+      // Assume all trees start in the HTML namespace (not totally true, but
+      // this is what we did historically)
+      domNamespace: Namespaces.html,
       children,
       childIndex: 0,
       context: emptyObject,
@@ -483,7 +491,7 @@ class ReactDOMServerRenderer {
       if (__DEV__) {
         setCurrentDebugStack(this.stack);
       }
-      out += this.render(child, frame.context);
+      out += this.render(child, frame.context, frame.domNamespace);
       if (__DEV__) {
         // TODO: Handle reentrant server render calls. This doesn't.
         resetCurrentDebugStack();
@@ -492,7 +500,7 @@ class ReactDOMServerRenderer {
     return out;
   }
 
-  render(child, context) {
+  render(child, context, parentNamespace) {
     if (typeof child === 'string' || typeof child === 'number') {
       var text = '' + child;
       if (text === '') {
@@ -512,10 +520,11 @@ class ReactDOMServerRenderer {
         return '';
       } else {
         if (React.isValidElement(child)) {
-          return this.renderDOM(child, context);
+          return this.renderDOM(child, context, parentNamespace);
         } else {
           var children = toArray(child);
           var frame = {
+            domNamespace: parentNamespace,
             children,
             childIndex: 0,
             context: context,
@@ -531,16 +540,25 @@ class ReactDOMServerRenderer {
     }
   }
 
-  renderDOM(element, context) {
+  renderDOM(element, context, parentNamespace) {
     var tag = element.type.toLowerCase();
 
+    let namespace = parentNamespace;
+    if (parentNamespace === Namespaces.html) {
+      namespace = getIntrinsicNamespace(tag);
+    }
+
     if (__DEV__) {
-      warning(
-        tag === element.type,
-        '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
-          'in React.',
-        element.type,
-      );
+      if (namespace === Namespaces.html) {
+        // Should this check be gated by parent namespace? Not sure we want to
+        // allow <SVG> or <mATH>.
+        warning(
+          tag === element.type,
+          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+            'in React.',
+          element.type,
+        );
+      }
     }
 
     validateDangerousTag(tag);
@@ -801,6 +819,7 @@ class ReactDOMServerRenderer {
       children = toArray(props.children);
     }
     var frame = {
+      domNamespace: getChildNamespace(parentNamespace, element.type),
       tag,
       children,
       childIndex: 0,

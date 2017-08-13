@@ -11,7 +11,7 @@
 
 'use strict';
 
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
 var setInnerHTML = require('setInnerHTML');
 var {DOCUMENT_FRAGMENT_NODE, ELEMENT_NODE} = require('HTMLNodeType');
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
@@ -68,7 +68,7 @@ var insertTreeBefore = createMicrosoftUnsafeLocalFunction(function(
     (tree.node.nodeType === ELEMENT_NODE &&
       tree.node.nodeName.toLowerCase() === 'object' &&
       (tree.node.namespaceURI == null ||
-        tree.node.namespaceURI === DOMNamespaces.html))
+        tree.node.namespaceURI === Namespaces.html))
   ) {
     insertTreeChildren(tree);
     parentNode.insertBefore(tree.node, referenceNode);

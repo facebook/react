@@ -772,4 +772,36 @@ describe('ReactDOMServer', () => {
       );
     }).toThrowError(/Cannot assign to read only property.*/);
   });
+
+  it('warns about lowercase html but not in svg tags', () => {
+    spyOn(console, 'error');
+    function CompositeG(props) {
+      // Make sure namespace passes through composites
+      return <g>{props.children}</g>;
+    }
+    ReactDOMServer.renderToStaticMarkup(
+      <div>
+        <inPUT />
+        <svg>
+          <CompositeG>
+            <linearGradient />
+            <foreignObject>
+              {/* back to HTML */}
+              <iFrame />
+            </foreignObject>
+          </CompositeG>
+        </svg>
+      </div>,
+    );
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    );
+    // linearGradient doesn't warn
+    expect(console.error.calls.argsFor(1)[0]).toBe(
+      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    );
+  });
 });

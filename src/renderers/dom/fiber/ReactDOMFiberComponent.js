@@ -58,11 +58,7 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
-var {
-  html: HTML_NAMESPACE,
-  svg: SVG_NAMESPACE,
-  mathml: MATH_NAMESPACE,
-} = DOMNamespaces;
+var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
 if (__DEV__) {
   var warnedUnknownTags = {
@@ -295,32 +291,7 @@ function updateDOMProperties(
   }
 }
 
-// Assumes there is no parent namespace.
-function getIntrinsicNamespace(type: string): string {
-  switch (type) {
-    case 'svg':
-      return SVG_NAMESPACE;
-    case 'math':
-      return MATH_NAMESPACE;
-    default:
-      return HTML_NAMESPACE;
-  }
-}
-
 var ReactDOMFiberComponent = {
-  getChildNamespace(parentNamespace: string | null, type: string): string {
-    if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
-      // No (or default) parent namespace: potential entry point.
-      return getIntrinsicNamespace(type);
-    }
-    if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
-      // We're leaving SVG.
-      return HTML_NAMESPACE;
-    }
-    // By default, pass namespace below.
-    return parentNamespace;
-  },
-
   createElement(
     type: *,
     props: Object,
@@ -343,6 +314,8 @@ var ReactDOMFiberComponent = {
     }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
+        // Should this check be gated by parent namespace? Not sure we want to
+        // allow <SVG> or <mATH>.
         warning(
           isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
