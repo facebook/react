@@ -917,7 +917,7 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
-    it.only('should warn for non-functional event listeners', () => {
+    it('should warn for non-functional event listeners', () => {
       spyOn(console, 'error');
       class Example extends React.Component {
         render() {
