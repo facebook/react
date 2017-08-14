@@ -476,3 +476,74 @@ describe('root level refs', () => {
     }
   });
 });
+
+describe('creating element with ref in constructor', () => {
+  class RefTest extends React.Component {
+    constructor(props) {
+      super(props);
+      this.p = <p ref="p">Hello!</p>;
+    }
+
+    render() {
+      return <div>{this.p}</div>;
+    }
+  }
+
+  var devErrorMessage =
+    'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
+    "be adding a ref to a component that was not created inside a component's " +
+    '`render` method, or you have multiple copies of React loaded ' +
+    '(details: https://fb.me/react-refs-must-have-owner).';
+
+  var prodErrorMessage =
+    'Minified React error #119; visit ' +
+    'http://facebook.github.io/react/docs/error-decoder.html?invariant=119 for the full message ' +
+    'or use the non-minified dev environment for full errors and additional helpful warnings.';
+
+  var fiberDevErrorMessage =
+    'Element ref was specified as a string (p) but no owner was ' +
+    'set. You may have multiple copies of React loaded. ' +
+    '(details: https://fb.me/react-refs-must-have-owner).';
+
+  var fiberProdErrorMessage =
+    'Minified React error #149; visit ' +
+    'http://facebook.github.io/react/docs/error-decoder.html?invariant=149&args[]=p ' +
+    'for the full message or use the non-minified dev environment for full errors and additional ' +
+    'helpful warnings.';
+
+  it('throws an error when __DEV__ = true', () => {
+    ReactTestUtils = require('react-dom/test-utils');
+
+    var originalDev = __DEV__;
+    __DEV__ = true;
+
+    try {
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toThrowError(
+        ReactDOMFeatureFlags.useFiber ? fiberDevErrorMessage : devErrorMessage,
+      );
+    } finally {
+      __DEV__ = originalDev;
+    }
+  });
+
+  it('throws an error when __DEV__ = false', () => {
+    ReactTestUtils = require('react-dom/test-utils');
+
+    var originalDev = __DEV__;
+    __DEV__ = false;
+
+    try {
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toThrowError(
+        ReactDOMFeatureFlags.useFiber
+          ? fiberProdErrorMessage
+          : prodErrorMessage,
+      );
+    } finally {
+      __DEV__ = originalDev;
+    }
+  });
+});
