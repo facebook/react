@@ -16,11 +16,13 @@ jest.mock('isEventSupported');
 describe('EventPluginHub', () => {
   var React;
   var ReactTestUtils;
+  var ReactDOMFeatureFlags;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactTestUtils = require('react-dom/test-utils');
+    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   it('should prevent non-function listeners, at dispatch', () => {
@@ -34,6 +36,14 @@ describe('EventPluginHub', () => {
     }).toThrowError(
       'Expected onClick listener to be a function, instead got type string',
     );
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Expected onClick listener to be a function, instead got type string',
+      );
+    } else {
+      expectDev(console.error.calls.count()).toBe(0);
+    }
   });
 
   it('should not prevent null listeners, at dispatch', () => {
