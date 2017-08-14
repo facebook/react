@@ -163,19 +163,14 @@ function findInsertionPosition(queue, update): Update | null {
 function ensureUpdateQueues(fiber: Fiber) {
   const alternateFiber = fiber.alternate;
 
-  let queue1 = fiber.updateQueue;
-  if (queue1 === null) {
-    queue1 = fiber.updateQueue = createUpdateQueue();
+  if (fiber.updateQueue === null) {
+    fiber.updateQueue = createUpdateQueue();
   }
 
-  let queue2;
   if (alternateFiber !== null) {
-    queue2 = alternateFiber.updateQueue;
-    if (queue2 === null) {
-      queue2 = alternateFiber.updateQueue = createUpdateQueue();
+    if (alternateFiber.updateQueue === null) {
+      alternateFiber.updateQueue = createUpdateQueue();
     }
-  } else {
-    queue2 = null;
   }
 }
 
@@ -369,9 +364,7 @@ function addTopLevelUpdate(
     // TODO: Redesign the top-level mount/update/unmount API to avoid this
     // special case.
     const queue1: UpdateQueue | null = fiber.updateQueue;
-    const queue2: UpdateQueue | null = fiber.alternate &&
-      fiber.alternate.updateQueue !== queue1
-      ? fiber.alternate.updateQueue
+    const queue2: UpdateQueue | null = fiber.alternate ? fiber.alternate.updateQueue
       : null;
 
     // Drop all updates that are lower-priority, so that the tree is not
