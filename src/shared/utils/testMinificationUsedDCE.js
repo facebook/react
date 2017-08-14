@@ -17,8 +17,7 @@ function testMinificationUsedDCE() {
     // 'top-level' mangling is not enabled.
     const source = testMinificationUsedDCE.toString();
     const longVariableName = source;
-    if (longVariableName &&
-        source.match(/longVariableName/g).length === 3) {
+    if (longVariableName && source.match(/longVariableName/g).length === 3) {
       // We are not minified.
       // This might be a Node environment where DCE is not expected anyway.
       return;
@@ -45,10 +44,12 @@ function testMinificationUsedDCE() {
         // because it is impossible to reach in production.
         setTimeout(function() {
           // Ensure it gets reported to production logging
-          throw new Error('React is running in production mode, but dead code '
-                          + 'elimination has not been applied. Read how to correctly '
-                          + 'configure React for production: '
-                          + 'https://fburl.com/react-perf-use-the-production-build');
+          throw new Error(
+            'React is running in production mode, but dead code ' +
+              'elimination has not been applied. Read how to correctly ' +
+              'configure React for production: ' +
+              'https://fburl.com/react-perf-use-the-production-build',
+          );
         });
       }
     } catch (e) {}

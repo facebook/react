@@ -14,7 +14,6 @@ var babel = require('babel-core');
 var UglifyJs = require('uglify-js');
 var testMinificationUsedDCE;
 
-
 describe('in the production environment', () => {
   let oldProcess;
   beforeEach(() => {
@@ -35,7 +34,6 @@ describe('in the production environment', () => {
   afterEach(() => {
     __DEV__ = true;
     global.process = oldProcess;
-
   });
 
   describe('when not minified', () => {
@@ -54,16 +52,16 @@ describe('in the production environment', () => {
         var rawCode = testMinificationUsedDCE
           .toString()
           .replace(/process\.env\.NODE_ENV/, '"production"');
-        var code = { 'file.js': rawCode };
-        var options = { fromString: true, parse: { dead_code: false } };
+        var code = {'file.js': rawCode};
+        var options = {fromString: true, parse: {dead_code: false}};
         var result = UglifyJs.minify(code, options);
         const minifiedWithNoDCE = () => eval('(' + result.code + ')()');
         expect(() => {
           minifiedWithNoDCE();
           jest.runAllTimers();
         }).toThrow(
-          'React is running in production mode, but dead code elimination '
-            + 'has not been applied.',
+          'React is running in production mode, but dead code elimination ' +
+            'has not been applied.',
         );
       });
     });
@@ -74,8 +72,8 @@ describe('in the production environment', () => {
         var rawCode = testMinificationUsedDCE
           .toString()
           .replace(/process\.env\.NODE_ENV/g, '"production"');
-        var code = { 'file.js': rawCode };
-        var options = { fromString: true, parse: { dead_code: true } };
+        var code = {'file.js': rawCode};
+        var options = {fromString: true, parse: {dead_code: true}};
         var result = UglifyJs.minify(code, options);
         const minifiedWithNoDCE = () => eval('(' + result.code + ')()');
         expect(() => {
@@ -87,24 +85,25 @@ describe('in the production environment', () => {
 
     describe('when minified first with *unsuccessful* DCE, then envified', () => {
       it('should throw', () => {
-        var code = { 'file.js': testMinificationUsedDCE.toString() };
-        var options = { fromString: true, parse: { dead_code: true } };
+        var code = {'file.js': testMinificationUsedDCE.toString()};
+        var options = {fromString: true, parse: {dead_code: true}};
         var result = UglifyJs.minify(code, options);
         // late envify: change `process.env.NODE_ENV` to `"production"`
-        var resultCode = result.code
-          .replace(/process\.env\.NODE_ENV/g, '"production"');
+        var resultCode = result.code.replace(
+          /process\.env\.NODE_ENV/g,
+          '"production"',
+        );
         const minifiedWithNoDCE = () => eval('(' + resultCode + ')()');
         expect(() => {
           minifiedWithNoDCE();
           jest.runAllTimers();
         }).toThrow(
-          'React is running in production mode, but dead code elimination '
-            + 'has not been applied.',
+          'React is running in production mode, but dead code elimination ' +
+            'has not been applied.',
         );
       });
     });
   });
-
 
   describe('when minified with babel/minify with *no* DCE', () => {
     xit('should throw', () => {
@@ -114,7 +113,7 @@ describe('in the production environment', () => {
       // TODO: Why is this not actually minifying the code????
       const minifiedWithNoDCE = () => {
         eval(
-          babel.transform(testMinificationUsedDCE.toString(), babelOpts).code
+          babel.transform(testMinificationUsedDCE.toString(), babelOpts).code,
         );
       };
       expect(() => {
@@ -133,7 +132,7 @@ describe('in the production environment', () => {
       // TODO: Why is this not actually minifying the code????
       const minifiedWithDCE = () => {
         eval(
-          babel.transform(testMinificationUsedDCE.toString(), babelOpts).code
+          babel.transform(testMinificationUsedDCE.toString(), babelOpts).code,
         );
       };
       expect(() => {
