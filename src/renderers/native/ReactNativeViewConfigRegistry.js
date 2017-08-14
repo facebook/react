@@ -20,23 +20,43 @@ export type ReactNativeBaseComponentViewConfig = {
   propTypes?: Object,
 };
 
+const lazyViewConfigs = new Map();
+const views = new Map();
 const viewConfigs = new Map();
 
 const ReactNativeViewConfigRegistry = {
   register(viewConfig: ReactNativeBaseComponentViewConfig) {
     const name = viewConfig.uiViewClassName;
     invariant(
-      !viewConfigs.has(name),
+      !views.has(name),
       'Tried to register two views with the same name %s',
       name,
     );
     viewConfigs.set(name, viewConfig);
+    views.set(name);
+    return name;
+  },
+  registerLazy(name: string, callback: () => ReactNativeBaseComponentViewConfig) {
+    invariant(
+      !views.has(name),
+      'Tried to register two views with the same name %s',
+      name,
+    );
+    lazyViewConfigs.set(name, callback);
+    views.set(name);
     return name;
   },
   get(name: string) {
-    const config = viewConfigs.get(name);
-    invariant(config, 'View config not found for name %s', name);
-    return config;
+    let viewConfig;
+    if (!viewConfigs.has(name)) {
+      const callback = lazyViewConfigs.get(name);
+      viewConfig = callback();
+      viewConfigs.set(name, viewConfig);
+    } else {
+      viewConfig = viewConfigs.get(name);
+    }
+    invariant(viewConfig, 'View config not found for name %s', name);
+    return viewConfig;
   },
 };
 

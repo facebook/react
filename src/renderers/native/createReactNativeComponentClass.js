@@ -32,3 +32,5 @@ const createReactNativeComponentClass = function(
 };
 
 module.exports = createReactNativeComponentClass;
+
+createReactNativeComponentClass.lazy = ReactNativeViewConfigRegistry.registerLazy;
