@@ -30,11 +30,6 @@ const reactNativeSrcDependencies = [
   'src/renderers/native/ReactNativeTypes.js',
 ];
 
-// these files need to be copied to the react build
-const reactPackageDependencies = [
-  'src/shared/utils/testMinificationUsedDCE.js',
-];
-
 function getPackageName(name) {
   if (name.indexOf('/') !== -1) {
     return name.split('/')[0];
@@ -104,7 +99,7 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
       from = resolve(`./build/dist/${filename}`);
       to = `${packageDirectory}/umd/${filename}`;
     }
-    const promises = [];
+
     // for NODE bundles we have to move the files into a cjs directory
     // within the package directory. we also need to set the from
     // to be the root build from directory
@@ -115,31 +110,13 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
         fs.mkdirSync(distDirectory);
       }
       to = `${packageDirectory}/cjs/${filename}`;
-      if (packageName === 'react') {
-        // we are building the React package
-        let promises = [];
-        // we also need to copy over some specific files from src
-        // defined in reactPackageDependencies
-        for (const srcDependency of reactPackageDependencies) {
-          // TODO: the srcDependency needs to be processed
-          // before this step.
-          var specificFrom = resolve(srcDependency);
-          var specificTo = resolve(`${distDirectory}/${basename(srcDependency)}`);
-          promises.push(
-            asyncCopyTo(specificFrom, specificTo)
-          );
-        }
-      }
     }
-    promises.push(
-      asyncCopyTo(from, to).then(() => {
-        // delete the old file if this is a not a UMD bundle
-        if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
-          fs.unlinkSync(from);
-        }
-      })
-    );
-    return Promise.all(promises);
+    return asyncCopyTo(from, to).then(() => {
+      // delete the old file if this is a not a UMD bundle
+      if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
+        fs.unlinkSync(from);
+      }
+    });
   } else {
     return Promise.resolve();
   }
