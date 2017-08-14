@@ -263,6 +263,7 @@ const bundles = [
     externals: [
       'ExceptionsManager',
       'InitializeCore',
+      'Platform',
       'RCTEventEmitter',
       'TextInputState',
       'UIManager',
