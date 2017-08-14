@@ -364,7 +364,8 @@ function addTopLevelUpdate(
     // TODO: Redesign the top-level mount/update/unmount API to avoid this
     // special case.
     const queue1: UpdateQueue | null = fiber.updateQueue;
-    const queue2: UpdateQueue | null = fiber.alternate ? fiber.alternate.updateQueue
+    const queue2: UpdateQueue | null = fiber.alternate
+      ? fiber.alternate.updateQueue
       : null;
 
     // Drop all updates that are lower-priority, so that the tree is not
