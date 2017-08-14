@@ -236,7 +236,7 @@ function setInitialDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
-        if (__DEV__) {
+        if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
         ensureListeningTo(rootContainerElement, propKey);
@@ -752,7 +752,7 @@ var ReactDOMFiberComponent = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
           // We eagerly listen to this even though we haven't committed yet.
-          if (__DEV__) {
+          if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
           }
           ensureListeningTo(rootContainerElement, propKey);
@@ -995,7 +995,7 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (__DEV__) {
+        if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
         if (nextProp) {
