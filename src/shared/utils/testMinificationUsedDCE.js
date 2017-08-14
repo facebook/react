@@ -13,6 +13,8 @@
 
 function testMinificationUsedDCE() {
   if (process.env.NODE_ENV === 'production') {
+    // use scoped variable for our initial test, in case
+    // 'top-level' mangling is not enabled.
     const source = testMinificationUsedDCE.toString();
     const longVariableName = source;
     if (longVariableName &&
@@ -35,7 +37,7 @@ function testMinificationUsedDCE() {
         // Therefore the browser gave us invalid source.
         return;
       }
-      if (source.match(/unreachable/g).length !== 2) {
+      if (source.match(/unreachable/g).length === 2) {
         // We always look for two matches:
         // The actual occurence and then the call to 'match'
 

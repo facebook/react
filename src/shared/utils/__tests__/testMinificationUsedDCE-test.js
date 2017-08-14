@@ -11,7 +11,7 @@
 'use strict';
 
 var babel = require('babel-core');
-//var minify = require('babel-preset-minify');
+var UglifyJs = require('uglify-js');
 var testMinificationUsedDCE;
 
 
@@ -46,6 +46,65 @@ describe('in the production environment', () => {
       }).not.toThrow();
     });
   });
+
+  describe('with uglifyjs', () => {
+    describe('when envified first, then minification with *no* DCE', () => {
+      it('should throw', () => {
+        // envify: change `process.env.NODE_ENV` to `"production"`
+        var rawCode = testMinificationUsedDCE
+          .toString()
+          .replace(/process\.env\.NODE_ENV/, '"production"');
+        var code = { 'file.js': rawCode };
+        var options = { fromString: true, parse: { dead_code: false } };
+        var result = UglifyJs.minify(code, options);
+        const minifiedWithNoDCE = () => eval('(' + result.code + ')()');
+        expect(() => {
+          minifiedWithNoDCE();
+          jest.runAllTimers();
+        }).toThrow(
+          'React is running in production mode, but dead code elimination '
+            + 'has not been applied.',
+        );
+      });
+    });
+
+    describe('when envified first, then minified and *yes* successful DCE', () => {
+      it('should not throw', () => {
+        // envify: change `process.env.NODE_ENV` to `"production"`
+        var rawCode = testMinificationUsedDCE
+          .toString()
+          .replace(/process\.env\.NODE_ENV/g, '"production"');
+        var code = { 'file.js': rawCode };
+        var options = { fromString: true, parse: { dead_code: true } };
+        var result = UglifyJs.minify(code, options);
+        const minifiedWithNoDCE = () => eval('(' + result.code + ')()');
+        expect(() => {
+          minifiedWithNoDCE();
+          jest.runAllTimers();
+        }).not.toThrow();
+      });
+    });
+
+    describe('when minified first with *unsuccessful* DCE, then envified', () => {
+      it('should throw', () => {
+        var code = { 'file.js': testMinificationUsedDCE.toString() };
+        var options = { fromString: true, parse: { dead_code: true } };
+        var result = UglifyJs.minify(code, options);
+        // late envify: change `process.env.NODE_ENV` to `"production"`
+        var resultCode = result.code
+          .replace(/process\.env\.NODE_ENV/g, '"production"');
+        const minifiedWithNoDCE = () => eval('(' + resultCode + ')()');
+        expect(() => {
+          minifiedWithNoDCE();
+          jest.runAllTimers();
+        }).toThrow(
+          'React is running in production mode, but dead code elimination '
+            + 'has not been applied.',
+        );
+      });
+    });
+  });
+
 
   describe('when minified with babel/minify with *no* DCE', () => {
     xit('should throw', () => {
