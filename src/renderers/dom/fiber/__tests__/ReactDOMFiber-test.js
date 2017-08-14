@@ -18,6 +18,10 @@ var ReactTestUtils = require('react-dom/test-utils');
 var PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   var container;
   var ReactFeatureFlags;
 
@@ -913,7 +917,7 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
-    it('should warn for non-functional event listeners', () => {
+    it.only('should warn for non-functional event listeners', () => {
       spyOn(console, 'error');
       class Example extends React.Component {
         render() {
@@ -922,8 +926,10 @@ describe('ReactDOMFiber', () => {
       }
       ReactDOM.render(<Example />, container);
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Expected onClick listener to be a function, instead got type string',
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Expected onClick listener to be a function, instead got type string\n' +
+        '    in div (at **)\n' +
+        '    in Example (at **)' 
       );
     });
 

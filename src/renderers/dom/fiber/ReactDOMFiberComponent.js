@@ -34,6 +34,7 @@ var setTextContent = require('setTextContent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
@@ -124,10 +125,11 @@ if (__DEV__) {
 
   var warnForInvalidEventListener = function(registrationName, listener) {
     warning(
-      typeof listener === 'function',
-      'Expected %s listener to be a function, instead got type %s',
+      false,
+      'Expected %s listener to be a function, instead got type %s%s',
       registrationName,
       typeof listener,
+      getCurrentFiberStackAddendum(),
     );
   };
 
