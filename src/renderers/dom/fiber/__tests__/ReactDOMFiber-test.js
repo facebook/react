@@ -926,10 +926,12 @@ describe('ReactDOMFiber', () => {
       }
       ReactDOM.render(<Example />, container);
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
         'Expected onClick listener to be a function, instead got type string\n' +
-        '    in div (at **)\n' +
-        '    in Example (at **)' 
+          '    in div (at **)\n' +
+          '    in Example (at **)',
       );
     });
 
