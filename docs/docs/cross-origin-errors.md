@@ -8,11 +8,11 @@ permalink: docs/cross-origin-errors.html
 >
 > The following section applies only to the development mode of React. Error handling in production mode is done with regular try/catch statements.
 
-In [development mode](https://facebook.github.io/react/docs/optimizing-performance.html), React uses a global `error` event handler to preserve the "Pause on exceptions" behavior of browser DevTools. It also logs errors to the developer console.
+In [development mode](https://facebook.github.io/react/docs/optimizing-performance.html), React uses a global `error` event handler to preserve the "pause on exceptions" behavior of browser DevTools. It also logs errors to the developer console.
 
 If an error is thrown from a [different origin](https://developer.mozilla.org/en-US/docs/Web/Security/Same-origin_policy) the browser will mask its details and React will not be able to log the original error message. This is a security precaution taken by browsers to avoid leaking sensitive information.
 
-If you trust the scripts you're running you can ask the browser to bypass the same-origin policy in a secure way. Doing this can help simplify the development/debugging process. Below are some common causes of cross-origin errors and ways to address them.
+You can simplify the development/debugging process by ensuring that errors are thrown with a same-origin policy. Below are some common causes of cross-origin errors and ways to address them.
 
 ### CDN
 
@@ -28,6 +28,6 @@ Also ensure the CDN responds with the `Access-Control-Allow-Origin: *` HTTP head
 
 ### Webpack
 
-Some JavaScript bundlers may wrap the application code with `eval` statements in development. For example Webpack will do so if the [`devtool` setting](https://webpack.js.org/configuration/devtool/) is any of the options containing the word "eval" (which includes the default setting).
+Some JavaScript bundlers may wrap the application code with `eval` statements in development. (For example Webpack will do this if [`devtool`](https://webpack.js.org/configuration/devtool/) is set to any value containing the word "eval".) This may cause errors to be treated as cross-origin.
 
-If you use Webpack, we recommend using the `cheap-module-source-map` setting in development instead to avoid this problem.
+If you use Webpack, we recommend using the `cheap-module-source-map` setting in development to avoid this problem.
