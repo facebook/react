@@ -402,7 +402,7 @@ var ReactCompositeComponent = {
     publicContext,
     updateQueue,
   ) {
-    if (__DEV__) {
+    if (__DEV__ && !doConstruct) {
       ReactCurrentOwner.current = this;
       ReactDebugCurrentFrame.getCurrentStack =
         ReactDebugCurrentStack.getStackAddendum;
