@@ -11,8 +11,8 @@
 
 'use strict';
 
-import { css } from 'glamor'
-import {colors, media} from 'theme';
+import {css} from 'glamor';
+import {colors} from 'theme';
 
 const prismColors = {
   char: '#61dafb',
@@ -32,17 +32,20 @@ css.global('.gatsby-highlight', {
   tabSize: '1.5em',
 });
 
-css.global(`
+css.global(
+  `
 .gatsby-highlight code[class*="gatsby-code-"],
 .gatsby-highlight pre[class*="gatsby-code-"],
-.gatsby-highlight pre.prism-code`, {
-  height: 'auto !important',
-  margin: '1rem',
-  fontSize: 14,
-  lineHeight: '20px',
-  whiteSpace: 'pre-wrap',
-  wordBreak: 'break-word',
-});
+.gatsby-highlight pre.prism-code`,
+  {
+    height: 'auto !important',
+    margin: '1rem',
+    fontSize: 14,
+    lineHeight: '20px',
+    whiteSpace: 'pre-wrap',
+    wordBreak: 'break-word',
+  },
+);
 
 css.global('.gatsby-highlight + .gatsby-highlight', {
   marginTop: 20,
@@ -59,49 +62,64 @@ css.global('.token.attr-name', {
   color: colors.white,
 });
 
-css.global(`
+css.global(
+  `
 .token.comment,
 .token.block-comment,
 .token.prolog,
 .token.doctype,
-.token.cdata`, {
-  color: prismColors.comment,
-});
+.token.cdata`,
+  {
+    color: prismColors.comment,
+  },
+);
 
-css.global(`
+css.global(
+  `
 .token.property,
 .token.boolean,
 .token.number,
 .token.function-name,
 .token.constant,
 .token.symbol,
-.token.deleted`, {
-  color: prismColors.primative,
-});
+.token.deleted`,
+  {
+    color: prismColors.primative,
+  },
+);
 
-css.global(`
+css.global(
+  `
 .token.punctuation,
 .token.tag,
-.token.string`, {
-  color: prismColors.string,
-});
+.token.string`,
+  {
+    color: prismColors.string,
+  },
+);
 
-css.global(`
+css.global(
+  `
 .token.selector,
 .token.char,
 .token.function,
 .token.builtin,
-.token.inserted`, {
-  color: prismColors.char,
-});
+.token.inserted`,
+  {
+    color: prismColors.char,
+  },
+);
 
-css.global(`
+css.global(
+  `
 .token.operator,
 .token.entity,
 .token.url,
-.token.variable`, {
-  color: prismColors.variable,
-});
+.token.variable`,
+  {
+    color: prismColors.variable,
+  },
+);
 
 css.global('.token.attr-value', {
   color: prismColors.comment,
@@ -111,11 +129,14 @@ css.global('.token.keyword', {
   color: prismColors.keyword,
 });
 
-css.global(`
+css.global(
+  `
 .token.atrule,
-.token.class-name`, {
-  color: prismColors.char,
-});
+.token.class-name`,
+  {
+    color: prismColors.char,
+  },
+);
 
 css.global('.token.important', {
   fontWeight: 'normal',
