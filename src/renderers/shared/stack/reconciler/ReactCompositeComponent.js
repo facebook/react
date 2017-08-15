@@ -372,7 +372,7 @@ var ReactCompositeComponent = {
     publicContext,
     updateQueue,
   ) {
-    if (__DEV__) {
+    if (__DEV__ && !doConstruct) {
       ReactCurrentOwner.current = this;
       try {
         return this._constructComponentWithoutOwner(
