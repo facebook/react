@@ -782,6 +782,9 @@ describe('ReactDOMServerIntegration', () => {
         expect(style.lineClamp).toBe('10');
         expect(style.WebkitLineClamp).toBe('10');
         expect(style.MozFlexGrow).toBe('10');
+        // jsdom is inconsistent in the style property name
+        // it uses on the client and when processing server markup.
+        // But it should be there either way.
         expect(style.MsFlexGrow || style.msFlexGrow).toBe('10');
         expect(style.MsGridRow || style.msGridRow).toBe('10');
         expect(style.MsGridRowEnd || style.msGridRowEnd).toBe('10');
