@@ -34,7 +34,7 @@ const toSectionList = allMarkdownRemark => [
 const Blog = ({data, location}) => (
   <MarkdownPage
     authors={data.markdownRemark.frontmatter.author}
-    date={new Date(data.markdownRemark.fields.date)}
+    date={data.markdownRemark.fields.date}
     location={location}
     markdownRemark={data.markdownRemark}
     sectionList={toSectionList(data.allMarkdownRemark)}
@@ -62,7 +62,7 @@ export const pageQuery = graphql`
         }
       }
       fields {
-        date
+        date(formatString: "MMMM DD, YYYY")
         path
       }
     }

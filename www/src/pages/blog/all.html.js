@@ -16,7 +16,6 @@ import Container from 'components/Container';
 import Header from 'components/Header';
 import React from 'react';
 import {sharedStyles} from 'theme';
-import dateToString from 'utils/dateToString';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 
 const AllBlogPosts = ({data}) => (
@@ -38,7 +37,7 @@ const AllBlogPosts = ({data}) => (
           {' '}
           on
           {' '}
-          {dateToString(new Date(node.fields.date))}
+          {node.fields.date}
           {' '}
           by
           {' '}
@@ -72,7 +71,7 @@ export const pageQuery = graphql`
             }
           }
           fields {
-            date
+            date(formatString: "MMMM DD, YYYY")
             slug
           }
         }
