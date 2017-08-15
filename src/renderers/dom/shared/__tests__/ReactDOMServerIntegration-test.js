@@ -619,16 +619,16 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('classname')).toBe(true);
       });
 
-      itRenders('no className prop when given the alias', async render => {
+      itRenders('className prop when given the alias', async render => {
         const e = await render(<div class="test" />, 1);
-        expect(e.className).toBe('');
+        expect(e.className).toBe('test');
       });
 
       itRenders(
         'no className prop when given a badly cased alias',
         async render => {
           const e = await render(<div cLASs="test" />, 1);
-          expect(e.className).toBe('');
+          expect(e.className).toBe('test');
         },
       );
 
@@ -836,7 +836,7 @@ describe('ReactDOMServerIntegration', () => {
         'no badly cased original SVG attribute that is aliased',
         async render => {
           const e = await render(<text stroke-dasharray="10 10" />, 1);
-          expect(e.hasAttribute('stroke-dasharray')).toBe(false);
+          expect(e.getAttribute('stroke-dasharray')).toBe('10 10');
         },
       );
     });

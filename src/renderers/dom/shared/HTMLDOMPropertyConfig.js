@@ -39,6 +39,7 @@ var HTMLDOMPropertyConfig = {
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
     formNoValidate: HAS_BOOLEAN_VALUE,
     hidden: HAS_BOOLEAN_VALUE,
+    loop: HAS_BOOLEAN_VALUE,
     // Caution; `option.selected` is not updated if `select.multiple` is
     // disabled with `removeAttribute`.
     multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
@@ -56,7 +57,6 @@ var HTMLDOMPropertyConfig = {
     selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     size: HAS_POSITIVE_NUMERIC_VALUE,
     start: HAS_NUMERIC_VALUE,
-    loop: HAS_BOOLEAN_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
     // Style must be explicitly set in the attribute list. React components

@@ -118,10 +118,6 @@ var DOMPropertyInjection = {
         var attributeName = DOMAttributeNames[propName];
 
         propertyInfo.attributeName = attributeName;
-
-        // Use the lowercase form of the attribute name to prevent
-        // badly cased React attribute alises from writing to the DOM.
-        DOMProperty.aliases[attributeName.toLowerCase()] = true;
       }
 
       if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
@@ -198,13 +194,6 @@ var DOMProperty = {
   properties: {},
 
   /**
-   * Some attributes are aliased for easier use within React. We don't
-   * allow direct use of these attributes. See DOMAttributeNames in
-   * HTMLPropertyConfig and SVGPropertyConfig.
-   */
-  aliases: {},
-
-  /**
    * Checks whether a property name is a writeable attribute.
    * @method
    */
@@ -218,12 +207,6 @@ var DOMProperty = {
     }
 
     var lowerCased = name.toLowerCase();
-
-    // Prevent aliases, and badly cased aliases like `class` or `cLASS`
-    // from showing up in the DOM
-    if (DOMProperty.aliases.hasOwnProperty(lowerCased)) {
-      return false;
-    }
 
     var propertyInfo = DOMProperty.properties[name];
 
@@ -239,13 +222,9 @@ var DOMProperty = {
       case 'string':
         return true;
       case 'object':
-        // Allow HAS_BOOLEAN_VALUE to coerce to true
-        if (propertyInfo && propertyInfo.hasBooleanValue) {
-          return true;
-        }
-
-        return value.toString !== Object.prototype.toString;
+        return true;
       default:
+        // function, symbol
         return false;
     }
   },

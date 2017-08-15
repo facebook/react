@@ -158,7 +158,7 @@ describe('ReactDOMComponent', () => {
     it('should group multiple unknown prop warnings together', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<div foo={() => {}} baz={{}} />, container);
+      ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid props `foo`, `baz` on <div> tag. Either remove these ' +
@@ -1913,32 +1913,31 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('Attributes with aliases', function() {
-    it('does not set aliased attributes on HTML attributes', function() {
+    it('sets aliased attributes on HTML attributes', function() {
       spyOn(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div class="test" />);
 
-      expect(el.className).toBe('');
+      expect(el.className).toBe('test');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid DOM property `class`. Did you mean `className`?',
       );
     });
 
-    it('does not set incorrectly cased aliased attributes on HTML attributes with a warning', function() {
+    it('sets incorrectly cased aliased attributes on HTML attributes with a warning', function() {
       spyOn(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div cLASS="test" />);
 
-      expect(el.className).toBe('');
-      expect(el.hasAttribute('class')).toBe(false);
+      expect(el.className).toBe('test');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid DOM property `cLASS`. Did you mean `className`?',
       );
     });
 
-    it('does not set aliased attributes on SVG elements with a warning', function() {
+    it('sets aliased attributes on SVG elements with a warning', function() {
       spyOn(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(
@@ -1946,7 +1945,7 @@ describe('ReactDOMComponent', () => {
       );
       var text = el.querySelector('text');
 
-      expect(text.hasAttribute('arabic-form')).toBe(false);
+      expect(text.hasAttribute('arabic-form')).toBe(true);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
@@ -2039,16 +2038,9 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('will not assign an object custom attributes', function() {
-      spyOn(console, 'error');
-
+    it('will assign an object custom attributes', function() {
       var el = ReactTestUtils.renderIntoDocument(<div whatever={{}} />);
-
-      expect(el.hasAttribute('whatever')).toBe(false);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `whatever` on <div> tag.',
-      );
+      expect(el.getAttribute('whatever')).toBe('[object Object]');
     });
 
     it('allows cased data attributes', function() {
@@ -2079,7 +2071,7 @@ describe('ReactDOMComponent', () => {
 
       var container = document.createElement('div');
       ReactDOM.render(<div whatever={0} />, container);
-      ReactDOM.render(<div whatever={{}} />, container);
+      ReactDOM.render(<div whatever={() => {}} />, container);
       var el = container.firstChild;
 
       expect(el.hasAttribute('whatever')).toBe(false);
@@ -2091,18 +2083,11 @@ describe('ReactDOMComponent', () => {
   });
 
   describe('Object stringification', function() {
-    it('does not allow objects without a toString method for members of the whitelist', function() {
-      spyOn(console, 'error');
-
+    it('allows objects on known properties', function() {
       var el = ReactTestUtils.renderIntoDocument(
         <div allowTransparency={{}} />,
       );
-
-      expect(el.hasAttribute('allowtransparency')).toBe(false);
-
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `allowTransparency` on <div> tag.',
-      );
+      expect(el.getAttribute('allowtransparency')).toBe('[object Object]');
     });
 
     it('should pass objects as attributes if they define toString', () => {
@@ -2125,29 +2110,23 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should not pass objects on known SVG attributes if they do not define toString', () => {
-      spyOn(console, 'error');
+    it('passes objects on known SVG attributes if they do not define toString', () => {
       var obj = {};
       var container = document.createElement('div');
 
       ReactDOM.render(<svg arabicForm={obj} />, container);
-      expect(container.firstChild.getAttribute('arabic-form')).toBe(null);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `arabicForm` on <svg> tag.',
+      expect(container.firstChild.getAttribute('arabic-form')).toBe(
+        '[object Object]',
       );
     });
 
-    it('should not pass objects on custom attributes if they do not define toString', () => {
-      spyOn(console, 'error');
+    it('passes objects on custom attributes if they do not define toString', () => {
       var obj = {};
       var container = document.createElement('div');
 
       ReactDOM.render(<div customAttribute={obj} />, container);
-      expect(container.firstChild.getAttribute('customAttribute')).toBe(null);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `customAttribute` on <div> tag.',
+      expect(container.firstChild.getAttribute('customAttribute')).toBe(
+        '[object Object]',
       );
     });
 
