@@ -12,7 +12,7 @@ It looks like [Ben Alpert](http://benalpert.com/) is the first person outside of
 > I just rewrote a 2000-line project in React and have now made a handful of pull requests to React. Everything about React I've seen so far seems really well thought-out and I'm proud to be the first non-FB/IG production user of React.
 >
 > The project that I rewrote in React (and am continuing to improve) is the Khan Academy question editor which content creators can use to enter questions and hints that will be presented to students:
-> <figure>[![](/docs/img/blog/khan-academy-editor.webp)](http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html)</figure>
+> [![](/docs/img/blog/khan-academy-editor.webp)](http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html)
 >
 > [Read the full post...](http://benalpert.com/2013/06/09/using-react-to-speed-up-khan-academy.html)
 
