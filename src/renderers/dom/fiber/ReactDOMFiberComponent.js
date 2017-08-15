@@ -901,8 +901,10 @@ var ReactDOMFiberComponent = {
       var extraAttributeNames: Set<string> = new Set();
       var attributes = domElement.attributes;
       for (var i = 0; i < attributes.length; i++) {
-        // TODO: Do we need to lower case this to get case insensitive matches?
-        var name = attributes[i].name;
+        // Downcase to work around IE Edge, which reports some SVG attributes
+        // in all-caps. See:
+        // https://github.com/facebook/react/pull/10394#issuecomment-320523369
+        var name = attributes[i].name.toLowerCase();
         switch (name) {
           // Built-in SSR attribute is whitelisted
           case 'data-reactroot':
@@ -991,7 +993,7 @@ var ReactDOMFiberComponent = {
           DOMProperty.isCustomAttribute(propKey)
         ) {
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
+          extraAttributeNames.delete(propKey.toLowerCase());
           serverValue = DOMPropertyOperations.getValueForAttribute(
             domElement,
             propKey,

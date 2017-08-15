@@ -624,6 +624,12 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div className={null} />);
         expect(e.hasAttribute('className')).toBe(false);
       });
+
+      itRenders('no lower case classname', async render => {
+        const e = await render(<div classname="test" />, 1);
+        expect(e.hasAttribute('className')).toBe(false);
+        expect(e.hasAttribute('class')).toBe(false);
+      });
     });
 
     describe('htmlFor property', function() {
@@ -787,6 +793,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('unknown data- attributes', async render => {
         const e = await render(<div data-foo="bar" />);
         expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders('unknown data- attributes with casing', async render => {
+        const e = await render(<div data-myAttribute="test" />, 0);
+        expect(e.getAttribute('data-myAttribute')).toBe('test');
       });
 
       itRenders('no unknown data- attributes with null value', async render => {
