@@ -131,7 +131,7 @@ const sharedStyles = {
 
     '& p > code, & li > code': {
       background: hex2rgba(colors.note, 0.5),
-      padding: '0 3',
+      padding: '0 3px',
     },
 
     '& hr': {
@@ -181,6 +181,26 @@ const sharedStyles = {
         // 30px, 700);
       },
     },
+
+    // TODO Implement a better style for blockquotes
+    '& blockquote': {
+      backgroundColor: colors.divider,
+      padding: '0.5rem 1rem',
+      borderRadius: 10,
+      marginBottom: 30,
+
+      '& p': {
+        marginTop: 15,
+
+        '&:first-of-type': {
+          fontWeight: 'bold',
+        },
+
+        '&:nth-of-type(2)': {
+          marginTop: 0,
+        },
+      },
+    }
   },
 };
 
