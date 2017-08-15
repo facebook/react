@@ -19,7 +19,6 @@ import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React from 'react';
 import StickySidebar from '../StickySidebar';
-import dateToString from 'utils/dateToString';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 import {sharedStyles} from 'theme';
@@ -62,7 +61,7 @@ const MarkdownPage = ({
 
               {(date || hasAuthors) &&
                 <div css={{marginTop: 15}}>
-                  {date ? `${dateToString(date)} ` : ''}
+                  {date}{' '}
                   {hasAuthors &&
                     <span>
                       by {toCommaSeparatedList(authors, author => (
@@ -122,7 +121,7 @@ MarkdownPage.defaultProps = {
 // TODO Better types
 MarkdownPage.propTypes = {
   authors: PropTypes.array.isRequired,
-  date: PropTypes.object,
+  date: PropTypes.string,
   location: PropTypes.object.isRequired,
   markdownRemark: PropTypes.object.isRequired,
   sectionList: PropTypes.array.isRequired,
