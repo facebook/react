@@ -88,9 +88,7 @@ var DOMMarkupOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
+    var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
       if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
@@ -103,7 +101,7 @@ var DOMMarkupOperations = {
         return attributeName + '=""';
       }
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
-    } else if (DOMProperty.isCustomAttribute(name)) {
+    } else if (DOMProperty.shouldSetAttribute(name, value)) {
       if (value == null) {
         return '';
       }

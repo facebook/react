@@ -64,11 +64,6 @@ function assertValidProps(
   }
   if (__DEV__) {
     warning(
-      props.innerHTML == null,
-      'Directly setting property `innerHTML` is not permitted. ' +
-        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-    );
-    warning(
       props.suppressContentEditableWarning ||
         !props.contentEditable ||
         props.children == null,
@@ -76,12 +71,6 @@ function assertValidProps(
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
         'probably not intentional.',
-    );
-    warning(
-      props.onFocusIn == null && props.onFocusOut == null,
-      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-        'are not needed/supported by React.',
     );
   }
   invariant(

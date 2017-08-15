@@ -227,20 +227,11 @@ function setInitialDOMProperties(
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else if (nextProp != null) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (nextProp != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          nextProp,
-        );
-      }
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
     }
   }
 }
@@ -271,22 +262,13 @@ function updateDOMProperties(
       } else {
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else if (propValue != null) {
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
+    } else {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
-      }
+      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
     }
   }
 }
@@ -901,8 +883,7 @@ var ReactDOMFiberComponent = {
       var extraAttributeNames: Set<string> = new Set();
       var attributes = domElement.attributes;
       for (var i = 0; i < attributes.length; i++) {
-        // TODO: Do we need to lower case this to get case insensitive matches?
-        var name = attributes[i].name;
+        var name = attributes[i].name.toLowerCase();
         switch (name) {
           // Built-in SSR attribute is whitelisted
           case 'data-reactroot':
@@ -986,28 +967,37 @@ var ReactDOMFiberComponent = {
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
-        } else if (
-          isCustomComponentTag ||
-          DOMProperty.isCustomAttribute(propKey)
-        ) {
+        } else if (isCustomComponentTag) {
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
+          extraAttributeNames.delete(propKey.toLowerCase());
           serverValue = DOMPropertyOperations.getValueForAttribute(
             domElement,
             propKey,
             nextProp,
           );
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
-        } else if ((propertyInfo = DOMProperty.properties[propKey])) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = DOMPropertyOperations.getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-          );
+        } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+          if ((propertyInfo = DOMProperty.getPropertyInfo(propKey))) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propertyInfo.attributeName);
+            serverValue = DOMPropertyOperations.getValueForProperty(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          } else {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey.toLowerCase());
+            serverValue = DOMPropertyOperations.getValueForAttribute(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          }
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }

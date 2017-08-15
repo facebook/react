@@ -13,6 +13,21 @@
 
 var invariant = require('fbjs/lib/invariant');
 
+// These attributes should be all lowercase to allow for
+// case insensitive checks
+var RESERVED_PROPS = {
+  children: true,
+  dangerouslysetinnerhtml: true,
+  autofocus: true,
+  defaultvalue: true,
+  defaultchecked: true,
+  innerhtml: true,
+  suppresscontenteditablewarning: true,
+  onfocusin: true,
+  onfocusout: true,
+  style: true,
+};
+
 function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
@@ -31,11 +46,6 @@ var DOMPropertyInjection = {
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
    * with the following properties:
-   *
-   * isCustomAttribute: function that given an attribute name will return true
-   * if it can be inserted into the DOM verbatim. Useful for data-* or aria-*
-   * attributes where it's impossible to enumerate all of the possible
-   * attribute names,
    *
    * Properties: object mapping DOM property name to one of the
    * DOMPropertyInjection constants or null. If your attribute isn't in here,
@@ -61,14 +71,7 @@ var DOMPropertyInjection = {
     var Properties = domPropertyConfig.Properties || {};
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-    var DOMPropertyNames = domPropertyConfig.DOMPropertyNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
-
-    if (domPropertyConfig.isCustomAttribute) {
-      DOMProperty._isCustomAttributeFunctions.push(
-        domPropertyConfig.isCustomAttribute,
-      );
-    }
 
     for (var propName in Properties) {
       invariant(
@@ -111,30 +114,24 @@ var DOMPropertyInjection = {
         propName,
       );
 
-      if (__DEV__) {
-        DOMProperty.getPossibleStandardName[lowerCased] = propName;
-      }
-
       if (DOMAttributeNames.hasOwnProperty(propName)) {
         var attributeName = DOMAttributeNames[propName];
+
         propertyInfo.attributeName = attributeName;
-        if (__DEV__) {
-          DOMProperty.getPossibleStandardName[attributeName] = propName;
-        }
       }
 
       if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
         propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
       }
 
-      if (DOMPropertyNames.hasOwnProperty(propName)) {
-        propertyInfo.propertyName = DOMPropertyNames[propName];
-      }
-
       if (DOMMutationMethods.hasOwnProperty(propName)) {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
 
+      // Downcase references to whitelist properties to check for membership
+      // without case-sensitivity. This allows the whitelist to pick up
+      // `allowfullscreen`, which should be written using the property configuration
+      // for `allowFullscreen`
       DOMProperty.properties[propName] = propertyInfo;
     }
   },
@@ -197,33 +194,58 @@ var DOMProperty = {
   properties: {},
 
   /**
-   * Mapping from lowercase property names to the properly cased version, used
-   * to warn in the case of missing properties. Available only in __DEV__.
-   *
-   * autofocus is predefined, because adding it to the property whitelist
-   * causes unintended side effects.
-   *
-   * @type {Object}
-   */
-  getPossibleStandardName: __DEV__ ? {autofocus: 'autoFocus'} : null,
-
-  /**
-   * All of the isCustomAttribute() functions that have been injected.
-   */
-  _isCustomAttributeFunctions: [],
-
-  /**
-   * Checks whether a property name is a custom attribute.
+   * Checks whether a property name is a writeable attribute.
    * @method
    */
-  isCustomAttribute: function(attributeName) {
-    for (var i = 0; i < DOMProperty._isCustomAttributeFunctions.length; i++) {
-      var isCustomAttributeFn = DOMProperty._isCustomAttributeFunctions[i];
-      if (isCustomAttributeFn(attributeName)) {
-        return true;
-      }
+  shouldSetAttribute: function(name, value) {
+    if (DOMProperty.isReservedProp(name)) {
+      return false;
     }
-    return false;
+
+    if (value === null) {
+      return true;
+    }
+
+    var lowerCased = name.toLowerCase();
+
+    var propertyInfo = DOMProperty.properties[name];
+
+    switch (typeof value) {
+      case 'boolean':
+        if (propertyInfo) {
+          return true;
+        }
+        var prefix = lowerCased.slice(0, 5);
+        return prefix === 'data-' || prefix === 'aria-';
+      case 'undefined':
+      case 'number':
+      case 'string':
+        return true;
+      case 'object':
+        return true;
+      default:
+        // function, symbol
+        return false;
+    }
+  },
+
+  getPropertyInfo(name) {
+    return DOMProperty.properties.hasOwnProperty(name)
+      ? DOMProperty.properties[name]
+      : null;
+  },
+
+  /**
+   * Checks to see if a property name is within the list of properties
+   * reserved for internal React operations. These properties should
+   * not be set on an HTML element.
+   *
+   * @private
+   * @param {string} name
+   * @return {boolean} If the name is within reserved props
+   */
+  isReservedProp(name) {
+    return RESERVED_PROPS.hasOwnProperty(name.toLowerCase());
   },
 
   injection: DOMPropertyInjection,

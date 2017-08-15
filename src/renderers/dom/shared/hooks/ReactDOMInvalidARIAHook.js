@@ -15,6 +15,9 @@ var DOMProperty = require('DOMProperty');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
+var rARIACamel = new RegExp(
+  '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
+);
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -23,6 +26,8 @@ if (__DEV__) {
     ReactDebugCurrentFrame,
   } = require('ReactGlobalSharedState');
   var {getStackAddendumByID} = ReactComponentTreeHook;
+
+  var validAriaProperties = require('./validAriaProperties');
 }
 
 function getStackAddendum(debugID) {
@@ -41,12 +46,42 @@ function validateProperty(tagName, name, debugID) {
     return true;
   }
 
+  if (rARIACamel.test(name)) {
+    var ariaName = 'aria-' + name.slice(4).toLowerCase();
+    var correctName = validAriaProperties.hasOwnProperty(ariaName)
+      ? ariaName
+      : null;
+
+    // If this is an aria-* attribute, but is not listed in the known DOM
+    // DOM properties, then it is an invalid aria-* attribute.
+    if (correctName == null) {
+      warning(
+        false,
+        'Invalid ARIA attribute %s. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
+        name,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+    // aria-* attributes should be lowercase; suggest the lowercase version.
+    if (name !== correctName) {
+      warning(
+        false,
+        'Invalid ARIA attribute %s. Did you mean %s?%s',
+        name,
+        correctName,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+  }
+
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
-      lowerCasedName,
-    )
-      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+    var standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
+      ? lowerCasedName
       : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM
