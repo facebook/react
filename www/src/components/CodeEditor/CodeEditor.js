@@ -12,6 +12,8 @@
 'use strict';
 
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
+import Remarkable from 'remarkable';
 import {transform} from 'babel-standalone';
 import Flex from 'components/Flex';
 import {LiveProvider, LiveEditor} from 'react-live';
@@ -197,24 +199,16 @@ class CodeEditor extends Component {
 
     const {compiled} = this.state;
 
-    // Evaluated code references local "mountNode" variable by convention.
-    // eslint-disable-next-line no-unused-vars
-    const mountNode = this._mountNode;
-
-    // Evaluated code references React and ReactDOM (as globals).
-    // Make sure they're visible to the eval'ed code.
-    // eslint-disable-next-line no-unused-vars, no-shadow
-    const React = require('react');
-    // eslint-disable-next-line no-unused-vars
-    const ReactDOM = require('react-dom');
-
-    // HACK Remarkable plugin is used in one of the examples too.
-    // eslint-disable-next-line no-unused-vars
-    const Remarkable = require('remarkable');
-
     try {
-      // eslint-disable-next-line no-eval
-      eval(compiled);
+      // Example code requires React, ReactDOM, and Remarkable to be within scope.
+      // It also requires a "mountNode" variable for ReactDOM.render()
+      // eslint-disable-next-line no-new-func
+      new Function('React', 'ReactDOM', 'Remarkable', 'mountNode', compiled)(
+        React,
+        ReactDOM,
+        Remarkable,
+        this._mountNode,
+      );
     } catch (error) {
       console.error(error);
 

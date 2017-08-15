@@ -200,7 +200,7 @@ const sharedStyles = {
           marginTop: 0,
         },
       },
-    }
+    },
   },
 };
 
