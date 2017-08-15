@@ -67,12 +67,13 @@ describe('DOMPropertyOperations', () => {
       // This ensures that we have consistent behavior.
       var obj = {
         toString: function() {
-          return '<html>';
+          return 'css-class';
         },
       };
+
       var container = document.createElement('div');
-      ReactDOM.render(<div role={obj} />, container);
-      expect(container.firstChild.getAttribute('role')).toBe('<html>');
+      ReactDOM.render(<div className={obj} />, container);
+      expect(container.firstChild.getAttribute('class')).toBe('css-class');
     });
 
     it('should not remove empty attributes for special properties', () => {

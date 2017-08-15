@@ -58,11 +58,7 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
-var {
-  html: HTML_NAMESPACE,
-  svg: SVG_NAMESPACE,
-  mathml: MATH_NAMESPACE,
-} = DOMNamespaces;
+var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
 if (__DEV__) {
   var warnedUnknownTags = {
@@ -231,20 +227,11 @@ function setInitialDOMProperties(
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else if (nextProp != null) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (nextProp != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          nextProp,
-        );
-      }
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
     }
   }
 }
@@ -275,52 +262,18 @@ function updateDOMProperties(
       } else {
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else if (propValue != null) {
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
+    } else {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
-      }
+      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
     }
-  }
-}
-
-// Assumes there is no parent namespace.
-function getIntrinsicNamespace(type: string): string {
-  switch (type) {
-    case 'svg':
-      return SVG_NAMESPACE;
-    case 'math':
-      return MATH_NAMESPACE;
-    default:
-      return HTML_NAMESPACE;
   }
 }
 
 var ReactDOMFiberComponent = {
-  getChildNamespace(parentNamespace: string | null, type: string): string {
-    if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
-      // No (or default) parent namespace: potential entry point.
-      return getIntrinsicNamespace(type);
-    }
-    if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
-      // We're leaving SVG.
-      return HTML_NAMESPACE;
-    }
-    // By default, pass namespace below.
-    return parentNamespace;
-  },
-
   createElement(
     type: *,
     props: Object,
@@ -343,6 +296,8 @@ var ReactDOMFiberComponent = {
     }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
+        // Should this check be gated by parent namespace? Not sure we want to
+        // allow <SVG> or <mATH>.
         warning(
           isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
@@ -928,8 +883,7 @@ var ReactDOMFiberComponent = {
       var extraAttributeNames: Set<string> = new Set();
       var attributes = domElement.attributes;
       for (var i = 0; i < attributes.length; i++) {
-        // TODO: Do we need to lower case this to get case insensitive matches?
-        var name = attributes[i].name;
+        var name = attributes[i].name.toLowerCase();
         switch (name) {
           // Built-in SSR attribute is whitelisted
           case 'data-reactroot':
@@ -1013,28 +967,37 @@ var ReactDOMFiberComponent = {
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
-        } else if (
-          isCustomComponentTag ||
-          DOMProperty.isCustomAttribute(propKey)
-        ) {
+        } else if (isCustomComponentTag) {
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
+          extraAttributeNames.delete(propKey.toLowerCase());
           serverValue = DOMPropertyOperations.getValueForAttribute(
             domElement,
             propKey,
             nextProp,
           );
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
-        } else if ((propertyInfo = DOMProperty.properties[propKey])) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = DOMPropertyOperations.getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-          );
+        } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+          if ((propertyInfo = DOMProperty.getPropertyInfo(propKey))) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propertyInfo.attributeName);
+            serverValue = DOMPropertyOperations.getValueForProperty(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          } else {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey.toLowerCase());
+            serverValue = DOMPropertyOperations.getValueForAttribute(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          }
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
