@@ -791,6 +791,43 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.style.width).toBe('');
         expect(e.hasAttribute('style')).toBe(false);
       });
+
+      itRenders('unitless-number rules with prefixes', async render => {
+        const {style} = await render(
+          <div
+            style={{
+              lineClamp: 10,
+              WebkitLineClamp: 10,
+              MozFlexGrow: 10,
+              msFlexGrow: 10,
+              msGridRow: 10,
+              msGridRowEnd: 10,
+              msGridRowSpan: 10,
+              msGridRowStart: 10,
+              msGridColumn: 10,
+              msGridColumnEnd: 10,
+              msGridColumnSpan: 10,
+              msGridColumnStart: 10,
+            }}
+          />,
+        );
+
+        expect(style.lineClamp).toBe('10');
+        expect(style.WebkitLineClamp).toBe('10');
+        expect(style.MozFlexGrow).toBe('10');
+        // jsdom is inconsistent in the style property name
+        // it uses on the client and when processing server markup.
+        // But it should be there either way.
+        expect(style.MsFlexGrow || style.msFlexGrow).toBe('10');
+        expect(style.MsGridRow || style.msGridRow).toBe('10');
+        expect(style.MsGridRowEnd || style.msGridRowEnd).toBe('10');
+        expect(style.MsGridRowSpan || style.msGridRowSpan).toBe('10');
+        expect(style.MsGridRowStart || style.msGridRowStart).toBe('10');
+        expect(style.MsGridColumn || style.msGridColumn).toBe('10');
+        expect(style.MsGridColumnEnd || style.msGridColumnEnd).toBe('10');
+        expect(style.MsGridColumnSpan || style.msGridColumnSpan).toBe('10');
+        expect(style.MsGridColumnStart || style.msGridColumnStart).toBe('10');
+      });
     });
 
     describe('aria attributes', function() {
