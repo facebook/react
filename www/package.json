@@ -7,7 +7,7 @@
   },
   "dependencies": {
     "babel-standalone": "^6.25.0",
-    "docsearch.js": "^2.3.3",
+    "docsearch.js": "^2.4.1",
     "gatsby": "^1.8.11",
     "gatsby-link": "^1.6.7",
     "gatsby-plugin-glamor": "^1.6.3",
@@ -44,7 +44,7 @@
     "underscore.string": "^3.2.3"
   },
   "devDependencies": {
-    "gh-pages": "^0.12.0",
+    "gh-pages": "^1.0.0",
     "rimraf": "^2.6.1"
   },
   "engines": {

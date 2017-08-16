@@ -11,7 +11,7 @@
 
 'use strict';
 
-import MarkdownPage from './components/MarkdownPage';
+import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
 

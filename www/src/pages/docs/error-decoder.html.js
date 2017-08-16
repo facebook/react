@@ -1,8 +1,10 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
+ * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
 */
@@ -15,11 +17,16 @@ import Flex from 'components/Flex';
 import hex2rgba from 'hex2rgba';
 import MarkdownHeader from 'components/MarkdownHeader';
 import React from 'react';
-import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
+import {StickyContainer} from 'react-sticky';
+import StickySidebar from 'components/StickySidebar';
 import {colors, sharedStyles} from 'theme';
-import {createLinkDocs} from 'utils/createLink';
 import findSectionForPath from 'utils/findSectionForPath';
-import {sectionListDocs} from 'utils/sectionList';
+
+import sectionList from '../../../../docs/_data/nav_docs.yml';
+
+// TODO Load and parse the error code
+// Keep an eye on gatsby/issues/33 for supporting URL parameters
+const todoLocation = {search: '?invariant=109&args[]=MyComponent&args[]=bar'};
 
 const ErrorPage = ({data, location}) => (
   <Flex
@@ -34,60 +41,60 @@ const ErrorPage = ({data, location}) => (
       zIndex: 0,
     }}>
     <Container>
-      <div css={sharedStyles.articleLayout.container}>
-
-        <Flex
-          type="article"
-          direction="column"
-          grow="1"
-          halign="stretch"
-          css={{
-            minHeight: 'calc(100vh - 40px)',
-          }}>
+      <StickyContainer
+        css={{
+          display: 'flex',
+          overflow: 'auto',
+        }}>
+        <Flex type="article" direction="column" grow="1" halign="stretch">
           <MarkdownHeader
             path={data.markdownRemark.fields.path}
             title={data.markdownRemark.frontmatter.title}
           />
 
-          <div css={sharedStyles.articleLayout.content}>
+          <div
+            css={{
+              marginTop: 65,
+              marginBottom: 120,
+            }}>
             <div
               css={sharedStyles.markdown}
               dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
             />
             <div
-              css={[
-                sharedStyles.markdown,
-                {
+              css={{
+                '& p': {
                   marginTop: 30,
-                  '& code': {
-                    display: 'block',
-                    marginTop: 30,
-                    padding: '1rem',
-                    borderRadius: '0.5rem',
-                    backgroundColor: hex2rgba(colors.error, 0.1),
-                    color: colors.error,
-                  },
                 },
-              ]}>
-              <ErrorDecoder location={location} />
+                '& code': {
+                  display: 'block',
+                  marginTop: 30,
+                  padding: '1rem',
+                  borderRadius: '0.5rem',
+                  backgroundColor: hex2rgba(colors.error, 0.1),
+                  color: colors.error,
+                },
+              }}>
+              <ErrorDecoder location={todoLocation} />
             </div>
           </div>
         </Flex>
 
-        <div css={sharedStyles.articleLayout.sidebar}>
-          <StickyResponsiveSidebar
-            createLink={createLinkDocs}
+        <div
+          css={{
+            flex: '0 0 200px',
+            marginLeft: 'calc(9% + 40px)',
+          }}>
+          <StickySidebar
             defaultActiveSection={findSectionForPath(
               location.pathname,
-              sectionListDocs,
+              sectionList,
             )}
             location={location}
-            sectionList={sectionListDocs}
-            title={data.markdownRemark.frontmatter.title}
+            sectionList={sectionList}
           />
         </div>
-
-      </div>
+      </StickyContainer>
     </Container>
   </Flex>
 );
