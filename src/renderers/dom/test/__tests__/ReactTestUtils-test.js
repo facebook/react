@@ -260,7 +260,8 @@ describe('ReactTestUtils', () => {
 
     expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
       'TestUtils.Simulate expected a DOM node as the first argument but received ' +
-        'a React element. Pass the DOM node you wish to simulate the event on instead.',
+        'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
+        'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
     );
     expect(handler).not.toHaveBeenCalled();
   });
