@@ -265,7 +265,7 @@ describe('ReactTestUtils', () => {
     expect(handler).not.toHaveBeenCalled();
   });
 
-  it('should throw when attempting to use a composite component', () => {
+  it('should throw when attempting to use a component instance', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
