@@ -565,13 +565,7 @@ var ReactTestRendererFiber = {
     invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
 
-    return {
-      get root() {
-        if (root === null || root.current.child === null) {
-          throw new Error("Can't access .root on unmounted test renderer");
-        }
-        return wrapFiber(root.current.child);
-      },
+    var entry = {
       toJSON() {
         if (root == null || root.current == null || container == null) {
           return null;
@@ -611,6 +605,21 @@ var ReactTestRendererFiber = {
         return TestRenderer.getPublicRootInstance(root);
       },
     };
+
+    Object.defineProperties(entry, {
+      root: {
+        get: function() {
+          if (root === null || root.current.child === null) {
+            throw new Error("Can't access .root on unmounted test renderer");
+          }
+          return wrapFiber(root.current.child);
+        },
+        enumerable: true,
+        configurable: true,
+      },
+    });
+
+    return entry;
   },
 
   /* eslint-disable camelcase */
