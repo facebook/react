@@ -13,7 +13,7 @@
 
 import React, {Component} from 'react';
 
-const errorCodes = require('../../../../../scripts/error-codes/codes.json');
+const errorCodes = require('../../../../scripts/error-codes/codes.json');
 
 function replaceArgs(msg, argList) {
   let argIdx = 0;

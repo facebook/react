@@ -12,17 +12,17 @@
 'use strict';
 
 import Container from 'components/Container';
-import ErrorDecoder from './components/ErrorDecoder';
+import ErrorDecoder from 'components/ErrorDecoder';
 import Flex from 'components/Flex';
 import hex2rgba from 'hex2rgba';
-import MarkdownHeader from './components/MarkdownHeader';
+import MarkdownHeader from 'components/MarkdownHeader';
 import React from 'react';
 import {StickyContainer} from 'react-sticky';
-import StickySidebar from './components/StickySidebar';
+import StickySidebar from 'components/StickySidebar';
 import {colors, sharedStyles} from 'theme';
 import findSectionForPath from 'utils/findSectionForPath';
 
-import sectionList from '../../../docs/_data/nav_docs.yml';
+import sectionList from '../../../../docs/_data/nav_docs.yml';
 
 // TODO Load and parse the error code
 // Keep an eye on gatsby/issues/33 for supporting URL parameters

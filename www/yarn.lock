@@ -283,9 +283,9 @@ async-each@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/async-each/-/async-each-1.0.1.tgz#19d386a1d9edc6e7c1c85d388aedbcc56d33602d"
 
-async@2.1.2:
-  version "2.1.2"
-  resolved "https://registry.yarnpkg.com/async/-/async-2.1.2.tgz#612a4ab45ef42a70cde806bad86ee6db047e8385"
+async@2.1.4:
+  version "2.1.4"
+  resolved "https://registry.yarnpkg.com/async/-/async-2.1.4.tgz#2d2160c7788032e4dd6cbe2502f1f9a2c8f6cde4"
   dependencies:
     lodash "^4.14.0"
 
@@ -1170,6 +1170,10 @@ base64id@1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/base64id/-/base64id-1.0.0.tgz#47688cb99bb6804f0e06d3e763b1c32e57d8e6b6"
 
+base64url@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/base64url/-/base64url-2.0.0.tgz#eac16e03ea1438eff9423d69baa36262ed1f70bb"
+
 basename@0.1.2:
   version "0.1.2"
   resolved "https://registry.yarnpkg.com/basename/-/basename-0.1.2.tgz#d6039bef939863160c78048cced3c5e7f88cb261"
@@ -1747,12 +1751,6 @@ coffee-script@^1.12.4, coffee-script@^1.9.1:
 collapse-white-space@^1.0.0, collapse-white-space@^1.0.2:
   version "1.0.3"
   resolved "https://registry.yarnpkg.com/collapse-white-space/-/collapse-white-space-1.0.3.tgz#4b906f670e5a963a87b76b0e1689643341b6023c"
-
-collections@^0.2.0:
-  version "0.2.2"
-  resolved "https://registry.yarnpkg.com/collections/-/collections-0.2.2.tgz#1f23026b2ef36f927eecc901e99c5f0d48fa334e"
-  dependencies:
-    weak-map "1.0.0"
 
 color-convert@^0.5.3:
   version "0.5.3"
@@ -2433,9 +2431,9 @@ diffie-hellman@^5.0.0:
     miller-rabin "^4.0.0"
     randombytes "^2.0.0"
 
-docsearch.js@^2.3.3:
-  version "2.3.3"
-  resolved "https://registry.yarnpkg.com/docsearch.js/-/docsearch.js-2.3.3.tgz#6daee4fb978365d038960b4d0ae5360a54002a0c"
+docsearch.js@^2.4.1:
+  version "2.4.1"
+  resolved "https://registry.yarnpkg.com/docsearch.js/-/docsearch.js-2.4.1.tgz#c59a21f77c23420a83d6535dcab5180d1dbfb219"
   dependencies:
     algoliasearch "^3.22.1"
     autocomplete.js "^0.28.0"
@@ -3591,16 +3589,16 @@ getpass@^0.1.1:
   dependencies:
     assert-plus "^1.0.0"
 
-gh-pages@^0.12.0:
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/gh-pages/-/gh-pages-0.12.0.tgz#d951e3ed98b85699d4b0418eb1a15b1a04988dc1"
+gh-pages@^1.0.0:
+  version "1.0.0"
+  resolved "https://registry.yarnpkg.com/gh-pages/-/gh-pages-1.0.0.tgz#4a46f4c25439f7a2b7e6835504d4a49e949f04ca"
   dependencies:
-    async "2.1.2"
+    async "2.1.4"
+    base64url "^2.0.0"
     commander "2.9.0"
+    fs-extra "^3.0.1"
     globby "^6.1.0"
-    graceful-fs "4.1.10"
-    q "1.4.1"
-    q-io "1.13.2"
+    graceful-fs "4.1.11"
     rimraf "^2.5.4"
 
 github-slugger@^1.1.1:
@@ -3777,13 +3775,13 @@ got@^6.7.1:
     unzip-response "^2.0.1"
     url-parse-lax "^1.0.0"
 
-graceful-fs@4.1.10, graceful-fs@^4.1.2, graceful-fs@^4.1.3, graceful-fs@^4.1.4, graceful-fs@^4.1.6:
-  version "4.1.10"
-  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.10.tgz#f2d720c22092f743228775c75e3612632501f131"
-
-graceful-fs@^4.0.0, graceful-fs@^4.1.11:
+graceful-fs@4.1.11, graceful-fs@^4.0.0, graceful-fs@^4.1.11:
   version "4.1.11"
   resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.11.tgz#0e8bdfe4d1ddb8854d64e04ea7c00e2a026e5658"
+
+graceful-fs@^4.1.2, graceful-fs@^4.1.3, graceful-fs@^4.1.4, graceful-fs@^4.1.6:
+  version "4.1.10"
+  resolved "https://registry.yarnpkg.com/graceful-fs/-/graceful-fs-4.1.10.tgz#f2d720c22092f743228775c75e3612632501f131"
 
 "graceful-readlink@>= 1.0.0":
   version "1.0.1"
@@ -5420,13 +5418,9 @@ mime@1.3.4:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.3.4.tgz#115f9e3b6b3daf2959983cb38f149a2d40eb5d53"
 
-mime@1.3.x, mime@^1.2.11, mime@^1.3.4, mime@^1.3.6:
+mime@1.3.x, mime@^1.3.4, mime@^1.3.6:
   version "1.3.6"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.3.6.tgz#591d84d3653a6b0b4a3b9df8de5aa8108e72e5e0"
-
-mimeparse@^0.1.4:
-  version "0.1.4"
-  resolved "https://registry.yarnpkg.com/mimeparse/-/mimeparse-0.1.4.tgz#dafb02752370fd226093ae3152c271af01ac254a"
 
 mimic-fn@^1.0.0:
   version "1.1.0"
@@ -6820,18 +6814,7 @@ punycode@^1.2.4, punycode@^1.4.1:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/punycode/-/punycode-1.4.1.tgz#c0d5a63b2718800ad8e1eb0fa5269c84dd41845e"
 
-q-io@1.13.2:
-  version "1.13.2"
-  resolved "https://registry.yarnpkg.com/q-io/-/q-io-1.13.2.tgz#eea130d481ddb5e1aa1bc5a66855f7391d06f003"
-  dependencies:
-    collections "^0.2.0"
-    mime "^1.2.11"
-    mimeparse "^0.1.4"
-    q "^1.0.1"
-    qs "^1.2.1"
-    url2 "^0.0.0"
-
-q@1.4.1, q@^1.0.1, q@^1.1.2:
+q@^1.1.2:
   version "1.4.1"
   resolved "https://registry.yarnpkg.com/q/-/q-1.4.1.tgz#55705bcd93c5f3673530c2c2cbc0c2b3addc286e"
 
@@ -6842,10 +6825,6 @@ qs@4.x.x:
 qs@6.4.0, qs@~6.4.0:
   version "6.4.0"
   resolved "https://registry.yarnpkg.com/qs/-/qs-6.4.0.tgz#13e26d28ad6b0ffaa91312cd3bf708ed351e7233"
-
-qs@^1.2.1:
-  version "1.2.2"
-  resolved "https://registry.yarnpkg.com/qs/-/qs-1.2.2.tgz#19b57ff24dc2a99ce1f8bdf6afcda59f8ef61f88"
 
 query-string@^4.1.0:
   version "4.3.4"
@@ -6999,7 +6978,7 @@ react-router-dom@^4.1.1:
     prop-types "^15.5.4"
     react-router "^4.1.1"
 
-"react-router-scroll@github:ytase/react-router-scroll#build":
+react-router-scroll@ytase/react-router-scroll#build:
   version "0.4.1"
   resolved "https://codeload.github.com/ytase/react-router-scroll/tar.gz/991ecddb08885e1fb80ec1e9dbf3a35844b7d4cd"
   dependencies:
@@ -8821,10 +8800,6 @@ url-regex@^3.0.0:
   dependencies:
     ip-regex "^1.0.1"
 
-url2@^0.0.0:
-  version "0.0.0"
-  resolved "https://registry.yarnpkg.com/url2/-/url2-0.0.0.tgz#4eaabd1d5c3ac90d62ab4485c998422865a04b1a"
-
 url@^0.11.0:
   version "0.11.0"
   resolved "https://registry.yarnpkg.com/url/-/url-0.11.0.tgz#3838e97cfc60521eb73c525a8e55bfdd9e2e28f1"
@@ -9027,10 +9002,6 @@ watchpack@^0.2.1:
     async "^0.9.0"
     chokidar "^1.0.0"
     graceful-fs "^4.1.2"
-
-weak-map@1.0.0:
-  version "1.0.0"
-  resolved "https://registry.yarnpkg.com/weak-map/-/weak-map-1.0.0.tgz#b66e56a9df0bd25a76bbf1b514db129080614a37"
 
 webpack-configurator@^0.3.0:
   version "0.3.1"

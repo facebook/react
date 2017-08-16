@@ -13,12 +13,12 @@
 
 import Container from 'components/Container';
 import Flex from 'components/Flex';
-import MarkdownHeader from 'templates/components/MarkdownHeader';
+import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React from 'react';
-import StickySidebar from '../StickySidebar';
+import StickySidebar from 'components/StickySidebar';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 import {sharedStyles} from 'theme';
