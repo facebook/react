@@ -127,10 +127,9 @@ function ignoreFBModules() {
 
 function ignoreReactNativeModules() {
   return [
-    // This imports NativeMethodsMixin, causing
-    // a circular dependency.
+    // This imports NativeMethodsMixin, causing a circular dependency.
     'View',
-    // We have a shim for this file.
+    // This file is injected based on a runtime config.
     'ReactNativeFeatureFlags',
   ];
 }
