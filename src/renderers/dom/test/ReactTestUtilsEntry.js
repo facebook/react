@@ -446,8 +446,8 @@ function makeSimulator(eventType) {
   return function(domNode, eventData) {
     invariant(
       !React.isValidElement(domNode),
-      'TestUtils.Simulate expects a DOM node and not a ReactElement. ' +
-        'TestUtils.Simulate will not work if you are using shallow rendering.',
+      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+        'a React element. Pass the DOM node you wish to simulate the event on instead.',
     );
     invariant(
       !ReactTestUtils.isCompositeComponent(domNode),

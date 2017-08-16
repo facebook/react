@@ -241,7 +241,7 @@ describe('ReactTestUtils', () => {
     );
   });
 
-  it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', () => {
+  it('should throw when attempting to use a React element', () => {
     class SomeComponent extends React.Component {
       render() {
         return (
@@ -259,8 +259,8 @@ describe('ReactTestUtils', () => {
     );
 
     expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
-      'TestUtils.Simulate expects a DOM node and not a ReactElement. ' +
-        'TestUtils.Simulate will not work if you are using shallow rendering.',
+      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+        'a React element. Pass the DOM node you wish to simulate the event on instead.',
     );
     expect(handler).not.toHaveBeenCalled();
   });
