@@ -437,9 +437,9 @@ var ReactTestUtils = {
 /**
  * Exports:
  *
- * - `ReactTestUtils.Simulate.click(domNode)`
- * - `ReactTestUtils.Simulate.mouseMove(domNode)`
- * - `ReactTestUtils.Simulate.change(domNode)`
+ * - `ReactTestUtils.Simulate.click(Element)`
+ * - `ReactTestUtils.Simulate.mouseMove(Element)`
+ * - `ReactTestUtils.Simulate.change(Element)`
  * - ... (All keys from event plugin `eventTypes` objects)
  */
 function makeSimulator(eventType) {
