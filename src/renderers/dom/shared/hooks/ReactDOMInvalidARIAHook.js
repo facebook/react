@@ -57,7 +57,7 @@ function validateProperty(tagName, name, debugID) {
     if (correctName == null) {
       warning(
         false,
-        'Invalid ARIA attribute %s. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
+        'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
         name,
         getStackAddendum(debugID),
       );
@@ -68,7 +68,7 @@ function validateProperty(tagName, name, debugID) {
     if (name !== correctName) {
       warning(
         false,
-        'Invalid ARIA attribute %s. Did you mean %s?%s',
+        'Invalid ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         correctName,
         getStackAddendum(debugID),
@@ -94,7 +94,7 @@ function validateProperty(tagName, name, debugID) {
     if (name !== standardName) {
       warning(
         false,
-        'Unknown ARIA attribute %s. Did you mean %s?%s',
+        'Unknown ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         standardName,
         getStackAddendum(debugID),

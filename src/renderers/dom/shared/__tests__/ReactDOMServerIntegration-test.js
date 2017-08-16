@@ -613,19 +613,22 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('className')).toBe(false);
       });
 
-      itRenders('no badly cased className with a warning', async render => {
+      itRenders('badly cased className with a warning', async render => {
         const e = await render(<div classname="test" />, 1);
         expect(e.hasAttribute('class')).toBe(false);
         expect(e.hasAttribute('classname')).toBe(true);
       });
 
-      itRenders('className prop when given the alias', async render => {
-        const e = await render(<div class="test" />, 1);
-        expect(e.className).toBe('test');
-      });
+      itRenders(
+        'className prop when given the alias with a warning',
+        async render => {
+          const e = await render(<div class="test" />, 1);
+          expect(e.className).toBe('test');
+        },
+      );
 
       itRenders(
-        'no className prop when given a badly cased alias',
+        'className prop when given a badly cased alias',
         async render => {
           const e = await render(<div cLASs="test" />, 1);
           expect(e.className).toBe('test');
@@ -1310,7 +1313,7 @@ describe('ReactDOMServerIntegration', () => {
         );
       });
 
-      itRenders('no svg child element with a badly cased', async render => {
+      itRenders('svg child element with a badly cased alias', async render => {
         let e = await render(
           <svg><image xlinkhref="http://i.imgur.com/w7GCRPb.png" /></svg>,
           1,
