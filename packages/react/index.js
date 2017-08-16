@@ -1,20 +1,20 @@
 'use strict';
 
 function testMinificationUsedDCE() {
-  // use scoped variable for our initial test, in case
-  // 'top-level' mangling is not enabled.
-  const source = testMinificationUsedDCE.toString();
-  const longVariableName = source;
-  if (longVariableName && source.match(/longVariableName/g).length === 3) {
-    // We are not minified.
-    // This might be a Node environment where DCE is not expected anyway.
-    return;
-  }
   if (process.env.NODE_ENV === 'development') {
     // We expect this method only to be called in production.
     throw new Error('This is unreachable');
   }
   try {
+    // use scoped variable for our initial test, in case
+    // 'top-level' mangling is not enabled.
+    const source = testMinificationUsedDCE.toString();
+    const longVariableName = true;
+    if (longVariableName && source.match(/longVariableName/g).length === 3) {
+      // We are not minified.
+      // This might be a Node environment where DCE is not expected anyway.
+      return;
+    }
     if (source.match(/toString/g).length !== 2) {
       // We always look for two matches:
       // The actual occurence and then the call to 'match'

@@ -99,7 +99,6 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
       from = resolve(`./build/dist/${filename}`);
       to = `${packageDirectory}/umd/${filename}`;
     }
-
     // for NODE bundles we have to move the files into a cjs directory
     // within the package directory. we also need to set the from
     // to be the root build from directory

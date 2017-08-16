@@ -86,7 +86,7 @@
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
-    "uglify-js": "^2.8.29",
+    "uglify-js": "^2.5.0",
     "yargs": "^6.3.0"
   },
   "devEngines": {
