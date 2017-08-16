@@ -284,8 +284,8 @@ describe('ReactTestUtils', () => {
     );
 
     expect(() => ReactTestUtils.Simulate.click(instance)).toThrowError(
-      'TestUtils.Simulate does not support a composite component instance.' +
-        'TestUtils.Simulate only works with DOM component instance or a DOM node.',
+      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+        'a component instance. Pass the DOM node you wish to simulate the event on instead.',
     );
     expect(handler).not.toHaveBeenCalled();
   });
