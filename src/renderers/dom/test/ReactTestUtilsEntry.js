@@ -437,16 +437,16 @@ var ReactTestUtils = {
 /**
  * Exports:
  *
- * - `ReactTestUtils.Simulate.click(Element)`
- * - `ReactTestUtils.Simulate.mouseMove(Element)`
- * - `ReactTestUtils.Simulate.change(Element)`
+ * - `ReactTestUtils.Simulate.click(domNode)`
+ * - `ReactTestUtils.Simulate.mouseMove(domNode)`
+ * - `ReactTestUtils.Simulate.change(domNode)`
  * - ... (All keys from event plugin `eventTypes` objects)
  */
 function makeSimulator(eventType) {
   return function(domNode, eventData) {
     invariant(
       !React.isValidElement(domNode),
-      'TestUtils.Simulate expects a component instance and not a ReactElement. ' +
+      'TestUtils.Simulate expects a DOM node and not a ReactElement. ' +
         'TestUtils.Simulate will not work if you are using shallow rendering.',
     );
     invariant(
