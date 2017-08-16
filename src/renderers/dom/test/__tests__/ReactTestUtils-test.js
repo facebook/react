@@ -259,7 +259,7 @@ describe('ReactTestUtils', () => {
     );
 
     expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
-      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
+      'TestUtils.Simulate expects a component instance and not a ReactElement. ' +
         'TestUtils.Simulate will not work if you are using shallow rendering.',
     );
     expect(handler).not.toHaveBeenCalled();
