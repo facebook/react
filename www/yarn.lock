@@ -3387,9 +3387,9 @@ gatsby-transformer-sharp@^1.6.0:
     fs-extra "^4.0.0"
     image-size "^0.6.0"
 
-gatsby@^1.3.2:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.3.2.tgz#b485d1cb7644473b8049b72df002eeb73f00356e"
+gatsby@1.6.6:
+  version "1.6.6"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.6.6.tgz#de1a982d4513499c5f94443b1c4e953fb849ab12"
   dependencies:
     async "^2.1.2"
     babel-core "^6.24.1"
@@ -3476,6 +3476,7 @@ gatsby@^1.3.2:
     redux "^3.6.0"
     relay-compiler "^1.1.0"
     remote-redux-devtools "^0.5.7"
+    resolve-cwd "^2.0.0"
     sift "^3.2.6"
     slash "^1.0.0"
     socket.io "^2.0.3"
@@ -7355,12 +7356,22 @@ requires-port@1.0.x, requires-port@1.x.x:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/requires-port/-/requires-port-1.0.0.tgz#925d2601d39ac485e091cf0da5c6e694dc3dcaff"
 
+resolve-cwd@^2.0.0:
+  version "2.0.0"
+  resolved "https://registry.yarnpkg.com/resolve-cwd/-/resolve-cwd-2.0.0.tgz#00a9f7387556e27038eae232caa372a6a59b665a"
+  dependencies:
+    resolve-from "^3.0.0"
+
 resolve-dir@^0.1.0:
   version "0.1.1"
   resolved "https://registry.yarnpkg.com/resolve-dir/-/resolve-dir-0.1.1.tgz#b219259a5602fac5c5c496ad894a6e8cc430261e"
   dependencies:
     expand-tilde "^1.2.2"
     global-modules "^0.2.3"
+
+resolve-from@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/resolve-from/-/resolve-from-3.0.0.tgz#b22c7af7d9d6881bc8b6e653335eebcb0a188748"
 
 resolve-pathname@^2.0.0:
   version "2.1.0"
