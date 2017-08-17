@@ -24,10 +24,6 @@ import findSectionForPath from 'utils/findSectionForPath';
 
 import sectionList from '../../../../docs/_data/nav_docs.yml';
 
-// TODO Load and parse the error code
-// Keep an eye on gatsby/issues/33 for supporting URL parameters
-const todoLocation = {search: '?invariant=109&args[]=MyComponent&args[]=bar'};
-
 const ErrorPage = ({data, location}) => (
   <Flex
     direction="column"
@@ -75,7 +71,7 @@ const ErrorPage = ({data, location}) => (
                   color: colors.error,
                 },
               }}>
-              <ErrorDecoder location={todoLocation} />
+              <ErrorDecoder location={location} />
             </div>
           </div>
         </Flex>
