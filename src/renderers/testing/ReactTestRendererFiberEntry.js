@@ -566,8 +566,8 @@ var ReactTestRendererFiber = {
     TestRenderer.updateContainer(element, root, null, null);
 
     var entry = {
-      root: undefined, // make flow happy;
-      // we set this below with Object.defineProperty
+      root: undefined, // makes flow happy
+      // we define a 'getter' for 'root' below using 'Object.defineProperty'
       toJSON() {
         if (root == null || root.current == null || container == null) {
           return null;
@@ -608,17 +608,20 @@ var ReactTestRendererFiber = {
       },
     };
 
-    Object.defineProperty(entry, 'root', {
-      configurable: true,
-      enumerable: true,
-      get: function() {
-        if (root === null || root.current.child === null) {
-          throw new Error("Can't access .root on unmounted test renderer");
-        }
-        return wrapFiber(root.current.child);
-      },
-      value: undefined, // make flow happy
-    });
+    Object.defineProperty(
+      entry,
+      'root',
+      ({
+        configurable: true,
+        enumerable: true,
+        get: function() {
+          if (root === null || root.current.child === null) {
+            throw new Error("Can't access .root on unmounted test renderer");
+          }
+          return wrapFiber(root.current.child);
+        },
+      }: Object),
+    );
 
     return entry;
   },
