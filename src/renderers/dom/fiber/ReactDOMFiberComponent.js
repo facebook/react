@@ -31,9 +31,9 @@ var inputValueTracking = require('inputValueTracking');
 var isCustomComponent = require('isCustomComponent');
 var setInnerHTML = require('setInnerHTML');
 var setTextContent = require('setTextContent');
-var warning = require('fbjs/lib/warning');
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
@@ -58,13 +58,17 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
-var {
-  html: HTML_NAMESPACE,
-  svg: SVG_NAMESPACE,
-  mathml: MATH_NAMESPACE,
-} = DOMNamespaces;
+var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
 if (__DEV__) {
+  var warnedUnknownTags = {
+    // Chrome is the only major browser not shipping <time>. But as of July
+    // 2017 it intends to ship it due to widespread usage. We intentionally
+    // *don't* warn for <time> even if it's unrecognized by Chrome because
+    // it soon will be, and many apps have been using it anyway.
+    time: true,
+  };
+
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
@@ -183,54 +187,6 @@ function trapClickOnNonInteractiveElement(node: HTMLElement) {
   node.onclick = emptyFunction;
 }
 
-function trapBubbledEventsLocal(node: Element, tag: string) {
-  // If a component renders to null or if another component fatals and causes
-  // the state of the tree to be corrupted, `node` here can be null.
-
-  // TODO: Make sure that we check isMounted before firing any of these events.
-  // TODO: Inline these below since we're calling this from an equivalent
-  // switch statement.
-  switch (tag) {
-    case 'iframe':
-    case 'object':
-      ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
-      break;
-    case 'video':
-    case 'audio':
-      // Create listener for each media event
-      for (var event in mediaEvents) {
-        if (mediaEvents.hasOwnProperty(event)) {
-          ReactBrowserEventEmitter.trapBubbledEvent(
-            event,
-            mediaEvents[event],
-            node,
-          );
-        }
-      }
-      break;
-    case 'source':
-      ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
-      break;
-    case 'img':
-    case 'image':
-      ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node);
-      ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node);
-      break;
-    case 'form':
-      ReactBrowserEventEmitter.trapBubbledEvent('topReset', 'reset', node);
-      ReactBrowserEventEmitter.trapBubbledEvent('topSubmit', 'submit', node);
-      break;
-    case 'input':
-    case 'select':
-    case 'textarea':
-      ReactBrowserEventEmitter.trapBubbledEvent('topInvalid', 'invalid', node);
-      break;
-    case 'details':
-      ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node);
-      break;
-  }
-}
-
 function setInitialDOMProperties(
   domElement: Element,
   rootContainerElement: Element | Document,
@@ -271,20 +227,11 @@ function setInitialDOMProperties(
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else if (nextProp != null) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (nextProp != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          nextProp,
-        );
-      }
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
     }
   }
 }
@@ -315,52 +262,18 @@ function updateDOMProperties(
       } else {
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
-    } else if (
-      DOMProperty.properties[propKey] ||
-      DOMProperty.isCustomAttribute(propKey)
-    ) {
+    } else if (propValue != null) {
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
+    } else {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
       // brings us in line with the same behavior we have on initial render.
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForProperty(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
-      }
+      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
     }
-  }
-}
-
-// Assumes there is no parent namespace.
-function getIntrinsicNamespace(type: string): string {
-  switch (type) {
-    case 'svg':
-      return SVG_NAMESPACE;
-    case 'math':
-      return MATH_NAMESPACE;
-    default:
-      return HTML_NAMESPACE;
   }
 }
 
 var ReactDOMFiberComponent = {
-  getChildNamespace(parentNamespace: string | null, type: string): string {
-    if (parentNamespace == null || parentNamespace === HTML_NAMESPACE) {
-      // No (or default) parent namespace: potential entry point.
-      return getIntrinsicNamespace(type);
-    }
-    if (parentNamespace === SVG_NAMESPACE && type === 'foreignObject') {
-      // We're leaving SVG.
-      return HTML_NAMESPACE;
-    }
-    // By default, pass namespace below.
-    return parentNamespace;
-  },
-
   createElement(
     type: *,
     props: Object,
@@ -383,6 +296,8 @@ var ReactDOMFiberComponent = {
     }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
+        // Should this check be gated by parent namespace? Not sure we want to
+        // allow <SVG> or <mATH>.
         warning(
           isCustomComponentTag || type === type.toLowerCase(),
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
@@ -414,15 +329,21 @@ var ReactDOMFiberComponent = {
 
     if (__DEV__) {
       if (namespaceURI === HTML_NAMESPACE) {
-        warning(
-          isCustomComponentTag ||
-            Object.prototype.toString.call(domElement) !==
-              '[object HTMLUnknownElement]',
-          'The tag <%s> is unrecognized in this browser. ' +
-            'If you meant to render a React component, start its name with ' +
-            'an uppercase letter.',
-          type,
-        );
+        if (
+          !isCustomComponentTag &&
+          Object.prototype.toString.call(domElement) ===
+            '[object HTMLUnknownElement]' &&
+          !Object.prototype.hasOwnProperty.call(warnedUnknownTags, type)
+        ) {
+          warnedUnknownTags[type] = true;
+          warning(
+            false,
+            'The tag <%s> is unrecognized in this browser. ' +
+              'If you meant to render a React component, start its name with ' +
+              'an uppercase letter.',
+            type,
+          );
+        }
       }
     }
 
@@ -449,25 +370,83 @@ var ReactDOMFiberComponent = {
       }
     }
 
+    // TODO: Make sure that we check isMounted before firing any of these events.
     var props: Object;
     switch (tag) {
-      case 'audio':
-      case 'form':
       case 'iframe':
+      case 'object':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topLoad',
+          'load',
+          domElement,
+        );
+        props = rawProps;
+        break;
+      case 'video':
+      case 'audio':
+        // Create listener for each media event
+        for (var event in mediaEvents) {
+          if (mediaEvents.hasOwnProperty(event)) {
+            ReactBrowserEventEmitter.trapBubbledEvent(
+              event,
+              mediaEvents[event],
+              domElement,
+            );
+          }
+        }
+        props = rawProps;
+        break;
+      case 'source':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topError',
+          'error',
+          domElement,
+        );
+        props = rawProps;
+        break;
       case 'img':
       case 'image':
-      case 'link':
-      case 'object':
-      case 'source':
-      case 'video':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topError',
+          'error',
+          domElement,
+        );
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topLoad',
+          'load',
+          domElement,
+        );
+        props = rawProps;
+        break;
+      case 'form':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topReset',
+          'reset',
+          domElement,
+        );
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topSubmit',
+          'submit',
+          domElement,
+        );
+        props = rawProps;
+        break;
       case 'details':
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topToggle',
+          'toggle',
+          domElement,
+        );
         props = rawProps;
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberInput.getHostProps(domElement, rawProps);
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -479,7 +458,11 @@ var ReactDOMFiberComponent = {
       case 'select':
         ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -487,7 +470,11 @@ var ReactDOMFiberComponent = {
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
         props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -509,13 +496,13 @@ var ReactDOMFiberComponent = {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         break;
       case 'option':
@@ -790,22 +777,75 @@ var ReactDOMFiberComponent = {
       }
     }
 
+    // TODO: Make sure that we check isMounted before firing any of these events.
     switch (tag) {
-      case 'audio':
-      case 'form':
       case 'iframe':
+      case 'object':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topLoad',
+          'load',
+          domElement,
+        );
+        break;
+      case 'video':
+      case 'audio':
+        // Create listener for each media event
+        for (var event in mediaEvents) {
+          if (mediaEvents.hasOwnProperty(event)) {
+            ReactBrowserEventEmitter.trapBubbledEvent(
+              event,
+              mediaEvents[event],
+              domElement,
+            );
+          }
+        }
+        break;
+      case 'source':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topError',
+          'error',
+          domElement,
+        );
+        break;
       case 'img':
       case 'image':
-      case 'link':
-      case 'object':
-      case 'source':
-      case 'video':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topError',
+          'error',
+          domElement,
+        );
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topLoad',
+          'load',
+          domElement,
+        );
+        break;
+      case 'form':
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topReset',
+          'reset',
+          domElement,
+        );
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topSubmit',
+          'submit',
+          domElement,
+        );
+        break;
       case 'details':
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topToggle',
+          'toggle',
+          domElement,
+        );
         break;
       case 'input':
         ReactDOMFiberInput.initWrapperState(domElement, rawProps);
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -815,14 +855,22 @@ var ReactDOMFiberComponent = {
         break;
       case 'select':
         ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
         break;
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
-        trapBubbledEventsLocal(domElement, tag);
+        ReactBrowserEventEmitter.trapBubbledEvent(
+          'topInvalid',
+          'invalid',
+          domElement,
+        );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
         ensureListeningTo(rootContainerElement, 'onChange');
@@ -835,17 +883,10 @@ var ReactDOMFiberComponent = {
       var extraAttributeNames: Set<string> = new Set();
       var attributes = domElement.attributes;
       for (var i = 0; i < attributes.length; i++) {
-        // TODO: Do we need to lower case this to get case insensitive matches?
-        var name = attributes[i].name;
+        var name = attributes[i].name.toLowerCase();
         switch (name) {
-          // Built-in attributes are whitelisted
-          // TODO: Once these are gone from the server renderer, we don't need
-          // this whitelist aynymore.
+          // Built-in SSR attribute is whitelisted
           case 'data-reactroot':
-            break;
-          case 'data-reactid':
-            break;
-          case 'data-react-checksum':
             break;
           // Controlled attributes are not validated
           // TODO: Only ignore them on controlled tags.
@@ -926,28 +967,37 @@ var ReactDOMFiberComponent = {
           if (expectedStyle !== serverValue) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
-        } else if (
-          isCustomComponentTag ||
-          DOMProperty.isCustomAttribute(propKey)
-        ) {
+        } else if (isCustomComponentTag) {
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propKey);
+          extraAttributeNames.delete(propKey.toLowerCase());
           serverValue = DOMPropertyOperations.getValueForAttribute(
             domElement,
             propKey,
             nextProp,
           );
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
-        } else if ((propertyInfo = DOMProperty.properties[propKey])) {
-          // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
-          serverValue = DOMPropertyOperations.getValueForProperty(
-            domElement,
-            propKey,
-            nextProp,
-          );
+        } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+          if ((propertyInfo = DOMProperty.getPropertyInfo(propKey))) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propertyInfo.attributeName);
+            serverValue = DOMPropertyOperations.getValueForProperty(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          } else {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(propKey.toLowerCase());
+            serverValue = DOMPropertyOperations.getValueForAttribute(
+              domElement,
+              propKey,
+              nextProp,
+            );
+          }
+
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
@@ -967,13 +1017,13 @@ var ReactDOMFiberComponent = {
       case 'input':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberInput.postMountWrapper(domElement, rawProps);
         break;
       case 'textarea':
         // TODO: Make sure we check if this is still unmounted or do any clean
         // up necessary since we never stop tracking anymore.
-        inputValueTracking.trackNode((domElement: any));
+        inputValueTracking.track((domElement: any));
         ReactDOMFiberTextarea.postMountWrapper(domElement, rawProps);
         break;
       case 'select':
@@ -1050,7 +1100,7 @@ var ReactDOMFiberComponent = {
       didWarnInvalidHydration = true;
       warning(
         false,
-        'Did not find a matching <%s> in <%s>.',
+        'Expected server HTML to contain a matching <%s> in <%s>.',
         tag,
         parentNode.nodeName.toLowerCase(),
       );
@@ -1072,7 +1122,7 @@ var ReactDOMFiberComponent = {
       didWarnInvalidHydration = true;
       warning(
         false,
-        'Did not find a matching text node for "%s" in <%s>.',
+        'Expected server HTML to contain a matching text node for "%s" in <%s>.',
         text,
         parentNode.nodeName.toLowerCase(),
       );

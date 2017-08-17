@@ -289,4 +289,54 @@ describe('ReactDOM', () => {
       HTMLElement.prototype.focus = originalFocus;
     }
   });
+
+  it("shouldn't fire duplicate event handler while handling other nested dispatch", () => {
+    const actual = [];
+
+    function click(node) {
+      var fakeNativeEvent = function() {};
+      fakeNativeEvent.target = node;
+      fakeNativeEvent.path = [node, container];
+      ReactTestUtils.simulateNativeEventOnNode(
+        'topClick',
+        node,
+        fakeNativeEvent,
+      );
+    }
+
+    class Wrapper extends React.Component {
+      componentDidMount() {
+        click(this.ref1);
+      }
+
+      render() {
+        return (
+          <div>
+            <div
+              onClick={() => {
+                actual.push('1st node clicked');
+                click(this.ref2);
+              }}
+              ref={ref => (this.ref1 = ref)}
+            />
+            <div
+              onClick={ref => {
+                actual.push("2nd node clicked imperatively from 1st's handler");
+              }}
+              ref={ref => (this.ref2 = ref)}
+            />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Wrapper />, container);
+
+    const expected = [
+      '1st node clicked',
+      "2nd node clicked imperatively from 1st's handler",
+    ];
+    expect(actual).toEqual(expected);
+  });
 });

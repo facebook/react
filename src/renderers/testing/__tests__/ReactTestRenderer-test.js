@@ -439,7 +439,7 @@ describe('ReactTestRenderer', () => {
       onClick() {
         /* do nothing */
       }
-      unstable_handleError() {
+      componentDidCatch() {
         this.setState({error: true});
       }
     }

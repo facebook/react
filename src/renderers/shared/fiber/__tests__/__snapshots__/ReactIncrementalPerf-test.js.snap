@@ -171,9 +171,10 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 "// Stop on Baddie and restart from Boundary
 ⛔ (React Tree Reconciliation) Warning: There were cascading updates
   ⚛ Parent [mount]
-    ⚛ Boundary [mount]
+    ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
       ⚛ Parent [mount]
         ⚛ Baddie [mount]
+    ⚛ Boundary [mount]
   ⛔ (Committing Changes) Warning: Lifecycle hook scheduled a cascading update
     ⚛ (Committing Host Effects: 2 Total)
     ⚛ (Calling Lifecycle Methods: 1 Total)

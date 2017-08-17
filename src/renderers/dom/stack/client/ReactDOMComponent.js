@@ -14,7 +14,8 @@
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
@@ -30,15 +31,22 @@ var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
 var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var inputValueTracking = require('inputValueTracking');
 var invariant = require('fbjs/lib/invariant');
 var isCustomComponent = require('isCustomComponent');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
 var voidElementTags = require('voidElementTags');
-var warning = require('fbjs/lib/warning');
+var warnValidStyle = require('warnValidStyle');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var didWarnShadyDOM = false;
 
@@ -52,11 +60,6 @@ var CONTENT_TYPES = {string: true, number: true};
 
 var STYLE = 'style';
 var HTML = '__html';
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -104,11 +107,6 @@ function assertValidProps(component, props) {
   }
   if (__DEV__) {
     warning(
-      props.innerHTML == null,
-      'Directly setting property `innerHTML` is not permitted. ' +
-        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-    );
-    warning(
       props.suppressContentEditableWarning ||
         !props.contentEditable ||
         props.children == null,
@@ -116,12 +114,6 @@ function assertValidProps(component, props) {
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
         'probably not intentional.',
-    );
-    warning(
-      props.onFocusIn == null && props.onFocusOut == null,
-      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-        'are not needed/supported by React.',
     );
   }
   invariant(
@@ -160,6 +152,38 @@ function textareaPostMount() {
 function optionPostMount() {
   var inst = this;
   ReactDOMOption.postMountWrapper(inst);
+}
+
+var processStyleName = memoizeStringOnly(function(styleName) {
+  return hyphenateStyleName(styleName);
+});
+
+function createMarkupForStyles(styles, component) {
+  var serialized = '';
+  var delimiter = '';
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+    var isCustomProperty = styleName.indexOf('--') === 0;
+    var styleValue = styles[styleName];
+    if (__DEV__) {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+    }
+    if (styleValue != null) {
+      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
+    }
+  }
+  return serialized || null;
 }
 
 var setAndValidateContentChildDev = emptyFunction;
@@ -227,7 +251,7 @@ var mediaEvents = {
 };
 
 function trackInputValue() {
-  inputValueTracking.track(this);
+  inputValueTracking.track(getNode(this));
 }
 
 function trapClickOnNonInteractiveElement() {
@@ -337,6 +361,13 @@ function validateDangerousTag(tag) {
 }
 
 var globalIdCounter = 1;
+var warnedUnknownTags = {
+  // Chrome is the only major browser not shipping <time>. But as of July
+  // 2017 it intends to ship it due to widespread usage. We intentionally
+  // *don't* warn for <time> even if it's unrecognized by Chrome because
+  // it soon will be, and many apps have been using it anyway.
+  time: true,
+};
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -465,11 +496,11 @@ ReactDOMComponent.Mixin = {
     }
     if (
       namespaceURI == null ||
-      (namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject')
+      (namespaceURI === Namespaces.svg && parentTag === 'foreignobject')
     ) {
-      namespaceURI = DOMNamespaces.html;
+      namespaceURI = Namespaces.html;
     }
-    if (namespaceURI === DOMNamespaces.html) {
+    if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
         warning(
           isCustomComponentTag || this._tag === this._currentElement.type,
@@ -479,9 +510,9 @@ ReactDOMComponent.Mixin = {
         );
       }
       if (this._tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
+        namespaceURI = Namespaces.svg;
       } else if (this._tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
+        namespaceURI = Namespaces.mathml;
       }
     }
     this._namespaceURI = namespaceURI;
@@ -510,7 +541,7 @@ ReactDOMComponent.Mixin = {
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
-      if (namespaceURI === DOMNamespaces.html) {
+      if (namespaceURI === Namespaces.html) {
         if (this._tag === 'script') {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
@@ -540,16 +571,22 @@ ReactDOMComponent.Mixin = {
           );
           didWarnShadyDOM = true;
         }
-        if (this._namespaceURI === DOMNamespaces.html) {
-          warning(
-            isCustomComponentTag ||
-              Object.prototype.toString.call(el) !==
-                '[object HTMLUnknownElement]',
-            'The tag <%s> is unrecognized in this browser. ' +
-              'If you meant to render a React component, start its name with ' +
-              'an uppercase letter.',
-            this._tag,
-          );
+        if (this._namespaceURI === Namespaces.html) {
+          if (
+            !isCustomComponentTag &&
+            Object.prototype.toString.call(el) ===
+              '[object HTMLUnknownElement]' &&
+            !Object.prototype.hasOwnProperty.call(warnedUnknownTags, this._tag)
+          ) {
+            warnedUnknownTags[this._tag] = true;
+            warning(
+              false,
+              'The tag <%s> is unrecognized in this browser. ' +
+                'If you meant to render a React component, start its name with ' +
+                'an uppercase letter.',
+              this._tag,
+            );
+          }
         }
       }
       ReactDOMComponentTree.precacheNode(this, el);
@@ -656,21 +693,18 @@ ReactDOMComponent.Mixin = {
               Object.freeze(propValue);
             }
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(
-            propValue,
-            this,
-          );
+          propValue = createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+          if (!DOMProperty.isReservedProp(propKey)) {
+            markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
             );
           }
         } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(
+          markup = DOMMarkupOperations.createMarkupForProperty(
             propKey,
             propValue,
           );
@@ -688,9 +722,9 @@ ReactDOMComponent.Mixin = {
     }
 
     if (!this._hostParent) {
-      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+      ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
     }
-    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    ret += ' ' + DOMMarkupOperations.createMarkupForID(this._domID);
     return ret;
   },
 
@@ -862,7 +896,7 @@ ReactDOMComponent.Mixin = {
         ReactDOMInput.updateWrapper(this);
         // We also check that we haven't missed a value update, such as a
         // Radio group shifting the checked value to another named radio input.
-        inputValueTracking.updateValueIfChanged(this);
+        inputValueTracking.updateValueIfChanged(getNode(this));
         break;
       case 'textarea':
         ReactDOMTextarea.updateWrapper(this);
@@ -918,15 +952,12 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
-      } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
+        if (isCustomComponent(this._tag, lastProps)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
+        } else {
+          DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
@@ -975,17 +1006,14 @@ ReactDOMComponent.Mixin = {
           ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
             nextProp,
           );
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
@@ -1107,7 +1135,7 @@ ReactDOMComponent.Mixin = {
         break;
       case 'input':
       case 'textarea':
-        inputValueTracking.stopTracking(this);
+        inputValueTracking.stopTracking(getNode(this));
         break;
       case 'html':
       case 'head':

@@ -198,16 +198,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (nextProps === null || memoizedProps === nextProps) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
-      // TODO: Disable this before release, since it is not part of the public API
-      // I use this for testing to compare the relative overhead of classes.
-      if (
-        typeof fn.shouldComponentUpdate === 'function' &&
-        !fn.shouldComponentUpdate(memoizedProps, nextProps)
-      ) {
-        // Memoize props even if shouldComponentUpdate returns false
-        memoizeProps(workInProgress, nextProps);
-        return bailoutOnAlreadyFinishedWork(current, workInProgress);
-      }
+      // TODO: consider bringing fn.shouldComponentUpdate() back.
+      // It used to be here.
     }
 
     var unmaskedContext = getUnmaskedContext(workInProgress);
@@ -277,6 +269,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     markRef(current, workInProgress);
 
     if (!shouldUpdate) {
+      // Context providers should defer to sCU for rendering
+      if (hasContext) {
+        invalidateContextProvider(workInProgress, false);
+      }
+
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -302,8 +299,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // The context might have changed so we need to recalculate it.
     if (hasContext) {
-      invalidateContextProvider(workInProgress);
+      invalidateContextProvider(workInProgress, true);
     }
+
     return workInProgress.child;
   }
 
@@ -773,11 +771,22 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress: Fiber,
     priorityLevel: PriorityLevel,
   ) {
-    invariant(
-      workInProgress.tag === ClassComponent || workInProgress.tag === HostRoot,
-      'Invalid type of work. This error is likely caused by a bug in React. ' +
-        'Please file an issue.',
-    );
+    // Push context providers here to avoid a push/pop context mismatch.
+    switch (workInProgress.tag) {
+      case ClassComponent:
+        pushContextProvider(workInProgress);
+        break;
+      case HostRoot:
+        const root: FiberRoot = workInProgress.stateNode;
+        pushHostContainer(workInProgress, root.containerInfo);
+        break;
+      default:
+        invariant(
+          false,
+          'Invalid type of work. This error is likely caused by a bug in React. ' +
+            'Please file an issue.',
+        );
+    }
 
     // Add an error effect so we can handle the error during the commit phase
     workInProgress.effectTag |= Err;

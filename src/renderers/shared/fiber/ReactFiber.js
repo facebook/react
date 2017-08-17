@@ -48,7 +48,6 @@ var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var getComponentName = require('getComponentName');
-
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
@@ -65,12 +64,6 @@ if (__DEV__) {
 // A Fiber is work on a Component that needs to be done or was done. There can
 // be more than one per component.
 export type Fiber = {|
-  // __DEV__ only
-  _debugID?: DebugID,
-  _debugSource?: Source | null,
-  _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
-  _debugIsCurrentlyTiming?: boolean,
-
   // These first fields are conceptually members of an Instance. This used to
   // be split into a separate type and intersected with the other Fiber fields,
   // but until Flow fixes its intersection bugs, we've merged them into a
@@ -155,23 +148,76 @@ export type Fiber = {|
   // Conceptual aliases
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
+  // __DEV__ only
+  _debugID?: DebugID,
+  _debugSource?: Source | null,
+  _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
+  _debugIsCurrentlyTiming?: boolean,
 |};
 
 if (__DEV__) {
   var debugCounter = 1;
 }
 
-// This is a constructor of a POJO instead of a constructor function for a few
-// reasons:
+function FiberNode(
+  tag: TypeOfWork,
+  key: null | string,
+  internalContextTag: TypeOfInternalContext,
+) {
+  // Instance
+  this.tag = tag;
+  this.key = key;
+  this.type = null;
+  this.stateNode = null;
+
+  // Fiber
+  this.return = null;
+  this.child = null;
+  this.sibling = null;
+  this.index = 0;
+
+  this.ref = null;
+
+  this.pendingProps = null;
+  this.memoizedProps = null;
+  this.updateQueue = null;
+  this.memoizedState = null;
+
+  this.internalContextTag = internalContextTag;
+
+  // Effects
+  this.effectTag = NoEffect;
+  this.nextEffect = null;
+
+  this.firstEffect = null;
+  this.lastEffect = null;
+
+  this.pendingWorkPriority = NoWork;
+
+  this.alternate = null;
+
+  if (__DEV__) {
+    this._debugID = debugCounter++;
+    this._debugSource = null;
+    this._debugOwner = null;
+    this._debugIsCurrentlyTiming = false;
+    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
+      Object.preventExtensions(this);
+    }
+  }
+}
+
+// This is a constructor function, rather than a POJO constructor, still
+// please ensure we do the following:
 // 1) Nobody should add any instance methods on this. Instance methods can be
 //    more difficult to predict when they get optimized and they are almost
 //    never inlined properly in static compilers.
 // 2) Nobody should rely on `instanceof Fiber` for type testing. We should
 //    always know when it is a fiber.
-// 3) We can easily go from a createFiber call to calling a constructor if that
-//    is faster. The opposite is not true.
-// 4) We might want to experiment with using numeric keys since they are easier
+// 3) We might want to experiment with using numeric keys since they are easier
 //    to optimize in a non-JIT environment.
+// 4) We can easily go from a constructor to a createFiber object literal if that
+//    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
 var createFiber = function(
@@ -179,55 +225,8 @@ var createFiber = function(
   key: null | string,
   internalContextTag: TypeOfInternalContext,
 ): Fiber {
-  var fiber: Fiber = {
-    // Instance
-
-    tag: tag,
-
-    key: key,
-
-    type: null,
-
-    stateNode: null,
-
-    // Fiber
-
-    return: null,
-
-    child: null,
-    sibling: null,
-    index: 0,
-
-    ref: null,
-
-    pendingProps: null,
-    memoizedProps: null,
-    updateQueue: null,
-    memoizedState: null,
-
-    internalContextTag,
-
-    effectTag: NoEffect,
-    nextEffect: null,
-    firstEffect: null,
-    lastEffect: null,
-
-    pendingWorkPriority: NoWork,
-
-    alternate: null,
-  };
-
-  if (__DEV__) {
-    fiber._debugID = debugCounter++;
-    fiber._debugSource = null;
-    fiber._debugOwner = null;
-    fiber._debugIsCurrentlyTiming = false;
-    if (!hasBadMapPolyfill && typeof Object.preventExtensions === 'function') {
-      Object.preventExtensions(fiber);
-    }
-  }
-
-  return fiber;
+  // $FlowFixMe: the shapes are exact here but Flow doesn't like constructors
+  return new FiberNode(tag, key, internalContextTag);
 };
 
 function shouldConstruct(Component) {

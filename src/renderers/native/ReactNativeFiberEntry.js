@@ -89,6 +89,8 @@ const ReactNativeFiber: ReactNativeType = {
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 
+  flushSync: ReactNativeFiberRenderer.flushSync,
+
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
     NativeMethodsMixin: require('NativeMethodsMixin'),
@@ -114,15 +116,13 @@ if (__DEV__) {
   );
 }
 
-if (typeof injectInternals === 'function') {
-  injectInternals({
-    findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
-    findHostInstanceByFiber: ReactNativeFiberRenderer.findHostInstance,
-    getInspectorDataForViewTag: ReactNativeFiberInspector.getInspectorDataForViewTag,
-    // This is an enum because we may add more (e.g. profiler build)
-    bundleType: __DEV__ ? 1 : 0,
-    version: ReactVersion,
-  });
-}
+injectInternals({
+  findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+  findHostInstanceByFiber: ReactNativeFiberRenderer.findHostInstance,
+  getInspectorDataForViewTag: ReactNativeFiberInspector.getInspectorDataForViewTag,
+  // This is an enum because we may add more (e.g. profiler build)
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+});
 
 module.exports = ReactNativeFiber;

@@ -14,7 +14,10 @@
 var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Injected dependencies:

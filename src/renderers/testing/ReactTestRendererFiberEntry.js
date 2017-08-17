@@ -14,11 +14,13 @@
 'use strict';
 
 var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('fbjs/lib/emptyObject');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var invariant = require('fbjs/lib/invariant');
 var {
+  Fragment,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
@@ -61,7 +63,28 @@ type TextInstance = {|
   tag: 'TEXT',
 |};
 
+type FindOptions = $Shape<{
+  // performs a "greedy" search: if a matching node is found, will continue
+  // to search within the matching node's children. (default: true)
+  deep: boolean,
+}>;
+
+export type Predicate = (node: ReactTestInstance) => ?boolean;
+
 const UPDATE_SIGNAL = {};
+
+function getPublicInstance(inst: Instance | TextInstance): * {
+  switch (inst.tag) {
+    case 'INSTANCE':
+      const createNodeMock = inst.rootContainerInstance.createNodeMock;
+      return createNodeMock({
+        type: inst.type,
+        props: inst.props,
+      });
+    default:
+      return inst;
+  }
+}
 
 function appendChild(
   parentInstance: Instance | Container,
@@ -225,18 +248,7 @@ var TestRenderer = ReactFiberReconciler({
 
   useSyncScheduling: true,
 
-  getPublicInstance(inst: Instance | TextInstance): * {
-    switch (inst.tag) {
-      case 'INSTANCE':
-        const createNodeMock = inst.rootContainerInstance.createNodeMock;
-        return createNodeMock({
-          type: inst.type,
-          props: inst.props,
-        });
-      default:
-        return inst;
-    }
-  },
+  getPublicInstance,
 });
 
 var defaultTestOptions = {
@@ -325,6 +337,219 @@ function toTree(node: ?Fiber) {
   }
 }
 
+const fiberToWrapper = new WeakMap();
+function wrapFiber(fiber: Fiber): ReactTestInstance {
+  let wrapper = fiberToWrapper.get(fiber);
+  if (wrapper === undefined && fiber.alternate !== null) {
+    wrapper = fiberToWrapper.get(fiber.alternate);
+  }
+  if (wrapper === undefined) {
+    wrapper = new ReactTestInstance(fiber);
+    fiberToWrapper.set(fiber, wrapper);
+  }
+  return wrapper;
+}
+
+const validWrapperTypes = new Set([
+  FunctionalComponent,
+  ClassComponent,
+  HostComponent,
+]);
+
+class ReactTestInstance {
+  _fiber: Fiber;
+
+  _currentFiber(): Fiber {
+    // Throws if this component has been unmounted.
+    const fiber = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
+      this._fiber,
+    );
+    invariant(
+      fiber !== null,
+      "Can't read from currently-mounting component. This error is likely " +
+        'caused by a bug in React. Please file an issue.',
+    );
+    return fiber;
+  }
+
+  constructor(fiber: Fiber) {
+    invariant(
+      validWrapperTypes.has(fiber.tag),
+      'Unexpected object passed to ReactTestInstance constructor (tag: %s). ' +
+        'This is probably a bug in React.',
+      fiber.tag,
+    );
+    this._fiber = fiber;
+  }
+
+  get instance() {
+    if (this._fiber.tag === HostComponent) {
+      return getPublicInstance(this._fiber.stateNode);
+    } else {
+      return this._fiber.stateNode;
+    }
+  }
+
+  get type() {
+    return this._fiber.type;
+  }
+
+  get props(): Object {
+    return this._currentFiber().memoizedProps;
+  }
+
+  get parent(): ?ReactTestInstance {
+    const parent = this._fiber.return;
+    return parent === null || parent.tag === HostRoot
+      ? null
+      : wrapFiber(parent);
+  }
+
+  get children(): Array<ReactTestInstance | string> {
+    const children = [];
+    const startingNode = this._currentFiber();
+    let node: Fiber = startingNode;
+    if (node.child === null) {
+      return children;
+    }
+    node.child.return = node;
+    node = node.child;
+    outer: while (true) {
+      let descend = false;
+      switch (node.tag) {
+        case FunctionalComponent:
+        case ClassComponent:
+        case HostComponent:
+          children.push(wrapFiber(node));
+          break;
+        case HostText:
+          children.push('' + node.memoizedProps);
+          break;
+        case Fragment:
+          descend = true;
+          break;
+        default:
+          invariant(
+            false,
+            'Unsupported component type %s in test renderer. ' +
+              'This is probably a bug in React.',
+            node.tag,
+          );
+      }
+      if (descend && node.child !== null) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      while (node.sibling === null) {
+        if (node.return === startingNode) {
+          break outer;
+        }
+        node = (node.return: any);
+      }
+      (node.sibling: any).return = node.return;
+      node = (node.sibling: any);
+    }
+    return children;
+  }
+
+  // Custom search functions
+  find(predicate: Predicate): ReactTestInstance {
+    return expectOne(
+      this.findAll(predicate, {deep: false}),
+      `matching custom predicate: ${predicate.toString()}`,
+    );
+  }
+
+  findByType(type: any): ReactTestInstance {
+    return expectOne(
+      this.findAllByType(type, {deep: false}),
+      `with node type: "${type.displayName || type.name}"`,
+    );
+  }
+
+  findByProps(props: Object): ReactTestInstance {
+    return expectOne(
+      this.findAllByProps(props, {deep: false}),
+      `with props: ${JSON.stringify(props)}`,
+    );
+  }
+
+  findAll(
+    predicate: Predicate,
+    options: ?FindOptions = null,
+  ): Array<ReactTestInstance> {
+    return findAll(this, predicate, options);
+  }
+
+  findAllByType(
+    type: any,
+    options: ?FindOptions = null,
+  ): Array<ReactTestInstance> {
+    return findAll(this, node => node.type === type, options);
+  }
+
+  findAllByProps(
+    props: Object,
+    options: ?FindOptions = null,
+  ): Array<ReactTestInstance> {
+    return findAll(
+      this,
+      node => node.props && propsMatch(node.props, props),
+      options,
+    );
+  }
+}
+
+function findAll(
+  root: ReactTestInstance,
+  predicate: Predicate,
+  options: ?FindOptions,
+): Array<ReactTestInstance> {
+  const deep = options ? options.deep : true;
+  const results = [];
+
+  if (predicate(root)) {
+    results.push(root);
+    if (!deep) {
+      return results;
+    }
+  }
+
+  for (const child of root.children) {
+    if (typeof child === 'string') {
+      continue;
+    }
+    results.push(...findAll(child, predicate, options));
+  }
+
+  return results;
+}
+
+function expectOne(
+  all: Array<ReactTestInstance>,
+  message: string,
+): ReactTestInstance {
+  if (all.length === 1) {
+    return all[0];
+  }
+
+  const prefix = all.length === 0
+    ? 'No instances found '
+    : `Expected 1 but found ${all.length} instances `;
+
+  throw new Error(prefix + message);
+}
+
+function propsMatch(props: Object, filter: Object): boolean {
+  for (const key in filter) {
+    if (props[key] !== filter[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+
 var ReactTestRendererFiber = {
   create(element: ReactElement<any>, options: TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
@@ -336,11 +561,13 @@ var ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    var root: ?FiberRoot = TestRenderer.createContainer(container);
+    var root: FiberRoot | null = TestRenderer.createContainer(container);
     invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
 
-    return {
+    var entry = {
+      root: undefined, // makes flow happy
+      // we define a 'getter' for 'root' below using 'Object.defineProperty'
       toJSON() {
         if (root == null || root.current == null || container == null) {
           return null;
@@ -380,6 +607,23 @@ var ReactTestRendererFiber = {
         return TestRenderer.getPublicRootInstance(root);
       },
     };
+
+    Object.defineProperty(
+      entry,
+      'root',
+      ({
+        configurable: true,
+        enumerable: true,
+        get: function() {
+          if (root === null || root.current.child === null) {
+            throw new Error("Can't access .root on unmounted test renderer");
+          }
+          return wrapFiber(root.current.child);
+        },
+      }: Object),
+    );
+
+    return entry;
   },
 
   /* eslint-disable camelcase */

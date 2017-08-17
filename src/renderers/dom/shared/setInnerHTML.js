@@ -11,7 +11,7 @@
 
 'use strict';
 
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 
 // SVG temp container for IE lacking innerHTML
@@ -28,7 +28,7 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
   // IE does not have innerHTML for SVG nodes, so instead we inject the
   // new markup in a temp node and then move the child nodes across into
   // the target node
-  if (node.namespaceURI === DOMNamespaces.svg && !('innerHTML' in node)) {
+  if (node.namespaceURI === Namespaces.svg && !('innerHTML' in node)) {
     reusableSVGContainer =
       reusableSVGContainer || document.createElement('div');
     reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';

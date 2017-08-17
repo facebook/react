@@ -26,7 +26,11 @@ var {
 } = ReactTypeOfWork;
 var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
-var {invokeGuardedCallback} = require('ReactErrorUtils');
+var {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = require('ReactErrorUtils');
 
 var {
   Placement,
@@ -43,7 +47,7 @@ if (__DEV__) {
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
-  captureError: (failedFiber: Fiber, error: Error) => Fiber | null,
+  captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
   const {
     commitMount,
@@ -62,6 +66,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   if (__DEV__) {
     var callComponentWillUnmountWithTimerInDev = function(current, instance) {
       startPhaseTimer(current, 'componentWillUnmount');
+      instance.props = current.memoizedProps;
+      instance.state = current.memoizedState;
       instance.componentWillUnmount();
       stopPhaseTimer();
     };
@@ -70,18 +76,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
-      const unmountError = invokeGuardedCallback(
+      invokeGuardedCallback(
         null,
         callComponentWillUnmountWithTimerInDev,
         null,
         current,
         instance,
       );
-      if (unmountError) {
+      if (hasCaughtError()) {
+        const unmountError = clearCaughtError();
         captureError(current, unmountError);
       }
     } else {
       try {
+        instance.props = current.memoizedProps;
+        instance.state = current.memoizedState;
         instance.componentWillUnmount();
       } catch (unmountError) {
         captureError(current, unmountError);
@@ -93,8 +102,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const ref = current.ref;
     if (ref !== null) {
       if (__DEV__) {
-        const refError = invokeGuardedCallback(null, ref, null, null);
-        if (refError !== null) {
+        invokeGuardedCallback(null, ref, null, null);
+        if (hasCaughtError()) {
+          const refError = clearCaughtError();
           captureError(current, refError);
         }
       } else {
@@ -489,6 +499,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             if (__DEV__) {
               startPhaseTimer(finishedWork, 'componentDidMount');
             }
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
             instance.componentDidMount();
             if (__DEV__) {
               stopPhaseTimer();
@@ -499,6 +511,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             if (__DEV__) {
               startPhaseTimer(finishedWork, 'componentDidUpdate');
             }
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
             instance.componentDidUpdate(prevProps, prevState);
             if (__DEV__) {
               stopPhaseTimer();

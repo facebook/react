@@ -30,13 +30,13 @@ describe('SyntheticClipboardEvent', () => {
       describe('when event has clipboardData', () => {
         it("returns event's clipboardData", () => {
           // Mock clipboardData since native implementation doesn't have a constructor
-          var clipboardData = jasmine.createSpyObj('clipboardData', [
-            'dropEffect',
-            'effectAllowed',
-            'files',
-            'items',
-            'types',
-          ]);
+          var clipboardData = {
+            dropEffect: null,
+            effectAllowed: null,
+            files: null,
+            items: null,
+            types: null,
+          };
           var clipboardEvent = createEvent({clipboardData: clipboardData});
 
           expect(clipboardEvent.clipboardData).toBe(clipboardData);

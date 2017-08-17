@@ -14,6 +14,7 @@
 var invariant = require('fbjs/lib/invariant');
 var React = require('react');
 var ReactPartialRenderer = require('ReactPartialRenderer');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 
 var Readable = require('stream').Readable;
 
@@ -37,30 +38,36 @@ class ReactMarkupReadableStream extends Readable {
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
- * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostream
+ * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertonodestream
  */
-function renderToStream(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToStream(): You must pass a valid ReactElement.',
-  );
+function renderToNodeStream(element) {
+  const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+  if (disableNewFiberFeatures) {
+    invariant(
+      React.isValidElement(element),
+      'renderToNodeStream(): Invalid component element.',
+    );
+  }
   return new ReactMarkupReadableStream(element, false);
 }
 
 /**
- * Similar to renderToStream, except this doesn't create extra DOM attributes
+ * Similar to renderToNodeStream, except this doesn't create extra DOM attributes
  * such as data-react-id that React uses internally.
- * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostaticstream
+ * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostaticnodestream
  */
-function renderToStaticStream(element) {
-  invariant(
-    React.isValidElement(element),
-    'renderToStaticStream(): You must pass a valid ReactElement.',
-  );
+function renderToStaticNodeStream(element) {
+  const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
+  if (disableNewFiberFeatures) {
+    invariant(
+      React.isValidElement(element),
+      'renderToStaticNodeStream(): Invalid component element.',
+    );
+  }
   return new ReactMarkupReadableStream(element, true);
 }
 
 module.exports = {
-  renderToStream: renderToStream,
-  renderToStaticStream: renderToStaticStream,
+  renderToNodeStream: renderToNodeStream,
+  renderToStaticNodeStream: renderToStaticNodeStream,
 };

@@ -1,6 +1,6 @@
-const React = window.React;
-
 import Fixture from '../../Fixture';
+
+const React = window.React;
 
 class NumberInputExtraZeroes extends React.Component {
   state = {value: '3.0000'};

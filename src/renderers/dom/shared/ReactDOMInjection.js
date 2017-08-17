@@ -11,11 +11,9 @@
 
 'use strict';
 
-var ARIADOMPropertyConfig = require('ARIADOMPropertyConfig');
 var DOMProperty = require('DOMProperty');
 var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
 var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
 
-DOMProperty.injection.injectDOMPropertyConfig(ARIADOMPropertyConfig);
 DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
 DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);

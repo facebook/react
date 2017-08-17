@@ -43,24 +43,24 @@ describe('FallbackCompositionState', () => {
 
   function assertExtractedData(modifiedValue, expectedData) {
     var input = getInput();
-    var composition = FallbackCompositionState.getPooled(input);
+    FallbackCompositionState.initialize(input);
     input.value = modifiedValue;
-    expect(composition.getData()).toBe(expectedData);
-    FallbackCompositionState.release(composition);
+    expect(FallbackCompositionState.getData()).toBe(expectedData);
+    FallbackCompositionState.reset();
   }
 
   it('extracts value via `getText()`', () => {
-    var composition = FallbackCompositionState.getPooled(getInput());
-    expect(composition.getText()).toBe(TEXT);
-    FallbackCompositionState.release(composition);
+    FallbackCompositionState.initialize(getInput());
+    expect(FallbackCompositionState.getText()).toBe(TEXT);
+    FallbackCompositionState.reset();
 
-    composition = FallbackCompositionState.getPooled(getTextarea());
-    expect(composition.getText()).toBe(TEXT);
-    FallbackCompositionState.release(composition);
+    FallbackCompositionState.initialize(getTextarea());
+    expect(FallbackCompositionState.getText()).toBe(TEXT);
+    FallbackCompositionState.reset();
 
-    composition = FallbackCompositionState.getPooled(getContentEditable());
-    expect(composition.getText()).toBe(TEXT);
-    FallbackCompositionState.release(composition);
+    FallbackCompositionState.initialize(getContentEditable());
+    expect(FallbackCompositionState.getText()).toBe(TEXT);
+    FallbackCompositionState.reset();
   });
 
   describe('Extract fallback data inserted at collapsed cursor', () => {

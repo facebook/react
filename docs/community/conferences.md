@@ -24,6 +24,11 @@ September 8-10 in Tel Aviv, Israel
 
 [Website](http://react-next.com/) - [Twitter](https://twitter.com/ReactNext)
 
+### ReactFoo 2017
+September 14 in Bangalore, India
+
+[Website](https://reactfoo.in/2017/)
+
 ### React Boston 2017
 September 23-24 in Boston, Massachusetts USA
 

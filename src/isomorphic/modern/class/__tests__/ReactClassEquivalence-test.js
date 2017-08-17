@@ -32,16 +32,12 @@ function runJest(testFile) {
   var cwd = process.cwd();
   var extension = process.platform === 'win32' ? '.cmd' : '';
   var jestBin = path.resolve('node_modules', '.bin', 'jest' + extension);
-  var setupFile = path.resolve(
-    'scripts',
-    'jest',
-    'setupSpecEquivalenceReporter.js',
-  );
-  var result = spawnSync(
-    jestBin,
-    [testFile, '--setupTestFrameworkScriptFile', setupFile],
-    {cwd},
-  );
+  var result = spawnSync(jestBin, [testFile], {
+    cwd,
+    env: Object.assign({}, process.env, {
+      REACT_CLASS_EQUIVALENCE_TEST: 'true',
+    }),
+  });
 
   if (result.error) {
     throw result.error;
@@ -59,7 +55,7 @@ function runJest(testFile) {
     );
   }
 
-  return result.stdout.toString();
+  return result.stdout.toString() + result.stderr.toString();
 }
 
 function compareResults(a, b) {

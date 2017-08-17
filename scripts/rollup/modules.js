@@ -274,7 +274,7 @@ function replaceBundleStubModules(bundleModulesToStub) {
 
   if (Array.isArray(bundleModulesToStub)) {
     bundleModulesToStub.forEach(module => {
-      stubbedModules[module] = devOnlyModuleStub;
+      stubbedModules[`'${module}'`] = devOnlyModuleStub;
     });
   }
 

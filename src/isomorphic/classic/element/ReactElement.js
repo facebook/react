@@ -12,9 +12,11 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-
-var warning = require('fbjs/lib/warning');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
