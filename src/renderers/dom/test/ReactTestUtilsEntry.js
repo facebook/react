@@ -450,6 +450,11 @@ function makeSimulator(eventType) {
       'TestUtils.Simulate expects a component instance and not a ReactElement.' +
         'TestUtils.Simulate will not work if you are using shallow rendering.',
     );
+    invariant(
+      !ReactTestUtils.isCompositeComponent(domComponentOrNode),
+      'TestUtils.Simulate does not support a composite component instance.' +
+        'TestUtils.Simulate only works with DOM component instance or a DOM node.',
+    );
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       node = findDOMNode(domComponentOrNode);
     } else if (domComponentOrNode.tagName) {
