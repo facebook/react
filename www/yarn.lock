@@ -3202,6 +3202,14 @@ fs-extra@^3.0.1:
     jsonfile "^3.0.0"
     universalify "^0.1.0"
 
+fs-extra@^4.0.0:
+  version "4.0.1"
+  resolved "https://registry.yarnpkg.com/fs-extra/-/fs-extra-4.0.1.tgz#7fc0c6c8957f983f57f306a24e5b9ddd8d0dd880"
+  dependencies:
+    graceful-fs "^4.1.2"
+    jsonfile "^3.0.0"
+    universalify "^0.1.0"
+
 fs-readdir-recursive@^1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/fs-readdir-recursive/-/fs-readdir-recursive-1.0.0.tgz#8cd1745c8b4f8a29c8caec392476921ba195f560"
@@ -3238,45 +3246,45 @@ function-bind@^1.0.2:
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/function-bind/-/function-bind-1.1.0.tgz#16176714c801798e4e8f2cf7f7529467bb4a5771"
 
-gatsby-link@^1.3.2:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.3.2.tgz#5b333e9776b80a2ff7e1ee0a21c770800e7d5b17"
+gatsby-link@^1.6.7:
+  version "1.6.7"
+  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.6.7.tgz#d84bd096f5c41ffaaeb293220024f305e8200845"
   dependencies:
     prop-types "^15.5.8"
     ric "^1.3.0"
 
-gatsby-plugin-glamor@^1.3.2:
-  version "1.3.2"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-glamor/-/gatsby-plugin-glamor-1.3.2.tgz#4e28536dfc0adb10ce23b22412621f8a70b27111"
+gatsby-plugin-glamor@^1.6.3:
+  version "1.6.3"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-glamor/-/gatsby-plugin-glamor-1.6.3.tgz#9a8a22da62371202ba794d1cc701349a47c362a3"
   dependencies:
     glamor "^2.20.29"
 
-gatsby-plugin-google-analytics@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-google-analytics/-/gatsby-plugin-google-analytics-1.0.1.tgz#849b452b6fad7da5c63230b0944e9eb2f3d3959d"
+gatsby-plugin-google-analytics@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-google-analytics/-/gatsby-plugin-google-analytics-1.0.3.tgz#591348c1cd356d3ed31e6f9324b3beb3cd632c14"
 
-gatsby-plugin-manifest@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-manifest/-/gatsby-plugin-manifest-1.0.1.tgz#caeca2c1fac4160032680cfbe7d9e4b1266f9813"
+gatsby-plugin-manifest@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-manifest/-/gatsby-plugin-manifest-1.0.3.tgz#d6402b44b52ca89b08dceb695e271b754a349d76"
   dependencies:
     bluebird "^3.5.0"
 
-gatsby-plugin-offline@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-offline/-/gatsby-plugin-offline-1.0.1.tgz#1ac610a6bf17cdefb6e8a0789db5c4601712aba8"
+gatsby-plugin-offline@^1.0.3:
+  version "1.0.3"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-offline/-/gatsby-plugin-offline-1.0.3.tgz#1db212606f4bd68afdbb564f07426a4b9b6cbd81"
   dependencies:
     sw-precache "^5.0.0"
 
-gatsby-plugin-preact@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-preact/-/gatsby-plugin-preact-1.0.1.tgz#f76accd95887870a7f43aa9d7aa4968fb5424aad"
+gatsby-plugin-preact@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-preact/-/gatsby-plugin-preact-1.0.2.tgz#dbbd858ba4e115c9b72e29148a09ab63b455b797"
   dependencies:
     preact "^8.1.0"
     preact-compat "^3.16.0"
 
-gatsby-plugin-react-helmet@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-react-helmet/-/gatsby-plugin-react-helmet-1.0.1.tgz#98d60ed796f9115dc08daba89ac6a622c94e1897"
+gatsby-plugin-react-helmet@^1.0.2:
+  version "1.0.2"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-react-helmet/-/gatsby-plugin-react-helmet-1.0.2.tgz#bc5b87ecd2f1f25a32ef4b460e10582c1d6c2259"
   dependencies:
     react-helmet "^5.1.3"
 
@@ -3293,17 +3301,17 @@ gatsby-plugin-sharp@^1.3.0:
     progress "^1.1.8"
     sharp "^0.17.3"
 
-gatsby-remark-autolink-headers@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-remark-autolink-headers/-/gatsby-remark-autolink-headers-1.0.1.tgz#aea46508de40786f1a09b18e9f4f64c23195c1d9"
+gatsby-remark-autolink-headers@^1.4.3:
+  version "1.4.3"
+  resolved "https://registry.yarnpkg.com/gatsby-remark-autolink-headers/-/gatsby-remark-autolink-headers-1.4.3.tgz#a90e0283db55450bad122544033ff819ce4434d0"
   dependencies:
     github-slugger "^1.1.1"
     mdast-util-to-string "^1.0.2"
     unist-util-visit "^1.1.1"
 
-gatsby-remark-copy-linked-files@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/gatsby-remark-copy-linked-files/-/gatsby-remark-copy-linked-files-1.3.0.tgz#62e64ae481041ed793ea53cd16d352d2d052d15f"
+gatsby-remark-copy-linked-files@^1.5.1:
+  version "1.5.1"
+  resolved "https://registry.yarnpkg.com/gatsby-remark-copy-linked-files/-/gatsby-remark-copy-linked-files-1.5.1.tgz#193215e40d05f7aa5bf8d9eb7dfd05305184f912"
   dependencies:
     cheerio "^1.0.0-rc.2"
     fs-extra "^3.0.1"
@@ -3319,9 +3327,9 @@ gatsby-remark-prismjs@^1.2.0:
     prismjs "^1.6.0"
     unist-util-visit "^1.1.1"
 
-gatsby-remark-responsive-iframe@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/gatsby-remark-responsive-iframe/-/gatsby-remark-responsive-iframe-1.3.0.tgz#5d9e0cfdf9660fd8086e43aece0429585125cdc7"
+gatsby-remark-responsive-iframe@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/gatsby-remark-responsive-iframe/-/gatsby-remark-responsive-iframe-1.4.2.tgz#52f746236e9e84b994a836b1c1c8147f346e6e54"
   dependencies:
     bluebird "^3.5.0"
     cheerio "^1.0.0-rc.2"
@@ -3337,9 +3345,9 @@ gatsby-remark-responsive-image@next:
     lodash "^4.17.4"
     unist-util-select "^1.5.0"
 
-gatsby-remark-smartypants@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-remark-smartypants/-/gatsby-remark-smartypants-1.0.1.tgz#3676593a8f25265d877a4b3248ac624b24d8c78e"
+gatsby-remark-smartypants@^1.4.2:
+  version "1.4.2"
+  resolved "https://registry.yarnpkg.com/gatsby-remark-smartypants/-/gatsby-remark-smartypants-1.4.2.tgz#c27431a49f027b920919e9bcd550bdd90ca9590a"
   dependencies:
     retext "^4.0.0"
     retext-smartypants "^2.0.0"
@@ -3355,26 +3363,29 @@ gatsby-source-filesystem@^1.0.1:
     pretty-bytes "^4.0.2"
     slash "^1.0.0"
 
-gatsby-transformer-remark@^1.1.0:
-  version "1.1.0"
-  resolved "https://registry.yarnpkg.com/gatsby-transformer-remark/-/gatsby-transformer-remark-1.1.0.tgz#c7954abcd8485fe66481a8ab3ec5fec1006721bc"
+gatsby-transformer-remark@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/gatsby-transformer-remark/-/gatsby-transformer-remark-1.7.0.tgz#821a1fa6853e3ff1a493dfe048d907c9a900206a"
   dependencies:
     bluebird "^3.5.0"
     gray-matter "^2.1.0"
     hast-util-to-html "^3.0.0"
     lodash "^4.17.4"
     mdast-util-to-hast "^2.4.0"
+    mdast-util-toc "^2.0.1"
     remark "^7.0.1"
     sanitize-html "^1.14.1"
     underscore.string "^3.3.4"
     unist-util-select "^1.5.0"
     unist-util-visit "^1.1.1"
 
-gatsby-transformer-sharp@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-transformer-sharp/-/gatsby-transformer-sharp-1.0.1.tgz#52493b9f68c3d2c8ebb0fa892cfd17b0168b37db"
+gatsby-transformer-sharp@^1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/gatsby-transformer-sharp/-/gatsby-transformer-sharp-1.6.0.tgz#51b2c3b55263648e8b86f09a46ebe82f646dc53e"
   dependencies:
     bluebird "^3.5.0"
+    fs-extra "^4.0.0"
+    image-size "^0.6.0"
 
 gatsby@^1.3.2:
   version "1.3.2"
@@ -4105,6 +4116,10 @@ ieee754@^1.1.4:
 image-size@^0.5.1:
   version "0.5.5"
   resolved "https://registry.yarnpkg.com/image-size/-/image-size-0.5.5.tgz#09dfd4ab9d20e29eb1c3e80b8990378df9e3cb9c"
+
+image-size@^0.6.0:
+  version "0.6.1"
+  resolved "https://registry.yarnpkg.com/image-size/-/image-size-0.6.1.tgz#98122a562d59dcc097ef1b2c8191866eb8f5d663"
 
 imagemin-pngquant@^5.0.0:
   version "5.0.1"
@@ -5257,6 +5272,14 @@ mdast-util-to-hast@^2.4.0:
 mdast-util-to-string@^1.0.2:
   version "1.0.4"
   resolved "https://registry.yarnpkg.com/mdast-util-to-string/-/mdast-util-to-string-1.0.4.tgz#5c455c878c9355f0c1e7f3e8b719cf583691acfb"
+
+mdast-util-toc@^2.0.1:
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/mdast-util-toc/-/mdast-util-toc-2.0.1.tgz#b1d2cb23bfb01f812fa7b55bffe8b0a8bedf6f21"
+  dependencies:
+    github-slugger "^1.1.1"
+    mdast-util-to-string "^1.0.2"
+    unist-util-visit "^1.1.0"
 
 media-typer@0.3.0:
   version "0.3.0"
