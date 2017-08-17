@@ -69,7 +69,6 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
     } else if (slug === 'docs/error-decoder.html') {
       // No-op so far as markdown templates go.
       // Error codes are managed by a page (which gets created automatically).
-console.log('Skipping "docs/error-decoder.html"');
 
     } else if (
       slug.includes('blog/') ||
@@ -213,10 +212,9 @@ exports.onCreatePage = async ({ page, boundActionCreators }) => {
     // page.matchPath is a special key that's used for matching pages only on the client.
     // Explicitly wire up all error code wildcard matches to redirect to the error code page.
     if (page.path.includes('docs/error-decoder.html')) {
-      page.matchPath = 'docs/error-decoder.html?invariant=:invariant&args=:args';
+      page.matchPath = 'docs/error-decoder:path?';
       page.context.slug = 'docs/error-decoder.html';
 
-console.log('Recreating error codes page to match wildcards');
       createPage(page);
     }
 
