@@ -437,40 +437,40 @@ var ReactTestUtils = {
 /**
  * Exports:
  *
- * - `ReactTestUtils.Simulate.click(Element/ReactDOMComponent)`
- * - `ReactTestUtils.Simulate.mouseMove(Element/ReactDOMComponent)`
- * - `ReactTestUtils.Simulate.change(Element/ReactDOMComponent)`
+ * - `ReactTestUtils.Simulate.click(Element)`
+ * - `ReactTestUtils.Simulate.mouseMove(Element)`
+ * - `ReactTestUtils.Simulate.change(Element)`
  * - ... (All keys from event plugin `eventTypes` objects)
  */
 function makeSimulator(eventType) {
-  return function(domComponentOrNode, eventData) {
-    var node;
+  return function(domNode, eventData) {
     invariant(
-      !React.isValidElement(domComponentOrNode),
-      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
-        'TestUtils.Simulate will not work if you are using shallow rendering.',
+      !React.isValidElement(domNode),
+      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+        'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
+        'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
     );
-    if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
-      node = findDOMNode(domComponentOrNode);
-    } else if (domComponentOrNode.tagName) {
-      node = domComponentOrNode;
-    }
+    invariant(
+      !ReactTestUtils.isCompositeComponent(domNode),
+      'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+        'a component instance. Pass the DOM node you wish to simulate the event on instead.',
+    );
 
     var dispatchConfig =
       EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
     var fakeNativeEvent = new Event();
-    fakeNativeEvent.target = node;
+    fakeNativeEvent.target = domNode;
     fakeNativeEvent.type = eventType.toLowerCase();
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
-    var targetInst = ReactDOMComponentTree.getInstanceFromNode(node);
+    var targetInst = ReactDOMComponentTree.getInstanceFromNode(domNode);
     var event = new SyntheticEvent(
       dispatchConfig,
       targetInst,
       fakeNativeEvent,
-      node,
+      domNode,
     );
 
     // Since we aren't using pooling, always persist the event. This will make
@@ -487,7 +487,7 @@ function makeSimulator(eventType) {
     ReactDOM.unstable_batchedUpdates(function() {
       // Normally extractEvent enqueues a state restore, but we'll just always
       // do that since we we're by-passing it here.
-      ReactControlledComponent.enqueueStateRestore(node);
+      ReactControlledComponent.enqueueStateRestore(domNode);
 
       EventPluginHub.enqueueEvents(event);
       EventPluginHub.processEventQueue(true);
