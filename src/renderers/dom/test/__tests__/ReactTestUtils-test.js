@@ -234,7 +234,11 @@ describe('ReactTestUtils', () => {
         render() {
           return (
             <div>
-              <input type="text" ref="input" onChange={this.props.handleChange} />
+              <input
+                type="text"
+                ref="input"
+                onChange={this.props.handleChange}
+              />
             </div>
           );
         }
