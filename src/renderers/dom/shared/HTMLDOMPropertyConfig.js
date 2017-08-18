@@ -22,6 +22,9 @@ var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
 
 var HTMLDOMPropertyConfig = {
+  // When adding attributes to this list, be sure to also add them to
+  // the `possibleStandardNames` module to ensure casing and incorrect
+  // name warnings.
   Properties: {
     allowFullScreen: HAS_BOOLEAN_VALUE,
     // specifies target context for links with `preload` type
