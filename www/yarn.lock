@@ -3288,9 +3288,9 @@ gatsby-plugin-react-helmet@^1.0.2:
   dependencies:
     react-helmet "^5.1.3"
 
-gatsby-plugin-sharp@^1.3.0:
-  version "1.3.0"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-sharp/-/gatsby-plugin-sharp-1.3.0.tgz#c20421bdc80346ced11a79dd7b1bb4ae6c878019"
+gatsby-plugin-sharp@1.6.0:
+  version "1.6.0"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-sharp/-/gatsby-plugin-sharp-1.6.0.tgz#430f18acd7478088b4695b85939d38d48d6acf87"
   dependencies:
     async "^2.1.2"
     bluebird "^3.5.0"
@@ -3353,13 +3353,15 @@ gatsby-remark-smartypants@^1.4.2:
     retext-smartypants "^2.0.0"
     unist-util-visit "^1.1.1"
 
-gatsby-source-filesystem@^1.0.1:
-  version "1.0.1"
-  resolved "https://registry.yarnpkg.com/gatsby-source-filesystem/-/gatsby-source-filesystem-1.0.1.tgz#d7229fbbbdc895ef669a3101d6199df90c31e5e7"
+gatsby-source-filesystem@1.4.1:
+  version "1.4.1"
+  resolved "https://registry.yarnpkg.com/gatsby-source-filesystem/-/gatsby-source-filesystem-1.4.1.tgz#fe5cd2b6f73883883867ff24e17cda5cb7d1e29a"
   dependencies:
     babel-cli "^6.24.1"
     bluebird "^3.5.0"
     chokidar "^1.7.0"
+    md5-file "^3.1.1"
+    mime "^1.3.6"
     pretty-bytes "^4.0.2"
     slash "^1.0.0"
 
@@ -5376,7 +5378,7 @@ mime@1.3.4:
   version "1.3.4"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.3.4.tgz#115f9e3b6b3daf2959983cb38f149a2d40eb5d53"
 
-mime@1.3.x, mime@^1.3.4:
+mime@1.3.x, mime@^1.3.4, mime@^1.3.6:
   version "1.3.6"
   resolved "https://registry.yarnpkg.com/mime/-/mime-1.3.6.tgz#591d84d3653a6b0b4a3b9df8de5aa8108e72e5e0"
 
