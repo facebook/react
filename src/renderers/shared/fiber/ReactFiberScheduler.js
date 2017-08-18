@@ -52,6 +52,7 @@ var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
 var {createWorkInProgress} = require('ReactFiber');
+var {isRootBlocked} = require('ReactFiberRoot');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -266,10 +267,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function resetNextUnitOfWork() {
-    // Clear out roots with no more work on them, or if they have uncaught errors
+    // Clear out roots with no more work on them
     while (
       nextScheduledRoot !== null &&
-      nextScheduledRoot.current.expirationTime === NoWork
+      nextScheduledRoot.current.expirationTime === NoWork &&
+      nextScheduledRoot.completedAt === NoWork
     ) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
@@ -293,10 +295,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let earliestExpirationRoot = null;
     let earliestExpirationTime = NoWork;
     while (root !== null) {
+      let rootExpirationTime = shouldWorkOnRoot(root);
       if (
-        root.current.expirationTime !== NoWork &&
+        rootExpirationTime !== NoWork &&
         (earliestExpirationTime === NoWork ||
-          earliestExpirationTime > root.current.expirationTime)
+          earliestExpirationTime > rootExpirationTime)
       ) {
         earliestExpirationTime = root.current.expirationTime;
         earliestExpirationRoot = root;
@@ -313,10 +316,26 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      nextUnitOfWork = createWorkInProgress(
-        earliestExpirationRoot.current,
-        earliestExpirationTime,
-      );
+      if (earliestExpirationRoot.completedAt === nextRenderExpirationTime) {
+        // If the root is already complete, reuse the existing work-in-progress.
+        // TODO: This is a limited version of resuming that only applies to
+        // the root, to account for the pathological case where a completed
+        // root must be completely restarted before it can commit. Once we
+        // implement resuming for real, this special branch shouldn't
+        // be neccessary.
+        nextUnitOfWork = earliestExpirationRoot.current.alternate;
+        invariant(
+          nextUnitOfWork !== null,
+          'Expected a completed root to have a work-in-progress. This error ' +
+            'is likely caused by a bug in React. Please file an issue.',
+        );
+      } else {
+        earliestExpirationRoot.completedAt = NoWork;
+        nextUnitOfWork = createWorkInProgress(
+          earliestExpirationRoot.current,
+          earliestExpirationTime,
+        );
+      }
       if (earliestExpirationRoot !== nextRenderedTree) {
         // We've switched trees. Reset the nested update counter.
         nestedUpdateCount = 0;
@@ -329,6 +348,37 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextUnitOfWork = null;
     nextRenderedTree = null;
     return;
+  }
+
+  // Indicates whether the root should be worked on. Not the same as whether a
+  // root has work, because work could be blocked.
+  function shouldWorkOnRoot(root: FiberRoot): ExpirationTime {
+    const completedAt = root.completedAt;
+    const expirationTime = root.current.expirationTime;
+
+    if (expirationTime === NoWork) {
+      // There's no work in this tree.
+      return NoWork;
+    }
+
+    if (completedAt !== NoWork) {
+      // The root completed but was blocked from committing.
+
+      if (expirationTime < completedAt) {
+        // We have work that expires earlier than the completed root. Regardless
+        // of whether the root is blocked, we should work on it.
+        return expirationTime;
+      }
+
+      // There have been no higher priority updates since we completed the root.
+      // If it's still blocked, return NoWork, as if it has no more work. If it's
+      // no longer blocked, return the time at which it completed so that we
+      // can commit it.
+      const isBlocked = isRootBlocked(root, expirationTime);
+      return isBlocked ? NoWork : completedAt;
+    }
+
+    return expirationTime;
   }
 
   function commitAllHostEffects() {
@@ -455,6 +505,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'related to the return field. This error is likely caused by a bug ' +
         'in React. Please file an issue.',
     );
+
+    root.completedAt = NoWork;
 
     if (nextRenderExpirationTime <= mostRecentCurrentTime) {
       // Keep track of the number of iterations to prevent an infinite
@@ -712,7 +764,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // We've reached the root. Mark the root as pending commit. Depending
         // on how much time we have left, we'll either commit it now or in
         // the next frame.
-        pendingCommit = workInProgress;
+        const root = workInProgress.stateNode;
+        if (isRootBlocked(root, nextRenderExpirationTime)) {
+          root.completedAt = workInProgress.expirationTime = nextRenderExpirationTime;
+        } else {
+          pendingCommit = workInProgress;
+        }
         return null;
       }
     }
