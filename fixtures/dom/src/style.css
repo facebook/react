@@ -24,6 +24,9 @@ button {
   padding: 5px;
 }
 
+details {
+  margin: 1rem 0;
+}
 
 .header {
   background: #222;
@@ -211,4 +214,14 @@ li {
   margin: 0 -15px; /* opposite of .test-case padding */
   background-color: #f4f4f4;
   border-top: 1px solid #d9d9d9;
+}
+
+.error-info {
+  white-space: pre-wrap;
+  font-size: 12px;
+  max-height: 200px;
+  overflow: auto;
+  background: #eee;
+  padding: 0.5rem;
+  border-radius: 0.5rem;
 }

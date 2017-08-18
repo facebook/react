@@ -15,9 +15,10 @@ class ErrorBoundary extends React.Component {
     shouldThrow: false,
     didThrow: false,
     error: null,
+    info: null,
   };
-  componentDidCatch(error) {
-    this.setState({error, didThrow: true});
+  componentDidCatch(error, info) {
+    this.setState({error, info, didThrow: true});
   }
   triggerError = () => {
     this.setState({
@@ -26,11 +27,21 @@ class ErrorBoundary extends React.Component {
   };
   render() {
     if (this.state.didThrow) {
-      if (this.state.error) {
-        return <p>Captured an error: {this.state.error.message}</p>;
-      } else {
-        return <p>Captured an error: {'' + this.state.error}</p>;
-      }
+      const errorSummary = this.state.error
+        ? <p>Captured an error: {this.state.error.message}</p>
+        : <p>Captured an error: {'' + this.state.error}</p>;
+
+      return (
+        <div>
+          {errorSummary}
+          <details>
+            <summary>Error info</summary>
+            <pre className="error-info">
+              {JSON.stringify(this.state.info, null, 2)}
+            </pre>
+          </details>
+        </div>
+      );
     }
     if (this.state.shouldThrow) {
       return <BadRender doThrow={this.props.doThrow} />;
