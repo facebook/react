@@ -17,8 +17,9 @@ function getProvidesHeader(hasteFinalName) {
 
 function getHeader(filename, reactVersion) {
   return `/**
+ * ${filename}
  * React v${reactVersion}
- *
+ * 
  * Copyright 2013-present, Facebook, Inc.
  * All rights reserved.
  *
