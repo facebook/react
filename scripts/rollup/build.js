@@ -80,12 +80,14 @@ function getBanner(bundleType, hasteName, filename) {
     // UMDs are not wrapped in conditions.
     case UMD_DEV:
     case UMD_PROD:
-      return Header.getUMDHeader(filename, reactVersion);
+      return Header.getHeader(filename, reactVersion);
     // CommonJS DEV bundle is guarded to help weak dead code elimination.
     case NODE_DEV:
+      let banner = Header.getHeader(filename, reactVersion);
       // Wrap the contents of the if-DEV check with an IIFE.
       // Block-level function definitions can cause problems for strict mode.
-      return `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
+      banner += `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
+      return banner;
     case NODE_PROD:
       return '';
     // All FB and RN bundles need Haste headers.
