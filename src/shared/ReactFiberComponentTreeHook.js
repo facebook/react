@@ -27,7 +27,6 @@ import type {Fiber} from 'ReactFiber';
 
 export type StackFrame = {
   name: string | null,
-  ownerName: string | null,
   source: Source | null,
 };
 
@@ -38,19 +37,15 @@ function createStackFrame(fiber: Fiber): StackFrame {
     case ClassComponent:
     case HostComponent:
       const name = getComponentName(fiber);
-      const owner = fiber._debugOwner;
-      const ownerName = owner != null ? getComponentName(owner) : null;
       const source = fiber._debugSource;
 
       return {
         name,
-        ownerName,
         source: source != null ? source : null,
       };
     default:
       return {
         name: null,
-        ownerName: null,
         source: null,
       };
   }
