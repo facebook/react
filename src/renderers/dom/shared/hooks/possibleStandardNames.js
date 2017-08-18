@@ -9,6 +9,9 @@
  * @providesModule possibleStandardNames
  */
 
+// When adding attributes to the HTML or SVG whitelist, be sure to
+// also add them to this module to ensure casing and incorrect name
+// warnings.
 var possibleStandardNames = {
   // HTML
   accept: 'accept',
