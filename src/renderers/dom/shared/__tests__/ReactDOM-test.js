@@ -18,6 +18,7 @@ var ReactTestUtils = require('react-dom/test-utils');
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
   // supports real submit events.
+  // TODO: also add tests for the events onChange, onInput, and onReset
   /*
   it('should bubble onSubmit', function() {
     var count = 0;

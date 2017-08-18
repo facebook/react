@@ -3,8 +3,10 @@ class TodoApp extends React.Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
+    this.handleReset = this.handleReset.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.state = {items: [], text: ''};
+    this.originalValues = {items: [], text: ''};
+    this.state = this.originalValues;
   }
 
   render() {
@@ -12,9 +14,10 @@ class TodoApp extends React.Component {
       <div>
         <h3>TODO</h3>
         <TodoList items={this.state.items} />
-        <form onSubmit={this.handleSubmit}>
+        <form onSubmit={this.handleSubmit} onReset={this.handleReset}>
           <input onChange={this.handleChange} value={this.state.text} />
-          <button>{'Add #' + (this.state.items.length + 1)}</button>
+          <button>{'Add #' + (this.state.items.length + 1)}</button><br />
+          <button type="reset">Reset</button>
         </form>
       </div>
     );
@@ -22,6 +25,13 @@ class TodoApp extends React.Component {
 
   handleChange(e) {
     this.setState({text: e.target.value});
+  }
+
+  handleReset(e) {
+    e.preventDefault();
+    this.setState(() => (
+      this.originalValues
+    ));
   }
 
   handleSubmit(e) {
