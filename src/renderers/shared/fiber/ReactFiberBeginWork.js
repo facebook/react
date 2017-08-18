@@ -330,7 +330,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostRoot(current, workInProgress, renderExpirationTime) {
+    const root = (workInProgress.stateNode: FiberRoot);
     pushHostRootContext(workInProgress);
+    if (root.completedAt === renderExpirationTime) {
+      // The root is already complete. Bail out and commit.
+      // TODO: This is a limited version of resuming that only applies to
+      // the root, to account for the pathological case where a completed
+      // root must be completely restarted before it can commit. Once we
+      // implement resuming for real, this special branch shouldn't
+      // be neccessary.
+      return null;
+    }
+
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
