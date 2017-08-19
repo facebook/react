@@ -21,7 +21,6 @@ var ReactDOMFiberOption = require('ReactDOMFiberOption');
 var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
 var assertValidProps = require('assertValidProps');
 var emptyFunction = require('fbjs/lib/emptyFunction');
@@ -148,24 +147,6 @@ if (__DEV__) {
   };
 }
 
-function ensureListeningTo(rootContainerElement, registrationName) {
-  var isDocumentOrFragment =
-    rootContainerElement.nodeType === DOCUMENT_NODE ||
-    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
-  var doc = isDocumentOrFragment
-    ? rootContainerElement
-    : rootContainerElement.ownerDocument;
-  listenTo(registrationName, doc);
-}
-
-function getOwnerDocumentFromRootContainer(
-  rootContainerElement: Element | Document,
-): Document {
-  return rootContainerElement.nodeType === DOCUMENT_NODE
-    ? (rootContainerElement: any)
-    : rootContainerElement.ownerDocument;
-}
-
 // There are so many media events, it makes sense to just
 // maintain a list rather than create a `trapBubbledEvent` for each
 var mediaEvents = {
@@ -209,7 +190,7 @@ function trapClickOnNonInteractiveElement(node: HTMLElement) {
 
 function setInitialDOMProperties(
   domElement: Element,
-  rootContainerElement: Element | Document,
+  ownerDocument: Document,
   nextProps: Object,
   isCustomComponentTag: boolean,
 ): void {
@@ -246,7 +227,7 @@ function setInitialDOMProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        ensureListeningTo(rootContainerElement, propKey);
+        listenTo(propKey, ownerDocument);
       }
     } else if (isCustomComponentTag) {
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
@@ -300,14 +281,12 @@ var ReactDOMFiberComponent = {
   createElement(
     type: *,
     props: Object,
-    rootContainerElement: Element | Document,
+    ownerDocument: Document,
     parentNamespace: string,
   ): Element {
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
-    var ownerDocument: Document = getOwnerDocumentFromRootContainer(
-      rootContainerElement,
-    );
+
     var domElement: Element;
     var namespaceURI = parentNamespace;
     if (namespaceURI === HTML_NAMESPACE) {
@@ -370,17 +349,15 @@ var ReactDOMFiberComponent = {
     return domElement;
   },
 
-  createTextNode(text: string, rootContainerElement: Element | Document): Text {
-    return getOwnerDocumentFromRootContainer(
-      rootContainerElement,
-    ).createTextNode(text);
+  createTextNode(text: string, ownerDocument: Document): Text {
+    return ownerDocument.createTextNode(text);
   },
 
   setInitialProperties(
     domElement: Element,
     tag: string,
     rawProps: Object,
-    rootContainerElement: Element | Document,
+    ownerDocument: Document,
   ): void {
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
@@ -475,7 +452,7 @@ var ReactDOMFiberComponent = {
         );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
+        listenTo('onChange', ownerDocument);
         break;
       case 'option':
         ReactDOMFiberOption.validateProps(domElement, rawProps);
@@ -491,7 +468,7 @@ var ReactDOMFiberComponent = {
         );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
+        listenTo('onChange', ownerDocument);
         break;
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
@@ -503,7 +480,7 @@ var ReactDOMFiberComponent = {
         );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
+        listenTo('onChange', ownerDocument);
         break;
       default:
         props = rawProps;
@@ -513,7 +490,7 @@ var ReactDOMFiberComponent = {
 
     setInitialDOMProperties(
       domElement,
-      rootContainerElement,
+      ownerDocument,
       props,
       isCustomComponentTag,
     );
@@ -552,7 +529,7 @@ var ReactDOMFiberComponent = {
     tag: string,
     lastRawProps: Object,
     nextRawProps: Object,
-    rootContainerElement: Element | Document,
+    ownerDocument: Document,
   ): null | Array<mixed> {
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, nextRawProps);
@@ -724,7 +701,7 @@ var ReactDOMFiberComponent = {
           if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
           }
-          ensureListeningTo(rootContainerElement, propKey);
+          listenTo(propKey, ownerDocument);
         }
         if (!updatePayload && lastProp !== nextProp) {
           // This is a special case. If any listener updates we need to ensure
@@ -791,7 +768,7 @@ var ReactDOMFiberComponent = {
     tag: string,
     rawProps: Object,
     parentNamespace: string,
-    rootContainerElement: Element | Document,
+    ownerDocument: Document,
   ): null | Array<mixed> {
     if (__DEV__) {
       var isCustomComponentTag = isCustomComponent(tag, rawProps);
@@ -878,7 +855,7 @@ var ReactDOMFiberComponent = {
         );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
+        listenTo('onChange', ownerDocument);
         break;
       case 'option':
         ReactDOMFiberOption.validateProps(domElement, rawProps);
@@ -892,7 +869,7 @@ var ReactDOMFiberComponent = {
         );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
+        listenTo('onChange', ownerDocument);
         break;
       case 'textarea':
         ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
@@ -903,7 +880,7 @@ var ReactDOMFiberComponent = {
         );
         // For controlled components we always need to ensure we're listening
         // to onChange. Even if there is no listener.
-        ensureListeningTo(rootContainerElement, 'onChange');
+        listenTo('onChange', ownerDocument);
         break;
     }
 
@@ -970,7 +947,7 @@ var ReactDOMFiberComponent = {
           if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
           }
-          ensureListeningTo(rootContainerElement, propKey);
+          listenTo(propKey, ownerDocument);
         }
       } else if (__DEV__) {
         // Validate that the properties correspond to their expected values.
