@@ -70,6 +70,22 @@ class TextInputFixtures extends React.Component {
           <InputTestCase type="url" defaultValue="" />
         </TestCase>
 
+        <TestCase title="Inputs with an id of `nodeName`">
+          <TestCase.Steps>
+            <li>Type any character</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            There should be no errors in the console.
+          </TestCase.ExpectedResult>
+
+          <form className="control-box">
+            <fieldset>
+              <input id="nodeName" />
+            </fieldset>
+          </form>
+        </TestCase>
+
         <TestCase title="All inputs" description="General test of all inputs">
           <InputTestCase type="text" defaultValue="Text" />
           <InputTestCase type="email" defaultValue="user@example.com" />

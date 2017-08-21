@@ -43,10 +43,18 @@ var eventTypes = {
   },
 };
 
+var nodeNameGetter = Object.getOwnPropertyDescriptor(Node.prototype, 'nodeName')
+  .get;
+
 function shouldUseChangeEvent(elem) {
-  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+  if (elem === window) {
+    return false;
+  }
+
+  var nodeName = nodeNameGetter.call(elem);
+
   return (
-    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
+    nodeName === 'SELECT' || (nodeName === 'INPUT' && elem.type === 'FILE')
   );
 }
 
