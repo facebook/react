@@ -813,7 +813,7 @@ const foundDevTools = injectInternals({
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
-  id: 'react-dom',
+  rendererPackageName: 'react-dom',
 });
 
 if (__DEV__) {

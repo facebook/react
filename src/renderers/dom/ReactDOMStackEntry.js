@@ -79,7 +79,7 @@ if (
     },
     Mount: ReactMount,
     Reconciler: ReactReconciler,
-    id: 'react-dom',
+    rendererPackageName: 'react-dom',
   });
 }
 
