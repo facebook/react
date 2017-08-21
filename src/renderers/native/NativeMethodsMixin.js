@@ -183,11 +183,16 @@ function setNativePropsFiber(componentOrHandle: any, nativeProps: Object) {
     viewConfig.validAttributes,
   );
 
-  UIManager.updateView(
-    maybeInstance._nativeTag,
-    viewConfig.uiViewClassName,
-    updatePayload,
-  );
+  // Avoid the overhead of bridge calls if there's no update.
+  // This is an expensive no-op for Android, and causes an unnecessary
+  // view invalidation for certain components (eg RCTTextInput) on iOS.
+  if (updatePayload != null) {
+    UIManager.updateView(
+      maybeInstance._nativeTag,
+      viewConfig.uiViewClassName,
+      updatePayload,
+    );
+  }
 }
 
 // TODO (bvaughn) Remove this once ReactNativeStack is dropped.
