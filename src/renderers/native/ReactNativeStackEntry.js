@@ -100,6 +100,7 @@ if (
     Mount: ReactNativeMount,
     Reconciler: require('ReactReconciler'),
     getInspectorDataForViewTag: ReactNativeStackInspector.getInspectorDataForViewTag,
+    rendererPackageName: 'react-native',
   });
 }
 
