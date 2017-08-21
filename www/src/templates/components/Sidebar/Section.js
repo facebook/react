@@ -60,13 +60,13 @@ const Section = ({isActive, onClick, section}) => (
       <ul css={{marginBottom: 10}}>
         {section.items.map(item => (
           <li key={item.id}>
-            {CreateLink(item)}
+            {CreateLink(section, item)}
 
             {item.subitems &&
               <ul css={{marginLeft: 20}}>
                 {item.subitems.map(subitem => (
                   <li key={subitem.id}>
-                    {CreateLink(subitem)}
+                    {CreateLink(section, subitem)}
                   </li>
                 ))}
               </ul>}
@@ -101,7 +101,7 @@ const linkCss = {
   },
 };
 
-const CreateLink = item => {
+const CreateLink = (section, item) => {
   if (item.id.includes('.html')) {
     return (
       <Link css={[linkCss, isItemActive(item) && activeLinkCss]} to={item.id}>
@@ -141,7 +141,7 @@ const CreateLink = item => {
     return (
       <Link
         css={[linkCss, isItemActive(item) && activeLinkCss]}
-        to={slugify(item.id)}>
+        to={slugify(item.id, section.directory)}>
         {item.title}
       </Link>
     );

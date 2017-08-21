@@ -13,4 +13,8 @@
 
 import slugify from 'underscore.string/slugify';
 
-export default string => slugify(string) + '.html';
+export default (string, directory) => {
+  const filename = slugify(string) + '.html';
+
+  return directory ? `../${directory}/${filename}` : filename;
+};

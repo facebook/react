@@ -72,6 +72,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
     } else if (
       slug.includes('blog/') ||
       slug.includes('community/') ||
+      slug.includes('contributing/') ||
       slug.includes('docs/') ||
       slug.includes('tutorial/')
     ) {
@@ -80,7 +81,10 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
         template = blogTemplate;
       } else if (slug.includes('community/')) {
         template = communityTemplate;
-      } else if (slug.includes('docs/')) {
+      } else if (
+        slug.includes('contributing/') ||
+        slug.includes('docs/')
+      ) {
         template = docsTemplate;
       } else if (slug.includes('tutorial/')) {
         template = tutorialTemplate;
