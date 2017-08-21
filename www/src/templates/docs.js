@@ -15,7 +15,20 @@ import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
 
-import sectionList from '../../../docs/_data/nav_docs.yml';
+import sectionListA from '../../../docs/_data/nav_docs.yml';
+import sectionListB from '../../../docs/_data/nav_contributing.yml';
+
+const sectionList = sectionListA
+  .map(item => {
+    item.directory = 'docs';
+    return item;
+  })
+  .concat(
+    sectionListB.map(item => {
+      item.directory = 'contributing';
+      return item;
+    }),
+  );
 
 const Docs = ({data, location}) => (
   <MarkdownPage
