@@ -50,8 +50,7 @@ const MarkdownPage = ({
         <Container>
           <StickyContainer
             css={{
-              display: 'flex',
-              overflow: 'auto',
+              display: 'flex'
             }}>
             <Flex type="article" direction="column" grow="1" halign="stretch">
               <MarkdownHeader
