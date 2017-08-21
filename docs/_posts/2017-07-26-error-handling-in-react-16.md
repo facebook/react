@@ -1,6 +1,6 @@
 ---
 title: "Error Handling in React 16"
-author: gaearon
+author: [gaearon]
 ---
 
 As React 16 release is getting closer, we would like to announce a few changes to how React handles JavaScript errors inside components. These changes are included in React 16 beta versions, and will be a part of React 16.
