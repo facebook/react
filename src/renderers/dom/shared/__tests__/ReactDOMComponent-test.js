@@ -2080,6 +2080,18 @@ describe('ReactDOMComponent', () => {
         'Warning: Invalid prop `whatever` on <div> tag.',
       );
     });
+
+    it('warns on bad casing of known HTML attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div SiZe="30" />);
+
+      expect(el.getAttribute('size')).toBe('30');
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid DOM property `SiZe`. Did you mean `size`?',
+      );
+    });
   });
 
   describe('Object stringification', function() {
