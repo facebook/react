@@ -21,107 +21,90 @@ describe('ReactDOM unknown attribute', () => {
     ReactDOM = require('react-dom');
   });
 
+  function testUnknownAttributeRemoval(givenValue) {
+    var el = document.createElement('div');
+    ReactDOM.render(<div unknown="something" />, el);
+    expect(el.firstChild.getAttribute('unknown')).toBe('something');
+    ReactDOM.render(<div unknown={givenValue} />, el);
+    expect(el.firstChild.hasAttribute('unknown')).toBe(false);
+  }
+
+  function testUnknownAttributeAssignment(givenValue, expectedDOMValue) {
+    var el = document.createElement('div');
+    ReactDOM.render(<div unknown="something" />, el);
+    expect(el.firstChild.getAttribute('unknown')).toBe('something');
+    ReactDOM.render(<div unknown={givenValue} />, el);
+    expect(el.firstChild.getAttribute('unknown')).toBe(expectedDOMValue);
+  }
+
   describe('unknown attributes', () => {
     it('removes values null and undefined', () => {
-      var el = document.createElement('div');
-      spyOn(console, 'error');
-
-      function testRemove(value) {
-        ReactDOM.render(<div unknown="something" />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe('something');
-        expectDev(console.error.calls.count(0)).toBe(0);
-        ReactDOM.render(<div unknown={value} />, el);
-        expect(el.firstChild.hasAttribute('unknown')).toBe(false);
-        expectDev(console.error.calls.count(0)).toBe(0);
-        console.error.calls.reset();
-      }
-
-      testRemove(null);
-      testRemove(undefined);
+      testUnknownAttributeRemoval(null);
+      testUnknownAttributeRemoval(undefined);
     });
 
     it('removes unknown attributes that were rendered but are now missing', () => {
       var el = document.createElement('div');
-      spyOn(console, 'error');
       ReactDOM.render(<div unknown="something" />, el);
       expect(el.firstChild.getAttribute('unknown')).toBe('something');
-      expectDev(console.error.calls.count(0)).toBe(0);
       ReactDOM.render(<div />, el);
       expect(el.firstChild.hasAttribute('unknown')).toBe(false);
-      expectDev(console.error.calls.count(0)).toBe(0);
     });
 
     it('passes through strings', () => {
-      var el = document.createElement('div');
-      spyOn(console, 'error');
-      ReactDOM.render(<div unknown="something" />, el);
-      expect(el.firstChild.getAttribute('unknown')).toBe('something');
-      expectDev(console.error.calls.count(0)).toBe(0);
-      ReactDOM.render(<div />, el);
-      expect(el.firstChild.hasAttribute('unknown')).toBe(false);
-      expectDev(console.error.calls.count(0)).toBe(0);
+      testUnknownAttributeAssignment('a string', 'a string');
     });
 
     it('coerces numbers and booleans to strings', () => {
-      var el = document.createElement('div');
-      spyOn(console, 'error');
-
-      function testCoerceToString(value) {
-        ReactDOM.render(<div unknown="something" />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe('something');
-        expectDev(console.error.calls.count(0)).toBe(0);
-        ReactDOM.render(<div unknown={value} />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
-        expectDev(console.error.calls.count(0)).toBe(0);
-        console.error.calls.reset();
-      }
-
-      testCoerceToString(0);
-      testCoerceToString(-1);
-      testCoerceToString(42);
-      testCoerceToString(9000.99999);
-      testCoerceToString(true);
-      testCoerceToString(false);
+      testUnknownAttributeAssignment(0, '0');
+      testUnknownAttributeAssignment(-1, '-1');
+      testUnknownAttributeAssignment(42, '42');
+      testUnknownAttributeAssignment(9000.99, '9000.99');
+      testUnknownAttributeAssignment(true, 'true');
+      testUnknownAttributeAssignment(false, 'false');
     });
 
-    it('coerces NaN and object to strings **and warns**', () => {
-      var el = document.createElement('div');
+    it('coerces NaN to strings **and warns**', () => {
       spyOn(console, 'error');
 
-      function testCoerceToString(value) {
-        ReactDOM.render(<div unknown="something" />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe('something');
-        expectDev(console.error.calls.count(0)).toBe(0);
-        ReactDOM.render(<div unknown={value} />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
-        expectDev(console.error.calls.count(0)).toBe(1);
-        // TODO: add specific expectations about what the warning says
-        // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
-        console.error.calls.reset();
-      }
-
-      testCoerceToString(NaN);
-      testCoerceToString({hello: 'world'});
+      testUnknownAttributeAssignment(NaN, 'NaN');
+      // TODO: add specific expectations about what the warning says
+      // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+      expectDev(console.error.calls.count()).toBe(1);
     });
 
-    it('removes symbols and functions **and warns**', () => {
-      var el = document.createElement('div');
+    it('coerces objects to strings **and warns**', () => {
       spyOn(console, 'error');
 
-      function testCoerceToString(value) {
-        ReactDOM.render(<div unknown="something" />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe('something');
-        expectDev(console.error.calls.count(0)).toBe(0);
-        ReactDOM.render(<div unknown={value} />, el);
-        expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
-        expectDev(console.error.calls.count(0)).toBe(1);
-        // TODO: add specific expectations about what the warning says
-        // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
-        console.error.calls.reset();
-      }
+      const lol = {
+        toString() {
+          return 'lol';
+        },
+      };
 
-      testCoerceToString(Symbol('foo'));
-      testCoerceToString(() => 'foo');
+      testUnknownAttributeAssignment({hello: 'world'}, '[object Object]');
+      testUnknownAttributeAssignment(lol, 'lol');
+      // TODO: add specific expectations about what the warning says
+      // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+      expectDev(console.error.calls.count()).toBe(1);
+    });
+
+    it('removes symbols **and warns**', () => {
+      spyOn(console, 'error');
+
+      testUnknownAttributeRemoval(Symbol('foo'));
+      // TODO: add specific expectations about what the warning says
+      // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+      expectDev(console.error.calls.count()).toBe(1);
+    });
+
+    it('removes functions **and warns**', () => {
+      spyOn(console, 'error');
+
+      testUnknownAttributeRemoval(function someFunction() {});
+      // TODO: add specific expectations about what the warning says
+      // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+      expectDev(console.error.calls.count()).toBe(1);
     });
   });
 });
