@@ -62,8 +62,8 @@ describe('ReactNative', () => {
     expect(UIManager.updateView).toBeCalledWith(2, 'View', {foo: 'bar'});
   });
 
-  it('should not call UIManager.updateView unless something has changed', () => {
-    var Text = createReactNativeComponentClass({
+  it('should not call UIManager.updateView after render for properties that have not changed', () => {
+    const Text = createReactNativeComponentClass({
       validAttributes: {foo: true},
       uiViewClassName: 'Text',
     });
@@ -98,6 +98,23 @@ describe('ReactNative', () => {
     // Call updateView for both changed text and properties.
     ReactNative.render(<Hack><Text foo="c">3</Text></Hack>, 11);
     expect(UIManager.updateView.mock.calls.length).toBe(4);
+  });
+
+  it('should not call UIManager.updateView from setNativeProps for properties that have not changed', () => {
+    const View = createReactNativeComponentClass({
+      validAttributes: {foo: true},
+      uiViewClassName: 'View',
+    });
+
+    let viewRef;
+    ReactNative.render(<View foo="bar" ref={ref => {viewRef = ref}} />, 11);
+    expect(UIManager.updateView).not.toBeCalled();
+
+    viewRef.setNativeProps({});
+    expect(UIManager.updateView).not.toBeCalled();
+
+    viewRef.setNativeProps({foo: "baz"});
+    expect(UIManager.updateView.mock.calls.length).toBe(1);
   });
 
   it('returns the correct instance and calls it in the callback', () => {

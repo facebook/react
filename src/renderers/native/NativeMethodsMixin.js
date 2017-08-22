@@ -243,7 +243,9 @@ function setNativePropsStack(componentOrHandle: any, nativeProps: Object) {
     viewConfig.validAttributes,
   );
 
-  UIManager.updateView(tag, viewConfig.uiViewClassName, updatePayload);
+  if (updatePayload) {
+    UIManager.updateView(tag, viewConfig.uiViewClassName, updatePayload);
+  }
 }
 
 // Switching based on fiber vs stack to avoid a lot of inline checks at runtime.
