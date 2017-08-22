@@ -19,7 +19,7 @@ var warning = require('fbjs/lib/warning');
 import type {Transaction} from 'Transaction';
 
 function warnNoop(
-  publicInstance: ReactComponent<any, any, any>,
+  publicInstance: React$Component<any, any>,
   callerName: string,
 ) {
   if (__DEV__) {
@@ -58,7 +58,7 @@ class ReactServerUpdateQueue {
    * @protected
    * @final
    */
-  isMounted(publicInstance: ReactComponent<any, any, any>): boolean {
+  isMounted(publicInstance: React$Component<any, any>): boolean {
     return false;
   }
 
@@ -78,7 +78,7 @@ class ReactServerUpdateQueue {
    * @internal
    */
   enqueueForceUpdate(
-    publicInstance: ReactComponent<any, any, any>,
+    publicInstance: React$Component<any, any>,
     callback?: Function,
     callerName?: string,
   ) {
@@ -103,7 +103,7 @@ class ReactServerUpdateQueue {
    * @internal
    */
   enqueueReplaceState(
-    publicInstance: ReactComponent<any, any, any>,
+    publicInstance: React$Component<any, any>,
     completeState: Object | Function,
     callback?: Function,
     callerName?: string,
@@ -131,7 +131,7 @@ class ReactServerUpdateQueue {
    * @internal
    */
   enqueueSetState(
-    publicInstance: ReactComponent<any, any, any>,
+    publicInstance: React$Component<any, any>,
     partialState: Object | Function,
     callback?: Function,
     callerName?: string,

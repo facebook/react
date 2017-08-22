@@ -13,16 +13,16 @@
 'use strict';
 
 export type ReactNode =
-  | ReactElement<any>
+  | React$Element<any>
   | ReactCoroutine
   | ReactYield
   | ReactPortal
   | ReactText
   | ReactFragment;
 
-export type ReactFragment = ReactEmpty | Iterable<ReactNode>;
+export type ReactFragment = ReactEmpty | Iterable<React$Node>;
 
-export type ReactNodeList = ReactEmpty | ReactNode;
+export type ReactNodeList = ReactEmpty | React$Node;
 
 export type ReactText = string | number;
 

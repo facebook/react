@@ -111,7 +111,7 @@ if (__DEV__) {
     stopCommitLifeCyclesTimer,
   } = require('ReactDebugFiberPerf');
 
-  var warnAboutUpdateOnUnmounted = function(instance: ReactClass<any>) {
+  var warnAboutUpdateOnUnmounted = function(instance: React$ComponentType<any>) {
     const ctor = instance.constructor;
     warning(
       false,
@@ -123,7 +123,7 @@ if (__DEV__) {
     );
   };
 
-  var warnAboutInvalidUpdates = function(instance: ReactClass<any>) {
+  var warnAboutInvalidUpdates = function(instance: React$ComponentType<any>) {
     switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
         warning(

@@ -71,7 +71,7 @@ exports.isFiberMounted = function(fiber: Fiber): boolean {
 };
 
 exports.isMounted = function(
-  component: ReactComponent<any, any, any>,
+  component: React$Component<any, any>,
 ): boolean {
   if (__DEV__) {
     const owner = (ReactCurrentOwner.current: any);

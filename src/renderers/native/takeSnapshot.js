@@ -33,7 +33,7 @@ const findNumericNodeHandle = require('findNumericNodeHandle');
  * @platform ios
  */
 function takeSnapshot(
-  view?: 'window' | ReactElement<any> | number,
+  view?: 'window' | React$Element<any> | number,
   options?: {
     width?: number,
     height?: number,
