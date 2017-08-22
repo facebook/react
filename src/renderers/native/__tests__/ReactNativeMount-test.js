@@ -106,15 +106,33 @@ describe('ReactNative', () => {
       uiViewClassName: 'View',
     });
 
-    let viewRef;
-    ReactNative.render(<View foo="bar" ref={ref => {viewRef = ref}} />, 11);
-    expect(UIManager.updateView).not.toBeCalled();
+    class Subclass extends ReactNative.NativeComponent {
+      render() {
+        return <View />;
+      }
+    }
 
-    viewRef.setNativeProps({});
-    expect(UIManager.updateView).not.toBeCalled();
+    [View, Subclass].forEach(Component => {
+      UIManager.updateView.mockReset();
 
-    viewRef.setNativeProps({foo: "baz"});
-    expect(UIManager.updateView.mock.calls.length).toBe(1);
+      let viewRef;
+      ReactNative.render(
+        <Component
+          foo="bar"
+          ref={ref => {
+            viewRef = ref;
+          }}
+        />,
+        11,
+      );
+      expect(UIManager.updateView).not.toBeCalled();
+
+      viewRef.setNativeProps({});
+      expect(UIManager.updateView).not.toBeCalled();
+
+      viewRef.setNativeProps({foo: 'baz'});
+      expect(UIManager.updateView.mock.calls.length).toBe(1);
+    });
   });
 
   it('returns the correct instance and calls it in the callback', () => {
