@@ -6,7 +6,7 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactNativeFiberEntry
+ * @providesModule ReactNativeEntry
  * @flow
  */
 
@@ -22,7 +22,7 @@ const ReactNativeFiberInspector = require('ReactNativeFiberInspector');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = require('findNumericNodeHandleFiber');
+const findNumericNodeHandle = require('findNumericNodeHandle');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 

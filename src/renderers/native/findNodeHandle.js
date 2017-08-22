@@ -13,7 +13,6 @@
 'use strict';
 
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
@@ -56,11 +55,6 @@ import type {ReactInstance} from 'ReactInstanceType';
  * nodeHandle       N/A              rootNodeID             tag
  */
 
-// Rollup will strip the ReactNativeFiberRenderer from the Stack build.
-const injectedFindNode = ReactNativeFeatureFlags.useFiber
-  ? (fiber: Fiber) => ReactNativeFiberRenderer.findHostInstance(fiber)
-  : instance => instance;
-
 // TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
 // eg findInternalHostInstance. This will reduce the likelihood of someone
 // accidentally deep-requiring this version.
@@ -94,18 +88,16 @@ function findNodeHandle(componentOrHandle: any): any {
 
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
-  var internalInstance = ReactInstanceMap.get(component);
+  var internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return injectedFindNode(internalInstance);
+    return ReactNativeFiberRenderer.findHostInstance(internalInstance);
   } else {
     if (component) {
       return component;
     } else {
       invariant(
         // Native
-        (typeof component === 'object' &&
-          ('_rootNodeID' in component || // TODO (bvaughn) Clean up once Stack is deprecated
-            '_nativeTag' in component)) ||
+        (typeof component === 'object' && '_nativeTag' in component) ||
           // Composite
           (component.render != null && typeof component.render === 'function'),
         'findNodeHandle(...): Argument is not a component ' +
