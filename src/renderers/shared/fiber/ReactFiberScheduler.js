@@ -111,7 +111,9 @@ if (__DEV__) {
     stopCommitLifeCyclesTimer,
   } = require('ReactDebugFiberPerf');
 
-  var warnAboutUpdateOnUnmounted = function(instance: React$ComponentType<any>) {
+  var warnAboutUpdateOnUnmounted = function(
+    instance: React$ComponentType<any>,
+  ) {
     const ctor = instance.constructor;
     warning(
       false,
