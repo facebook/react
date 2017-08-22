@@ -11,7 +11,7 @@
 
 'use strict';
 
-describe('ReactDOMAttribute', () => {
+describe('ReactDOM unknown attribute', () => {
   var React;
   var ReactDOM;
 
@@ -24,12 +24,16 @@ describe('ReactDOMAttribute', () => {
   describe('unknown attributes', () => {
     it('removes unknown attributes with values null and undefined', () => {
       var el = document.createElement('div');
+      spyOn(console, 'error');
 
       function testRemove(value) {
         ReactDOM.render(<div unknown="something" />, el);
         expect(el.firstChild.getAttribute('unknown')).toBe('something');
+        expectDev(console.error.calls.count(0)).toBe(0);
         ReactDOM.render(<div unknown={value} />, el);
         expect(el.firstChild.hasAttribute('unknown')).toBe(false);
+        expectDev(console.error.calls.count(0)).toBe(0);
+        console.error.calls.reset();
       }
 
       testRemove(null);
@@ -38,28 +42,38 @@ describe('ReactDOMAttribute', () => {
 
     it('removes unknown attributes that were rendered but are now missing', () => {
       var el = document.createElement('div');
+      spyOn(console, 'error');
       ReactDOM.render(<div unknown="something" />, el);
       expect(el.firstChild.getAttribute('unknown')).toBe('something');
+      expectDev(console.error.calls.count(0)).toBe(0);
       ReactDOM.render(<div />, el);
       expect(el.firstChild.hasAttribute('unknown')).toBe(false);
+      expectDev(console.error.calls.count(0)).toBe(0);
     });
 
     it('passes through strings to unknown attributes', () => {
       var el = document.createElement('div');
+      spyOn(console, 'error');
       ReactDOM.render(<div unknown="something" />, el);
       expect(el.firstChild.getAttribute('unknown')).toBe('something');
+      expectDev(console.error.calls.count(0)).toBe(0);
       ReactDOM.render(<div />, el);
       expect(el.firstChild.hasAttribute('unknown')).toBe(false);
+      expectDev(console.error.calls.count(0)).toBe(0);
     });
 
     it('coerces unknown attributes to strings with numbers and booleans', () => {
       var el = document.createElement('div');
+      spyOn(console, 'error');
 
       function testCoerceToString(value) {
         ReactDOM.render(<div unknown="something" />, el);
         expect(el.firstChild.getAttribute('unknown')).toBe('something');
+        expectDev(console.error.calls.count(0)).toBe(0);
         ReactDOM.render(<div unknown={value} />, el);
         expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
+        expectDev(console.error.calls.count(0)).toBe(0);
+        console.error.calls.reset();
       }
 
       testCoerceToString(0);
