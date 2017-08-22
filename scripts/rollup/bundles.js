@@ -285,11 +285,6 @@ const bundles = [
       'src/shared/**/*.js',
     ],
     useFiber: true,
-    modulesToStub: [
-      'createReactNativeComponentClassStack',
-      'findNumericNodeHandleStack',
-      'ReactNativeStack',
-    ],
   },
 
   /******* React Test Renderer *******/
