@@ -22,7 +22,7 @@ describe('ReactDOM unknown attribute', () => {
   });
 
   describe('unknown attributes', () => {
-    it('removes unknown attributes with values null and undefined', () => {
+    it('removes values null and undefined', () => {
       var el = document.createElement('div');
       spyOn(console, 'error');
 
@@ -51,7 +51,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(console.error.calls.count(0)).toBe(0);
     });
 
-    it('passes through strings to unknown attributes', () => {
+    it('passes through strings', () => {
       var el = document.createElement('div');
       spyOn(console, 'error');
       ReactDOM.render(<div unknown="something" />, el);
@@ -62,7 +62,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(console.error.calls.count(0)).toBe(0);
     });
 
-    it('coerces unknown attributes to strings with numbers and booleans', () => {
+    it('coerces numbers and booleans to strings', () => {
       var el = document.createElement('div');
       spyOn(console, 'error');
 
@@ -80,46 +80,48 @@ describe('ReactDOM unknown attribute', () => {
       testCoerceToString(-1);
       testCoerceToString(42);
       testCoerceToString(9000.99999);
-      // TODO: either change what we expect here or update the implementation
-      // so that these pass -
-      //
-      // testCoerceToString(true);
-      // testCoerceToString(false);
+      testCoerceToString(true);
+      testCoerceToString(false);
     });
 
-    // TODO: get this test passing
-    xit(
-      'coerces unknown attributes to strings **and warns** with NaN, symbols, functions, and objects',
-      () => {
-        var el = document.createElement('div');
-        spyOn(console, 'error');
+    it('coerces NaN and object to strings **and warns**', () => {
+      var el = document.createElement('div');
+      spyOn(console, 'error');
 
-        function testCoerceToString(value) {
-          ReactDOM.render(<div unknown="something" />, el);
-          expect(el.firstChild.getAttribute('unknown')).toBe('something');
-          expectDev(console.error.calls.count(0)).toBe(0);
-          ReactDOM.render(<div unknown={value} />, el);
-          expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
-          expectDev(console.error.calls.count(0)).toBe(1);
-          // TODO: add specific expectations about what the warning says
-          // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
-          console.error.calls.reset();
-        }
+      function testCoerceToString(value) {
+        ReactDOM.render(<div unknown="something" />, el);
+        expect(el.firstChild.getAttribute('unknown')).toBe('something');
+        expectDev(console.error.calls.count(0)).toBe(0);
+        ReactDOM.render(<div unknown={value} />, el);
+        expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
+        expectDev(console.error.calls.count(0)).toBe(1);
+        // TODO: add specific expectations about what the warning says
+        // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+        console.error.calls.reset();
+      }
 
-        // TODO: this does not warn. We think it should.
-        testCoerceToString(NaN);
+      testCoerceToString(NaN);
+      testCoerceToString({hello: 'world'});
+    });
 
-        // TODO: either change what we expect or change our implementation
-        // this throws "TypeError: Cannot convert a Symbol value to a string"
-        // testCoerceToString(Symbol('foo'));
+    it('removes symbols and functions **and warns**', () => {
+      var el = document.createElement('div');
+      spyOn(console, 'error');
 
-        // TODO: either change what we expect or change our implementation
-        // this does not set it to the stringified function.
-        testCoerceToString(() => 'foo');
+      function testCoerceToString(value) {
+        ReactDOM.render(<div unknown="something" />, el);
+        expect(el.firstChild.getAttribute('unknown')).toBe('something');
+        expectDev(console.error.calls.count(0)).toBe(0);
+        ReactDOM.render(<div unknown={value} />, el);
+        expect(el.firstChild.getAttribute('unknown')).toBe(value + '');
+        expectDev(console.error.calls.count(0)).toBe(1);
+        // TODO: add specific expectations about what the warning says
+        // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+        console.error.calls.reset();
+      }
 
-        // TODO: this does not warn. We think it should.
-        testCoerceToString({hello: 'world'});
-      },
-    );
+      testCoerceToString(Symbol('foo'));
+      testCoerceToString(() => 'foo');
+    });
   });
 });
