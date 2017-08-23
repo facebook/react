@@ -11,7 +11,6 @@
 
 'use strict';
 
-var PropTypes;
 var React;
 var ReactNative;
 var createReactNativeComponentClass;
@@ -21,7 +20,6 @@ describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    PropTypes = require('prop-types');
     React = require('react');
     ReactNative = require('react-native');
     UIManager = require('UIManager');
@@ -68,35 +66,23 @@ describe('ReactNative', () => {
       uiViewClassName: 'Text',
     });
 
-    // Context hack is required for RN text rendering in stack.
-    // TODO Remove this from the test when RN stack has been deleted.
-    class Hack extends React.Component {
-      static childContextTypes = {isInAParentText: PropTypes.bool};
-      getChildContext() {
-        return {isInAParentText: true};
-      }
-      render() {
-        return this.props.children;
-      }
-    }
-
-    ReactNative.render(<Hack><Text foo="a">1</Text></Hack>, 11);
+    ReactNative.render(<Text foo="a">1</Text>, 11);
     expect(UIManager.updateView).not.toBeCalled();
 
     // If no properties have changed, we shouldn't call updateView.
-    ReactNative.render(<Hack><Text foo="a">1</Text></Hack>, 11);
+    ReactNative.render(<Text foo="a">1</Text>, 11);
     expect(UIManager.updateView).not.toBeCalled();
 
     // Only call updateView for the changed property (and not for text).
-    ReactNative.render(<Hack><Text foo="b">1</Text></Hack>, 11);
+    ReactNative.render(<Text foo="b">1</Text>, 11);
     expect(UIManager.updateView.mock.calls.length).toBe(1);
 
     // Only call updateView for the changed text (and no other properties).
-    ReactNative.render(<Hack><Text foo="b">2</Text></Hack>, 11);
+    ReactNative.render(<Text foo="b">2</Text>, 11);
     expect(UIManager.updateView.mock.calls.length).toBe(2);
 
     // Call updateView for both changed text and properties.
-    ReactNative.render(<Hack><Text foo="c">3</Text></Hack>, 11);
+    ReactNative.render(<Text foo="c">3</Text>, 11);
     expect(UIManager.updateView.mock.calls.length).toBe(4);
   });
 

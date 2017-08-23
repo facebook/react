@@ -129,8 +129,6 @@ function ignoreReactNativeModules() {
   return [
     // This imports NativeMethodsMixin, causing a circular dependency.
     'View',
-    // This file is injected based on a runtime config.
-    'ReactNativeFeatureFlags',
   ];
 }
 

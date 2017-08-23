@@ -11,12 +11,9 @@
  */
 'use strict';
 
-const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = ReactNativeFeatureFlags.useFiber
-  ? require('findNumericNodeHandleFiber')
-  : require('findNumericNodeHandleStack');
+const findNumericNodeHandle = require('findNumericNodeHandle');
 
 /**
  * Capture an image of the screen, window or an individual view. The image

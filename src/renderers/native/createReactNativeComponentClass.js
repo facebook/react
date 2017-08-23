@@ -12,7 +12,7 @@
 
 'use strict';
 
-const ReactNativeFeatureFlags = require('ReactNativeFeatureFlags');
+const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 
 // See also ReactNativeBaseComponent
 export type ReactNativeBaseComponentViewConfig = {
@@ -21,6 +21,14 @@ export type ReactNativeBaseComponentViewConfig = {
   propTypes?: Object,
 };
 
-module.exports = ReactNativeFeatureFlags.useFiber
-  ? require('createReactNativeComponentClassFiber')
-  : require('createReactNativeComponentClassStack');
+/**
+ * @param {string} config iOS View configuration.
+ * @private
+ */
+const createReactNativeComponentClass = function(
+  viewConfig: ReactNativeBaseComponentViewConfig,
+): string {
+  return ReactNativeViewConfigRegistry.register(viewConfig);
+};
+
+module.exports = createReactNativeComponentClass;
