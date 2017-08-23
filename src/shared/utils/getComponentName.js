@@ -12,20 +12,11 @@
 
 'use strict';
 
-import type {ReactInstance} from 'ReactInstanceType';
 import type {Fiber} from 'ReactFiber';
 
-function getComponentName(
-  instanceOrFiber: ReactInstance | Fiber,
-): string | null {
-  if (typeof instanceOrFiber.getName === 'function') {
-    // Stack reconciler
-    const instance = ((instanceOrFiber: any): ReactInstance);
-    return instance.getName();
-  }
-  if (typeof instanceOrFiber.tag === 'number') {
+function getComponentName(fiber: Fiber): string | null {
+  if (typeof fiber.tag === 'number') {
     // Fiber reconciler
-    const fiber = ((instanceOrFiber: any): Fiber);
     const {type} = fiber;
     if (typeof type === 'string') {
       return type;
