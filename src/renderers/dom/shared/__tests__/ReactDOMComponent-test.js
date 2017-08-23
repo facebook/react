@@ -1690,8 +1690,8 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(
         <div className="foo1">
           <div class="foo2" />
-          <div onClick="foo3" />
-          <div onclick="foo4" />
+          <div onClick={() => {}} />
+          <div onclick={() => {}} />
           <div className="foo5" />
           <div className="foo6" />
         </div>,
