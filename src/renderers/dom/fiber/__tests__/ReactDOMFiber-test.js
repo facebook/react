@@ -929,7 +929,7 @@ describe('ReactDOMFiber', () => {
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
-        'Expected onClick listener to be a function, instead got type string\n' +
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
           '    in div (at **)\n' +
           '    in Example (at **)',
       );
