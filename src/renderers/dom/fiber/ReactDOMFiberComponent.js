@@ -58,7 +58,10 @@ import {getCurrentFiberOwnerName} from 'ReactDebugCurrentFiber';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from 'HTMLNodeType';
 import assertValidProps from 'assertValidProps';
 import emptyFunction from 'fbjs/lib/emptyFunction';
-import inputValueTracking from 'inputValueTracking';
+import {
+  track as trackInputValue,
+  updateValueIfChanged as updateInputValueIfChanged,
+} from 'inputValueTracking';
 import isCustomComponent from 'isCustomComponent';
 import setInnerHTML from 'setInnerHTML';
 import setTextContent from 'setTextContent';
@@ -484,13 +487,13 @@ export function setInitialProperties(
     case 'input':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
+      trackInputValue((domElement: any));
       postMountWrapperForInput(domElement, rawProps);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
+      trackInputValue((domElement: any));
       postMountWrapperForTextarea(domElement, rawProps);
       break;
     case 'option':
@@ -726,7 +729,7 @@ export function updateProperties(
 
       // We also check that we haven't missed a value update, such as a
       // Radio group shifting the checked value to another named radio input.
-      inputValueTracking.updateValueIfChanged((domElement: any));
+      updateInputValueIfChanged((domElement: any));
       break;
     case 'textarea':
       updateWrapperForTextarea(domElement, nextRawProps);
@@ -944,13 +947,13 @@ export function diffHydratedProperties(
     case 'input':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
+      trackInputValue((domElement: any));
       postMountWrapperForInput(domElement, rawProps);
       break;
     case 'textarea':
       // TODO: Make sure we check if this is still unmounted or do any clean
       // up necessary since we never stop tracking anymore.
-      inputValueTracking.track((domElement: any));
+      trackInputValue((domElement: any));
       postMountWrapperForTextarea(domElement, rawProps);
       break;
     case 'select':

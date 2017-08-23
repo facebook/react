@@ -71,7 +71,7 @@ var EventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @param {DOMEventTarget} nativeEventTarget Target node.
  */
-function SyntheticEvent(
+export default function SyntheticEvent(
   dispatchConfig,
   targetInst,
   nativeEvent,
@@ -274,8 +274,6 @@ if (__DEV__) {
 }
 
 addEventPoolingTo(SyntheticEvent);
-
-module.exports = SyntheticEvent;
 
 /**
   * Helper to nullify syntheticEvent instance properties when destructing
