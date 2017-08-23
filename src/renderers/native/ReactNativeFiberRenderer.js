@@ -143,11 +143,16 @@ const NativeRenderer = ReactFiberReconciler({
       viewConfig.validAttributes,
     );
 
-    UIManager.updateView(
-      instance._nativeTag, // reactTag
-      viewConfig.uiViewClassName, // viewName
-      updatePayload, // props
-    );
+    // Avoid the overhead of bridge calls if there's no update.
+    // This is an expensive no-op for Android, and causes an unnecessary
+    // view invalidation for certain components (eg RCTTextInput) on iOS.
+    if (updatePayload != null) {
+      UIManager.updateView(
+        instance._nativeTag, // reactTag
+        viewConfig.uiViewClassName, // viewName
+        updatePayload, // props
+      );
+    }
   },
 
   createInstance(

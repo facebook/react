@@ -1690,8 +1690,8 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(
         <div className="foo1">
           <div class="foo2" />
-          <div onClick="foo3" />
-          <div onclick="foo4" />
+          <div onClick={() => {}} />
+          <div onclick={() => {}} />
           <div className="foo5" />
           <div className="foo6" />
         </div>,
@@ -2078,6 +2078,18 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Warning: Invalid prop `whatever` on <div> tag.',
+      );
+    });
+
+    it('warns on bad casing of known HTML attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div SiZe="30" />);
+
+      expect(el.getAttribute('size')).toBe('30');
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid DOM property `SiZe`. Did you mean `size`?',
       );
     });
   });

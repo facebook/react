@@ -34,6 +34,7 @@ var setTextContent = require('setTextContent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
@@ -116,6 +117,16 @@ if (__DEV__) {
       names.push(name);
     });
     warning(false, 'Extra attributes from the server: %s', names);
+  };
+
+  var warnForInvalidEventListener = function(registrationName, listener) {
+    warning(
+      false,
+      'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
+      registrationName,
+      typeof listener,
+      getCurrentFiberStackAddendum(),
+    );
   };
 
   var testDocument;
@@ -223,6 +234,9 @@ function setInitialDOMProperties(
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp) {
+        if (__DEV__ && typeof nextProp !== 'function') {
+          warnForInvalidEventListener(propKey, nextProp);
+        }
         ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (isCustomComponentTag) {
@@ -695,6 +709,9 @@ var ReactDOMFiberComponent = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp) {
           // We eagerly listen to this even though we haven't committed yet.
+          if (__DEV__ && typeof nextProp !== 'function') {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           ensureListeningTo(rootContainerElement, propKey);
         }
         if (!updatePayload && lastProp !== nextProp) {
@@ -934,6 +951,9 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
+        if (__DEV__ && typeof nextProp !== 'function') {
+          warnForInvalidEventListener(propKey, nextProp);
+        }
         if (nextProp) {
           ensureListeningTo(rootContainerElement, propKey);
         }

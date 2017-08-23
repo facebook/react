@@ -1123,4 +1123,41 @@ describe('ReactIncrementalErrorHandling', () => {
       );
     });
   });
+
+  it('resets instance variables before unmounting failed node', () => {
+    spyOn(console, 'error');
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        this.setState({error});
+      }
+      render() {
+        return this.state.error ? null : this.props.children;
+      }
+    }
+    class Foo extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentWillUnmount() {
+        ReactNoop.yield('componentWillUnmount: ' + this.state.step);
+      }
+      render() {
+        ReactNoop.yield('render: ' + this.state.step);
+        if (this.state.step > 0) {
+          throw new Error('oops');
+        }
+        return null;
+      }
+    }
+
+    ReactNoop.render(<ErrorBoundary><Foo /></ErrorBoundary>);
+    expect(ReactNoop.flush()).toEqual([
+      'render: 0',
+      'render: 1',
+      'componentWillUnmount: 0',
+    ]);
+  });
 });

@@ -59,8 +59,8 @@ describe('ReactDOMInvalidARIAHook', () => {
       mountComponent({'aria-hasPopup': 'true'});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Unknown ARIA attribute aria-hasPopup. ' +
-          'Did you mean aria-haspopup?',
+        'Warning: Unknown ARIA attribute `aria-hasPopup`. ' +
+          'Did you mean `aria-haspopup`?',
       );
     });
 
@@ -70,8 +70,8 @@ describe('ReactDOMInvalidARIAHook', () => {
       mountComponent({ariaHasPopup: 'true'});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid ARIA attribute ariaHasPopup. ' +
-          'Did you mean aria-haspopup?',
+        'Warning: Invalid ARIA attribute `ariaHasPopup`. ' +
+          'Did you mean `aria-haspopup`?',
       );
     });
 
@@ -81,7 +81,7 @@ describe('ReactDOMInvalidARIAHook', () => {
       mountComponent({ariaSomethingInvalid: 'true'});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid ARIA attribute ariaSomethingInvalid. ARIA ' +
+        'Warning: Invalid ARIA attribute `ariaSomethingInvalid`. ARIA ' +
           'attributes follow the pattern aria-* and must be lowercase.',
       );
     });

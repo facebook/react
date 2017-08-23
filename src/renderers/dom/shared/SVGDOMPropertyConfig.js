@@ -17,8 +17,12 @@ var NS = {
 };
 
 /**
- * This is a list of all SVG attributes that need special
- * casing, namespacing, or boolean value assignment.
+ * This is a list of all SVG attributes that need special casing,
+ * namespacing, or boolean value assignment.
+ *
+ * When adding attributes to this list, be sure to also add them to
+ * the `possibleStandardNames` module to ensure casing and incorrect
+ * name warnings.
  *
  * SVG Attributes List:
  * https://www.w3.org/TR/SVG/attindex.html
