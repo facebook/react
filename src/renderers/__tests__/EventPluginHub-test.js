@@ -26,7 +26,6 @@ describe('EventPluginHub', () => {
   });
 
   it('should prevent non-function listeners, at dispatch', () => {
-    // ReactDOMFiberComponent warns for non-function event listeners
     spyOn(console, 'error');
     var node = ReactTestUtils.renderIntoDocument(
       <div onClick="not a function" />,
@@ -34,12 +33,12 @@ describe('EventPluginHub', () => {
     expect(function() {
       ReactTestUtils.SimulateNative.click(node);
     }).toThrowError(
-      'Expected onClick listener to be a function, instead got type string',
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
     );
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Expected onClick listener to be a function, instead got type string',
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.',
       );
     } else {
       expectDev(console.error.calls.count()).toBe(0);
