@@ -12,6 +12,17 @@
 
 import type {Fiber} from 'ReactFiber';
 
+import {
+  HostRoot,
+  HostComponent,
+  HostText,
+  HostPortal,
+  YieldComponent,
+  Fragment,
+} from 'ReactTypeOfWork';
+import getComponentName from 'getComponentName';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+
 type MeasurementPhase =
   | 'componentWillMount'
   | 'componentWillUnmount'
@@ -22,21 +33,24 @@ type MeasurementPhase =
   | 'componentDidMount'
   | 'getChildContext';
 
-// Trust the developer to only use this with a __DEV__ check
-let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
+export let recordEffect = emptyFunction;
+export let recordScheduleUpdate = emptyFunction;
+export let startWorkTimer = emptyFunction;
+export let cancelWorkTimer = emptyFunction;
+export let stopWorkTimer = emptyFunction;
+export let stopFailedWorkTimer = emptyFunction;
+export let startPhaseTimer = emptyFunction;
+export let stopPhaseTimer = emptyFunction;
+export let startWorkLoopTimer = emptyFunction;
+export let stopWorkLoopTimer = emptyFunction;
+export let startCommitTimer = emptyFunction;
+export let stopCommitTimer = emptyFunction;
+export let startCommitHostEffectsTimer = emptyFunction;
+export let stopCommitHostEffectsTimer = emptyFunction;
+export let startCommitLifeCyclesTimer = emptyFunction;
+export let stopCommitLifeCyclesTimer = emptyFunction;
 
 if (__DEV__) {
-  const {
-    HostRoot,
-    HostComponent,
-    HostText,
-    HostPortal,
-    YieldComponent,
-    Fragment,
-  } = require('ReactTypeOfWork');
-
-  const getComponentName = require('getComponentName');
-
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
@@ -217,199 +231,195 @@ if (__DEV__) {
     }
   };
 
-  ReactDebugFiberPerf = {
-    recordEffect(): void {
-      effectCountInCurrentCommit++;
-    },
+  recordEffect = function(): void {
+    effectCountInCurrentCommit++;
+  };
 
-    recordScheduleUpdate(): void {
-      if (isCommitting) {
-        hasScheduledUpdateInCurrentCommit = true;
-      }
-      if (
-        currentPhase !== null &&
-        currentPhase !== 'componentWillMount' &&
-        currentPhase !== 'componentWillReceiveProps'
-      ) {
-        hasScheduledUpdateInCurrentPhase = true;
-      }
-    },
+  recordScheduleUpdate = function(): void {
+    if (isCommitting) {
+      hasScheduledUpdateInCurrentCommit = true;
+    }
+    if (
+      currentPhase !== null &&
+      currentPhase !== 'componentWillMount' &&
+      currentPhase !== 'componentWillReceiveProps'
+    ) {
+      hasScheduledUpdateInCurrentPhase = true;
+    }
+  };
 
-    startWorkTimer(fiber: Fiber): void {
-      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
-        return;
-      }
-      // If we pause, this is the fiber to unwind from.
-      currentFiber = fiber;
-      if (!beginFiberMark(fiber, null)) {
-        return;
-      }
-      fiber._debugIsCurrentlyTiming = true;
-    },
+  startWorkTimer = function(fiber: Fiber): void {
+    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
+      return;
+    }
+    // If we pause, this is the fiber to unwind from.
+    currentFiber = fiber;
+    if (!beginFiberMark(fiber, null)) {
+      return;
+    }
+    fiber._debugIsCurrentlyTiming = true;
+  };
 
-    cancelWorkTimer(fiber: Fiber): void {
-      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
-        return;
-      }
-      // Remember we shouldn't complete measurement for this fiber.
-      // Otherwise flamechart will be deep even for small updates.
-      fiber._debugIsCurrentlyTiming = false;
-      clearFiberMark(fiber, null);
-    },
+  cancelWorkTimer = function(fiber: Fiber): void {
+    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
+      return;
+    }
+    // Remember we shouldn't complete measurement for this fiber.
+    // Otherwise flamechart will be deep even for small updates.
+    fiber._debugIsCurrentlyTiming = false;
+    clearFiberMark(fiber, null);
+  };
 
-    stopWorkTimer(fiber: Fiber): void {
-      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
-        return;
-      }
-      // If we pause, its parent is the fiber to unwind from.
-      currentFiber = fiber.return;
-      if (!fiber._debugIsCurrentlyTiming) {
-        return;
-      }
-      fiber._debugIsCurrentlyTiming = false;
-      endFiberMark(fiber, null, null);
-    },
+  stopWorkTimer = function(fiber: Fiber): void {
+    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
+      return;
+    }
+    // If we pause, its parent is the fiber to unwind from.
+    currentFiber = fiber.return;
+    if (!fiber._debugIsCurrentlyTiming) {
+      return;
+    }
+    fiber._debugIsCurrentlyTiming = false;
+    endFiberMark(fiber, null, null);
+  };
 
-    stopFailedWorkTimer(fiber: Fiber): void {
-      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
-        return;
-      }
-      // If we pause, its parent is the fiber to unwind from.
-      currentFiber = fiber.return;
-      if (!fiber._debugIsCurrentlyTiming) {
-        return;
-      }
-      fiber._debugIsCurrentlyTiming = false;
-      const warning = 'An error was thrown inside this error boundary';
-      endFiberMark(fiber, null, warning);
-    },
+  stopFailedWorkTimer = function(fiber: Fiber): void {
+    if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
+      return;
+    }
+    // If we pause, its parent is the fiber to unwind from.
+    currentFiber = fiber.return;
+    if (!fiber._debugIsCurrentlyTiming) {
+      return;
+    }
+    fiber._debugIsCurrentlyTiming = false;
+    const warning = 'An error was thrown inside this error boundary';
+    endFiberMark(fiber, null, warning);
+  };
 
-    startPhaseTimer(fiber: Fiber, phase: MeasurementPhase): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      clearPendingPhaseMeasurement();
-      if (!beginFiberMark(fiber, phase)) {
-        return;
-      }
-      currentPhaseFiber = fiber;
-      currentPhase = phase;
-    },
+  startPhaseTimer = function(fiber: Fiber, phase: MeasurementPhase): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    clearPendingPhaseMeasurement();
+    if (!beginFiberMark(fiber, phase)) {
+      return;
+    }
+    currentPhaseFiber = fiber;
+    currentPhase = phase;
+  };
 
-    stopPhaseTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      if (currentPhase !== null && currentPhaseFiber !== null) {
-        const warning = hasScheduledUpdateInCurrentPhase
-          ? 'Scheduled a cascading update'
-          : null;
-        endFiberMark(currentPhaseFiber, currentPhase, warning);
-      }
-      currentPhase = null;
-      currentPhaseFiber = null;
-    },
-
-    startWorkLoopTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      commitCountInCurrentWorkLoop = 0;
-      // This is top level call.
-      // Any other measurements are performed within.
-      beginMark('(React Tree Reconciliation)');
-      // Resume any measurements that were in progress during the last loop.
-      resumeTimers();
-    },
-
-    stopWorkLoopTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      const warning = commitCountInCurrentWorkLoop > 1
-        ? 'There were cascading updates'
+  stopPhaseTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    if (currentPhase !== null && currentPhaseFiber !== null) {
+      const warning = hasScheduledUpdateInCurrentPhase
+        ? 'Scheduled a cascading update'
         : null;
-      commitCountInCurrentWorkLoop = 0;
-      // Pause any measurements until the next loop.
-      pauseTimers();
-      endMark(
-        '(React Tree Reconciliation)',
-        '(React Tree Reconciliation)',
-        warning,
-      );
-    },
+      endFiberMark(currentPhaseFiber, currentPhase, warning);
+    }
+    currentPhase = null;
+    currentPhaseFiber = null;
+  };
 
-    startCommitTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      isCommitting = true;
-      hasScheduledUpdateInCurrentCommit = false;
-      labelsInCurrentCommit.clear();
-      beginMark('(Committing Changes)');
-    },
+  startWorkLoopTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    commitCountInCurrentWorkLoop = 0;
+    // This is top level call.
+    // Any other measurements are performed within.
+    beginMark('(React Tree Reconciliation)');
+    // Resume any measurements that were in progress during the last loop.
+    resumeTimers();
+  };
 
-    stopCommitTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
+  stopWorkLoopTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    const warning = commitCountInCurrentWorkLoop > 1
+      ? 'There were cascading updates'
+      : null;
+    commitCountInCurrentWorkLoop = 0;
+    // Pause any measurements until the next loop.
+    pauseTimers();
+    endMark(
+      '(React Tree Reconciliation)',
+      '(React Tree Reconciliation)',
+      warning,
+    );
+  };
 
-      let warning = null;
-      if (hasScheduledUpdateInCurrentCommit) {
-        warning = 'Lifecycle hook scheduled a cascading update';
-      } else if (commitCountInCurrentWorkLoop > 0) {
-        warning = 'Caused by a cascading update in earlier commit';
-      }
-      hasScheduledUpdateInCurrentCommit = false;
-      commitCountInCurrentWorkLoop++;
-      isCommitting = false;
-      labelsInCurrentCommit.clear();
+  startCommitTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    isCommitting = true;
+    hasScheduledUpdateInCurrentCommit = false;
+    labelsInCurrentCommit.clear();
+    beginMark('(Committing Changes)');
+  };
 
-      endMark('(Committing Changes)', '(Committing Changes)', warning);
-    },
+  stopCommitTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
 
-    startCommitHostEffectsTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      effectCountInCurrentCommit = 0;
-      beginMark('(Committing Host Effects)');
-    },
+    let warning = null;
+    if (hasScheduledUpdateInCurrentCommit) {
+      warning = 'Lifecycle hook scheduled a cascading update';
+    } else if (commitCountInCurrentWorkLoop > 0) {
+      warning = 'Caused by a cascading update in earlier commit';
+    }
+    hasScheduledUpdateInCurrentCommit = false;
+    commitCountInCurrentWorkLoop++;
+    isCommitting = false;
+    labelsInCurrentCommit.clear();
 
-    stopCommitHostEffectsTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      const count = effectCountInCurrentCommit;
-      effectCountInCurrentCommit = 0;
-      endMark(
-        `(Committing Host Effects: ${count} Total)`,
-        '(Committing Host Effects)',
-        null,
-      );
-    },
+    endMark('(Committing Changes)', '(Committing Changes)', warning);
+  };
 
-    startCommitLifeCyclesTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      effectCountInCurrentCommit = 0;
-      beginMark('(Calling Lifecycle Methods)');
-    },
+  startCommitHostEffectsTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    effectCountInCurrentCommit = 0;
+    beginMark('(Committing Host Effects)');
+  };
 
-    stopCommitLifeCyclesTimer(): void {
-      if (!supportsUserTiming) {
-        return;
-      }
-      const count = effectCountInCurrentCommit;
-      effectCountInCurrentCommit = 0;
-      endMark(
-        `(Calling Lifecycle Methods: ${count} Total)`,
-        '(Calling Lifecycle Methods)',
-        null,
-      );
-    },
+  stopCommitHostEffectsTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    const count = effectCountInCurrentCommit;
+    effectCountInCurrentCommit = 0;
+    endMark(
+      `(Committing Host Effects: ${count} Total)`,
+      '(Committing Host Effects)',
+      null,
+    );
+  };
+
+  startCommitLifeCyclesTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    effectCountInCurrentCommit = 0;
+    beginMark('(Calling Lifecycle Methods)');
+  };
+
+  stopCommitLifeCyclesTimer = function(): void {
+    if (!supportsUserTiming) {
+      return;
+    }
+    const count = effectCountInCurrentCommit;
+    effectCountInCurrentCommit = 0;
+    endMark(
+      `(Calling Lifecycle Methods: ${count} Total)`,
+      '(Calling Lifecycle Methods)',
+      null,
+    );
   };
 }
-
-module.exports = ReactDebugFiberPerf;

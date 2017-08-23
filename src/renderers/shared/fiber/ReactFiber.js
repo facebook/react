@@ -26,8 +26,7 @@ import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
 import getComponentName from 'getComponentName';
-
-var {
+import {
   IndeterminateComponent,
   ClassComponent,
   HostRoot,
@@ -37,15 +36,12 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
-} = require('ReactTypeOfWork');
+} from 'ReactTypeOfWork';
 
-var {NoWork} = require('ReactPriorityLevel');
-
-var {NoContext} = require('ReactTypeOfInternalContext');
-
-var {NoEffect} = require('ReactTypeOfSideEffect');
-
-var invariant = require('fbjs/lib/invariant');
+import {NoWork} from 'ReactPriorityLevel';
+import {NoContext} from 'ReactTypeOfInternalContext';
+import {NoEffect} from 'ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
 if (__DEV__) {
   var hasBadMapPolyfill = false;
@@ -234,7 +230,7 @@ function shouldConstruct(Component) {
 }
 
 // This is used to create an alternate fiber to do work on.
-exports.createWorkInProgress = function(
+export function createWorkInProgress(
   current: Fiber,
   renderPriority: PriorityLevel,
 ): Fiber {
@@ -289,14 +285,14 @@ exports.createWorkInProgress = function(
   workInProgress.ref = current.ref;
 
   return workInProgress;
-};
+}
 
-exports.createHostRootFiber = function(): Fiber {
+export function createHostRootFiber(): Fiber {
   const fiber = createFiber(HostRoot, null, NoContext);
   return fiber;
-};
+}
 
-exports.createFiberFromElement = function(
+export function createFiberFromElement(
   element: ReactElement,
   internalContextTag: TypeOfInternalContext,
   priorityLevel: PriorityLevel,
@@ -321,9 +317,9 @@ exports.createFiberFromElement = function(
   }
 
   return fiber;
-};
+}
 
-exports.createFiberFromFragment = function(
+export function createFiberFromFragment(
   elements: ReactFragment,
   internalContextTag: TypeOfInternalContext,
   priorityLevel: PriorityLevel,
@@ -334,9 +330,9 @@ exports.createFiberFromFragment = function(
   fiber.pendingProps = elements;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
-};
+}
 
-exports.createFiberFromText = function(
+export function createFiberFromText(
   content: string,
   internalContextTag: TypeOfInternalContext,
   priorityLevel: PriorityLevel,
@@ -345,9 +341,9 @@ exports.createFiberFromText = function(
   fiber.pendingProps = content;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
-};
+}
 
-function createFiberFromElementType(
+export function createFiberFromElementType(
   type: mixed,
   key: null | string,
   internalContextTag: TypeOfInternalContext,
@@ -403,15 +399,13 @@ function createFiberFromElementType(
   return fiber;
 }
 
-exports.createFiberFromElementType = createFiberFromElementType;
-
-exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
+export function createFiberFromHostInstanceForDeletion(): Fiber {
   const fiber = createFiber(HostComponent, null, NoContext);
   fiber.type = 'DELETED';
   return fiber;
-};
+}
 
-exports.createFiberFromCoroutine = function(
+export function createFiberFromCoroutine(
   coroutine: ReactCoroutine,
   internalContextTag: TypeOfInternalContext,
   priorityLevel: PriorityLevel,
@@ -425,18 +419,18 @@ exports.createFiberFromCoroutine = function(
   fiber.pendingProps = coroutine;
   fiber.pendingWorkPriority = priorityLevel;
   return fiber;
-};
+}
 
-exports.createFiberFromYield = function(
+export function createFiberFromYield(
   yieldNode: ReactYield,
   internalContextTag: TypeOfInternalContext,
   priorityLevel: PriorityLevel,
 ): Fiber {
   const fiber = createFiber(YieldComponent, null, internalContextTag);
   return fiber;
-};
+}
 
-exports.createFiberFromPortal = function(
+export function createFiberFromPortal(
   portal: ReactPortal,
   internalContextTag: TypeOfInternalContext,
   priorityLevel: PriorityLevel,
@@ -449,11 +443,11 @@ exports.createFiberFromPortal = function(
     implementation: portal.implementation,
   };
   return fiber;
-};
+}
 
-exports.largerPriority = function(
+export function largerPriority(
   p1: PriorityLevel,
   p2: PriorityLevel,
 ): PriorityLevel {
   return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
-};
+}

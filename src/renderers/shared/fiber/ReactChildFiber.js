@@ -17,20 +17,34 @@ import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
-var {REACT_PORTAL_TYPE} = require('ReactPortal');
-
-var ReactFiber = require('ReactFiber');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-
-var emptyObject = require('fbjs/lib/emptyObject');
-var invariant = require('fbjs/lib/invariant');
-var ReactFeatureFlags = require('ReactFeatureFlags');
+import {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} from 'ReactCoroutine';
+import {REACT_PORTAL_TYPE} from 'ReactPortal';
+import {
+  createWorkInProgress,
+  createFiberFromElement,
+  createFiberFromFragment,
+  createFiberFromText,
+  createFiberFromCoroutine,
+  createFiberFromYield,
+  createFiberFromPortal,
+} from 'ReactFiber';
+import {NoEffect, Placement, Deletion} from 'ReactTypeOfSideEffect';
+import {
+  FunctionalComponent,
+  ClassComponent,
+  HostText,
+  HostPortal,
+  CoroutineComponent,
+  YieldComponent,
+  Fragment,
+} from 'ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import ReactFeatureFlags from 'ReactFeatureFlags';
+import {getCurrentFiberStackAddendum} from 'ReactDebugCurrentFiber';
+import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-  var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
@@ -73,29 +87,7 @@ if (__DEV__) {
   };
 }
 
-const {
-  createWorkInProgress,
-  createFiberFromElement,
-  createFiberFromFragment,
-  createFiberFromText,
-  createFiberFromCoroutine,
-  createFiberFromYield,
-  createFiberFromPortal,
-} = ReactFiber;
-
 const isArray = Array.isArray;
-
-const {
-  FunctionalComponent,
-  ClassComponent,
-  HostText,
-  HostPortal,
-  CoroutineComponent,
-  YieldComponent,
-  Fragment,
-} = ReactTypeOfWork;
-
-const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
@@ -1485,13 +1477,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-exports.reconcileChildFibers = ChildReconciler(true, true);
+export const reconcileChildFibers = ChildReconciler(true, true);
 
-exports.reconcileChildFibersInPlace = ChildReconciler(false, true);
+export const reconcileChildFibersInPlace = ChildReconciler(false, true);
 
-exports.mountChildFibersInPlace = ChildReconciler(false, false);
+export const mountChildFibersInPlace = ChildReconciler(false, false);
 
-exports.cloneChildFibers = function(
+export function cloneChildFibers(
   current: Fiber | null,
   workInProgress: Fiber,
 ): void {
@@ -1524,4 +1516,4 @@ exports.cloneChildFibers = function(
     newChild.return = workInProgress;
   }
   newChild.sibling = null;
-};
+}

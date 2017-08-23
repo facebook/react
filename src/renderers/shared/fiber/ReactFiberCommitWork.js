@@ -15,37 +15,26 @@
 import type {Fiber} from 'ReactFiber';
 import type {HostConfig} from 'ReactFiberReconciler';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
+import {
   ClassComponent,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   CoroutineComponent,
-} = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('ReactFiberDevToolsHook');
-var {
+} from 'ReactTypeOfWork';
+import {commitCallbacks} from 'ReactFiberUpdateQueue';
+import {onCommitUnmount} from 'ReactFiberDevToolsHook';
+import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} = require('ReactErrorUtils');
+} from 'ReactErrorUtils';
+import {Placement, Update, Callback, ContentReset} from 'ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
+import {startPhaseTimer, stopPhaseTimer} from 'ReactDebugFiberPerf';
 
-var {
-  Placement,
-  Update,
-  Callback,
-  ContentReset,
-} = require('ReactTypeOfSideEffect');
-
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
-}
-
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+export default function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
@@ -597,4 +586,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     commitAttachRef,
     commitDetachRef,
   };
-};
+}

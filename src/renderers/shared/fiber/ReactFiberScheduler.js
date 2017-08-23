@@ -32,41 +32,36 @@ export type HandleErrorInfo = {
   componentStack: string,
 };
 
-var {popContextProvider} = require('ReactFiberContext');
-const {reset} = require('ReactFiberStack');
-var {
+import {popContextProvider} from 'ReactFiberContext';
+import {reset} from 'ReactFiberStack';
+import {
   getStackAddendumByWorkInProgressFiber,
-} = require('ReactFiberComponentTreeHook');
-var {logCapturedError} = require('ReactFiberErrorLogger');
-var {
+} from 'ReactFiberComponentTreeHook';
+import {logCapturedError} from 'ReactFiberErrorLogger';
+import {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} = require('ReactErrorUtils');
-
-var ReactFiberBeginWork = require('ReactFiberBeginWork');
-var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
-var ReactFiberCommitWork = require('ReactFiberCommitWork');
-var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+} from 'ReactErrorUtils';
+import ReactFiberBeginWork from 'ReactFiberBeginWork';
+import ReactFiberCompleteWork from 'ReactFiberCompleteWork';
+import ReactFiberCommitWork from 'ReactFiberCommitWork';
+import ReactFiberHostContext from 'ReactFiberHostContext';
+import ReactFiberHydrationContext from 'ReactFiberHydrationContext';
+import {ReactCurrentOwner} from 'ReactGlobalSharedState';
 import getComponentName from 'getComponentName';
-
-var {createWorkInProgress, largerPriority} = require('ReactFiber');
-var {onCommitRoot} = require('ReactFiberDevToolsHook');
-
-var {
+import {createWorkInProgress, largerPriority} from 'ReactFiber';
+import {onCommitRoot} from 'ReactFiberDevToolsHook';
+import {
   NoWork,
   SynchronousPriority,
   TaskPriority,
   HighPriority,
   LowPriority,
   OffscreenPriority,
-} = require('ReactPriorityLevel');
-
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
-var {
+} from 'ReactPriorityLevel';
+import {AsyncUpdates} from 'ReactTypeOfInternalContext';
+import {
   PerformedWork,
   Placement,
   Update,
@@ -76,41 +71,39 @@ var {
   Callback,
   Err,
   Ref,
-} = require('ReactTypeOfSideEffect');
-
-var {
+} from 'ReactTypeOfSideEffect';
+import {
   HostRoot,
   HostComponent,
   HostPortal,
   ClassComponent,
-} = require('ReactTypeOfWork');
-
-var {getUpdatePriority} = require('ReactFiberUpdateQueue');
-
-var {resetContext} = require('ReactFiberContext');
-
-var invariant = require('fbjs/lib/invariant');
+} from 'ReactTypeOfWork';
+import {getUpdatePriority} from 'ReactFiberUpdateQueue';
+import {resetContext} from 'ReactFiberContext';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
+import ReactFiberInstrumentation from 'ReactFiberInstrumentation';
+import ReactDebugCurrentFiber, {
+  setCurrentFiber,
+  resetCurrentFiber,
+} from 'ReactDebugCurrentFiber';
+import {
+  recordEffect,
+  recordScheduleUpdate,
+  startWorkTimer,
+  stopWorkTimer,
+  stopFailedWorkTimer,
+  startWorkLoopTimer,
+  stopWorkLoopTimer,
+  startCommitTimer,
+  stopCommitTimer,
+  startCommitHostEffectsTimer,
+  stopCommitHostEffectsTimer,
+  startCommitLifeCyclesTimer,
+  stopCommitLifeCyclesTimer,
+} from 'ReactDebugFiberPerf';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {
-    recordEffect,
-    recordScheduleUpdate,
-    startWorkTimer,
-    stopWorkTimer,
-    stopFailedWorkTimer,
-    startWorkLoopTimer,
-    stopWorkLoopTimer,
-    startCommitTimer,
-    stopCommitTimer,
-    startCommitHostEffectsTimer,
-    stopCommitHostEffectsTimer,
-    startCommitLifeCyclesTimer,
-    stopCommitLifeCyclesTimer,
-  } = require('ReactDebugFiberPerf');
-
   var warnAboutUpdateOnUnmounted = function(instance: ReactClass<any>) {
     const ctor = instance.constructor;
     warning(
@@ -146,7 +139,7 @@ if (__DEV__) {
 
 var timeHeuristicForUnitOfWork = 1;
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+export default function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
@@ -310,7 +303,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAllHostEffects() {
     while (nextEffect !== null) {
       if (__DEV__) {
-        ReactDebugCurrentFiber.setCurrentFiber(nextEffect, null);
+        setCurrentFiber(nextEffect, null);
         recordEffect();
       }
 
@@ -371,7 +364,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
+      resetCurrentFiber();
     }
   }
 
@@ -712,7 +705,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
+      resetCurrentFiber();
     }
 
     return next;
@@ -741,7 +734,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
+      resetCurrentFiber();
     }
 
     return next;
@@ -1094,7 +1087,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // It is no longer valid because we exited the user code.
     ReactCurrentOwner.current = null;
     if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
+      resetCurrentFiber();
     }
 
     // Search for the nearest error boundary.
@@ -1569,4 +1562,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     flushSync: flushSync,
     deferredUpdates: deferredUpdates,
   };
-};
+}

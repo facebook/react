@@ -20,12 +20,9 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
-var {reconcileChildFibers} = require('ReactChildFiber');
-var {popContextProvider} = require('ReactFiberContext');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactPriorityLevel = require('ReactPriorityLevel');
-var {
+import {reconcileChildFibers} from 'ReactChildFiber';
+import {popContextProvider} from 'ReactFiberContext';
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
@@ -37,17 +34,13 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
-var {OffscreenPriority} = ReactPriorityLevel;
+} from 'ReactTypeOfWork';
+import {Placement, Ref, Update} from 'ReactTypeOfSideEffect';
+import {OffscreenPriority} from 'ReactPriorityLevel';
+import {setCurrentFiber} from 'ReactDebugCurrentFiber';
+import invariant from 'fbjs/lib/invariant';
 
-if (__DEV__) {
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-}
-
-var invariant = require('fbjs/lib/invariant');
-
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+export default function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C>,
@@ -187,7 +180,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     renderPriority: PriorityLevel,
   ): Fiber | null {
     if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+      setCurrentFiber(workInProgress, null);
     }
 
     // Get the latest props.
@@ -399,4 +392,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   return {
     completeWork,
   };
-};
+}

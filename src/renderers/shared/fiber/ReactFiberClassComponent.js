@@ -15,37 +15,35 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {Update} = require('ReactTypeOfSideEffect');
-
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
-var {
+import {Update} from 'ReactTypeOfSideEffect';
+import ReactFeatureFlags from 'ReactFeatureFlags';
+import {AsyncUpdates} from 'ReactTypeOfInternalContext';
+import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
+  hasContextChanged,
   isContextConsumer,
-} = require('ReactFiberContext');
-var {
+} from 'ReactFiberContext';
+import {
   addUpdate,
   addReplaceUpdate,
   addForceUpdate,
   beginUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {hasContextChanged} = require('ReactFiberContext');
-var {isMounted} = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
+} from 'ReactFiberUpdateQueue';
+import {isMounted} from 'ReactFiberTreeReflection';
+import {startPhaseTimer, stopPhaseTimer} from 'ReactDebugFiberPerf';
+import ReactInstanceMap from 'ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'getComponentName';
-var shallowEqual = require('fbjs/lib/shallowEqual');
-var invariant = require('fbjs/lib/invariant');
+import shallowEqual from 'fbjs/lib/shallowEqual';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
-  var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
@@ -78,7 +76,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-module.exports = function(
+export default function(
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
@@ -681,4 +679,4 @@ module.exports = function(
     // resumeMountClassInstance,
     updateClassInstance,
   };
-};
+}

@@ -20,4 +20,4 @@ var ReactFiberInstrumentation = {
   debugTool: null,
 };
 
-module.exports = ReactFiberInstrumentation;
+export default ReactFiberInstrumentation;
