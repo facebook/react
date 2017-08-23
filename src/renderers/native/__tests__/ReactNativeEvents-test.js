@@ -250,9 +250,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
     if (responder === null) {
       return null;
     }
-    const props = typeof responder.tag === 'number'
-      ? responder.memoizedProps
-      : responder._currentElement.props;
+    const props = responder.memoizedProps;
     return props ? props.id : null;
   }
 
@@ -342,9 +340,7 @@ it('handles events without target', () => {
     if (responder === null) {
       return null;
     }
-    const props = typeof responder.tag === 'number'
-      ? responder.memoizedProps
-      : responder._currentElement.props;
+    const props = responder.memoizedProps;
     return props ? props.id : null;
   }
 

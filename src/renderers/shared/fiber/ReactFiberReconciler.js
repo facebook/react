@@ -25,7 +25,9 @@ var {
 } = require('ReactFiberContext');
 var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
+var ReactInstanceMap = require('ReactInstanceMap');
 var {HostComponent} = require('ReactTypeOfWork');
+var emptyObject = require('fbjs/lib/emptyObject');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -38,8 +40,6 @@ var {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
 } = require('ReactFiberTreeReflection');
-
-var getContextForSubtree = require('getContextForSubtree');
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -178,12 +178,19 @@ export type Reconciler<C, I, TI> = {
   findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
-getContextForSubtree._injectFiber(function(fiber: Fiber) {
+function getContextForSubtree(
+  parentComponent: ?React$Component<any, any>,
+): Object {
+  if (!parentComponent) {
+    return emptyObject;
+  }
+
+  const fiber = ReactInstanceMap.get(parentComponent);
   const parentContext = findCurrentUnmaskedContext(fiber);
   return isContextProvider(fiber)
     ? processChildContext(fiber, parentContext)
     : parentContext;
-});
+}
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,

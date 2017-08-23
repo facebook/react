@@ -23,17 +23,11 @@ describe('ReactDOMComponentTree', () => {
   }
 
   function getTypeOf(instance) {
-    if (typeof instance.tag === 'number') {
-      return instance.type;
-    }
-    return instance._currentElement.type;
+    return instance.type;
   }
 
   function getTextOf(instance) {
-    if (typeof instance.tag === 'number') {
-      return instance.memoizedProps;
-    }
-    return instance._stringText;
+    return instance.memoizedProps;
   }
 
   beforeEach(() => {

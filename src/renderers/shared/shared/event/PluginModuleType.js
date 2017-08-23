@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {ReactInstance} from 'ReactInstanceType';
+import type {Fiber} from 'ReactFiber';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
@@ -26,7 +26,7 @@ export type PluginModule<NativeEvent> = {
   eventTypes: EventTypes,
   extractEvents: (
     topLevelType: string,
-    targetInst: ReactInstance,
+    targetInst: Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
   ) => null | ReactSyntheticEvent,
