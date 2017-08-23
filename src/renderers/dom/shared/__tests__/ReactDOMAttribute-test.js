@@ -64,7 +64,7 @@ describe('ReactDOM unknown attribute', () => {
       testUnknownAttributeAssignment(false, 'false');
     });
 
-    it('coerces NaN to strings **and warns**', () => {
+    it('coerces NaN to strings and warns', () => {
       spyOn(console, 'error');
 
       testUnknownAttributeAssignment(NaN, 'NaN');
@@ -89,7 +89,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(console.error.calls.count()).toBe(1);
     });
 
-    it('removes symbols **and warns**', () => {
+    it('removes symbols and warns', () => {
       spyOn(console, 'error');
 
       testUnknownAttributeRemoval(Symbol('foo'));
@@ -98,7 +98,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(console.error.calls.count()).toBe(1);
     });
 
-    it('removes functions **and warns**', () => {
+    it('removes functions and warns', () => {
       spyOn(console, 'error');
 
       testUnknownAttributeRemoval(function someFunction() {});
