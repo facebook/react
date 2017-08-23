@@ -11,21 +11,21 @@
 
 'use strict';
 
-var EventPluginUtils = require('EventPluginUtils');
-
-var invariant = require('fbjs/lib/invariant');
+import {
+  getInstanceFromNode,
+  getFiberCurrentPropsFromNode,
+} from 'EventPluginUtils';
+import invariant from 'fbjs/lib/invariant';
 
 // Use to restore controlled state after a change event has fired.
 
 var restoreControlledState = null;
 
-var ReactControlledComponentInjection = {
-  injectRestoreControlledStateImplementation: function(restoreImpl) {
-    // The fiber implementation doesn't use dynamic dispatch so we need to
-    // inject the implementation.
-    restoreControlledState = restoreImpl;
-  },
-};
+export function injectRestoreControlledStateImplementation(restoreImpl) {
+  // The fiber implementation doesn't use dynamic dispatch so we need to
+  // inject the implementation.
+  restoreControlledState = restoreImpl;
+}
 
 var restoreTarget = null;
 var restoreQueue = null;
@@ -33,7 +33,7 @@ var restoreQueue = null;
 function restoreStateOfTarget(target) {
   // We perform this translation at the end of the event loop so that we
   // always receive the correct fiber here
-  var internalInstance = EventPluginUtils.getInstanceFromNode(target);
+  var internalInstance = getInstanceFromNode(target);
   if (!internalInstance) {
     // Unmounted
     return;
@@ -43,9 +43,7 @@ function restoreStateOfTarget(target) {
     'Fiber needs to be injected to handle a fiber target for controlled ' +
       'events. This error is likely caused by a bug in React. Please file an issue.',
   );
-  const props = EventPluginUtils.getFiberCurrentPropsFromNode(
-    internalInstance.stateNode,
-  );
+  const props = getFiberCurrentPropsFromNode(internalInstance.stateNode);
   restoreControlledState(
     internalInstance.stateNode,
     internalInstance.type,
@@ -53,37 +51,31 @@ function restoreStateOfTarget(target) {
   );
 }
 
-var ReactControlledComponent = {
-  injection: ReactControlledComponentInjection,
-
-  enqueueStateRestore(target) {
-    if (restoreTarget) {
-      if (restoreQueue) {
-        restoreQueue.push(target);
-      } else {
-        restoreQueue = [target];
-      }
+export function enqueueStateRestore(target) {
+  if (restoreTarget) {
+    if (restoreQueue) {
+      restoreQueue.push(target);
     } else {
-      restoreTarget = target;
+      restoreQueue = [target];
     }
-  },
+  } else {
+    restoreTarget = target;
+  }
+}
 
-  restoreStateIfNeeded() {
-    if (!restoreTarget) {
-      return;
+export function restoreStateIfNeeded() {
+  if (!restoreTarget) {
+    return;
+  }
+  var target = restoreTarget;
+  var queuedTargets = restoreQueue;
+  restoreTarget = null;
+  restoreQueue = null;
+
+  restoreStateOfTarget(target);
+  if (queuedTargets) {
+    for (var i = 0; i < queuedTargets.length; i++) {
+      restoreStateOfTarget(queuedTargets[i]);
     }
-    var target = restoreTarget;
-    var queuedTargets = restoreQueue;
-    restoreTarget = null;
-    restoreQueue = null;
-
-    restoreStateOfTarget(target);
-    if (queuedTargets) {
-      for (var i = 0; i < queuedTargets.length; i++) {
-        restoreStateOfTarget(queuedTargets[i]);
-      }
-    }
-  },
-};
-
-module.exports = ReactControlledComponent;
+  }
+}

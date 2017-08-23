@@ -13,8 +13,8 @@
 
 'use strict';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var invariant = require('fbjs/lib/invariant');
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import invariant from 'fbjs/lib/invariant';
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';

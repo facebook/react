@@ -11,7 +11,7 @@
 
 'use strict';
 
-var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
+import getVendorPrefixedEventName from 'getVendorPrefixedEventName';
 
 /**
  * Types of raw signals from the browser caught at the top level.
@@ -20,7 +20,7 @@ var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
  * trap at a lower node than `document`), binding at `document` would
  * cause duplicate events so we don't include them here.
  */
-var topLevelTypes = {
+export const topLevelTypes = {
   topAbort: 'abort',
   topAnimationEnd: getVendorPrefixedEventName('animationend') || 'animationend',
   topAnimationIteration: getVendorPrefixedEventName('animationiteration') ||
@@ -95,9 +95,3 @@ var topLevelTypes = {
 };
 
 export type TopLevelTypes = $Enum<typeof topLevelTypes>;
-
-var BrowserEventConstants = {
-  topLevelTypes,
-};
-
-module.exports = BrowserEventConstants;

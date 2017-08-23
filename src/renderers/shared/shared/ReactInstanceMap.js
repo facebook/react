@@ -42,4 +42,4 @@ var ReactInstanceMap = {
   },
 };
 
-module.exports = ReactInstanceMap;
+export default ReactInstanceMap;
