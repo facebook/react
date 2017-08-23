@@ -163,7 +163,7 @@ var EventPluginHub = {
 
     invariant(
       !listener || typeof listener === 'function',
-      'Expected %s listener to be a function, instead got type %s',
+      'Expected `%s` listener to be a function, instead got a value of `%s` type.',
       registrationName,
       typeof listener,
     );
