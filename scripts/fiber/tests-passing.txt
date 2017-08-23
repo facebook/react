@@ -685,6 +685,7 @@ src/renderers/dom/fiber/__tests__/ReactDOMFiber-test.js
 * throws if non-element passed to top-level render
 * throws if something other than false, null, or an element is returned from render
 * treats mocked render functions as if they return null
+* throws if the React package cannot be loaded
 
 src/renderers/dom/fiber/__tests__/ReactDOMFiberAsync-test.js
 * renders synchronously by default
@@ -822,6 +823,7 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should treat menuitem as a void element but still create the closing tag
 * should validate against multiple children props
 * should validate against use of innerHTML
+* should validate against use of innerHTML without case sensitivity
 * should validate use of dangerouslySetInnerHTML
 * should validate use of dangerouslySetInnerHTML
 * should allow {__html: null}
@@ -856,7 +858,9 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should warn about class
 * should warn about class (ssr)
 * should warn about props that are no longer supported
+* should warn about props that are no longer supported without case sensitivity
 * should warn about props that are no longer supported (ssr)
+* should warn about props that are no longer supported without case sensitivity (ssr)
 * gives source code refs for unknown prop warning
 * gives source code refs for unknown prop warning (ssr)
 * gives source code refs for unknown prop warning for update render
@@ -868,6 +872,29 @@ src/renderers/dom/shared/__tests__/ReactDOMComponent-test.js
 * should suggest property name if available (ssr)
 * renders innerHTML and preserves whitespace
 * render and then updates innerHTML and preserves whitespace
+* sets aliased attributes on HTML attributes
+* sets incorrectly cased aliased attributes on HTML attributes with a warning
+* sets aliased attributes on SVG elements with a warning
+* sets aliased attributes on custom elements
+* aliased attributes on custom elements with bad casing
+* updates aliased attributes on custom elements
+* allows assignment of custom attributes with string values
+* removes custom attributes
+* does not assign a boolean custom attributes as a string
+* does not assign an implicit boolean custom attributes
+* assigns a numeric custom attributes as a string
+* will not assign a function custom attributes
+* will assign an object custom attributes
+* allows cased data attributes
+* allows cased custom attributes
+* warns on NaN attributes
+* removes a property when it becomes invalid
+* allows objects on known properties
+* should pass objects as attributes if they define toString
+* passes objects on known SVG attributes if they do not define toString
+* passes objects on custom attributes if they do not define toString
+* allows objects that inherit a custom toString method
+* assigns ajaxify (an important internal FB attribute)
 
 src/renderers/dom/shared/__tests__/ReactDOMComponentTree-test.js
 * finds nodes for instances
@@ -886,6 +913,8 @@ src/renderers/dom/shared/__tests__/ReactDOMInvalidARIAHook-test.js
 * should warn for one invalid aria-* prop
 * should warn for many invalid aria-* props
 * should warn for an improperly cased aria-* prop
+* should warn for use of recognized camel case aria attributes
+* should warn for use of unrecognized camel case aria attributes
 
 src/renderers/dom/shared/__tests__/ReactDOMSVG-test.js
 * creates initial namespaced markup
@@ -955,16 +984,16 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders simple strings with clean client render
 * renders simple strings with client render on top of good server markup
 * renders simple strings with client render on top of bad server markup
-* renders string prop with true value with server string render
-* renders string prop with true value with server stream render
-* renders string prop with true value with clean client render
-* renders string prop with true value with client render on top of good server markup
-* renders string prop with true value with client render on top of bad server markup
-* renders string prop with false value with server string render
-* renders string prop with false value with server stream render
-* renders string prop with false value with clean client render
-* renders string prop with false value with client render on top of good server markup
-* renders string prop with false value with client render on top of bad server markup
+* renders no string prop with true value with server string render
+* renders no string prop with true value with server stream render
+* renders no string prop with true value with clean client render
+* renders no string prop with true value with client render on top of good server markup
+* renders no string prop with true value with client render on top of bad server markup
+* renders no string prop with false value with server string render
+* renders no string prop with false value with server stream render
+* renders no string prop with false value with clean client render
+* renders no string prop with false value with client render on top of good server markup
+* renders no string prop with false value with client render on top of bad server markup
 * renders no string prop with null value with server string render
 * renders no string prop with null value with server stream render
 * renders no string prop with null value with clean client render
@@ -1085,11 +1114,41 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no className prop with null value with clean client render
 * renders no className prop with null value with client render on top of good server markup
 * renders no className prop with null value with client render on top of bad server markup
+* renders no badly cased className with a warning with server string render
+* renders no badly cased className with a warning with server stream render
+* renders no badly cased className with a warning with clean client render
+* renders no badly cased className with a warning with client render on top of good server markup
+* renders no badly cased className with a warning with client render on top of bad server markup
+* renders className prop when given the alias with server string render
+* renders className prop when given the alias with server stream render
+* renders className prop when given the alias with clean client render
+* renders className prop when given the alias with client render on top of good server markup
+* renders className prop when given the alias with client render on top of bad server markup
+* renders no className prop when given a badly cased alias with server string render
+* renders no className prop when given a badly cased alias with server stream render
+* renders no className prop when given a badly cased alias with clean client render
+* renders no className prop when given a badly cased alias with client render on top of good server markup
+* renders no className prop when given a badly cased alias with client render on top of bad server markup
+* renders class for custom elements with server string render
+* renders class for custom elements with server stream render
+* renders class for custom elements with clean client render
+* renders class for custom elements with client render on top of good server markup
+* renders class for custom elements with client render on top of bad server markup
+* renders className for custom elements with server string render
+* renders className for custom elements with server stream render
+* renders className for custom elements with clean client render
+* renders className for custom elements with client render on top of good server markup
+* renders className for custom elements with client render on top of bad server markup
 * renders htmlFor with string value with server string render
 * renders htmlFor with string value with server stream render
 * renders htmlFor with string value with clean client render
 * renders htmlFor with string value with client render on top of good server markup
 * renders htmlFor with string value with client render on top of bad server markup
+* renders no badly cased htmlfor with server string render
+* renders no badly cased htmlfor with server stream render
+* renders no badly cased htmlfor with clean client render
+* renders no badly cased htmlfor with client render on top of good server markup
+* renders no badly cased htmlfor with client render on top of bad server markup
 * renders htmlFor with an empty string with server string render
 * renders htmlFor with an empty string with server stream render
 * renders htmlFor with an empty string with clean client render
@@ -1110,6 +1169,16 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no htmlFor prop with null value with clean client render
 * renders no htmlFor prop with null value with client render on top of good server markup
 * renders no htmlFor prop with null value with client render on top of bad server markup
+* renders htmlFor attribute on custom elements with server string render
+* renders htmlFor attribute on custom elements with server stream render
+* renders htmlFor attribute on custom elements with clean client render
+* renders htmlFor attribute on custom elements with client render on top of good server markup
+* renders htmlFor attribute on custom elements with client render on top of bad server markup
+* renders for attribute on custom elements with server string render
+* renders for attribute on custom elements with server stream render
+* renders for attribute on custom elements with clean client render
+* renders for attribute on custom elements with client render on top of good server markup
+* renders for attribute on custom elements with client render on top of bad server markup
 * renders positive numeric property with positive value with server string render
 * renders positive numeric property with positive value with server stream render
 * renders positive numeric property with positive value with clean client render
@@ -1190,11 +1259,31 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no aria prop with null value with clean client render
 * renders no aria prop with null value with client render on top of good server markup
 * renders no aria prop with null value with client render on top of bad server markup
-* renders no unknown attributes with server string render
-* renders no unknown attributes with server stream render
-* renders no unknown attributes with clean client render
-* renders no unknown attributes with client render on top of good server markup
-* renders no unknown attributes with client render on top of bad server markup
+* renders badly cased aliased HTML attribute with a warning with server string render
+* renders badly cased aliased HTML attribute with a warning with server stream render
+* renders badly cased aliased HTML attribute with a warning with clean client render
+* renders badly cased aliased HTML attribute with a warning with client render on top of good server markup
+* renders badly cased aliased HTML attribute with a warning with client render on top of bad server markup
+* renders badly cased SVG attribute with a warning with server string render
+* renders badly cased SVG attribute with a warning with server stream render
+* renders badly cased SVG attribute with a warning with clean client render
+* renders badly cased SVG attribute with a warning with client render on top of good server markup
+* renders badly cased SVG attribute with a warning with client render on top of bad server markup
+* renders no badly cased aliased SVG attribute alias with server string render
+* renders no badly cased aliased SVG attribute alias with server stream render
+* renders no badly cased aliased SVG attribute alias with clean client render
+* renders no badly cased aliased SVG attribute alias with client render on top of good server markup
+* renders no badly cased aliased SVG attribute alias with client render on top of bad server markup
+* renders no badly cased original SVG attribute that is aliased with server string render
+* renders no badly cased original SVG attribute that is aliased with server stream render
+* renders no badly cased original SVG attribute that is aliased with clean client render
+* renders no badly cased original SVG attribute that is aliased with client render on top of good server markup
+* renders no badly cased original SVG attribute that is aliased with client render on top of bad server markup
+* renders unknown attributes with server string render
+* renders unknown attributes with server stream render
+* renders unknown attributes with clean client render
+* renders unknown attributes with client render on top of good server markup
+* renders unknown attributes with client render on top of bad server markup
 * renders unknown data- attributes with server string render
 * renders unknown data- attributes with server stream render
 * renders unknown data- attributes with clean client render
@@ -1205,11 +1294,31 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no unknown data- attributes with null value with clean client render
 * renders no unknown data- attributes with null value with client render on top of good server markup
 * renders no unknown data- attributes with null value with client render on top of bad server markup
-* renders no unknown attributes for non-standard elements with server string render
-* renders no unknown attributes for non-standard elements with server stream render
-* renders no unknown attributes for non-standard elements with clean client render
-* renders no unknown attributes for non-standard elements with client render on top of good server markup
-* renders no unknown attributes for non-standard elements with client render on top of bad server markup
+* renders unknown data- attributes with casing with server string render
+* renders unknown data- attributes with casing with server stream render
+* renders unknown data- attributes with casing with clean client render
+* renders unknown data- attributes with casing with client render on top of good server markup
+* renders unknown data- attributes with casing with client render on top of bad server markup
+* renders unknown data- attributes with boolean true with server string render
+* renders unknown data- attributes with boolean true with server stream render
+* renders unknown data- attributes with boolean true with clean client render
+* renders unknown data- attributes with boolean true with client render on top of good server markup
+* renders unknown data- attributes with boolean true with client render on top of bad server markup
+* renders unknown data- attributes with boolean false with server string render
+* renders unknown data- attributes with boolean false with server stream render
+* renders unknown data- attributes with boolean false with clean client render
+* renders unknown data- attributes with boolean false with client render on top of good server markup
+* renders unknown data- attributes with boolean false with client render on top of bad server markup
+* renders no unknown data- attributes with casing and null value with server string render
+* renders no unknown data- attributes with casing and null value with server stream render
+* renders no unknown data- attributes with casing and null value with clean client render
+* renders no unknown data- attributes with casing and null value with client render on top of good server markup
+* renders no unknown data- attributes with casing and null value with client render on top of bad server markup
+* renders custom attributes for non-standard elements with server string render
+* renders custom attributes for non-standard elements with server stream render
+* renders custom attributes for non-standard elements with clean client render
+* renders custom attributes for non-standard elements with client render on top of good server markup
+* renders custom attributes for non-standard elements with client render on top of bad server markup
 * renders unknown attributes for custom elements with server string render
 * renders unknown attributes for custom elements with server stream render
 * renders unknown attributes for custom elements with clean client render
@@ -1230,6 +1339,11 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders no unknown attributes for custom elements using is with null value with clean client render
 * renders no unknown attributes for custom elements using is with null value with client render on top of good server markup
 * renders no unknown attributes for custom elements using is with null value with client render on top of bad server markup
+* renders cased custom attributes with server string render
+* renders cased custom attributes with server stream render
+* renders cased custom attributes with clean client render
+* renders cased custom attributes with client render on top of good server markup
+* renders cased custom attributes with client render on top of bad server markup
 * renders no HTML events with server string render
 * renders no HTML events with server stream render
 * renders no HTML events with clean client render
@@ -1350,11 +1464,16 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * renders an svg element with clean client render
 * renders an svg element with client render on top of good server markup
 * renders an svg element with client render on top of bad server markup
-* renders svg element with an xlink with server string render
-* renders svg element with an xlink with server stream render
-* renders svg element with an xlink with clean client render
-* renders svg element with an xlink with client render on top of good server markup
-* renders svg element with an xlink with client render on top of bad server markup
+* renders svg child element with server string render
+* renders svg child element with server stream render
+* renders svg child element with clean client render
+* renders svg child element with client render on top of good server markup
+* renders svg child element with client render on top of bad server markup
+* renders no svg child element with a badly cased with server string render
+* renders no svg child element with a badly cased with server stream render
+* renders no svg child element with a badly cased with clean client render
+* renders no svg child element with a badly cased with client render on top of good server markup
+* renders no svg child element with a badly cased with client render on top of bad server markup
 * renders a math element with server string render
 * renders a math element with server stream render
 * renders a math element with clean client render
@@ -1709,11 +1828,6 @@ src/renderers/dom/shared/__tests__/ReactDOMServerIntegration-test.js
 * can distinguish an empty component from a dom node
 * can distinguish an empty component from an empty text component
 * should error reconnecting a div with different dangerouslySetInnerHTML
-* renders injected attributes with server string render
-* renders injected attributes with server stream render
-* renders injected attributes with clean client render
-* renders injected attributes with client render on top of good server markup
-* renders injected attributes with client render on top of bad server markup
 
 src/renderers/dom/shared/__tests__/ReactDOMTextComponent-test.js
 * updates a mounted text component in place
@@ -1791,6 +1905,7 @@ src/renderers/dom/shared/__tests__/ReactServerRendering-test.js
 * warns with a no-op when an async setState is triggered
 * warns with a no-op when an async forceUpdate is triggered
 * should warn when children are mutated during render
+* warns about lowercase html but not in svg tags
 
 src/renderers/dom/shared/__tests__/ReactServerRenderingBrowser-test.js
 * provides the same top-level API as react-dom/server
@@ -1841,6 +1956,7 @@ src/renderers/dom/shared/__tests__/renderSubtreeIntoContainer-test.js
 * should render portal with non-context-provider parent
 * should get context through non-context-provider parent
 * should get context through middle non-context-provider layer
+* fails gracefully when mixing React 15 and 16
 
 src/renderers/dom/shared/__tests__/validateDOMNesting-test.js
 * allows any tag with no context
@@ -1950,6 +2066,8 @@ src/renderers/dom/shared/utils/__tests__/getEventCharCode-test.js
 * returns charCode
 * returns 13
 * returns 0
+* returns 13
+* returns 13
 * returns keyCode
 * returns 13
 * returns 0
@@ -2083,6 +2201,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMSelect-test.js
 * should warn if value and defaultValue props are specified
 * should be able to safely remove select onChange
 * should select grandchild options nested inside an optgroup
+* should allow controlling `value` in a nested render
 
 src/renderers/dom/shared/wrappers/__tests__/ReactDOMTextarea-test.js
 * should allow setting `defaultValue`

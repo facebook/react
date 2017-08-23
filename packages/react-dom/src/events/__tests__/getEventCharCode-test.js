@@ -50,6 +50,25 @@ describe('getEventCharCode', () => {
             expect(getEventCharCode(nativeEvent)).toBe(0);
           });
         });
+
+        describe('when charCode is 10', () => {
+          it('returns 13', () => {
+            var nativeEvent = new KeyboardEvent('keypress', {charCode: 10});
+
+            expect(getEventCharCode(nativeEvent)).toBe(13);
+          });
+
+          describe('when ctrl key is pressed', () => {
+            it('returns 13', () => {
+              var nativeEvent = new KeyboardEvent('keypress', {
+                charCode: 10,
+                ctrlKey: true,
+              });
+
+              expect(getEventCharCode(nativeEvent)).toBe(13);
+            });
+          });
+        });
       });
     });
   });
