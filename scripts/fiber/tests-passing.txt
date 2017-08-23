@@ -626,6 +626,8 @@ src/renderers/__tests__/refs-test.js
 * attaches, detaches from fiber component with stack layer
 * attaches, detaches from stack component with fiber layer
 * attaches and detaches root refs
+* throws an error when __DEV__ = true
+* throws an error when __DEV__ = false
 
 src/renderers/art/__tests__/ReactART-test.js
 * should have the correct lifecycle state

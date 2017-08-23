@@ -14,7 +14,7 @@
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
 var DOMMarkupOperations = require('DOMMarkupOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
@@ -60,11 +60,6 @@ var CONTENT_TYPES = {string: true, number: true};
 
 var STYLE = 'style';
 var HTML = '__html';
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -112,11 +107,6 @@ function assertValidProps(component, props) {
   }
   if (__DEV__) {
     warning(
-      props.innerHTML == null,
-      'Directly setting property `innerHTML` is not permitted. ' +
-        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-    );
-    warning(
       props.suppressContentEditableWarning ||
         !props.contentEditable ||
         props.children == null,
@@ -124,12 +114,6 @@ function assertValidProps(component, props) {
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
         'probably not intentional.',
-    );
-    warning(
-      props.onFocusIn == null && props.onFocusOut == null,
-      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-        'are not needed/supported by React.',
     );
   }
   invariant(
@@ -512,11 +496,11 @@ ReactDOMComponent.Mixin = {
     }
     if (
       namespaceURI == null ||
-      (namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject')
+      (namespaceURI === Namespaces.svg && parentTag === 'foreignobject')
     ) {
-      namespaceURI = DOMNamespaces.html;
+      namespaceURI = Namespaces.html;
     }
-    if (namespaceURI === DOMNamespaces.html) {
+    if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
         warning(
           isCustomComponentTag || this._tag === this._currentElement.type,
@@ -526,9 +510,9 @@ ReactDOMComponent.Mixin = {
         );
       }
       if (this._tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
+        namespaceURI = Namespaces.svg;
       } else if (this._tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
+        namespaceURI = Namespaces.mathml;
       }
     }
     this._namespaceURI = namespaceURI;
@@ -557,7 +541,7 @@ ReactDOMComponent.Mixin = {
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
-      if (namespaceURI === DOMNamespaces.html) {
+      if (namespaceURI === Namespaces.html) {
         if (this._tag === 'script') {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
@@ -587,7 +571,7 @@ ReactDOMComponent.Mixin = {
           );
           didWarnShadyDOM = true;
         }
-        if (this._namespaceURI === DOMNamespaces.html) {
+        if (this._namespaceURI === Namespaces.html) {
           if (
             !isCustomComponentTag &&
             Object.prototype.toString.call(el) ===
@@ -713,7 +697,7 @@ ReactDOMComponent.Mixin = {
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+          if (!DOMProperty.isReservedProp(propKey)) {
             markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
@@ -968,15 +952,12 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
-      } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
+        if (isCustomComponent(this._tag, lastProps)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
+        } else {
+          DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
@@ -1025,17 +1006,14 @@ ReactDOMComponent.Mixin = {
           ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
             nextProp,
           );
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This

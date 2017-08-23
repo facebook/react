@@ -79,9 +79,7 @@ var DOMPropertyOperations = {
    */
   getValueForProperty: function(node, name, expected) {
     if (__DEV__) {
-      var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-        ? DOMProperty.properties[name]
-        : null;
+      var propertyInfo = DOMProperty.getPropertyInfo(name);
       if (propertyInfo) {
         var mutationMethod = propertyInfo.mutationMethod;
         if (mutationMethod || propertyInfo.mustUseProperty) {
@@ -164,10 +162,9 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
-    if (propertyInfo) {
+    var propertyInfo = DOMProperty.getPropertyInfo(name);
+
+    if (propertyInfo && DOMProperty.shouldSetAttribute(name, value)) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
         mutationMethod(node, value);
@@ -194,8 +191,12 @@ var DOMPropertyOperations = {
           node.setAttribute(attributeName, '' + value);
         }
       }
-    } else if (DOMProperty.isCustomAttribute(name)) {
-      DOMPropertyOperations.setValueForAttribute(node, name, value);
+    } else {
+      DOMPropertyOperations.setValueForAttribute(
+        node,
+        name,
+        DOMProperty.shouldSetAttribute(name, value) ? value : null,
+      );
       return;
     }
 
@@ -255,9 +256,7 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
+    var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod) {
@@ -272,7 +271,7 @@ var DOMPropertyOperations = {
       } else {
         node.removeAttribute(propertyInfo.attributeName);
       }
-    } else if (DOMProperty.isCustomAttribute(name)) {
+    } else {
       node.removeAttribute(name);
     }
 

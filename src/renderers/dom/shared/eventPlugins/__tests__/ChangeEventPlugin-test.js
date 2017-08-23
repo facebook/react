@@ -15,6 +15,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactTestUtils = require('react-dom/test-utils');
 // TODO: can we express this test with only public API?
+var ChangeEventPlugin = require('ChangeEventPlugin');
 var inputValueTracking = require('inputValueTracking');
 
 function getTrackedValue(elem) {
@@ -53,7 +54,7 @@ describe('ChangeEventPlugin', () => {
     );
 
     setUntrackedValue(input, true);
-    ReactTestUtils.SimulateNative.change(input);
+    ReactTestUtils.SimulateNative.click(input);
 
     expect(called).toBe(1);
   });
@@ -102,12 +103,12 @@ describe('ChangeEventPlugin', () => {
     );
 
     input.checked = true;
-    ReactTestUtils.SimulateNative.change(input);
+    ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(0);
 
     input.checked = false;
     setTrackedValue(input, undefined);
-    ReactTestUtils.SimulateNative.change(input);
+    ReactTestUtils.SimulateNative.click(input);
 
     expect(called).toBe(1);
   });
@@ -130,8 +131,8 @@ describe('ChangeEventPlugin', () => {
       <input type="radio" onChange={cb} />,
     );
     setUntrackedValue(input, true);
-    ReactTestUtils.SimulateNative.change(input);
-    ReactTestUtils.SimulateNative.input(input);
+    ReactTestUtils.SimulateNative.click(input);
+    ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
   });
 
@@ -179,6 +180,10 @@ describe('ChangeEventPlugin', () => {
     function cb(e) {
       called += 1;
       expect(e.type).toBe('change');
+    }
+
+    if (!ChangeEventPlugin._isInputEventSupported) {
+      return;
     }
 
     var input = ReactTestUtils.renderIntoDocument(

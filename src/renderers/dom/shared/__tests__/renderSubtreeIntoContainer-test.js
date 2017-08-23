@@ -14,6 +14,7 @@
 var React = require('react');
 var PropTypes = require('prop-types');
 var ReactDOM = require('react-dom');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('react-dom/test-utils');
 var renderSubtreeIntoContainer = require('react-dom')
   .unstable_renderSubtreeIntoContainer;
@@ -299,4 +300,27 @@ describe('renderSubtreeIntoContainer', () => {
     ReactDOM.render(<Parent value="foo" />, container);
     expect(portal2.textContent).toBe('foo');
   });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('fails gracefully when mixing React 15 and 16', () => {
+      class C extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      const c = ReactDOM.render(<C />, document.createElement('div'));
+      // React 15 calls this:
+      // https://github.com/facebook/react/blob/77b71fc3c4/src/renderers/dom/client/ReactMount.js#L478-L479
+      expect(() => {
+        c._reactInternalInstance._processChildContext({});
+      }).toThrow(
+        '_processChildContext is not available in React 16+. This likely ' +
+          'means you have multiple copies of React and are attempting to nest ' +
+          'a React 15 tree inside a React 16 tree using ' +
+          "unstable_renderSubtreeIntoContainer, which isn't supported. Try to " +
+          'make sure you have only one copy of React (and ideally, switch to ' +
+          'ReactDOM.unstable_createPortal).',
+      );
+    });
+  }
 });

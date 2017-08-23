@@ -187,107 +187,6 @@ describe('ReactTestUtils', () => {
     expect(ReactTestUtils.isDOMComponent(component.refs.body)).toBe(true);
   });
 
-  it('should change the value of an input field', () => {
-    const obj = {
-      handler: function(e) {
-        e.persist();
-      },
-    };
-    spyOn(obj, 'handler').and.callThrough();
-    const container = document.createElement('div');
-    const instance = ReactDOM.render(
-      <input type="text" onChange={obj.handler} />,
-      container,
-    );
-
-    const node = ReactDOM.findDOMNode(instance);
-    node.value = 'giraffe';
-    ReactTestUtils.Simulate.change(node);
-
-    expect(obj.handler).toHaveBeenCalledWith(
-      jasmine.objectContaining({target: node}),
-    );
-  });
-
-  it('should change the value of an input field in a component', () => {
-    class SomeComponent extends React.Component {
-      render() {
-        return (
-          <div>
-            <input type="text" ref="input" onChange={this.props.handleChange} />
-          </div>
-        );
-      }
-    }
-
-    const obj = {
-      handler: function(e) {
-        e.persist();
-      },
-    };
-    spyOn(obj, 'handler').and.callThrough();
-    const container = document.createElement('div');
-    const instance = ReactDOM.render(
-      <SomeComponent handleChange={obj.handler} />,
-      container,
-    );
-
-    const node = ReactDOM.findDOMNode(instance.refs.input);
-    node.value = 'zebra';
-    ReactTestUtils.Simulate.change(node);
-
-    expect(obj.handler).toHaveBeenCalledWith(
-      jasmine.objectContaining({target: node}),
-    );
-  });
-
-  it('should throw when attempting to use ReactTestUtils.Simulate with shallow rendering', () => {
-    class SomeComponent extends React.Component {
-      render() {
-        return (
-          <div onClick={this.props.handleClick}>
-            hello, world.
-          </div>
-        );
-      }
-    }
-
-    const handler = jasmine.createSpy('spy');
-    const shallowRenderer = createRenderer();
-    const result = shallowRenderer.render(
-      <SomeComponent handleClick={handler} />,
-    );
-
-    expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
-      'TestUtils.Simulate expects a component instance and not a ReactElement.' +
-        'TestUtils.Simulate will not work if you are using shallow rendering.',
-    );
-    expect(handler).not.toHaveBeenCalled();
-  });
-
-  it('should not warn when simulating events with extra properties', () => {
-    spyOn(console, 'error');
-
-    const CLIENT_X = 100;
-
-    class Component extends React.Component {
-      handleClick = e => {
-        expect(e.clientX).toBe(CLIENT_X);
-      };
-
-      render() {
-        return <div onClick={this.handleClick} />;
-      }
-    }
-
-    const element = document.createElement('div');
-    const instance = ReactDOM.render(<Component />, element);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
-      clientX: CLIENT_X,
-    });
-    expectDev(console.error.calls.count()).toBe(0);
-  });
-
   it('can scry with stateless components involved', () => {
     const Stateless = () => <div><hr /></div>;
 
@@ -308,6 +207,137 @@ describe('ReactTestUtils', () => {
   });
 
   describe('Simulate', () => {
+    it('should change the value of an input field', () => {
+      const obj = {
+        handler: function(e) {
+          e.persist();
+        },
+      };
+      spyOn(obj, 'handler').and.callThrough();
+      const container = document.createElement('div');
+      const instance = ReactDOM.render(
+        <input type="text" onChange={obj.handler} />,
+        container,
+      );
+
+      const node = ReactDOM.findDOMNode(instance);
+      node.value = 'giraffe';
+      ReactTestUtils.Simulate.change(node);
+
+      expect(obj.handler).toHaveBeenCalledWith(
+        jasmine.objectContaining({target: node}),
+      );
+    });
+
+    it('should change the value of an input field in a component', () => {
+      class SomeComponent extends React.Component {
+        render() {
+          return (
+            <div>
+              <input
+                type="text"
+                ref="input"
+                onChange={this.props.handleChange}
+              />
+            </div>
+          );
+        }
+      }
+
+      const obj = {
+        handler: function(e) {
+          e.persist();
+        },
+      };
+      spyOn(obj, 'handler').and.callThrough();
+      const container = document.createElement('div');
+      const instance = ReactDOM.render(
+        <SomeComponent handleChange={obj.handler} />,
+        container,
+      );
+
+      const node = ReactDOM.findDOMNode(instance.refs.input);
+      node.value = 'zebra';
+      ReactTestUtils.Simulate.change(node);
+
+      expect(obj.handler).toHaveBeenCalledWith(
+        jasmine.objectContaining({target: node}),
+      );
+    });
+
+    it('should throw when attempting to use a React element', () => {
+      class SomeComponent extends React.Component {
+        render() {
+          return (
+            <div onClick={this.props.handleClick}>
+              hello, world.
+            </div>
+          );
+        }
+      }
+
+      const handler = jasmine.createSpy('spy');
+      const shallowRenderer = createRenderer();
+      const result = shallowRenderer.render(
+        <SomeComponent handleClick={handler} />,
+      );
+
+      expect(() => ReactTestUtils.Simulate.click(result)).toThrowError(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a React element. Pass the DOM node you wish to simulate the event on instead. ' +
+          'Note that TestUtils.Simulate will not work if you are using shallow rendering.',
+      );
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should throw when attempting to use a component instance', () => {
+      class SomeComponent extends React.Component {
+        render() {
+          return (
+            <div onClick={this.props.handleClick}>
+              hello, world.
+            </div>
+          );
+        }
+      }
+
+      const handler = jasmine.createSpy('spy');
+      const container = document.createElement('div');
+      const instance = ReactDOM.render(
+        <SomeComponent handleClick={handler} />,
+        container,
+      );
+
+      expect(() => ReactTestUtils.Simulate.click(instance)).toThrowError(
+        'TestUtils.Simulate expected a DOM node as the first argument but received ' +
+          'a component instance. Pass the DOM node you wish to simulate the event on instead.',
+      );
+      expect(handler).not.toHaveBeenCalled();
+    });
+
+    it('should not warn when used with extra properties', () => {
+      spyOn(console, 'error');
+
+      const CLIENT_X = 100;
+
+      class Component extends React.Component {
+        handleClick = e => {
+          expect(e.clientX).toBe(CLIENT_X);
+        };
+
+        render() {
+          return <div onClick={this.handleClick} />;
+        }
+      }
+
+      const element = document.createElement('div');
+      const instance = ReactDOM.render(<Component />, element);
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
+        clientX: CLIENT_X,
+      });
+      expectDev(console.error.calls.count()).toBe(0);
+    });
+
     it('should set the type of the event', () => {
       let event;
       const stub = jest.genMockFn().mockImplementation(e => {
