@@ -12,7 +12,6 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
