@@ -24,7 +24,7 @@ import {
   setEnabled as setEventEmitterEnabled,
 } from 'ReactBrowserEventEmitter';
 import {
-  injectRestoreControlledStateImplementation,
+  injection as ReactControlledComponentInjection,
 } from 'ReactControlledComponent';
 import {
   getClosestInstanceFromNode,
@@ -48,7 +48,10 @@ import {
   warnForInsertedHydratedText,
 } from 'ReactDOMFiberComponent';
 import {rIC} from 'ReactDOMFrameScheduling';
-import {injectFiberBatchedUpdates, batchedUpdates} from 'ReactGenericBatching';
+import {
+  injection as ReactGenericBatchingInjection,
+  batchedUpdates,
+} from 'ReactGenericBatching';
 import ReactFiberReconciler from 'ReactFiberReconciler';
 import {getSelectionInformation, restoreSelection} from 'ReactInputSelection';
 import ReactInstanceMap from 'ReactInstanceMap';
@@ -93,7 +96,9 @@ if (__DEV__) {
   }
 }
 
-injectRestoreControlledStateImplementation(restoreControlledState);
+ReactControlledComponentInjection.injectRestoreStateImplementation(
+  restoreControlledState,
+);
 
 type DOMContainer =
   | (Element & {
@@ -542,7 +547,9 @@ var DOMRenderer = ReactFiberReconciler({
   useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,
 });
 
-injectFiberBatchedUpdates(DOMRenderer.batchedUpdates);
+ReactGenericBatchingInjection.injectBatchedUpdatesImplementation(
+  DOMRenderer.batchedUpdates,
+);
 
 var warnedAboutHydrateAPI = false;
 

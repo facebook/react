@@ -65,74 +65,76 @@ export const HAS_OVERLOADED_BOOLEAN_VALUE = 0x20;
  *
  * @param {object} domPropertyConfig the config as described above.
  */
-export function injectDOMPropertyConfig(domPropertyConfig) {
-  var Properties = domPropertyConfig.Properties || {};
-  var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-  var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-  var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+export const injection = {
+  injectDOMPropertyConfig(domPropertyConfig) {
+    var Properties = domPropertyConfig.Properties || {};
+    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
+    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
-  for (var propName in Properties) {
-    invariant(
-      !properties.hasOwnProperty(propName),
-      "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-        "'%s' which has already been injected. You may be accidentally " +
-        'injecting the same DOM property config twice, or you may be ' +
-        'injecting two configs that have conflicting property names.',
-      propName,
-    );
+    for (var propName in Properties) {
+      invariant(
+        !properties.hasOwnProperty(propName),
+        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
+          "'%s' which has already been injected. You may be accidentally " +
+          'injecting the same DOM property config twice, or you may be ' +
+          'injecting two configs that have conflicting property names.',
+        propName,
+      );
 
-    var lowerCased = propName.toLowerCase();
-    var propConfig = Properties[propName];
+      var lowerCased = propName.toLowerCase();
+      var propConfig = Properties[propName];
 
-    var propertyInfo = {
-      attributeName: lowerCased,
-      attributeNamespace: null,
-      propertyName: propName,
-      mutationMethod: null,
+      var propertyInfo = {
+        attributeName: lowerCased,
+        attributeNamespace: null,
+        propertyName: propName,
+        mutationMethod: null,
 
-      mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
-      hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
-      hasNumericValue: checkMask(propConfig, HAS_NUMERIC_VALUE),
-      hasPositiveNumericValue: checkMask(
-        propConfig,
-        HAS_POSITIVE_NUMERIC_VALUE,
-      ),
-      hasOverloadedBooleanValue: checkMask(
-        propConfig,
-        HAS_OVERLOADED_BOOLEAN_VALUE,
-      ),
-    };
-    invariant(
-      propertyInfo.hasBooleanValue +
-        propertyInfo.hasNumericValue +
-        propertyInfo.hasOverloadedBooleanValue <=
-        1,
-      'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-        'numeric value, but not a combination: %s',
-      propName,
-    );
+        mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
+        hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
+        hasNumericValue: checkMask(propConfig, HAS_NUMERIC_VALUE),
+        hasPositiveNumericValue: checkMask(
+          propConfig,
+          HAS_POSITIVE_NUMERIC_VALUE,
+        ),
+        hasOverloadedBooleanValue: checkMask(
+          propConfig,
+          HAS_OVERLOADED_BOOLEAN_VALUE,
+        ),
+      };
+      invariant(
+        propertyInfo.hasBooleanValue +
+          propertyInfo.hasNumericValue +
+          propertyInfo.hasOverloadedBooleanValue <=
+          1,
+        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+          'numeric value, but not a combination: %s',
+        propName,
+      );
 
-    if (DOMAttributeNames.hasOwnProperty(propName)) {
-      var attributeName = DOMAttributeNames[propName];
+      if (DOMAttributeNames.hasOwnProperty(propName)) {
+        var attributeName = DOMAttributeNames[propName];
 
-      propertyInfo.attributeName = attributeName;
+        propertyInfo.attributeName = attributeName;
+      }
+
+      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+        propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
+      }
+
+      if (DOMMutationMethods.hasOwnProperty(propName)) {
+        propertyInfo.mutationMethod = DOMMutationMethods[propName];
+      }
+
+      // Downcase references to whitelist properties to check for membership
+      // without case-sensitivity. This allows the whitelist to pick up
+      // `allowfullscreen`, which should be written using the property configuration
+      // for `allowFullscreen`
+      properties[propName] = propertyInfo;
     }
-
-    if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-      propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-    }
-
-    if (DOMMutationMethods.hasOwnProperty(propName)) {
-      propertyInfo.mutationMethod = DOMMutationMethods[propName];
-    }
-
-    // Downcase references to whitelist properties to check for membership
-    // without case-sensitivity. This allows the whitelist to pick up
-    // `allowfullscreen`, which should be written using the property configuration
-    // for `allowFullscreen`
-    properties[propName] = propertyInfo;
-  }
-}
+  },
+};
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:

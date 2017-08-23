@@ -15,8 +15,8 @@ import BeforeInputEventPlugin from 'BeforeInputEventPlugin';
 import ChangeEventPlugin from 'ChangeEventPlugin';
 import DOMEventPluginOrder from 'DOMEventPluginOrder';
 import EnterLeaveEventPlugin from 'EnterLeaveEventPlugin';
-import {injectEventPluginOrder, injectEventPluginsByName} from 'EventPluginHub';
-import {injectComponentTree} from 'EventPluginUtils';
+import {injection as EventPluginRegistryInjection} from 'EventPluginRegistry';
+import {injection as EventPluginUtilsInjection} from 'EventPluginUtils';
 import {handleTopLevel} from 'ReactBrowserEventEmitter';
 import * as ReactDOMComponentTree from 'ReactDOMComponentTree';
 import {setHandleTopLevel} from 'ReactDOMEventListener';
@@ -28,14 +28,14 @@ setHandleTopLevel(handleTopLevel);
 /**
  * Inject modules for resolving DOM hierarchy and plugin ordering.
  */
-injectEventPluginOrder(DOMEventPluginOrder);
-injectComponentTree(ReactDOMComponentTree);
+EventPluginRegistryInjection.injectEventPluginOrder(DOMEventPluginOrder);
+EventPluginUtilsInjection.injectComponentTree(ReactDOMComponentTree);
 
 /**
  * Some important event plugins included by default (without having to require
  * them).
  */
-injectEventPluginsByName({
+EventPluginRegistryInjection.injectEventPluginsByName({
   SimpleEventPlugin,
   EnterLeaveEventPlugin,
   ChangeEventPlugin,

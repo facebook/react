@@ -11,9 +11,9 @@
 
 'use strict';
 
-import {injectDOMPropertyConfig} from 'DOMProperty';
+import {injection as DOMPropertyInjection} from 'DOMProperty';
 import HTMLDOMPropertyConfig from 'HTMLDOMPropertyConfig';
 import SVGDOMPropertyConfig from 'SVGDOMPropertyConfig';
 
-injectDOMPropertyConfig(HTMLDOMPropertyConfig);
-injectDOMPropertyConfig(SVGDOMPropertyConfig);
+DOMPropertyInjection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
+DOMPropertyInjection.injectDOMPropertyConfig(SVGDOMPropertyConfig);

@@ -189,62 +189,60 @@ export const registrationNameDependencies = {};
 export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
 // Trust the developer to only use possibleRegistrationNames in __DEV__
 
-/**
- * Injects an ordering of plugins (by plugin name). This allows the ordering
- * to be decoupled from injection of the actual plugins so that ordering is
- * always deterministic regardless of packaging, on-the-fly injection, etc.
- *
- * @param {array} InjectedEventPluginOrder
- * @internal
- * @see {EventPluginHub.injection.injectEventPluginOrder}
- */
-export function injectEventPluginOrder(
-  injectedEventPluginOrder: EventPluginOrder,
-): void {
-  invariant(
-    !eventPluginOrder,
-    'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
-      'once. You are likely trying to load more than one copy of React.',
-  );
-  // Clone the ordering so it cannot be dynamically mutated.
-  eventPluginOrder = Array.prototype.slice.call(injectedEventPluginOrder);
-  recomputePluginOrdering();
-}
-
-/**
- * Injects plugins to be used by `EventPluginHub`. The plugin names must be
- * in the ordering injected by `injectEventPluginOrder`.
- *
- * Plugins can be injected as part of page initialization or on-the-fly.
- *
- * @param {object} injectedNamesToPlugins Map from names to plugin modules.
- * @internal
- * @see {EventPluginHub.injection.injectEventPluginsByName}
- */
-export function injectEventPluginsByName(
-  injectedNamesToPlugins: NamesToPlugins,
-): void {
-  var isOrderingDirty = false;
-  for (var pluginName in injectedNamesToPlugins) {
-    if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
-      continue;
-    }
-    var pluginModule = injectedNamesToPlugins[pluginName];
-    if (
-      !namesToPlugins.hasOwnProperty(pluginName) ||
-      namesToPlugins[pluginName] !== pluginModule
-    ) {
-      invariant(
-        !namesToPlugins[pluginName],
-        'EventPluginRegistry: Cannot inject two different event plugins ' +
-          'using the same name, `%s`.',
-        pluginName,
-      );
-      namesToPlugins[pluginName] = pluginModule;
-      isOrderingDirty = true;
-    }
-  }
-  if (isOrderingDirty) {
+export const injection = {
+  /**
+   * Injects an ordering of plugins (by plugin name). This allows the ordering
+   * to be decoupled from injection of the actual plugins so that ordering is
+   * always deterministic regardless of packaging, on-the-fly injection, etc.
+   *
+   * @param {array} InjectedEventPluginOrder
+   * @internal
+   * @see {EventPluginHub.injection.injectEventPluginOrder}
+   */
+  injectEventPluginOrder(injectedEventPluginOrder: EventPluginOrder): void {
+    invariant(
+      !eventPluginOrder,
+      'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
+        'once. You are likely trying to load more than one copy of React.',
+    );
+    // Clone the ordering so it cannot be dynamically mutated.
+    eventPluginOrder = Array.prototype.slice.call(injectedEventPluginOrder);
     recomputePluginOrdering();
-  }
-}
+  },
+
+  /**
+   * Injects plugins to be used by `EventPluginHub`. The plugin names must be
+   * in the ordering injected by `injectEventPluginOrder`.
+   *
+   * Plugins can be injected as part of page initialization or on-the-fly.
+   *
+   * @param {object} injectedNamesToPlugins Map from names to plugin modules.
+   * @internal
+   * @see {EventPluginHub.injection.injectEventPluginsByName}
+   */
+  injectEventPluginsByName(injectedNamesToPlugins: NamesToPlugins): void {
+    var isOrderingDirty = false;
+    for (var pluginName in injectedNamesToPlugins) {
+      if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
+        continue;
+      }
+      var pluginModule = injectedNamesToPlugins[pluginName];
+      if (
+        !namesToPlugins.hasOwnProperty(pluginName) ||
+        namesToPlugins[pluginName] !== pluginModule
+      ) {
+        invariant(
+          !namesToPlugins[pluginName],
+          'EventPluginRegistry: Cannot inject two different event plugins ' +
+            'using the same name, `%s`.',
+          pluginName,
+        );
+        namesToPlugins[pluginName] = pluginModule;
+        isOrderingDirty = true;
+      }
+    }
+    if (isOrderingDirty) {
+      recomputePluginOrdering();
+    }
+  },
+};

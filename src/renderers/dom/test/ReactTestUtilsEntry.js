@@ -433,13 +433,15 @@ function buildSimulators() {
 }
 
 // Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-var oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
-EventPluginHub.injection.injectEventPluginOrder = function() {
+var oldInjectEventPluginOrder =
+  EventPluginRegistry.injection.injectEventPluginOrder;
+EventPluginRegistry.injection.injectEventPluginOrder = function() {
   oldInjectEventPluginOrder.apply(this, arguments);
   buildSimulators();
 };
-var oldInjectEventPlugins = EventPluginHub.injection.injectEventPluginsByName;
-EventPluginHub.injection.injectEventPluginsByName = function() {
+var oldInjectEventPlugins =
+  EventPluginRegistry.injection.injectEventPluginsByName;
+EventPluginRegistry.injection.injectEventPluginsByName = function() {
   oldInjectEventPlugins.apply(this, arguments);
   buildSimulators();
 };

@@ -81,14 +81,16 @@ export function logCapturedError(capturedError: CapturedError): void {
  * Display custom dialog for lifecycle errors.
  * Return false to prevent default behavior of logging to console.error.
  */
-export function injectErrorLoggerDialog(fn: (e: CapturedError) => boolean) {
-  invariant(
-    showDialog === defaultShowDialog,
-    'The custom dialog was already injected.',
-  );
-  invariant(
-    typeof fn === 'function',
-    'Injected showDialog() must be a function.',
-  );
-  showDialog = fn;
-}
+export const injection = {
+  injectDialog(fn: (e: CapturedError) => boolean) {
+    invariant(
+      showDialog === defaultShowDialog,
+      'The custom dialog was already injected.',
+    );
+    invariant(
+      typeof fn === 'function',
+      'Injected showDialog() must be a function.',
+    );
+    showDialog = fn;
+  },
+};

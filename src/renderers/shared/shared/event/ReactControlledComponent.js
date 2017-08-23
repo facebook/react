@@ -20,13 +20,6 @@ import invariant from 'fbjs/lib/invariant';
 // Use to restore controlled state after a change event has fired.
 
 var restoreControlledState = null;
-
-export function injectRestoreControlledStateImplementation(restoreImpl) {
-  // The fiber implementation doesn't use dynamic dispatch so we need to
-  // inject the implementation.
-  restoreControlledState = restoreImpl;
-}
-
 var restoreTarget = null;
 var restoreQueue = null;
 
@@ -50,6 +43,14 @@ function restoreStateOfTarget(target) {
     props,
   );
 }
+
+export const injection = {
+  injectRestoreStateImplementation(restoreImpl) {
+    // The fiber implementation doesn't use dynamic dispatch so we need to
+    // inject the implementation.
+    restoreControlledState = restoreImpl;
+  },
+};
 
 export function enqueueStateRestore(target) {
   if (restoreTarget) {

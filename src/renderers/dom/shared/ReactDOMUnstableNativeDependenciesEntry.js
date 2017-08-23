@@ -9,12 +9,12 @@
  * @providesModule ReactDOMUnstableNativeDependenciesEntry
  */
 
-import {injectComponentTree} from 'EventPluginUtils';
+import {injection as EventPluginUtilsInjection} from 'EventPluginUtils';
 import ResponderEventPlugin from 'ResponderEventPlugin';
 import ResponderTouchHistoryStore from 'ResponderTouchHistoryStore';
 
 const ReactDOMUnstableNativeDependencies = {
-  injectComponentTree,
+  injectComponentTree: EventPluginUtilsInjection.injectComponentTree,
   ResponderEventPlugin,
   ResponderTouchHistoryStore,
 };
@@ -24,7 +24,7 @@ const ReactDOM = require('react-dom');
 const {
   ReactDOMComponentTree,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-injectComponentTree(ReactDOMComponentTree);
+EventPluginUtilsInjection.injectComponentTree(ReactDOMComponentTree);
 
 // TODO: use ESM export?
 module.exports = ReactDOMUnstableNativeDependencies;

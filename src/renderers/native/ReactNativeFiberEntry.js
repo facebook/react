@@ -13,8 +13,13 @@
 'use strict';
 
 import 'ReactNativeInjection';
-import {injectErrorLoggerDialog} from 'ReactFiberErrorLogger';
-import {injectFiberBatchedUpdates, batchedUpdates} from 'ReactGenericBatching';
+import {
+  injection as ReactFiberErrorLoggerInjection,
+} from 'ReactFiberErrorLogger';
+import {
+  injection as ReactGenericBatchingInjection,
+  batchedUpdates,
+} from 'ReactGenericBatching';
 import ReactNativeComponent from 'ReactNativeComponent';
 import {showFiberErrorDialog} from 'ReactNativeFiberErrorDialog';
 import {createPortal} from 'ReactPortal';
@@ -38,13 +43,15 @@ import takeSnapshot from 'takeSnapshot';
 import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
 
-injectFiberBatchedUpdates(ReactNativeFiberRenderer.batchedUpdates);
-
-const roots = new Map();
+ReactGenericBatchingInjection.injectBatchedUpdatesImplementation(
+  ReactNativeFiberRenderer.batchedUpdates,
+);
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
-injectErrorLoggerDialog(showFiberErrorDialog);
+ReactFiberErrorLoggerInjection.injectDialog(showFiberErrorDialog);
+
+const roots = new Map();
 
 const ReactNativeFiber: ReactNativeType = {
   NativeComponent: ReactNativeComponent,

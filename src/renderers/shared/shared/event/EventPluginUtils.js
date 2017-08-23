@@ -24,16 +24,20 @@ import warning from 'fbjs/lib/warning';
  *   and actual node references.
  */
 var ComponentTree;
-export function injectComponentTree(Injected) {
-  ComponentTree = Injected;
-  if (__DEV__) {
-    warning(
-      Injected && Injected.getNodeFromInstance && Injected.getInstanceFromNode,
-      'injection.injectComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.',
-    );
-  }
-}
+export const injection = {
+  injectComponentTree(Injected) {
+    ComponentTree = Injected;
+    if (__DEV__) {
+      warning(
+        Injected &&
+          Injected.getNodeFromInstance &&
+          Injected.getInstanceFromNode,
+        'injection.injectComponentTree(...): Injected ' +
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
+      );
+    }
+  },
+};
 
 export function isEndish(topLevelType) {
   return (

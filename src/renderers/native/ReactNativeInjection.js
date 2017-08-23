@@ -18,8 +18,8 @@
  * TODO: require this in packager, not in React #10932517
  */
 import 'InitializeCore';
-import {injectEventPluginOrder, injectEventPluginsByName} from 'EventPluginHub';
-import {injectComponentTree} from 'EventPluginUtils';
+import {injection as EventPluginRegistryInjection} from 'EventPluginRegistry';
+import {injection as EventPluginUtilsInjection} from 'EventPluginUtils';
 import RCTEventEmitter from 'RCTEventEmitter';
 import ReactNativeBridgeEventPlugin from 'ReactNativeBridgeEventPlugin';
 import * as ReactNativeComponentTree from 'ReactNativeComponentTree';
@@ -37,8 +37,10 @@ RCTEventEmitter.register(ReactNativeEventEmitter);
 /**
  * Inject module for resolving DOM hierarchy and plugin ordering.
  */
-injectEventPluginOrder(ReactNativeEventPluginOrder);
-injectComponentTree(ReactNativeComponentTree);
+EventPluginRegistryInjection.injectEventPluginOrder(
+  ReactNativeEventPluginOrder,
+);
+EventPluginUtilsInjection.injectComponentTree(ReactNativeComponentTree);
 
 ResponderEventPlugin.injection.injectGlobalResponderHandler(
   ReactNativeGlobalResponderHandler,
@@ -48,7 +50,7 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler(
  * Some important event plugins included by default (without having to require
  * them).
  */
-injectEventPluginsByName({
+EventPluginRegistryInjection.injectEventPluginsByName({
   ResponderEventPlugin: ResponderEventPlugin,
   ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
 });

@@ -20,7 +20,7 @@ import {restoreStateIfNeeded} from 'ReactControlledComponent';
 // scheduled work and instead do synchronous work.
 
 // Defaults
-var fiberBatchedUpdates = function(fn, bookkeeping) {
+var batchedUpdatesImpl = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
 
@@ -30,11 +30,11 @@ export function batchedUpdates(fn, bookkeeping) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state. Therefore, we add the target to
     // a queue of work.
-    return fiberBatchedUpdates(fn, bookkeeping);
+    return batchedUpdatesImpl(fn, bookkeeping);
   }
   isNestingBatched = true;
   try {
-    return fiberBatchedUpdates(fn, bookkeeping);
+    return batchedUpdatesImpl(fn, bookkeeping);
   } finally {
     // Here we wait until all updates have propagated, which is important
     // when using controlled components within layers:
@@ -45,6 +45,8 @@ export function batchedUpdates(fn, bookkeeping) {
   }
 }
 
-export function injectFiberBatchedUpdates(_batchedUpdates) {
-  fiberBatchedUpdates = _batchedUpdates;
-}
+export const injection = {
+  injectBatchedUpdatesImplementation(_batchedUpdates) {
+    batchedUpdatesImpl = _batchedUpdates;
+  },
+};

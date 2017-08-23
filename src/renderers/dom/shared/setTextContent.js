@@ -26,7 +26,7 @@ import {TEXT_NODE} from 'HTMLNodeType';
  * @param {string} text
  * @internal
  */
-export default function setTextContent(node, text) {
+let setTextContent = function(node, text) {
   if (text) {
     var firstChild = node.firstChild;
 
@@ -40,7 +40,9 @@ export default function setTextContent(node, text) {
     }
   }
   node.textContent = text;
-}
+};
+
+export default setTextContent;
 
 if (ExecutionEnvironment.canUseDOM) {
   if (!('textContent' in document.documentElement)) {

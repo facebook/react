@@ -11,11 +11,7 @@
 
 'use strict';
 
-import {
-  injectEventPluginOrder,
-  injectEventPluginsByName,
-  plugins,
-} from 'EventPluginRegistry';
+import {plugins} from 'EventPluginRegistry';
 import {
   executeDispatchesInOrder,
   getFiberCurrentPropsFromNode,
@@ -104,9 +100,6 @@ function shouldPreventMouseEvent(name, type, props) {
  *
  * @public
  */
-
-// TODO: stop re-exporting these.
-export {injectEventPluginOrder, injectEventPluginsByName};
 
 /**
  * @param {object} inst The instance, which is the source of events.
