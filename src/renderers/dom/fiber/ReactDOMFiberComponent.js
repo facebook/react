@@ -126,7 +126,7 @@ if (__DEV__) {
   var warnForInvalidEventListener = function(registrationName, listener) {
     warning(
       false,
-      'Expected %s listener to be a function, instead got type %s%s',
+      'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
       registrationName,
       typeof listener,
       getCurrentFiberStackAddendum(),
