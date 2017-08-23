@@ -9,42 +9,43 @@
  * @emails react-core
 */
 
-'use strict';
+"use strict"
 
-import React, {Component} from 'react';
-import docsearch from 'docsearch.js';
-import Flex from 'components/Flex';
-import Footer from './components/Footer';
-import Header from './components/Header';
-import {media} from 'theme';
+import React, { Component } from "react"
+import docsearch from "docsearch.js"
+import Flex from "../components/Flex"
+import Footer from "../layout-components/components/Footer"
+import Header from "../layout-components/components/Header"
+import { media } from "theme"
 
 // Import global styles
-import './prism-styles';
-import 'glamor/reset';
-import 'css/reset.css';
-import 'css/algolia.css';
+import "../layout-components/prism-styles"
+import "glamor/reset"
+import "css/reset.css"
+import "css/algolia.css"
 
 class Template extends Component {
   componentDidMount() {
     // Initialize Algolia search.
     // TODO Is this expensive? Should it be deferred until a user is about to search?
     docsearch({
-      apiKey: '36221914cce388c46d0420343e0bb32e',
-      indexName: 'react',
-      inputSelector: '#algolia-doc-search',
-    });
+      apiKey: "36221914cce388c46d0420343e0bb32e",
+      indexName: "react",
+      inputSelector: "#algolia-doc-search",
+    })
   }
 
   render() {
-    const {children, location} = this.props;
+    const { children, location } = this.props
 
     return (
       <div
         css={{
-          display: 'flex',
-          flexDirection: 'column',
-          minHeight: '100vh',
-        }}>
+          display: "flex",
+          flexDirection: "column",
+          minHeight: "100vh",
+        }}
+      >
         <Header location={location} />
         <Flex
           direction="column"
@@ -52,7 +53,7 @@ class Template extends Component {
           grow="1"
           valign="stretch"
           css={{
-            flex: '1 0 auto',
+            flex: "1 0 auto",
             marginTop: 60,
             [media.mediumToLarge]: {
               marginTop: 50,
@@ -60,13 +61,14 @@ class Template extends Component {
             [media.smallDown]: {
               marginTop: 40,
             },
-          }}>
+          }}
+        >
           {children()}
         </Flex>
         <Footer />
       </div>
-    );
+    )
   }
 }
 
-export default Template;
+export default Template
