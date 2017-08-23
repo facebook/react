@@ -21,7 +21,7 @@
  * @param {object} nativeEvent Native browser event.
  * @return {number} Normalized `charCode` property.
  */
-function getEventCharCode(nativeEvent) {
+export default function getEventCharCode(nativeEvent) {
   var charCode;
   var keyCode = nativeEvent.keyCode;
 
@@ -45,5 +45,3 @@ function getEventCharCode(nativeEvent) {
 
   return 0;
 }
-
-module.exports = getEventCharCode;

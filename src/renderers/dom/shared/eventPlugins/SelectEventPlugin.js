@@ -154,9 +154,7 @@ var SelectEventPlugin = {
       return null;
     }
 
-    var targetNode = targetInst
-      ? getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.

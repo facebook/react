@@ -11,15 +11,13 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-
-var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
-var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
-var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
-var HAS_POSITIVE_NUMERIC_VALUE =
-  DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
-var HAS_OVERLOADED_BOOLEAN_VALUE =
-  DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
+import {
+  MUST_USE_PROPERTY,
+  HAS_BOOLEAN_VALUE,
+  HAS_NUMERIC_VALUE,
+  HAS_POSITIVE_NUMERIC_VALUE,
+  HAS_OVERLOADED_BOOLEAN_VALUE,
+} from 'DOMProperty';
 
 var HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
@@ -128,4 +126,4 @@ var HTMLDOMPropertyConfig = {
   },
 };
 
-module.exports = HTMLDOMPropertyConfig;
+export default HTMLDOMPropertyConfig;

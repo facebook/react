@@ -11,7 +11,7 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('HTMLNodeType');
+import {TEXT_NODE} from 'HTMLNodeType';
 
 /**
  * Gets the target node from a native browser event by accounting for
@@ -20,7 +20,7 @@ var {TEXT_NODE} = require('HTMLNodeType');
  * @param {object} nativeEvent Native browser event.
  * @return {DOMEventTarget} Target node.
  */
-function getEventTarget(nativeEvent) {
+export default function getEventTarget(nativeEvent) {
   var target = nativeEvent.target || nativeEvent.srcElement || window;
 
   // Normalize SVG <use> element events #4963
@@ -32,5 +32,3 @@ function getEventTarget(nativeEvent) {
   // @see http://www.quirksmode.org/js/events_properties.html
   return target.nodeType === TEXT_NODE ? target.parentNode : target;
 }
-
-module.exports = getEventTarget;

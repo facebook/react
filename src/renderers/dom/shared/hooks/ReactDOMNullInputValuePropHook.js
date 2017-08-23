@@ -11,10 +11,8 @@
 
 'use strict';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
-}
+import warning from 'fbjs/lib/warning';
+import {ReactDebugCurrentFrame} from 'ReactGlobalSharedState';
 
 var didWarnValueNull = false;
 
@@ -23,7 +21,7 @@ function getStackAddendum() {
   return stack != null ? stack : '';
 }
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (type !== 'input' && type !== 'textarea' && type !== 'select') {
     return;
   }
@@ -40,9 +38,3 @@ function validateProperties(type, props) {
     didWarnValueNull = true;
   }
 }
-
-var ReactDOMNullInputValuePropHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMNullInputValuePropHook;

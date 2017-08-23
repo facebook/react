@@ -11,20 +11,14 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+import {ATTRIBUTE_NAME_CHAR} from 'DOMProperty';
+import warning from 'fbjs/lib/warning';
+import {ReactDebugCurrentFrame} from 'ReactGlobalSharedState';
+import validAriaProperties from './validAriaProperties';
 
 var warnedProperties = {};
-var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-var rARIACamel = new RegExp(
-  '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
-);
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
-
-  var validAriaProperties = require('./validAriaProperties');
-}
+var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
+var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -132,15 +126,9 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (type.indexOf('-') >= 0 || props.is) {
     return;
   }
   warnInvalidARIAProps(type, props);
 }
-
-var ReactDOMInvalidARIAHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMInvalidARIAHook;

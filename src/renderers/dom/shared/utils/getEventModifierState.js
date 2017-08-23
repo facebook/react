@@ -36,8 +36,6 @@ function modifierStateGetter(keyArg) {
   return keyProp ? !!nativeEvent[keyProp] : false;
 }
 
-function getEventModifierState(nativeEvent) {
+export default function getEventModifierState(nativeEvent) {
   return modifierStateGetter;
 }
-
-module.exports = getEventModifierState;

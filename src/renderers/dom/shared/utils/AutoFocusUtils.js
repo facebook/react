@@ -11,14 +11,9 @@
 
 'use strict';
 
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
+import {getNodeFromInstance} from 'ReactDOMComponentTree';
+import focusNode from 'fbjs/lib/focusNode';
 
-var focusNode = require('fbjs/lib/focusNode');
-
-var AutoFocusUtils = {
-  focusDOMComponent: function() {
-    focusNode(ReactDOMComponentTree.getNodeFromInstance(this));
-  },
-};
-
-module.exports = AutoFocusUtils;
+export function focusDOMComponent() {
+  focusNode(getNodeFromInstance(this));
+}

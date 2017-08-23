@@ -11,20 +11,20 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import {
+  ATTRIBUTE_NAME_START_CHAR,
+  ATTRIBUTE_NAME_CHAR,
+  ID_ATTRIBUTE_NAME,
+  ROOT_ATTRIBUTE_NAME,
+  getPropertyInfo,
+  shouldSetAttribute,
+} from 'DOMProperty';
+import warning from 'fbjs/lib/warning';
 
 // isAttributeNameSafe() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  '^[' +
-    DOMProperty.ATTRIBUTE_NAME_START_CHAR +
-    '][' +
-    DOMProperty.ATTRIBUTE_NAME_CHAR +
-    ']*$',
+  '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
@@ -61,201 +61,198 @@ function shouldIgnoreValue(propertyInfo, value) {
 /**
  * Operations for dealing with DOM properties.
  */
-var DOMPropertyOperations = {
-  setAttributeForID: function(node, id) {
-    node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);
-  },
 
-  setAttributeForRoot: function(node) {
-    node.setAttribute(DOMProperty.ROOT_ATTRIBUTE_NAME, '');
-  },
+export function setAttributeForID(node, id) {
+  node.setAttribute(ID_ATTRIBUTE_NAME, id);
+}
 
-  /**
-   * Get the value for a property on a node. Only used in DEV for SSR validation.
-   * The "expected" argument is used as a hint of what the expected value is.
-   * Some properties have multiple equivalent values.
-   */
-  getValueForProperty: function(node, name, expected) {
-    if (__DEV__) {
-      var propertyInfo = DOMProperty.getPropertyInfo(name);
-      if (propertyInfo) {
-        var mutationMethod = propertyInfo.mutationMethod;
-        if (mutationMethod || propertyInfo.mustUseProperty) {
-          return node[propertyInfo.propertyName];
-        } else {
-          var attributeName = propertyInfo.attributeName;
+export function setAttributeForRoot(node) {
+  node.setAttribute(ROOT_ATTRIBUTE_NAME, '');
+}
 
-          var stringValue = null;
-
-          if (propertyInfo.hasOverloadedBooleanValue) {
-            if (node.hasAttribute(attributeName)) {
-              var value = node.getAttribute(attributeName);
-              if (value === '') {
-                return true;
-              }
-              if (shouldIgnoreValue(propertyInfo, expected)) {
-                return value;
-              }
-              if (value === '' + expected) {
-                return expected;
-              }
-              return value;
-            }
-          } else if (node.hasAttribute(attributeName)) {
-            if (shouldIgnoreValue(propertyInfo, expected)) {
-              // We had an attribute but shouldn't have had one, so read it
-              // for the error message.
-              return node.getAttribute(attributeName);
-            }
-            if (propertyInfo.hasBooleanValue) {
-              // If this was a boolean, it doesn't matter what the value is
-              // the fact that we have it is the same as the expected.
-              return expected;
-            }
-            // Even if this property uses a namespace we use getAttribute
-            // because we assume its namespaced name is the same as our config.
-            // To use getAttributeNS we need the local name which we don't have
-            // in our config atm.
-            stringValue = node.getAttribute(attributeName);
-          }
-
-          if (shouldIgnoreValue(propertyInfo, expected)) {
-            return stringValue === null ? expected : stringValue;
-          } else if (stringValue === '' + expected) {
-            return expected;
-          } else {
-            return stringValue;
-          }
-        }
-      }
-    }
-  },
-
-  /**
-   * Get the value for a attribute on a node. Only used in DEV for SSR validation.
-   * The third argument is used as a hint of what the expected value is. Some
-   * attributes have multiple equivalent values.
-   */
-  getValueForAttribute: function(node, name, expected) {
-    if (__DEV__) {
-      if (!isAttributeNameSafe(name)) {
-        return;
-      }
-      if (!node.hasAttribute(name)) {
-        return expected === undefined ? undefined : null;
-      }
-      var value = node.getAttribute(name);
-      if (value === '' + expected) {
-        return expected;
-      }
-      return value;
-    }
-  },
-
-  /**
-   * Sets the value for a property on a node.
-   *
-   * @param {DOMElement} node
-   * @param {string} name
-   * @param {*} value
-   */
-  setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
-
-    if (propertyInfo && DOMProperty.shouldSetAttribute(name, value)) {
+/**
+ * Get the value for a property on a node. Only used in DEV for SSR validation.
+ * The "expected" argument is used as a hint of what the expected value is.
+ * Some properties have multiple equivalent values.
+ */
+export function getValueForProperty(node, name, expected) {
+  if (__DEV__) {
+    var propertyInfo = getPropertyInfo(name);
+    if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod) {
-        mutationMethod(node, value);
-      } else if (shouldIgnoreValue(propertyInfo, value)) {
-        DOMPropertyOperations.deleteValueForProperty(node, name);
-        return;
-      } else if (propertyInfo.mustUseProperty) {
-        // Contrary to `setAttribute`, object properties are properly
-        // `toString`ed by IE8/9.
-        node[propertyInfo.propertyName] = value;
+      if (mutationMethod || propertyInfo.mustUseProperty) {
+        return node[propertyInfo.propertyName];
       } else {
         var attributeName = propertyInfo.attributeName;
-        var namespace = propertyInfo.attributeNamespace;
-        // `setAttribute` with objects becomes only `[object]` in IE8/9,
-        // ('' + value) makes it output the correct toString()-value.
-        if (namespace) {
-          node.setAttributeNS(namespace, attributeName, '' + value);
-        } else if (
-          propertyInfo.hasBooleanValue ||
-          (propertyInfo.hasOverloadedBooleanValue && value === true)
-        ) {
-          node.setAttribute(attributeName, '');
+
+        var stringValue = null;
+
+        if (propertyInfo.hasOverloadedBooleanValue) {
+          if (node.hasAttribute(attributeName)) {
+            var value = node.getAttribute(attributeName);
+            if (value === '') {
+              return true;
+            }
+            if (shouldIgnoreValue(propertyInfo, expected)) {
+              return value;
+            }
+            if (value === '' + expected) {
+              return expected;
+            }
+            return value;
+          }
+        } else if (node.hasAttribute(attributeName)) {
+          if (shouldIgnoreValue(propertyInfo, expected)) {
+            // We had an attribute but shouldn't have had one, so read it
+            // for the error message.
+            return node.getAttribute(attributeName);
+          }
+          if (propertyInfo.hasBooleanValue) {
+            // If this was a boolean, it doesn't matter what the value is
+            // the fact that we have it is the same as the expected.
+            return expected;
+          }
+          // Even if this property uses a namespace we use getAttribute
+          // because we assume its namespaced name is the same as our config.
+          // To use getAttributeNS we need the local name which we don't have
+          // in our config atm.
+          stringValue = node.getAttribute(attributeName);
+        }
+
+        if (shouldIgnoreValue(propertyInfo, expected)) {
+          return stringValue === null ? expected : stringValue;
+        } else if (stringValue === '' + expected) {
+          return expected;
         } else {
-          node.setAttribute(attributeName, '' + value);
+          return stringValue;
         }
       }
-    } else {
-      DOMPropertyOperations.setValueForAttribute(
-        node,
-        name,
-        DOMProperty.shouldSetAttribute(name, value) ? value : null,
-      );
-      return;
     }
+  }
+}
 
-    if (__DEV__) {
-      var payload = {};
-      payload[name] = value;
-    }
-  },
-
-  setValueForAttribute: function(node, name, value) {
+/**
+ * Get the value for a attribute on a node. Only used in DEV for SSR validation.
+ * The third argument is used as a hint of what the expected value is. Some
+ * attributes have multiple equivalent values.
+ */
+export function getValueForAttribute(node, name, expected) {
+  if (__DEV__) {
     if (!isAttributeNameSafe(name)) {
       return;
     }
-    if (value == null) {
-      node.removeAttribute(name);
+    if (!node.hasAttribute(name)) {
+      return expected === undefined ? undefined : null;
+    }
+    var value = node.getAttribute(name);
+    if (value === '' + expected) {
+      return expected;
+    }
+    return value;
+  }
+}
+
+/**
+ * Sets the value for a property on a node.
+ *
+ * @param {DOMElement} node
+ * @param {string} name
+ * @param {*} value
+ */
+export function setValueForProperty(node, name, value) {
+  var propertyInfo = getPropertyInfo(name);
+
+  if (propertyInfo && shouldSetAttribute(name, value)) {
+    var mutationMethod = propertyInfo.mutationMethod;
+    if (mutationMethod) {
+      mutationMethod(node, value);
+    } else if (shouldIgnoreValue(propertyInfo, value)) {
+      deleteValueForProperty(node, name);
+      return;
+    } else if (propertyInfo.mustUseProperty) {
+      // Contrary to `setAttribute`, object properties are properly
+      // `toString`ed by IE8/9.
+      node[propertyInfo.propertyName] = value;
     } else {
-      node.setAttribute(name, '' + value);
-    }
-
-    if (__DEV__) {
-      var payload = {};
-      payload[name] = value;
-    }
-  },
-
-  /**
-   * Deletes an attributes from a node.
-   *
-   * @param {DOMElement} node
-   * @param {string} name
-   */
-  deleteValueForAttribute: function(node, name) {
-    node.removeAttribute(name);
-  },
-
-  /**
-   * Deletes the value for a property on a node.
-   *
-   * @param {DOMElement} node
-   * @param {string} name
-   */
-  deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
-    if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod) {
-        mutationMethod(node, undefined);
-      } else if (propertyInfo.mustUseProperty) {
-        var propName = propertyInfo.propertyName;
-        if (propertyInfo.hasBooleanValue) {
-          node[propName] = false;
-        } else {
-          node[propName] = '';
-        }
+      var attributeName = propertyInfo.attributeName;
+      var namespace = propertyInfo.attributeNamespace;
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      if (namespace) {
+        node.setAttributeNS(namespace, attributeName, '' + value);
+      } else if (
+        propertyInfo.hasBooleanValue ||
+        (propertyInfo.hasOverloadedBooleanValue && value === true)
+      ) {
+        node.setAttribute(attributeName, '');
       } else {
-        node.removeAttribute(propertyInfo.attributeName);
+        node.setAttribute(attributeName, '' + value);
+      }
+    }
+  } else {
+    setValueForAttribute(
+      node,
+      name,
+      shouldSetAttribute(name, value) ? value : null,
+    );
+    return;
+  }
+
+  if (__DEV__) {
+    var payload = {};
+    payload[name] = value;
+  }
+}
+
+export function setValueForAttribute(node, name, value) {
+  if (!isAttributeNameSafe(name)) {
+    return;
+  }
+  if (value == null) {
+    node.removeAttribute(name);
+  } else {
+    node.setAttribute(name, '' + value);
+  }
+
+  if (__DEV__) {
+    var payload = {};
+    payload[name] = value;
+  }
+}
+
+/**
+ * Deletes an attributes from a node.
+ *
+ * @param {DOMElement} node
+ * @param {string} name
+ */
+export function deleteValueForAttribute(node, name) {
+  node.removeAttribute(name);
+}
+
+/**
+ * Deletes the value for a property on a node.
+ *
+ * @param {DOMElement} node
+ * @param {string} name
+ */
+export function deleteValueForProperty(node, name) {
+  var propertyInfo = getPropertyInfo(name);
+  if (propertyInfo) {
+    var mutationMethod = propertyInfo.mutationMethod;
+    if (mutationMethod) {
+      mutationMethod(node, undefined);
+    } else if (propertyInfo.mustUseProperty) {
+      var propName = propertyInfo.propertyName;
+      if (propertyInfo.hasBooleanValue) {
+        node[propName] = false;
+      } else {
+        node[propName] = '';
       }
     } else {
-      node.removeAttribute(name);
+      node.removeAttribute(propertyInfo.attributeName);
     }
-  },
-};
-
-module.exports = DOMPropertyOperations;
+  } else {
+    node.removeAttribute(name);
+  }
+}

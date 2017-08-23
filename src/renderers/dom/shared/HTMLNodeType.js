@@ -23,4 +23,4 @@ var HTMLNodeType = {
   DOCUMENT_FRAGMENT_NODE: 11,
 };
 
-module.exports = HTMLNodeType;
+export default HTMLNodeType;

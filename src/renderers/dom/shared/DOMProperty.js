@@ -11,7 +11,7 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
@@ -32,115 +32,107 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
-var DOMPropertyInjection = {
-  /**
-   * Mapping from normalized, camelcased property names to a configuration that
-   * specifies how the associated DOM property should be accessed or rendered.
-   */
-  MUST_USE_PROPERTY: 0x1,
-  HAS_BOOLEAN_VALUE: 0x4,
-  HAS_NUMERIC_VALUE: 0x8,
-  HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
-  HAS_OVERLOADED_BOOLEAN_VALUE: 0x20,
+/**
+ * Mapping from normalized, camelcased property names to a configuration that
+ * specifies how the associated DOM property should be accessed or rendered.
+ */
+export const MUST_USE_PROPERTY = 0x1;
+export const HAS_BOOLEAN_VALUE = 0x4;
+export const HAS_NUMERIC_VALUE = 0x8;
+export const HAS_POSITIVE_NUMERIC_VALUE = 0x10 | 0x8;
+export const HAS_OVERLOADED_BOOLEAN_VALUE = 0x20;
 
-  /**
-   * Inject some specialized knowledge about the DOM. This takes a config object
-   * with the following properties:
-   *
-   * Properties: object mapping DOM property name to one of the
-   * DOMPropertyInjection constants or null. If your attribute isn't in here,
-   * it won't get written to the DOM.
-   *
-   * DOMAttributeNames: object mapping React attribute name to the DOM
-   * attribute name. Attribute names not specified use the **lowercase**
-   * normalized name.
-   *
-   * DOMAttributeNamespaces: object mapping React attribute name to the DOM
-   * attribute namespace URL. (Attribute names not specified use no namespace.)
-   *
-   * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
-   * Property names not specified use the normalized name.
-   *
-   * DOMMutationMethods: Properties that require special mutation methods. If
-   * `value` is undefined, the mutation method should unset the property.
-   *
-   * @param {object} domPropertyConfig the config as described above.
-   */
-  injectDOMPropertyConfig: function(domPropertyConfig) {
-    var Injection = DOMPropertyInjection;
-    var Properties = domPropertyConfig.Properties || {};
-    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+/**
+ * Inject some specialized knowledge about the DOM. This takes a config object
+ * with the following properties:
+ *
+ * Properties: object mapping DOM property name to one of the
+ * constants above or null. If your attribute isn't in here,
+ * it won't get written to the DOM.
+ *
+ * DOMAttributeNames: object mapping React attribute name to the DOM
+ * attribute name. Attribute names not specified use the **lowercase**
+ * normalized name.
+ *
+ * DOMAttributeNamespaces: object mapping React attribute name to the DOM
+ * attribute namespace URL. (Attribute names not specified use no namespace.)
+ *
+ * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
+ * Property names not specified use the normalized name.
+ *
+ * DOMMutationMethods: Properties that require special mutation methods. If
+ * `value` is undefined, the mutation method should unset the property.
+ *
+ * @param {object} domPropertyConfig the config as described above.
+ */
+export function injectDOMPropertyConfig(domPropertyConfig) {
+  var Properties = domPropertyConfig.Properties || {};
+  var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
+  var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+  var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
-    for (var propName in Properties) {
-      invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
-        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-          "'%s' which has already been injected. You may be accidentally " +
-          'injecting the same DOM property config twice, or you may be ' +
-          'injecting two configs that have conflicting property names.',
-        propName,
-      );
+  for (var propName in Properties) {
+    invariant(
+      !properties.hasOwnProperty(propName),
+      "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
+        "'%s' which has already been injected. You may be accidentally " +
+        'injecting the same DOM property config twice, or you may be ' +
+        'injecting two configs that have conflicting property names.',
+      propName,
+    );
 
-      var lowerCased = propName.toLowerCase();
-      var propConfig = Properties[propName];
+    var lowerCased = propName.toLowerCase();
+    var propConfig = Properties[propName];
 
-      var propertyInfo = {
-        attributeName: lowerCased,
-        attributeNamespace: null,
-        propertyName: propName,
-        mutationMethod: null,
+    var propertyInfo = {
+      attributeName: lowerCased,
+      attributeNamespace: null,
+      propertyName: propName,
+      mutationMethod: null,
 
-        mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
-        hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
-        hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
-        hasPositiveNumericValue: checkMask(
-          propConfig,
-          Injection.HAS_POSITIVE_NUMERIC_VALUE,
-        ),
-        hasOverloadedBooleanValue: checkMask(
-          propConfig,
-          Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
-        ),
-      };
-      invariant(
-        propertyInfo.hasBooleanValue +
-          propertyInfo.hasNumericValue +
-          propertyInfo.hasOverloadedBooleanValue <=
-          1,
-        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-          'numeric value, but not a combination: %s',
-        propName,
-      );
+      mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
+      hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
+      hasNumericValue: checkMask(propConfig, HAS_NUMERIC_VALUE),
+      hasPositiveNumericValue: checkMask(
+        propConfig,
+        HAS_POSITIVE_NUMERIC_VALUE,
+      ),
+      hasOverloadedBooleanValue: checkMask(
+        propConfig,
+        HAS_OVERLOADED_BOOLEAN_VALUE,
+      ),
+    };
+    invariant(
+      propertyInfo.hasBooleanValue +
+        propertyInfo.hasNumericValue +
+        propertyInfo.hasOverloadedBooleanValue <=
+        1,
+      'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+        'numeric value, but not a combination: %s',
+      propName,
+    );
 
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
-        var attributeName = DOMAttributeNames[propName];
+    if (DOMAttributeNames.hasOwnProperty(propName)) {
+      var attributeName = DOMAttributeNames[propName];
 
-        propertyInfo.attributeName = attributeName;
-      }
-
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-        propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-      }
-
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        propertyInfo.mutationMethod = DOMMutationMethods[propName];
-      }
-
-      // Downcase references to whitelist properties to check for membership
-      // without case-sensitivity. This allows the whitelist to pick up
-      // `allowfullscreen`, which should be written using the property configuration
-      // for `allowFullscreen`
-      DOMProperty.properties[propName] = propertyInfo;
+      propertyInfo.attributeName = attributeName;
     }
-  },
-};
 
-/* eslint-disable max-len */
-var ATTRIBUTE_NAME_START_CHAR =
-  ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
-/* eslint-enable max-len */
+    if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
+      propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
+    }
+
+    if (DOMMutationMethods.hasOwnProperty(propName)) {
+      propertyInfo.mutationMethod = DOMMutationMethods[propName];
+    }
+
+    // Downcase references to whitelist properties to check for membership
+    // without case-sensitivity. This allows the whitelist to pick up
+    // `allowfullscreen`, which should be written using the property configuration
+    // for `allowFullscreen`
+    properties[propName] = propertyInfo;
+  }
+}
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:
@@ -155,15 +147,17 @@ var ATTRIBUTE_NAME_START_CHAR =
  * @see http://jsperf.com/key-exists
  * @see http://jsperf.com/key-missing
  */
-var DOMProperty = {
-  ID_ATTRIBUTE_NAME: 'data-reactid',
-  ROOT_ATTRIBUTE_NAME: 'data-reactroot',
 
-  ATTRIBUTE_NAME_START_CHAR: ATTRIBUTE_NAME_START_CHAR,
-  ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR +
-    '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040',
+export const ID_ATTRIBUTE_NAME = 'data-reactid';
+export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
+/* eslint-disable max-len */
+export const ATTRIBUTE_NAME_START_CHAR =
+  ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
+/* eslint-enable max-len */
+export const ATTRIBUTE_NAME_CHAR =
+  ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040';
 
-  /**
+/**
    * Map from property "standard name" to an object with info about how to set
    * the property in the DOM. Each object contains:
    *
@@ -191,64 +185,57 @@ var DOMProperty = {
    *   Removed when strictly equal to false; present without a value when
    *   strictly equal to true; present with a value otherwise.
    */
-  properties: {},
+export const properties = {};
 
-  /**
+/**
    * Checks whether a property name is a writeable attribute.
    * @method
    */
-  shouldSetAttribute: function(name, value) {
-    if (DOMProperty.isReservedProp(name)) {
-      return false;
-    }
+export function shouldSetAttribute(name, value) {
+  if (isReservedProp(name)) {
+    return false;
+  }
 
-    if (value === null) {
+  if (value === null) {
+    return true;
+  }
+
+  var lowerCased = name.toLowerCase();
+
+  var propertyInfo = properties[name];
+
+  switch (typeof value) {
+    case 'boolean':
+      if (propertyInfo) {
+        return true;
+      }
+      var prefix = lowerCased.slice(0, 5);
+      return prefix === 'data-' || prefix === 'aria-';
+    case 'undefined':
+    case 'number':
+    case 'string':
       return true;
-    }
+    case 'object':
+      return true;
+    default:
+      // function, symbol
+      return false;
+  }
+}
 
-    var lowerCased = name.toLowerCase();
+export function getPropertyInfo(name) {
+  return properties.hasOwnProperty(name) ? properties[name] : null;
+}
 
-    var propertyInfo = DOMProperty.properties[name];
-
-    switch (typeof value) {
-      case 'boolean':
-        if (propertyInfo) {
-          return true;
-        }
-        var prefix = lowerCased.slice(0, 5);
-        return prefix === 'data-' || prefix === 'aria-';
-      case 'undefined':
-      case 'number':
-      case 'string':
-        return true;
-      case 'object':
-        return true;
-      default:
-        // function, symbol
-        return false;
-    }
-  },
-
-  getPropertyInfo(name) {
-    return DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
-  },
-
-  /**
-   * Checks to see if a property name is within the list of properties
-   * reserved for internal React operations. These properties should
-   * not be set on an HTML element.
-   *
-   * @private
-   * @param {string} name
-   * @return {boolean} If the name is within reserved props
-   */
-  isReservedProp(name) {
-    return RESERVED_PROPS.hasOwnProperty(name.toLowerCase());
-  },
-
-  injection: DOMPropertyInjection,
-};
-
-module.exports = DOMProperty;
+/**
+ * Checks to see if a property name is within the list of properties
+ * reserved for internal React operations. These properties should
+ * not be set on an HTML element.
+ *
+ * @private
+ * @param {string} name
+ * @return {boolean} If the name is within reserved props
+ */
+export function isReservedProp(name) {
+  return RESERVED_PROPS.hasOwnProperty(name.toLowerCase());
+}

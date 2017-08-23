@@ -11,12 +11,9 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
-var voidElementTags = require('voidElementTags');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import invariant from 'fbjs/lib/invariant';
+import voidElementTags from 'voidElementTags';
+import warning from 'fbjs/lib/warning';
 
 var HTML = '__html';
 
@@ -31,7 +28,7 @@ function getDeclarationErrorAddendum(getCurrentOwnerName) {
   return '';
 }
 
-function assertValidProps(
+export default function assertValidProps(
   tag: string,
   props: ?Object,
   getCurrentOwnerName: () => ?string,
@@ -81,5 +78,3 @@ function assertValidProps(
     getDeclarationErrorAddendum(getCurrentOwnerName),
   );
 }
-
-module.exports = assertValidProps;

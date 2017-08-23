@@ -11,13 +11,14 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var EventPluginRegistry = require('EventPluginRegistry');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
-}
+import {isReservedProp, shouldSetAttribute} from 'DOMProperty';
+import {
+  registrationNameModules,
+  plugins,
+  possibleRegistrationNames,
+} from 'EventPluginRegistry';
+import warning from 'fbjs/lib/warning';
+import {ReactDebugCurrentFrame} from 'ReactGlobalSharedState';
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -35,24 +36,21 @@ if (__DEV__) {
       return true;
     }
 
-    if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
+    if (registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
 
-    if (
-      EventPluginRegistry.plugins.length === 0 &&
-      EVENT_NAME_REGEX.test(name)
-    ) {
+    if (plugins.length === 0 && EVENT_NAME_REGEX.test(name)) {
       // If no event plugins have been injected, we might be in a server environment.
       // Don't check events in this case.
       return true;
     }
 
     var lowerCasedName = name.toLowerCase();
-    var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+    var registrationName = possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
-      ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
+      ? possibleRegistrationNames[lowerCasedName]
       : null;
 
     if (registrationName != null) {
@@ -123,12 +121,12 @@ if (__DEV__) {
 
     // Now that we've validated casing, do not validate
     // data types for reserved props
-    if (DOMProperty.isReservedProp(name)) {
+    if (isReservedProp(name)) {
       return true;
     }
 
     // Warn when a known attribute is a bad type
-    if (!DOMProperty.shouldSetAttribute(name, value)) {
+    if (!shouldSetAttribute(name, value)) {
       warnedProperties[name] = true;
       return false;
     }
@@ -183,15 +181,9 @@ var warnUnknownProperties = function(type, props) {
   }
 };
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (type.indexOf('-') >= 0 || props.is) {
     return;
   }
   warnUnknownProperties(type, props);
 }
-
-var ReactDOMUnknownPropertyHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMUnknownPropertyHook;

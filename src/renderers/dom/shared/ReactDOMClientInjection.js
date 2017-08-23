@@ -11,36 +11,42 @@
 
 'use strict';
 
-var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
-var ChangeEventPlugin = require('ChangeEventPlugin');
-var DOMEventPluginOrder = require('DOMEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMEventListener = require('ReactDOMEventListener');
-var SelectEventPlugin = require('SelectEventPlugin');
-var SimpleEventPlugin = require('SimpleEventPlugin');
+import BeforeInputEventPlugin from 'BeforeInputEventPlugin';
+import ChangeEventPlugin from 'ChangeEventPlugin';
+import DOMEventPluginOrder from 'DOMEventPluginOrder';
+import EnterLeaveEventPlugin from 'EnterLeaveEventPlugin';
+import {injectEventPluginOrder, injectEventPluginsByName} from 'EventPluginHub';
+import {injectComponentTree} from 'EventPluginUtils';
+import {handleTopLevel} from 'ReactBrowserEventEmitter';
+import {
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+} from 'ReactDOMComponentTree';
+import {setHandleTopLevel} from 'ReactDOMEventListener';
+import SelectEventPlugin from 'SelectEventPlugin';
+import SimpleEventPlugin from 'SimpleEventPlugin';
 
-ReactDOMEventListener.setHandleTopLevel(
-  ReactBrowserEventEmitter.handleTopLevel,
-);
+setHandleTopLevel(handleTopLevel);
 
 /**
  * Inject modules for resolving DOM hierarchy and plugin ordering.
  */
-EventPluginHub.injection.injectEventPluginOrder(DOMEventPluginOrder);
-EventPluginUtils.injection.injectComponentTree(ReactDOMComponentTree);
+injectEventPluginOrder(DOMEventPluginOrder);
+injectComponentTree({
+  getFiberCurrentPropsFromNode,
+  getInstanceFromNode,
+  getNodeFromInstance,
+});
 
 /**
  * Some important event plugins included by default (without having to require
  * them).
  */
-EventPluginHub.injection.injectEventPluginsByName({
-  SimpleEventPlugin: SimpleEventPlugin,
-  EnterLeaveEventPlugin: EnterLeaveEventPlugin,
-  ChangeEventPlugin: ChangeEventPlugin,
-  SelectEventPlugin: SelectEventPlugin,
-  BeforeInputEventPlugin: BeforeInputEventPlugin,
+injectEventPluginsByName({
+  SimpleEventPlugin,
+  EnterLeaveEventPlugin,
+  ChangeEventPlugin,
+  SelectEventPlugin,
+  BeforeInputEventPlugin,
 });
