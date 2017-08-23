@@ -14,7 +14,6 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactDOMFeatureFlags;
 
 describe('ReactElement', () => {
   var ComponentClass;
@@ -31,7 +30,6 @@ describe('ReactElement', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
     ComponentClass = class extends React.Component {
@@ -237,12 +235,7 @@ describe('ReactElement', () => {
     var instance = ReactTestUtils.renderIntoDocument(
       React.createElement(Wrapper),
     );
-
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(element._owner.stateNode).toBe(instance);
-    } else {
-      expect(element._owner.getPublicInstance()).toBe(instance);
-    }
+    expect(element._owner.stateNode).toBe(instance);
   });
 
   it('merges an additional argument onto the children prop', () => {
