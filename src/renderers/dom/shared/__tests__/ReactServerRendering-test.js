@@ -49,10 +49,7 @@ describe('ReactDOMServer', () => {
       var response = ReactDOMServer.renderToString(<span>hello world</span>);
       expect(response).toMatch(
         new RegExp(
-          '<span ' +
-            ROOT_ATTRIBUTE_NAME +
-            '=""' +
-            '>hello world</span>',
+          '<span ' + ROOT_ATTRIBUTE_NAME + '=""' + '>hello world</span>',
         ),
       );
     });
@@ -60,12 +57,7 @@ describe('ReactDOMServer', () => {
     it('should generate simple markup for self-closing tags', () => {
       var response = ReactDOMServer.renderToString(<img />);
       expect(response).toMatch(
-        new RegExp(
-          '<img ' +
-            ROOT_ATTRIBUTE_NAME +
-            '=""' +
-            '/>',
-        ),
+        new RegExp('<img ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>'),
       );
     });
 
@@ -73,10 +65,7 @@ describe('ReactDOMServer', () => {
       var response = ReactDOMServer.renderToString(<img data-attr=">" />);
       expect(response).toMatch(
         new RegExp(
-          '<img data-attr="&gt;" ' +
-            ROOT_ATTRIBUTE_NAME +
-            '=""' +
-            '/>',
+          '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
         ),
       );
     });
