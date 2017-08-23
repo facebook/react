@@ -9,37 +9,39 @@
  * @emails react-core
 */
 
-'use strict';
+"use strict"
 
-import Container from 'components/Container';
-import HeaderLink from './HeaderLink';
-import React from 'react';
-import SearchSvg from './SearchSvg';
-import {colors, fonts, media} from 'theme';
+import Container from "components/Container"
+import HeaderLink from "./HeaderLink"
+import Link from "gatsby-link"
+import React from "react"
+import SearchSvg from "./SearchSvg"
+import { colors, fonts, media } from "theme"
 
-import logoSvg from 'icons/logo.svg';
+import logoSvg from "icons/logo.svg"
 
 // Note this version may point to an alpha/beta/next release.
 // This is how the previous Jekyll site determined version though.
-const {version} = require('../../../../../package.json');
+const { version } = require("../../../../../package.json")
 
-const Header = ({location}) => (
+const Header = ({ location }) =>
   <header
     css={{
       backgroundColor: colors.darker,
       color: colors.white,
-      position: 'fixed',
+      position: "fixed",
       zIndex: 1,
-      width: '100%',
+      width: "100%",
       top: 0,
       left: 0,
-    }}>
+    }}
+  >
     <Container>
       <div
         css={{
-          display: 'flex',
-          flexDirection: 'row',
-          alignItems: 'center',
+          display: "flex",
+          flexDirection: "row",
+          alignItems: "center",
           height: 60,
           [media.mediumToLarge]: {
             height: 50,
@@ -47,13 +49,15 @@ const Header = ({location}) => (
           [media.smallDown]: {
             height: 40,
           },
-        }}>
-        <a
+        }}
+      >
+        <Link
           css={{
-            display: 'flex',
-            width: 'calc(100% / 6)',
+            display: "flex",
+            width: "calc(100% / 6)",
           }}
-          href="/">
+          to="/"
+        >
           <img src={logoSvg} alt="React" height="20" />
           <span
             css={{
@@ -65,48 +69,51 @@ const Header = ({location}) => (
                 fontSize: 16,
               },
               [media.smallDown]: {
-                visibility: 'hidden',
+                visibility: "hidden",
               },
-            }}>
+            }}
+          >
             React
           </span>
-        </a>
+        </Link>
 
         <nav
           css={{
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'stretch',
-            overflowX: 'auto',
-            height: '100%',
-            width: '50%',
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "stretch",
+            overflowX: "auto",
+            height: "100%",
+            width: "50%",
             [media.xsmall]: {
-              width: 'calc(100% * 2/3)',
+              width: "calc(100% * 2/3)",
             },
             [media.xlargeUp]: {
-              width: 'calc(100% / 3)',
+              width: "calc(100% / 3)",
             },
             [media.smallDown]: {
-              maskImage: 'linear-gradient(to right, transparent, black 20px, black 90%, transparent)',
+              maskImage:
+                "linear-gradient(to right, transparent, black 20px, black 90%, transparent)",
             },
-          }}>
+          }}
+        >
           <HeaderLink
-            isActive={location.pathname.includes('/docs/')}
+            isActive={location.pathname.includes("/docs/")}
             title="Docs"
             to="/docs/hello-world.html"
           />
           <HeaderLink
-            isActive={location.pathname.includes('/tutorial/')}
+            isActive={location.pathname.includes("/tutorial/")}
             title="Tutorial"
             to="/tutorial/tutorial.html"
           />
           <HeaderLink
-            isActive={location.pathname.includes('/community/')}
+            isActive={location.pathname.includes("/community/")}
             title="Community"
             to="/community/support.html"
           />
           <HeaderLink
-            isActive={location.pathname.includes('/blog')}
+            isActive={location.pathname.includes("/blog")}
             title="Blog"
             to="/blog.html"
           />
@@ -114,20 +121,21 @@ const Header = ({location}) => (
 
         <form
           css={{
-            width: 'calc(100% / 6)',
-            display: 'flex',
-            flexDirection: 'row',
-            alignItems: 'center',
+            width: "calc(100% / 6)",
+            display: "flex",
+            flexDirection: "row",
+            alignItems: "center",
             [media.smallDown]: {
-              justifyContent: 'flex-end',
+              justifyContent: "flex-end",
             },
             [media.smallToMedium]: {
-              width: 'calc(100% / 3)',
+              width: "calc(100% / 3)",
             },
             [media.xlargeUp]: {
-              width: 'calc(100% / 3)',
+              width: "calc(100% / 3)",
             },
-          }}>
+          }}
+        >
           <label htmlFor="search">
             <SearchSvg />
           </label>
@@ -136,20 +144,21 @@ const Header = ({location}) => (
               flexGrow: 1,
               paddingLeft: 10,
               [media.xsmall]: {
-                display: 'none',
+                display: "none",
               },
-            }}>
+            }}
+          >
             <input
               css={{
-                appearance: 'none',
-                background: 'transparent',
+                appearance: "none",
+                background: "transparent",
                 border: 0,
                 color: colors.white,
-                width: '100%',
+                width: "100%",
                 fontSize: 18,
-                position: 'relative',
-                ':focus': {
-                  outline: 'none',
+                position: "relative",
+                ":focus": {
+                  outline: "none",
                 },
                 [media.largeDown]: {
                   fontSize: 14,
@@ -165,36 +174,38 @@ const Header = ({location}) => (
         <div
           css={{
             [media.mediumDown]: {
-              display: 'none',
+              display: "none",
             },
             [media.largeUp]: {
-              width: 'calc(100% / 6)',
+              width: "calc(100% / 6)",
             },
-          }}>
+          }}
+        >
           <a
             css={{
-              padding: '5px 10px',
+              padding: "5px 10px",
               backgroundColor: colors.lighter,
               borderRadius: 15,
-              whiteSpace: 'nowrap',
+              whiteSpace: "nowrap",
               ...fonts.small,
             }}
-            href="https://github.com/facebook/react/releases">
+            href="https://github.com/facebook/react/releases"
+          >
             v{version}
           </a>
           <a
             css={{
-              padding: '5px 10px',
-              whiteSpace: 'nowrap',
+              padding: "5px 10px",
+              whiteSpace: "nowrap",
               ...fonts.small,
             }}
-            href="https://github.com/facebook/react/">
+            href="https://github.com/facebook/react/"
+          >
             GitHub
           </a>
         </div>
       </div>
     </Container>
   </header>
-);
 
-export default Header;
+export default Header
