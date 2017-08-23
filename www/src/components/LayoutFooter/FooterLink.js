@@ -1,30 +1,31 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
+ * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
 */
 
 'use strict';
 
-import Link from 'gatsby-link';
 import React from 'react';
 import {colors} from 'theme';
 
-const FooterLink = ({children, target, to}) => (
-  <Link
+const FooterLink = ({children, to}) => (
+  <a
     css={{
+      fontWeight: 300,
       lineHeight: 2,
       ':hover': {
         color: colors.brand,
       },
     }}
-    to={to}
-    target={target}>
+    href={to}>
     {children}
-  </Link>
+  </a>
 );
 
 export default FooterLink;

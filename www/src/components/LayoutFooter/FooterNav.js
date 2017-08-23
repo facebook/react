@@ -1,8 +1,10 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
+ * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
 */
@@ -12,18 +14,18 @@
 import React from 'react';
 import {media} from 'theme';
 
-const FooterNav = ({children, title, layoutHasSidebar = false}) => (
+const FooterNav = ({children, title}) => (
   <div
     css={{
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'flex-start',
+      alignItems: 'center',
       width: '50%',
-      paddingTop: 40,
-
-      [media.size('sidebarFixed')]: {
-        paddingTop: 0,
+      [media.mediumToLarge]: {
         width: '25%',
+      },
+      [media.xlargeUp]: {
+        width: 'calc(100% / 6)',
       },
     }}>
     <div

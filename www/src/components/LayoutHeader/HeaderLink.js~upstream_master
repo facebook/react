@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -18,6 +16,7 @@ import {colors, media} from 'theme';
 const HeaderLink = ({isActive, title, to}) => (
   <Link css={[style, isActive && activeStyle]} to={to}>
     {title}
+    {isActive && <span css={activeAfterStyle} />}
   </Link>
 );
 
@@ -31,21 +30,20 @@ const style = {
   paddingRight: 15,
   fontWeight: 300,
 
-  [media.xsmall]: {
+  [media.size('xsmall')]: {
     paddingLeft: 8,
     paddingRight: 8,
   },
 
-  [media.small]: {
+  [media.between('small', 'medium')]: {
     paddingLeft: 10,
     paddingRight: 10,
   },
 
-  [media.xlargeUp]: {
+  [media.greaterThan('xlarge')]: {
     paddingLeft: 20,
     paddingRight: 20,
     fontSize: 18,
-    fontWeight: 400,
 
     ':hover': {
       color: colors.brand,
@@ -56,19 +54,20 @@ const style = {
 const activeStyle = {
   color: colors.brand,
 
-  [media.xlargeUp]: {
+  [media.greaterThan('small')]: {
     position: 'relative',
+  },
+};
 
-    ':after': {
-      content: '',
-      position: 'absolute',
-      bottom: -1,
-      height: 4,
-      background: colors.brand,
-      left: 0,
-      right: 0,
-      zIndex: 1,
-    },
+const activeAfterStyle = {
+  [media.greaterThan('small')]: {
+    position: 'absolute',
+    bottom: -1,
+    height: 4,
+    background: colors.brand,
+    left: 0,
+    right: 0,
+    zIndex: 1,
   },
 };
 

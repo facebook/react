@@ -13,13 +13,13 @@
 
 import React, {Component} from 'react';
 import docsearch from 'docsearch.js';
-import Flex from '../components/Flex';
-import Footer from '../layout-components/components/Footer';
-import Header from '../layout-components/components/Header';
+import Flex from 'components/Flex';
+import Footer from 'components/LayoutFooter';
+import Header from 'components/LayoutHeader';
 import {media} from 'theme';
 
 // Import global styles
-import '../layout-components/prism-styles';
+import '../prism-styles';
 import 'glamor/reset';
 import 'css/reset.css';
 import 'css/algolia.css';
