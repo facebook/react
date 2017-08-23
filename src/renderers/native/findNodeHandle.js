@@ -23,7 +23,6 @@ if (__DEV__) {
 }
 
 import type {Fiber} from 'ReactFiber';
-import type {ReactInstance} from 'ReactInstanceType';
 
 /**
  * ReactNative vs ReactWeb
@@ -60,11 +59,10 @@ import type {ReactInstance} from 'ReactInstanceType';
 // accidentally deep-requiring this version.
 function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
-    // TODO: fix this unsafe cast to work with Fiber.
-    var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
-    if (owner !== null) {
+    var owner = ReactCurrentOwner.current;
+    if (owner !== null && owner.stateNode !== null) {
       warning(
-        owner._warnedAboutRefsInRender,
+        owner.stateNode._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
           'render() should be a pure function of props and state. It should ' +
           'never access something that requires stale data from the previous ' +
@@ -73,7 +71,7 @@ function findNodeHandle(componentOrHandle: any): any {
         getComponentName(owner) || 'A component',
       );
 
-      owner._warnedAboutRefsInRender = true;
+      owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
   if (componentOrHandle == null) {
