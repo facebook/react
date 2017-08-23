@@ -13,7 +13,6 @@
 'use strict';
 
 import type {ReactElement, Source} from 'ReactElementType';
-import type {ReactInstance, DebugID} from 'ReactInstanceType';
 import type {
   ReactCoroutine,
   ReactFragment,
@@ -149,9 +148,9 @@ export type Fiber = {|
   // workInProgress : Fiber ->  alternate The alternate used for reuse happens
   // to be the same as work in progress.
   // __DEV__ only
-  _debugID?: DebugID,
+  _debugID?: number,
   _debugSource?: Source | null,
-  _debugOwner?: Fiber | ReactInstance | null, // Stack compatible
+  _debugOwner?: Fiber | null, // Stack compatible
   _debugIsCurrentlyTiming?: boolean,
 |};
 
@@ -351,7 +350,7 @@ function createFiberFromElementType(
   type: mixed,
   key: null | string,
   internalContextTag: TypeOfInternalContext,
-  debugOwner: null | Fiber | ReactInstance,
+  debugOwner: null | Fiber,
 ): Fiber {
   let fiber;
   if (typeof type === 'function') {
