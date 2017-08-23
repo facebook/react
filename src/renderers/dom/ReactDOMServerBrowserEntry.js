@@ -16,8 +16,9 @@ import {renderToString, renderToStaticMarkup} from 'ReactDOMStringRenderer';
 import ReactVersion from 'ReactVersion';
 import invariant from 'fbjs/lib/invariant';
 
-// TODO: convert to ESM?
-module.exports = {
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default {
   renderToString,
   renderToStaticMarkup,
   renderToNodeStream() {

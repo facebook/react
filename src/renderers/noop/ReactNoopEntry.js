@@ -474,5 +474,6 @@ var ReactNoop = {
   },
 };
 
-// TODO: change to ESM?
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
 module.exports = ReactNoop;

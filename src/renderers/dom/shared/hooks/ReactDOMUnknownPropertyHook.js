@@ -19,6 +19,7 @@ import {
 } from 'EventPluginRegistry';
 import warning from 'fbjs/lib/warning';
 import {ReactDebugCurrentFrame} from 'ReactGlobalSharedState';
+import possibleStandardNames from 'possibleStandardNames';
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -29,7 +30,6 @@ if (__DEV__) {
   var warnedProperties = {};
   var EVENT_NAME_REGEX = /^on[A-Z]/;
   var ARIA_NAME_REGEX = /^aria-/i;
-  var possibleStandardNames = require('possibleStandardNames');
 
   var validateProperty = function(tagName, name, value) {
     if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {

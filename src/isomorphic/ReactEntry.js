@@ -64,5 +64,4 @@ if (__DEV__) {
   });
 }
 
-// TODO: should this be ES export?
-module.exports = React;
+export default React;

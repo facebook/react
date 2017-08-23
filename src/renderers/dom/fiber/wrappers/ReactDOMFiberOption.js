@@ -12,8 +12,10 @@
 
 'use strict';
 
-import {Children} from 'react';
+import React from 'react';
 import warning from 'fbjs/lib/warning';
+
+const {Children} = React;
 
 function flattenChildren(children) {
   var content = '';

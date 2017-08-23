@@ -58,7 +58,7 @@ import ReactInstanceMap from 'ReactInstanceMap';
 import {createPortal} from 'ReactPortal';
 import ReactVersion from 'ReactVersion';
 import {ReactCurrentOwner} from 'ReactGlobalSharedState';
-import {isValidElement} from 'react';
+import React from 'react';
 import {injectInternals} from 'ReactFiberDevToolsHook';
 import {
   ELEMENT_NODE,
@@ -77,6 +77,10 @@ import {validateDOMNesting, updatedAncestorInfo} from 'validateDOMNesting';
 // TODO: we can remove these when we stop exposing them as secrets exports.
 import * as ReactControlledComponent from 'ReactControlledComponent';
 import * as ReactDOMComponentTree from 'ReactDOMComponentTree';
+import * as ReactDOMEventListener from 'ReactDOMEventListener';
+import * as EventPluginHub from 'EventPluginHub';
+import * as EventPluginRegistry from 'EventPluginRegistry';
+import * as EventPropagators from 'EventPropagators';
 
 if (__DEV__) {
   if (
@@ -716,7 +720,7 @@ var ReactDOMFiber = {
       // Top-level check occurs here instead of inside child reconciler
       // because requirements vary between renderers. E.g. React Art
       // allows arrays.
-      if (!isValidElement(element)) {
+      if (!React.isValidElement(element)) {
         if (typeof element === 'string') {
           invariant(
             false,
@@ -842,13 +846,13 @@ var ReactDOMFiber = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('EventPluginHub'),
+    EventPluginHub,
     // Used by test-utils
-    EventPluginRegistry: require('EventPluginRegistry'),
-    EventPropagators: require('EventPropagators'),
+    EventPluginRegistry,
+    EventPropagators,
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('ReactDOMEventListener'),
+    ReactDOMEventListener,
   },
 };
 
@@ -891,5 +895,4 @@ if (__DEV__) {
   }
 }
 
-// TODO: change to ESM?
-module.exports = ReactDOMFiber;
+export default ReactDOMFiber;

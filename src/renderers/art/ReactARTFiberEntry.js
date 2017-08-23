@@ -540,8 +540,9 @@ const ARTRenderer = ReactFiberReconciler({
 
 /** API */
 
-// TODO: convert to ESM?
-module.exports = {
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default {
   ClippingRectangle: TYPES.CLIPPING_RECTANGLE,
   Group: TYPES.GROUP,
   LinearGradient,

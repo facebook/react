@@ -12,7 +12,7 @@
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 // TODO: this is a bit tricky to convert to function exports
 // because our internal version reads fields from this object.

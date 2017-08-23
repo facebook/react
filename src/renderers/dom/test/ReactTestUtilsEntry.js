@@ -499,5 +499,6 @@ Object.keys(topLevelTypes).forEach(function(eventType) {
   );
 });
 
-// TODO: convert to ESM?
-module.exports = ReactTestUtils;
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default ReactTestUtils;

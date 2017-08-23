@@ -15,14 +15,11 @@
 
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';
 var EVENT_POOL_SIZE = 10;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 var shouldBeReleasedProperties = [
   'dispatchConfig',

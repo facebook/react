@@ -628,5 +628,6 @@ var ReactTestRendererFiber = {
   /* eslint-enable camelcase */
 };
 
-// TODO: convert to ESM?
-module.exports = ReactTestRendererFiber;
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default ReactTestRendererFiber;

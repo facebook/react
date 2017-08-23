@@ -267,5 +267,6 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
-// TODO: convert to ESM?
-module.exports = ReactShallowRenderer;
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default ReactShallowRenderer;
