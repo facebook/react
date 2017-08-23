@@ -22,13 +22,13 @@
 import type {Fiber} from 'ReactFiber';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
-var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-var ReactFiberReconciler = require('ReactFiberReconciler');
-var ReactInstanceMap = require('ReactInstanceMap');
-var {TaskPriority} = require('ReactPriorityLevel');
-var emptyObject = require('fbjs/lib/emptyObject');
+import ReactFiberInstrumentation from 'ReactFiberInstrumentation';
+import ReactFiberReconciler from 'ReactFiberReconciler';
+import ReactInstanceMap from 'ReactInstanceMap';
+import {TaskPriority} from 'ReactPriorityLevel';
+import emptyObject from 'fbjs/lib/emptyObject';
 
-var expect = require('jest-matchers');
+import expect from 'jest-matchers';
 
 const UPDATE_SIGNAL = {};
 
@@ -474,4 +474,5 @@ var ReactNoop = {
   },
 };
 
+// TODO: change to ESM?
 module.exports = ReactNoop;
