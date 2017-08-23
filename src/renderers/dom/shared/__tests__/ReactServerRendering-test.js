@@ -21,7 +21,6 @@ var ReactFeatureFlags;
 
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
-var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactDOMServer', () => {
@@ -40,7 +39,6 @@ describe('ReactDOMServer', () => {
     ReactDOMServer = require('react-dom/server');
 
     var DOMProperty = require('DOMProperty');
-    ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
@@ -171,12 +169,6 @@ describe('ReactDOMServer', () => {
             '<span ' +
               ROOT_ATTRIBUTE_NAME +
               '=""' +
-              (ReactDOMFeatureFlags.useFiber
-                ? ''
-                : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-              (ReactDOMFeatureFlags.useFiber
-                ? ''
-                : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
               '>' +
               (ReactDOMFeatureFlags.useFiber
                 ? 'Component name: <!-- -->TestComponent'
