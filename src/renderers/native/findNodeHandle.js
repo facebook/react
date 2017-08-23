@@ -15,7 +15,7 @@
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
+import getComponentName from 'getComponentName';
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {

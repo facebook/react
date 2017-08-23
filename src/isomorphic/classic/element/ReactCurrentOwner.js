@@ -28,4 +28,4 @@ var ReactCurrentOwner = {
   current: (null: null | Fiber),
 };
 
-module.exports = ReactCurrentOwner;
+export default ReactCurrentOwner;

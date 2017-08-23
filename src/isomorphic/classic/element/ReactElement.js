@@ -11,12 +11,10 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var hasOwnProperty = Object.prototype.hasOwnProperty;
+import ReactCurrentOwner from 'ReactCurrentOwner';
+import warning from 'fbjs/lib/warning';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 // The Symbol used to tag the ReactElement type. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
@@ -179,7 +177,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
  * Create and return a new ReactElement of the given type.
  * See https://facebook.github.io/react/docs/react-api.html#createelement
  */
-ReactElement.createElement = function(type, config, children) {
+export function createElement(type, config, children) {
   var propName;
 
   // Reserved names are extracted
@@ -265,14 +263,14 @@ ReactElement.createElement = function(type, config, children) {
     ReactCurrentOwner.current,
     props,
   );
-};
+}
 
 /**
  * Return a function that produces ReactElements of a given type.
  * See https://facebook.github.io/react/docs/react-api.html#createfactory
  */
-ReactElement.createFactory = function(type) {
-  var factory = ReactElement.createElement.bind(null, type);
+export function createFactory(type) {
+  var factory = createElement.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
   // easily accessed on elements. E.g. `<Foo />.type === Foo`.
   // This should not be named `constructor` since this may not be the function
@@ -280,9 +278,9 @@ ReactElement.createFactory = function(type) {
   // Legacy hook TODO: Warn if this is accessed
   factory.type = type;
   return factory;
-};
+}
 
-ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
+export function cloneAndReplaceKey(oldElement, newKey) {
   var newElement = ReactElement(
     oldElement.type,
     newKey,
@@ -294,13 +292,13 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
   );
 
   return newElement;
-};
+}
 
 /**
  * Clone and return a new ReactElement using element as the starting point.
  * See https://facebook.github.io/react/docs/react-api.html#cloneelement
  */
-ReactElement.cloneElement = function(element, config, children) {
+export function cloneElement(element, config, children) {
   var propName;
 
   // Original props are copied
@@ -363,7 +361,7 @@ ReactElement.cloneElement = function(element, config, children) {
   }
 
   return ReactElement(element.type, key, ref, self, source, owner, props);
-};
+}
 
 /**
  * Verifies the object is a ReactElement.
@@ -372,12 +370,10 @@ ReactElement.cloneElement = function(element, config, children) {
  * @return {boolean} True if `object` is a valid component.
  * @final
  */
-ReactElement.isValidElement = function(object) {
+export function isValidElement(object) {
   return (
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_ELEMENT_TYPE
   );
-};
-
-module.exports = ReactElement;
+}

@@ -19,9 +19,8 @@ var {
   ClassComponent,
   HostComponent,
 } = ReactTypeOfWork;
-var describeComponentFrame = require('describeComponentFrame');
-var getComponentName = require('getComponentName');
-
+import describeComponentFrame from 'describeComponentFrame';
+import getComponentName from 'getComponentName';
 import type {Fiber} from 'ReactFiber';
 
 function describeFiber(fiber: Fiber): string {

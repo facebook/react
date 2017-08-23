@@ -50,7 +50,7 @@ var ReactFiberCommitWork = require('ReactFiberCommitWork');
 var ReactFiberHostContext = require('ReactFiberHostContext');
 var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
+import getComponentName from 'getComponentName';
 
 var {createWorkInProgress, largerPriority} = require('ReactFiber');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');

@@ -11,9 +11,7 @@
 
 'use strict';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import warning from 'fbjs/lib/warning';
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
@@ -109,4 +107,4 @@ var ReactNoopUpdateQueue = {
   },
 };
 
-module.exports = ReactNoopUpdateQueue;
+export default ReactNoopUpdateQueue;

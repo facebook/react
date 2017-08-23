@@ -12,19 +12,21 @@
 
 'use strict';
 
-const ReactDebugCurrentFrame = {};
+let getCurrentStack: null | (() => string | null) = null;
 
-if (__DEV__) {
-  // Component that is being worked on
-  ReactDebugCurrentFrame.getCurrentStack = (null: null | (() => string | null));
-
-  ReactDebugCurrentFrame.getStackAddendum = function(): string | null {
-    const impl = ReactDebugCurrentFrame.getCurrentStack;
-    if (impl) {
-      return impl();
-    }
-    return null;
-  };
+export function setCurrentStackImplementation(
+  impl: null | (() => string | null),
+) {
+  if (__DEV__) {
+    getCurrentStack = impl;
+  }
 }
 
-module.exports = ReactDebugCurrentFrame;
+export function getStackAddendum(): string | null {
+  if (__DEV__) {
+    if (getCurrentStack) {
+      return getCurrentStack();
+    }
+  }
+  return null;
+}

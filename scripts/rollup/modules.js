@@ -46,10 +46,7 @@ const fbjsModules = [
 ];
 
 const devOnlyFilesToStubOut = [
-  "'ReactDebugCurrentFrame'",
-  "'ReactComponentTreeHook'",
-  "'ReactPerf'",
-  "'ReactTestUtils'",
+  // TODO: figure out the ESM strategy
 ];
 
 const legacyModules = [

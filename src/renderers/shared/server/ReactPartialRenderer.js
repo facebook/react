@@ -67,7 +67,7 @@ if (__DEV__) {
     // We are about to enter a new composite stack, reset the array.
     currentDebugElementStack.length = 0;
     currentDebugStack = stack;
-    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
+    ReactDebugCurrentFrame.setCurrentStackImplementation(getStackAddendum);
   };
   var pushElementToDebugStack = function(element) {
     if (currentDebugElementStack !== null) {
@@ -77,7 +77,7 @@ if (__DEV__) {
   var resetCurrentDebugStack = function() {
     currentDebugElementStack = null;
     currentDebugStack = null;
-    ReactDebugCurrentFrame.getCurrentStack = null;
+    ReactDebugCurrentFrame.setCurrentStackImplementation(null);
   };
   var getStackAddendum = function(): null | string {
     if (currentDebugStack === null) {

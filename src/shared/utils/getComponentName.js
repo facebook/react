@@ -14,7 +14,7 @@
 
 import type {Fiber} from 'ReactFiber';
 
-function getComponentName(fiber: Fiber): string | null {
+export default function getComponentName(fiber: Fiber): string | null {
   const {type} = fiber;
   if (typeof type === 'string') {
     return type;
@@ -24,5 +24,3 @@ function getComponentName(fiber: Fiber): string | null {
   }
   return null;
 }
-
-module.exports = getComponentName;

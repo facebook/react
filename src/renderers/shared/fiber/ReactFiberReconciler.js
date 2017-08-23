@@ -17,6 +17,8 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
+import getComponentName from 'getComponentName';
+
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
 var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
@@ -36,7 +38,6 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var getComponentName = require('getComponentName');
 }
 
 var {

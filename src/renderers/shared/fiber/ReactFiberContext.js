@@ -16,7 +16,7 @@ import type {Fiber} from 'ReactFiber';
 import type {StackCursor} from 'ReactFiberStack';
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
+import getComponentName from 'getComponentName';
 var invariant = require('fbjs/lib/invariant');
 var {isFiberMounted} = require('ReactFiberTreeReflection');
 var {ClassComponent, HostRoot} = require('ReactTypeOfWork');

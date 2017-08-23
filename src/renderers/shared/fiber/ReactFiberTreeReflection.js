@@ -17,7 +17,7 @@ import type {Fiber} from 'ReactFiber';
 var ReactInstanceMap = require('ReactInstanceMap');
 var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
-var getComponentName = require('getComponentName');
+import getComponentName from 'getComponentName';
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {

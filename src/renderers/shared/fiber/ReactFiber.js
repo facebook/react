@@ -25,6 +25,8 @@ import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
+import getComponentName from 'getComponentName';
+
 var {
   IndeterminateComponent,
   ClassComponent,
@@ -46,7 +48,6 @@ var {NoEffect} = require('ReactTypeOfSideEffect');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});

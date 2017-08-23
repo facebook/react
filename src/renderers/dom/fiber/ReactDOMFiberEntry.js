@@ -42,7 +42,7 @@ var {
 } = require('HTMLNodeType');
 var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
 
-var getComponentName = require('getComponentName');
+import getComponentName from 'getComponentName';
 var invariant = require('fbjs/lib/invariant');
 
 var {getChildNamespace} = DOMNamespaces;
