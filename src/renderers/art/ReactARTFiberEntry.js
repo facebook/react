@@ -10,18 +10,19 @@
  */
 'use strict';
 
-require('art/modes/current').setCurrent(
-  // Change to 'art/modes/dom' for easier debugging via SVG
-  require('art/modes/fast-noSideEffects'),
-);
+import Mode from 'art/modes/current';
+import fastNoSideEffectsMode from 'art/modes/fast-noSideEffects';
+import Transform from 'art/core/transform';
+import invariant from 'fbjs/lib/invariant';
+import emptyObject from 'fbjs/lib/emptyObject';
+import React from 'react';
+import ReactFiberReconciler from 'ReactFiberReconciler';
+import {rIC} from 'ReactDOMFrameScheduling';
 
-const Mode = require('art/modes/current');
-const Transform = require('art/core/transform');
-const invariant = require('fbjs/lib/invariant');
-const emptyObject = require('fbjs/lib/emptyObject');
-const React = require('react');
-const ReactFiberReconciler = require('ReactFiberReconciler');
-const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
+Mode.setCurrent(
+  // Change to 'art/modes/dom' for easier debugging via SVG
+  fastNoSideEffectsMode,
+);
 
 const {Component} = React;
 
@@ -526,7 +527,7 @@ const ARTRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
+  scheduleDeferredCallback: rIC,
 
   shouldSetTextContent(type, props) {
     return (
@@ -539,6 +540,7 @@ const ARTRenderer = ReactFiberReconciler({
 
 /** API */
 
+// TODO: convert to ESM?
 module.exports = {
   ClippingRectangle: TYPES.CLIPPING_RECTANGLE,
   Group: TYPES.GROUP,
