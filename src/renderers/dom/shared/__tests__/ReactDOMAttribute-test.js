@@ -21,6 +21,10 @@ describe('ReactDOM unknown attribute', () => {
     ReactDOM = require('react-dom');
   });
 
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   function testUnknownAttributeRemoval(givenValue) {
     var el = document.createElement('div');
     ReactDOM.render(<div unknown="something" />, el);
@@ -68,8 +72,11 @@ describe('ReactDOM unknown attribute', () => {
       spyOn(console, 'error');
 
       testUnknownAttributeAssignment(NaN, 'NaN');
-      // TODO: add specific expectations about what the warning says
-      // expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(...
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Received NaN for numeric attribute `unknown`. ' +
+          'If this is expected, cast the value to a string.\n' +
+          '    in div (at **)',
+      );
       expectDev(console.error.calls.count()).toBe(1);
     });
 
