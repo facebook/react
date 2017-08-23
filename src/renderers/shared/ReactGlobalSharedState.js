@@ -20,7 +20,6 @@ var ReactGlobalSharedState = {
 
 if (__DEV__) {
   Object.assign(ReactGlobalSharedState, {
-    ReactComponentTreeHook: ReactInternals.ReactComponentTreeHook,
     ReactDebugCurrentFrame: ReactInternals.ReactDebugCurrentFrame,
   });
 }
