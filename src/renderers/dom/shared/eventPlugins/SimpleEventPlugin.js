@@ -12,21 +12,21 @@
 
 'use strict';
 
-var EventPropagators = require('EventPropagators');
-var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
-var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-var SyntheticEvent = require('SyntheticEvent');
-var SyntheticFocusEvent = require('SyntheticFocusEvent');
-var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var SyntheticDragEvent = require('SyntheticDragEvent');
-var SyntheticTouchEvent = require('SyntheticTouchEvent');
-var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var SyntheticWheelEvent = require('SyntheticWheelEvent');
+import {accumulateTwoPhaseDispatches} from 'EventPropagators';
+import SyntheticAnimationEvent from 'SyntheticAnimationEvent';
+import SyntheticClipboardEvent from 'SyntheticClipboardEvent';
+import SyntheticEvent from 'SyntheticEvent';
+import SyntheticFocusEvent from 'SyntheticFocusEvent';
+import SyntheticKeyboardEvent from 'SyntheticKeyboardEvent';
+import SyntheticMouseEvent from 'SyntheticMouseEvent';
+import SyntheticDragEvent from 'SyntheticDragEvent';
+import SyntheticTouchEvent from 'SyntheticTouchEvent';
+import SyntheticTransitionEvent from 'SyntheticTransitionEvent';
+import SyntheticUIEvent from 'SyntheticUIEvent';
+import SyntheticWheelEvent from 'SyntheticWheelEvent';
 
-var getEventCharCode = require('getEventCharCode');
-var invariant = require('fbjs/lib/invariant');
+import getEventCharCode from 'getEventCharCode';
+import invariant from 'fbjs/lib/invariant';
 
 import type {TopLevelTypes} from 'BrowserEventConstants';
 import type {
@@ -269,9 +269,9 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatches(event);
     return event;
   },
 };
 
-module.exports = SimpleEventPlugin;
+export default SimpleEventPlugin;

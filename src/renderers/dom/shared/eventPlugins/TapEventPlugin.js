@@ -12,13 +12,10 @@
 
 'use strict';
 
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
-
-var isStartish = EventPluginUtils.isStartish;
-var isEndish = EventPluginUtils.isEndish;
+import {isStartish, isEndish} from 'EventPluginUtils';
+import {accumulateTwoPhaseDispatches} from 'EventPropagators';
+import SyntheticUIEvent from 'SyntheticUIEvent';
+import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket
@@ -148,7 +145,7 @@ var TapEventPlugin = {
       startCoords.x = 0;
       startCoords.y = 0;
     }
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatches(event);
     return event;
   },
 };

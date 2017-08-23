@@ -17,13 +17,13 @@ var invariant = require('fbjs/lib/invariant');
 
 // Use to restore controlled state after a change event has fired.
 
-var fiberHostComponent = null;
+var restoreControlledState = null;
 
 var ReactControlledComponentInjection = {
-  injectFiberControlledHostComponent: function(hostComponentImpl) {
+  injectRestoreControlledStateImplementation: function(restoreImpl) {
     // The fiber implementation doesn't use dynamic dispatch so we need to
     // inject the implementation.
-    fiberHostComponent = hostComponentImpl;
+    restoreControlledState = restoreImpl;
   },
 };
 
@@ -39,15 +39,14 @@ function restoreStateOfTarget(target) {
     return;
   }
   invariant(
-    fiberHostComponent &&
-      typeof fiberHostComponent.restoreControlledState === 'function',
+    restoreControlledState === 'function',
     'Fiber needs to be injected to handle a fiber target for controlled ' +
       'events. This error is likely caused by a bug in React. Please file an issue.',
   );
   const props = EventPluginUtils.getFiberCurrentPropsFromNode(
     internalInstance.stateNode,
   );
-  fiberHostComponent.restoreControlledState(
+  restoreControlledState(
     internalInstance.stateNode,
     internalInstance.type,
     props,

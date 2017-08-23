@@ -11,18 +11,18 @@
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactGenericBatching = require('ReactGenericBatching');
-var SyntheticEvent = require('SyntheticEvent');
+import {enqueueEvents, processEventQueue} from 'EventPluginHub';
+import {accumulateTwoPhaseDispatches} from 'EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {enqueueStateRestore} from 'ReactControlledComponent';
+import {getNodeFromInstance} from 'ReactDOMComponentTree';
+import {batchedUpdates} from 'ReactGenericBatching';
+import SyntheticEvent from 'SyntheticEvent';
 
-var inputValueTracking = require('inputValueTracking');
-var getEventTarget = require('getEventTarget');
-var isEventSupported = require('isEventSupported');
-var isTextInputElement = require('isTextInputElement');
+import {updateValueIfChanged} from 'inputValueTracking';
+import getEventTarget from 'getEventTarget';
+import isEventSupported from 'isEventSupported';
+import isTextInputElement from 'isTextInputElement';
 
 var eventTypes = {
   change: {
@@ -52,8 +52,8 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(target);
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  enqueueStateRestore(target);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 /**
@@ -90,17 +90,17 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  ReactGenericBatching.batchedUpdates(runEventInBatch, event);
+  batchedUpdates(runEventInBatch, event);
 }
 
 function runEventInBatch(event) {
-  EventPluginHub.enqueueEvents(event);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(event);
+  processEventQueue(false);
 }
 
 function getInstIfValueChanged(targetInst) {
-  const targetNode = ReactDOMComponentTree.getNodeFromInstance(targetInst);
-  if (inputValueTracking.updateValueIfChanged(targetNode)) {
+  const targetNode = getNodeFromInstance(targetInst);
+  if (updateValueIfChanged(targetNode)) {
     return targetInst;
   }
 }
@@ -268,9 +268,7 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     var getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {
@@ -309,4 +307,4 @@ var ChangeEventPlugin = {
   },
 };
 
-module.exports = ChangeEventPlugin;
+export default ChangeEventPlugin;

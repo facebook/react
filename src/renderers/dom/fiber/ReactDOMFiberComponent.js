@@ -14,7 +14,6 @@
 
 import {
   setValueForStyles,
-  setValueForStyles,
   createDangerousStringForStyles,
 } from 'CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from 'DOMNamespaces';

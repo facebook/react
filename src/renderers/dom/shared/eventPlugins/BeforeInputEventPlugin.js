@@ -11,11 +11,15 @@
 
 'use strict';
 
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var FallbackCompositionState = require('FallbackCompositionState');
-var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
-var SyntheticInputEvent = require('SyntheticInputEvent');
+import {accumulateTwoPhaseDispatches} from 'EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {
+  initialize as initializeFallbackCompositionState,
+  getData as getFallbackCompositionStateData,
+  reset as resetFallbackCompositionState,
+} from 'FallbackCompositionState';
+import SyntheticCompositionEvent from 'SyntheticCompositionEvent';
+import SyntheticInputEvent from 'SyntheticInputEvent';
 
 import type {TopLevelTypes} from 'BrowserEventConstants';
 
@@ -242,10 +246,10 @@ function extractCompositionEvent(
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
     if (!isComposing && eventType === eventTypes.compositionStart) {
-      isComposing = FallbackCompositionState.initialize(nativeEventTarget);
+      isComposing = initializeFallbackCompositionState(nativeEventTarget);
     } else if (eventType === eventTypes.compositionEnd) {
       if (isComposing) {
-        fallbackData = FallbackCompositionState.getData();
+        fallbackData = getFallbackCompositionStateData();
       }
     }
   }
@@ -268,7 +272,7 @@ function extractCompositionEvent(
     }
   }
 
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -342,8 +346,8 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
       (!canUseCompositionEvent &&
         isFallbackCompositionEnd(topLevelType, nativeEvent))
     ) {
-      var chars = FallbackCompositionState.getData();
-      FallbackCompositionState.reset();
+      var chars = getFallbackCompositionStateData();
+      resetFallbackCompositionState();
       isComposing = false;
       return chars;
     }
@@ -427,7 +431,7 @@ function extractBeforeInputEvent(
   );
 
   event.data = chars;
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -475,4 +479,4 @@ var BeforeInputEventPlugin = {
   },
 };
 
-module.exports = BeforeInputEventPlugin;
+export default BeforeInputEventPlugin;

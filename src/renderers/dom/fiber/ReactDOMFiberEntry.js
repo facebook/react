@@ -14,58 +14,68 @@
 
 import type {ReactNodeList} from 'ReactTypes';
 
-require('checkReact');
-var DOMNamespaces = require('DOMNamespaces');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
-var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactGenericBatching = require('ReactGenericBatching');
-var ReactFiberReconciler = require('ReactFiberReconciler');
-var ReactInputSelection = require('ReactInputSelection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPortal = require('ReactPortal');
-var ReactVersion = require('ReactVersion');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var {isValidElement} = require('react');
-var {injectInternals} = require('ReactFiberDevToolsHook');
-var {
-  ELEMENT_NODE,
-  TEXT_NODE,
-  COMMENT_NODE,
-  DOCUMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-} = require('HTMLNodeType');
-var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
-
-import getComponentName from 'getComponentName';
-var invariant = require('fbjs/lib/invariant');
-
-var {getChildNamespace} = DOMNamespaces;
-var {
+import 'checkReact';
+import 'ReactDOMClientInjection';
+import 'ReactDOMInjection';
+import {getChildNamespace} from 'DOMNamespaces';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {
+  isEnabled as isEventEmitterEnabled,
+  setEnabled as setEventEmitterEnabled,
+} from 'ReactBrowserEventEmitter';
+import {
+  injectRestoreControlledStateImplementation,
+} from 'ReactControlledComponent';
+import {
+  getClosestInstanceFromNode,
+  getInstanceFromNode,
+  precacheFiberNode,
+  updateFiberProps,
+} from 'ReactDOMComponentTree';
+import ReactFeatureFlags from 'ReactFeatureFlags';
+import ReactDOMFeatureFlags from 'ReactDOMFeatureFlags';
+import {
   createElement,
   setInitialProperties,
   diffProperties,
   updateProperties,
   diffHydratedProperties,
   diffHydratedText,
+  restoreControlledState,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-} = ReactDOMFiberComponent;
-var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
+} from 'ReactDOMFiberComponent';
+import {rIC} from 'ReactDOMFrameScheduling';
+import {injectFiberBatchedUpdates, batchedUpdates} from 'ReactGenericBatching';
+import ReactFiberReconciler from 'ReactFiberReconciler';
+import {getSelectionInformation, restoreSelection} from 'ReactInputSelection';
+import ReactInstanceMap from 'ReactInstanceMap';
+import {createPortal} from 'ReactPortal';
+import ReactVersion from 'ReactVersion';
+import {ReactCurrentOwner} from 'ReactGlobalSharedState';
+import {isValidElement} from 'react';
+import {injectInternals} from 'ReactFiberDevToolsHook';
+import {
+  ELEMENT_NODE,
+  TEXT_NODE,
+  COMMENT_NODE,
+  DOCUMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} from 'HTMLNodeType';
+import {ROOT_ATTRIBUTE_NAME} from 'DOMProperty';
+import getComponentName from 'getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'lowPriorityWarning';
+import warning from 'fbjs/lib/warning';
+import {validateDOMNesting, updatedAncestorInfo} from 'validateDOMNesting';
+
+// TODO: we can remove these when we stop exposing them as secrets exports.
+import * as ReactControlledComponent from 'ReactControlledComponent';
+import * as ReactDOMComponentTree from 'ReactDOMComponentTree';
 
 if (__DEV__) {
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var warning = require('fbjs/lib/warning');
-  var validateDOMNesting = require('validateDOMNesting');
-  var {updatedAncestorInfo} = validateDOMNesting;
-
   if (
     typeof Map !== 'function' ||
     Map.prototype == null ||
@@ -83,11 +93,7 @@ if (__DEV__) {
   }
 }
 
-require('ReactDOMClientInjection');
-require('ReactDOMInjection');
-ReactControlledComponent.injection.injectFiberControlledHostComponent(
-  ReactDOMFiberComponent,
-);
+injectRestoreControlledStateImplementation(restoreControlledState);
 
 type DOMContainer =
   | (Element & {
@@ -209,15 +215,15 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   prepareForCommit(): void {
-    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
-    selectionInformation = ReactInputSelection.getSelectionInformation();
-    ReactBrowserEventEmitter.setEnabled(false);
+    eventsEnabled = isEventEmitterEnabled();
+    selectionInformation = getSelectionInformation();
+    setEventEmitterEnabled(false);
   },
 
   resetAfterCommit(): void {
-    ReactInputSelection.restoreSelection(selectionInformation);
+    restoreSelection(selectionInformation);
     selectionInformation = null;
-    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+    setEventEmitterEnabled(eventsEnabled);
     eventsEnabled = null;
   },
 
@@ -531,14 +537,12 @@ var DOMRenderer = ReactFiberReconciler({
     warnForInsertedHydratedText(parentInstance, text);
   },
 
-  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
+  scheduleDeferredCallback: rIC,
 
   useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,
 });
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  DOMRenderer.batchedUpdates,
-);
+injectFiberBatchedUpdates(DOMRenderer.batchedUpdates);
 
 var warnedAboutHydrateAPI = false;
 
@@ -572,8 +576,7 @@ function renderSubtreeIntoContainer(
 
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
-    const hasNonRootReactChild = !!(rootEl &&
-      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+    const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
 
     warning(
       !hasNonRootReactChild || isRootRenderedBySomeReact,
@@ -771,8 +774,7 @@ var ReactDOMFiber = {
     if (container._reactRootContainer) {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const renderedByDifferentReact =
-          rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
         warning(
           !renderedByDifferentReact,
           "unmountComponentAtNode(): The node you're attempting to unmount " +
@@ -792,8 +794,7 @@ var ReactDOMFiber = {
     } else {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const hasNonRootReactChild = !!(rootEl &&
-          ReactDOMComponentTree.getInstanceFromNode(rootEl));
+        const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
 
         // Check if the container itself is a React root node.
         const isContainerReactRoot =
@@ -823,10 +824,10 @@ var ReactDOMFiber = {
     key: ?string = null,
   ) {
     // TODO: pass ReactDOM portal implementation as third argument
-    return ReactPortal.createPortal(children, container, null, key);
+    return createPortal(children, container, null, key);
   },
 
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
@@ -845,7 +846,7 @@ var ReactDOMFiber = {
 };
 
 const foundDevTools = injectInternals({
-  findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+  findFiberByHostInstance: getClosestInstanceFromNode,
   findHostInstanceByFiber: DOMRenderer.findHostInstance,
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
@@ -883,4 +884,5 @@ if (__DEV__) {
   }
 }
 
+// TODO: change to ESM?
 module.exports = ReactDOMFiber;

@@ -30,4 +30,4 @@ var DOMEventPluginOrder = [
   'BeforeInputEventPlugin',
 ];
 
-module.exports = DOMEventPluginOrder;
+export default DOMEventPluginOrder;
