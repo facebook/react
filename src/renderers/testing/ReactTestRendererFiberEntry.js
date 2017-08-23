@@ -13,20 +13,19 @@
 
 'use strict';
 
-var ReactFiberReconciler = require('ReactFiberReconciler');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactGenericBatching = require('ReactGenericBatching');
-var emptyObject = require('fbjs/lib/emptyObject');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var invariant = require('fbjs/lib/invariant');
-var {
+import ReactFiberReconciler from 'ReactFiberReconciler';
+import {findCurrentFiberUsingSlowPath} from 'ReactFiberTreeReflection';
+import {batchedUpdates} from 'ReactGenericBatching';
+import emptyObject from 'fbjs/lib/emptyObject';
+import {
   Fragment,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
   HostText,
   HostRoot,
-} = ReactTypeOfWork;
+} from 'ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
 
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
@@ -361,9 +360,7 @@ class ReactTestInstance {
 
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
-    const fiber = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-      this._fiber,
-    );
+    const fiber = findCurrentFiberUsingSlowPath(this._fiber);
     invariant(
       fiber !== null,
       "Can't read from currently-mounting component. This error is likely " +
@@ -627,8 +624,9 @@ var ReactTestRendererFiber = {
   },
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 };
 
+// TODO: convert to ESM?
 module.exports = ReactTestRendererFiber;

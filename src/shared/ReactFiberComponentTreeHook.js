@@ -12,13 +12,12 @@
 
 'use strict';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
-} = ReactTypeOfWork;
+} from 'ReactTypeOfWork';
 import describeComponentFrame from 'describeComponentFrame';
 import getComponentName from 'getComponentName';
 import type {Fiber} from 'ReactFiber';
@@ -45,7 +44,9 @@ function describeFiber(fiber: Fiber): string {
 // This function can only be called with a work-in-progress fiber and
 // only during begin or complete phase. Do not call it under any other
 // circumstances.
-function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
+export function getStackAddendumByWorkInProgressFiber(
+  workInProgress: Fiber,
+): string {
   var info = '';
   var node = workInProgress;
   do {
@@ -55,7 +56,3 @@ function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   } while (node);
   return info;
 }
-
-module.exports = {
-  getStackAddendumByWorkInProgressFiber,
-};

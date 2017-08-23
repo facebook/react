@@ -38,11 +38,7 @@ import {
   getStackAddendumByWorkInProgressFiber,
 } from 'ReactFiberComponentTreeHook';
 import {logCapturedError} from 'ReactFiberErrorLogger';
-import {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} from 'ReactErrorUtils';
+import ReactErrorUtils from 'ReactErrorUtils';
 import ReactFiberBeginWork from 'ReactFiberBeginWork';
 import ReactFiberCompleteWork from 'ReactFiberCompleteWork';
 import ReactFiberCommitWork from 'ReactFiberCommitWork';
@@ -102,6 +98,12 @@ import {
   startCommitLifeCyclesTimer,
   stopCommitLifeCyclesTimer,
 } from 'ReactDebugFiberPerf';
+
+const {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = ReactErrorUtils;
 
 if (__DEV__) {
   var warnAboutUpdateOnUnmounted = function(instance: ReactClass<any>) {

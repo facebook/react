@@ -25,14 +25,16 @@ import {
 } from 'ReactTypeOfWork';
 import {commitCallbacks} from 'ReactFiberUpdateQueue';
 import {onCommitUnmount} from 'ReactFiberDevToolsHook';
-import {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} from 'ReactErrorUtils';
+import ReactErrorUtils from 'ReactErrorUtils';
 import {Placement, Update, Callback, ContentReset} from 'ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 import {startPhaseTimer, stopPhaseTimer} from 'ReactDebugFiberPerf';
+
+const {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = ReactErrorUtils;
 
 export default function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,

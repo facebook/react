@@ -11,4 +11,5 @@
 
 'use strict';
 
+// TODO: ESM?
 module.exports = '16.0.0-beta.5';

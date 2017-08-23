@@ -33,4 +33,4 @@ function forEachAccumulated<T>(
   }
 }
 
-module.exports = forEachAccumulated;
+export default forEachAccumulated;

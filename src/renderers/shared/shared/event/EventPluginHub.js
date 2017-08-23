@@ -20,7 +20,7 @@ import {
   executeDispatchesInOrder,
   getFiberCurrentPropsFromNode,
 } from 'EventPluginUtils';
-import {rethrowCaughtError} from 'ReactErrorUtils';
+import ReactErrorUtils from 'ReactErrorUtils';
 
 import accumulateInto from 'accumulateInto';
 import forEachAccumulated from 'forEachAccumulated';
@@ -213,5 +213,5 @@ export function processEventQueue(simulated) {
       'an event queue. Support for this has not yet been implemented.',
   );
   // This would be a good time to rethrow if any of the event handlers threw.
-  rethrowCaughtError();
+  ReactErrorUtils.rethrowCaughtError();
 }

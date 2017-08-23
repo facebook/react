@@ -12,7 +12,7 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Accumulates items that must not be null or undefined.
@@ -47,4 +47,4 @@ function accumulate<T>(
   return [current, next];
 }
 
-module.exports = accumulate;
+export default accumulate;

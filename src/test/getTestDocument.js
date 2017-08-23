@@ -22,4 +22,4 @@ function getTestDocument(markup) {
   return doc;
 }
 
-module.exports = getTestDocument;
+export default getTestDocument;

@@ -11,7 +11,7 @@
 
 'use strict';
 
-import {invokeGuardedCallbackAndCatchFirstError} from 'ReactErrorUtils';
+import ReactErrorUtils from 'ReactErrorUtils';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -83,7 +83,12 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
   event.currentTarget = getNodeFromInstance(inst);
-  invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
+    type,
+    listener,
+    undefined,
+    event,
+  );
   event.currentTarget = null;
 }
 

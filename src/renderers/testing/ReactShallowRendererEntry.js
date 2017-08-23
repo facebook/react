@@ -12,14 +12,14 @@
 
 'use strict';
 
-const checkPropTypes = require('prop-types/checkPropTypes');
-const React = require('react');
+import checkPropTypes from 'prop-types/checkPropTypes';
+import React from 'react';
 
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
 
-const describeComponentFrame = require('describeComponentFrame');
-const getComponentName = require('getComponentName');
+import describeComponentFrame from 'describeComponentFrame';
+import getComponentName from 'getComponentName';
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -267,4 +267,5 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
+// TODO: convert to ESM?
 module.exports = ReactShallowRenderer;
