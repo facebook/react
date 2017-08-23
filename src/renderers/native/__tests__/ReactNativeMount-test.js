@@ -11,7 +11,6 @@
 
 'use strict';
 
-var PropTypes;
 var React;
 var ReactNative;
 var createReactNativeComponentClass;
@@ -21,7 +20,6 @@ describe('ReactNative', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    PropTypes = require('prop-types');
     React = require('react');
     ReactNative = require('react-native');
     UIManager = require('UIManager');
