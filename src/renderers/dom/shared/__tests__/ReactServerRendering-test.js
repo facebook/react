@@ -15,8 +15,6 @@ var ExecutionEnvironment;
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactMarkupChecksum;
-var ReactReconcileTransaction;
 var ReactTestUtils;
 var PropTypes;
 var ReactFeatureFlags;
@@ -32,8 +30,6 @@ describe('ReactDOMServer', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
 
     ReactFeatureFlags = require('ReactFeatureFlags');
@@ -56,12 +52,6 @@ describe('ReactDOMServer', () => {
           '<span ' +
             ROOT_ATTRIBUTE_NAME +
             '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '>hello world</span>',
         ),
       );
@@ -74,12 +64,6 @@ describe('ReactDOMServer', () => {
           '<img ' +
             ROOT_ATTRIBUTE_NAME +
             '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '/>',
         ),
       );
@@ -92,12 +76,6 @@ describe('ReactDOMServer', () => {
           '<img data-attr="&gt;" ' +
             ROOT_ATTRIBUTE_NAME +
             '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '/>',
         ),
       );
@@ -139,17 +117,8 @@ describe('ReactDOMServer', () => {
           '<div ' +
             ROOT_ATTRIBUTE_NAME +
             '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '>' +
             '<span' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             '>' +
             (ReactDOMFeatureFlags.useFiber
               ? 'My name is <!-- -->child'
@@ -582,11 +551,6 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-
-      ReactReconcileTransaction.prototype.perform = function() {
-        // We shouldn't ever be calling this on the server
-        throw new Error('Browser reconcile transaction should not be used');
-      };
       var markup = ReactDOMServer.renderToString(<Component />);
       expect(markup).toContain('hello, world');
     });
@@ -606,11 +570,6 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-
-      ReactReconcileTransaction.prototype.perform = function() {
-        // We shouldn't ever be calling this on the server
-        throw new Error('Browser reconcile transaction should not be used');
-      };
       var markup = ReactDOMServer.renderToString(<Component />);
       expect(markup).toContain('hello, world');
     });
