@@ -2,10 +2,10 @@
 
 // We want to globally mock this but jest doesn't let us do that by default
 // for a file that already exists. So we have to explicitly mock it.
-jest.mock('ReactDOMFeatureFlags', () => {
-  const flags = require.requireActual('ReactDOMFeatureFlags');
+jest.mock('ReactFeatureFlags', () => {
+  const flags = require.requireActual('ReactFeatureFlags');
   return Object.assign({}, flags, {
-    useFiber: false,
+    disableNewFiberFeatures: true,
   });
 });
 
