@@ -22,7 +22,7 @@ import logoSvg from 'icons/logo.svg';
 
 // Note this version may point to an alpha/beta/next release.
 // This is how the previous Jekyll site determined version though.
-const {version} = require('../../../../../package.json');
+const {version} = require('../../../../package.json');
 
 const Header = ({location}) => (
   <header
