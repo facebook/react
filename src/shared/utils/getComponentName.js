@@ -15,15 +15,12 @@
 import type {Fiber} from 'ReactFiber';
 
 function getComponentName(fiber: Fiber): string | null {
-  if (typeof fiber.tag === 'number') {
-    // Fiber reconciler
-    const {type} = fiber;
-    if (typeof type === 'string') {
-      return type;
-    }
-    if (typeof type === 'function') {
-      return type.displayName || type.name;
-    }
+  const {type} = fiber;
+  if (typeof type === 'string') {
+    return type;
+  }
+  if (typeof type === 'function') {
+    return type.displayName || type.name;
   }
   return null;
 }

@@ -232,7 +232,7 @@ var DOMRenderer = ReactFiberReconciler({
     if (__DEV__) {
       // TODO: take namespace into account when validating.
       const hostContextDev = ((hostContext: any): HostContextDev);
-      validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
       if (
         typeof props.children === 'string' ||
         typeof props.children === 'number'
@@ -243,7 +243,7 @@ var DOMRenderer = ReactFiberReconciler({
           type,
           null,
         );
-        validateDOMNesting(null, string, null, ownAncestorInfo);
+        validateDOMNesting(null, string, ownAncestorInfo);
       }
       parentNamespace = hostContextDev.namespace;
     } else {
@@ -298,7 +298,7 @@ var DOMRenderer = ReactFiberReconciler({
           type,
           null,
         );
-        validateDOMNesting(null, string, null, ownAncestorInfo);
+        validateDOMNesting(null, string, ownAncestorInfo);
       }
     }
     return diffProperties(
@@ -365,7 +365,7 @@ var DOMRenderer = ReactFiberReconciler({
   ): TextInstance {
     if (__DEV__) {
       const hostContextDev = ((hostContext: any): HostContextDev);
-      validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(null, text, hostContextDev.ancestorInfo);
     }
     var textNode: TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
