@@ -147,4 +147,4 @@ ATTRS.forEach(original => {
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
 });
 
-module.exports = SVGDOMPropertyConfig;
+export default SVGDOMPropertyConfig;

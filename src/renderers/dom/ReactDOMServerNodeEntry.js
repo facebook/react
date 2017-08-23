@@ -11,16 +11,19 @@
 
 'use strict';
 
-var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
-var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
-var ReactVersion = require('ReactVersion');
+import 'ReactDOMInjection';
+import {renderToString, renderToStaticMarkup} from 'ReactDOMStringRenderer';
+import {
+  renderToNodeStream,
+  renderToStaticNodeStream,
+} from 'ReactDOMNodeStreamRenderer';
+import ReactVersion from 'ReactVersion';
 
-require('ReactDOMInjection');
-
+// TODO: convert to ESM?
 module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToNodeStream: ReactDOMNodeStreamRenderer.renderToNodeStream,
-  renderToStaticNodeStream: ReactDOMNodeStreamRenderer.renderToStaticNodeStream,
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
   version: ReactVersion,
 };

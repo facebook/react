@@ -12,7 +12,7 @@
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 export type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
@@ -22,22 +22,18 @@ export type ReactNativeBaseComponentViewConfig = {
 
 const viewConfigs = new Map();
 
-const ReactNativeViewConfigRegistry = {
-  register(viewConfig: ReactNativeBaseComponentViewConfig) {
-    const name = viewConfig.uiViewClassName;
-    invariant(
-      !viewConfigs.has(name),
-      'Tried to register two views with the same name %s',
-      name,
-    );
-    viewConfigs.set(name, viewConfig);
-    return name;
-  },
-  get(name: string) {
-    const config = viewConfigs.get(name);
-    invariant(config, 'View config not found for name %s', name);
-    return config;
-  },
-};
-
-module.exports = ReactNativeViewConfigRegistry;
+export function register(viewConfig: ReactNativeBaseComponentViewConfig) {
+  const name = viewConfig.uiViewClassName;
+  invariant(
+    !viewConfigs.has(name),
+    'Tried to register two views with the same name %s',
+    name,
+  );
+  viewConfigs.set(name, viewConfig);
+  return name;
+}
+export function get(name: string) {
+  const config = viewConfigs.get(name);
+  invariant(config, 'View config not found for name %s', name);
+  return config;
+}

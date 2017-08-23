@@ -11,15 +11,15 @@
 
 'use strict';
 
-var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
-var ReactVersion = require('ReactVersion');
-var invariant = require('fbjs/lib/invariant');
+import 'ReactDOMInjection';
+import {renderToString, renderToStaticMarkup} from 'ReactDOMStringRenderer';
+import ReactVersion from 'ReactVersion';
+import invariant from 'fbjs/lib/invariant';
 
-require('ReactDOMInjection');
-
+// TODO: convert to ESM?
 module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
+  renderToString,
+  renderToStaticMarkup,
   renderToNodeStream() {
     invariant(
       false,

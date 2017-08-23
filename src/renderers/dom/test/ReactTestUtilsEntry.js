@@ -11,20 +11,22 @@
 
 'use strict';
 
-var BrowserEventConstants = require('BrowserEventConstants');
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactShallowRenderer = require('ReactShallowRendererEntry'); // TODO (bvaughn) Remove this import before 16.0.0
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var SyntheticEvent = require('SyntheticEvent');
-
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import {topLevelTypes} from 'BrowserEventConstants';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {findCurrentFiberUsingSlowPath} from 'ReactFiberTreeReflection';
+import ReactInstanceMap from 'ReactInstanceMap';
+// TODO (bvaughn) Remove this import before 16.0.0:
+import ReactShallowRenderer from 'ReactShallowRendererEntry';
+import {
+  ClassComponent,
+  FunctionalComponent,
+  HostComponent,
+  HostText,
+} from 'ReactTypeOfWork';
+import SyntheticEvent from 'SyntheticEvent';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 var {findDOMNode} = ReactDOM;
 var {
@@ -35,14 +37,6 @@ var {
   ReactDOMComponentTree,
   ReactDOMEventListener,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-
-var topLevelTypes = BrowserEventConstants.topLevelTypes;
-var {
-  ClassComponent,
-  FunctionalComponent,
-  HostComponent,
-  HostText,
-} = ReactTypeOfWork;
 
 // TODO (bvaughn) Remove this warning before 16.0.0
 // It's only being added for temporary deprecation notice in RN.
@@ -68,9 +62,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-    fiber,
-  );
+  var currentParent = findCurrentFiberUsingSlowPath(fiber);
   if (!currentParent) {
     return [];
   }
@@ -505,4 +497,5 @@ Object.keys(topLevelTypes).forEach(function(eventType) {
   );
 });
 
+// TODO: convert to ESM?
 module.exports = ReactTestUtils;

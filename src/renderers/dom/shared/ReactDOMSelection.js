@@ -11,8 +11,8 @@
 
 'use strict';
 
-var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
-var getTextContentAccessor = require('getTextContentAccessor');
+import getNodeForCharacterOffset from 'getNodeForCharacterOffset';
+import getTextContentAccessor from 'getTextContentAccessor';
 
 /**
  * While `isCollapsed` is available on the Selection object and `collapsed`
@@ -27,7 +27,7 @@ function isCollapsed(anchorNode, anchorOffset, focusNode, focusOffset) {
  * @param {DOMElement} node
  * @return {?object}
  */
-function getModernOffsets(node) {
+export function getOffsets(node) {
   var selection = window.getSelection && window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
@@ -107,7 +107,7 @@ function getModernOffsets(node) {
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-function setModernOffsets(node, offsets) {
+export function setOffsets(node, offsets) {
   if (!window.getSelection) {
     return;
   }
@@ -142,18 +142,3 @@ function setModernOffsets(node, offsets) {
     }
   }
 }
-
-var ReactDOMSelection = {
-  /**
-   * @param {DOMElement} node
-   */
-  getOffsets: getModernOffsets,
-
-  /**
-   * @param {DOMElement|DOMTextNode} node
-   * @param {object} offsets
-   */
-  setOffsets: setModernOffsets,
-};
-
-module.exports = ReactDOMSelection;

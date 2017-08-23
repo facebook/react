@@ -11,8 +11,9 @@
 
 'use strict';
 
-var Namespaces = require('DOMNamespaces').Namespaces;
-var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
+import {Namespaces} from 'DOMNamespaces';
+import createMicrosoftUnsafeLocalFunction
+  from 'createMicrosoftUnsafeLocalFunction';
 
 // SVG temp container for IE lacking innerHTML
 var reusableSVGContainer;
@@ -24,7 +25,10 @@ var reusableSVGContainer;
  * @param {string} html
  * @internal
  */
-var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
+export const setInnerHTML = createMicrosoftUnsafeLocalFunction(function(
+  node,
+  html,
+) {
   // IE does not have innerHTML for SVG nodes, so instead we inject the
   // new markup in a temp node and then move the child nodes across into
   // the target node
@@ -40,5 +44,3 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
     node.innerHTML = html;
   }
 });
-
-module.exports = setInnerHTML;

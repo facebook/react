@@ -15,4 +15,4 @@ var ReactDOMFeatureFlags = {
   fiberAsyncScheduling: false,
 };
 
-module.exports = ReactDOMFeatureFlags;
+export default ReactDOMFeatureFlags;

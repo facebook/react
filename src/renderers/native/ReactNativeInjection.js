@@ -17,17 +17,17 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
-require('InitializeCore');
-
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
-var RCTEventEmitter = require('RCTEventEmitter');
-var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
-var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
-var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
-var ResponderEventPlugin = require('ResponderEventPlugin');
+import 'InitializeCore';
+import {injectEventPluginOrder, injectEventPluginsByName} from 'EventPluginHub';
+import {injectComponentTree} from 'EventPluginUtils';
+import RCTEventEmitter from 'RCTEventEmitter';
+import ReactNativeBridgeEventPlugin from 'ReactNativeBridgeEventPlugin';
+import * as ReactNativeComponentTree from 'ReactNativeComponentTree';
+import * as ReactNativeEventEmitter from 'ReactNativeEventEmitter';
+import ReactNativeEventPluginOrder from 'ReactNativeEventPluginOrder';
+import ReactNativeGlobalResponderHandler
+  from 'ReactNativeGlobalResponderHandler';
+import ResponderEventPlugin from 'ResponderEventPlugin';
 
 /**
  * Register the event emitter with the native bridge
@@ -37,8 +37,8 @@ RCTEventEmitter.register(ReactNativeEventEmitter);
 /**
  * Inject module for resolving DOM hierarchy and plugin ordering.
  */
-EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
-EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
+injectEventPluginOrder(ReactNativeEventPluginOrder);
+injectComponentTree(ReactNativeComponentTree);
 
 ResponderEventPlugin.injection.injectGlobalResponderHandler(
   ReactNativeGlobalResponderHandler,
@@ -48,7 +48,7 @@ ResponderEventPlugin.injection.injectGlobalResponderHandler(
  * Some important event plugins included by default (without having to require
  * them).
  */
-EventPluginHub.injection.injectEventPluginsByName({
+injectEventPluginsByName({
   ResponderEventPlugin: ResponderEventPlugin,
   ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
 });

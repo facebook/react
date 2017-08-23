@@ -18,11 +18,7 @@ import EnterLeaveEventPlugin from 'EnterLeaveEventPlugin';
 import {injectEventPluginOrder, injectEventPluginsByName} from 'EventPluginHub';
 import {injectComponentTree} from 'EventPluginUtils';
 import {handleTopLevel} from 'ReactBrowserEventEmitter';
-import {
-  getFiberCurrentPropsFromNode,
-  getInstanceFromNode,
-  getNodeFromInstance,
-} from 'ReactDOMComponentTree';
+import * as ReactDOMComponentTree from 'ReactDOMComponentTree';
 import {setHandleTopLevel} from 'ReactDOMEventListener';
 import SelectEventPlugin from 'SelectEventPlugin';
 import SimpleEventPlugin from 'SimpleEventPlugin';
@@ -33,11 +29,7 @@ setHandleTopLevel(handleTopLevel);
  * Inject modules for resolving DOM hierarchy and plugin ordering.
  */
 injectEventPluginOrder(DOMEventPluginOrder);
-injectComponentTree({
-  getFiberCurrentPropsFromNode,
-  getInstanceFromNode,
-  getNodeFromInstance,
-});
+injectComponentTree(ReactDOMComponentTree);
 
 /**
  * Some important event plugins included by default (without having to require

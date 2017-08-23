@@ -12,7 +12,9 @@
 
 'use strict';
 
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
+import {
+  register as registerInViewConfigRegistry,
+} from 'ReactNativeViewConfigRegistry';
 
 // See also ReactNativeBaseComponent
 export type ReactNativeBaseComponentViewConfig = {
@@ -28,7 +30,7 @@ export type ReactNativeBaseComponentViewConfig = {
 const createReactNativeComponentClass = function(
   viewConfig: ReactNativeBaseComponentViewConfig,
 ): string {
-  return ReactNativeViewConfigRegistry.register(viewConfig);
+  return registerInViewConfigRegistry(viewConfig);
 };
 
-module.exports = createReactNativeComponentClass;
+export default createReactNativeComponentClass;

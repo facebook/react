@@ -11,17 +11,17 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
-var React = require('react');
-var ReactPartialRenderer = require('ReactPartialRenderer');
-var ReactFeatureFlags = require('ReactFeatureFlags');
+import invariant from 'fbjs/lib/invariant';
+import React from 'react';
+import ReactPartialRenderer from 'ReactPartialRenderer';
+import ReactFeatureFlags from 'ReactFeatureFlags';
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostring
  */
-function renderToString(element) {
+export function renderToString(element) {
   const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
   if (disableNewFiberFeatures) {
     invariant(
@@ -39,7 +39,7 @@ function renderToString(element) {
  * such as data-react-id that React uses internally.
  * See https://facebook.github.io/react/docs/react-dom-server.html#rendertostaticmarkup
  */
-function renderToStaticMarkup(element) {
+export function renderToStaticMarkup(element) {
   const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
   if (disableNewFiberFeatures) {
     invariant(
@@ -51,8 +51,3 @@ function renderToStaticMarkup(element) {
   var markup = renderer.read(Infinity);
   return markup;
 }
-
-module.exports = {
-  renderToString: renderToString,
-  renderToStaticMarkup: renderToStaticMarkup,
-};

@@ -11,15 +11,16 @@
 
 'use strict';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import camelizeStyleName from 'fbjs/lib/camelizeStyleName';
+import warning from 'fbjs/lib/warning';
+import {getCurrentFiberOwnerName} from 'ReactDebugCurrentFiber';
 
 var warnValidStyle = emptyFunction;
 
-if (__DEV__) {
-  var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+export default warnValidStyle;
 
+if (__DEV__) {
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 
@@ -135,5 +136,3 @@ if (__DEV__) {
     }
   };
 }
-
-module.exports = warnValidStyle;

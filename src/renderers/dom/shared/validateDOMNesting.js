@@ -11,14 +11,15 @@
 
 'use strict';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import warning from 'fbjs/lib/warning';
+import {getCurrentFiberStackAddendum} from 'ReactDebugCurrentFiber';
 
-var validateDOMNesting = emptyFunction;
+export let updatedAncestorInfo = emptyFunction;
+export let validateDOMNesting = emptyFunction;
+export let isTagValidInContext = emptyFunction;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-
   // This validation code was written based on the HTML5 parsing spec:
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   //
@@ -165,7 +166,7 @@ if (__DEV__) {
     dlItemTagAutoclosing: null,
   };
 
-  var updatedAncestorInfo = function(oldInfo, tag, instance) {
+  updatedAncestorInfo = function(oldInfo, tag, instance) {
     var ancestorInfo = Object.assign({}, oldInfo || emptyAncestorInfo);
     var info = {tag: tag, instance: instance};
 
@@ -485,10 +486,8 @@ if (__DEV__) {
     }
   };
 
-  validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
-
   // For testing
-  validateDOMNesting.isTagValidInContext = function(tag, ancestorInfo) {
+  isTagValidInContext = function(tag, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
@@ -498,5 +497,3 @@ if (__DEV__) {
     );
   };
 }
-
-module.exports = validateDOMNesting;

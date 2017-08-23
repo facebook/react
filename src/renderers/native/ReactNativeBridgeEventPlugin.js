@@ -11,9 +11,12 @@
  */
 'use strict';
 
-var EventPropagators = require('EventPropagators');
-var SyntheticEvent = require('SyntheticEvent');
-var UIManager = require('UIManager');
+import {
+  accumulateTwoPhaseDispatches,
+  accumulateDirectDispatches,
+} from 'EventPropagators';
+import SyntheticEvent from 'SyntheticEvent';
+import UIManager from 'UIManager';
 
 var customBubblingEventTypes = UIManager.customBubblingEventTypes;
 var customDirectEventTypes = UIManager.customDirectEventTypes;
@@ -51,9 +54,9 @@ var ReactNativeBridgeEventPlugin = {
       nativeEventTarget,
     );
     if (bubbleDispatchConfig) {
-      EventPropagators.accumulateTwoPhaseDispatches(event);
+      accumulateTwoPhaseDispatches(event);
     } else if (directDispatchConfig) {
-      EventPropagators.accumulateDirectDispatches(event);
+      accumulateDirectDispatches(event);
     } else {
       return null;
     }
@@ -61,4 +64,4 @@ var ReactNativeBridgeEventPlugin = {
   },
 };
 
-module.exports = ReactNativeBridgeEventPlugin;
+export default ReactNativeBridgeEventPlugin;

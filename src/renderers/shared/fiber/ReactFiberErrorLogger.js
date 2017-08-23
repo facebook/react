@@ -12,7 +12,7 @@
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 import type {CapturedError} from 'ReactFiberScheduler';
 
@@ -20,7 +20,7 @@ const defaultShowDialog = (capturedError: CapturedError) => true;
 
 let showDialog = defaultShowDialog;
 
-function logCapturedError(capturedError: CapturedError): void {
+export function logCapturedError(capturedError: CapturedError): void {
   const logError = showDialog(capturedError);
 
   // Allow injected showDialog() to prevent default console.error logging.
@@ -77,22 +77,18 @@ function logCapturedError(capturedError: CapturedError): void {
   }
 }
 
-exports.injection = {
-  /**
-   * Display custom dialog for lifecycle errors.
-   * Return false to prevent default behavior of logging to console.error.
-   */
-  injectDialog(fn: (e: CapturedError) => boolean) {
-    invariant(
-      showDialog === defaultShowDialog,
-      'The custom dialog was already injected.',
-    );
-    invariant(
-      typeof fn === 'function',
-      'Injected showDialog() must be a function.',
-    );
-    showDialog = fn;
-  },
-};
-
-exports.logCapturedError = logCapturedError;
+/**
+ * Display custom dialog for lifecycle errors.
+ * Return false to prevent default behavior of logging to console.error.
+ */
+export function injectErrorLoggerDialog(fn: (e: CapturedError) => boolean) {
+  invariant(
+    showDialog === defaultShowDialog,
+    'The custom dialog was already injected.',
+  );
+  invariant(
+    typeof fn === 'function',
+    'Injected showDialog() must be a function.',
+  );
+  showDialog = fn;
+}

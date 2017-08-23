@@ -11,19 +11,19 @@
  */
 'use strict';
 
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
+import ReactNativeAttributePayload from 'ReactNativeAttributePayload';
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
 
-const invariant = require('fbjs/lib/invariant');
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
+import invariant from 'fbjs/lib/invariant';
+import findNodeHandle from 'findNodeHandle';
+import findNumericNodeHandle from 'findNumericNodeHandle';
 
-const {
+import {
   mountSafeCallback,
   throwOnStylesProp,
   warnForStyleProps,
-} = require('NativeMethodsMixinUtils');
+} from 'NativeMethodsMixinUtils';
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -204,4 +204,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = NativeMethodsMixin;
+export default NativeMethodsMixin;

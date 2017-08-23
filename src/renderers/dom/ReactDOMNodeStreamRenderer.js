@@ -11,12 +11,12 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
-var React = require('react');
-var ReactPartialRenderer = require('ReactPartialRenderer');
-var ReactFeatureFlags = require('ReactFeatureFlags');
+import invariant from 'fbjs/lib/invariant';
+import React from 'react';
+import ReactPartialRenderer from 'ReactPartialRenderer';
+import ReactFeatureFlags from 'ReactFeatureFlags';
 
-var Readable = require('stream').Readable;
+import {Readable} from 'stream';
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {
@@ -40,7 +40,7 @@ class ReactMarkupReadableStream extends Readable {
  * server.
  * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertonodestream
  */
-function renderToNodeStream(element) {
+export function renderToNodeStream(element) {
   const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
   if (disableNewFiberFeatures) {
     invariant(
@@ -56,7 +56,7 @@ function renderToNodeStream(element) {
  * such as data-react-id that React uses internally.
  * See https://facebook.github.io/react/docs/react-dom-stream.html#rendertostaticnodestream
  */
-function renderToStaticNodeStream(element) {
+export function renderToStaticNodeStream(element) {
   const disableNewFiberFeatures = ReactFeatureFlags.disableNewFiberFeatures;
   if (disableNewFiberFeatures) {
     invariant(
@@ -66,8 +66,3 @@ function renderToStaticNodeStream(element) {
   }
   return new ReactMarkupReadableStream(element, true);
 }
-
-module.exports = {
-  renderToNodeStream: renderToNodeStream,
-  renderToStaticNodeStream: renderToStaticNodeStream,
-};
