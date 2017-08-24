@@ -169,16 +169,19 @@ const attributes = [
   {name: 'clip-rule'},
   {name: 'clipPath', read: getAttribute('clip-path')},
   {name: 'clipPathUnits'},
-  {name: 'clipRule'},
+  {name: 'clipRule', read: getAttribute('clip-rule')},
   {name: 'color'},
   {name: 'color-interpolation'},
   {name: 'color-interpolation-filters'},
   {name: 'color-profile'},
   {name: 'color-rendering'},
-  {name: 'colorInterpolation'},
-  {name: 'colorInterpolationFilters'},
-  {name: 'colorProfile'},
-  {name: 'colorRendering'},
+  {name: 'colorInterpolation', read: getAttribute('color-interpolation')},
+  {
+    name: 'colorInterpolationFilters',
+    read: getAttribute('color-interpolation-filters'),
+  },
+  {name: 'colorProfile', read: getAttribute('color-profile')},
+  {name: 'colorRendering', read: getAttribute('color-rendering')},
   {name: 'cols'},
   {name: 'colSpan'},
   {name: 'content'},
@@ -499,7 +502,10 @@ const attributes = [
   {name: 'strikethrough-position'},
   {name: 'strikethrough-thickness'},
   {name: 'strikethroughPosition', read: getAttribute('strikethrough-position')},
-  {name: 'strikethroughThickness', read: getAttribute('strikethrough-thickness')},
+  {
+    name: 'strikethroughThickness',
+    read: getAttribute('strikethrough-thickness'),
+  },
   {name: 'string'},
   {name: 'stroke'},
   {name: 'stroke-dasharray'},
@@ -659,7 +665,7 @@ function getRenderedAttributeValue(renderer, attribute, givenValue) {
     //   debugger;
     // }
 
-    const read = attribute.read || getAttribute(attribute.name);
+    const read = attribute.read || getProperty(attribute.name);
 
     return {
       result: read(container.firstChild),
