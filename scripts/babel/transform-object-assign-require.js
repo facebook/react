@@ -16,11 +16,7 @@ module.exports = function autoImporter(babel) {
     if (state.id) {
       return state.id;
     }
-    const id = file.addImport(
-      'object-assign',
-      'default',
-      'assign',
-    );
+    const id = file.addImport('object-assign', 'default', 'assign');
     state.id = id;
     return id;
   }

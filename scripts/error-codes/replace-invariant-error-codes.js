@@ -27,7 +27,7 @@ module.exports = function(babel) {
     const id = file.addImport(
       'reactProdInvariant',
       'default',
-      'reactProdInvariant',
+      'reactProdInvariant'
     );
     localState.prodInvariantIdentifier = id;
     return id;
