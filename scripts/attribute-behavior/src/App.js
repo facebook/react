@@ -122,17 +122,40 @@ const attributes = [
     tagName: 'font-face',
     read: getAttribute('accent-height'),
   },
-  {name: 'accept'},
+  {name: 'accept', tagName: 'form'},
   {name: 'accept-charset', tagName: 'form'},
   {name: 'accept-Charset', tagName: 'form'},
   {name: 'acceptCharset', tagName: 'form'},
   {name: 'accessKey'},
-  {name: 'accumulate'},
-  {name: 'action'},
-  {name: 'additive'},
-  {name: 'alignment-baseline'},
-  {name: 'alignmentBaseline', read: getAttribute('alignment-baseline')},
-  {name: 'allowFullScreen'},
+  {
+    name: 'accumulate',
+    containerTagName: 'svg',
+    tagName: 'animate',
+    read: getAttribute('accumulate'),
+  },
+  {name: 'action', tagName: 'form'},
+  {name: 'additive', tagName: 'animate'},
+  {name: 'alignment-baseline', containerTagName: 'svg', tagName: 'textPath'},
+  {
+    name: 'alignmentBaseline',
+    containerTagName: 'svg',
+    tagName: 'textPath',
+    read: getAttribute('alignment-baseline'),
+  },
+  {
+    name: 'allowFullScreen',
+    tagName: 'iframe',
+    read: getProperty('allowFullscreen'),
+  },
+  {
+    name: 'allowfullscreen',
+    tagName: 'iframe',
+    read: getProperty('allowFullscreen'),
+  },
+  {
+    name: 'allowFullscreen',
+    tagName: 'iframe',
+  },
   {name: 'allowReorder'},
   {name: 'allowTransparency'},
   {name: 'alphabetic'},
@@ -667,21 +690,27 @@ function getRenderedAttributeValue(renderer, attribute, givenValue) {
     container = document.createElement(containerTagName);
   }
 
+  let defaultValue;
   try {
+    const read = attribute.read || getProperty(attribute.name);
+    defaultValue = read(container);
+
     const props = {
       [attribute.name]: givenValue,
     };
     renderer.render(React.createElement(tagName, props), container);
 
-    const read = attribute.read || getProperty(attribute.name);
+    const result = read(container.firstChild);
 
     return {
-      result: read(container.firstChild),
+      defaultValue,
+      result,
       didWarn: _didWarn,
       didError: false,
     };
   } catch (error) {
     return {
+      defaultValue,
       result: null,
       didWarn: _didWarn,
       didError: true,
@@ -736,12 +765,14 @@ const successColor = 'green';
 const warnColor = 'yellow';
 const errorColor = 'red';
 
-function RendererResult({version, result, didWarn, didError}) {
+function RendererResult({version, result, defaultValue, didWarn, didError}) {
   let backgroundColor;
   if (didError) {
     backgroundColor = errorColor;
   } else if (didWarn) {
     backgroundColor = warnColor;
+  } else if (result !== defaultValue) {
+    backgroundColor = 'cyan';
   } else {
     backgroundColor = successColor;
   }
@@ -759,11 +790,9 @@ function RendererResult({version, result, didWarn, didError}) {
   switch (typeof result) {
     case 'undefined':
       displayResult = '<undefined>';
-      style.backgroundColor = 'cyan';
       break;
     case 'object':
       if (result === null) {
-        style.backgroundColor = 'cyan';
         displayResult = '<null>';
         break;
       }
