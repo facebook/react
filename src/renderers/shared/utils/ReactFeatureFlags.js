@@ -14,7 +14,7 @@
 
 var ReactFeatureFlags = {
   disableNewFiberFeatures: false,
-  enableAsyncSubtreeAPI: false,
+  enableAsyncSubtreeAPI: true,
 };
 
 module.exports = ReactFeatureFlags;
