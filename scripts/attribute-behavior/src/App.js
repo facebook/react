@@ -73,6 +73,10 @@ function getProperty(propertyName) {
   return el => el[propertyName];
 }
 
+function getAttribute(attributeName) {
+  return el => el.getAttribute(attributeName);
+}
+
 const attributes = [
   {name: 'about'},
   {name: 'aBoUt'},
@@ -624,11 +628,7 @@ function getRenderedAttributeValue(renderer, container, attribute, givenValue) {
     };
     renderer.render(<div {...props} />, container);
 
-    const read =
-      attribute.read ||
-      function(el) {
-        return el.getAttribute(attribute.name);
-      };
+    const read = attribute.read || getAttribute(attribute.name);
 
     return {
       result: read(container.firstChild),
