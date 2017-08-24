@@ -1,1 +1,38 @@
+'   
+'  <?php
+'  /**
+'  Code:
+' -  npm install -g create-react-app
+'  -  create-react-app:"babel_mouse.down"
+' -  cd babel_mouse.down
+' -  npm start
+'   -  ReactDOM.render(
+'  -  <h1>Hello, world!</h1>;
+'  -  document.getElementById('root')
+'  -  );
+' @0072016
+  foo.gradle@gmail.com
+  https://developers.facebook.com
+  2017-08-22T9:18:22
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
