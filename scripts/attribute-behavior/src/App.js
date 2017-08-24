@@ -22,6 +22,25 @@ const types = [
     testValue: null,
   },
   {
+    name: 'undefined',
+    testValue: undefined,
+  },
+  {
+    name: 'empty string',
+    testValue: '',
+    testDisplayValue: "''",
+  },
+  {
+    name: 'array',
+    testValue: ['string'],
+    testDisplayValue: "['string']",
+  },
+  {
+    name: 'empty array',
+    testValue: [],
+    testDisplayValue: '[]',
+  },
+  {
     name: 'object',
     testValue: {
       toString() {
@@ -82,17 +101,17 @@ const attributes = [
   {name: 'aBoUt'},
   {name: 'accent-Height'},
   {name: 'accent-height'},
-  {name: 'accentHeight'},
+  {name: 'accentHeight', read: getAttribute('accent-height')},
   {name: 'accept'},
   {name: 'accept-charset'},
   {name: 'accept-Charset'},
-  {name: 'acceptCharset'},
+  {name: 'acceptCharset', read: getAttribute('accept-charset')},
   {name: 'accessKey'},
   {name: 'accumulate'},
   {name: 'action'},
   {name: 'additive'},
   {name: 'alignment-baseline'},
-  {name: 'alignmentBaseline'},
+  {name: 'alignmentBaseline', read: getAttribute('alignment-baseline')},
   {name: 'allowFullScreen'},
   {name: 'allowReorder'},
   {name: 'allowTransparency'},
@@ -100,7 +119,7 @@ const attributes = [
   {name: 'alt'},
   {name: 'amplitude'},
   {name: 'arabic-form'},
-  {name: 'arabicForm'},
+  {name: 'arabicForm', read: getAttribute('arabic-form')},
   {name: 'aria'},
   {name: 'aria-'},
   {name: 'aria-invalidattribute'},
@@ -118,7 +137,7 @@ const attributes = [
   {name: 'azimuth'},
   {name: 'baseFrequency'},
   {name: 'baseline-shift'},
-  {name: 'baselineShift'},
+  {name: 'baselineShift', read: getAttribute('baseline-shift')},
   {name: 'baseProfile'},
   {name: 'bbox'},
   {name: 'begin'},
@@ -126,13 +145,13 @@ const attributes = [
   {name: 'by'},
   {name: 'calcMode'},
   {name: 'cap-height'},
-  {name: 'capHeight'},
+  {name: 'capHeight', read: getAttribute('cap-height')},
   {name: 'capture'},
   {name: 'cellPadding'},
   {name: 'cellSpacing'},
   {name: 'challenge'},
   {name: 'charSet'},
-  {name: 'checked'},
+  {name: 'checked', read: getProperty('checked')},
   {name: 'Checked'},
   {name: 'Children'},
   {name: 'children'},
@@ -143,7 +162,7 @@ const attributes = [
   {name: 'clip'},
   {name: 'clip-path'},
   {name: 'clip-rule'},
-  {name: 'clipPath'},
+  {name: 'clipPath', read: getAttribute('clip-path')},
   {name: 'clipPathUnits'},
   {name: 'clipRule'},
   {name: 'color'},
@@ -628,6 +647,14 @@ function getRenderedAttributeValue(renderer, container, attribute, givenValue) {
     };
     renderer.render(<div {...props} />, container);
 
+    // if (
+    //   renderer === ReactDOM15 &&
+    //   attribute.name === 'accentHeight' &&
+    //   typeof givenValue === 'string'
+    // ) {
+    //   debugger;
+    // }
+
     const read = attribute.read || getAttribute(attribute.name);
 
     return {
@@ -712,13 +739,40 @@ function RendererResult({version, result, didWarn, didError}) {
     backgroundColor,
   };
 
-  let displayResult = result;
-  if (result === undefined) {
-    displayResult = '<undefined>';
-  } else if (result === null) {
-    displayResult = '<null>';
-  } else if (result === '') {
-    displayResult = '<empty string>';
+  let displayResult;
+  switch (typeof result) {
+    case 'undefined':
+      displayResult = '<undefined>';
+      break;
+    case 'object':
+      if (result === null) {
+        style.backgroundColor = 'cyan';
+        displayResult = '<null>';
+        break;
+      }
+      displayResult = '<object>';
+      break;
+    case 'function':
+      displayResult = '<function>';
+      break;
+    case 'symbol':
+      displayResult = '<symbol>';
+      break;
+    case 'number':
+      displayResult = `<Number: ${result}>`;
+      break;
+    case 'string':
+      if (result === '') {
+        displayResult = '<empty string>';
+        break;
+      }
+      displayResult = result;
+      break;
+    case 'boolean':
+      displayResult = `<Boolean: ${result}>`;
+      break;
+    default:
+      throw new Error('Switch statement should be exhaustive.');
   }
 
   return <div css={style}>{displayResult}</div>;
