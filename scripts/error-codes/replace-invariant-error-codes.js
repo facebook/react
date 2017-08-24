@@ -20,19 +20,17 @@ module.exports = function(babel) {
   var SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
   // Generate a hygienic identifier
-  function getProdInvariantIdentifier(path, localState) {
-    if (!localState.prodInvariantIdentifier) {
-      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
-        'prodInvariant'
-      );
-      path.scope.getProgramParent().push({
-        id: localState.prodInvariantIdentifier,
-        init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
-        ]),
-      });
+  function getProdInvariantIdentifier(path, file, localState) {
+    if (localState.prodInvariantIdentifier) {
+      return localState.prodInvariantIdentifier;
     }
-    return localState.prodInvariantIdentifier;
+    const id = file.addImport(
+      'reactProdInvariant',
+      'default',
+      'reactProdInvariant'
+    );
+    localState.prodInvariantIdentifier = id;
+    return id;
   }
 
   var DEV_EXPRESSION = t.identifier('__DEV__');
@@ -44,7 +42,7 @@ module.exports = function(babel) {
 
     visitor: {
       CallExpression: {
-        exit: function(path) {
+        exit: function(path, file) {
           var node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
@@ -59,7 +57,7 @@ module.exports = function(babel) {
             path.get('arguments')[0].isStringLiteral({value: 'invariant'})
           ) {
             node[SEEN_SYMBOL] = true;
-            getProdInvariantIdentifier(path, this);
+            getProdInvariantIdentifier(path, file, this);
           } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
@@ -110,7 +108,7 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantIdentifier(path, this);
+            var localInvariantId = getProdInvariantIdentifier(path, file, this);
             var prodInvariant = t.callExpression(
               localInvariantId,
               [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))

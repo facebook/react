@@ -14,18 +14,17 @@
 
 import type {Fiber} from 'ReactFiber';
 
+import getComponentName from 'getComponentName';
+import {ReactDebugCurrentFrame} from 'ReactGlobalSharedState';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'ReactFiberComponentTreeHook';
+
+const {setCurrentStackImplementation} = ReactDebugCurrentFrame;
+
 type LifeCyclePhase = 'render' | 'getChildContext';
 
-var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
-
-if (__DEV__) {
-  var getComponentName = require('getComponentName');
-  var {
-    getStackAddendumByWorkInProgressFiber,
-  } = require('ReactFiberComponentTreeHook');
-}
-
-function getCurrentFiberOwnerName(): string | null {
+export function getCurrentFiberOwnerName(): string | null {
   if (__DEV__) {
     const fiber = ReactDebugCurrentFiber.current;
     if (fiber === null) {
@@ -38,7 +37,7 @@ function getCurrentFiberOwnerName(): string | null {
   return null;
 }
 
-function getCurrentFiberStackAddendum(): string | null {
+export function getCurrentFiberStackAddendum(): string | null {
   if (__DEV__) {
     const fiber = ReactDebugCurrentFiber.current;
     if (fiber === null) {
@@ -51,25 +50,24 @@ function getCurrentFiberStackAddendum(): string | null {
   return null;
 }
 
-function resetCurrentFiber() {
-  ReactDebugCurrentFrame.getCurrentStack = null;
+export function resetCurrentFiber() {
+  setCurrentStackImplementation(null);
   ReactDebugCurrentFiber.current = null;
   ReactDebugCurrentFiber.phase = null;
 }
 
-function setCurrentFiber(fiber: Fiber | null, phase: LifeCyclePhase | null) {
-  ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
+export function setCurrentFiber(
+  fiber: Fiber | null,
+  phase: LifeCyclePhase | null,
+) {
+  setCurrentStackImplementation(getCurrentFiberStackAddendum);
   ReactDebugCurrentFiber.current = fiber;
   ReactDebugCurrentFiber.phase = phase;
 }
 
-var ReactDebugCurrentFiber = {
+const ReactDebugCurrentFiber = {
   current: (null: Fiber | null),
   phase: (null: LifeCyclePhase | null),
-  resetCurrentFiber,
-  setCurrentFiber,
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
 };
 
-module.exports = ReactDebugCurrentFiber;
+export default ReactDebugCurrentFiber;

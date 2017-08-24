@@ -11,4 +11,5 @@
 
 'use strict';
 
+// TODO: convert this file to ESM (this currently breaks Node script).
 module.exports = '16.0.0-beta.5';

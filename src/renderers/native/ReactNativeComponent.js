@@ -13,15 +13,15 @@
 
 'use strict';
 
-const React = require('react');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
+import React from 'react';
+import ReactNativeAttributePayload from 'ReactNativeAttributePayload';
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
 
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
+import findNodeHandle from 'findNodeHandle';
+import findNumericNodeHandle from 'findNumericNodeHandle';
 
-const {mountSafeCallback} = require('NativeMethodsMixinUtils');
+import {mountSafeCallback} from 'NativeMethodsMixinUtils';
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -177,4 +177,4 @@ class ReactNativeComponent<DefaultProps, Props, State>
 // eslint-disable-next-line no-unused-expressions
 (ReactNativeComponent.prototype: NativeMethodsMixinType);
 
-module.exports = ReactNativeComponent;
+export default ReactNativeComponent;

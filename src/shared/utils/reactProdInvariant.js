@@ -42,4 +42,5 @@ function reactProdInvariant(code: string): void {
   throw error;
 }
 
+// TODO: ESM?
 module.exports = reactProdInvariant;

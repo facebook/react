@@ -10,8 +10,8 @@
  * @flow
  */
 
-var React = require('react');
-var invariant = require('fbjs/lib/invariant');
+import React from 'react';
+import invariant from 'fbjs/lib/invariant';
 
 invariant(
   React,

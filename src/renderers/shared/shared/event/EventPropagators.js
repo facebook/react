@@ -11,19 +11,17 @@
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
-var ReactTreeTraversal = require('ReactTreeTraversal');
-
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
+import {getListener} from 'EventPluginHub';
+import {
+  getParentInstance,
+  traverseTwoPhase,
+  traverseEnterLeave,
+} from 'ReactTreeTraversal';
+import accumulateInto from 'accumulateInto';
+import forEachAccumulated from 'forEachAccumulated';
+import warning from 'fbjs/lib/warning';
 
 type PropagationPhases = 'bubbled' | 'captured';
-
-var getListener = EventPluginHub.getListener;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 /**
  * Some event types have a notion of different registration names for different
@@ -64,11 +62,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
  */
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    ReactTreeTraversal.traverseTwoPhase(
-      event._targetInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -78,14 +72,8 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     var targetInst = event._targetInst;
-    var parentInst = targetInst
-      ? ReactTreeTraversal.getParentInstance(targetInst)
-      : null;
-    ReactTreeTraversal.traverseTwoPhase(
-      parentInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    var parentInst = targetInst ? getParentInstance(targetInst) : null;
+    traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -119,28 +107,6 @@ function accumulateDirectDispatchesSingle(event) {
   }
 }
 
-function accumulateTwoPhaseDispatches(events) {
-  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
-}
-
-function accumulateTwoPhaseDispatchesSkipTarget(events) {
-  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
-}
-
-function accumulateEnterLeaveDispatches(leave, enter, from, to) {
-  ReactTreeTraversal.traverseEnterLeave(
-    from,
-    to,
-    accumulateDispatches,
-    leave,
-    enter,
-  );
-}
-
-function accumulateDirectDispatches(events) {
-  forEachAccumulated(events, accumulateDirectDispatchesSingle);
-}
-
 /**
  * A small set of propagation patterns, each of which will accept a small amount
  * of information, and generate a set of "dispatch ready event objects" - which
@@ -149,14 +115,20 @@ function accumulateDirectDispatches(events) {
  * propagation strategies from actually executing the dispatches, since we
  * always want to collect the entire set of dispatches before executing even a
  * single one.
- *
- * @constructor EventPropagators
  */
-var EventPropagators = {
-  accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
-  accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
-  accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
-};
 
-module.exports = EventPropagators;
+export function accumulateTwoPhaseDispatches(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
+}
+
+export function accumulateTwoPhaseDispatchesSkipTarget(events) {
+  forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
+}
+
+export function accumulateEnterLeaveDispatches(leave, enter, from, to) {
+  traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
+}
+
+export function accumulateDirectDispatches(events) {
+  forEachAccumulated(events, accumulateDirectDispatchesSingle);
+}

@@ -11,46 +11,52 @@
 
 'use strict';
 
-var {
+import {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
-} = require('DOMNamespaces');
-var DOMMarkupOperations = require('DOMMarkupOperations');
-var React = require('react');
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-
-var assertValidProps = require('assertValidProps');
-var dangerousStyleValue = require('dangerousStyleValue');
-var emptyObject = require('fbjs/lib/emptyObject');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var invariant = require('fbjs/lib/invariant');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
-var omittedCloseTags = require('omittedCloseTags');
+} from 'DOMNamespaces';
+import {
+  createMarkupForCustomAttribute,
+  createMarkupForProperty,
+  createMarkupForRoot,
+} from 'DOMMarkupOperations';
+import React from 'react';
+import {
+  checkPropTypes as checkControlledValuePropTypes,
+} from 'ReactControlledValuePropTypes';
+import assertValidProps from 'assertValidProps';
+import dangerousStyleValue from 'dangerousStyleValue';
+import emptyObject from 'fbjs/lib/emptyObject';
+import escapeTextContentForBrowser from 'escapeTextContentForBrowser';
+import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
+import invariant from 'fbjs/lib/invariant';
+import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
+import omittedCloseTags from 'omittedCloseTags';
+import warning from 'fbjs/lib/warning';
+import checkPropTypes from 'prop-types/checkPropTypes';
+import warnValidStyle from 'warnValidStyle';
+import {
+  validateProperties as validateARIAProperties,
+} from 'ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputPropertes,
+} from 'ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownPropertes,
+} from 'ReactDOMUnknownPropertyHook';
+import describeComponentFrame from 'describeComponentFrame';
+import {ReactDebugCurrentFrame} from 'ReactGlobalSharedState';
 
 var toArray = React.Children.toArray;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var checkPropTypes = require('prop-types/checkPropTypes');
-  var warnValidStyle = require('warnValidStyle');
-  var {
-    validateProperties: validateARIAProperties,
-  } = require('ReactDOMInvalidARIAHook');
-  var {
-    validateProperties: validateInputPropertes,
-  } = require('ReactDOMNullInputValuePropHook');
-  var {
-    validateProperties: validateUnknownPropertes,
-  } = require('ReactDOMUnknownPropertyHook');
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputPropertes(type, props);
     validateUnknownPropertes(type, props);
   };
 
-  var describeComponentFrame = require('describeComponentFrame');
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
@@ -59,7 +65,6 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
   var setCurrentDebugStack = function(stack) {
@@ -67,7 +72,7 @@ if (__DEV__) {
     // We are about to enter a new composite stack, reset the array.
     currentDebugElementStack.length = 0;
     currentDebugStack = stack;
-    ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
+    ReactDebugCurrentFrame.setCurrentStackImplementation(getStackAddendum);
   };
   var pushElementToDebugStack = function(element) {
     if (currentDebugElementStack !== null) {
@@ -77,7 +82,7 @@ if (__DEV__) {
   var resetCurrentDebugStack = function() {
     currentDebugElementStack = null;
     currentDebugStack = null;
-    ReactDebugCurrentFrame.getCurrentStack = null;
+    ReactDebugCurrentFrame.setCurrentStackImplementation(null);
   };
   var getStackAddendum = function(): null | string {
     if (currentDebugStack === null) {
@@ -282,13 +287,10 @@ function createOpenTagMarkup(
     var markup = null;
     if (isCustomComponent(tagLowercase, props)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        markup = DOMMarkupOperations.createMarkupForCustomAttribute(
-          propKey,
-          propValue,
-        );
+        markup = createMarkupForCustomAttribute(propKey, propValue);
       }
     } else {
-      markup = DOMMarkupOperations.createMarkupForProperty(propKey, propValue);
+      markup = createMarkupForProperty(propKey, propValue);
     }
     if (markup) {
       ret += ' ' + markup;
@@ -302,7 +304,7 @@ function createOpenTagMarkup(
   }
 
   if (isRootElement) {
-    ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
+    ret += ' ' + createMarkupForRoot();
   }
   return ret;
 }
@@ -444,7 +446,7 @@ function resolve(child, context) {
   return {child, context};
 }
 
-class ReactDOMServerRenderer {
+export default class ReactDOMServerRenderer {
   constructor(element, makeStaticMarkup) {
     var children = React.isValidElement(element) ? [element] : toArray(element);
     var topFrame = {
@@ -566,7 +568,7 @@ class ReactDOMServerRenderer {
     var props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
+        checkControlledValuePropTypes(
           'input',
           props,
           () => '', //getCurrentFiberStackAddendum
@@ -624,7 +626,7 @@ class ReactDOMServerRenderer {
       );
     } else if (tag === 'textarea') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
+        checkControlledValuePropTypes(
           'textarea',
           props,
           () => '', //getCurrentFiberStackAddendum
@@ -685,7 +687,7 @@ class ReactDOMServerRenderer {
       });
     } else if (tag === 'select') {
       if (__DEV__) {
-        ReactControlledValuePropTypes.checkPropTypes(
+        checkControlledValuePropTypes(
           'select',
           props,
           () => '', // getCurrentFiberStackAddendum,
@@ -833,5 +835,3 @@ class ReactDOMServerRenderer {
     return out;
   }
 }
-
-module.exports = ReactDOMServerRenderer;

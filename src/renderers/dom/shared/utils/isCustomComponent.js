@@ -11,8 +11,6 @@
 
 'use strict';
 
-function isCustomComponent(tagName, props) {
+export default function isCustomComponent(tagName, props) {
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
-
-module.exports = isCustomComponent;

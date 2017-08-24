@@ -12,11 +12,10 @@
 
 'use strict';
 
-var React = require('react');
+import React from 'react';
+import warning from 'fbjs/lib/warning';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+const {Children} = React;
 
 function flattenChildren(children) {
   var content = '';
@@ -25,7 +24,7 @@ function flattenChildren(children) {
   // invalid types are ignored.
   // We can silently skip them because invalid DOM nesting warning
   // catches these cases in Fiber.
-  React.Children.forEach(children, function(child) {
+  Children.forEach(children, function(child) {
     if (child == null) {
       return;
     }
@@ -40,36 +39,33 @@ function flattenChildren(children) {
 /**
  * Implements an <option> host component that warns when `selected` is set.
  */
-var ReactDOMOption = {
-  validateProps: function(element: Element, props: Object) {
-    // TODO (yungsters): Remove support for `selected` in <option>.
-    if (__DEV__) {
-      warning(
-        props.selected == null,
-        'Use the `defaultValue` or `value` props on <select> instead of ' +
-          'setting `selected` on <option>.',
-      );
-    }
-  },
 
-  postMountWrapper: function(element: Element, props: Object) {
-    // value="" should make a value attribute (#6219)
-    if (props.value != null) {
-      element.setAttribute('value', props.value);
-    }
-  },
+export function validateProps(element: Element, props: Object) {
+  // TODO (yungsters): Remove support for `selected` in <option>.
+  if (__DEV__) {
+    warning(
+      props.selected == null,
+      'Use the `defaultValue` or `value` props on <select> instead of ' +
+        'setting `selected` on <option>.',
+    );
+  }
+}
 
-  getHostProps: function(element: Element, props: Object) {
-    var hostProps = Object.assign({children: undefined}, props);
+export function postMountWrapper(element: Element, props: Object) {
+  // value="" should make a value attribute (#6219)
+  if (props.value != null) {
+    element.setAttribute('value', props.value);
+  }
+}
 
-    var content = flattenChildren(props.children);
+export function getHostProps(element: Element, props: Object) {
+  var hostProps = Object.assign({children: undefined}, props);
 
-    if (content) {
-      hostProps.children = content;
-    }
+  var content = flattenChildren(props.children);
 
-    return hostProps;
-  },
-};
+  if (content) {
+    hostProps.children = content;
+  }
 
-module.exports = ReactDOMOption;
+  return hostProps;
+}

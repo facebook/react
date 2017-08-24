@@ -11,7 +11,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('SyntheticEvent');
+import SyntheticEvent from 'SyntheticEvent';
 
 /**
  * `touchHistory` isn't actually on the native event, but putting it in the
@@ -47,4 +47,4 @@ function ResponderSyntheticEvent(
 
 SyntheticEvent.augmentClass(ResponderSyntheticEvent, ResponderEventInterface);
 
-module.exports = ResponderSyntheticEvent;
+export default ResponderSyntheticEvent;

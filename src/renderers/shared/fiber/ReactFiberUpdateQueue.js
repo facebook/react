@@ -15,20 +15,11 @@
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
-
-const {
-  NoWork,
-  SynchronousPriority,
-  TaskPriority,
-} = require('ReactPriorityLevel');
-
-const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
-
-const invariant = require('fbjs/lib/invariant');
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import {Callback as CallbackEffect} from 'ReactTypeOfSideEffect';
+import {NoWork, SynchronousPriority, TaskPriority} from 'ReactPriorityLevel';
+import {ClassComponent, HostRoot} from 'ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 type PartialState<State, Props> =
   | $Subtype<State>
@@ -280,7 +271,7 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
   }
 }
 
-function addUpdate(
+export function addUpdate(
   fiber: Fiber,
   partialState: PartialState<any, any> | null,
   callback: mixed,
@@ -297,9 +288,8 @@ function addUpdate(
   };
   insertUpdate(fiber, update);
 }
-exports.addUpdate = addUpdate;
 
-function addReplaceUpdate(
+export function addReplaceUpdate(
   fiber: Fiber,
   state: any | null,
   callback: Callback | null,
@@ -316,9 +306,8 @@ function addReplaceUpdate(
   };
   insertUpdate(fiber, update);
 }
-exports.addReplaceUpdate = addReplaceUpdate;
 
-function addForceUpdate(
+export function addForceUpdate(
   fiber: Fiber,
   callback: Callback | null,
   priorityLevel: PriorityLevel,
@@ -334,9 +323,8 @@ function addForceUpdate(
   };
   insertUpdate(fiber, update);
 }
-exports.addForceUpdate = addForceUpdate;
 
-function getUpdatePriority(fiber: Fiber): PriorityLevel {
+export function getUpdatePriority(fiber: Fiber): PriorityLevel {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
     return NoWork;
@@ -346,9 +334,8 @@ function getUpdatePriority(fiber: Fiber): PriorityLevel {
   }
   return updateQueue.first !== null ? updateQueue.first.priorityLevel : NoWork;
 }
-exports.getUpdatePriority = getUpdatePriority;
 
-function addTopLevelUpdate(
+export function addTopLevelUpdate(
   fiber: Fiber,
   partialState: PartialState<any, any>,
   callback: Callback | null,
@@ -384,7 +371,6 @@ function addTopLevelUpdate(
     }
   }
 }
-exports.addTopLevelUpdate = addTopLevelUpdate;
 
 function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
@@ -396,7 +382,7 @@ function getStateFromUpdate(update, instance, prevState, props) {
   }
 }
 
-function beginUpdateQueue(
+export function beginUpdateQueue(
   current: Fiber | null,
   workInProgress: Fiber,
   queue: UpdateQueue,
@@ -491,9 +477,8 @@ function beginUpdateQueue(
 
   return state;
 }
-exports.beginUpdateQueue = beginUpdateQueue;
 
-function commitCallbacks(
+export function commitCallbacks(
   finishedWork: Fiber,
   queue: UpdateQueue,
   context: mixed,
@@ -517,4 +502,3 @@ function commitCallbacks(
     callback.call(context);
   }
 }
-exports.commitCallbacks = commitCallbacks;

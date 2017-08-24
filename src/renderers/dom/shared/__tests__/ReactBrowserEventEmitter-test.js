@@ -135,7 +135,7 @@ describe('ReactBrowserEventEmitter', () => {
 
     idCallOrder = [];
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
-    EventPluginHub.injection.injectEventPluginsByName({
+    EventPluginRegistry.injection.injectEventPluginsByName({
       TapEventPlugin: TapEventPlugin,
     });
   });

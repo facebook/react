@@ -11,32 +11,28 @@
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
+import {enqueueEvents, extractEvents, processEventQueue} from 'EventPluginHub';
 
 function runEventQueueInBatch(events) {
-  EventPluginHub.enqueueEvents(events);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(events);
+  processEventQueue(false);
 }
 
-var ReactEventEmitterMixin = {
-  /**
+/**
    * Streams a fired top-level event to `EventPluginHub` where plugins have the
    * opportunity to create `ReactEvent`s to be dispatched.
    */
-  handleTopLevel: function(
+export function handleTopLevel(
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  var events = extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
-  ) {
-    var events = EventPluginHub.extractEvents(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    runEventQueueInBatch(events);
-  },
-};
-
-module.exports = ReactEventEmitterMixin;
+  );
+  runEventQueueInBatch(events);
+}

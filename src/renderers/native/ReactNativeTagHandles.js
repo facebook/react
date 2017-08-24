@@ -11,7 +11,7 @@
  */
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,
@@ -27,32 +27,29 @@ var invariant = require('fbjs/lib/invariant');
  * unmount a component with a `rootNodeID`, then mount a new one in its place,
  */
 var INITIAL_TAG_COUNT = 1;
-var ReactNativeTagHandles = {
-  tagsStartAt: INITIAL_TAG_COUNT,
-  tagCount: INITIAL_TAG_COUNT,
 
-  allocateTag: function(): number {
-    // Skip over root IDs as those are reserved for native
-    while (this.reactTagIsNativeTopRootID(ReactNativeTagHandles.tagCount)) {
-      ReactNativeTagHandles.tagCount++;
-    }
-    var tag = ReactNativeTagHandles.tagCount;
-    ReactNativeTagHandles.tagCount++;
-    return tag;
-  },
+let tagCount = INITIAL_TAG_COUNT;
+export const tagsStartAt = INITIAL_TAG_COUNT;
 
-  assertRootTag: function(tag: number): void {
-    invariant(
-      this.reactTagIsNativeTopRootID(tag),
-      'Expect a native root tag, instead got %s',
-      tag,
-    );
-  },
+export function allocateTag(): number {
+  // Skip over root IDs as those are reserved for native
+  while (reactTagIsNativeTopRootID(tagCount)) {
+    tagCount++;
+  }
+  var tag = tagCount;
+  tagCount++;
+  return tag;
+}
 
-  reactTagIsNativeTopRootID: function(reactTag: number): boolean {
-    // We reserve all tags that are 1 mod 10 for native root views
-    return reactTag % 10 === 1;
-  },
-};
+export function assertRootTag(tag: number): void {
+  invariant(
+    reactTagIsNativeTopRootID(tag),
+    'Expect a native root tag, instead got %s',
+    tag,
+  );
+}
 
-module.exports = ReactNativeTagHandles;
+export function reactTagIsNativeTopRootID(reactTag: number): boolean {
+  // We reserve all tags that are 1 mod 10 for native root views
+  return reactTag % 10 === 1;
+}

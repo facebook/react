@@ -11,9 +11,9 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+import SyntheticUIEvent from 'SyntheticUIEvent';
 
-var getEventModifierState = require('getEventModifierState');
+import getEventModifierState from 'getEventModifierState';
 
 /**
  * @interface MouseEvent
@@ -66,4 +66,4 @@ function SyntheticMouseEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticMouseEvent, MouseEventInterface);
 
-module.exports = SyntheticMouseEvent;
+export default SyntheticMouseEvent;

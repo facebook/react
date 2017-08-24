@@ -17,4 +17,4 @@ var ReactFeatureFlags = {
   enableAsyncSubtreeAPI: false,
 };
 
-module.exports = ReactFeatureFlags;
+export default ReactFeatureFlags;

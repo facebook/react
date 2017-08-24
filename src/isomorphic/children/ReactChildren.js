@@ -11,15 +11,11 @@
 
 'use strict';
 
-var ReactElement = require('ReactElement');
-
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {getStackAddendum} = require('ReactDebugCurrentFrame');
-}
+import {isValidElement, cloneAndReplaceKey} from 'ReactElement';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
+import {getStackAddendum} from 'ReactDebugCurrentFrame';
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
@@ -274,7 +270,7 @@ function forEachSingleChild(bookKeeping, child, name) {
  * @param {function(*, int)} forEachFunc
  * @param {*} forEachContext Context for forEachContext.
  */
-function forEachChildren(children, forEachFunc, forEachContext) {
+export function forEach(children, forEachFunc, forEachContext) {
   if (children == null) {
     return children;
   }
@@ -300,8 +296,8 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       emptyFunction.thatReturnsArgument,
     );
   } else if (mappedChild != null) {
-    if (ReactElement.isValidElement(mappedChild)) {
-      mappedChild = ReactElement.cloneAndReplaceKey(
+    if (isValidElement(mappedChild)) {
+      mappedChild = cloneAndReplaceKey(
         mappedChild,
         // Keep both the (mapped) and old keys if they differ, just as
         // traverseAllChildren used to do for objects as children
@@ -344,7 +340,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
  * @param {*} context Context for mapFunction.
  * @return {object} Object containing the ordered map of results.
  */
-function mapChildren(children, func, context) {
+export function map(children, func, context) {
   if (children == null) {
     return children;
   }
@@ -362,7 +358,7 @@ function mapChildren(children, func, context) {
  * @param {?*} children Children tree container.
  * @return {number} The number of children.
  */
-function countChildren(children, context) {
+export function count(children, context) {
   return traverseAllChildren(children, emptyFunction.thatReturnsNull, null);
 }
 
@@ -372,7 +368,7 @@ function countChildren(children, context) {
  *
  * See https://facebook.github.io/react/docs/react-api.html#react.children.toarray
  */
-function toArray(children) {
+export function toArray(children) {
   var result = [];
   mapIntoWithKeyPrefixInternal(
     children,
@@ -383,11 +379,24 @@ function toArray(children) {
   return result;
 }
 
-var ReactChildren = {
-  forEach: forEachChildren,
-  map: mapChildren,
-  count: countChildren,
-  toArray: toArray,
-};
-
-module.exports = ReactChildren;
+/**
+ * Returns the first child in a collection of children and verifies that there
+ * is only one child in the collection.
+ *
+ * See https://facebook.github.io/react/docs/react-api.html#react.children.only
+ *
+ * The current implementation of this function assumes that a single child gets
+ * passed without a wrapper, but the purpose of this helper function is to
+ * abstract away the particular structure of children.
+ *
+ * @param {?object} children Child collection structure.
+ * @return {ReactElement} The first and only `ReactElement` contained in the
+ * structure.
+ */
+export function only(children) {
+  invariant(
+    isValidElement(children),
+    'React.Children.only expected to receive a single React element child.',
+  );
+  return children;
+}

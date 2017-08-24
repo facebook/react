@@ -11,24 +11,19 @@
 
 'use strict';
 
-var {HostComponent} = require('ReactTypeOfWork');
+import {HostComponent} from 'ReactTypeOfWork';
 
 function getParent(inst) {
-  if (inst._hostParent !== undefined) {
-    return inst._hostParent;
-  }
-  if (typeof inst.tag === 'number') {
-    do {
-      inst = inst.return;
-      // TODO: If this is a HostRoot we might want to bail out.
-      // That is depending on if we want nested subtrees (layers) to bubble
-      // events to their parent. We could also go through parentNode on the
-      // host node but that wouldn't work for React Native and doesn't let us
-      // do the portal feature.
-    } while (inst && inst.tag !== HostComponent);
-    if (inst) {
-      return inst;
-    }
+  do {
+    inst = inst.return;
+    // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent);
+  if (inst) {
+    return inst;
   }
   return null;
 }
@@ -37,7 +32,7 @@ function getParent(inst) {
  * Return the lowest common ancestor of A and B, or null if they are in
  * different trees.
  */
-function getLowestCommonAncestor(instA, instB) {
+export function getLowestCommonAncestor(instA, instB) {
   var depthA = 0;
   for (var tempA = instA; tempA; tempA = getParent(tempA)) {
     depthA++;
@@ -74,7 +69,7 @@ function getLowestCommonAncestor(instA, instB) {
 /**
  * Return if A is an ancestor of B.
  */
-function isAncestor(instA, instB) {
+export function isAncestor(instA, instB) {
   while (instB) {
     if (instA === instB || instA === instB.alternate) {
       return true;
@@ -87,14 +82,14 @@ function isAncestor(instA, instB) {
 /**
  * Return the parent instance of the passed-in instance.
  */
-function getParentInstance(inst) {
+export function getParentInstance(inst) {
   return getParent(inst);
 }
 
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-function traverseTwoPhase(inst, fn, arg) {
+export function traverseTwoPhase(inst, fn, arg) {
   var path = [];
   while (inst) {
     path.push(inst);
@@ -116,7 +111,7 @@ function traverseTwoPhase(inst, fn, arg) {
  * Does not invoke the callback on the nearest common ancestor because nothing
  * "entered" or "left" that element.
  */
-function traverseEnterLeave(from, to, fn, argFrom, argTo) {
+export function traverseEnterLeave(from, to, fn, argFrom, argTo) {
   var common = from && to ? getLowestCommonAncestor(from, to) : null;
   var pathFrom = [];
   while (from && from !== common) {
@@ -136,11 +131,3 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
     fn(pathTo[i], 'captured', argTo);
   }
 }
-
-module.exports = {
-  isAncestor: isAncestor,
-  getLowestCommonAncestor: getLowestCommonAncestor,
-  getParentInstance: getParentInstance,
-  traverseTwoPhase: traverseTwoPhase,
-  traverseEnterLeave: traverseEnterLeave,
-};

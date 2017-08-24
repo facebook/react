@@ -11,17 +11,11 @@
 
 'use strict';
 
-var ReactControlledValuePropTypes = {
-  checkPropTypes: null,
-};
+import warning from 'fbjs/lib/warning';
+import PropTypes from 'prop-types';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var emptyFunction = require('fbjs/lib/emptyFunction');
-  var PropTypes = require('prop-types');
   var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
-
-  ReactControlledValuePropTypes.checkPropTypes = emptyFunction;
   var hasReadOnlyValue = {
     button: true,
     checkbox: true,
@@ -31,7 +25,6 @@ if (__DEV__) {
     reset: true,
     submit: true,
   };
-
   var propTypes = {
     value: function(props, propName, componentName) {
       if (
@@ -68,18 +61,15 @@ if (__DEV__) {
     },
     onChange: PropTypes.func,
   };
-
   var loggedTypeFailures = {};
+}
 
-  /**
-   * Provide a linked `value` attribute for controlled forms. You should not use
-   * this outside of the ReactDOM controlled form components.
-   */
-  ReactControlledValuePropTypes.checkPropTypes = function(
-    tagName,
-    props,
-    getStack,
-  ) {
+/**
+ * Provide a linked `value` attribute for controlled forms. You should not use
+ * this outside of the ReactDOM controlled form components.
+ */
+export function checkPropTypes(tagName, props, getStack) {
+  if (__DEV__) {
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error = propTypes[propName](
@@ -99,7 +89,5 @@ if (__DEV__) {
         warning(false, 'Failed form propType: %s%s', error.message, getStack());
       }
     }
-  };
+  }
 }
-
-module.exports = ReactControlledValuePropTypes;

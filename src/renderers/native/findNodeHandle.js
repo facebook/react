@@ -12,15 +12,12 @@
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import ReactInstanceMap from 'ReactInstanceMap';
+import ReactNativeFiberRenderer from 'ReactNativeFiberRenderer';
+import {ReactCurrentOwner} from 'ReactGlobalSharedState';
+import getComponentName from 'getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 import type {Fiber} from 'ReactFiber';
 
@@ -112,4 +109,4 @@ function findNodeHandle(componentOrHandle: any): any {
   }
 }
 
-module.exports = findNodeHandle;
+export default findNodeHandle;

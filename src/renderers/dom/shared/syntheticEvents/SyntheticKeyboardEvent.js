@@ -11,11 +11,11 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+import SyntheticUIEvent from 'SyntheticUIEvent';
 
-var getEventCharCode = require('getEventCharCode');
-var getEventKey = require('getEventKey');
-var getEventModifierState = require('getEventModifierState');
+import getEventCharCode from 'getEventCharCode';
+import getEventKey from 'getEventKey';
+import getEventModifierState from 'getEventModifierState';
 
 /**
  * @interface KeyboardEvent
@@ -92,4 +92,4 @@ function SyntheticKeyboardEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);
 
-module.exports = SyntheticKeyboardEvent;
+export default SyntheticKeyboardEvent;

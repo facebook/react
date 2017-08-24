@@ -20,23 +20,14 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
-var {
+import {
   mountChildFibersInPlace,
   reconcileChildFibers,
   reconcileChildFibersInPlace,
   cloneChildFibers,
-} = require('ReactChildFiber');
-var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
-  getMaskedContext,
-  getUnmaskedContext,
-  hasContextChanged,
-  pushContextProvider,
-  pushTopLevelContextObject,
-  invalidateContextProvider,
-} = require('ReactFiberContext');
-var {
+} from 'ReactChildFiber';
+import {beginUpdateQueue} from 'ReactFiberUpdateQueue';
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
@@ -48,28 +39,39 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
-var {
+} from 'ReactTypeOfWork';
+import {
+  getMaskedContext,
+  getUnmaskedContext,
+  hasContextChanged,
+  pushContextProvider,
+  pushTopLevelContextObject,
+  invalidateContextProvider,
+} from 'ReactFiberContext';
+import {NoWork, OffscreenPriority} from 'ReactPriorityLevel';
+import {
   PerformedWork,
   Placement,
   ContentReset,
   Err,
   Ref,
-} = require('ReactTypeOfSideEffect');
-var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var invariant = require('fbjs/lib/invariant');
+} from 'ReactTypeOfSideEffect';
+import ReactFiberClassComponent from 'ReactFiberClassComponent';
+import {ReactCurrentOwner} from 'ReactGlobalSharedState';
+import invariant from 'fbjs/lib/invariant';
+import {
+  setCurrentFiber,
+  getCurrentFiberOwnerName,
+  getCurrentFiberStackAddendum,
+} from 'ReactDebugCurrentFiber';
+import {cancelWorkTimer} from 'ReactDebugFiberPerf';
+import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {cancelWorkTimer} = require('ReactDebugFiberPerf');
-  var warning = require('fbjs/lib/warning');
-
   var warnedAboutStatelessRefs = {};
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+export default function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C>,
@@ -209,9 +211,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, 'render');
+      setCurrentFiber(workInProgress, 'render');
       nextChildren = fn(nextProps, context);
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+      setCurrentFiber(workInProgress, null);
     } else {
       nextChildren = fn(nextProps, context);
     }
@@ -283,9 +285,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     ReactCurrentOwner.current = workInProgress;
     let nextChildren;
     if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, 'render');
+      setCurrentFiber(workInProgress, 'render');
       nextChildren = instance.render();
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+      setCurrentFiber(workInProgress, null);
     } else {
       nextChildren = instance.render();
     }
@@ -504,7 +506,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
         if (workInProgress.ref !== null) {
           let info = '';
-          const ownerName = ReactDebugCurrentFiber.getCurrentFiberOwnerName();
+          const ownerName = getCurrentFiberOwnerName();
           if (ownerName) {
             info += '\n\nCheck the render method of `' + ownerName + '`.';
           }
@@ -521,7 +523,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
               'Stateless function components cannot be given refs. ' +
                 'Attempts to access this ref will fail.%s%s',
               info,
-              ReactDebugCurrentFiber.getCurrentFiberStackAddendum(),
+              getCurrentFiberStackAddendum(),
             );
           }
         }
@@ -723,7 +725,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+      setCurrentFiber(workInProgress, null);
     }
 
     switch (workInProgress.tag) {
@@ -836,4 +838,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     beginWork,
     beginFailedWork,
   };
-};
+}

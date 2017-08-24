@@ -12,7 +12,7 @@
 
 'use strict';
 
-module.exports = function(
+export default function(
   name: null | string,
   source: any,
   ownerName: null | string,
@@ -28,4 +28,4 @@ module.exports = function(
           ')'
       : ownerName ? ' (created by ' + ownerName + ')' : '')
   );
-};
+}

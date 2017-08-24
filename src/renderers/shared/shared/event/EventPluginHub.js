@@ -11,13 +11,16 @@
 
 'use strict';
 
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactErrorUtils = require('ReactErrorUtils');
+import {plugins} from 'EventPluginRegistry';
+import {
+  executeDispatchesInOrder,
+  getFiberCurrentPropsFromNode,
+} from 'EventPluginUtils';
+import ReactErrorUtils from 'ReactErrorUtils';
 
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
-var invariant = require('fbjs/lib/invariant');
+import accumulateInto from 'accumulateInto';
+import forEachAccumulated from 'forEachAccumulated';
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -34,7 +37,7 @@ var eventQueue = null;
  */
 var executeDispatchesAndRelease = function(event, simulated) {
   if (event) {
-    EventPluginUtils.executeDispatchesInOrder(event, simulated);
+    executeDispatchesInOrder(event, simulated);
 
     if (!event.isPersistent()) {
       event.constructor.release(event);
@@ -97,154 +100,111 @@ function shouldPreventMouseEvent(name, type, props) {
  *
  * @public
  */
-var EventPluginHub = {
-  /**
-   * Methods for injecting dependencies.
-   */
-  injection: {
-    /**
-     * @param {array} InjectedEventPluginOrder
-     * @public
-     */
-    injectEventPluginOrder: EventPluginRegistry.injectEventPluginOrder,
 
-    /**
-     * @param {object} injectedNamesToPlugins Map from names to plugin modules.
-     */
-    injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
-  },
+/**
+ * @param {object} inst The instance, which is the source of events.
+ * @param {string} registrationName Name of listener (e.g. `onClick`).
+ * @return {?function} The stored callback.
+ */
+export function getListener(inst, registrationName) {
+  var listener;
 
-  /**
-   * @param {object} inst The instance, which is the source of events.
-   * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @return {?function} The stored callback.
-   */
-  getListener: function(inst, registrationName) {
-    var listener;
+  // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
+  // live here; needs to be moved to a better place soon
+  const stateNode = inst.stateNode;
+  if (!stateNode) {
+    // Work in progress (ex: onload events in incremental mode).
+    return null;
+  }
+  const props = getFiberCurrentPropsFromNode(stateNode);
+  if (!props) {
+    // Work in progress.
+    return null;
+  }
+  listener = props[registrationName];
+  if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+    return null;
+  }
+  invariant(
+    !listener || typeof listener === 'function',
+    'Expected `%s` listener to be a function, instead got a value of `%s` type.',
+    registrationName,
+    typeof listener,
+  );
+  return listener;
+}
 
-    // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
-    // live here; needs to be moved to a better place soon
-    if (typeof inst.tag === 'number') {
-      const stateNode = inst.stateNode;
-      if (!stateNode) {
-        // Work in progress (ex: onload events in incremental mode).
-        return null;
-      }
-      const props = EventPluginUtils.getFiberCurrentPropsFromNode(stateNode);
-      if (!props) {
-        // Work in progress.
-        return null;
-      }
-      listener = props[registrationName];
-      if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
-        return null;
-      }
-    } else {
-      const currentElement = inst._currentElement;
-      if (
-        typeof currentElement === 'string' ||
-        typeof currentElement === 'number'
-      ) {
-        // Text node, let it bubble through.
-        return null;
-      }
-      if (!inst._rootNodeID) {
-        // If the instance is already unmounted, we have no listeners.
-        return null;
-      }
-      const props = currentElement.props;
-      listener = props[registrationName];
-      if (
-        shouldPreventMouseEvent(registrationName, currentElement.type, props)
-      ) {
-        return null;
-      }
-    }
-
-    invariant(
-      !listener || typeof listener === 'function',
-      'Expected `%s` listener to be a function, instead got a value of `%s` type.',
-      registrationName,
-      typeof listener,
-    );
-    return listener;
-  },
-
-  /**
-   * Allows registered plugins an opportunity to extract events from top-level
-   * native browser events.
-   *
-   * @return {*} An accumulation of synthetic events.
-   * @internal
-   */
-  extractEvents: function(
-    topLevelType,
-    targetInst,
-    nativeEvent,
-    nativeEventTarget,
-  ) {
-    var events;
-    var plugins = EventPluginRegistry.plugins;
-    for (var i = 0; i < plugins.length; i++) {
-      // Not every plugin in the ordering may be loaded at runtime.
-      var possiblePlugin = plugins[i];
-      if (possiblePlugin) {
-        var extractedEvents = possiblePlugin.extractEvents(
-          topLevelType,
-          targetInst,
-          nativeEvent,
-          nativeEventTarget,
-        );
-        if (extractedEvents) {
-          events = accumulateInto(events, extractedEvents);
-        }
-      }
-    }
-    return events;
-  },
-
-  /**
-   * Enqueues a synthetic event that should be dispatched when
-   * `processEventQueue` is invoked.
-   *
-   * @param {*} events An accumulation of synthetic events.
-   * @internal
-   */
-  enqueueEvents: function(events) {
-    if (events) {
-      eventQueue = accumulateInto(eventQueue, events);
-    }
-  },
-
-  /**
-   * Dispatches all synthetic events on the event queue.
-   *
-   * @internal
-   */
-  processEventQueue: function(simulated) {
-    // Set `eventQueue` to null before processing it so that we can tell if more
-    // events get enqueued while processing.
-    var processingEventQueue = eventQueue;
-    eventQueue = null;
-    if (simulated) {
-      forEachAccumulated(
-        processingEventQueue,
-        executeDispatchesAndReleaseSimulated,
+/**
+ * Allows registered plugins an opportunity to extract events from top-level
+ * native browser events.
+ *
+ * @return {*} An accumulation of synthetic events.
+ * @internal
+ */
+export function extractEvents(
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  var events;
+  for (var i = 0; i < plugins.length; i++) {
+    // Not every plugin in the ordering may be loaded at runtime.
+    var possiblePlugin = plugins[i];
+    if (possiblePlugin) {
+      var extractedEvents = possiblePlugin.extractEvents(
+        topLevelType,
+        targetInst,
+        nativeEvent,
+        nativeEventTarget,
       );
-    } else {
-      forEachAccumulated(
-        processingEventQueue,
-        executeDispatchesAndReleaseTopLevel,
-      );
+      if (extractedEvents) {
+        events = accumulateInto(events, extractedEvents);
+      }
     }
-    invariant(
-      !eventQueue,
-      'processEventQueue(): Additional events were enqueued while processing ' +
-        'an event queue. Support for this has not yet been implemented.',
-    );
-    // This would be a good time to rethrow if any of the event handlers threw.
-    ReactErrorUtils.rethrowCaughtError();
-  },
-};
+  }
+  return events;
+}
 
-module.exports = EventPluginHub;
+/**
+ * Enqueues a synthetic event that should be dispatched when
+ * `processEventQueue` is invoked.
+ *
+ * @param {*} events An accumulation of synthetic events.
+ * @internal
+ */
+export function enqueueEvents(events) {
+  if (events) {
+    eventQueue = accumulateInto(eventQueue, events);
+  }
+}
+
+/**
+ * Dispatches all synthetic events on the event queue.
+ *
+ * @internal
+ */
+export function processEventQueue(simulated) {
+  // Set `eventQueue` to null before processing it so that we can tell if more
+  // events get enqueued while processing.
+  var processingEventQueue = eventQueue;
+  eventQueue = null;
+  if (simulated) {
+    forEachAccumulated(
+      processingEventQueue,
+      executeDispatchesAndReleaseSimulated,
+    );
+  } else {
+    forEachAccumulated(
+      processingEventQueue,
+      executeDispatchesAndReleaseTopLevel,
+    );
+  }
+  invariant(
+    !eventQueue,
+    'processEventQueue(): Additional events were enqueued while processing ' +
+      'an event queue. Support for this has not yet been implemented.',
+  );
+  // This would be a good time to rethrow if any of the event handlers threw.
+  ReactErrorUtils.rethrowCaughtError();
+}

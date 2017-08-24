@@ -17,32 +17,27 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
+import getComponentName from 'getComponentName';
+import ReactFeatureFlags from 'ReactFeatureFlags';
+import {addTopLevelUpdate} from 'ReactFiberUpdateQueue';
 
-var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
-
-var {
+import {
   findCurrentUnmaskedContext,
   isContextProvider,
   processChildContext,
-} = require('ReactFiberContext');
-var {createFiberRoot} = require('ReactFiberRoot');
-var ReactFiberScheduler = require('ReactFiberScheduler');
-var {HostComponent} = require('ReactTypeOfWork');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var getComponentName = require('getComponentName');
-}
-
-var {
+} from 'ReactFiberContext';
+import {createFiberRoot} from 'ReactFiberRoot';
+import ReactFiberScheduler from 'ReactFiberScheduler';
+import ReactInstanceMap from 'ReactInstanceMap';
+import {HostComponent} from 'ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import warning from 'fbjs/lib/warning';
+import ReactFiberInstrumentation from 'ReactFiberInstrumentation';
+import ReactDebugCurrentFiber from 'ReactDebugCurrentFiber';
+import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} = require('ReactFiberTreeReflection');
-
-var getContextForSubtree = require('getContextForSubtree');
+} from 'ReactFiberTreeReflection';
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -181,14 +176,21 @@ export type Reconciler<C, I, TI> = {
   findHostInstanceWithNoPortals(component: Fiber): I | TI | null,
 };
 
-getContextForSubtree._injectFiber(function(fiber: Fiber) {
+function getContextForSubtree(
+  parentComponent: ?ReactComponent<any, any, any>,
+): Object {
+  if (!parentComponent) {
+    return emptyObject;
+  }
+
+  const fiber = ReactInstanceMap.get(parentComponent);
   const parentContext = findCurrentUnmaskedContext(fiber);
   return isContextProvider(fiber)
     ? processChildContext(fiber, parentContext, false)
     : parentContext;
-});
+}
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
+export default function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ): Reconciler<C, I, TI> {
   var {getPublicInstance} = config;
@@ -325,4 +327,4 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return hostFiber.stateNode;
     },
   };
-};
+}

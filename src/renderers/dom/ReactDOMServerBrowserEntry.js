@@ -11,15 +11,16 @@
 
 'use strict';
 
-var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
-var ReactVersion = require('ReactVersion');
-var invariant = require('fbjs/lib/invariant');
+import 'ReactDOMInjection';
+import {renderToString, renderToStaticMarkup} from 'ReactDOMStringRenderer';
+import ReactVersion from 'ReactVersion';
+import invariant from 'fbjs/lib/invariant';
 
-require('ReactDOMInjection');
-
-module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default {
+  renderToString,
+  renderToStaticMarkup,
   renderToNodeStream() {
     invariant(
       false,

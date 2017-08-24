@@ -11,13 +11,9 @@
 
 'use strict';
 
-var ReactErrorUtils = require('ReactErrorUtils');
-
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import ReactErrorUtils from 'ReactErrorUtils';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 /**
  * Injected dependencies:
@@ -28,22 +24,22 @@ if (__DEV__) {
  *   and actual node references.
  */
 var ComponentTree;
-var injection = {
-  injectComponentTree: function(Injected) {
+export const injection = {
+  injectComponentTree(Injected) {
     ComponentTree = Injected;
     if (__DEV__) {
       warning(
         Injected &&
           Injected.getNodeFromInstance &&
           Injected.getInstanceFromNode,
-        'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
+        'injection.injectComponentTree(...): Injected ' +
           'module is missing getNodeFromInstance or getInstanceFromNode.',
       );
     }
   },
 };
 
-function isEndish(topLevelType) {
+export function isEndish(topLevelType) {
   return (
     topLevelType === 'topMouseUp' ||
     topLevelType === 'topTouchEnd' ||
@@ -51,10 +47,10 @@ function isEndish(topLevelType) {
   );
 }
 
-function isMoveish(topLevelType) {
+export function isMoveish(topLevelType) {
   return topLevelType === 'topMouseMove' || topLevelType === 'topTouchMove';
 }
-function isStartish(topLevelType) {
+export function isStartish(topLevelType) {
   return topLevelType === 'topMouseDown' || topLevelType === 'topTouchStart';
 }
 
@@ -90,7 +86,7 @@ if (__DEV__) {
  */
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
-  event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
+  event.currentTarget = getNodeFromInstance(inst);
   ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
     type,
     listener,
@@ -103,7 +99,7 @@ function executeDispatch(event, simulated, listener, inst) {
 /**
  * Standard/simple iteration through an event's collected dispatches.
  */
-function executeDispatchesInOrder(event, simulated) {
+export function executeDispatchesInOrder(event, simulated) {
   var dispatchListeners = event._dispatchListeners;
   var dispatchInstances = event._dispatchInstances;
   if (__DEV__) {
@@ -163,7 +159,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
 /**
  * @see executeDispatchesInOrderStopAtTrueImpl
  */
-function executeDispatchesInOrderStopAtTrue(event) {
+export function executeDispatchesInOrderStopAtTrue(event) {
   var ret = executeDispatchesInOrderStopAtTrueImpl(event);
   event._dispatchInstances = null;
   event._dispatchListeners = null;
@@ -179,7 +175,7 @@ function executeDispatchesInOrderStopAtTrue(event) {
  *
  * @return {*} The return value of executing the single dispatch.
  */
-function executeDirectDispatch(event) {
+export function executeDirectDispatch(event) {
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -190,7 +186,7 @@ function executeDirectDispatch(event) {
     'executeDirectDispatch(...): Invalid `event`.',
   );
   event.currentTarget = dispatchListener
-    ? EventPluginUtils.getNodeFromInstance(dispatchInstance)
+    ? getNodeFromInstance(dispatchInstance)
     : null;
   var res = dispatchListener ? dispatchListener(event) : null;
   event.currentTarget = null;
@@ -203,34 +199,16 @@ function executeDirectDispatch(event) {
  * @param {SyntheticEvent} event
  * @return {boolean} True iff number of dispatches accumulated is greater than 0.
  */
-function hasDispatches(event) {
+export function hasDispatches(event) {
   return !!event._dispatchListeners;
 }
 
-/**
- * General utilities that are useful in creating custom Event Plugins.
- */
-var EventPluginUtils = {
-  isEndish: isEndish,
-  isMoveish: isMoveish,
-  isStartish: isStartish,
-
-  executeDirectDispatch: executeDirectDispatch,
-  executeDispatchesInOrder: executeDispatchesInOrder,
-  executeDispatchesInOrderStopAtTrue: executeDispatchesInOrderStopAtTrue,
-  hasDispatches: hasDispatches,
-
-  getFiberCurrentPropsFromNode: function(node) {
-    return ComponentTree.getFiberCurrentPropsFromNode(node);
-  },
-  getInstanceFromNode: function(node) {
-    return ComponentTree.getInstanceFromNode(node);
-  },
-  getNodeFromInstance: function(node) {
-    return ComponentTree.getNodeFromInstance(node);
-  },
-
-  injection: injection,
-};
-
-module.exports = EventPluginUtils;
+export function getFiberCurrentPropsFromNode(node) {
+  return ComponentTree.getFiberCurrentPropsFromNode(node);
+}
+export function getInstanceFromNode(node) {
+  return ComponentTree.getInstanceFromNode(node);
+}
+export function getNodeFromInstance(node) {
+  return ComponentTree.getNodeFromInstance(node);
+}

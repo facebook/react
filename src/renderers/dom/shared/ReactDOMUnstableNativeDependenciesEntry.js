@@ -9,12 +9,12 @@
  * @providesModule ReactDOMUnstableNativeDependenciesEntry
  */
 
-const EventPluginUtils = require('EventPluginUtils');
-const ResponderEventPlugin = require('ResponderEventPlugin');
-const ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
+import {injection as EventPluginUtilsInjection} from 'EventPluginUtils';
+import ResponderEventPlugin from 'ResponderEventPlugin';
+import ResponderTouchHistoryStore from 'ResponderTouchHistoryStore';
 
 const ReactDOMUnstableNativeDependencies = {
-  injectComponentTree: EventPluginUtils.injection.injectComponentTree,
+  injectComponentTree: EventPluginUtilsInjection.injectComponentTree,
   ResponderEventPlugin,
   ResponderTouchHistoryStore,
 };
@@ -24,6 +24,8 @@ const ReactDOM = require('react-dom');
 const {
   ReactDOMComponentTree,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-ReactDOMUnstableNativeDependencies.injectComponentTree(ReactDOMComponentTree);
+EventPluginUtilsInjection.injectComponentTree(ReactDOMComponentTree);
 
-module.exports = ReactDOMUnstableNativeDependencies;
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default ReactDOMUnstableNativeDependencies;

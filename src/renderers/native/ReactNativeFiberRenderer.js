@@ -12,17 +12,24 @@
 
 'use strict';
 
-const ReactFiberReconciler = require('ReactFiberReconciler');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
-const ReactNativeTagHandles = require('ReactNativeTagHandles');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
-const UIManager = require('UIManager');
-
-const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+import ReactFiberReconciler from 'ReactFiberReconciler';
+import {
+  create as createAttributePayload,
+  diff as diffAttributePayload,
+} from 'ReactNativeAttributePayload';
+import {
+  precacheFiberNode,
+  uncacheFiberNode,
+  updateFiberProps,
+} from 'ReactNativeComponentTree';
+import ReactNativeFiberHostComponent from 'ReactNativeFiberHostComponent';
+import {allocateTag} from 'ReactNativeTagHandles';
+import {get as getFromViewConfigRegistry} from 'ReactNativeViewConfigRegistry';
+import UIManager from 'UIManager';
+import deepFreezeAndThrowOnMutationInDev
+  from 'deepFreezeAndThrowOnMutationInDev';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
 
 import type {
   ReactNativeBaseComponentViewConfig,
@@ -36,12 +43,6 @@ export type Instance = {
 };
 export type Props = Object;
 export type TextInstance = number;
-
-const {
-  precacheFiberNode,
-  uncacheFiberNode,
-  updateFiberProps,
-} = ReactNativeComponentTree;
 
 function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   if (typeof node === 'number') {
@@ -137,7 +138,7 @@ const NativeRenderer = ReactFiberReconciler({
 
     updateFiberProps(instance._nativeTag, newProps);
 
-    const updatePayload = ReactNativeAttributePayload.diff(
+    const updatePayload = diffAttributePayload(
       oldProps,
       newProps,
       viewConfig.validAttributes,
@@ -162,8 +163,8 @@ const NativeRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): Instance {
-    const tag = ReactNativeTagHandles.allocateTag();
-    const viewConfig = ReactNativeViewConfigRegistry.get(type);
+    const tag = allocateTag();
+    const viewConfig = getFromViewConfigRegistry(type);
 
     if (__DEV__) {
       for (const key in viewConfig.validAttributes) {
@@ -173,7 +174,7 @@ const NativeRenderer = ReactFiberReconciler({
       }
     }
 
-    const updatePayload = ReactNativeAttributePayload.create(
+    const updatePayload = createAttributePayload(
       props,
       viewConfig.validAttributes,
     );
@@ -201,7 +202,7 @@ const NativeRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): TextInstance {
-    const tag = ReactNativeTagHandles.allocateTag();
+    const tag = allocateTag();
 
     UIManager.createView(
       tag, // reactTag
@@ -383,4 +384,4 @@ const NativeRenderer = ReactFiberReconciler({
   useSyncScheduling: true,
 });
 
-module.exports = NativeRenderer;
+export default NativeRenderer;

@@ -11,9 +11,9 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+import SyntheticUIEvent from 'SyntheticUIEvent';
 
-var getEventModifierState = require('getEventModifierState');
+import getEventModifierState from 'getEventModifierState';
 
 /**
  * @interface TouchEvent
@@ -53,4 +53,4 @@ function SyntheticTouchEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticTouchEvent, TouchEventInterface);
 
-module.exports = SyntheticTouchEvent;
+export default SyntheticTouchEvent;

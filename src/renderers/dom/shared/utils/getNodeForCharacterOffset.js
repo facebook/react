@@ -11,7 +11,7 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('HTMLNodeType');
+import {TEXT_NODE} from 'HTMLNodeType';
 
 /**
  * Given any node return the first leaf node without children.
@@ -49,7 +49,7 @@ function getSiblingNode(node) {
  * @param {number} offset
  * @return {?object}
  */
-function getNodeForCharacterOffset(root, offset) {
+export default function getNodeForCharacterOffset(root, offset) {
   var node = getLeafNode(root);
   var nodeStart = 0;
   var nodeEnd = 0;
@@ -71,5 +71,3 @@ function getNodeForCharacterOffset(root, offset) {
     node = getLeafNode(getSiblingNode(node));
   }
 }
-
-module.exports = getNodeForCharacterOffset;

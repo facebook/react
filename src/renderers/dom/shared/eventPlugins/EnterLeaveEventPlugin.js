@@ -11,9 +11,12 @@
 
 'use strict';
 
-var EventPropagators = require('EventPropagators');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
+import {accumulateEnterLeaveDispatches} from 'EventPropagators';
+import {
+  getClosestInstanceFromNode,
+  getNodeFromInstance,
+} from 'ReactDOMComponentTree';
+import SyntheticMouseEvent from 'SyntheticMouseEvent';
 
 var eventTypes = {
   mouseEnter: {
@@ -72,9 +75,7 @@ var EnterLeaveEventPlugin = {
     if (topLevelType === 'topMouseOut') {
       from = targetInst;
       var related = nativeEvent.relatedTarget || nativeEvent.toElement;
-      to = related
-        ? ReactDOMComponentTree.getClosestInstanceFromNode(related)
-        : null;
+      to = related ? getClosestInstanceFromNode(related) : null;
     } else {
       // Moving to a node from outside the window.
       from = null;
@@ -86,12 +87,8 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromNode = from == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(from);
-    var toNode = to == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(to);
+    var fromNode = from == null ? win : getNodeFromInstance(from);
+    var toNode = to == null ? win : getNodeFromInstance(to);
 
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,
@@ -113,10 +110,10 @@ var EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, from, to);
+    accumulateEnterLeaveDispatches(leave, enter, from, to);
 
     return [leave, enter];
   },
 };
 
-module.exports = EnterLeaveEventPlugin;
+export default EnterLeaveEventPlugin;

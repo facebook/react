@@ -12,7 +12,11 @@
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
+
+// TODO: this is a bit tricky to convert to function exports
+// because our internal version reads fields from this object.
+// This is non-obvious, and we should refactor it to pass those fields explicitly.
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
@@ -275,4 +279,4 @@ let rethrowCaughtError = function() {
   }
 };
 
-module.exports = ReactErrorUtils;
+export default ReactErrorUtils;

@@ -20,7 +20,7 @@ type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 
 type EventPluginOrder = null | Array<PluginName>;
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Injectable ordering of event plugins.
@@ -51,7 +51,7 @@ function recomputePluginOrdering(): void {
         'the plugin ordering, `%s`.',
       pluginName,
     );
-    if (EventPluginRegistry.plugins[pluginIndex]) {
+    if (plugins[pluginIndex]) {
       continue;
     }
     invariant(
@@ -60,7 +60,7 @@ function recomputePluginOrdering(): void {
         'method, but `%s` does not.',
       pluginName,
     );
-    EventPluginRegistry.plugins[pluginIndex] = pluginModule;
+    plugins[pluginIndex] = pluginModule;
     var publishedEvents = pluginModule.eventTypes;
     for (var eventName in publishedEvents) {
       invariant(
@@ -91,12 +91,12 @@ function publishEventForPlugin(
   eventName: string,
 ): boolean {
   invariant(
-    !EventPluginRegistry.eventNameDispatchConfigs.hasOwnProperty(eventName),
+    !eventNameDispatchConfigs.hasOwnProperty(eventName),
     'EventPluginHub: More than one plugin attempted to publish the same ' +
       'event name, `%s`.',
     eventName,
   );
-  EventPluginRegistry.eventNameDispatchConfigs[eventName] = dispatchConfig;
+  eventNameDispatchConfigs[eventName] = dispatchConfig;
 
   var phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
@@ -135,23 +135,21 @@ function publishRegistrationName(
   eventName: string,
 ): void {
   invariant(
-    !EventPluginRegistry.registrationNameModules[registrationName],
+    !registrationNameModules[registrationName],
     'EventPluginHub: More than one plugin attempted to publish the same ' +
       'registration name, `%s`.',
     registrationName,
   );
-  EventPluginRegistry.registrationNameModules[registrationName] = pluginModule;
-  EventPluginRegistry.registrationNameDependencies[registrationName] =
+  registrationNameModules[registrationName] = pluginModule;
+  registrationNameDependencies[registrationName] =
     pluginModule.eventTypes[eventName].dependencies;
 
   if (__DEV__) {
     var lowerCasedName = registrationName.toLowerCase();
-    EventPluginRegistry.possibleRegistrationNames[
-      lowerCasedName
-    ] = registrationName;
+    possibleRegistrationNames[lowerCasedName] = registrationName;
 
     if (registrationName === 'onDoubleClick') {
-      EventPluginRegistry.possibleRegistrationNames.ondblclick = registrationName;
+      possibleRegistrationNames.ondblclick = registrationName;
     }
   }
 }
@@ -161,36 +159,37 @@ function publishRegistrationName(
  *
  * @see {EventPluginHub}
  */
-var EventPluginRegistry = {
-  /**
-   * Ordered list of injected plugins.
-   */
-  plugins: [],
 
-  /**
-   * Mapping from event name to dispatch config
-   */
-  eventNameDispatchConfigs: {},
+/**
+ * Ordered list of injected plugins.
+ */
+export const plugins = [];
 
-  /**
-   * Mapping from registration name to plugin module
-   */
-  registrationNameModules: {},
+/**
+ * Mapping from event name to dispatch config
+ */
+export const eventNameDispatchConfigs = {};
 
-  /**
-   * Mapping from registration name to event name
-   */
-  registrationNameDependencies: {},
+/**
+ * Mapping from registration name to plugin module
+ */
+export const registrationNameModules = {};
 
-  /**
-   * Mapping from lowercase registration names to the properly cased version,
-   * used to warn in the case of missing event handlers. Available
-   * only in __DEV__.
-   * @type {Object}
-   */
-  possibleRegistrationNames: __DEV__ ? {} : (null: any),
-  // Trust the developer to only use possibleRegistrationNames in __DEV__
+/**
+ * Mapping from registration name to event name
+ */
+export const registrationNameDependencies = {};
 
+/**
+ * Mapping from lowercase registration names to the properly cased version,
+ * used to warn in the case of missing event handlers. Available
+ * only in __DEV__.
+ * @type {Object}
+ */
+export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
+// Trust the developer to only use possibleRegistrationNames in __DEV__
+
+export const injection = {
   /**
    * Injects an ordering of plugins (by plugin name). This allows the ordering
    * to be decoupled from injection of the actual plugins so that ordering is
@@ -200,9 +199,7 @@ var EventPluginRegistry = {
    * @internal
    * @see {EventPluginHub.injection.injectEventPluginOrder}
    */
-  injectEventPluginOrder: function(
-    injectedEventPluginOrder: EventPluginOrder,
-  ): void {
+  injectEventPluginOrder(injectedEventPluginOrder: EventPluginOrder): void {
     invariant(
       !eventPluginOrder,
       'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
@@ -223,9 +220,7 @@ var EventPluginRegistry = {
    * @internal
    * @see {EventPluginHub.injection.injectEventPluginsByName}
    */
-  injectEventPluginsByName: function(
-    injectedNamesToPlugins: NamesToPlugins,
-  ): void {
+  injectEventPluginsByName(injectedNamesToPlugins: NamesToPlugins): void {
     var isOrderingDirty = false;
     for (var pluginName in injectedNamesToPlugins) {
       if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
@@ -251,5 +246,3 @@ var EventPluginRegistry = {
     }
   },
 };
-
-module.exports = EventPluginRegistry;

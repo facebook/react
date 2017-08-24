@@ -16,11 +16,11 @@ import type {ReactNodeList, ReactPortal} from 'ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-var REACT_PORTAL_TYPE =
+export const REACT_PORTAL_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
   0xeaca;
 
-exports.createPortal = function(
+export function createPortal(
   children: ReactNodeList,
   containerInfo: any,
   // TODO: figure out the API for cross-renderer implementation.
@@ -35,17 +35,15 @@ exports.createPortal = function(
     containerInfo,
     implementation,
   };
-};
+}
 
 /**
  * Verifies the object is a portal object.
  */
-exports.isPortal = function(object: mixed): boolean {
+export function isPortal(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_PORTAL_TYPE
   );
-};
-
-exports.REACT_PORTAL_TYPE = REACT_PORTAL_TYPE;
+}

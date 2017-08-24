@@ -11,21 +11,25 @@
  */
 'use strict';
 
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
-const UIManager = require('UIManager');
-const invariant = require('fbjs/lib/invariant');
-
-const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
+import {getClosestInstanceFromNode} from 'ReactNativeComponentTree';
+import {
+  findCurrentHostFiber,
+  findCurrentFiberUsingSlowPath,
+} from 'ReactFiberTreeReflection';
+import getComponentName from 'getComponentName';
+import emptyObject from 'fbjs/lib/emptyObject';
+import {HostComponent} from 'ReactTypeOfWork';
+import UIManager from 'UIManager';
+import invariant from 'fbjs/lib/invariant';
 
 import type {Fiber} from 'ReactFiber';
 
-let getInspectorDataForViewTag;
+export let getInspectorDataForViewTag = () => {
+  invariant(
+    false,
+    'getInspectorDataForViewTag() is not available in production',
+  );
+};
 
 if (__DEV__) {
   var traverseOwnerTreeUp = function(hierarchy, instance: any) {
@@ -53,7 +57,7 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+    const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }
@@ -116,15 +120,4 @@ if (__DEV__) {
       source,
     };
   };
-} else {
-  getInspectorDataForViewTag = () => {
-    invariant(
-      false,
-      'getInspectorDataForViewTag() is not available in production',
-    );
-  };
 }
-
-module.exports = {
-  getInspectorDataForViewTag,
-};

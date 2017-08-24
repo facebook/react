@@ -12,39 +12,49 @@
 
 'use strict';
 
-const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
-const ReactPortal = require('ReactPortal');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-const ReactNativeFiberInspector = require('ReactNativeFiberInspector');
-const ReactVersion = require('ReactVersion');
-const UIManager = require('UIManager');
+import 'ReactNativeInjection';
+import {
+  injection as ReactFiberErrorLoggerInjection,
+} from 'ReactFiberErrorLogger';
+import {
+  injection as ReactGenericBatchingInjection,
+  batchedUpdates,
+} from 'ReactGenericBatching';
+import ReactNativeComponent from 'ReactNativeComponent';
+import {showFiberErrorDialog} from 'ReactNativeFiberErrorDialog';
+import {createPortal} from 'ReactPortal';
+import {getClosestInstanceFromNode} from 'ReactNativeComponentTree';
+import ReactNativeFiberRenderer from 'ReactNativeFiberRenderer';
+import {getInspectorDataForViewTag} from 'ReactNativeFiberInspector';
+import ReactVersion from 'ReactVersion';
+import UIManager from 'UIManager';
+import findNumericNodeHandle from 'findNumericNodeHandle';
+import {injectInternals} from 'ReactFiberDevToolsHook';
 
-const findNumericNodeHandle = require('findNumericNodeHandle');
-
-const {injectInternals} = require('ReactFiberDevToolsHook');
+// These can be removed once we stop exposing them to RN internals.
+import NativeMethodsMixin from 'NativeMethodsMixin';
+import ReactGlobalSharedState from 'ReactGlobalSharedState';
+import * as ReactNativeComponentTree from 'ReactNativeComponentTree';
+import ReactNativePropRegistry from 'ReactNativePropRegistry';
+import TouchHistoryMath from 'TouchHistoryMath';
+import createReactNativeComponentClass from 'createReactNativeComponentClass';
+import takeSnapshot from 'takeSnapshot';
 
 import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
 
-require('ReactNativeInjection');
-
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
+ReactGenericBatchingInjection.injectBatchedUpdatesImplementation(
   ReactNativeFiberRenderer.batchedUpdates,
 );
 
-const roots = new Map();
-
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(
-  ReactNativeFiberErrorDialog.showDialog,
-);
+ReactFiberErrorLoggerInjection.injectDialog(showFiberErrorDialog);
+
+const roots = new Map();
 
 const ReactNativeFiber: ReactNativeType = {
-  NativeComponent: require('ReactNativeComponent'),
+  NativeComponent: ReactNativeComponent,
 
   findNodeHandle: findNumericNodeHandle,
 
@@ -84,24 +94,24 @@ const ReactNativeFiber: ReactNativeType = {
     containerTag: number,
     key: ?string = null,
   ) {
-    return ReactPortal.createPortal(children, containerTag, null, key);
+    return createPortal(children, containerTag, null, key);
   },
 
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
 
   flushSync: ReactNativeFiberRenderer.flushSync,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
-    NativeMethodsMixin: require('NativeMethodsMixin'),
+    NativeMethodsMixin,
 
     // Used by react-native-github/Libraries/ components
-    ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
-    ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
-    ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
-    TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg Text
-    takeSnapshot: require('takeSnapshot'), // react-native-implementation
+    ReactGlobalSharedState, // Systrace
+    ReactNativeComponentTree, // InspectorUtils, ScrollResponder
+    ReactNativePropRegistry, // flattenStyle, Stylesheet
+    TouchHistoryMath, // PanResponder
+    createReactNativeComponentClass, // eg Text
+    takeSnapshot, // react-native-implementation
   },
 };
 
@@ -110,20 +120,33 @@ if (__DEV__) {
   Object.assign(
     ReactNativeFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
-      ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
-      ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
+      // TODO: none of these work since Fiber. Remove these dependencies.
+      // Used by RCTRenderingPerf, Systrace:
+      ReactDebugTool: {
+        addHook() {},
+        removeHook() {},
+      },
+      // Used by ReactPerfStallHandler, RCTRenderingPerf:
+      ReactPerf: {
+        start() {},
+        stop() {},
+        printInclusive() {},
+        printWasted() {},
+      },
     },
   );
 }
 
 injectInternals({
-  findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
+  findFiberByHostInstance: getClosestInstanceFromNode,
   findHostInstanceByFiber: ReactNativeFiberRenderer.findHostInstance,
-  getInspectorDataForViewTag: ReactNativeFiberInspector.getInspectorDataForViewTag,
+  getInspectorDataForViewTag,
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-native',
 });
 
-module.exports = ReactNativeFiber;
+// TODO: this fixes Rollup build but probably breaks Jest.
+// Need to figure something out.
+export default ReactNativeFiber;

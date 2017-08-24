@@ -11,9 +11,9 @@
 
 'use strict';
 
-var SyntheticEvent = require('SyntheticEvent');
+import SyntheticEvent from 'SyntheticEvent';
 
-var getEventTarget = require('getEventTarget');
+import getEventTarget from 'getEventTarget';
 
 /**
  * @interface UIEvent
@@ -67,4 +67,4 @@ function SyntheticUIEvent(
 
 SyntheticEvent.augmentClass(SyntheticUIEvent, UIEventInterface);
 
-module.exports = SyntheticUIEvent;
+export default SyntheticUIEvent;

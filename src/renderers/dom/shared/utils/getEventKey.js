@@ -11,7 +11,7 @@
 
 'use strict';
 
-var getEventCharCode = require('getEventCharCode');
+import getEventCharCode from 'getEventCharCode';
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -80,7 +80,7 @@ var translateToKey = {
  * @param {object} nativeEvent Native browser event.
  * @return {string} Normalized `key` property.
  */
-function getEventKey(nativeEvent) {
+export default function getEventKey(nativeEvent) {
   if (nativeEvent.key) {
     // Normalize inconsistent values reported by browsers due to
     // implementations of a working draft specification.
@@ -108,5 +108,3 @@ function getEventKey(nativeEvent) {
   }
   return '';
 }
-
-module.exports = getEventKey;

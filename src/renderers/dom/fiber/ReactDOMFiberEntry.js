@@ -12,60 +12,77 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
-require('checkReact');
-var DOMNamespaces = require('DOMNamespaces');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
-var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactGenericBatching = require('ReactGenericBatching');
-var ReactFiberReconciler = require('ReactFiberReconciler');
-var ReactInputSelection = require('ReactInputSelection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPortal = require('ReactPortal');
-var ReactVersion = require('ReactVersion');
-var {isValidElement} = require('react');
-var {injectInternals} = require('ReactFiberDevToolsHook');
-var {
-  ELEMENT_NODE,
-  TEXT_NODE,
-  COMMENT_NODE,
-  DOCUMENT_NODE,
-  DOCUMENT_FRAGMENT_NODE,
-} = require('HTMLNodeType');
-var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
-
-var findDOMNode = require('findDOMNode');
-var invariant = require('fbjs/lib/invariant');
-
-var {getChildNamespace} = DOMNamespaces;
-var {
+import 'checkReact';
+import 'ReactDOMClientInjection';
+import 'ReactDOMInjection';
+import {getChildNamespace} from 'DOMNamespaces';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import {
+  isEnabled as isEventEmitterEnabled,
+  setEnabled as setEventEmitterEnabled,
+} from 'ReactBrowserEventEmitter';
+import {
+  injection as ReactControlledComponentInjection,
+} from 'ReactControlledComponent';
+import {
+  getClosestInstanceFromNode,
+  getInstanceFromNode,
+  precacheFiberNode,
+  updateFiberProps,
+} from 'ReactDOMComponentTree';
+import ReactFeatureFlags from 'ReactFeatureFlags';
+import ReactDOMFeatureFlags from 'ReactDOMFeatureFlags';
+import {
   createElement,
   setInitialProperties,
   diffProperties,
   updateProperties,
   diffHydratedProperties,
   diffHydratedText,
+  restoreControlledState,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
-} = ReactDOMFiberComponent;
-var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
+} from 'ReactDOMFiberComponent';
+import {rIC} from 'ReactDOMFrameScheduling';
+import {
+  injection as ReactGenericBatchingInjection,
+  batchedUpdates,
+} from 'ReactGenericBatching';
+import ReactFiberReconciler from 'ReactFiberReconciler';
+import {getSelectionInformation, restoreSelection} from 'ReactInputSelection';
+import ReactInstanceMap from 'ReactInstanceMap';
+import {createPortal} from 'ReactPortal';
+import ReactVersion from 'ReactVersion';
+import {ReactCurrentOwner} from 'ReactGlobalSharedState';
+import React from 'react';
+import {injectInternals} from 'ReactFiberDevToolsHook';
+import {
+  ELEMENT_NODE,
+  TEXT_NODE,
+  COMMENT_NODE,
+  DOCUMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} from 'HTMLNodeType';
+import {ROOT_ATTRIBUTE_NAME} from 'DOMProperty';
+import getComponentName from 'getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'lowPriorityWarning';
+import warning from 'fbjs/lib/warning';
+import {validateDOMNesting, updatedAncestorInfo} from 'validateDOMNesting';
+
+// TODO: we can remove these when we stop exposing them as secrets exports.
+import * as ReactControlledComponent from 'ReactControlledComponent';
+import * as ReactDOMComponentTree from 'ReactDOMComponentTree';
+import * as ReactDOMEventListener from 'ReactDOMEventListener';
+import * as EventPluginHub from 'EventPluginHub';
+import * as EventPluginRegistry from 'EventPluginRegistry';
+import * as EventPropagators from 'EventPropagators';
 
 if (__DEV__) {
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var warning = require('fbjs/lib/warning');
-  var validateDOMNesting = require('validateDOMNesting');
-  var {updatedAncestorInfo} = validateDOMNesting;
-
   if (
     typeof Map !== 'function' ||
     Map.prototype == null ||
@@ -83,14 +100,9 @@ if (__DEV__) {
   }
 }
 
-require('ReactDOMClientInjection');
-require('ReactDOMInjection');
-ReactControlledComponent.injection.injectFiberControlledHostComponent(
-  ReactDOMFiberComponent,
+ReactControlledComponentInjection.injectRestoreStateImplementation(
+  restoreControlledState,
 );
-findDOMNode._injectFiber(function(fiber: Fiber) {
-  return DOMRenderer.findHostInstance(fiber);
-});
 
 type DOMContainer =
   | (Element & {
@@ -212,15 +224,15 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   prepareForCommit(): void {
-    eventsEnabled = ReactBrowserEventEmitter.isEnabled();
-    selectionInformation = ReactInputSelection.getSelectionInformation();
-    ReactBrowserEventEmitter.setEnabled(false);
+    eventsEnabled = isEventEmitterEnabled();
+    selectionInformation = getSelectionInformation();
+    setEventEmitterEnabled(false);
   },
 
   resetAfterCommit(): void {
-    ReactInputSelection.restoreSelection(selectionInformation);
+    restoreSelection(selectionInformation);
     selectionInformation = null;
-    ReactBrowserEventEmitter.setEnabled(eventsEnabled);
+    setEventEmitterEnabled(eventsEnabled);
     eventsEnabled = null;
   },
 
@@ -235,7 +247,7 @@ var DOMRenderer = ReactFiberReconciler({
     if (__DEV__) {
       // TODO: take namespace into account when validating.
       const hostContextDev = ((hostContext: any): HostContextDev);
-      validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
       if (
         typeof props.children === 'string' ||
         typeof props.children === 'number'
@@ -246,7 +258,7 @@ var DOMRenderer = ReactFiberReconciler({
           type,
           null,
         );
-        validateDOMNesting(null, string, null, ownAncestorInfo);
+        validateDOMNesting(null, string, ownAncestorInfo);
       }
       parentNamespace = hostContextDev.namespace;
     } else {
@@ -301,7 +313,7 @@ var DOMRenderer = ReactFiberReconciler({
           type,
           null,
         );
-        validateDOMNesting(null, string, null, ownAncestorInfo);
+        validateDOMNesting(null, string, ownAncestorInfo);
       }
     }
     return diffProperties(
@@ -368,7 +380,7 @@ var DOMRenderer = ReactFiberReconciler({
   ): TextInstance {
     if (__DEV__) {
       const hostContextDev = ((hostContext: any): HostContextDev);
-      validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(null, text, hostContextDev.ancestorInfo);
     }
     var textNode: TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
@@ -534,12 +546,12 @@ var DOMRenderer = ReactFiberReconciler({
     warnForInsertedHydratedText(parentInstance, text);
   },
 
-  scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
+  scheduleDeferredCallback: rIC,
 
   useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,
 });
 
-ReactGenericBatching.injection.injectFiberBatchedUpdates(
+ReactGenericBatchingInjection.injectBatchedUpdatesImplementation(
   DOMRenderer.batchedUpdates,
 );
 
@@ -575,8 +587,7 @@ function renderSubtreeIntoContainer(
 
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
-    const hasNonRootReactChild = !!(rootEl &&
-      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+    const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
 
     warning(
       !hasNonRootReactChild || isRootRenderedBySomeReact,
@@ -649,6 +660,48 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
+  findDOMNode(
+    componentOrElement: Element | ?ReactComponent<any, any, any>,
+  ): null | Element | Text {
+    if (__DEV__) {
+      var owner = (ReactCurrentOwner.current: any);
+      if (owner !== null) {
+        var warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
+        warning(
+          warnedAboutRefsInRender,
+          '%s is accessing findDOMNode inside its render(). ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(owner) || 'A component',
+        );
+        owner.stateNode._warnedAboutRefsInRender = true;
+      }
+    }
+    if (componentOrElement == null) {
+      return null;
+    }
+    if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
+      return (componentOrElement: any);
+    }
+
+    var inst = ReactInstanceMap.get(componentOrElement);
+    if (inst) {
+      return DOMRenderer.findHostInstance(inst);
+    }
+
+    if (typeof componentOrElement.render === 'function') {
+      invariant(false, 'Unable to find node on an unmounted component.');
+    } else {
+      invariant(
+        false,
+        'Element appears to be neither ReactComponent nor DOMNode. Keys: %s',
+        Object.keys(componentOrElement),
+      );
+    }
+  },
+
   hydrate(
     element: ReactElement<any>,
     container: DOMContainer,
@@ -667,7 +720,7 @@ var ReactDOMFiber = {
       // Top-level check occurs here instead of inside child reconciler
       // because requirements vary between renderers. E.g. React Art
       // allows arrays.
-      if (!isValidElement(element)) {
+      if (!React.isValidElement(element)) {
         if (typeof element === 'string') {
           invariant(
             false,
@@ -732,8 +785,7 @@ var ReactDOMFiber = {
     if (container._reactRootContainer) {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const renderedByDifferentReact =
-          rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+        const renderedByDifferentReact = rootEl && !getInstanceFromNode(rootEl);
         warning(
           !renderedByDifferentReact,
           "unmountComponentAtNode(): The node you're attempting to unmount " +
@@ -753,8 +805,7 @@ var ReactDOMFiber = {
     } else {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const hasNonRootReactChild = !!(rootEl &&
-          ReactDOMComponentTree.getInstanceFromNode(rootEl));
+        const hasNonRootReactChild = !!(rootEl && getInstanceFromNode(rootEl));
 
         // Check if the container itself is a React root node.
         const isContainerReactRoot =
@@ -778,18 +829,16 @@ var ReactDOMFiber = {
     }
   },
 
-  findDOMNode: findDOMNode,
-
   unstable_createPortal(
     children: ReactNodeList,
     container: DOMContainer,
     key: ?string = null,
   ) {
     // TODO: pass ReactDOM portal implementation as third argument
-    return ReactPortal.createPortal(children, container, null, key);
+    return createPortal(children, container, null, key);
   },
 
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
 
   unstable_deferredUpdates: DOMRenderer.deferredUpdates,
 
@@ -797,18 +846,18 @@ var ReactDOMFiber = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('EventPluginHub'),
+    EventPluginHub,
     // Used by test-utils
-    EventPluginRegistry: require('EventPluginRegistry'),
-    EventPropagators: require('EventPropagators'),
+    EventPluginRegistry,
+    EventPropagators,
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('ReactDOMEventListener'),
+    ReactDOMEventListener,
   },
 };
 
 const foundDevTools = injectInternals({
-  findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
+  findFiberByHostInstance: getClosestInstanceFromNode,
   findHostInstanceByFiber: DOMRenderer.findHostInstance,
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
@@ -846,4 +895,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactDOMFiber;
+export default ReactDOMFiber;

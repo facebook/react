@@ -13,11 +13,12 @@
 
 'use strict';
 
-var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-var TextInputState = require('TextInputState');
-var UIManager = require('UIManager');
-
-var {mountSafeCallback, warnForStyleProps} = require('NativeMethodsMixinUtils');
+import {
+  create as createReactNativeAttributePayload,
+} from 'ReactNativeAttributePayload';
+import {blurTextInput, focusTextInput} from 'TextInputState';
+import UIManager from 'UIManager';
+import {mountSafeCallback, warnForStyleProps} from 'NativeMethodsMixinUtils';
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -49,11 +50,11 @@ class ReactNativeFiberHostComponent {
   }
 
   blur() {
-    TextInputState.blurTextInput(this._nativeTag);
+    blurTextInput(this._nativeTag);
   }
 
   focus() {
-    TextInputState.focusTextInput(this._nativeTag);
+    focusTextInput(this._nativeTag);
   }
 
   measure(callback: MeasureOnSuccessCallback) {
@@ -85,7 +86,7 @@ class ReactNativeFiberHostComponent {
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 
-    var updatePayload = ReactNativeAttributePayload.create(
+    var updatePayload = createReactNativeAttributePayload(
       nativeProps,
       this.viewConfig.validAttributes,
     );
@@ -106,4 +107,4 @@ class ReactNativeFiberHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactNativeFiberHostComponent.prototype: NativeMethodsMixinType);
 
-module.exports = ReactNativeFiberHostComponent;
+export default ReactNativeFiberHostComponent;

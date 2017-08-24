@@ -16,7 +16,7 @@
 /**
  * Create a function which has 'unsafe' privileges (required by windows8 apps)
  */
-var createMicrosoftUnsafeLocalFunction = function(func) {
+export default function createMicrosoftUnsafeLocalFunction(func) {
   if (typeof MSApp !== 'undefined' && MSApp.execUnsafeLocalFunction) {
     return function(arg0, arg1, arg2, arg3) {
       MSApp.execUnsafeLocalFunction(function() {
@@ -26,6 +26,4 @@ var createMicrosoftUnsafeLocalFunction = function(func) {
   } else {
     return func;
   }
-};
-
-module.exports = createMicrosoftUnsafeLocalFunction;
+}

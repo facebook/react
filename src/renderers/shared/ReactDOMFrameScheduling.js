@@ -22,11 +22,10 @@
 
 import type {Deadline} from 'ReactFiberReconciler';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
   if (
     ExecutionEnvironment.canUseDOM &&
     typeof requestAnimationFrame !== 'function'
@@ -40,7 +39,7 @@ if (__DEV__) {
 }
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
-let rIC: (callback: (deadline: Deadline) => void) => number;
+export let rIC: (callback: (deadline: Deadline) => void) => number;
 
 if (!ExecutionEnvironment.canUseDOM) {
   rIC = function(frameCallback: (deadline: Deadline) => void): number {
@@ -154,5 +153,3 @@ if (!ExecutionEnvironment.canUseDOM) {
 } else {
   rIC = requestIdleCallback;
 }
-
-exports.rIC = rIC;

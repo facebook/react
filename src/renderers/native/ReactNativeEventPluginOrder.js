@@ -16,4 +16,4 @@ var ReactNativeEventPluginOrder = [
   'ReactNativeBridgeEventPlugin',
 ];
 
-module.exports = ReactNativeEventPluginOrder;
+export default ReactNativeEventPluginOrder;
