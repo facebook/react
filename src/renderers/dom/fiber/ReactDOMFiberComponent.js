@@ -951,10 +951,10 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (__DEV__ && typeof nextProp !== 'function') {
-          warnForInvalidEventListener(propKey, nextProp);
-        }
         if (nextProp) {
+          if (__DEV__ && typeof nextProp !== 'function') {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           ensureListeningTo(rootContainerElement, propKey);
         }
       } else if (__DEV__) {
