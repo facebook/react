@@ -102,15 +102,30 @@ function getAttribute(attributeName) {
 }
 
 const attributes = [
-  {name: 'about'},
-  {name: 'aBoUt'},
-  {name: 'accent-Height'},
-  {name: 'accent-height'},
-  {name: 'accentHeight', read: getAttribute('accent-height')},
+  {name: 'about', read: getAttribute('about')},
+  {name: 'aBoUt', read: getAttribute('about')},
+  {
+    name: 'accent-Height',
+    containerTagName: 'svg',
+    tagName: 'font-face',
+    read: getAttribute('accent-height'),
+  },
+  {
+    name: 'accent-height',
+    containerTagName: 'svg',
+    tagName: 'font-face',
+    read: getAttribute('accent-height'),
+  },
+  {
+    name: 'accentHeight',
+    containerTagName: 'svg',
+    tagName: 'font-face',
+    read: getAttribute('accent-height'),
+  },
   {name: 'accept'},
-  {name: 'accept-charset'},
-  {name: 'accept-Charset'},
-  {name: 'acceptCharset', read: getAttribute('accept-charset')},
+  {name: 'accept-charset', tagName: 'form'},
+  {name: 'accept-Charset', tagName: 'form'},
+  {name: 'acceptCharset', tagName: 'form'},
   {name: 'accessKey'},
   {name: 'accumulate'},
   {name: 'action'},
@@ -632,13 +647,6 @@ const attributes = [
   {name: 'zoomAndPan'},
 ];
 
-// function getTestDisplayValue(type) {
-//   if (typeof type.testDisplayValue === 'string') {
-//     return type.testDisplayValue;
-//   }
-//   return '' + type.testValue;
-// }
-
 let _didWarn = false;
 function warn(str) {
   _didWarn = true;
@@ -649,21 +657,21 @@ function getRenderedAttributeValue(renderer, attribute, givenValue) {
   const originalConsoleError = console.error;
   console.error = warn;
 
-  const container = document.createElement(attribute.tagName || 'div');
+  const containerTagName = attribute.containerTagName || 'div';
+  const tagName = attribute.tagName || 'div';
+
+  let container;
+  if (containerTagName === 'svg') {
+    container = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  } else {
+    container = document.createElement(containerTagName);
+  }
 
   try {
     const props = {
       [attribute.name]: givenValue,
     };
-    renderer.render(<div {...props} />, container);
-
-    // if (
-    //   renderer === ReactDOM15 &&
-    //   attribute.name === 'accentHeight' &&
-    //   typeof givenValue === 'string'
-    // ) {
-    //   debugger;
-    // }
+    renderer.render(React.createElement(tagName, props), container);
 
     const read = attribute.read || getProperty(attribute.name);
 
@@ -751,6 +759,7 @@ function RendererResult({version, result, didWarn, didError}) {
   switch (typeof result) {
     case 'undefined':
       displayResult = '<undefined>';
+      style.backgroundColor = 'cyan';
       break;
     case 'object':
       if (result === null) {
@@ -874,7 +883,7 @@ class App extends Component {
             fixedColumnCount={1}
             enableFixedColumnScroll={true}
             enableFixedRowScroll={true}
-            height={800}
+            height={1200}
             rowHeight={40}
             rowCount={attributes.length + 1}
             fixedRowCount={1}
