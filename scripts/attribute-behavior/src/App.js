@@ -50,6 +50,11 @@ const types = [
     testDisplayValue: "{ toString() { return 'result of toString()'; } }",
   },
   {
+    name: 'numeric string',
+    testValue: '42',
+    displayValue: "'42'",
+  },
+  {
     name: '-1',
     testValue: -1,
   },
@@ -628,18 +633,17 @@ const attributes = [
 //   return '' + type.testValue;
 // }
 
-const container15 = document.createElement('div');
-const container16 = document.createElement('div');
-
 let _didWarn = false;
 function warn(str) {
   _didWarn = true;
 }
 
-function getRenderedAttributeValue(renderer, container, attribute, givenValue) {
+function getRenderedAttributeValue(renderer, attribute, givenValue) {
   _didWarn = false;
   const originalConsoleError = console.error;
   console.error = warn;
+
+  const container = document.createElement(attribute.tagName || 'div');
 
   try {
     const props = {
@@ -676,13 +680,11 @@ function getRenderedAttributeValue(renderer, container, attribute, givenValue) {
 function getRenderedAttributeValues(attribute, givenValue) {
   const react15Value = getRenderedAttributeValue(
     ReactDOM15,
-    container15,
     attribute,
     givenValue,
   );
   const react16Value = getRenderedAttributeValue(
     ReactDOM16,
-    container16,
     attribute,
     givenValue,
   );
