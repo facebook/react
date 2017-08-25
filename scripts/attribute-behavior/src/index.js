@@ -8,12 +8,8 @@ import {loadScript} from './react-loader';
   delete window.React;
   delete window.ReactDOM;
 
-  await loadScript(
-    'https://unpkg.com/react@16.0.0-beta.5/umd/react.production.min.js',
-  );
-  await loadScript(
-    'https://unpkg.com/react-dom@16.0.0-beta.5/umd/react-dom.production.min.js',
-  );
+  await loadScript('/react.production.min.js');
+  await loadScript('/react-dom.production.min.js');
 
   const React = (window.React16 = window.React);
   const ReactDOM = (window.ReactDOM16 = window.ReactDOM);
