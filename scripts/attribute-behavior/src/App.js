@@ -808,7 +808,7 @@ const attributes = [
   {name: 'referrerPolicy', tagName: 'iframe'},
   {name: 'refX', read: getAttribute('refX')},
   {name: 'refY', read: getAttribute('refY')},
-  {name: 'rel', tagName: 'a' },
+  {name: 'rel', tagName: 'a'},
   {name: 'rendering-intent', read: getAttribute('rendering-intent')},
   {name: 'renderingIntent', read: getAttribute('rendering-intent')},
   {name: 'repeatCount', read: getAttribute('repeatcount')},
@@ -827,9 +827,14 @@ const attributes = [
   {name: 'rowSpan', tagName: 'td'},
   {name: 'rx', read: getAttribute('rx')},
   {name: 'ry', read: getAttribute('ry')},
-  {name: 'sandbox', tagName: 'iframe', overrideStringValue: 'allow-forms  allow-scripts', read(element) {
-    return element.sandbox.value;
-  }},
+  {
+    name: 'sandbox',
+    tagName: 'iframe',
+    overrideStringValue: 'allow-forms  allow-scripts',
+    read(element) {
+      return element.sandbox.value;
+    },
+  },
   {name: 'scale', read: getAttribute('scale')},
   {name: 'scope', tagName: 'th', overrideStringValue: 'row'},
   {name: 'scoped', tagName: 'style', read: getAttribute('scoped')},
@@ -843,21 +848,45 @@ const attributes = [
   {name: 'shape-rendering', read: getAttribute('shape-rendering')},
   {name: 'shapeRendering', read: getAttribute('shape-rendering')},
   {name: 'size', tagName: 'input'},
-  {name: 'sizes', tagName: 'link', read(element) {
-    return element.sizes.value;
-  }},
+  {
+    name: 'sizes',
+    tagName: 'link',
+    read(element) {
+      return element.sizes.value;
+    },
+  },
   {name: 'slope', read: getAttribute('slope')},
   {name: 'spacing', read: getAttribute('spacing')},
   {name: 'span', tagName: 'col'},
   {name: 'specularConstant', read: getAttribute('specularConstant')},
   {name: 'specularExponent', read: getAttribute('specularConstant')},
   {name: 'speed', read: getAttribute('speed')},
-  {name: 'spellCheck', overrideStringValue: 'false', tagName: 'input', read: getProperty('spellcheck')},
-  {name: 'spellcheck', overrideStringValue: 'false', tagName: 'input', read: getProperty('spellcheck')},
+  {
+    name: 'spellCheck',
+    overrideStringValue: 'false',
+    tagName: 'input',
+    read: getProperty('spellcheck'),
+  },
+  {
+    name: 'spellcheck',
+    overrideStringValue: 'false',
+    tagName: 'input',
+    read: getProperty('spellcheck'),
+  },
   {name: 'spreadMethod', read: getAttribute('spreadMethod')},
   {name: 'src', tagName: 'img', overrideStringValue: 'https://reactjs.com'},
-  {name: 'srcDoc', tagName: 'iframe', overrideStringValue: '<p>Hi</p>', read: getProperty('srcdoc')},
-  {name: 'srcdoc', tagName: 'iframe', overrideStringValue: '<p>Hi</p>', read: getProperty('srcdoc')},
+  {
+    name: 'srcDoc',
+    tagName: 'iframe',
+    overrideStringValue: '<p>Hi</p>',
+    read: getProperty('srcdoc'),
+  },
+  {
+    name: 'srcdoc',
+    tagName: 'iframe',
+    overrideStringValue: '<p>Hi</p>',
+    read: getProperty('srcdoc'),
+  },
   {
     name: 'srcLang',
     containerTagName: 'audio',
@@ -918,9 +947,16 @@ const attributes = [
   {name: 'strokeWidth', read: getAttribute('stroke-width')},
   {name: 'style'},
   {name: 'summary', tagName: 'table'},
-  {name: 'suppressContentEditableWarning', read: getAttribute('suppresscontenteditablewarning')},
+  {
+    name: 'suppressContentEditableWarning',
+    read: getAttribute('suppresscontenteditablewarning'),
+  },
   {name: 'surfaceScale', read: getAttribute('surfaceScale')},
-  {name: 'systemLanguage', overrideStringValue: 'en', read: getAttribute('systemLanguage')}, // obsolete as of IE9
+  {
+    name: 'systemLanguage',
+    overrideStringValue: 'en',
+    read: getAttribute('systemLanguage'),
+  }, // obsolete as of IE9
   {name: 'tabIndex'},
   {name: 'tableValues', read: getAttribute('tableValues')},
   {name: 'target', read: getAttribute('target')},
@@ -967,7 +1003,12 @@ const attributes = [
   {name: 'value', tagName: 'input'},
   {name: 'value', tagName: 'textarea'},
   {name: 'value', containerTagName: 'select', tagName: 'option'},
-  {name: 'Value', containerTagName: 'select', tagName: 'option', read: getProperty('value')},
+  {
+    name: 'Value',
+    containerTagName: 'select',
+    tagName: 'option',
+    read: getProperty('value'),
+  },
   {name: 'values', read: getAttribute('values')},
   {name: 'vector-effect', read: getAttribute('vector-effect')},
   {name: 'vectorEffect', read: getAttribute('vector-effect')},
