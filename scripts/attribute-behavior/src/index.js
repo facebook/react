@@ -18,6 +18,6 @@ import {loadScript} from './react-loader';
 
   ReactDOM.render(
     React.createElement(App.default),
-    document.getElementById('root'),
+    document.getElementById('root')
   );
 })();
