@@ -1,6 +1,5 @@
 import {createElement} from 'glamor/react'; // eslint-disable-line
 /* @jsx createElement */
-import './App.css';
 
 import {MultiGrid, AutoSizer} from 'react-virtualized';
 import 'react-virtualized/styles.css';

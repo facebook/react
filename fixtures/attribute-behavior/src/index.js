@@ -1,4 +1,5 @@
 import {loadScript} from './react-loader';
+import './index.css';
 
 (async function foo() {
   await loadScript('https://unpkg.com/react@15.6.1/dist/react.min.js');
@@ -18,6 +19,6 @@ import {loadScript} from './react-loader';
 
   ReactDOM.render(
     React.createElement(App.default),
-    document.getElementById('root')
+    document.getElementById('root'),
   );
 })();
