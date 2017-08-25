@@ -1240,10 +1240,15 @@ const attributes = [
 
 const ALPHABETICAL = 'alphabetical';
 const REV_ALPHABETICAL = 'reverse_alphabetical';
+const GROUPED_BY_ROW_PATTERN = 'grouped_by_row_pattern';
 
 const attributesSorted = {
-  [ALPHABETICAL]: attributes.slice(0).sort((attr1, attr2) => attr1.name < attr2.name ? -1 : 1),
-  [REV_ALPHABETICAL]: attributes.slice(0).sort((attr1, attr2) => attr1.name < attr2.name ? 1 : -1),
+  [ALPHABETICAL]: attributes
+    .slice(0)
+    .sort((attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)),
+  [REV_ALPHABETICAL]: attributes
+    .slice(0)
+    .sort((attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)),
 };
 
 let _didWarn = false;
@@ -1343,45 +1348,42 @@ function getRenderedAttributeValues(attribute, type) {
 }
 
 const table = new Map();
+const groupByRowPattern = new Map();
 
 // Disable error overlay while test each attribute
 uninjectErrorOverlay();
 for (let attribute of attributes) {
   const row = new Map();
+  let textOfTheRow = '';
   for (let type of types) {
     const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
+    textOfTheRow +=
+      getResultDisplayString(result.react15.result) +
+      getResultDisplayString(result.react16.result);
   }
   table.set(attribute, row);
+  if (!groupByRowPattern.get(textOfTheRow)) {
+    groupByRowPattern.set(textOfTheRow, []);
+  }
+  const updatedAttributesArray = groupByRowPattern.get(textOfTheRow);
+  updatedAttributesArray.push(attribute);
+  groupByRowPattern.set(textOfTheRow, updatedAttributesArray);
 }
+
+let attributesSortedByRowPattern = [];
+groupByRowPattern.forEach(arrayOfAttributes => {
+  attributesSortedByRowPattern = attributesSortedByRowPattern.concat(
+    arrayOfAttributes
+  );
+});
+
+attributesSorted[GROUPED_BY_ROW_PATTERN] = attributesSortedByRowPattern;
+
 // Renable error overlay
 injectErrorOverlay();
 
-const successColor = 'white';
-const warnColor = 'yellow';
-const errorColor = 'red';
-
-function RendererResult({version, result, defaultValue, didWarn, didError}) {
-  let backgroundColor;
-  if (didError) {
-    backgroundColor = errorColor;
-  } else if (didWarn) {
-    backgroundColor = warnColor;
-  } else if (result !== defaultValue) {
-    backgroundColor = 'cyan';
-  } else {
-    backgroundColor = successColor;
-  }
-
-  let style = {
-    display: 'flex',
-    alignItems: 'center',
-    position: 'absolute',
-    height: '100%',
-    width: '100%',
-    backgroundColor,
-  };
-
+function getResultDisplayString(result) {
   let displayResult;
   switch (typeof result) {
     case 'undefined':
@@ -1416,8 +1418,35 @@ function RendererResult({version, result, defaultValue, didWarn, didError}) {
     default:
       throw new Error('Switch statement should be exhaustive.');
   }
+  return displayResult;
+}
 
-  return <div css={style}>{displayResult}</div>;
+const successColor = 'white';
+const warnColor = 'yellow';
+const errorColor = 'red';
+
+function RendererResult({version, result, defaultValue, didWarn, didError}) {
+  let backgroundColor;
+  if (didError) {
+    backgroundColor = errorColor;
+  } else if (didWarn) {
+    backgroundColor = warnColor;
+  } else if (result !== defaultValue) {
+    backgroundColor = 'cyan';
+  } else {
+    backgroundColor = successColor;
+  }
+
+  let style = {
+    display: 'flex',
+    alignItems: 'center',
+    position: 'absolute',
+    height: '100%',
+    width: '100%',
+    backgroundColor,
+  };
+
+  return <div css={style}>{getResultDisplayString(result)}</div>;
 }
 
 function ResultPopover(props) {
@@ -1617,12 +1646,19 @@ class App extends Component {
               value={REV_ALPHABETICAL}>
               reverse alphabetical
             </option>
+            <option
+              selected={this.state.sortOrder === GROUPED_BY_ROW_PATTERN}
+              value={GROUPED_BY_ROW_PATTERN}>
+              grouped by row pattern :)
+            </option>
           </select>
         </div>
         <AutoSizer disableHeight={true}>
           {({width}) => (
             <MultiGrid
-              ref={(input) => { this.grid = input; }}
+              ref={input => {
+                this.grid = input;
+              }}
               cellRenderer={this._renderCell}
               columnWidth={200}
               columnCount={1 + types.length}
