@@ -1149,6 +1149,15 @@ const attributes = [
   {name: 'v-mathematical', read: getAttribute('v-mathematical')},
   {name: 'vAlphabetic', read: getAttribute('v-alphabetic')},
   {name: 'value', tagName: 'input'},
+  {name: 'value', tagName: 'input', type: 'email'},
+  {
+    name: 'value',
+    tagName: 'input',
+    type: 'number',
+    read(element) {
+      return element.valueAsNumber;
+    },
+  },
   {name: 'value', tagName: 'textarea'},
   {name: 'value', containerTagName: 'select', tagName: 'option'},
   {
@@ -1261,10 +1270,15 @@ function getRenderedAttributeValue(renderer, attribute, type) {
       }
     }
 
-    renderer.render(React.createElement(tagName), container);
+    let baseProps = {};
+    if (attribute.type) {
+      baseProps.type = attribute.type;
+    }
+    renderer.render(React.createElement(tagName, baseProps), container);
     defaultValue = read(container.firstChild);
 
     const props = {
+      ...baseProps,
       [attribute.name]: testValue,
     };
     renderer.render(React.createElement(tagName, props), container);
@@ -1299,7 +1313,7 @@ function getRenderedAttributeValues(attribute, type) {
   } else if (!react15Value.didError && !react16Value.didError) {
     hasSameBehavior =
       react15Value.didWarn === react16Value.didWarn &&
-      react15Value.result === react16Value.result;
+      Object.is(react15Value.result, react16Value.result);
   } else {
     hasSameBehavior = false;
   }
@@ -1319,7 +1333,7 @@ for (let attribute of attributes) {
     const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
   }
-  table.set(attribute.name, row);
+  table.set(attribute, row);
 }
 
 const successColor = 'white';
@@ -1451,7 +1465,7 @@ function CellContent(props) {
     return <ColumnHeader>{type.name}</ColumnHeader>;
   }
 
-  const row = table.get(attribute.name);
+  const row = table.get(attribute);
   const result = row.get(type.name);
 
   return <Result {...result} />;
