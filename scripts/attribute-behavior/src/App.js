@@ -31,7 +31,7 @@ const types = [
     testDisplayValue: "''",
   },
   {
-    name: 'array',
+    name: 'array with string',
     testValue: ['string'],
     testDisplayValue: "['string']",
   },
@@ -723,12 +723,21 @@ function getRenderedAttributeValue(renderer, attribute, type) {
   let defaultValue;
   try {
     const read = attribute.read || getProperty(attribute.name);
-    defaultValue = read(container);
 
-    const testValue = type.name === 'string' &&
-      attribute.overrideStringValue !== undefined
-      ? attribute.overrideStringValue
-      : type.testValue;
+    let testValue = type.testValue;
+    if (attribute.overrideStringValue !== undefined) {
+      switch (type.name) {
+        case 'string':
+          testValue = attribute.overrideStringValue;
+          break;
+        case 'array with string':
+          testValue = [attribute.overrideStringValue];
+          break;
+      }
+    }
+
+    renderer.render(React.createElement(tagName), container);
+    defaultValue = read(container.firstChild);
 
     const props = {
       [attribute.name]: testValue,
