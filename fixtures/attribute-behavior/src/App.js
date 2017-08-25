@@ -1238,6 +1238,14 @@ const attributes = [
   {name: 'zoomAndPan', read: getAttribute('zoomAndPan')},
 ];
 
+const ALPHABETICAL = 'alphabetical';
+const REV_ALPHABETICAL = 'reverse_alphabetical';
+
+const attributesSorted = {
+  [ALPHABETICAL]: attributes.slice(0).sort((attr1, attr2) => attr1.name < attr2.name ? -1 : 1),
+  [REV_ALPHABETICAL]: attributes.slice(0).sort((attr1, attr2) => attr1.name < attr2.name ? 1 : -1),
+};
+
 let _didWarn = false;
 function warn(str) {
   _didWarn = true;
@@ -1549,9 +1557,8 @@ function RowHeader({children}) {
 }
 
 function CellContent(props) {
-  const {columnIndex, rowIndex} = props;
-
-  const attribute = attributes[rowIndex - 1];
+  const {columnIndex, rowIndex, attributesInSortedOrder} = props;
+  const attribute = attributesInSortedOrder[rowIndex - 1];
   const type = types[columnIndex - 1];
 
   if (columnIndex === 0) {
@@ -1571,30 +1578,66 @@ function CellContent(props) {
   return <Result {...result} />;
 }
 
-function cellRenderer(props) {
-  return <div style={props.style}><CellContent {...props} /></div>;
-}
-
 class App extends Component {
+  constructor() {
+    super();
+    this.state = {sortOrder: REV_ALPHABETICAL};
+    this._renderCell = this.renderCell.bind(this);
+    this._onUpdateSort = this.onUpdateSort.bind(this);
+  }
+
+  renderCell(props) {
+    return (
+      <div style={props.style}>
+        <CellContent
+          attributesInSortedOrder={attributesSorted[this.state.sortOrder]}
+          {...props}
+        />
+      </div>
+    );
+  }
+
+  onUpdateSort(e) {
+    this.setState({sortOrder: e.target.value});
+    this.grid.forceUpdateGrids();
+  }
+
   render() {
     return (
-      <AutoSizer disableHeight={true}>
-        {({width}) => (
-          <MultiGrid
-            cellRenderer={cellRenderer}
-            columnWidth={200}
-            columnCount={1 + types.length}
-            fixedColumnCount={1}
-            enableFixedColumnScroll={true}
-            enableFixedRowScroll={true}
-            height={1200}
-            rowHeight={40}
-            rowCount={attributes.length + 1}
-            fixedRowCount={1}
-            width={width}
-          />
-        )}
-      </AutoSizer>
+      <div>
+        <div>
+          <select onChange={this._onUpdateSort}>
+            <option
+              selected={this.state.sortOrder === ALPHABETICAL}
+              value={ALPHABETICAL}>
+              alphabetical
+            </option>
+            <option
+              selected={this.state.sortOrder === REV_ALPHABETICAL}
+              value={REV_ALPHABETICAL}>
+              reverse alphabetical
+            </option>
+          </select>
+        </div>
+        <AutoSizer disableHeight={true}>
+          {({width}) => (
+            <MultiGrid
+              ref={(input) => { this.grid = input; }}
+              cellRenderer={this._renderCell}
+              columnWidth={200}
+              columnCount={1 + types.length}
+              fixedColumnCount={1}
+              enableFixedColumnScroll={true}
+              enableFixedRowScroll={true}
+              height={1200}
+              rowHeight={40}
+              rowCount={attributes.length + 1}
+              fixedRowCount={1}
+              width={width}
+            />
+          )}
+        </AutoSizer>
+      </div>
     );
   }
 }
