@@ -4,6 +4,11 @@ import {createElement} from 'glamor/react'; // eslint-disable-line
 import {MultiGrid, AutoSizer} from 'react-virtualized';
 import 'react-virtualized/styles.css';
 
+import {
+  inject as injectErrorOverlay,
+  uninject as uninjectErrorOverlay,
+} from 'react-error-overlay/lib/overlay';
+
 const React = global.React;
 const {Component} = React;
 
@@ -1267,6 +1272,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
         case 'array with string':
           testValue = [attribute.overrideStringValue];
           break;
+        default:
+          break;
       }
     }
 
@@ -1288,7 +1295,6 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     return {
       testValue,
       defaultValue,
-      defaultValue,
       result,
       didWarn: _didWarn,
       didError: false,
@@ -1296,7 +1302,6 @@ function getRenderedAttributeValue(renderer, attribute, type) {
   } catch (error) {
     return {
       testValue,
-      defaultValue,
       defaultValue,
       result: null,
       didWarn: _didWarn,
@@ -1331,6 +1336,8 @@ function getRenderedAttributeValues(attribute, type) {
 
 const table = new Map();
 
+// Disable error overlay while test each attribute
+uninjectErrorOverlay();
 for (let attribute of attributes) {
   const row = new Map();
   for (let type of types) {
@@ -1339,6 +1346,8 @@ for (let attribute of attributes) {
   }
   table.set(attribute, row);
 }
+// Renable error overlay
+injectErrorOverlay();
 
 const successColor = 'white';
 const warnColor = 'yellow';
