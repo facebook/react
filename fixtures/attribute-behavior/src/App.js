@@ -1354,21 +1354,21 @@ const groupByRowPattern = new Map();
 uninjectErrorOverlay();
 for (let attribute of attributes) {
   const row = new Map();
-  let textOfTheRow = '';
+  let rowHash = '';
   for (let type of types) {
     const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
-    textOfTheRow +=
+    rowHash +=
       getResultDisplayString(result.react15.result) +
       getResultDisplayString(result.react16.result);
   }
   table.set(attribute, row);
-  if (!groupByRowPattern.get(textOfTheRow)) {
-    groupByRowPattern.set(textOfTheRow, []);
+  if (!groupByRowPattern.get(rowHash)) {
+    groupByRowPattern.set(rowHash, []);
   }
-  const updatedAttributesArray = groupByRowPattern.get(textOfTheRow);
+  const updatedAttributesArray = groupByRowPattern.get(rowHash);
   updatedAttributesArray.push(attribute);
-  groupByRowPattern.set(textOfTheRow, updatedAttributesArray);
+  groupByRowPattern.set(rowHash, updatedAttributesArray);
 }
 
 let attributesSortedByRowPattern = [];
