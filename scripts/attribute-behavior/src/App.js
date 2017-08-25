@@ -156,22 +156,47 @@ const attributes = [
     name: 'allowFullscreen',
     tagName: 'iframe',
   },
-  {name: 'allowReorder'},
-  {name: 'allowTransparency'},
-  {name: 'alphabetic'},
-  {name: 'alt'},
-  {name: 'amplitude'},
-  {name: 'arabic-form'},
-  {name: 'arabicForm', read: getAttribute('arabic-form')},
+  {name: 'allowReorder', containerTagName: 'svg', tagName: 'switch'},
+  {name: 'allowTransparency', containerTagName: 'svg', tagName: 'path'},
+  {name: 'alphabetic', containerTagName: 'svg', tagName: 'path'},
+  {name: 'alt', tagName: 'img'},
+  {name: 'amplitude', containerTagName: 'svg', tagName: 'path'},
+  {name: 'arabic-form', containerTagName: 'svg', tagName: 'path'},
+  {
+    name: 'arabicForm',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('arabic-form'),
+  },
   {name: 'aria'},
   {name: 'aria-'},
   {name: 'aria-invalidattribute'},
   {name: 'as'},
-  {name: 'ascent'},
-  {name: 'async'},
-  {name: 'attributeName'},
-  {name: 'attributeType'},
-  {name: 'autoCapitalize'},
+  {
+    name: 'ascent',
+    containerTagName: 'svg',
+    tagName: 'font-face',
+    read: getAttribute('ascent'),
+  },
+  {name: 'async', tagName: 'script'},
+  {
+    name: 'attributeName',
+    containerTagName: 'svg',
+    tagName: 'animate',
+    read: getAttribute('attributeName'),
+  },
+  {
+    name: 'attributeType',
+    containerTagName: 'svg',
+    tagName: 'animate',
+    read: getAttribute('attributeType'),
+  },
+  {
+    name: 'autoCapitalize',
+    tagName: 'input',
+    read: getProperty('autocapitalize'),
+    overrideStringValue: 'words',
+  },
   {name: 'autoComplete'},
   {name: 'autoCorrect'},
   {name: 'autoPlay'},
@@ -675,7 +700,7 @@ function warn(str) {
   _didWarn = true;
 }
 
-function getRenderedAttributeValue(renderer, attribute, givenValue) {
+function getRenderedAttributeValue(renderer, attribute, type) {
   _didWarn = false;
   const originalConsoleError = console.error;
   console.error = warn;
@@ -695,8 +720,13 @@ function getRenderedAttributeValue(renderer, attribute, givenValue) {
     const read = attribute.read || getProperty(attribute.name);
     defaultValue = read(container);
 
+    const testValue = type.name === 'string' &&
+      attribute.overrideStringValue !== undefined
+      ? attribute.overrideStringValue
+      : type.testValue;
+
     const props = {
-      [attribute.name]: givenValue,
+      [attribute.name]: testValue,
     };
     renderer.render(React.createElement(tagName, props), container);
 
@@ -720,17 +750,9 @@ function getRenderedAttributeValue(renderer, attribute, givenValue) {
   }
 }
 
-function getRenderedAttributeValues(attribute, givenValue) {
-  const react15Value = getRenderedAttributeValue(
-    ReactDOM15,
-    attribute,
-    givenValue,
-  );
-  const react16Value = getRenderedAttributeValue(
-    ReactDOM16,
-    attribute,
-    givenValue,
-  );
+function getRenderedAttributeValues(attribute, type) {
+  const react15Value = getRenderedAttributeValue(ReactDOM15, attribute, type);
+  const react16Value = getRenderedAttributeValue(ReactDOM16, attribute, type);
 
   let hasSameBehavior;
   if (react15Value.didError && react16Value.didError) {
@@ -755,13 +777,13 @@ const table = new Map();
 for (let attribute of attributes) {
   const row = new Map();
   for (let type of types) {
-    const result = getRenderedAttributeValues(attribute, type.testValue);
+    const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
   }
   table.set(attribute.name, row);
 }
 
-const successColor = 'green';
+const successColor = 'white';
 const warnColor = 'yellow';
 const errorColor = 'red';
 
