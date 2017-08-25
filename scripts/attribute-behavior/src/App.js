@@ -481,7 +481,11 @@ const attributes = [
   {name: 'for', tagName: 'label', read: getProperty('htmlFor')},
   {name: 'fOr', tagName: 'label', read: getProperty('htmlFor')},
   {name: 'form', read: getAttribute('form')}, // TODO: Read the property by rendering into a form with id
-  {name: 'formAction', tagName: 'input', overrideStringValue: 'https://reactjs.com'},
+  {
+    name: 'formAction',
+    tagName: 'input',
+    overrideStringValue: 'https://reactjs.com',
+  },
   {name: 'format', read: getAttribute('format')},
   {name: 'formEncType', tagName: 'input', read: getProperty('formEnctype')},
   {name: 'formMethod', tagName: 'input', overrideStringValue: 'POST'},
@@ -658,7 +662,11 @@ const attributes = [
   {name: 'pointsAtX', read: getAttribute('pointsAtX')},
   {name: 'pointsAtY', read: getAttribute('pointsAtY')},
   {name: 'pointsAtZ', read: getAttribute('pointsAtZ')},
-  {name: 'poster', tagName: 'video', overrideStringValue: 'https://reactjs.com'},
+  {
+    name: 'poster',
+    tagName: 'video',
+    overrideStringValue: 'https://reactjs.com',
+  },
   {name: 'prefix', read: getAttribute('prefix')},
   {name: 'preload', tagName: 'video', overrideStringValue: 'none'},
   {name: 'preserveAlpha', read: getAttribute('preserveAlpha')},
@@ -674,7 +682,7 @@ const attributes = [
   {name: 'referrerPolicy', tagName: 'iframe'},
   {name: 'refX', read: getAttribute('refX')},
   {name: 'refY', read: getAttribute('refY')},
-  {name: 'rel', tagName: 'a' },
+  {name: 'rel', tagName: 'a'},
 
   // Sebastian stop here
   // Flarnie start here
