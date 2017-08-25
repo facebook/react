@@ -26,9 +26,7 @@ var {
   isContextConsumer,
 } = require('ReactFiberContext');
 var {
-  addUpdate,
-  addReplaceUpdate,
-  addForceUpdate,
+  insertUpdateIntoFiber,
   beginUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var {hasContextChanged} = require('ReactFiberContext');
@@ -106,14 +104,17 @@ module.exports = function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(
-        fiber,
-        partialState,
-        callback,
+      const update = {
         priorityLevel,
         expirationTime,
-        currentTime,
-      );
+        partialState,
+        callback,
+        isReplace: false,
+        isForced: false,
+        isTopLevelUnmount: false,
+        next: null,
+      };
+      insertUpdateIntoFiber(fiber, update, currentTime);
       scheduleUpdate(fiber, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
@@ -128,14 +129,17 @@ module.exports = function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(
-        fiber,
-        state,
-        callback,
+      const update = {
         priorityLevel,
         expirationTime,
-        currentTime,
-      );
+        partialState: state,
+        callback,
+        isReplace: true,
+        isForced: false,
+        isTopLevelUnmount: false,
+        next: null,
+      };
+      insertUpdateIntoFiber(fiber, update, currentTime);
       scheduleUpdate(fiber, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
@@ -150,13 +154,17 @@ module.exports = function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(
-        fiber,
-        callback,
+      const update = {
         priorityLevel,
         expirationTime,
-        currentTime,
-      );
+        partialState: null,
+        callback,
+        isReplace: false,
+        isForced: true,
+        isTopLevelUnmount: false,
+        next: null,
+      };
+      insertUpdateIntoFiber(fiber, update, currentTime);
       scheduleUpdate(fiber, expirationTime);
     },
   };
