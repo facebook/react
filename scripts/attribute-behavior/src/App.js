@@ -142,9 +142,9 @@ const attributes = [
     tagName: 'font-face',
     read: getAttribute('accent-height'),
   },
-  {name: 'accept', tagName: 'form'},
-  {name: 'accept-charset', tagName: 'form'},
-  {name: 'accept-Charset', tagName: 'form'},
+  {name: 'accept', tagName: 'input'},
+  {name: 'accept-charset', tagName: 'form', read: getProperty('acceptCharset')},
+  {name: 'accept-Charset', tagName: 'form', read: getProperty('acceptCharset')},
   {name: 'acceptCharset', tagName: 'form'},
   {name: 'accessKey'},
   {
@@ -153,9 +153,19 @@ const attributes = [
     tagName: 'animate',
     read: getAttribute('accumulate'),
   },
-  {name: 'action', tagName: 'form'},
-  {name: 'additive', tagName: 'animate'},
-  {name: 'alignment-baseline', containerTagName: 'svg', tagName: 'textPath'},
+  {name: 'action', tagName: 'form', overrideStringValue: 'https://reactjs.com'},
+  {
+    name: 'additive',
+    containerTagName: 'svg',
+    tagName: 'animate',
+    read: getAttribute('additive'),
+  },
+  {
+    name: 'alignment-baseline',
+    containerTagName: 'svg',
+    tagName: 'textPath',
+    read: getAttribute('alignment-baseline'),
+  },
   {
     name: 'alignmentBaseline',
     containerTagName: 'svg',
@@ -176,22 +186,47 @@ const attributes = [
     name: 'allowFullscreen',
     tagName: 'iframe',
   },
-  {name: 'allowReorder', containerTagName: 'svg', tagName: 'switch'},
-  {name: 'allowTransparency', containerTagName: 'svg', tagName: 'path'},
-  {name: 'alphabetic', containerTagName: 'svg', tagName: 'path'},
+  {
+    name: 'allowReorder',
+    containerTagName: 'svg',
+    tagName: 'switch',
+    read: getAttribute('allowreorder'),
+  },
+  {
+    name: 'allowTransparency',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('allowtransparency'),
+  },
+  {
+    name: 'alphabetic',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('alphabetic'),
+  },
   {name: 'alt', tagName: 'img'},
-  {name: 'amplitude', containerTagName: 'svg', tagName: 'path'},
-  {name: 'arabic-form', containerTagName: 'svg', tagName: 'path'},
+  {
+    name: 'amplitude',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('amplitude'),
+  },
+  {
+    name: 'arabic-form',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('arabic-form'),
+  },
   {
     name: 'arabicForm',
     containerTagName: 'svg',
     tagName: 'path',
     read: getAttribute('arabic-form'),
   },
-  {name: 'aria'},
-  {name: 'aria-'},
-  {name: 'aria-invalidattribute'},
-  {name: 'as'},
+  {name: 'aria', read: getAttribute('aria')},
+  {name: 'aria-', read: getAttribute('aria-')},
+  {name: 'aria-invalidattribute', read: getAttribute('aria-invalidattribute')},
+  {name: 'as', read: getAttribute('aria-invalidattribute')},
   {
     name: 'ascent',
     containerTagName: 'svg',
@@ -227,7 +262,7 @@ const attributes = [
     name: 'autoCorrect',
     tagName: 'input',
     overrideStringValue: 'off',
-    read: getProperty('autocorrect'),
+    read: getAttribute('autocorrect'), // Chrome doesn't support the property.
   },
   {name: 'autoPlay', tagName: 'video', read: getProperty('autoplay')},
   {
@@ -309,10 +344,19 @@ const attributes = [
     tagName: 'font-face',
     read: getAttribute('cap-height'),
   },
-  {name: 'capture', tagName: 'input'}, // TODO
+  {
+    name: 'capture',
+    tagName: 'input',
+    overrideStringValue: 'environment',
+    read: getAttribute('capture'), // The property is not supported in Chrome.
+  },
   {name: 'cellPadding', tagName: 'table'},
   {name: 'cellSpacing', tagName: 'table'},
-  {name: 'challenge', tagName: 'keygen'}, // TODO
+  {
+    name: 'challenge',
+    tagName: 'keygen',
+    read: getAttribute('challenge'), // The property is not supported in Chrome.
+  },
   {name: 'charSet', tagName: 'script', read: getProperty('charset')},
   {name: 'checked', tagName: 'input'},
   {name: 'Checked', tagName: 'input', read: getAttribute('Checked')},
@@ -324,7 +368,7 @@ const attributes = [
     overrideStringValue: 'http://reactjs.com/',
   },
   {name: 'class', read: getAttribute('class')},
-  {name: 'classID', read: getProperty('classid')},
+  {name: 'classID', tagName: 'object', read: getAttribute('classid')},
   {name: 'className'},
   {name: 'clip', tagName: 'svg', read: getAttribute('clip')},
   {
@@ -345,8 +389,18 @@ const attributes = [
     tagName: 'clipPath',
     read: getAttribute('clipPathUnits'),
   },
-  {name: 'clip-rule'}, // TODO
-  {name: 'clipRule'}, // TODO
+  {
+    name: 'clip-rule',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('clip-rule'),
+  },
+  {
+    name: 'clipRule',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('clip-rule'),
+  },
   {
     name: 'color',
     containerTagName: 'svg',
@@ -423,7 +477,7 @@ const attributes = [
     tagName: 'svg',
     read: getAttribute('contentStyleType'),
   },
-  {name: 'contextMenu', read: getProperty('contextmenu')},
+  {name: 'contextMenu', read: getAttribute('contextmenu')}, // TODO: Read the property by rendering a menu with the ID.
   {name: 'controls', tagName: 'video'},
   {name: 'coords', tagName: 'a'},
   {name: 'crossOrigin', tagName: 'script'},
@@ -454,10 +508,10 @@ const attributes = [
     name: 'DangerouslySetInnerHTML',
     read: getAttribute('DangerouslySetInnerHTML'),
   },
-  {name: 'data'},
-  {name: 'data-'},
+  {name: 'data', read: getAttribute('data')},
+  {name: 'data-', read: getAttribute('data-')},
   {name: 'data-unknownattribute', read: getAttribute('data-unknownattribute')},
-  {name: 'datatype'},
+  {name: 'datatype', read: getAttribute('datatype')},
   {
     name: 'dateTime',
     tagName: 'time',
@@ -683,8 +737,7 @@ const attributes = [
     overrideStringValue: 'inherit',
     read: getAttribute('flood-opacity'),
   },
-  {name: 'focusable', tagName: 'p'},
-  // start here Sebastian
+  {name: 'focusable', tagName: 'p', read: getAttribute('focusable')},
   {name: 'font-family', read: getAttribute('font-family')},
   {name: 'font-size', read: getAttribute('font-size')},
   {name: 'font-size-adjust', read: getAttribute('font-size-adjust')},
