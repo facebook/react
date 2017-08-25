@@ -8,6 +8,8 @@
 
 # production
 /build
+/public/react.development.js
+/public/react-dom.development.js
 
 # misc
 .DS_Store
