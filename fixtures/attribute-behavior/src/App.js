@@ -1253,11 +1253,12 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     container = document.createElement(containerTagName);
   }
 
+  let testValue;
   let defaultValue;
   try {
     const read = attribute.read || getProperty(attribute.name);
 
-    let testValue = type.testValue;
+    testValue = type.testValue;
     if (attribute.overrideStringValue !== undefined) {
       switch (type.name) {
         case 'string':
@@ -1285,6 +1286,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     const result = read(container.firstChild);
 
     return {
+      testValue,
+      defaultValue,
       defaultValue,
       result,
       didWarn: _didWarn,
@@ -1292,6 +1295,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     };
   } catch (error) {
     return {
+      testValue,
+      defaultValue,
       defaultValue,
       result: null,
       didWarn: _didWarn,
@@ -1398,23 +1403,110 @@ function RendererResult({version, result, defaultValue, didWarn, didError}) {
   return <div css={style}>{displayResult}</div>;
 }
 
-function Result(props) {
-  const {react15, react16, hasSameBehavior} = props;
-  const style = {position: 'absolute', width: '100%', height: '100%'};
-  if (!hasSameBehavior) {
-    style.border = '4px solid purple';
-  }
+function ResultPopover(props) {
   return (
-    <div css={style}>
-      <div css={{position: 'absolute', width: '50%', height: '100%'}}>
-        <RendererResult version={15} {...react15} />
-      </div>
-      <div
-        css={{position: 'absolute', width: '50%', left: '50%', height: '100%'}}>
-        <RendererResult version={16} {...react16} />
-      </div>
-    </div>
+    <pre
+      css={{
+        padding: '1em',
+        width: '25em',
+      }}>
+      {JSON.stringify(
+        {
+          react15: props.react15,
+          react16: props.react16,
+          hasSameBehavior: props.hasSameBehavior,
+        },
+        null,
+        2,
+      )}
+    </pre>
   );
+}
+
+class Result extends React.Component {
+  state = {showInfo: false};
+  onMouseEnter = () => {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+    this.timeout = setTimeout(() => {
+      this.setState({showInfo: true});
+    }, 250);
+  };
+  onMouseLeave = () => {
+    if (this.timeout) {
+      clearTimeout(this.timeout);
+    }
+    this.setState({showInfo: false});
+  };
+
+  componentWillUnmount() {
+    if (this.timeout) {
+      clearTimeout(this.interval);
+    }
+  }
+
+  render() {
+    const {react15, react16, hasSameBehavior} = this.props;
+    const style = {
+      position: 'absolute',
+      width: '100%',
+      height: '100%',
+    };
+
+    let highlight = null;
+    let popover = null;
+    if (this.state.showInfo) {
+      highlight = (
+        <div
+          css={{
+            position: 'absolute',
+            height: '100%',
+            width: '100%',
+            border: '2px solid blue',
+          }}
+        />
+      );
+
+      popover = (
+        <div
+          css={{
+            backgroundColor: 'white',
+            border: '1px solid black',
+            position: 'absolute',
+            top: '100%',
+            zIndex: 999,
+          }}>
+          <ResultPopover {...this.props} />
+        </div>
+      );
+    }
+
+    if (!hasSameBehavior) {
+      style.border = '4px solid purple';
+    }
+    return (
+      <div
+        css={style}
+        onMouseEnter={this.onMouseEnter}
+        onMouseLeave={this.onMouseLeave}>
+        <div css={{position: 'absolute', width: '50%', height: '100%'}}>
+          <RendererResult version={15} {...react15} />
+        </div>
+        <div
+          css={{
+            position: 'absolute',
+            width: '50%',
+            left: '50%',
+            height: '100%',
+          }}>
+          <RendererResult version={16} {...react16} />
+        </div>
+        {highlight}
+        {popover}
+      </div>
+    );
+  }
 }
 
 function ColumnHeader({children}) {
