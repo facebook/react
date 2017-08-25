@@ -642,10 +642,10 @@ const attributes = [
   {name: 'slope'},
   {name: 'spacing'},
   {name: 'span'},
-  {name: 'specularConstant'},
-  {name: 'specularExponent'},
-  {name: 'speed'},
   // Done from here down
+  {name: 'specularConstant', read: getAttribute('specularConstant')},
+  {name: 'specularExponent', read: getAttribute('specularConstant')},
+  {name: 'speed', read: getAttribute('speed')},
   {name: 'spellCheck', overrideStringValue: 'false', tagName: 'input'},
   {name: 'spreadMethod', read: getAttribute('spreadMethod')},
   {name: 'src', tagName: 'img'},
