@@ -1380,17 +1380,17 @@ function RendererResult({version, result, defaultValue, didWarn, didError}) {
       displayResult = '<symbol>';
       break;
     case 'number':
-      displayResult = `<Number: ${result}>`;
+      displayResult = `<number: ${result}>`;
       break;
     case 'string':
       if (result === '') {
         displayResult = '<empty string>';
         break;
       }
-      displayResult = result;
+      displayResult = '"' + result + '"';
       break;
     case 'boolean':
-      displayResult = `<Boolean: ${result}>`;
+      displayResult = `<boolean: ${result}>`;
       break;
     default:
       throw new Error('Switch statement should be exhaustive.');
