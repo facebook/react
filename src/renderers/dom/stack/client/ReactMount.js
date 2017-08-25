@@ -85,7 +85,7 @@ function internalGetID(node) {
 /**
  * Mounts this component and inserts it into the DOM.
  *
- * @param {ReactComponent} componentInstance The instance to mount.
+ * @param {ReactComponent} wrapperInstance The instance to mount.
  * @param {DOMElement} container DOM element to mount into.
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup

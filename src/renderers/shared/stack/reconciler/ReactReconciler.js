@@ -32,8 +32,8 @@ var ReactReconciler = {
    *
    * @param {ReactComponent} internalInstance
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {?object} the containing host component instance
-   * @param {?object} info about the host container
+   * @param {?object} hostParent the containing host component instance
+   * @param {?object} hostContainerInfo info about the host container
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
