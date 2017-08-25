@@ -1417,7 +1417,7 @@ function ResultPopover(props) {
           hasSameBehavior: props.hasSameBehavior,
         },
         null,
-        2,
+        2
       )}
     </pre>
   );

@@ -19,6 +19,6 @@ import './index.css';
 
   ReactDOM.render(
     React.createElement(App.default),
-    document.getElementById('root'),
+    document.getElementById('root')
   );
 })();
