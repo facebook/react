@@ -19,6 +19,8 @@ var rARIACamel = new RegExp(
   '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
 );
 
+var hasOwnProperty = Object.prototype.hasOwnProperty;
+
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var {
@@ -42,7 +44,7 @@ function getStackAddendum(debugID) {
 }
 
 function validateProperty(tagName, name, debugID) {
-  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+  if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
   }
 

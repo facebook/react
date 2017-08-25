@@ -36,12 +36,13 @@ function getStackAddendum(debugID) {
 
 if (__DEV__) {
   var warnedProperties = {};
+  var hasOwnProperty = Object.prototype.hasOwnProperty;
   var EVENT_NAME_REGEX = /^on[A-Z]/;
   var ARIA_NAME_REGEX = /^aria-/i;
   var possibleStandardNames = require('possibleStandardNames');
 
   var validateProperty = function(tagName, name, value, debugID) {
-    if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
 
