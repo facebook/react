@@ -12,11 +12,16 @@
 
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
+import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 import type {ReactNodeList} from 'ReactTypes';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
-var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
+var {
+  insertUpdateIntoFiber,
+  createUpdateQueue,
+} = require('ReactFiberUpdateQueue');
 
 var {
   findCurrentUnmaskedContext,
@@ -48,6 +53,17 @@ export type Deadline = {
 
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
+
+type Awaitable<T> = {
+  then(resolve: (result: T) => mixed): void,
+};
+
+type Work = Awaitable<void> & {
+  commit(): void,
+
+  _reactRootContainer: *,
+  _expirationTime: ExpirationTime,
+};
 
 export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
@@ -197,7 +213,7 @@ export type Reconciler<C, I, TI> = {
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
-  ): void,
+  ): Work,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -249,7 +265,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     current: Fiber,
     element: ReactNodeList,
     callback: ?Function,
-  ) {
+  ): ExpirationTime {
     if (__DEV__) {
       if (
         ReactDebugCurrentFiber.phase === 'render' &&
@@ -293,20 +309,98 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback,
       );
     }
-    addTopLevelUpdate(
-      current,
-      nextState,
-      callback,
+    const isTopLevelUnmount = nextState.element === null;
+    const update = {
       priorityLevel,
       expirationTime,
-      currentTime,
-    );
+      partialState: nextState,
+      callback,
+      isReplace: false,
+      isForced: false,
+      isTopLevelUnmount,
+      next: null,
+    };
+    const update2 = insertUpdateIntoFiber(current, update, currentTime);
+
+    if (isTopLevelUnmount) {
+      // TODO: Redesign the top-level mount/update/unmount API to avoid this
+      // special case.
+      const queue1 = current.updateQueue;
+      const queue2 = current.alternate !== null
+        ? current.alternate.updateQueue
+        : null;
+
+      // Drop all updates that are lower-priority, so that the tree is not
+      // remounted. We need to do this for both queues.
+      if (queue1 !== null && update.next !== null) {
+        update.next = null;
+        queue1.last = update;
+      }
+      if (queue2 !== null && update2 !== null && update2.next !== null) {
+        update2.next = null;
+        queue2.last = update;
+      }
+    }
+
     scheduleUpdate(current, expirationTime);
+    return expirationTime;
   }
+
+  function WorkNode(root: OpaqueRoot, expirationTime: ExpirationTime) {
+    this._reactRootContainer = root;
+    this._expirationTime = expirationTime;
+  }
+  WorkNode.prototype.commit = function() {};
+  WorkNode.prototype.then = function(resolve) {
+    // const fiber = this._reactRootContainer.current;
+    // const expirationTime = this._expirationTime;
+    // const currentTime = recalculateCurrentTime();
+    // addCallback(fiber, resolve, null, expirationTime, currentTime);
+    // scheduleUpdate(fiber, expirationTime);
+  };
 
   return {
     createContainer(containerInfo: C): OpaqueRoot {
       return createFiberRoot(containerInfo);
+    },
+
+    updateRoot(
+      element: ReactNodeList,
+      container: OpaqueRoot,
+      parentComponent: ?React$Component<any, any>,
+      didComplete: ?Function,
+    ) {
+      const current = container.current;
+
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          if (current.alternate === null) {
+            ReactFiberInstrumentation.debugTool.onMountContainer(container);
+          } else if (element === null) {
+            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+          } else {
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+          }
+        }
+      }
+
+      const context = getContextForSubtree(parentComponent);
+      if (container.context === null) {
+        container.context = context;
+      } else {
+        container.pendingContext = context;
+      }
+
+      const expirationTime = scheduleTopLevelUpdate(current, element);
+
+      let completionCallbacks = container.completionCallbacks;
+      if (completionCallbacks === null) {
+        completionCallbacks = createUpdateQueue();
+      }
+
+      // TODO: Add didComplete to root's completionCallbacks
+
+      return new WorkNode(container, expirationTime);
     },
 
     updateContainer(
@@ -314,7 +408,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
       callback: ?Function,
-    ): void {
+    ): Work {
       // TODO: If this is a nested container, this won't be the root.
       const current = container.current;
 

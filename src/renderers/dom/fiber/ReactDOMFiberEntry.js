@@ -10,6 +10,7 @@
 
 'use strict';
 
+import type {Work} from 'ReactFiberReconciler';
 import type {ReactNodeList} from 'ReactTypes';
 
 require('checkReact');
@@ -798,7 +799,64 @@ function createPortal(
   return ReactPortal.createPortal(children, container, null, key);
 }
 
+type PublicRoot = {
+  render(children: ReactNodeList, callback: () => mixed): Work,
+  prerender(children: ReactNodeList, callback: () => mixed): Work,
+  unmount(callback: () => mixed): Work,
+
+  _reactRootContainer: *,
+  _getComponent: () => DOMContainer,
+};
+
+function PublicRootNode(
+  container: DOMContainer | (() => DOMContainer),
+  namespace: ?string,
+) {
+  if (typeof container === 'function') {
+    if (typeof namespace !== 'string') {
+      // Default to HTML namespace
+      namespace = DOMNamespaces.html;
+    }
+    this._reactRootContainer = DOMRenderer.createContainer(namespace);
+    this._getComponent = container;
+  } else {
+    // Assume this is a DOM container
+    const domContainer: DOMContainer = (container: any);
+    this._reactRootContainer = DOMRenderer.createContainer(domContainer);
+    this._getComponent = function() {
+      return domContainer;
+    };
+  }
+}
+PublicRootNode.prototype.render = function(
+  children: ReactNodeList,
+  callback: () => mixed,
+): Work {
+  return DOMRenderer.updateContainer(
+    children,
+    this._reactRootContainer,
+    null,
+    callback,
+  );
+};
+PublicRootNode.prototype.prerender = function() {};
+PublicRootNode.prototype.unmount = function() {
+  return DOMRenderer.updateContainer(
+    null,
+    this._reactRootContainer,
+    null,
+    null,
+  );
+};
+
 var ReactDOMFiber = {
+  unstable_create(
+    container: DOMContainer | (() => DOMContainer),
+    namespace: ?string,
+  ): PublicRoot {
+    return new PublicRootNode(container, namespace);
+  },
+
   createPortal,
 
   findDOMNode(
