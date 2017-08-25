@@ -124,11 +124,10 @@ var ReactNativeEventEmitter = {
    * @param {object} nativeEventParam Object passed from native.
    */
   receiveEvent: function(
-    tag: number,
+    rootNodeID: number,
     topLevelType: string,
     nativeEventParam: Object,
   ) {
-    var rootNodeID = tag;
     ReactNativeEventEmitter._receiveRootNodeIDEvent(
       rootNodeID,
       topLevelType,
