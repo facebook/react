@@ -13,6 +13,8 @@ fixtures/
 # Ignore built files.
 build/
 coverage/
+scripts/attribute-behavior/public/react-dom.production.min.js
+scripts/attribute-behavior/public/react.production.min.js
 scripts/bench/benchmarks/**/*.js
 scripts/bench/remote-repo/
 vendor/*

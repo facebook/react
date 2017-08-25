@@ -39,7 +39,11 @@ const config = {
   },
   scripts: {
     patterns: ['scripts/**/*.js', 'fixtures/**/*.js'],
-    ignore: ['scripts/bench/benchmarks/**'],
+    ignore: [
+      'scripts/bench/benchmarks/**',
+      'scripts/attribute-behavior/public/react.production.min.js',
+      'scripts/attribute-behavior/public/react-dom.production.min.js',
+    ],
     options: {
       'trailing-comma': 'es5',
     },
