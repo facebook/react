@@ -326,13 +326,33 @@ const attributes = [
   {name: 'class', read: getAttribute('class')},
   {name: 'classID', read: getProperty('classid')},
   {name: 'className'},
-  {name: 'clip'},
-  {name: 'clip-path'},
-  {name: 'clip-rule'},
-  {name: 'clipPath', read: getAttribute('clip-path')},
-  {name: 'clipPathUnits'},
-  {name: 'clipRule', read: getAttribute('clip-rule')},
-  {name: 'color'},
+  {name: 'clip', tagName: 'svg', read: getAttribute('clip')},
+  {
+    name: 'clip-path',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('clip-path'),
+  },
+  {
+    name: 'clipPath',
+    containerTagName: 'svg',
+    tagName: 'path',
+    read: getAttribute('clip-path'),
+  },
+  {
+    name: 'clipPathUnits',
+    containerTagName: 'svg',
+    tagName: 'clipPath',
+    read: getAttribute('clipPathUnits'),
+  },
+  {name: 'clip-rule'}, // TODO
+  {name: 'clipRule'}, // TODO
+  {
+    name: 'color',
+    containerTagName: 'svg',
+    tagName: 'text',
+    read: getAttribute('color'),
+  },
   {name: 'color-interpolation'},
   {name: 'color-interpolation-filters'},
   {name: 'color-profile'},
@@ -650,7 +670,12 @@ const attributes = [
   {name: 'spreadMethod', read: getAttribute('spreadMethod')},
   {name: 'src', tagName: 'img'},
   {name: 'srcDoc', tagName: 'iframe', overrideStringValue: '<p>Hi</p>'},
-  {name: 'srcLang', containerTagName: 'audio', tagName: 'track', overrideStringValue: 'en'},
+  {
+    name: 'srcLang',
+    containerTagName: 'audio',
+    tagName: 'track',
+    overrideStringValue: 'en',
+  },
   {name: 'srcSet', tagName: 'img'},
   {name: 'start', tagName: 'ol'},
   {name: 'startOffset', read: getAttribute('startOffset')},
@@ -664,8 +689,14 @@ const attributes = [
   {name: 'stop-opacity', read: getAttribute('stop-opacity')},
   {name: 'stopColor', read: getAttribute('stop-color')},
   {name: 'stopOpacity', read: getAttribute('stop-opacity')},
-  {name: 'strikethrough-position', read: getAttribute('strikethrough-thickness')},
-  {name: 'strikethrough-thickness', read: getAttribute('strikethrough-thickness')},
+  {
+    name: 'strikethrough-position',
+    read: getAttribute('strikethrough-thickness'),
+  },
+  {
+    name: 'strikethrough-thickness',
+    read: getAttribute('strikethrough-thickness'),
+  },
   {name: 'strikethroughPosition', read: getAttribute('strikethrough-position')},
   {
     name: 'strikethroughThickness',
@@ -724,7 +755,12 @@ const attributes = [
   {name: 'units-per-em', read: getAttribute('units-per-em')},
   {name: 'unitsPerEm', read: getAttribute('unites-per-em')},
   {name: 'unknown', read: getAttribute('unknown')},
-  {name: 'unselectable', read: getAttribute('unselectable'), tagName: 'span', overrideStringValue: 'on'}, // seems to be IE only
+  {
+    name: 'unselectable',
+    read: getAttribute('unselectable'),
+    tagName: 'span',
+    overrideStringValue: 'on',
+  }, // seems to be IE only
   {name: 'useMap', tagName: 'img'},
   {name: 'v-alphabetic', read: getAttribute('v-alphabetic')},
   {name: 'v-hanging', read: getAttribute('v-hanging')},
@@ -786,7 +822,9 @@ const attributes = [
   {name: 'xml:space', read: getAttribute('xml:space')},
   {name: 'xmlBase', read: getAttribute('xml:base')},
   {name: 'xmlLang', read: getAttribute('xml:lang')},
-  {name: 'xmlns', read: getProperty('namespaceURI'),
+  {
+    name: 'xmlns',
+    read: getProperty('namespaceURI'),
     tagName: 'svg',
   },
   {name: 'xmlns:xlink', read: getAttribute('xmlns:xlink')},
