@@ -247,7 +247,7 @@ The `componentDidMount()` hook runs after the component output has been rendered
   }
 ```
 
-Note how we save the timer ID right on `this`.
+Note how we save the timer ID write on `this`.
 
 While `this.props` is set up by React itself and `this.state` has a special meaning, you are free to add additional fields to the class manually if you need to store something that is not used for the visual output.
 
