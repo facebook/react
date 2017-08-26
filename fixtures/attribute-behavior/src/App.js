@@ -28,13 +28,13 @@ function getRenderedAttributeValues(attribute, type) {
     React15,
     ReactDOM15,
     attribute,
-    type,
+    type
   );
   const react16Value = getRenderedAttributeValue(
     React16,
     ReactDOM16,
     attribute,
-    type,
+    type
   );
 
   let hasSameBehavior;
@@ -147,7 +147,7 @@ function ResultPopover(props) {
           hasSameBehavior: props.hasSameBehavior,
         },
         null,
-        2,
+        2
       )}
     </pre>
   );

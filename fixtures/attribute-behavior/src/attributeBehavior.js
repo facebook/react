@@ -1,4 +1,4 @@
-export const types = [
+const types = [
   {
     name: 'string',
     testValue: 'a string',
@@ -122,7 +122,7 @@ function getSVGAttribute(attributeName) {
   };
 }
 
-export const attributes = [
+const attributes = [
   {name: 'about', read: getAttribute('about')},
   {name: 'aBoUt', read: getAttribute('about')},
   {
@@ -2364,7 +2364,7 @@ function warn(str) {
   _didWarn = true;
 }
 
-export function getRenderedAttributeValue(React, ReactDOM, attribute, type) {
+function getRenderedAttributeValue(React, ReactDOM, attribute, type) {
   _didWarn = false;
   const originalConsoleError = console.error;
   console.error = warn;
@@ -2432,3 +2432,7 @@ export function getRenderedAttributeValue(React, ReactDOM, attribute, type) {
     console.error = originalConsoleError;
   }
 }
+
+exports.attributes = attributes;
+exports.types = types;
+exports.getRenderedAttributeValue = getRenderedAttributeValue;
