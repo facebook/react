@@ -2376,6 +2376,19 @@ const attributes = [
   {name: 'zoomAndPan', read: getSVGAttribute('zoomAndPan'), tagName: 'svg'},
 ];
 
+const ALPHABETICAL = 'alphabetical';
+const REV_ALPHABETICAL = 'reverse_alphabetical';
+const GROUPED_BY_ROW_PATTERN = 'grouped_by_row_pattern';
+
+const attributesSorted = {
+  [ALPHABETICAL]: attributes
+    .slice(0)
+    .sort((attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)),
+  [REV_ALPHABETICAL]: attributes
+    .slice(0)
+    .sort((attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)),
+};
+
 let _didWarn = false;
 function warn(str) {
   _didWarn = true;
@@ -2473,45 +2486,42 @@ function getRenderedAttributeValues(attribute, type) {
 }
 
 const table = new Map();
+const groupByRowPattern = new Map();
 
 // Disable error overlay while test each attribute
 uninjectErrorOverlay();
 for (let attribute of attributes) {
   const row = new Map();
+  let rowHash = '';
   for (let type of types) {
     const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
+    rowHash +=
+      getResultDisplayString(result.react15.result) +
+      getResultDisplayString(result.react16.result);
   }
   table.set(attribute, row);
+  if (!groupByRowPattern.get(rowHash)) {
+    groupByRowPattern.set(rowHash, []);
+  }
+  const updatedAttributesArray = groupByRowPattern.get(rowHash);
+  updatedAttributesArray.push(attribute);
+  groupByRowPattern.set(rowHash, updatedAttributesArray);
 }
+
+let attributesSortedByRowPattern = [];
+groupByRowPattern.forEach(arrayOfAttributes => {
+  attributesSortedByRowPattern = attributesSortedByRowPattern.concat(
+    arrayOfAttributes
+  );
+});
+
+attributesSorted[GROUPED_BY_ROW_PATTERN] = attributesSortedByRowPattern;
+
 // Renable error overlay
 injectErrorOverlay();
 
-const successColor = 'white';
-const warnColor = 'yellow';
-const errorColor = 'red';
-
-function RendererResult({version, result, defaultValue, didWarn, didError}) {
-  let backgroundColor;
-  if (didError) {
-    backgroundColor = errorColor;
-  } else if (didWarn) {
-    backgroundColor = warnColor;
-  } else if (result !== defaultValue) {
-    backgroundColor = 'cyan';
-  } else {
-    backgroundColor = successColor;
-  }
-
-  let style = {
-    display: 'flex',
-    alignItems: 'center',
-    position: 'absolute',
-    height: '100%',
-    width: '100%',
-    backgroundColor,
-  };
-
+function getResultDisplayString(result) {
   let displayResult;
   switch (typeof result) {
     case 'undefined':
@@ -2546,8 +2556,35 @@ function RendererResult({version, result, defaultValue, didWarn, didError}) {
     default:
       throw new Error('Switch statement should be exhaustive.');
   }
+  return displayResult;
+}
 
-  return <div css={style}>{displayResult}</div>;
+const successColor = 'white';
+const warnColor = 'yellow';
+const errorColor = 'red';
+
+function RendererResult({version, result, defaultValue, didWarn, didError}) {
+  let backgroundColor;
+  if (didError) {
+    backgroundColor = errorColor;
+  } else if (didWarn) {
+    backgroundColor = warnColor;
+  } else if (result !== defaultValue) {
+    backgroundColor = 'cyan';
+  } else {
+    backgroundColor = successColor;
+  }
+
+  let style = {
+    display: 'flex',
+    alignItems: 'center',
+    position: 'absolute',
+    height: '100%',
+    width: '100%',
+    backgroundColor,
+  };
+
+  return <div css={style}>{getResultDisplayString(result)}</div>;
 }
 
 function ResultPopover(props) {
@@ -2687,9 +2724,8 @@ function RowHeader({children}) {
 }
 
 function CellContent(props) {
-  const {columnIndex, rowIndex} = props;
-
-  const attribute = attributes[rowIndex - 1];
+  const {columnIndex, rowIndex, attributesInSortedOrder} = props;
+  const attribute = attributesInSortedOrder[rowIndex - 1];
   const type = types[columnIndex - 1];
 
   if (columnIndex === 0) {
@@ -2709,30 +2745,73 @@ function CellContent(props) {
   return <Result {...result} />;
 }
 
-function cellRenderer(props) {
-  return <div style={props.style}><CellContent {...props} /></div>;
-}
-
 class App extends Component {
+  constructor() {
+    super();
+    this.state = {sortOrder: REV_ALPHABETICAL};
+    this._renderCell = this.renderCell.bind(this);
+    this._onUpdateSort = this.onUpdateSort.bind(this);
+  }
+
+  renderCell(props) {
+    return (
+      <div style={props.style}>
+        <CellContent
+          attributesInSortedOrder={attributesSorted[this.state.sortOrder]}
+          {...props}
+        />
+      </div>
+    );
+  }
+
+  onUpdateSort(e) {
+    this.setState({sortOrder: e.target.value});
+    this.grid.forceUpdateGrids();
+  }
+
   render() {
     return (
-      <AutoSizer disableHeight={true}>
-        {({width}) => (
-          <MultiGrid
-            cellRenderer={cellRenderer}
-            columnWidth={200}
-            columnCount={1 + types.length}
-            fixedColumnCount={1}
-            enableFixedColumnScroll={true}
-            enableFixedRowScroll={true}
-            height={1200}
-            rowHeight={40}
-            rowCount={attributes.length + 1}
-            fixedRowCount={1}
-            width={width}
-          />
-        )}
-      </AutoSizer>
+      <div>
+        <div>
+          <select onChange={this._onUpdateSort}>
+            <option
+              selected={this.state.sortOrder === ALPHABETICAL}
+              value={ALPHABETICAL}>
+              alphabetical
+            </option>
+            <option
+              selected={this.state.sortOrder === REV_ALPHABETICAL}
+              value={REV_ALPHABETICAL}>
+              reverse alphabetical
+            </option>
+            <option
+              selected={this.state.sortOrder === GROUPED_BY_ROW_PATTERN}
+              value={GROUPED_BY_ROW_PATTERN}>
+              grouped by row pattern :)
+            </option>
+          </select>
+        </div>
+        <AutoSizer disableHeight={true}>
+          {({width}) => (
+            <MultiGrid
+              ref={input => {
+                this.grid = input;
+              }}
+              cellRenderer={this._renderCell}
+              columnWidth={200}
+              columnCount={1 + types.length}
+              fixedColumnCount={1}
+              enableFixedColumnScroll={true}
+              enableFixedRowScroll={true}
+              height={1200}
+              rowHeight={40}
+              rowCount={attributes.length + 1}
+              fixedRowCount={1}
+              width={width}
+            />
+          )}
+        </AutoSizer>
+      </div>
     );
   }
 }
