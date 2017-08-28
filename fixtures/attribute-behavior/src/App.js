@@ -984,7 +984,9 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'font-face',
   },
-  {name: 'hasOwnProperty', read: getAttribute('hasOwnProperty')},
+  // Disabled because it crashes other tests with React 15.
+  // TODO: re-enable when we no longer compare to 15.
+  // {name: 'hasOwnProperty', read: getAttribute('hasOwnProperty')},
   {name: 'headers', tagName: 'td'},
   {name: 'height', tagName: 'img'},
   {
