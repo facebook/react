@@ -76,7 +76,7 @@ const types = [
   },
   {
     name: 'false',
-    testValue: 'false',
+    testValue: false,
   },
   {
     name: "string 'true'",
