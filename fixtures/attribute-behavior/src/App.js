@@ -2428,20 +2428,14 @@ const ALPHABETICAL = 'alphabetical';
 const REV_ALPHABETICAL = 'reverse_alphabetical';
 const GROUPED_BY_ROW_PATTERN = 'grouped_by_row_pattern';
 
-const attributesSorted = {
-  [ALPHABETICAL]: attributes
-    .slice(0)
-    .sort((attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)),
-  [REV_ALPHABETICAL]: attributes
-    .slice(0)
-    .sort((attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)),
-};
+const ALL = 'all';
+const COMPLETE = 'complete';
+const INCOMPLETE = 'incomplete';
 
 function getCanonicalizedValue(value) {
   switch (typeof value) {
     case 'undefined':
       return '<undefined>';
-      break;
     case 'object':
       if (value === null) {
         return '<null>';
@@ -2522,7 +2516,6 @@ function getCanonicalizedValue(value) {
     default:
       throw new Error('Switch statement should be exhaustive.');
   }
-  return value;
 }
 
 let _didWarn = false;
@@ -2628,17 +2621,20 @@ function getRenderedAttributeValues(attribute, type) {
 }
 
 const table = new Map();
-const groupByRowPattern = new Map();
 
-// Disable error overlay while test each attribute
+// Disable error overlay while testing each attribute
 uninjectErrorOverlay();
 for (let attribute of attributes) {
-  const row = new Map();
-  let rowHash = '';
+  const results = new Map();
+  let hasSameBehaviorForAll = true;
+  let rowPatternHash = '';
   for (let type of types) {
     const result = getRenderedAttributeValues(attribute, type);
-    row.set(type.name, result);
-    rowHash += [result.react15, result.react16]
+    results.set(type.name, result);
+    if (!result.hasSameBehavior) {
+      hasSameBehaviorForAll = false;
+    }
+    rowPatternHash += [result.react15, result.react16]
       .map(res =>
         [
           res.canonicalResult,
@@ -2649,23 +2645,15 @@ for (let attribute of attributes) {
       )
       .join('||');
   }
+  const row = {
+    results,
+    hasSameBehaviorForAll,
+    rowPatternHash,
+    // "Good enough" id that we can store in localStorage
+    rowIdHash: `${attribute.name} ${attribute.tagName} ${attribute.overrideStringValue}`,
+  };
   table.set(attribute, row);
-  if (!groupByRowPattern.get(rowHash)) {
-    groupByRowPattern.set(rowHash, []);
-  }
-  const updatedAttributesArray = groupByRowPattern.get(rowHash);
-  updatedAttributesArray.push(attribute);
-  groupByRowPattern.set(rowHash, updatedAttributesArray);
 }
-
-let attributesSortedByRowPattern = [];
-groupByRowPattern.forEach(arrayOfAttributes => {
-  attributesSortedByRowPattern = attributesSortedByRowPattern.concat(
-    arrayOfAttributes
-  );
-});
-
-attributesSorted[GROUPED_BY_ROW_PATTERN] = attributesSortedByRowPattern;
 
 // Renable error overlay
 injectErrorOverlay();
@@ -2827,7 +2815,7 @@ function ColumnHeader({children}) {
   );
 }
 
-function RowHeader({children}) {
+function RowHeader({children, checked, onChange}) {
   return (
     <div
       css={{
@@ -2838,12 +2826,19 @@ function RowHeader({children}) {
         alignItems: 'center',
       }}>
       {children}
+      <input type="checkbox" checked={checked} onChange={onChange} />
     </div>
   );
 }
 
 function CellContent(props) {
-  const {columnIndex, rowIndex, attributesInSortedOrder} = props;
+  const {
+    columnIndex,
+    rowIndex,
+    attributesInSortedOrder,
+    completedAttributes,
+    toggleAttribute,
+  } = props;
   const attribute = attributesInSortedOrder[rowIndex - 1];
   const type = types[columnIndex - 1];
 
@@ -2851,12 +2846,14 @@ function CellContent(props) {
     if (rowIndex === 0) {
       return null;
     }
-    const hasSameBehaviorForAll = types.every(
-      type => table.get(attribute).get(type.name).hasSameBehavior
-    );
+    const row = table.get(attribute);
     return (
-      <RowHeader>
-        {hasSameBehaviorForAll ? attribute.name : <b>{attribute.name}</b>}
+      <RowHeader
+        checked={completedAttributes.has(attribute)}
+        onChange={() => toggleAttribute(attribute)}>
+        {row.hasSameBehaviorForAll
+          ? attribute.name
+          : <b css={{color: 'purple'}}>{attribute.name}</b>}
       </RowHeader>
     );
   }
@@ -2866,40 +2863,149 @@ function CellContent(props) {
   }
 
   const row = table.get(attribute);
-  const result = row.get(type.name);
+  const result = row.results.get(type.name);
 
   return <Result {...result} />;
 }
 
-class App extends Component {
-  constructor() {
-    super();
-    this.state = {sortOrder: REV_ALPHABETICAL};
-    this._renderCell = this.renderCell.bind(this);
-    this._onUpdateSort = this.onUpdateSort.bind(this);
-  }
+function saveToLocalStorage(completedAttributes) {
+  let array = [];
+  completedAttributes.forEach(attr => {
+    const row = table.get(attr);
+    array.push(row.rowIdHash);
+  });
+  const str = JSON.stringify(array);
+  localStorage.setItem('completedAttributes', str);
+  console.log(localStorage.getItem('completedAttributes'));
+}
 
-  renderCell(props) {
+function restoreFromLocalStorage() {
+  const str = localStorage.getItem('completedAttributes');
+  if (str) {
+    const completedIds = new Set(JSON.parse(str));
+    const completedAttributes = new Set();
+    attributes.forEach(attr => {
+      const row = table.get(attr);
+      if (completedIds.has(row.rowIdHash)) {
+        completedAttributes.add(attr);
+      }
+    });
+    console.log(completedAttributes);
+    return completedAttributes;
+  }
+  return new Set();
+}
+
+class App extends Component {
+  state = {
+    sortOrder: ALPHABETICAL,
+    filter: ALL,
+    completedAttributes: restoreFromLocalStorage(),
+  };
+
+  renderCell = props => {
     return (
       <div style={props.style}>
         <CellContent
-          attributesInSortedOrder={attributesSorted[this.state.sortOrder]}
+          toggleAttribute={this.toggleAttribute}
+          completedAttributes={this.state.completedAttributes}
+          attributesInSortedOrder={this.attributes}
           {...props}
         />
       </div>
     );
+  };
+
+  onUpdateSort = e => {
+    this.setState({sortOrder: e.target.value});
+  };
+
+  onUpdateFilter = e => {
+    this.setState({filter: e.target.value});
+  };
+
+  toggleAttribute = attribute => {
+    const completedAttributes = new Set(this.state.completedAttributes);
+    if (completedAttributes.has(attribute)) {
+      completedAttributes.delete(attribute);
+    } else {
+      completedAttributes.add(attribute);
+    }
+    this.setState({completedAttributes}, () =>
+      saveToLocalStorage(completedAttributes)
+    );
+  };
+
+  componentWillMount() {
+    this.attributes = this.getAttributes(
+      this.state.sortOrder,
+      this.state.filter
+    );
   }
 
-  onUpdateSort(e) {
-    this.setState({sortOrder: e.target.value});
-    this.grid.forceUpdateGrids();
+  componentWillUpdate(nextProps, nextState) {
+    if (
+      nextState.sortOrder !== this.state.sortOrder ||
+      nextState.filter !== this.state.filter ||
+      nextState.completedAttributes !== this.state.completedAttributes
+    ) {
+      this.attributes = this.getAttributes(
+        nextState.sortOrder,
+        nextState.filter,
+        nextState.completedAttributes
+      );
+      this.grid.forceUpdateGrids();
+    }
+  }
+
+  getAttributes(sortOrder, filter, completedAttributes) {
+    // Filter
+    let filteredAttributes;
+    switch (filter) {
+      case ALL:
+        filteredAttributes = attributes.filter(() => true);
+        break;
+      case COMPLETE:
+        filteredAttributes = attributes.filter(attribute =>
+          completedAttributes.has(attribute)
+        );
+        break;
+      case INCOMPLETE:
+        filteredAttributes = attributes.filter(
+          attribute => !completedAttributes.has(attribute)
+        );
+        break;
+      default:
+        throw new Error('Switch statement should be exhuastive');
+    }
+
+    // Sort
+    switch (sortOrder) {
+      case ALPHABETICAL:
+        return filteredAttributes.sort(
+          (attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)
+        );
+      case REV_ALPHABETICAL:
+        return filteredAttributes.sort(
+          (attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)
+        );
+      case GROUPED_BY_ROW_PATTERN: {
+        return filteredAttributes.sort((attr1, attr2) => {
+          const row1 = table.get(attr1);
+          const row2 = table.get(attr2);
+          return row1.rowPatternHash.localeCompare(row2.rowPatternHash);
+        });
+      }
+      default:
+        throw new Error('Switch statement should be exhuastive');
+    }
   }
 
   render() {
     return (
       <div>
         <div>
-          <select onChange={this._onUpdateSort}>
+          <select onChange={this.onUpdateSort}>
             <option
               selected={this.state.sortOrder === ALPHABETICAL}
               value={ALPHABETICAL}>
@@ -2916,6 +3022,21 @@ class App extends Component {
               grouped by row pattern :)
             </option>
           </select>
+          <select onChange={this.onUpdateFilter}>
+            <option selected={this.state.sortOrder === ALL} value={ALL}>
+              all
+            </option>
+            <option
+              selected={this.state.sortOrder === INCOMPLETE}
+              value={INCOMPLETE}>
+              incomplete
+            </option>
+            <option
+              selected={this.state.sortOrder === COMPLETE}
+              value={COMPLETE}>
+              complete
+            </option>
+          </select>
         </div>
         <AutoSizer disableHeight={true}>
           {({width}) => (
@@ -2923,7 +3044,7 @@ class App extends Component {
               ref={input => {
                 this.grid = input;
               }}
-              cellRenderer={this._renderCell}
+              cellRenderer={this.renderCell}
               columnWidth={200}
               columnCount={1 + types.length}
               fixedColumnCount={1}
@@ -2931,7 +3052,7 @@ class App extends Component {
               enableFixedRowScroll={true}
               height={1200}
               rowHeight={40}
-              rowCount={attributes.length + 1}
+              rowCount={this.attributes.length + 1}
               fixedRowCount={1}
               width={width}
             />
