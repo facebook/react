@@ -649,11 +649,7 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
-  hydrate(
-    element: React$Element<any>,
-    container: DOMContainer,
-    callback: ?Function,
-  ) {
+  hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
     // TODO: throw or warn if we couldn't hydrate?
     return renderSubtreeIntoContainer(null, element, container, true, callback);
   },
