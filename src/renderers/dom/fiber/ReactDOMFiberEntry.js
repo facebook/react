@@ -12,7 +12,6 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
 import type {ReactNodeList} from 'ReactTypes';
 
 require('checkReact');
@@ -31,6 +30,7 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var ReactVersion = require('ReactVersion');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
 var {
@@ -42,7 +42,7 @@ var {
 } = require('HTMLNodeType');
 var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
 
-var findDOMNode = require('findDOMNode');
+var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 var {getChildNamespace} = DOMNamespaces;
@@ -88,9 +88,6 @@ require('ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
-findDOMNode._injectFiber(function(fiber: Fiber) {
-  return DOMRenderer.findHostInstance(fiber);
-});
 
 type DOMContainer =
   | (Element & {
@@ -235,7 +232,7 @@ var DOMRenderer = ReactFiberReconciler({
     if (__DEV__) {
       // TODO: take namespace into account when validating.
       const hostContextDev = ((hostContext: any): HostContextDev);
-      validateDOMNesting(type, null, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(type, null, hostContextDev.ancestorInfo);
       if (
         typeof props.children === 'string' ||
         typeof props.children === 'number'
@@ -246,7 +243,7 @@ var DOMRenderer = ReactFiberReconciler({
           type,
           null,
         );
-        validateDOMNesting(null, string, null, ownAncestorInfo);
+        validateDOMNesting(null, string, ownAncestorInfo);
       }
       parentNamespace = hostContextDev.namespace;
     } else {
@@ -301,7 +298,7 @@ var DOMRenderer = ReactFiberReconciler({
           type,
           null,
         );
-        validateDOMNesting(null, string, null, ownAncestorInfo);
+        validateDOMNesting(null, string, ownAncestorInfo);
       }
     }
     return diffProperties(
@@ -368,7 +365,7 @@ var DOMRenderer = ReactFiberReconciler({
   ): TextInstance {
     if (__DEV__) {
       const hostContextDev = ((hostContext: any): HostContextDev);
-      validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
+      validateDOMNesting(null, text, hostContextDev.ancestorInfo);
     }
     var textNode: TextInstance = document.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
@@ -649,6 +646,48 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
+  findDOMNode(
+    componentOrElement: Element | ?ReactComponent<any, any, any>,
+  ): null | Element | Text {
+    if (__DEV__) {
+      var owner = (ReactCurrentOwner.current: any);
+      if (owner !== null) {
+        var warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
+        warning(
+          warnedAboutRefsInRender,
+          '%s is accessing findDOMNode inside its render(). ' +
+            'render() should be a pure function of props and state. It should ' +
+            'never access something that requires stale data from the previous ' +
+            'render, such as refs. Move this logic to componentDidMount and ' +
+            'componentDidUpdate instead.',
+          getComponentName(owner) || 'A component',
+        );
+        owner.stateNode._warnedAboutRefsInRender = true;
+      }
+    }
+    if (componentOrElement == null) {
+      return null;
+    }
+    if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
+      return (componentOrElement: any);
+    }
+
+    var inst = ReactInstanceMap.get(componentOrElement);
+    if (inst) {
+      return DOMRenderer.findHostInstance(inst);
+    }
+
+    if (typeof componentOrElement.render === 'function') {
+      invariant(false, 'Unable to find node on an unmounted component.');
+    } else {
+      invariant(
+        false,
+        'Element appears to be neither ReactComponent nor DOMNode. Keys: %s',
+        Object.keys(componentOrElement),
+      );
+    }
+  },
+
   hydrate(
     element: ReactElement<any>,
     container: DOMContainer,
@@ -777,8 +816,6 @@ var ReactDOMFiber = {
       return false;
     }
   },
-
-  findDOMNode: findDOMNode,
 
   unstable_createPortal(
     children: ReactNodeList,

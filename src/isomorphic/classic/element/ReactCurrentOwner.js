@@ -12,7 +12,6 @@
 
 'use strict';
 
-import type {ReactInstance} from 'ReactInstanceType';
 import type {Fiber} from 'ReactFiber';
 
 /**
@@ -26,7 +25,7 @@ var ReactCurrentOwner = {
    * @internal
    * @type {ReactComponent}
    */
-  current: (null: null | ReactInstance | Fiber),
+  current: (null: null | Fiber),
 };
 
 module.exports = ReactCurrentOwner;

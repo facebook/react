@@ -13,7 +13,6 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactTestUtils;
 var TogglingComponent;
 
@@ -25,7 +24,6 @@ describe('ReactEmptyComponent', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
 
     log = jasmine.createSpy();
@@ -237,15 +235,8 @@ describe('ReactEmptyComponent', () => {
     var div = document.createElement('div');
 
     try {
-      if (ReactDOMFeatureFlags.useFiber) {
-        ReactDOM.render(null, div);
-        expect(div.innerHTML).toBe('');
-      } else {
-        // Stack does not implement this.
-        expect(function() {
-          ReactDOM.render(null, div);
-        }).toThrowError('ReactDOM.render(): Invalid component element.');
-      }
+      ReactDOM.render(null, div);
+      expect(div.innerHTML).toBe('');
     } finally {
       ReactFeatureFlags.disableNewFiberFeatures = true;
     }
@@ -300,21 +291,11 @@ describe('ReactEmptyComponent', () => {
 
     ReactDOM.render(<Empty />, container);
     var noscript1 = container.firstChild;
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(noscript1).toBe(null);
-    } else {
-      expect(noscript1.nodeName).toBe('#comment');
-    }
+    expect(noscript1).toBe(null);
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
     var noscript2 = container.firstChild;
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(noscript1).toBe(null);
-    } else {
-      expect(noscript2.nodeName).toBe('#comment');
-    }
-
-    expect(noscript1).toBe(noscript2);
+    expect(noscript2).toBe(null);
   });
 });
