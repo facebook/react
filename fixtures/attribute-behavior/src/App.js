@@ -130,6 +130,10 @@ function getAttribute(attributeName) {
   };
 }
 
+function getSVGProperty(propertyName) {
+  return el => el[propertyName];
+}
+
 function getSVGAttribute(attributeName) {
   return el => {
     if (el.namespaceURI !== 'http://www.w3.org/2000/svg') {
@@ -224,7 +228,7 @@ const attributes = [
     name: 'amplitude',
     containerTagName: 'svg',
     tagName: 'feFuncA',
-    read: getSVGAttribute('amplitude'),
+    read: getSVGProperty('amplitude'),
   },
   {
     name: 'arabic-form',
@@ -291,7 +295,7 @@ const attributes = [
     name: 'azimuth',
     containerTagName: 'svg',
     tagName: 'feDistantLight',
-    read: getSVGAttribute('azimuth'),
+    read: getSVGProperty('azimuth'),
   },
   {
     name: 'baseFrequency',
@@ -328,7 +332,7 @@ const attributes = [
     name: 'bias',
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
-    read: getSVGAttribute('bias'),
+    read: getSVGProperty('bias'),
   },
   {
     name: 'by',
@@ -398,7 +402,8 @@ const attributes = [
     name: 'clipPathUnits',
     containerTagName: 'svg',
     tagName: 'clipPath',
-    read: getSVGAttribute('clipPathUnits'),
+    overrideStringValue: 'objectBoundingBox',
+    read: getSVGProperty('clipPathUnits'),
   },
   {
     name: 'clip-rule',
@@ -497,13 +502,15 @@ const attributes = [
     name: 'cx',
     containerTagName: 'svg',
     tagName: 'circle',
-    read: getSVGAttribute('cx'),
+    overrideStringValue: '10px',
+    read: getSVGProperty('cx'),
   },
   {
     name: 'cy',
     containerTagName: 'svg',
     tagName: 'circle',
-    read: getSVGAttribute('cy'),
+    overrideStringValue: '10%',
+    read: getSVGProperty('cy'),
   },
   {
     name: 'd',
@@ -555,7 +562,7 @@ const attributes = [
     name: 'diffuseConstant',
     containerTagName: 'svg',
     tagName: 'feDiffuseLighting',
-    read: getSVGAttribute('diffuseConstant'),
+    read: getSVGProperty('diffuseConstant'),
   },
   {name: 'dir', overrideStringValue: 'rtl'},
   {
@@ -576,7 +583,7 @@ const attributes = [
     name: 'divisor',
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
-    read: getSVGAttribute('divisor'),
+    read: getSVGProperty('divisor'),
   },
   {
     name: 'dominant-baseline',
@@ -603,38 +610,42 @@ const attributes = [
     name: 'dx',
     containerTagName: 'svg',
     tagName: 'text',
-    read: getSVGAttribute('dx'),
+    overrideStringValue: '1pt 2px 3em',
+    read: getSVGProperty('dx'),
   },
   {
     name: 'dX',
     containerTagName: 'svg',
     tagName: 'text',
-    read: getSVGAttribute('dX'),
+    overrideStringValue: '1pt 2px 3em',
+    read: getSVGProperty('dx'),
   },
   {
     name: 'dy',
     containerTagName: 'svg',
     tagName: 'text',
-    read: getSVGAttribute('dy'),
+    overrideStringValue: '1 2 3',
+    read: getSVGProperty('dy'),
   },
   {
     name: 'dY',
     containerTagName: 'svg',
     tagName: 'text',
-    read: getSVGAttribute('dY'),
+    overrideStringValue: '1 2 3',
+    read: getSVGProperty('dy'),
   },
   {
     name: 'edgeMode',
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
     overrideStringValue: 'wrap',
-    read: getSVGAttribute('edgeMode'),
+    read: getSVGProperty('edgeMode'),
   },
   {
     name: 'elevation',
     containerTagName: 'svg',
     tagName: 'feDistantLight',
-    read: getSVGAttribute('elevation'),
+    read: getSVGProperty('elevation'),
   },
   {
     name: 'enable-background',
@@ -662,7 +673,7 @@ const attributes = [
   },
   {
     name: 'exponent',
-    read: getSVGAttribute('exponent'),
+    read: getSVGProperty('exponent'),
     containerTagName: 'svg',
     tagName: 'feFuncA',
   },
@@ -719,7 +730,7 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'filter',
     overrideStringValue: 'userSpaceOnUse',
-    read: getSVGAttribute('filterUnits'),
+    read: getSVGProperty('filterUnits'),
   },
   {
     name: 'flood-color',
@@ -861,26 +872,30 @@ const attributes = [
   },
   {
     name: 'fx',
-    read: getSVGAttribute('fx'),
+    read: getSVGProperty('fx'),
     containerTagName: 'svg',
+    overrideStringValue: '10px',
     tagName: 'radialGradient',
   },
   {
     name: 'fX',
     containerTagName: 'svg',
     tagName: 'radialGradient',
-    read: getSVGAttribute('fx'),
+    overrideStringValue: '10px',
+    read: getSVGProperty('fx'),
   },
   {
     name: 'fY',
     containerTagName: 'svg',
     tagName: 'radialGradient',
-    read: getSVGAttribute('fy'),
+    overrideStringValue: '20em',
+    read: getSVGProperty('fy'),
   },
   {
     name: 'fy',
-    read: getSVGAttribute('fy'),
+    read: getSVGProperty('fy'),
     containerTagName: 'svg',
+    overrideStringValue: '20em',
     tagName: 'radialGradient',
   },
   {
@@ -951,14 +966,16 @@ const attributes = [
   },
   {
     name: 'gradientTransform',
-    read: getSVGAttribute('gradientTransform'),
+    read: getSVGProperty('gradientTransform'),
     containerTagName: 'svg',
+    overrideStringValue: 'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
     tagName: 'linearGradient',
   },
   {
     name: 'gradientUnits',
-    read: getSVGAttribute('gradientUnits'),
+    read: getSVGProperty('gradientUnits'),
     containerTagName: 'svg',
+    overrideStringValue: 'userSpaceOnUse',
     tagName: 'linearGradient',
   },
   {
@@ -974,7 +991,8 @@ const attributes = [
     name: 'height',
     containerTagName: 'svg',
     tagName: 'rect',
-    read: getSVGAttribute('height'),
+    read: getSVGProperty('height'),
+    overrideStringValue: '100%',
   },
   {name: 'hidden'},
   {name: 'high', tagName: 'meter'},
@@ -1034,7 +1052,7 @@ const attributes = [
   },
   {
     name: 'in2',
-    read: getSVGAttribute('in2'),
+    read: getSVGProperty('in2'),
     containerTagName: 'svg',
     tagName: 'feBlend',
   },
@@ -1045,7 +1063,7 @@ const attributes = [
   {name: 'integrity', tagName: 'script'},
   {
     name: 'intercept',
-    read: getSVGAttribute('intercept'),
+    read: getSVGProperty('intercept'),
     containerTagName: 'svg',
     tagName: 'feFuncA',
   },
@@ -1076,37 +1094,38 @@ const attributes = [
     name: 'K1',
     containerTagName: 'svg',
     tagName: 'feComposite',
-    read: getSVGAttribute('k1'),
+    read: getSVGProperty('k1'),
   },
   {
     name: 'k1',
-    read: getSVGAttribute('k1'),
+    read: getSVGProperty('k1'),
     containerTagName: 'svg',
     tagName: 'feComposite',
   },
   {
     name: 'k2',
-    read: getSVGAttribute('k2'),
+    read: getSVGProperty('k2'),
     containerTagName: 'svg',
     tagName: 'feComposite',
   },
   {
     name: 'k3',
-    read: getSVGAttribute('k3'),
+    read: getSVGProperty('k3'),
     containerTagName: 'svg',
     tagName: 'feComposite',
   },
   {
     name: 'k4',
-    read: getSVGAttribute('k4'),
+    read: getSVGProperty('k4'),
     containerTagName: 'svg',
     tagName: 'feComposite',
   },
   {
     name: 'kernelMatrix',
-    read: getSVGAttribute('kernelMatrix'),
+    read: getSVGProperty('kernelMatrix'),
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
+    overrideStringValue: '1 2 3,4',
   },
   {
     name: 'kernelUnitLength',
@@ -1147,9 +1166,10 @@ const attributes = [
   {name: 'length', read: getAttribute('length')},
   {
     name: 'lengthAdjust',
-    read: getSVGAttribute('lengthAdjust'),
+    read: getSVGProperty('lengthAdjust'),
     containerTagName: 'svg',
     tagName: 'text',
+    overrideStringValue: 'spacingAndGlyphs',
   },
   {
     name: 'letter-spacing',
@@ -1177,7 +1197,7 @@ const attributes = [
   },
   {
     name: 'limitingConeAngle',
-    read: getSVGAttribute('limitingConeAngle'),
+    read: getSVGProperty('limitingConeAngle'),
     containerTagName: 'svg',
     tagName: 'feSpotLight',
   },
@@ -1219,7 +1239,7 @@ const attributes = [
   },
   {
     name: 'markerHeight',
-    read: getSVGAttribute('markerHeight'),
+    read: getSVGProperty('markerHeight'),
     containerTagName: 'svg',
     tagName: 'marker',
   },
@@ -1237,13 +1257,13 @@ const attributes = [
   },
   {
     name: 'markerUnits',
-    read: getSVGAttribute('markerUnits'),
+    read: getSVGProperty('markerUnits'),
     containerTagName: 'svg',
     tagName: 'marker',
   },
   {
     name: 'markerWidth',
-    read: getSVGAttribute('markerWidth'),
+    read: getSVGProperty('markerWidth'),
     containerTagName: 'svg',
     tagName: 'marker',
   },
@@ -1255,15 +1275,17 @@ const attributes = [
   },
   {
     name: 'maskContentUnits',
-    read: getSVGAttribute('maskContentUnits'),
+    read: getSVGProperty('maskContentUnits'),
     containerTagName: 'svg',
     tagName: 'mask',
+    overrideStringValue: 'objectBoundingBox',
   },
   {
     name: 'maskUnits',
-    read: getSVGAttribute('maskUnits'),
+    read: getSVGProperty('maskUnits'),
     containerTagName: 'svg',
     tagName: 'mask',
+    overrideStringValue: 'userSpaceOnUse',
   },
   {
     name: 'mathematical',
@@ -1286,7 +1308,7 @@ const attributes = [
     name: 'media',
     containerTagName: 'svg',
     tagName: 'style',
-    read: getSVGAttribute('media'),
+    read: getSVGProperty('media'),
   },
   {name: 'mediaGroup', tagName: 'video', read: getAttribute('mediagroup')}, // TODO: Not yet implemented in Chrome.
   {name: 'method', tagName: 'form', overrideStringValue: 'POST'},
@@ -1294,7 +1316,8 @@ const attributes = [
     name: 'method',
     containerTagName: 'svg',
     tagName: 'textPath',
-    read: getSVGAttribute('method'),
+    read: getSVGProperty('method'),
+    overrideStringValue: 'stretch',
   },
   {name: 'min', tagName: 'input'},
   {name: 'min', tagName: 'meter'},
@@ -1307,9 +1330,10 @@ const attributes = [
   {name: 'minLength', tagName: 'input'},
   {
     name: 'mode',
-    read: getSVGAttribute('mode'),
+    read: getSVGProperty('mode'),
     containerTagName: 'svg',
     tagName: 'feBlend',
+    overrideStringValue: 'multiply',
   },
   {name: 'multiple', tagName: 'select'},
   {name: 'muted', tagName: 'video'},
@@ -1324,13 +1348,13 @@ const attributes = [
   {name: 'noValidate', tagName: 'form'},
   {
     name: 'numOctaves',
-    read: getSVGAttribute('numOctaves'),
+    read: getSVGProperty('numOctaves'),
     containerTagName: 'svg',
     tagName: 'feTurbulence',
   },
   {
     name: 'offset',
-    read: getSVGAttribute('offset'),
+    read: getSVGProperty('offset'),
     containerTagName: 'svg',
     tagName: 'stop',
   },
@@ -1349,9 +1373,10 @@ const attributes = [
   {name: 'open', tagName: 'details'},
   {
     name: 'operator',
-    read: getSVGAttribute('operator'),
+    read: getSVGProperty('operator'),
     containerTagName: 'svg',
     tagName: 'feComposite',
+    overrideStringValue: 'xor',
   },
   {name: 'optimum', tagName: 'meter'},
   {
@@ -1434,28 +1459,31 @@ const attributes = [
   },
   {
     name: 'pathLength',
-    read: getSVGAttribute('pathLength'),
+    read: getSVGProperty('pathLength'),
     containerTagName: 'svg',
     tagName: 'path',
   },
   {name: 'pattern', tagName: 'input'},
   {
     name: 'patternContentUnits',
-    read: getSVGAttribute('patternContentUnits'),
+    read: getSVGProperty('patternContentUnits'),
     containerTagName: 'svg',
     tagName: 'pattern',
+    overrideStringValue: 'objectBoundingBox',
   },
   {
     name: 'patternTransform',
-    read: getSVGAttribute('patternTransform'),
+    read: getSVGProperty('patternTransform'),
     containerTagName: 'svg',
     tagName: 'pattern',
+    overrideStringValue: 'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
   },
   {
     name: 'patternUnits',
-    read: getSVGAttribute('patternUnits'),
+    read: getSVGProperty('patternUnits'),
     containerTagName: 'svg',
     tagName: 'pattern',
+    overrideStringValue: 'userSpaceOnUse',
   },
   {name: 'placeholder', tagName: 'input'},
   {name: 'playsInline', read: getAttribute('playsinline')},
@@ -1473,25 +1501,26 @@ const attributes = [
   },
   {
     name: 'points',
-    read: getSVGAttribute('points'),
+    read: getSVGProperty('points'),
     containerTagName: 'svg',
     tagName: 'polygon',
+    overrideStringValue: '350,75  379,161 469,161',
   },
   {
     name: 'pointsAtX',
-    read: getSVGAttribute('pointsAtX'),
+    read: getSVGProperty('pointsAtX'),
     containerTagName: 'svg',
     tagName: 'feSpotLight',
   },
   {
     name: 'pointsAtY',
-    read: getSVGAttribute('pointsAtY'),
+    read: getSVGProperty('pointsAtY'),
     containerTagName: 'svg',
     tagName: 'feSpotLight',
   },
   {
     name: 'pointsAtZ',
-    read: getSVGAttribute('pointsAtZ'),
+    read: getSVGProperty('pointsAtZ'),
     containerTagName: 'svg',
     tagName: 'feSpotLight',
   },
@@ -1504,30 +1533,33 @@ const attributes = [
   {name: 'preload', tagName: 'video', overrideStringValue: 'none'},
   {
     name: 'preserveAlpha',
-    read: getSVGAttribute('preserveAlpha'),
+    read: getSVGProperty('preserveAlpha'),
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
   },
   {
     name: 'preserveAspectRatio',
-    read: getSVGAttribute('preserveAspectRatio'),
+    read: getSVGProperty('preserveAspectRatio'),
     containerTagName: 'svg',
     tagName: 'feImage',
+    overrideStringValue: 'xMinYMin slice',
   },
   {
     name: 'primitiveUnits',
-    read: getSVGAttribute('primitiveUnits'),
+    read: getSVGProperty('primitiveUnits'),
     containerTagName: 'svg',
     tagName: 'filter',
+    overrideStringValue: 'objectBoundingBox',
   },
   {name: 'profile', read: getAttribute('profile')},
   {name: 'property', read: getAttribute('property')},
   {name: 'props', read: getAttribute('props')},
   {
     name: 'r',
-    read: getSVGAttribute('r'),
+    read: getSVGProperty('r'),
     containerTagName: 'svg',
     tagName: 'circle',
+    overrideStringValue: '10pt',
   },
   {name: 'radioGroup', tagName: 'command', read: getAttribute('radiogroup')},
   {
@@ -1540,15 +1572,17 @@ const attributes = [
   {name: 'referrerPolicy', tagName: 'iframe'},
   {
     name: 'refX',
-    read: getSVGAttribute('refX'),
+    read: getSVGProperty('refX'),
     containerTagName: 'svg',
     tagName: 'marker',
+    overrideStringValue: '5em',
   },
   {
     name: 'refY',
-    read: getSVGAttribute('refY'),
+    read: getSVGProperty('refY'),
     containerTagName: 'svg',
     tagName: 'marker',
+    overrideStringValue: '6em',
   },
   {name: 'rel', tagName: 'a'},
   {
@@ -1578,7 +1612,7 @@ const attributes = [
   {name: 'required', tagName: 'input'},
   {
     name: 'requiredExtensions',
-    read: getSVGAttribute('requiredExtensions'),
+    read: getSVGProperty('requiredExtensions'),
     containerTagName: 'svg',
     tagName: 'a',
   },
@@ -1597,7 +1631,7 @@ const attributes = [
   },
   {
     name: 'result',
-    read: getSVGAttribute('result'),
+    read: getSVGProperty('result'),
     containerTagName: 'svg',
     tagName: 'feBlend',
   },
@@ -1614,15 +1648,17 @@ const attributes = [
   {name: 'rowSpan', tagName: 'td'},
   {
     name: 'rx',
-    read: getSVGAttribute('rx'),
+    read: getSVGProperty('rx'),
     containerTagName: 'svg',
     tagName: 'ellipse',
+    overrideStringValue: '1px',
   },
   {
     name: 'ry',
-    read: getSVGAttribute('ry'),
+    read: getSVGProperty('ry'),
     containerTagName: 'svg',
     tagName: 'ellipse',
+    overrideStringValue: '2px',
   },
   {
     name: 'sandbox',
@@ -1631,7 +1667,7 @@ const attributes = [
   },
   {
     name: 'scale',
-    read: getSVGAttribute('scale'),
+    read: getSVGProperty('scale'),
     containerTagName: 'svg',
     tagName: 'feDisplacementMap',
   },
@@ -1642,7 +1678,7 @@ const attributes = [
   {name: 'security', tagName: 'iframe', read: getAttribute('security')},
   {
     name: 'seed',
-    read: getSVGAttribute('seed'),
+    read: getSVGProperty('seed'),
     containerTagName: 'svg',
     tagName: 'feTurbulence',
   },
@@ -1669,20 +1705,21 @@ const attributes = [
   },
   {
     name: 'spacing',
-    read: getSVGAttribute('spacing'),
+    read: getSVGProperty('spacing'),
     containerTagName: 'svg',
     tagName: 'textPath',
+    overrideStringValue: 'auto',
   },
   {name: 'span', tagName: 'col'},
   {
     name: 'specularConstant',
-    read: getSVGAttribute('specularConstant'),
+    read: getSVGProperty('specularConstant'),
     containerTagName: 'svg',
     tagName: 'feSpecularLighting',
   },
   {
     name: 'specularExponent',
-    read: getSVGAttribute('specularConstant'),
+    read: getSVGProperty('specularConstant'),
     containerTagName: 'svg',
     tagName: 'feSpecularLighting',
   },
@@ -1701,9 +1738,10 @@ const attributes = [
   },
   {
     name: 'spreadMethod',
-    read: getSVGAttribute('spreadMethod'),
+    read: getSVGProperty('spreadMethod'),
     containerTagName: 'svg',
     tagName: 'linearGradient',
+    overrideStringValue: 'reflect',
   },
   {name: 'src', tagName: 'img', overrideStringValue: 'https://reactjs.com'},
   {
@@ -1737,7 +1775,7 @@ const attributes = [
   {name: 'start', tagName: 'ol'},
   {
     name: 'startOffset',
-    read: getSVGAttribute('startOffset'),
+    read: getSVGProperty('startOffset'),
     containerTagName: 'svg',
     tagName: 'textPath',
   },
@@ -1763,9 +1801,10 @@ const attributes = [
   {name: 'step', read: getAttribute('step')},
   {
     name: 'stitchTiles',
-    read: getSVGAttribute('stitchTiles'),
+    read: getSVGProperty('stitchTiles'),
     containerTagName: 'svg',
     tagName: 'feTurbulence',
+    overrideStringValue: 'stitch',
   },
   {
     name: 'stop-color',
@@ -1925,39 +1964,40 @@ const attributes = [
   },
   {
     name: 'surfaceScale',
-    read: getSVGAttribute('surfaceScale'),
+    read: getSVGProperty('surfaceScale'),
     containerTagName: 'svg',
     tagName: 'feDiffuseLighting',
   },
   {
     name: 'systemLanguage',
     overrideStringValue: 'en',
-    read: getSVGAttribute('systemLanguage'),
+    read: getSVGProperty('systemLanguage'),
     containerTagName: 'svg',
     tagName: 'a',
   },
   {name: 'tabIndex'},
   {
     name: 'tableValues',
-    read: getSVGAttribute('tableValues'),
+    read: getSVGProperty('tableValues'),
     containerTagName: 'svg',
     tagName: 'feFuncA',
+    overrideStringValue: '0 1 2 3',
   },
   {
     name: 'target',
-    read: getSVGAttribute('target'),
+    read: getSVGProperty('target'),
     containerTagName: 'svg',
     tagName: 'a',
   },
   {
     name: 'targetX',
-    read: getSVGAttribute('targetX'),
+    read: getSVGProperty('targetX'),
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
   },
   {
     name: 'targetY',
-    read: getSVGAttribute('targetY'),
+    read: getSVGProperty('targetY'),
     containerTagName: 'svg',
     tagName: 'feConvolveMatrix',
   },
@@ -1992,7 +2032,7 @@ const attributes = [
   },
   {
     name: 'textLength',
-    read: getSVGAttribute('textLength'),
+    read: getSVGProperty('textLength'),
     containerTagName: 'svg',
     tagName: 'text',
   },
@@ -2010,16 +2050,18 @@ const attributes = [
   },
   {
     name: 'transform',
-    read: getSVGAttribute('transform'),
+    read: getSVGProperty('transform'),
     containerTagName: 'svg',
     tagName: 'a',
+    overrideStringValue: 'translate(-10,-20) scale(2) rotate(45) translate(5,10)',
   },
   {name: 'type', tagName: 'button', overrideStringValue: 'reset'},
   {
     name: 'type',
     containerTagName: 'svg',
     tagName: 'feFuncA',
-    read: getSVGAttribute('type'),
+    read: getSVGProperty('type'),
+    overrideStringValue: 'discrete',
   },
   {name: 'typeof', read: getAttribute('typeof')},
   {
@@ -2151,9 +2193,10 @@ const attributes = [
   },
   {
     name: 'values',
-    read: getSVGAttribute('values'),
+    read: getSVGProperty('values'),
     containerTagName: 'svg',
     tagName: 'feColorMatrix',
+    overrideStringValue: '1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0',
   },
   {
     name: 'vector-effect',
@@ -2219,9 +2262,10 @@ const attributes = [
   },
   {
     name: 'viewBox',
-    read: getSVGAttribute('viewBox'),
+    read: getSVGProperty('viewBox'),
     containerTagName: 'svg',
     tagName: 'marker',
+    overrideStringValue: '0 0 1500 1000',
   },
   {
     name: 'viewTarget',
@@ -2248,7 +2292,7 @@ const attributes = [
     name: 'width',
     containerTagName: 'svg',
     tagName: 'rect',
-    read: getSVGAttribute('width'),
+    read: getSVGProperty('width'),
   },
   {
     name: 'widths',
@@ -2296,21 +2340,22 @@ const attributes = [
   },
   {
     name: 'x1',
-    read: getSVGAttribute('x1'),
+    read: getSVGProperty('x1'),
     containerTagName: 'svg',
     tagName: 'line',
   },
   {
     name: 'x2',
-    read: getSVGAttribute('x2'),
+    read: getSVGProperty('x2'),
     containerTagName: 'svg',
     tagName: 'line',
   },
   {
     name: 'xChannelSelector',
-    read: getSVGAttribute('xChannelSelector'),
+    read: getSVGProperty('xChannelSelector'),
     containerTagName: 'svg',
     tagName: 'feDisplacementMap',
+    overrideStringValue: 'R',
   },
   {
     name: 'xHeight',
@@ -2351,29 +2396,30 @@ const attributes = [
   },
   {
     name: 'y1',
-    read: getSVGAttribute('y1'),
+    read: getSVGProperty('y1'),
     containerTagName: 'svg',
     tagName: 'line',
   },
   {
     name: 'y2',
-    read: getSVGAttribute('y2'),
+    read: getSVGProperty('y2'),
     containerTagName: 'svg',
     tagName: 'line',
   },
   {
     name: 'yChannelSelector',
-    read: getSVGAttribute('yChannelSelector'),
+    read: getSVGProperty('yChannelSelector'),
     containerTagName: 'svg',
     tagName: 'feDisplacementMap',
+    overrideStringValue: 'B',
   },
   {
     name: 'z',
-    read: getSVGAttribute('z'),
+    read: getSVGProperty('z'),
     containerTagName: 'svg',
     tagName: 'fePointLight',
   },
-  {name: 'zoomAndPan', read: getSVGAttribute('zoomAndPan'), tagName: 'svg'},
+  {name: 'zoomAndPan', read: getSVGProperty('zoomAndPan'), tagName: 'svg'},
 ];
 
 const ALPHABETICAL = 'alphabetical';
@@ -2388,6 +2434,94 @@ const attributesSorted = {
     .slice(0)
     .sort((attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)),
 };
+
+function getCanonicalizedValue(value) {
+  switch (typeof value) {
+    case 'undefined':
+      return '<undefined>';
+      break;
+    case 'object':
+      if (value === null) {
+        return '<null>';
+      }
+      if ('baseVal' in value) {
+        return getCanonicalizedValue(value.baseVal);
+      }
+      if (value instanceof SVGLength) {
+        return '<SVGLength: ' + value.valueAsString + '>';
+      }
+      if (value instanceof SVGRect) {
+        return (
+          '<SVGRect: ' +
+          [value.x, value.y, value.width, value.height].join(',') +
+          '>'
+        );
+      }
+      if (value instanceof SVGPreserveAspectRatio) {
+        return (
+          '<SVGPreserveAspectRatio: ' +
+          value.align +
+          '/' +
+          value.meetOrSlice +
+          '>'
+        );
+      }
+      if (value instanceof SVGNumber) {
+        return value.value;
+      }
+      if (value instanceof SVGMatrix) {
+        return (
+          '<SVGMatrix ' +
+          value.a +
+          ' ' +
+          value.b +
+          ' ' +
+          value.c +
+          ' ' +
+          value.d +
+          ' ' +
+          value.e +
+          ' ' +
+          value.f +
+          '>'
+        );
+      }
+      if (value instanceof SVGTransform) {
+        return (
+          getCanonicalizedValue(value.matrix) +
+          '/' +
+          value.type +
+          '/' +
+          value.angle
+        );
+      }
+      if (typeof value.length === 'number') {
+        return (
+          '[' +
+          Array.from(value).map(v => getCanonicalizedValue(v)).join(', ') +
+          ']'
+        );
+      }
+      let name = (value.constructor && value.constructor.name) || 'object';
+      return '<' + name + '>';
+    case 'function':
+      return '<function>';
+    case 'symbol':
+      return '<symbol>';
+    case 'number':
+      return `<number: ${value}>`;
+    case 'string':
+      if (value === '') {
+        return '<empty string>';
+      }
+      return '"' + value + '"';
+    case 'boolean':
+      return `<boolean: ${value}>`;
+    default:
+      throw new Error('Switch statement should be exhaustive.');
+  }
+  return value;
+}
 
 let _didWarn = false;
 function warn(str) {
@@ -2411,6 +2545,7 @@ function getRenderedAttributeValue(renderer, attribute, type) {
 
   let testValue;
   let defaultValue;
+  let canonicalDefaultValue;
   try {
     const read = attribute.read || getProperty(attribute.name);
 
@@ -2434,6 +2569,7 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     }
     renderer.render(React.createElement(tagName, baseProps), container);
     defaultValue = read(container.firstChild);
+    canonicalDefaultValue = getCanonicalizedValue(defaultValue);
 
     const props = {
       ...baseProps,
@@ -2447,6 +2583,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
       testValue,
       defaultValue,
       result,
+      canonicalResult: getCanonicalizedValue(result),
+      canonicalDefaultValue,
       didWarn: _didWarn,
       didError: false,
     };
@@ -2455,6 +2593,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
       testValue,
       defaultValue,
       result: null,
+      canonicalResult: getCanonicalizedValue(null),
+      canonicalDefaultValue,
       didWarn: _didWarn,
       didError: true,
     };
@@ -2473,7 +2613,7 @@ function getRenderedAttributeValues(attribute, type) {
   } else if (!react15Value.didError && !react16Value.didError) {
     hasSameBehavior =
       react15Value.didWarn === react16Value.didWarn &&
-      Object.is(react15Value.result, react16Value.result);
+      react15Value.canonicalResult === react16Value.canonicalResult;
   } else {
     hasSameBehavior = false;
   }
@@ -2497,8 +2637,7 @@ for (let attribute of attributes) {
     const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
     rowHash +=
-      getResultDisplayString(result.react15.result) +
-      getResultDisplayString(result.react16.result);
+      result.react15.canonicalResult + '||' + result.react16.canonicalResult;
   }
   table.set(attribute, row);
   if (!groupByRowPattern.get(rowHash)) {
@@ -2521,55 +2660,25 @@ attributesSorted[GROUPED_BY_ROW_PATTERN] = attributesSortedByRowPattern;
 // Renable error overlay
 injectErrorOverlay();
 
-function getResultDisplayString(result) {
-  let displayResult;
-  switch (typeof result) {
-    case 'undefined':
-      displayResult = '<undefined>';
-      break;
-    case 'object':
-      if (result === null) {
-        displayResult = '<null>';
-        break;
-      }
-      displayResult = '<object>';
-      break;
-    case 'function':
-      displayResult = '<function>';
-      break;
-    case 'symbol':
-      displayResult = '<symbol>';
-      break;
-    case 'number':
-      displayResult = `<number: ${result}>`;
-      break;
-    case 'string':
-      if (result === '') {
-        displayResult = '<empty string>';
-        break;
-      }
-      displayResult = '"' + result + '"';
-      break;
-    case 'boolean':
-      displayResult = `<boolean: ${result}>`;
-      break;
-    default:
-      throw new Error('Switch statement should be exhaustive.');
-  }
-  return displayResult;
-}
-
 const successColor = 'white';
 const warnColor = 'yellow';
 const errorColor = 'red';
 
-function RendererResult({version, result, defaultValue, didWarn, didError}) {
+function RendererResult({
+  version,
+  result,
+  canonicalResult,
+  defaultValue,
+  canonicalDefaultValue,
+  didWarn,
+  didError,
+}) {
   let backgroundColor;
   if (didError) {
     backgroundColor = errorColor;
   } else if (didWarn) {
     backgroundColor = warnColor;
-  } else if (result !== defaultValue) {
+  } else if (canonicalResult !== canonicalDefaultValue) {
     backgroundColor = 'cyan';
   } else {
     backgroundColor = successColor;
@@ -2584,7 +2693,7 @@ function RendererResult({version, result, defaultValue, didWarn, didError}) {
     backgroundColor,
   };
 
-  return <div css={style}>{getResultDisplayString(result)}</div>;
+  return <div css={style}>{canonicalResult}</div>;
 }
 
 function ResultPopover(props) {
