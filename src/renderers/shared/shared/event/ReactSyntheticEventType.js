@@ -33,4 +33,4 @@ export type ReactSyntheticEvent = {
     nativeTarget: Event,
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,
-} & SyntheticEvent;
+} & SyntheticEvent<>;

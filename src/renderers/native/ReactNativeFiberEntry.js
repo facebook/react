@@ -48,7 +48,7 @@ const ReactNativeFiber: ReactNativeType = {
 
   findNodeHandle: findNumericNodeHandle,
 
-  render(element: ReactElement<any>, containerTag: any, callback: ?Function) {
+  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 
     if (!root) {

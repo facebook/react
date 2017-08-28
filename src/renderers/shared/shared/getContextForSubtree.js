@@ -20,7 +20,7 @@ let getContextFiber = function(arg) {
 };
 
 function getContextForSubtree(
-  parentComponent: ?ReactComponent<any, any, any>,
+  parentComponent: ?React$Component<any, any>,
 ): Object {
   if (!parentComponent) {
     return emptyObject;

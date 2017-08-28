@@ -251,12 +251,12 @@ var ReactNoop = {
   },
 
   // Shortcut for testing a single root
-  render(element: ReactElement<any>, callback: ?Function) {
+  render(element: React$Element<any>, callback: ?Function) {
     ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
   },
 
   renderToRootWithID(
-    element: ReactElement<any>,
+    element: React$Element<any>,
     rootID: string,
     callback: ?Function,
   ) {
@@ -281,7 +281,7 @@ var ReactNoop = {
   },
 
   findInstance(
-    componentOrElement: Element | ?ReactComponent<any, any, any>,
+    componentOrElement: Element | ?React$Component<any, any>,
   ): null | Instance | TextInstance {
     if (componentOrElement == null) {
       return null;

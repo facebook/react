@@ -43,7 +43,7 @@ if (
  */
 function flattenSingleChildIntoContext(
   traverseContext: mixed,
-  child: ReactElement<any>,
+  child: React$Element<any>,
   name: string,
   selfDebugID?: number,
 ): void {
@@ -82,9 +82,9 @@ function flattenSingleChildIntoContext(
  * @return {!object} flattened children keyed by name.
  */
 function flattenStackChildren(
-  children: ReactElement<any>,
+  children: React$Element<any>,
   selfDebugID?: number,
-): ?{[name: string]: ReactElement<any>} {
+): ?{[name: string]: React$Element<any>} {
   if (children == null) {
     return children;
   }

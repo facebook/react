@@ -11,8 +11,6 @@
  */
 'use strict';
 
-import type React from 'react';
-
 export type MeasureOnSuccessCallback = (
   x: number,
   y: number,
@@ -78,7 +76,7 @@ export type ReactNativeType = {
   NativeComponent: any,
   findNodeHandle(componentOrHandle: any): ?number,
   render(
-    element: React.Element<any>,
+    element: React$Element<any>,
     containerTag: any,
     callback: ?Function,
   ): any,

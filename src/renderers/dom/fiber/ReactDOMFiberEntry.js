@@ -546,7 +546,7 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 var warnedAboutHydrateAPI = false;
 
 function renderSubtreeIntoContainer(
-  parentComponent: ?ReactComponent<any, any, any>,
+  parentComponent: ?React$Component<any, any>,
   children: ReactNodeList,
   container: DOMContainer,
   forceHydrate: boolean,
@@ -649,17 +649,13 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
-  hydrate(
-    element: ReactElement<any>,
-    container: DOMContainer,
-    callback: ?Function,
-  ) {
+  hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
     // TODO: throw or warn if we couldn't hydrate?
     return renderSubtreeIntoContainer(null, element, container, true, callback);
   },
 
   render(
-    element: ReactElement<any>,
+    element: React$Element<any>,
     container: DOMContainer,
     callback: ?Function,
   ) {
@@ -705,8 +701,8 @@ var ReactDOMFiber = {
   },
 
   unstable_renderSubtreeIntoContainer(
-    parentComponent: ReactComponent<any, any, any>,
-    element: ReactElement<any>,
+    parentComponent: React$Component<any, any>,
+    element: React$Element<any>,
     containerNode: DOMContainer,
     callback: ?Function,
   ) {

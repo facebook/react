@@ -32,7 +32,7 @@ import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 
 type TestRendererOptions = {
-  createNodeMock: (element: ReactElement<any>) => any,
+  createNodeMock: (element: React$Element<any>) => any,
 };
 
 type ReactTestRendererJSON = {|
@@ -551,7 +551,7 @@ function propsMatch(props: Object, filter: Object): boolean {
 }
 
 var ReactTestRendererFiber = {
-  create(element: ReactElement<any>, options: TestRendererOptions) {
+  create(element: React$Element<any>, options: TestRendererOptions) {
     var createNodeMock = defaultTestOptions.createNodeMock;
     if (options && typeof options.createNodeMock === 'function') {
       createNodeMock = options.createNodeMock;
@@ -586,7 +586,7 @@ var ReactTestRendererFiber = {
         }
         return toTree(root.current);
       },
-      update(newElement: ReactElement<any>) {
+      update(newElement: React$Element<any>) {
         if (root == null || root.current == null) {
           return;
         }
