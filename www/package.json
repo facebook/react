@@ -8,7 +8,7 @@
   "dependencies": {
     "babel-standalone": "^6.26.0",
     "docsearch.js": "^2.4.1",
-    "gatsby": "^1.8.16",
+    "gatsby": "^1.9.9",
     "gatsby-link": "^1.6.9",
     "gatsby-plugin-glamor": "^1.6.4",
     "gatsby-plugin-google-analytics": "^1.0.4",
