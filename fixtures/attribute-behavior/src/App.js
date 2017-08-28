@@ -2872,6 +2872,17 @@ class App extends Component {
   }
 
   renderCell(props) {
+    const {rowIndex} = props;
+    if (rowIndex !== 0) {
+      const attribute = attributesSorted[this.state.sortOrder][rowIndex - 1];
+      const hasSameBehaviorForAll = types.every(
+        type => table.get(attribute).get(type.name).hasSameBehavior
+      );
+      if (hasSameBehaviorForAll) {
+        return <div style={props.style}>(no changes)</div>;
+      }
+    }
+
     return (
       <div style={props.style}>
         <CellContent
