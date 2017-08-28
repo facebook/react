@@ -100,7 +100,7 @@ var ReactNativeEventEmitter = {
   _receiveRootNodeIDEvent: function(
     rootNodeID: number,
     topLevelType: string,
-    nativeEventParam: Object,
+    nativeEventParam: ?Object,
   ) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
     var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
