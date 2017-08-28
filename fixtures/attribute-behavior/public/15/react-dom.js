@@ -7158,13 +7158,13 @@ function validateProperty(tagName, name, debugID) {
     // If this is an aria-* attribute, but is not listed in the known DOM
     // DOM properties, then it is an invalid aria-* attribute.
     if (standardName == null) {
-      warnedProperties[name] = true;
+      // warnedProperties[name] = true;
       return false;
     }
     // aria-* attributes should be lowercase; suggest the lowercase version.
     if (name !== standardName) {
       "development" !== 'production' ? warning(false, 'Unknown ARIA attribute %s. Did you mean %s?%s', name, standardName, ReactComponentTreeHook.getStackAddendumByID(debugID)) : void 0;
-      warnedProperties[name] = true;
+      // warnedProperties[name] = true;
       return true;
     }
   }
@@ -8335,7 +8335,7 @@ if ("development" !== 'production') {
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
-    warnedProperties[name] = true;
+    // warnedProperties[name] = true;
     var lowerCasedName = name.toLowerCase();
 
     // data-* attributes should be lowercase; suggest the lowercase version

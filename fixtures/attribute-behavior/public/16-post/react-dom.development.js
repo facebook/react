@@ -6045,13 +6045,13 @@ function validateProperty(tagName, name, debugID) {
     // DOM properties, then it is an invalid aria-* attribute.
     if (correctName == null) {
       warning$16(false, 'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.%s', name, getStackAddendum(debugID));
-      warnedProperties[name] = true;
+      // warnedProperties[name] = true;
       return true;
     }
     // aria-* attributes should be lowercase; suggest the lowercase version.
     if (name !== correctName) {
       warning$16(false, 'Invalid ARIA attribute `%s`. Did you mean `%s`?%s', name, correctName, getStackAddendum(debugID));
-      warnedProperties[name] = true;
+      // warnedProperties[name] = true;
       return true;
     }
   }
@@ -6063,13 +6063,13 @@ function validateProperty(tagName, name, debugID) {
     // If this is an aria-* attribute, but is not listed in the known DOM
     // DOM properties, then it is an invalid aria-* attribute.
     if (standardName == null) {
-      warnedProperties[name] = true;
+      // warnedProperties[name] = true;
       return false;
     }
     // aria-* attributes should be lowercase; suggest the lowercase version.
     if (name !== standardName) {
       warning$16(false, 'Unknown ARIA attribute `%s`. Did you mean `%s`?%s', name, standardName, getStackAddendum(debugID));
-      warnedProperties[name] = true;
+      // warnedProperties[name] = true;
       return true;
     }
   }
@@ -6724,7 +6724,7 @@ function getStackAddendum$2(debugID) {
 
     if (registrationName != null) {
       warning$18(false, 'Unknown event handler property `%s`. Did you mean `%s`?%s', name, registrationName, getStackAddendum$2(debugID));
-      warnedProperties$1[name] = true;
+      // warnedProperties$1[name] = true;
       return true;
     }
 
@@ -6735,19 +6735,19 @@ function getStackAddendum$2(debugID) {
 
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
       warning$18(false, 'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' + 'All React events are normalized to bubble, so onFocusIn and onFocusOut ' + 'are not needed/supported by React.');
-      warnedProperties$1[name] = true;
+      // warnedProperties$1[name] = true;
       return true;
     }
 
     if (lowerCasedName === 'innerhtml') {
       warning$18(false, 'Directly setting property `innerHTML` is not permitted. ' + 'For more information, lookup documentation on `dangerouslySetInnerHTML`.');
-      warnedProperties$1[name] = true;
+      // warnedProperties$1[name] = true;
       return true;
     }
 
     if (typeof value === 'number' && isNaN(value)) {
       warning$18(false, 'Received NaN for numeric attribute `%s`. If this is expected, cast ' + 'the value to a string.%s', name, getStackAddendum$2(debugID));
-      warnedProperties$1[name] = true;
+      // warnedProperties$1[name] = true;
       return true;
     }
 
@@ -6756,7 +6756,7 @@ function getStackAddendum$2(debugID) {
       var standardName = possibleStandardNames[lowerCasedName];
       if (standardName !== name) {
         warning$18(false, 'Invalid DOM property `%s`. Did you mean `%s`?%s', name, standardName, getStackAddendum$2(debugID));
-        warnedProperties$1[name] = true;
+        // warnedProperties$1[name] = true;
         return true;
       }
     }
@@ -6769,7 +6769,7 @@ function getStackAddendum$2(debugID) {
 
     // Warn when a known attribute is a bad type
     if (!DOMProperty_1.shouldSetAttribute(name, value)) {
-      warnedProperties$1[name] = true;
+      // warnedProperties$1[name] = true;
       return false;
     }
 
