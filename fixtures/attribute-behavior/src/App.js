@@ -2732,7 +2732,14 @@ function CellContent(props) {
     if (rowIndex === 0) {
       return null;
     }
-    return <RowHeader>{attribute.name}</RowHeader>;
+    const hasSameBehaviorForAll = types.every(
+      type => table.get(attribute).get(type.name).hasSameBehavior
+    );
+    return (
+      <RowHeader>
+        {hasSameBehaviorForAll ? attribute.name : <b>{attribute.name}</b>}
+      </RowHeader>
+    );
   }
 
   if (rowIndex === 0) {
