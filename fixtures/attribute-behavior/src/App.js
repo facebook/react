@@ -2638,8 +2638,16 @@ for (let attribute of attributes) {
   for (let type of types) {
     const result = getRenderedAttributeValues(attribute, type);
     row.set(type.name, result);
-    rowHash +=
-      result.react15.canonicalResult + '||' + result.react16.canonicalResult;
+    rowHash += [result.react15, result.react16]
+      .map(res =>
+        [
+          res.canonicalResult,
+          res.canonicalDefaultValue,
+          res.didWarn,
+          res.didError,
+        ].join('||')
+      )
+      .join('||');
   }
   table.set(attribute, row);
   if (!groupByRowPattern.get(rowHash)) {
