@@ -54,7 +54,7 @@
     "fbjs": "^0.8.9",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
-    "flow-bin": "^0.52.0",
+    "flow-bin": "^0.53.1",
     "git-branch": "^0.3.0",
     "glob": "^6.0.4",
     "glob-stream": "^6.1.0",

@@ -83,5 +83,5 @@ declare module 'UIManager' {
   ) : Promise<any>;
 }
 declare module 'View' {
-  declare var exports : typeof ReactComponent;
+  declare var exports : typeof React$Component;
 }

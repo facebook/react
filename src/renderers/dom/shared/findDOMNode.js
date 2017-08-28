@@ -29,7 +29,7 @@ let findStack = function(arg) {
 };
 
 const findDOMNode = function(
-  componentOrElement: Element | ?ReactComponent<any, any, any>,
+  componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
   if (__DEV__) {
     var owner = (ReactCurrentOwner.current: any);

@@ -23,7 +23,7 @@ var ReactNodeTypes = {
   COMPOSITE: 1,
   EMPTY: 2,
 
-  getType: function(node: ReactElement<any>): ReactNodeType {
+  getType: function(node: React$Element<any>): ReactNodeType {
     if (node === null || node === false) {
       return ReactNodeTypes.EMPTY;
     } else if (React.isValidElement(node)) {
