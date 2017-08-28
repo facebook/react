@@ -2888,17 +2888,19 @@ class App extends Component {
     let attribute = null;
     if (rowIndex !== 0) {
       attribute = attributesSorted[this.state.sortOrder][rowIndex - 1];
-      const hasSameBehaviorForAll = types.every(
-        type => table.get(attribute).get(type.name).hasSameBehavior
-      );
-      if (hasSameBehaviorForAll) {
-        return <div style={props.style}>(no changes)</div>;
-      }
-      const isSkipped = this.state.skipPatterns.indexOf(
-        rowPatternByAttribute.get(attribute)
-      ) > -1;
-      if (isSkipped) {
-        return <div style={props.style}>(skipped)</div>;
+      if (columnIndex !== 0) {
+        const hasSameBehaviorForAll = types.every(
+          type => table.get(attribute).get(type.name).hasSameBehavior
+        );
+        if (hasSameBehaviorForAll) {
+          return <div style={props.style}>(no changes)</div>;
+        }
+        const isSkipped = this.state.skipPatterns.indexOf(
+          rowPatternByAttribute.get(attribute)
+        ) > -1;
+        if (isSkipped) {
+          return <div style={props.style}>(skipped)</div>;
+        }
       }
     }
 
