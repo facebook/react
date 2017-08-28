@@ -7147,7 +7147,7 @@ var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 
 function validateProperty(tagName, name, debugID) {
-  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+  if (Object.prototype.hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
   }
 
@@ -8329,7 +8329,7 @@ if ("development" !== 'production') {
     if (DOMProperty.properties.hasOwnProperty(name) || DOMProperty.isCustomAttribute(name)) {
       return true;
     }
-    if (reactProps.hasOwnProperty(name) && reactProps[name] || warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+    if (reactProps.hasOwnProperty(name) && reactProps[name] || Object.prototype.hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
     if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
