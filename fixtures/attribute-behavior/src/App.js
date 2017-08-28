@@ -22,14 +22,6 @@ const types = [
     testDisplayValue: "'a string'",
   },
   {
-    name: 'null',
-    testValue: null,
-  },
-  {
-    name: 'undefined',
-    testValue: undefined,
-  },
-  {
     name: 'empty string',
     testValue: '',
     testDisplayValue: "''",
@@ -114,6 +106,14 @@ const types = [
   {
     name: 'function',
     testValue: function f() {},
+  },
+  {
+    name: 'null',
+    testValue: null,
+  },
+  {
+    name: 'undefined',
+    testValue: undefined,
   },
 ];
 
