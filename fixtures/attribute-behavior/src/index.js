@@ -9,8 +9,8 @@ import './index.css';
   delete window.React;
   delete window.ReactDOM;
 
-  await loadScript('/16-pre/react.development.js');
-  await loadScript('/16-pre/react-dom.development.js');
+  await loadScript('/16-post/react.development.js');
+  await loadScript('/16-post/react-dom.development.js');
 
   const React = (window.React16 = window.React);
   const ReactDOM = (window.ReactDOM16 = window.ReactDOM);
