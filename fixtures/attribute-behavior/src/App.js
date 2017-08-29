@@ -2992,7 +2992,7 @@ class App extends Component {
           const patternGroupSize1 = (patternGroup1 && patternGroup1.size) || 0;
           const patternGroup2 = rowPatternHashes.get(row2.rowPatternHash);
           const patternGroupSize2 = (patternGroup2 && patternGroup2.size) || 0;
-          return patternGroupSize1 - patternGroupSize2;
+          return patternGroupSize2 - patternGroupSize1;
         });
       }
       default:
