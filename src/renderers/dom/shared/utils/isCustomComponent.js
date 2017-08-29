@@ -13,7 +13,7 @@
 'use strict';
 
 var DOMNamespaces = require('DOMNamespaces');
-var invariant = require('invariant');
+var invariant = require('fbjs/lib/invariant');
 var HTML_NAMESPACE = DOMNamespaces.Namespaces.html;
 
 function isCustomComponent(
