@@ -125,6 +125,11 @@ var SVGDOMPropertyConfig = {
     externalResourcesRequired: HAS_STRING_BOOLEAN_VALUE,
     preserveAlpha: HAS_STRING_BOOLEAN_VALUE,
   },
+  DOMAttributeNames: {
+    autoReverse: 'autoReverse',
+    externalResourcesRequired: 'externalResourcesRequired',
+    preserveAlpha: 'preserveAlpha',
+  },
   DOMAttributeNamespaces: {
     xlinkActuate: NS.xlink,
     xlinkArcrole: NS.xlink,
@@ -137,7 +142,6 @@ var SVGDOMPropertyConfig = {
     xmlLang: NS.xml,
     xmlSpace: NS.xml,
   },
-  DOMAttributeNames: {},
 };
 
 var CAMELIZE = /[\-\:]([a-z])/g;
