@@ -597,15 +597,15 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with true value', async render => {
-        const e = await render(<div className={true} />);
-        expect(e.getAttribute('class')).toBe('true');
+      itRenders('no className prop with true value', async render => {
+        const e = await render(<div className={true} />, 1);
+        expect(e.hasAttribute('class')).toBe(false);
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
-        const e = await render(<div className={false} />);
-        expect(e.getAttribute('class')).toBe('false');
+      itRenders('no className prop with false value', async render => {
+        const e = await render(<div className={false} />, 1);
+        expect(e.hasAttribute('class')).toBe(false);
       });
 
       itRenders('no className prop with null value', async render => {
@@ -664,15 +664,15 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('htmlFor prop with true value', async render => {
-        const e = await render(<div htmlFor={true} />);
-        expect(e.getAttribute('for')).toBe('true');
+      itRenders('no htmlFor prop with true value', async render => {
+        const e = await render(<div htmlFor={true} />, 1);
+        expect(e.hasAttribute('for')).toBe(false);
       });
 
       // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('htmlFor prop with false value', async render => {
-        const e = await render(<div htmlFor={false} />);
-        expect(e.getAttribute('for')).toBe('false');
+      itRenders('no htmlFor prop with false value', async render => {
+        const e = await render(<div htmlFor={false} />, 1);
+        expect(e.hasAttribute('for')).toBe(false);
       });
 
       itRenders('no htmlFor prop with null value', async render => {

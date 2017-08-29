@@ -116,6 +116,7 @@ if (__DEV__) {
       return true;
     }
 
+
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       var standardName = possibleStandardNames[lowerCasedName];
@@ -130,6 +131,19 @@ if (__DEV__) {
         warnedProperties[name] = true;
         return true;
       }
+    }
+
+    if (typeof value === 'boolean') {
+      warning(
+        DOMProperty.allowBoolean(name),
+        'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
+          'the value to a string.%s',
+        value,
+        name,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
     }
 
     // Now that we've validated casing, do not validate

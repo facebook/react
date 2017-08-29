@@ -99,8 +99,9 @@ var DOMMarkupOperations = {
         (propertyInfo.hasOverloadedBooleanValue && value === true)
       ) {
         return attributeName + '=""';
+      } else if (typeof value !== 'boolean' || DOMProperty.allowBoolean(name)) {
+        return attributeName + '=' + quoteAttributeValueForBrowser(value);
       }
-      return attributeName + '=' + quoteAttributeValueForBrowser(value);
     } else if (DOMProperty.shouldSetAttribute(name, value)) {
       if (value == null) {
         return '';

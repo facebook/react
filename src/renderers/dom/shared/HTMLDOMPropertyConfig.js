@@ -43,6 +43,7 @@ var HTMLDOMPropertyConfig = {
     controls: HAS_BOOLEAN_VALUE,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
+    defaultChecked: HAS_BOOLEAN_VALUE,
     disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
     draggable: HAS_STRING_BOOLEAN_VALUE,

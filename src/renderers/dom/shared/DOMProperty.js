@@ -217,13 +217,7 @@ var DOMProperty = {
 
     switch (typeof value) {
       case 'boolean':
-        if (propertyInfo) {
-          return (
-            propertyInfo.hasBooleanValue || propertyInfo.hasStringBooleanValue
-          );
-        }
-        var prefix = lowerCased.slice(0, 5);
-        return prefix === 'data-' || prefix === 'aria-';
+        return DOMProperty.allowBoolean(name)
       case 'undefined':
       case 'number':
       case 'string':
@@ -239,6 +233,24 @@ var DOMProperty = {
     return DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
       : null;
+  },
+
+  allowBoolean(name) {
+    if (DOMProperty.isReservedProp(name)) {
+      return true;
+    }
+
+    let propertyInfo = DOMProperty.getPropertyInfo(name)
+
+    if (propertyInfo) {
+      return (
+        propertyInfo.hasBooleanValue || propertyInfo.hasStringBooleanValue || propertyInfo.hasOverloadedBooleanValue
+      );
+    }
+
+    var prefix = name.toLowerCase().slice(0, 5);
+
+    return prefix === 'data-' || prefix === 'aria-';
   },
 
   /**
