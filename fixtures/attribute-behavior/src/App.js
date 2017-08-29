@@ -2428,20 +2428,14 @@ const ALPHABETICAL = 'alphabetical';
 const REV_ALPHABETICAL = 'reverse_alphabetical';
 const GROUPED_BY_ROW_PATTERN = 'grouped_by_row_pattern';
 
-const attributesSorted = {
-  [ALPHABETICAL]: attributes
-    .slice(0)
-    .sort((attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)),
-  [REV_ALPHABETICAL]: attributes
-    .slice(0)
-    .sort((attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)),
-};
+const ALL = 'all';
+const COMPLETE = 'complete';
+const INCOMPLETE = 'incomplete';
 
 function getCanonicalizedValue(value) {
   switch (typeof value) {
     case 'undefined':
       return '<undefined>';
-      break;
     case 'object':
       if (value === null) {
         return '<null>';
@@ -2522,7 +2516,6 @@ function getCanonicalizedValue(value) {
     default:
       throw new Error('Switch statement should be exhaustive.');
   }
-  return value;
 }
 
 let _didWarn = false;
@@ -2582,6 +2575,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     const result = read(container.firstChild);
 
     return {
+      tagName,
+      containerTagName,
       testValue,
       defaultValue,
       result,
@@ -2592,6 +2587,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     };
   } catch (error) {
     return {
+      tagName,
+      containerTagName,
       testValue,
       defaultValue,
       result: null,
@@ -2628,17 +2625,21 @@ function getRenderedAttributeValues(attribute, type) {
 }
 
 const table = new Map();
-const groupByRowPattern = new Map();
+const rowPatternHashes = new Map();
 
-// Disable error overlay while test each attribute
+// Disable error overlay while testing each attribute
 uninjectErrorOverlay();
 for (let attribute of attributes) {
-  const row = new Map();
-  let rowHash = '';
+  const results = new Map();
+  let hasSameBehaviorForAll = true;
+  let rowPatternHash = '';
   for (let type of types) {
     const result = getRenderedAttributeValues(attribute, type);
-    row.set(type.name, result);
-    rowHash += [result.react15, result.react16]
+    results.set(type.name, result);
+    if (!result.hasSameBehavior) {
+      hasSameBehaviorForAll = false;
+    }
+    rowPatternHash += [result.react15, result.react16]
       .map(res =>
         [
           res.canonicalResult,
@@ -2649,23 +2650,18 @@ for (let attribute of attributes) {
       )
       .join('||');
   }
+  const row = {
+    results,
+    hasSameBehaviorForAll,
+    rowPatternHash,
+    // "Good enough" id that we can store in localStorage
+    rowIdHash: `${attribute.name} ${attribute.tagName} ${attribute.overrideStringValue}`,
+  };
+  const rowGroup = rowPatternHashes.get(rowPatternHash) || new Set();
+  rowGroup.add(row);
+  rowPatternHashes.set(rowPatternHash, rowGroup);
   table.set(attribute, row);
-  if (!groupByRowPattern.get(rowHash)) {
-    groupByRowPattern.set(rowHash, []);
-  }
-  const updatedAttributesArray = groupByRowPattern.get(rowHash);
-  updatedAttributesArray.push(attribute);
-  groupByRowPattern.set(rowHash, updatedAttributesArray);
 }
-
-let attributesSortedByRowPattern = [];
-groupByRowPattern.forEach(arrayOfAttributes => {
-  attributesSortedByRowPattern = attributesSortedByRowPattern.concat(
-    arrayOfAttributes
-  );
-});
-
-attributesSorted[GROUPED_BY_ROW_PATTERN] = attributesSortedByRowPattern;
 
 // Renable error overlay
 injectErrorOverlay();
@@ -2827,7 +2823,7 @@ function ColumnHeader({children}) {
   );
 }
 
-function RowHeader({children}) {
+function RowHeader({children, checked, onChange}) {
   return (
     <div
       css={{
@@ -2838,12 +2834,19 @@ function RowHeader({children}) {
         alignItems: 'center',
       }}>
       {children}
+      <input type="checkbox" checked={checked} onChange={onChange} />
     </div>
   );
 }
 
 function CellContent(props) {
-  const {columnIndex, rowIndex, attributesInSortedOrder} = props;
+  const {
+    columnIndex,
+    rowIndex,
+    attributesInSortedOrder,
+    completedHashes,
+    toggleAttribute,
+  } = props;
   const attribute = attributesInSortedOrder[rowIndex - 1];
   const type = types[columnIndex - 1];
 
@@ -2851,12 +2854,15 @@ function CellContent(props) {
     if (rowIndex === 0) {
       return null;
     }
-    const hasSameBehaviorForAll = types.every(
-      type => table.get(attribute).get(type.name).hasSameBehavior
-    );
+    const row = table.get(attribute);
+    const rowPatternHash = row.rowPatternHash;
     return (
-      <RowHeader>
-        {hasSameBehaviorForAll ? attribute.name : <b>{attribute.name}</b>}
+      <RowHeader
+        checked={completedHashes.has(rowPatternHash)}
+        onChange={() => toggleAttribute(rowPatternHash)}>
+        {row.hasSameBehaviorForAll
+          ? attribute.name
+          : <b css={{color: 'purple'}}>{attribute.name}</b>}
       </RowHeader>
     );
   }
@@ -2866,40 +2872,139 @@ function CellContent(props) {
   }
 
   const row = table.get(attribute);
-  const result = row.get(type.name);
+  const result = row.results.get(type.name);
 
   return <Result {...result} />;
 }
 
-class App extends Component {
-  constructor() {
-    super();
-    this.state = {sortOrder: REV_ALPHABETICAL};
-    this._renderCell = this.renderCell.bind(this);
-    this._onUpdateSort = this.onUpdateSort.bind(this);
-  }
+function saveToLocalStorage(completedHashes) {
+  const str = JSON.stringify([...completedHashes]);
+  localStorage.setItem('completedHashes', str);
+}
 
-  renderCell(props) {
+function restoreFromLocalStorage() {
+  const str = localStorage.getItem('completedHashes');
+  if (str) {
+    const completedHashes = new Set(JSON.parse(str));
+    return completedHashes;
+  }
+  return new Set();
+}
+
+class App extends Component {
+  state = {
+    sortOrder: ALPHABETICAL,
+    filter: ALL,
+    completedHashes: restoreFromLocalStorage(),
+  };
+
+  renderCell = props => {
     return (
       <div style={props.style}>
         <CellContent
-          attributesInSortedOrder={attributesSorted[this.state.sortOrder]}
+          toggleAttribute={this.toggleAttribute}
+          completedHashes={this.state.completedHashes}
+          attributesInSortedOrder={this.attributes}
           {...props}
         />
       </div>
     );
+  };
+
+  onUpdateSort = e => {
+    this.setState({sortOrder: e.target.value});
+  };
+
+  onUpdateFilter = e => {
+    this.setState({filter: e.target.value});
+  };
+
+  toggleAttribute = rowPatternHash => {
+    const completedHashes = new Set(this.state.completedHashes);
+    if (completedHashes.has(rowPatternHash)) {
+      completedHashes.delete(rowPatternHash);
+    } else {
+      completedHashes.add(rowPatternHash);
+    }
+    this.setState({completedHashes}, () => saveToLocalStorage(completedHashes));
+  };
+
+  componentWillMount() {
+    this.attributes = this.getAttributes(
+      this.state.sortOrder,
+      this.state.filter
+    );
   }
 
-  onUpdateSort(e) {
-    this.setState({sortOrder: e.target.value});
-    this.grid.forceUpdateGrids();
+  componentWillUpdate(nextProps, nextState) {
+    if (
+      nextState.sortOrder !== this.state.sortOrder ||
+      nextState.filter !== this.state.filter ||
+      nextState.completedHashes !== this.state.completedHashes
+    ) {
+      this.attributes = this.getAttributes(
+        nextState.sortOrder,
+        nextState.filter,
+        nextState.completedHashes
+      );
+      this.grid.forceUpdateGrids();
+    }
+  }
+
+  getAttributes(sortOrder, filter, completedHashes) {
+    // Filter
+    let filteredAttributes;
+    switch (filter) {
+      case ALL:
+        filteredAttributes = attributes.filter(() => true);
+        break;
+      case COMPLETE:
+        filteredAttributes = attributes.filter(attribute => {
+          const row = table.get(attribute);
+          return completedHashes.has(row.rowPatternHash);
+        });
+        break;
+      case INCOMPLETE:
+        filteredAttributes = attributes.filter(attribute => {
+          const row = table.get(attribute);
+          return !completedHashes.has(row.rowPatternHash);
+        });
+        break;
+      default:
+        throw new Error('Switch statement should be exhuastive');
+    }
+
+    // Sort
+    switch (sortOrder) {
+      case ALPHABETICAL:
+        return filteredAttributes.sort(
+          (attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)
+        );
+      case REV_ALPHABETICAL:
+        return filteredAttributes.sort(
+          (attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)
+        );
+      case GROUPED_BY_ROW_PATTERN: {
+        return filteredAttributes.sort((attr1, attr2) => {
+          const row1 = table.get(attr1);
+          const row2 = table.get(attr2);
+          const patternGroup1 = rowPatternHashes.get(row1.rowPatternHash);
+          const patternGroupSize1 = (patternGroup1 && patternGroup1.size) || 0;
+          const patternGroup2 = rowPatternHashes.get(row2.rowPatternHash);
+          const patternGroupSize2 = (patternGroup2 && patternGroup2.size) || 0;
+          return patternGroupSize2 - patternGroupSize1;
+        });
+      }
+      default:
+        throw new Error('Switch statement should be exhuastive');
+    }
   }
 
   render() {
     return (
       <div>
         <div>
-          <select onChange={this._onUpdateSort}>
+          <select onChange={this.onUpdateSort}>
             <option
               selected={this.state.sortOrder === ALPHABETICAL}
               value={ALPHABETICAL}>
@@ -2916,6 +3021,21 @@ class App extends Component {
               grouped by row pattern :)
             </option>
           </select>
+          <select onChange={this.onUpdateFilter}>
+            <option selected={this.state.sortOrder === ALL} value={ALL}>
+              all
+            </option>
+            <option
+              selected={this.state.sortOrder === INCOMPLETE}
+              value={INCOMPLETE}>
+              incomplete
+            </option>
+            <option
+              selected={this.state.sortOrder === COMPLETE}
+              value={COMPLETE}>
+              complete
+            </option>
+          </select>
         </div>
         <AutoSizer disableHeight={true}>
           {({width}) => (
@@ -2923,7 +3043,7 @@ class App extends Component {
               ref={input => {
                 this.grid = input;
               }}
-              cellRenderer={this._renderCell}
+              cellRenderer={this.renderCell}
               columnWidth={200}
               columnCount={1 + types.length}
               fixedColumnCount={1}
@@ -2931,7 +3051,7 @@ class App extends Component {
               enableFixedRowScroll={true}
               height={1200}
               rowHeight={40}
-              rowCount={attributes.length + 1}
+              rowCount={this.attributes.length + 1}
               fixedRowCount={1}
               width={width}
             />
