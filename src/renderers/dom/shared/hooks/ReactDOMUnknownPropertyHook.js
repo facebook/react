@@ -14,7 +14,6 @@
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
 var isCustomComponent = require('isCustomComponent');
-var DOMNamespaces = require('DOMNamespaces');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
