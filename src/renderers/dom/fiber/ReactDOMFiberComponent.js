@@ -746,15 +746,16 @@ var ReactDOMFiberComponent = {
     lastRawProps: Object,
     nextRawProps: Object,
   ): void {
+    var namespaceURI = domElement.namespaceURI;
     var wasCustomComponentTag = isCustomComponent(
       tag,
       lastRawProps,
-      domElement.namespaceURI,
+      namespaceURI,
     );
     var isCustomComponentTag = isCustomComponent(
       tag,
       nextRawProps,
-      domElement.namespaceURI,
+      namespaceURI,
     );
     // Apply the diff.
     updateDOMProperties(
