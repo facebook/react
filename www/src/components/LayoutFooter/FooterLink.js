@@ -14,7 +14,7 @@
 import React from 'react';
 import {colors} from 'theme';
 
-const FooterLink = ({children, to}) => (
+const FooterLink = ({children, target, to}) => (
   <a
     css={{
       fontWeight: 300,
@@ -23,7 +23,8 @@ const FooterLink = ({children, to}) => (
         color: colors.brand,
       },
     }}
-    href={to}>
+    href={to}
+    target={target}>
     {children}
   </a>
 );
