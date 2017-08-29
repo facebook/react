@@ -596,13 +596,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('class')).toBe('');
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
       itRenders('no className prop with true value', async render => {
         const e = await render(<div className={true} />, 1);
         expect(e.hasAttribute('class')).toBe(false);
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
       itRenders('no className prop with false value', async render => {
         const e = await render(<div className={false} />, 1);
         expect(e.hasAttribute('class')).toBe(false);
@@ -663,13 +661,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('for')).toBe('');
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
       itRenders('no htmlFor prop with true value', async render => {
         const e = await render(<div htmlFor={true} />, 1);
         expect(e.hasAttribute('for')).toBe(false);
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
       itRenders('no htmlFor prop with false value', async render => {
         const e = await render(<div htmlFor={false} />, 1);
         expect(e.hasAttribute('for')).toBe(false);
