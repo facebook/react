@@ -893,9 +893,10 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('data-foo')).toBe('bar');
       });
 
-      itRenders('no "data" attribute', async render => {
-        const e = await render(<div data="hello" />, 1);
-        expect(e.hasAttribute('data')).toBe(false);
+      itRenders('"data" attribute', async render => {
+        // For `<object />` acts as `src`.
+        const e = await render(<object data="hello" />);
+        expect(e.getAttribute('data')).toBe(true);
       });
 
       itRenders('no unknown data- attributes with null value', async render => {

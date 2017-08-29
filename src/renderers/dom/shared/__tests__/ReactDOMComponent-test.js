@@ -829,13 +829,9 @@ describe('ReactDOMComponent', () => {
 
     it('should warn on props reserved for future use', () => {
       spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div data="hello" aria="world" />);
-      expectDev(console.error.calls.count()).toBe(2);
+      ReactTestUtils.renderIntoDocument(<div aria="hello" />);
+      expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'The `data` attribute is reserved for future use in React, and will be ignored. ' +
-          'Pass individual `data-` attributes instead.',
-      );
-      expectDev(console.error.calls.argsFor(1)[0]).toContain(
         'The `aria` attribute is reserved for future use in React, and will be ignored. ' +
           'Pass individual `aria-` attributes instead.',
       );

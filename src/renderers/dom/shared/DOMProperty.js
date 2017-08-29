@@ -18,7 +18,6 @@ var invariant = require('fbjs/lib/invariant');
 var RESERVED_PROPS = {
   aria: true,
   children: true,
-  data: true,
   dangerouslysetinnerhtml: true,
   autofocus: true,
   defaultvalue: true,
