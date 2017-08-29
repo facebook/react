@@ -173,7 +173,7 @@ DOMEventTarget relatedTarget
 Event names:
 
 ```
-onChange onInput onSubmit
+onChange onInput onInvalid onSubmit
 ```
 
 For more information about the onChange event, see [Forms](/react/docs/forms.html).
