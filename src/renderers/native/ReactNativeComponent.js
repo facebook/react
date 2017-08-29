@@ -28,10 +28,8 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
-} from 'ReactNativeTypes';
-import type {
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
+} from 'ReactNativeTypes';
 
 /**
  * Superclass that provides methods to access the underlying native component.

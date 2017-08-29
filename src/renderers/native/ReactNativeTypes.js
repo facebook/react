@@ -34,6 +34,14 @@ export type MeasureLayoutOnSuccessCallback = (
   height: number,
 ) => void;
 
+export type ReactNativeBaseComponentViewConfig = {
+  validAttributes: Object,
+  uiViewClassName: string,
+  propTypes?: Object,
+};
+
+export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig;
+
 /**
  * This type keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
  * It can also provide types for ReactNative applications that use NMM or refs.
@@ -51,17 +59,20 @@ export type NativeMethodsMixinType = {
   setNativeProps(nativeProps: Object): void,
 };
 
-type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object,
-  uiViewClassName: string,
-  propTypes?: Object,
-};
-
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
   createReactNativeComponentClass(
     viewConfig: ReactNativeBaseComponentViewConfig,
   ): any,
+  lazilyCreateReactNativeComponentClass(
+    name: string,
+    callback: ViewConfigGetter,
+  ): any,
+  ReactNativeViewConfigRegistry: {
+    register(viewConfig: ReactNativeBaseComponentViewConfig): string,
+    registerLazy(name: string, callback: ViewConfigGetter): string,
+    get(name: string): ReactNativeBaseComponentViewConfig,
+  },
   ReactNativeComponentTree: any,
   ReactNativePropRegistry: any,
   // TODO (bvaughn) Decide which additional types to expose here?

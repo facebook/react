@@ -99,8 +99,10 @@ const ReactNativeFiber: ReactNativeType = {
     ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
     ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
     ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
+    ReactNativeViewConfigRegistry: require('ReactNativeViewConfigRegistry'), // requireNativeComponent
     TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg Text
+    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg RCTText, ReactNativeART
+    lazilyCreateReactNativeComponentClass: require('lazilyCreateReactNativeComponentClass'), // eg RCTView
     takeSnapshot: require('takeSnapshot'), // react-native-implementation
   },
 };

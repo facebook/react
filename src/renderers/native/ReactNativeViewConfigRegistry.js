@@ -14,42 +14,60 @@
 
 const invariant = require('fbjs/lib/invariant');
 
-export type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object,
-  uiViewClassName: string,
-  propTypes?: Object,
-};
+import type {
+  ReactNativeBaseComponentViewConfig,
+  ViewConfigGetter,
+} from 'ReactNativeTypes';
 
-const lazyViewConfigs = new Map();
-const views = new Map();
+const registeredViewNames = new Map();
+const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
 
 const ReactNativeViewConfigRegistry = {
+  /**
+   * Registers a native view/component.
+   * This method is intended for views with JavaScript-defined configs.
+   * If the config is loaded from UIManager, use registerLazy() instead.
+   */
   register(viewConfig: ReactNativeBaseComponentViewConfig) {
     const name = viewConfig.uiViewClassName;
     invariant(
-      !views.has(name),
+      !registeredViewNames.has(name),
       'Tried to register two views with the same name %s',
       name,
     );
     viewConfigs.set(name, viewConfig);
-    views.set(name);
+    registeredViewNames.set(name);
     return name;
   },
-  registerLazy(name: string, callback: () => ReactNativeBaseComponentViewConfig) {
+
+  /**
+   * Registers a native view/component by name.
+   * A callback is provided to load the view config from UIManager.
+   * The callback is deferred until the view is actually rendered.
+   * This is done to avoid causing Prepack deopts.
+   */
+  registerLazy(name: string, callback: ViewConfigGetter) {
     invariant(
-      !views.has(name),
+      !registeredViewNames.has(name),
       'Tried to register two views with the same name %s',
       name,
     );
-    lazyViewConfigs.set(name, callback);
-    views.set(name);
+    viewConfigCallbacks.set(name, callback);
+    registeredViewNames.set(name);
     return name;
   },
+
   get(name: string) {
     let viewConfig;
     if (!viewConfigs.has(name)) {
-      const callback = lazyViewConfigs.get(name);
+      const callback = viewConfigCallbacks.get(name);
+      invariant(
+        typeof callback === 'function',
+        'View config not found for name %s',
+        name,
+      );
+      viewConfigCallbacks.set(name, null);
       viewConfig = callback();
       viewConfigs.set(name, viewConfig);
     } else {
