@@ -145,8 +145,8 @@ function warnInvalidARIAProps(type, props, debugID) {
   }
 }
 
-function validateProperties(type, props, namespace, debugID /* Stack only */) {
-  if (isCustomComponent(type, props, namespace)) {
+function validateProperties(type, props, domElement, debugID /* Stack only */) {
+  if (isCustomComponent(type, props, domElement)) {
     return;
   }
   warnInvalidARIAProps(type, props, debugID);

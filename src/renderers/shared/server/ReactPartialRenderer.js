@@ -40,15 +40,15 @@ if (__DEV__) {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');
   var {
-    validateProperties: validateInputPropertes,
+    validateProperties: validateInputProperties,
   } = require('ReactDOMNullInputValuePropHook');
   var {
-    validateProperties: validateUnknownPropertes,
+    validateProperties: validateUnknownProperties,
   } = require('ReactDOMUnknownPropertyHook');
-  var validatePropertiesInDevelopment = function(type, namespace, props) {
-    validateARIAProperties(type, namespace, props);
-    validateInputPropertes(type, props);
-    validateUnknownPropertes(type, namespace, props);
+  var validatePropertiesInDevelopment = function(type, props, domElement) {
+    validateARIAProperties(type, props, domElement);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props, domElement);
   };
 
   var describeComponentFrame = require('describeComponentFrame');
@@ -278,7 +278,7 @@ function createOpenTagMarkup(
       propValue = createMarkupForStyles(propValue, instForDebug);
     }
     var markup = null;
-    if (isCustomComponent(tagLowercase, props, namespace)) {
+    if (isCustomComponent(tagLowercase, props, {namespaceURI: namespace})) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
         markup = DOMMarkupOperations.createMarkupForCustomAttribute(
           propKey,
@@ -775,7 +775,7 @@ class ReactDOMServerRenderer {
     }
 
     if (__DEV__) {
-      validatePropertiesInDevelopment(tag, props, namespace);
+      validatePropertiesInDevelopment(tag, props, {namespaceURI: namespace});
     }
 
     assertValidProps(tag, props);

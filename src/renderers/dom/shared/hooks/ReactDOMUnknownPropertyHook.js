@@ -232,8 +232,8 @@ var warnUnknownProperties = function(type, props, debugID) {
   }
 };
 
-function validateProperties(type, props, namespace, debugID /* Stack only */) {
-  if (isCustomComponent(type, props, namespace)) {
+function validateProperties(type, props, domElement, debugID /* Stack only */) {
+  if (isCustomComponent(type, props, domElement)) {
     return;
   }
   warnUnknownProperties(type, props, debugID);
