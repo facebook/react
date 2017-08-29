@@ -2189,33 +2189,39 @@ describe('ReactDOMComponent', () => {
     });
   });
 
-  describe('Hyphenated SVG elements', function() {
-    it('the font-face element is not a custom element', function() {
-      spyOn(console, 'error');
-      var el = ReactTestUtils.renderIntoDocument(
-        <font-face x-height={false} />,
-      );
+  if (ReactDOMFeatureFlags.useFiber) {
+    describe('Hyphenated SVG elements', function() {
+      it('the font-face element is not a custom element', function() {
+        spyOn(console, 'error');
+        var el = ReactTestUtils.renderIntoDocument(
+          <svg><font-face x-height={false} /></svg>,
+        );
 
-      expect(el.hasAttribute('x-height')).toBe(false);
+        expect(el.querySelector('font-face').hasAttribute('x-height')).toBe(
+          false,
+        );
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
-      );
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
+        );
+      });
+
+      it('the font-face element does not allow unknown boolean values', function() {
+        spyOn(console, 'error');
+        var el = ReactTestUtils.renderIntoDocument(
+          <svg><font-face whatever={false} /></svg>,
+        );
+
+        expect(el.querySelector('font-face').hasAttribute('whatever')).toBe(
+          false,
+        );
+
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Received `false` for non-boolean attribute `whatever`.',
+        );
+      });
     });
-
-    it('the font-face element does not allow unknown boolean values', function() {
-      spyOn(console, 'error');
-      var el = ReactTestUtils.renderIntoDocument(
-        <font-face whatever={false} />,
-      );
-
-      expect(el.hasAttribute('whatever')).toBe(false);
-
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `false` for non-boolean attribute `whatever`.',
-      );
-    });
-  });
+  }
 });

@@ -40,10 +40,10 @@ if (__DEV__) {
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
   var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
   var {
-    validateProperties: validateInputPropertes,
+    validateProperties: validateInputProperties,
   } = ReactDOMNullInputValuePropHook;
   var {
-    validateProperties: validateUnknownPropertes,
+    validateProperties: validateUnknownProperties,
   } = ReactDOMUnknownPropertyHook;
 }
 
@@ -70,10 +70,10 @@ if (__DEV__) {
     time: true,
   };
 
-  var validatePropertiesInDevelopment = function(type, props) {
-    validateARIAProperties(type, props);
-    validateInputPropertes(type, props);
-    validateUnknownPropertes(type, props);
+  var validatePropertiesInDevelopment = function(type, namespace, props) {
+    validateARIAProperties(type, props, namespace);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props, namespace);
   };
 
   var warnForTextDifference = function(serverText: string, clientText: string) {
@@ -307,8 +307,7 @@ var ReactDOMFiberComponent = {
     }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
-        var isCustomComponentTag =
-          isCustomComponent(type, props) && namespaceURI === HTML_NAMESPACE;
+        var isCustomComponentTag = isCustomComponent(type, props, namespaceURI);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
         warning(
@@ -369,11 +368,13 @@ var ReactDOMFiberComponent = {
     rawProps: Object,
     rootContainerElement: Element | Document,
   ): void {
-    var isCustomComponentTag =
-      isCustomComponent(tag, rawProps) &&
-      domElement.namespaceURI === HTML_NAMESPACE;
+    var isCustomComponentTag = isCustomComponent(
+      tag,
+      rawProps,
+      domElement.namespaceURI,
+    );
     if (__DEV__) {
-      validatePropertiesInDevelopment(tag, rawProps);
+      validatePropertiesInDevelopment(tag, domElement.namespaceURI, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
@@ -544,7 +545,11 @@ var ReactDOMFiberComponent = {
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
-      validatePropertiesInDevelopment(tag, nextRawProps);
+      validatePropertiesInDevelopment(
+        tag,
+        domElement.namespaceURI,
+        nextRawProps,
+      );
     }
 
     var updatePayload: null | Array<any> = null;
@@ -741,12 +746,16 @@ var ReactDOMFiberComponent = {
     lastRawProps: Object,
     nextRawProps: Object,
   ): void {
-    var wasCustomComponentTag =
-      isCustomComponent(tag, lastRawProps) &&
-      domElement.namespaceURI === HTML_NAMESPACE;
-    var isCustomComponentTag =
-      isCustomComponent(tag, nextRawProps) &&
-      domElement.namespaceURI === HTML_NAMESPACE;
+    var wasCustomComponentTag = isCustomComponent(
+      tag,
+      lastRawProps,
+      domElement.namespaceURI,
+    );
+    var isCustomComponentTag = isCustomComponent(
+      tag,
+      nextRawProps,
+      domElement.namespaceURI,
+    );
     // Apply the diff.
     updateDOMProperties(
       domElement,
@@ -786,10 +795,12 @@ var ReactDOMFiberComponent = {
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
-      var isCustomComponentTag =
-        isCustomComponent(tag, rawProps) &&
-        domElement.namespaceURI === HTML_NAMESPACE;
-      validatePropertiesInDevelopment(tag, rawProps);
+      var isCustomComponentTag = isCustomComponent(
+        tag,
+        rawProps,
+        domElement.namespaceURI,
+      );
+      validatePropertiesInDevelopment(tag, domElement.namespaceURI, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,

@@ -11,23 +11,17 @@
 
 'use strict';
 
-// https://www.w3.org/TR/SVG/eltindex.html
-var DashedSVGElements = {
-  'color-profile': true,
-  'font-face': true,
-  'font-face-format': true,
-  'font-face-name': true,
-  'font-face-src': true,
-  'font-face-uri': true,
-  'missing-glyph': true,
-};
+var DOMNamespaces = require('DOMNamespaces');
+var HTML_NAMESPACE = DOMNamespaces.Namespaces.html;
 
-function isCustomComponent(tagName, props) {
-  if (DashedSVGElements[tagName]) {
-    return false;
+function isCustomComponent(tagName, props, namespace) {
+  if (tagName.indexOf('-') >= 0 || props.is != null) {
+    // TODO: We always have a namespace with fiber. Drop the first
+    // check when Stack is removed.
+    return namespace == null || namespace === HTML_NAMESPACE;
   }
 
-  return tagName.indexOf('-') >= 0 || props.is != null;
+  return false;
 }
 
 module.exports = isCustomComponent;

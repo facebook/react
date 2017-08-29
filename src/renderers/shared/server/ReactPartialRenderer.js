@@ -45,10 +45,10 @@ if (__DEV__) {
   var {
     validateProperties: validateUnknownPropertes,
   } = require('ReactDOMUnknownPropertyHook');
-  var validatePropertiesInDevelopment = function(type, props) {
-    validateARIAProperties(type, props);
+  var validatePropertiesInDevelopment = function(type, namespace, props) {
+    validateARIAProperties(type, namespace, props);
     validateInputPropertes(type, props);
-    validateUnknownPropertes(type, props);
+    validateUnknownPropertes(type, namespace, props);
   };
 
   var describeComponentFrame = require('describeComponentFrame');
@@ -278,10 +278,7 @@ function createOpenTagMarkup(
       propValue = createMarkupForStyles(propValue, instForDebug);
     }
     var markup = null;
-    if (
-      isCustomComponent(tagLowercase, props) &&
-      namespace === Namespaces.html
-    ) {
+    if (isCustomComponent(tagLowercase, props, namespace)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
         markup = DOMMarkupOperations.createMarkupForCustomAttribute(
           propKey,
@@ -778,7 +775,7 @@ class ReactDOMServerRenderer {
     }
 
     if (__DEV__) {
-      validatePropertiesInDevelopment(tag, props);
+      validatePropertiesInDevelopment(tag, props, namespace);
     }
 
     assertValidProps(tag, props);

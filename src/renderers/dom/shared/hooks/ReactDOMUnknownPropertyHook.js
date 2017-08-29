@@ -14,6 +14,7 @@
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
 var isCustomComponent = require('isCustomComponent');
+var DOMNamespaces = require('DOMNamespaces');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -208,8 +209,8 @@ var warnUnknownProperties = function(type, props, debugID) {
   }
 };
 
-function validateProperties(type, props, debugID /* Stack only */) {
-  if (isCustomComponent(type, props)) {
+function validateProperties(type, props, namespace, debugID /* Stack only */) {
+  if (isCustomComponent(type, props, namespace)) {
     return;
   }
   warnUnknownProperties(type, props, debugID);
@@ -221,12 +222,12 @@ var ReactDOMUnknownPropertyHook = {
   // Stack
   onBeforeMountComponent(debugID, element) {
     if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, debugID);
+      validateProperties(element.type, element.props, null, debugID);
     }
   },
   onBeforeUpdateComponent(debugID, element) {
     if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, debugID);
+      validateProperties(element.type, element.props, null, debugID);
     }
   },
 };
