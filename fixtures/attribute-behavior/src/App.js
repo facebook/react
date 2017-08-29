@@ -2629,6 +2629,7 @@ function getRenderedAttributeValues(attribute, type) {
 
 const table = new Map();
 const groupByRowPattern = new Map();
+const rowPatternByAttribute = new Map();
 
 // Disable error overlay while test each attribute
 uninjectErrorOverlay();
@@ -2649,6 +2650,7 @@ for (let attribute of attributes) {
       )
       .join('||');
   }
+  rowPatternByAttribute.set(attribute, rowHash);
   table.set(attribute, row);
   if (!groupByRowPattern.get(rowHash)) {
     groupByRowPattern.set(rowHash, []);
@@ -2856,7 +2858,9 @@ function CellContent(props) {
     );
     return (
       <RowHeader>
-        {hasSameBehaviorForAll ? attribute.name : <b>{attribute.name}</b>}
+        <span onClick={props.onClick}>
+          {hasSameBehaviorForAll ? attribute.name : <b>{attribute.name}</b>}
+        </span>
       </RowHeader>
     );
   }
@@ -2874,21 +2878,49 @@ function CellContent(props) {
 class App extends Component {
   constructor() {
     super();
-    this.state = {sortOrder: REV_ALPHABETICAL};
+    this.state = {sortOrder: REV_ALPHABETICAL, skipPatterns: []};
     this._renderCell = this.renderCell.bind(this);
     this._onUpdateSort = this.onUpdateSort.bind(this);
   }
 
   renderCell(props) {
+    const {rowIndex, columnIndex} = props;
+    let attribute = null;
+    if (rowIndex !== 0) {
+      attribute = attributesSorted[this.state.sortOrder][rowIndex - 1];
+      if (columnIndex !== 0) {
+        const hasSameBehaviorForAll = types.every(
+          type => table.get(attribute).get(type.name).hasSameBehavior
+        );
+        if (hasSameBehaviorForAll) {
+          return <div style={props.style}>(no changes)</div>;
+        }
+        const isSkipped = this.state.skipPatterns.indexOf(
+          rowPatternByAttribute.get(attribute)
+        ) > -1;
+        if (isSkipped) {
+          return <div style={props.style}>(skipped)</div>;
+        }
+      }
+    }
+
     return (
       <div style={props.style}>
         <CellContent
           attributesInSortedOrder={attributesSorted[this.state.sortOrder]}
+          onClick={() => this.handleAccept(attribute)}
           {...props}
         />
       </div>
     );
   }
+
+  handleAccept = (attribute) => {
+    this.setState(({skipPatterns}) => ({
+      skipPatterns: [...skipPatterns, rowPatternByAttribute.get(attribute)]
+    }));
+    this.grid.forceUpdateGrids();
+  };
 
   onUpdateSort(e) {
     this.setState({sortOrder: e.target.value});
