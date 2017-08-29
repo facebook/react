@@ -981,6 +981,14 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.getAttribute('onClick')).toBe(null);
       expect(e.getAttribute('click')).toBe(null);
     });
+
+    itRenders('no unknown events', async render => {
+      const e = await render(
+        <div onunknownevent="alert(&quot;hack&quot;)" />,
+        1,
+      );
+      expect(e.getAttribute('onunknownevent')).toBe(null);
+    });
   });
 
   describe('elements and children', function() {

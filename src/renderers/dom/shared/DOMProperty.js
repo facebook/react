@@ -211,6 +211,12 @@ var DOMProperty = {
     if (value === null) {
       return true;
     }
+    if (
+      (name[0] === 'o' || name[0] === 'O') &&
+      (name[1] === 'n' || name[1] === 'N')
+    ) {
+      return false;
+    }
     switch (typeof value) {
       case 'boolean':
         return DOMProperty.shouldAttributeAcceptBooleanValue(name);
