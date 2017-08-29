@@ -2575,6 +2575,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     const result = read(container.firstChild);
 
     return {
+      tagName,
+      containerTagName,
       testValue,
       defaultValue,
       result,
@@ -2585,6 +2587,8 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     };
   } catch (error) {
     return {
+      tagName,
+      containerTagName,
       testValue,
       defaultValue,
       result: null,
@@ -2621,6 +2625,7 @@ function getRenderedAttributeValues(attribute, type) {
 }
 
 const table = new Map();
+const rowPatternHashes = new Map();
 
 // Disable error overlay while testing each attribute
 uninjectErrorOverlay();
@@ -2652,6 +2657,9 @@ for (let attribute of attributes) {
     // "Good enough" id that we can store in localStorage
     rowIdHash: `${attribute.name} ${attribute.tagName} ${attribute.overrideStringValue}`,
   };
+  const rowGroup = rowPatternHashes.get(rowPatternHash) || new Set();
+  rowGroup.add(row);
+  rowPatternHashes.set(rowPatternHash, rowGroup);
   table.set(attribute, row);
 }
 
@@ -2836,7 +2844,7 @@ function CellContent(props) {
     columnIndex,
     rowIndex,
     attributesInSortedOrder,
-    completedAttributes,
+    completedHashes,
     toggleAttribute,
   } = props;
   const attribute = attributesInSortedOrder[rowIndex - 1];
@@ -2847,10 +2855,11 @@ function CellContent(props) {
       return null;
     }
     const row = table.get(attribute);
+    const rowPatternHash = row.rowPatternHash;
     return (
       <RowHeader
-        checked={completedAttributes.has(attribute)}
-        onChange={() => toggleAttribute(attribute)}>
+        checked={completedHashes.has(rowPatternHash)}
+        onChange={() => toggleAttribute(rowPatternHash)}>
         {row.hasSameBehaviorForAll
           ? attribute.name
           : <b css={{color: 'purple'}}>{attribute.name}</b>}
@@ -2868,30 +2877,16 @@ function CellContent(props) {
   return <Result {...result} />;
 }
 
-function saveToLocalStorage(completedAttributes) {
-  let array = [];
-  completedAttributes.forEach(attr => {
-    const row = table.get(attr);
-    array.push(row.rowIdHash);
-  });
-  const str = JSON.stringify(array);
-  localStorage.setItem('completedAttributes', str);
-  console.log(localStorage.getItem('completedAttributes'));
+function saveToLocalStorage(completedHashes) {
+  const str = JSON.stringify([...completedHashes]);
+  localStorage.setItem('completedHashes', str);
 }
 
 function restoreFromLocalStorage() {
-  const str = localStorage.getItem('completedAttributes');
+  const str = localStorage.getItem('completedHashes');
   if (str) {
-    const completedIds = new Set(JSON.parse(str));
-    const completedAttributes = new Set();
-    attributes.forEach(attr => {
-      const row = table.get(attr);
-      if (completedIds.has(row.rowIdHash)) {
-        completedAttributes.add(attr);
-      }
-    });
-    console.log(completedAttributes);
-    return completedAttributes;
+    const completedHashes = new Set(JSON.parse(str));
+    return completedHashes;
   }
   return new Set();
 }
@@ -2900,7 +2895,7 @@ class App extends Component {
   state = {
     sortOrder: ALPHABETICAL,
     filter: ALL,
-    completedAttributes: restoreFromLocalStorage(),
+    completedHashes: restoreFromLocalStorage(),
   };
 
   renderCell = props => {
@@ -2908,7 +2903,7 @@ class App extends Component {
       <div style={props.style}>
         <CellContent
           toggleAttribute={this.toggleAttribute}
-          completedAttributes={this.state.completedAttributes}
+          completedHashes={this.state.completedHashes}
           attributesInSortedOrder={this.attributes}
           {...props}
         />
@@ -2924,16 +2919,14 @@ class App extends Component {
     this.setState({filter: e.target.value});
   };
 
-  toggleAttribute = attribute => {
-    const completedAttributes = new Set(this.state.completedAttributes);
-    if (completedAttributes.has(attribute)) {
-      completedAttributes.delete(attribute);
+  toggleAttribute = rowPatternHash => {
+    const completedHashes = new Set(this.state.completedHashes);
+    if (completedHashes.has(rowPatternHash)) {
+      completedHashes.delete(rowPatternHash);
     } else {
-      completedAttributes.add(attribute);
+      completedHashes.add(rowPatternHash);
     }
-    this.setState({completedAttributes}, () =>
-      saveToLocalStorage(completedAttributes)
-    );
+    this.setState({completedHashes}, () => saveToLocalStorage(completedHashes));
   };
 
   componentWillMount() {
@@ -2947,18 +2940,18 @@ class App extends Component {
     if (
       nextState.sortOrder !== this.state.sortOrder ||
       nextState.filter !== this.state.filter ||
-      nextState.completedAttributes !== this.state.completedAttributes
+      nextState.completedHashes !== this.state.completedHashes
     ) {
       this.attributes = this.getAttributes(
         nextState.sortOrder,
         nextState.filter,
-        nextState.completedAttributes
+        nextState.completedHashes
       );
       this.grid.forceUpdateGrids();
     }
   }
 
-  getAttributes(sortOrder, filter, completedAttributes) {
+  getAttributes(sortOrder, filter, completedHashes) {
     // Filter
     let filteredAttributes;
     switch (filter) {
@@ -2966,14 +2959,16 @@ class App extends Component {
         filteredAttributes = attributes.filter(() => true);
         break;
       case COMPLETE:
-        filteredAttributes = attributes.filter(attribute =>
-          completedAttributes.has(attribute)
-        );
+        filteredAttributes = attributes.filter(attribute => {
+          const row = table.get(attribute);
+          return completedHashes.has(row.rowPatternHash);
+        });
         break;
       case INCOMPLETE:
-        filteredAttributes = attributes.filter(
-          attribute => !completedAttributes.has(attribute)
-        );
+        filteredAttributes = attributes.filter(attribute => {
+          const row = table.get(attribute);
+          return !completedHashes.has(row.rowPatternHash);
+        });
         break;
       default:
         throw new Error('Switch statement should be exhuastive');
@@ -2993,7 +2988,11 @@ class App extends Component {
         return filteredAttributes.sort((attr1, attr2) => {
           const row1 = table.get(attr1);
           const row2 = table.get(attr2);
-          return row1.rowPatternHash.localeCompare(row2.rowPatternHash);
+          const patternGroup1 = rowPatternHashes.get(row1.rowPatternHash);
+          const patternGroupSize1 = (patternGroup1 && patternGroup1.size) || 0;
+          const patternGroup2 = rowPatternHashes.get(row2.rowPatternHash);
+          const patternGroupSize2 = (patternGroup2 && patternGroup2.size) || 0;
+          return patternGroupSize1 - patternGroupSize2;
         });
       }
       default:
