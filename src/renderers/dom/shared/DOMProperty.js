@@ -42,6 +42,7 @@ var DOMPropertyInjection = {
   HAS_NUMERIC_VALUE: 0x8,
   HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
   HAS_OVERLOADED_BOOLEAN_VALUE: 0x20,
+  HAS_STRING_BOOLEAN_VALUE: 0x40,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -102,6 +103,10 @@ var DOMPropertyInjection = {
         hasOverloadedBooleanValue: checkMask(
           propConfig,
           Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
+        ),
+        hasStringBooleanValue: checkMask(
+          propConfig,
+          Injection.HAS_STRING_BOOLEAN_VALUE,
         ),
       };
       invariant(
@@ -213,14 +218,15 @@ var DOMProperty = {
     switch (typeof value) {
       case 'boolean':
         if (propertyInfo) {
-          return true;
+          return (
+            propertyInfo.hasBooleanValue || propertyInfo.hasStringBooleanValue
+          );
         }
         var prefix = lowerCased.slice(0, 5);
         return prefix === 'data-' || prefix === 'aria-';
       case 'undefined':
       case 'number':
       case 'string':
-        return true;
       case 'object':
         return true;
       default:

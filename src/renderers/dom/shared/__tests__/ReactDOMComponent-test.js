@@ -2096,10 +2096,8 @@ describe('ReactDOMComponent', () => {
 
   describe('Object stringification', function() {
     it('allows objects on known properties', function() {
-      var el = ReactTestUtils.renderIntoDocument(
-        <div acceptCharset={{}} />,
-      );
-      expect(el.getAttribute('acceptCharset')).toBe('[object Object]');
+      var el = ReactTestUtils.renderIntoDocument(<div acceptCharset={{}} />);
+      expect(el.getAttribute('accept-charset')).toBe('[object Object]');
     });
 
     it('should pass objects as attributes if they define toString', () => {
@@ -2155,6 +2153,39 @@ describe('ReactDOMComponent', () => {
       var el = ReactTestUtils.renderIntoDocument(<div ajaxify={options} />);
 
       expect(el.getAttribute('ajaxify')).toBe('ajaxy');
+    });
+  });
+
+  describe('String boolean attributes', function() {
+    it('does not assign string boolean attributes for custom attributes', function() {
+      spyOn(console, 'error');
+
+      var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid prop `whatever` on <div> tag',
+      );
+    });
+
+    it('stringifies the boolean true for allowed attributes', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div spellCheck={true} />);
+
+      expect(el.getAttribute('spellCheck')).toBe('true');
+    });
+
+    it('stringifies the boolean false for allowed attributes', function() {
+      var el = ReactTestUtils.renderIntoDocument(<div spellCheck={false} />);
+
+      expect(el.getAttribute('spellCheck')).toBe('false');
+    });
+
+    it('stringifies implicit booleans for allowed attributes', function() {
+      // eslint-disable-next-line react/jsx-boolean-value
+      var el = ReactTestUtils.renderIntoDocument(<div spellCheck />);
+
+      expect(el.getAttribute('spellCheck')).toBe('true');
     });
   });
 });

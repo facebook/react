@@ -20,6 +20,7 @@ var HAS_POSITIVE_NUMERIC_VALUE =
   DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
 var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
+var HAS_STRING_BOOLEAN_VALUE = DOMProperty.injection.HAS_STRING_BOOLEAN_VALUE;
 
 var HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
@@ -29,7 +30,7 @@ var HTMLDOMPropertyConfig = {
     allowFullScreen: HAS_BOOLEAN_VALUE,
     // IE only true/false iFrame attribute
     // https://msdn.microsoft.com/en-us/library/ms533072(v=vs.85).aspx
-    allowTransparency: HAS_BOOLEAN_VALUE,
+    allowTransparency: HAS_STRING_BOOLEAN_VALUE,
     // specifies target context for links with `preload` type
     async: HAS_BOOLEAN_VALUE,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
@@ -38,13 +39,13 @@ var HTMLDOMPropertyConfig = {
     capture: HAS_BOOLEAN_VALUE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
-    contentEditable: HAS_BOOLEAN_VALUE,
+    contentEditable: HAS_STRING_BOOLEAN_VALUE,
     controls: HAS_BOOLEAN_VALUE,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
     disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
-    draggable: HAS_BOOLEAN_VALUE,
+    draggable: HAS_STRING_BOOLEAN_VALUE,
     formNoValidate: HAS_BOOLEAN_VALUE,
     hidden: HAS_BOOLEAN_VALUE,
     loop: HAS_BOOLEAN_VALUE,
@@ -67,7 +68,7 @@ var HTMLDOMPropertyConfig = {
     start: HAS_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
-    spellCheck: HAS_BOOLEAN_VALUE,
+    spellCheck: HAS_STRING_BOOLEAN_VALUE,
     // Style must be explicitly set in the attribute list. React components
     // expect a style object
     style: 0,
