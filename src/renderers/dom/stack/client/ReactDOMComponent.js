@@ -480,9 +480,6 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, props);
 
-    if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(this._tag, props);
-    }
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var namespaceURI;
@@ -499,6 +496,10 @@ ReactDOMComponent.Mixin = {
       (namespaceURI === Namespaces.svg && parentTag === 'foreignobject')
     ) {
       namespaceURI = Namespaces.html;
+    }
+    if (__DEV__) {
+      var isCustomComponentTag =
+        isCustomComponent(this._tag, props) && namespaceURI === Namespaces.html;
     }
     if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
@@ -696,7 +697,11 @@ ReactDOMComponent.Mixin = {
           propValue = createMarkupForStyles(propValue, this);
         }
         var markup = null;
-        if (this._tag != null && isCustomComponent(this._tag, props)) {
+        if (
+          this._tag != null &&
+          isCustomComponent(this._tag, props) &&
+          this._namespaceURI === Namespaces.html
+        ) {
           if (!DOMProperty.isReservedProp(propKey)) {
             markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
@@ -879,7 +884,9 @@ ReactDOMComponent.Mixin = {
     }
 
     assertValidProps(this, nextProps);
-    var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
+    var isCustomComponentTag =
+      isCustomComponent(this._tag, nextProps) &&
+      this._namespaceURI === Namespaces.html;
     this._updateDOMProperties(
       lastProps,
       nextProps,
@@ -953,7 +960,10 @@ ReactDOMComponent.Mixin = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
       } else if (!DOMProperty.isReservedProp(propKey)) {
-        if (isCustomComponent(this._tag, lastProps)) {
+        if (
+          isCustomComponent(this._tag, lastProps) &&
+          this._namespaceURI === Namespaces.html
+        ) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
         } else {
           DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);

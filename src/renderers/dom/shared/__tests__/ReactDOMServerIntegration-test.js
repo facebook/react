@@ -950,6 +950,15 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
+      itRenders(
+        'known SVG attributes for elements with dashes in tag',
+        async render => {
+          const e = await render(<svg><font-face accentHeight={10} /></svg>);
+          expect(e.firstChild.hasAttribute('accentHeight')).toBe(false);
+          expect(e.firstChild.getAttribute('accent-height')).toBe('10');
+        },
+      );
+
       itRenders('cased custom attributes', async render => {
         const e = await render(<div fooBar="test" />);
         expect(e.getAttribute('fooBar')).toBe('test');

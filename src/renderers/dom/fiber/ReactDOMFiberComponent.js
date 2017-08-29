@@ -305,11 +305,10 @@ var ReactDOMFiberComponent = {
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
-    if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(type, props);
-    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
+        var isCustomComponentTag =
+          isCustomComponent(type, props) && namespaceURI === HTML_NAMESPACE;
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
         warning(
@@ -370,7 +369,9 @@ var ReactDOMFiberComponent = {
     rawProps: Object,
     rootContainerElement: Element | Document,
   ): void {
-    var isCustomComponentTag = isCustomComponent(tag, rawProps);
+    var isCustomComponentTag =
+      isCustomComponent(tag, rawProps) &&
+      domElement.namespaceURI === HTML_NAMESPACE;
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
@@ -740,8 +741,12 @@ var ReactDOMFiberComponent = {
     lastRawProps: Object,
     nextRawProps: Object,
   ): void {
-    var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
-    var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
+    var wasCustomComponentTag =
+      isCustomComponent(tag, lastRawProps) &&
+      domElement.namespaceURI === HTML_NAMESPACE;
+    var isCustomComponentTag =
+      isCustomComponent(tag, nextRawProps) &&
+      domElement.namespaceURI === HTML_NAMESPACE;
     // Apply the diff.
     updateDOMProperties(
       domElement,
@@ -781,7 +786,9 @@ var ReactDOMFiberComponent = {
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(tag, rawProps);
+      var isCustomComponentTag =
+        isCustomComponent(tag, rawProps) &&
+        domElement.namespaceURI === HTML_NAMESPACE;
       validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(

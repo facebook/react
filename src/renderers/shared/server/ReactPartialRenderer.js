@@ -262,6 +262,7 @@ function createOpenTagMarkup(
   tagVerbatim,
   tagLowercase,
   props,
+  namespace,
   makeStaticMarkup,
   isRootElement,
   instForDebug,
@@ -280,7 +281,10 @@ function createOpenTagMarkup(
       propValue = createMarkupForStyles(propValue, instForDebug);
     }
     var markup = null;
-    if (isCustomComponent(tagLowercase, props)) {
+    if (
+      isCustomComponent(tagLowercase, props) &&
+      namespace === Namespaces.html
+    ) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
         markup = DOMMarkupOperations.createMarkupForCustomAttribute(
           propKey,
@@ -786,6 +790,7 @@ class ReactDOMServerRenderer {
       element.type,
       tag,
       props,
+      namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
       null,
