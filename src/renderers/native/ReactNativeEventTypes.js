@@ -391,12 +391,12 @@ let ReactNativeEventTypes;
 if (Platform.OS === 'ios') {
   ReactNativeEventTypes = {
     customBubblingEventTypes: IOS_BUBBLING_EVENT_TYPES,
-    customDirectEventTypes: IOS_DIRECT_EVENT_TYPES,   
+    customDirectEventTypes: IOS_DIRECT_EVENT_TYPES,
   };
 } else if (Platform.OS === 'android') {
   ReactNativeEventTypes = {
     customBubblingEventTypes: ANDROID_BUBBLING_EVENT_TYPES,
-    customDirectEventTypes: ANDROID_DIRECT_EVENT_TYPES,   
+    customDirectEventTypes: ANDROID_DIRECT_EVENT_TYPES,
   };
 } else {
   ReactNativeEventTypes = {
