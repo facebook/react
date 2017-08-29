@@ -940,38 +940,35 @@ describe('ReactDOMComponent', () => {
       }).toThrowError('\n\nThis DOM node was rendered by `Owner`.');
     });
 
-    it.only(
-      'should emit a warning once for a named custom component using shady DOM',
-      () => {
-        spyOn(console, 'error');
+    it('should emit a warning once for a named custom component using shady DOM', () => {
+      spyOn(console, 'error');
 
-        var defaultCreateElement = document.createElement.bind(document);
+      var defaultCreateElement = document.createElement.bind(document);
 
-        try {
-          document.createElement = element => {
-            var container = defaultCreateElement(element);
-            container.shadyRoot = {};
-            return container;
-          };
-          class ShadyComponent extends React.Component {
-            render() {
-              return <polymer-component />;
-            }
+      try {
+        document.createElement = element => {
+          var container = defaultCreateElement(element);
+          container.shadyRoot = {};
+          return container;
+        };
+        class ShadyComponent extends React.Component {
+          render() {
+            return <polymer-component />;
           }
-          var node = document.createElement('div');
-          ReactDOM.render(<ShadyComponent />, node);
-          expectDev(console.error.calls.count()).toBe(1);
-          expectDev(console.error.calls.argsFor(0)[0]).toContain(
-            'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
-              'cause things to break subtly.',
-          );
-          mountComponent({is: 'custom-shady-div2'});
-          expectDev(console.error.calls.count()).toBe(1);
-        } finally {
-          document.createElement = defaultCreateElement;
         }
-      },
-    );
+        var node = document.createElement('div');
+        ReactDOM.render(<ShadyComponent />, node);
+        expectDev(console.error.calls.count()).toBe(1);
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
+            'cause things to break subtly.',
+        );
+        mountComponent({is: 'custom-shady-div2'});
+        expectDev(console.error.calls.count()).toBe(1);
+      } finally {
+        document.createElement = defaultCreateElement;
+      }
+    });
 
     it('should emit a warning once for an unnamed custom component using shady DOM', () => {
       spyOn(console, 'error');
