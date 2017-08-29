@@ -15,7 +15,7 @@ var DOMNamespaces = require('DOMNamespaces');
 var HTML_NAMESPACE = DOMNamespaces.Namespaces.html;
 
 function isCustomComponent(tagName, props, namespace) {
-  if (tagName.indexOf('-') >= 0 || props.is != null) {
+  if (tagName.indexOf('-') >= 0 || typeof props.is === 'string') {
     // TODO: We always have a namespace with fiber. Drop the first
     // check when Stack is removed.
     return namespace == null || namespace === HTML_NAMESPACE;

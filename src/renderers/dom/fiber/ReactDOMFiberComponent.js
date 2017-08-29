@@ -326,7 +326,7 @@ var ReactDOMFiberComponent = {
         // This is guaranteed to yield a script element.
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
-      } else if (props.is) {
+      } else if (typeof props.is === 'string') {
         // $FlowIssue `createElement` should be updated for Web Components
         domElement = ownerDocument.createElement(type, {is: props.is});
       } else {

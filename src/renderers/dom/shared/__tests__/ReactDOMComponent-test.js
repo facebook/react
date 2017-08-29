@@ -635,10 +635,22 @@ describe('ReactDOMComponent', () => {
       expect(nodeValueSetter.mock.calls.length).toBe(3);
     });
 
-    it('should ignore attribute whitelist for elements with the "is: attribute', () => {
+    it('should ignore attribute whitelist for elements with the "is" attribute', () => {
       var container = document.createElement('div');
       ReactDOM.render(<button is="test" cowabunga="chevynova" />, container);
       expect(container.firstChild.hasAttribute('cowabunga')).toBe(true);
+    });
+
+    it('should warn about non-string "is" attribute', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<button is={function() {}} />, container);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Received a `function` for string attribute `is`. If this is expected, cast ' +
+          'the value to a string.',
+      );
     });
 
     it('should not update when switching between null/undefined', () => {

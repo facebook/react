@@ -105,6 +105,23 @@ if (__DEV__) {
       return true;
     }
 
+    if (
+      lowerCasedName === 'is' &&
+      value !== null &&
+      value !== undefined &&
+      typeof value !== 'string'
+    ) {
+      warning(
+        false,
+        'Received a `%s` for string attribute `is`. If this is expected, cast ' +
+          'the value to a string.%s',
+        typeof value,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+
     if (typeof value === 'number' && isNaN(value)) {
       warning(
         false,

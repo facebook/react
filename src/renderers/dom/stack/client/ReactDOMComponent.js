@@ -552,7 +552,7 @@ ReactDOMComponent.Mixin = {
           var div = ownerDocument.createElement('div');
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
-        } else if (props.is) {
+        } else if (typeof props.is === 'string') {
           el = ownerDocument.createElement(type, {is: props.is});
         } else {
           // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
