@@ -307,9 +307,12 @@ var ReactDOMFiberComponent = {
     }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
-        var isCustomComponentTag = isCustomComponent(type, props, {
-          namespaceURI: namespaceURI,
-        });
+        var isCustomComponentTag = isCustomComponent(
+          type,
+          props,
+          null,
+          namespaceURI,
+        );
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
         warning(
@@ -370,7 +373,12 @@ var ReactDOMFiberComponent = {
     rawProps: Object,
     rootContainerElement: Element | Document,
   ): void {
-    var isCustomComponentTag = isCustomComponent(tag, rawProps, domElement);
+    var isCustomComponentTag = isCustomComponent(
+      tag,
+      rawProps,
+      domElement,
+      null,
+    );
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, rawProps, domElement);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
@@ -744,8 +752,14 @@ var ReactDOMFiberComponent = {
       tag,
       lastRawProps,
       domElement,
+      null,
     );
-    var isCustomComponentTag = isCustomComponent(tag, nextRawProps, domElement);
+    var isCustomComponentTag = isCustomComponent(
+      tag,
+      nextRawProps,
+      domElement,
+      null,
+    );
     // Apply the diff.
     updateDOMProperties(
       domElement,
@@ -785,7 +799,12 @@ var ReactDOMFiberComponent = {
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(tag, rawProps, domElement);
+      var isCustomComponentTag = isCustomComponent(
+        tag,
+        rawProps,
+        domElement,
+        null,
+      );
       validatePropertiesInDevelopment(tag, rawProps, domElement);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(

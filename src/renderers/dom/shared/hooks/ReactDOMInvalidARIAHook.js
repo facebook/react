@@ -146,7 +146,7 @@ function warnInvalidARIAProps(type, props, debugID) {
 }
 
 function validateProperties(type, props, domElement, debugID /* Stack only */) {
-  if (isCustomComponent(type, props, domElement)) {
+  if (isCustomComponent(type, props, domElement, null)) {
     return;
   }
   warnInvalidARIAProps(type, props, debugID);

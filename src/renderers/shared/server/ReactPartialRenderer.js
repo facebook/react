@@ -278,7 +278,7 @@ function createOpenTagMarkup(
       propValue = createMarkupForStyles(propValue, instForDebug);
     }
     var markup = null;
-    if (isCustomComponent(tagLowercase, props, {namespaceURI: namespace})) {
+    if (isCustomComponent(tagLowercase, props, null, namespace)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
         markup = DOMMarkupOperations.createMarkupForCustomAttribute(
           propKey,
