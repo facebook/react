@@ -134,7 +134,7 @@ if (__DEV__) {
 
     if (typeof value === 'boolean') {
       warning(
-        DOMProperty.allowBoolean(name),
+        DOMProperty.shouldAttributeAcceptBooleanValue(name),
         'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
           'the value to a string.%s',
         value,

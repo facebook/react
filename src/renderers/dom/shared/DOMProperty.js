@@ -206,18 +206,12 @@ var DOMProperty = {
     if (DOMProperty.isReservedProp(name)) {
       return false;
     }
-
     if (value === null) {
       return true;
     }
-
-    var lowerCased = name.toLowerCase();
-
-    var propertyInfo = DOMProperty.properties[name];
-
     switch (typeof value) {
       case 'boolean':
-        return DOMProperty.allowBoolean(name);
+        return DOMProperty.shouldAttributeAcceptBooleanValue(name);
       case 'undefined':
       case 'number':
       case 'string':
@@ -235,13 +229,11 @@ var DOMProperty = {
       : null;
   },
 
-  allowBoolean(name) {
+  shouldAttributeAcceptBooleanValue(name) {
     if (DOMProperty.isReservedProp(name)) {
       return true;
     }
-
     let propertyInfo = DOMProperty.getPropertyInfo(name);
-
     if (propertyInfo) {
       return (
         propertyInfo.hasBooleanValue ||
@@ -249,9 +241,7 @@ var DOMProperty = {
         propertyInfo.hasOverloadedBooleanValue
       );
     }
-
     var prefix = name.toLowerCase().slice(0, 5);
-
     return prefix === 'data-' || prefix === 'aria-';
   },
 
