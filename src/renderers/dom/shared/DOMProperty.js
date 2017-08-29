@@ -16,7 +16,9 @@ var invariant = require('fbjs/lib/invariant');
 // These attributes should be all lowercase to allow for
 // case insensitive checks
 var RESERVED_PROPS = {
+  aria: true,
   children: true,
+  data: true,
   dangerouslysetinnerhtml: true,
   autofocus: true,
   defaultvalue: true,

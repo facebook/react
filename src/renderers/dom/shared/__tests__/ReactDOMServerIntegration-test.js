@@ -845,6 +845,11 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div aria-label={null} />);
         expect(e.hasAttribute('aria-label')).toBe(false);
       });
+
+      itRenders('no "aria" attribute', async render => {
+        const e = await render(<div aria="hello" />, 1);
+        expect(e.hasAttribute('aria')).toBe(false);
+      });
     });
 
     describe('cased attributes', function() {
@@ -886,6 +891,11 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('unknown data- attributes', async render => {
         const e = await render(<div data-foo="bar" />);
         expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders('no "data" attribute', async render => {
+        const e = await render(<div data="hello" />, 1);
+        expect(e.hasAttribute('data')).toBe(false);
       });
 
       itRenders('no unknown data- attributes with null value', async render => {

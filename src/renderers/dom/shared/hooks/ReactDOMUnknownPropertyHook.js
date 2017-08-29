@@ -105,6 +105,26 @@ if (__DEV__) {
       return true;
     }
 
+    if (lowerCasedName === 'aria') {
+      warning(
+        false,
+        'The `aria` attribute is reserved for future use in React, and will be ignored. ' +
+          'Pass individual `aria-` attributes instead.',
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    if (lowerCasedName === 'data') {
+      warning(
+        false,
+        'The `data` attribute is reserved for future use in React, and will be ignored. ' +
+          'Pass individual `data-` attributes instead.',
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+
     if (
       lowerCasedName === 'is' &&
       value !== null &&
