@@ -2188,4 +2188,34 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('spellCheck')).toBe('true');
     });
   });
+
+  describe('Hyphenated SVG elements', function() {
+    it('the font-face element is not a custom element', function() {
+      spyOn(console, 'error');
+      var el = ReactTestUtils.renderIntoDocument(
+        <font-face x-height={false} />,
+      );
+
+      expect(el.hasAttribute('x-height')).toBe(false);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
+      );
+    });
+
+    it('the font-face element does not allow unknown boolean values', function() {
+      spyOn(console, 'error');
+      var el = ReactTestUtils.renderIntoDocument(
+        <font-face whatever={false} />,
+      );
+
+      expect(el.hasAttribute('whatever')).toBe(false);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Received `false` for non-boolean attribute `whatever`.',
+      );
+    });
+  });
 });

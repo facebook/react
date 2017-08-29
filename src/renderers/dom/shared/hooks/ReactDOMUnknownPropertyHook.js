@@ -13,6 +13,7 @@
 
 var DOMProperty = require('DOMProperty');
 var EventPluginRegistry = require('EventPluginRegistry');
+var isCustomComponent = require('isCustomComponent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -208,7 +209,7 @@ var warnUnknownProperties = function(type, props, debugID) {
 };
 
 function validateProperties(type, props, debugID /* Stack only */) {
-  if (type.indexOf('-') >= 0 || props.is) {
+  if (isCustomComponent(type, props)) {
     return;
   }
   warnUnknownProperties(type, props, debugID);

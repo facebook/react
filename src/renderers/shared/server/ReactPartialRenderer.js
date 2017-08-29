@@ -28,6 +28,7 @@ var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var invariant = require('fbjs/lib/invariant');
 var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
+var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
 
@@ -253,10 +254,6 @@ var RESERVED_PROPS = {
   dangerouslySetInnerHTML: null,
   suppressContentEditableWarning: null,
 };
-
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
-}
 
 function createOpenTagMarkup(
   tagVerbatim,

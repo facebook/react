@@ -11,7 +11,22 @@
 
 'use strict';
 
+// https://www.w3.org/TR/SVG/eltindex.html
+var DashedSVGElements = {
+  'color-profile': true,
+  'font-face': true,
+  'font-face-format': true,
+  'font-face-name': true,
+  'font-face-src': true,
+  'font-face-uri': true,
+  'missing-glyph': true,
+};
+
 function isCustomComponent(tagName, props) {
+  if (DashedSVGElements[tagName]) {
+    return false;
+  }
+
   return tagName.indexOf('-') >= 0 || props.is != null;
 }
 

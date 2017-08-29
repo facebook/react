@@ -12,6 +12,7 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var isCustomComponent = require('isCustomComponent');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
@@ -145,7 +146,7 @@ function warnInvalidARIAProps(type, props, debugID) {
 }
 
 function validateProperties(type, props, debugID /* Stack only */) {
-  if (type.indexOf('-') >= 0 || props.is) {
+  if (isCustomComponent(type, props)) {
     return;
   }
   warnInvalidARIAProps(type, props, debugID);
