@@ -205,23 +205,10 @@ var warnUnknownProperties = function(type, props, debugID) {
     var isValid = validateProperty(type, key, props[key], debugID);
     if (!isValid) {
       unknownProps.push(key);
-      var value = props[key];
-      if (typeof value === 'object' && value !== null) {
-        warning(
-          false,
-          'The %s prop on <%s> is not a known property, and was given an object.' +
-            'Remove it, or it will appear in the ' +
-            'DOM after a future React update.%s',
-          key,
-          type,
-          getStackAddendum(debugID),
-        );
-      }
     }
   }
 
   var unknownPropString = unknownProps.map(prop => '`' + prop + '`').join(', ');
-
   if (unknownProps.length === 1) {
     warning(
       false,
