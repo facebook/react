@@ -233,7 +233,7 @@ function setInitialDOMProperties(
     } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
-      if (nextProp) {
+      if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
@@ -715,7 +715,7 @@ var ReactDOMFiberComponent = {
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
         // Noop
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
+        if (nextProp != null) {
           // We eagerly listen to this even though we haven't committed yet.
           if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
@@ -974,7 +974,7 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
+        if (nextProp != null) {
           if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
           }
