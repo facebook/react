@@ -2003,7 +2003,7 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`'
+        'Warning: Received `true` for non-boolean attribute `whatever`',
       );
     });
 
@@ -2016,7 +2016,7 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`'
+        'Warning: Received `true` for non-boolean attribute `whatever`',
       );
     });
 

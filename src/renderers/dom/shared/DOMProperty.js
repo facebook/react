@@ -217,7 +217,7 @@ var DOMProperty = {
 
     switch (typeof value) {
       case 'boolean':
-        return DOMProperty.allowBoolean(name)
+        return DOMProperty.allowBoolean(name);
       case 'undefined':
       case 'number':
       case 'string':
@@ -240,11 +240,13 @@ var DOMProperty = {
       return true;
     }
 
-    let propertyInfo = DOMProperty.getPropertyInfo(name)
+    let propertyInfo = DOMProperty.getPropertyInfo(name);
 
     if (propertyInfo) {
       return (
-        propertyInfo.hasBooleanValue || propertyInfo.hasStringBooleanValue || propertyInfo.hasOverloadedBooleanValue
+        propertyInfo.hasBooleanValue ||
+        propertyInfo.hasStringBooleanValue ||
+        propertyInfo.hasOverloadedBooleanValue
       );
     }
 

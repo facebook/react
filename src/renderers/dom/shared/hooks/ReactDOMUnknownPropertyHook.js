@@ -116,7 +116,6 @@ if (__DEV__) {
       return true;
     }
 
-
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       var standardName = possibleStandardNames[lowerCasedName];

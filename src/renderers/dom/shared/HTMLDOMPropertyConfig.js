@@ -43,7 +43,6 @@ var HTMLDOMPropertyConfig = {
     controls: HAS_BOOLEAN_VALUE,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
-    defaultChecked: HAS_BOOLEAN_VALUE,
     disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
     draggable: HAS_STRING_BOOLEAN_VALUE,
@@ -83,7 +82,8 @@ var HTMLDOMPropertyConfig = {
     htmlFor: 0,
     httpEquiv: 0,
     // Attributes with mutation methods must be specified in the whitelist
-    value: 0,
+    // Set the string boolean flag to allow the behavior
+    value: HAS_STRING_BOOLEAN_VALUE,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',

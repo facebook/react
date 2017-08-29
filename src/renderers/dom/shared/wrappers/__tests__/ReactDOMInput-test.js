@@ -301,28 +301,20 @@ describe('ReactDOMInput', () => {
     component.forceUpdate();
   });
 
-  it('should display nothing for `defaultValue` of `true`', () => {
+  it('should display "true" for `defaultValue` of `true`', () => {
     var stub = <input type="text" defaultValue={true} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
-    expect(node.value).toBe('');
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
-      'Warning: Received `true` for non-boolean attribute `defaultValue`.'
-    );
+    expect(node.value).toBe('true');
   });
 
-  it('should display nothing for `defaultValue` of `false`', () => {
+  it('should display "false" for `defaultValue` of `false`', () => {
     var stub = <input type="text" defaultValue={false} />;
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
-    expect(node.value).toBe('');
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
-      'Warning: Received `false` for non-boolean attribute `defaultValue`.'
-    );
+    expect(node.value).toBe('false');
   });
 
   it('should update `defaultValue` for uncontrolled input', () => {
