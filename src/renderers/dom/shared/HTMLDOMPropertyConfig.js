@@ -27,6 +27,9 @@ var HTMLDOMPropertyConfig = {
   // name warnings.
   Properties: {
     allowFullScreen: HAS_BOOLEAN_VALUE,
+    // IE only true/false iFrame attribute
+    // https://msdn.microsoft.com/en-us/library/ms533072(v=vs.85).aspx
+    allowTransparency: HAS_BOOLEAN_VALUE,
     // specifies target context for links with `preload` type
     async: HAS_BOOLEAN_VALUE,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
@@ -35,11 +38,13 @@ var HTMLDOMPropertyConfig = {
     capture: HAS_BOOLEAN_VALUE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
+    contentEditable: HAS_BOOLEAN_VALUE,
     controls: HAS_BOOLEAN_VALUE,
     default: HAS_BOOLEAN_VALUE,
     defer: HAS_BOOLEAN_VALUE,
     disabled: HAS_BOOLEAN_VALUE,
     download: HAS_OVERLOADED_BOOLEAN_VALUE,
+    draggable: HAS_BOOLEAN_VALUE,
     formNoValidate: HAS_BOOLEAN_VALUE,
     hidden: HAS_BOOLEAN_VALUE,
     loop: HAS_BOOLEAN_VALUE,
@@ -62,6 +67,7 @@ var HTMLDOMPropertyConfig = {
     start: HAS_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
+    spellCheck: HAS_BOOLEAN_VALUE,
     // Style must be explicitly set in the attribute list. React components
     // expect a style object
     style: 0,
@@ -76,14 +82,6 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: 0,
     // Attributes with mutation methods must be specified in the whitelist
     value: 0,
-    // The following attributes expect boolean values. They must be in
-    // the whitelist to allow boolean attribute assignment:
-    // IE only true/false iFrame attribute
-    // https://msdn.microsoft.com/en-us/library/ms533072(v=vs.85).aspx
-    allowTransparency: 0,
-    contentEditable: 0,
-    draggable: 0,
-    spellCheck: 0,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',

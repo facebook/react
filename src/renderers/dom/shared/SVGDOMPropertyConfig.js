@@ -11,6 +11,10 @@
 
 'use strict';
 
+var DOMProperty = require('DOMProperty');
+
+var HAS_BOOLEAN_VALUE = DOMProperty.injection.MUST_USE_PROPERTY;
+
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
   xml: 'http://www.w3.org/XML/1998/namespace',
@@ -113,15 +117,16 @@ var ATTRS = [
   'xmlns:xlink',
   'xml:lang',
   'xml:space',
-  // The following attributes expect boolean values. They must be in
-  // the whitelist to allow boolean attribute assignment:
-  'autoReverse',
-  'externalResourcesRequired',
-  'preserveAlpha',
 ];
 
 var SVGDOMPropertyConfig = {
-  Properties: {},
+  Properties: {
+    // The following attributes expect boolean values. They must be in
+    // the whitelist to allow boolean attribute assignment:
+    autoReverse: HAS_BOOLEAN_VALUE,
+    externalResourcesRequired: HAS_BOOLEAN_VALUE,
+    preserveAlpha: HAS_BOOLEAN_VALUE,
+  },
   DOMAttributeNamespaces: {
     xlinkActuate: NS.xlink,
     xlinkArcrole: NS.xlink,
