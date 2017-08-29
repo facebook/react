@@ -2097,9 +2097,9 @@ describe('ReactDOMComponent', () => {
   describe('Object stringification', function() {
     it('allows objects on known properties', function() {
       var el = ReactTestUtils.renderIntoDocument(
-        <div allowTransparency={{}} />,
+        <div acceptCharset={{}} />,
       );
-      expect(el.getAttribute('allowtransparency')).toBe('[object Object]');
+      expect(el.getAttribute('acceptCharset')).toBe('[object Object]');
     });
 
     it('should pass objects as attributes if they define toString', () => {
