@@ -2607,9 +2607,14 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   console.error = originalConsoleError;
 
   let ssrHasSameBehavior;
+  let ssrHasSameBehaviorExceptWarnings;
   if (didError && ssrDidError) {
     ssrHasSameBehavior = true;
   } else if (!didError && !ssrDidError) {
+    if (canonicalResult === canonicalSsrResult) {
+      ssrHasSameBehaviorExceptWarnings = true;
+      ssrHasSameBehavior = didWarn === ssrDidWarn;
+    }
     ssrHasSameBehavior =
       didWarn === ssrDidWarn && canonicalResult === canonicalSsrResult;
   } else {
@@ -2631,6 +2636,7 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
     ssrDidWarn,
     ssrDidError,
     ssrHasSameBehavior,
+    ssrHasSameBehaviorExceptWarnings,
   };
 }
 
@@ -2722,6 +2728,7 @@ function RendererResult({
   didWarn,
   didError,
   ssrHasSameBehavior,
+  ssrHasSameBehaviorExceptWarnings,
 }) {
   let backgroundColor;
   if (didError) {
@@ -2744,7 +2751,8 @@ function RendererResult({
   };
 
   if (!ssrHasSameBehavior) {
-    style.border = '3px dotted magenta';
+    const color = ssrHasSameBehaviorExceptWarnings ? 'gray' : 'magenta';
+    style.border = `3px dotted ${color}`;
   }
 
   return <div css={style}>{canonicalResult}</div>;
