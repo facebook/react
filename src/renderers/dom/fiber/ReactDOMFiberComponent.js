@@ -70,7 +70,7 @@ if (__DEV__) {
     time: true,
   };
 
-  var validatePropertiesInDevelopment = function(type, props, domElement) {
+  var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props);
