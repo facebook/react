@@ -12,33 +12,8 @@
 
 'use strict';
 
-var DOMNamespaces = require('DOMNamespaces');
-var invariant = require('fbjs/lib/invariant');
-var HTML_NAMESPACE = DOMNamespaces.Namespaces.html;
-
-function isCustomComponent(
-  tagName: string,
-  props: Object,
-  domElement: Element | null,
-  namespaceURI: string | null,
-) {
-  if (domElement !== null && namespaceURI !== null) {
-    invariant(
-      false,
-      'Either pass domElement or namespaceURI, but not both. This error is likely ' +
-        'caused by a bug in React. Please file an issue.',
-    );
-  }
-  if (tagName.indexOf('-') >= 0 || typeof props.is === 'string') {
-    if (domElement === null) {
-      // TODO: We always have a namespace with fiber. Drop the first
-      // check when Stack is removed.
-      return namespaceURI === null || namespaceURI === HTML_NAMESPACE;
-    }
-    return domElement.namespaceURI === HTML_NAMESPACE;
-  }
-
-  return false;
+function isCustomComponent(tagName: string, props: Object) {
+  return tagName.indexOf('-') >= 0 || typeof props.is === 'string';
 }
 
 module.exports = isCustomComponent;

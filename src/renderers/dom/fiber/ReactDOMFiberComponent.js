@@ -71,9 +71,9 @@ if (__DEV__) {
   };
 
   var validatePropertiesInDevelopment = function(type, props, domElement) {
-    validateARIAProperties(type, props, domElement);
+    validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props, domElement);
+    validateUnknownProperties(type, props);
   };
 
   var warnForTextDifference = function(serverText: string, clientText: string) {
@@ -310,8 +310,6 @@ var ReactDOMFiberComponent = {
         var isCustomComponentTag = isCustomComponent(
           type,
           props,
-          null,
-          namespaceURI,
         );
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
@@ -376,8 +374,6 @@ var ReactDOMFiberComponent = {
     var isCustomComponentTag = isCustomComponent(
       tag,
       rawProps,
-      domElement,
-      null,
     );
     if (__DEV__) {
       validatePropertiesInDevelopment(tag, rawProps, domElement);
@@ -751,14 +747,10 @@ var ReactDOMFiberComponent = {
     var wasCustomComponentTag = isCustomComponent(
       tag,
       lastRawProps,
-      domElement,
-      null,
     );
     var isCustomComponentTag = isCustomComponent(
       tag,
       nextRawProps,
-      domElement,
-      null,
     );
     // Apply the diff.
     updateDOMProperties(
@@ -802,8 +794,6 @@ var ReactDOMFiberComponent = {
       var isCustomComponentTag = isCustomComponent(
         tag,
         rawProps,
-        domElement,
-        null,
       );
       validatePropertiesInDevelopment(tag, rawProps, domElement);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {

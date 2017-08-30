@@ -501,8 +501,6 @@ ReactDOMComponent.Mixin = {
       var isCustomComponentTag = isCustomComponent(
         this._tag,
         props,
-        null,
-        namespaceURI,
       );
     }
     if (namespaceURI === Namespaces.html) {
@@ -703,7 +701,7 @@ ReactDOMComponent.Mixin = {
         var markup = null;
         if (
           this._tag != null &&
-          isCustomComponent(this._tag, props, null, this._namespaceURI)
+          isCustomComponent(this._tag, props)
         ) {
           if (!DOMProperty.isReservedProp(propKey)) {
             markup = DOMMarkupOperations.createMarkupForCustomAttribute(
@@ -890,8 +888,6 @@ ReactDOMComponent.Mixin = {
     var isCustomComponentTag = isCustomComponent(
       this._tag,
       nextProps,
-      null,
-      this._namespaceURI,
     );
     this._updateDOMProperties(
       lastProps,
@@ -966,7 +962,7 @@ ReactDOMComponent.Mixin = {
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
       } else if (!DOMProperty.isReservedProp(propKey)) {
-        if (isCustomComponent(this._tag, lastProps, null, this._namespaceURI)) {
+        if (isCustomComponent(this._tag, lastProps)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
         } else {
           DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);

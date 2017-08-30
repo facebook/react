@@ -222,8 +222,8 @@ var warnUnknownProperties = function(type, props, debugID) {
   }
 };
 
-function validateProperties(type, props, domElement, debugID /* Stack only */) {
-  if (isCustomComponent(type, props, domElement, null)) {
+function validateProperties(type, props, debugID /* Stack only */) {
+  if (isCustomComponent(type, props)) {
     return;
   }
   warnUnknownProperties(type, props, debugID);
@@ -235,12 +235,12 @@ var ReactDOMUnknownPropertyHook = {
   // Stack
   onBeforeMountComponent(debugID, element) {
     if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, null, debugID);
+      validateProperties(element.type, element.props, debugID);
     }
   },
   onBeforeUpdateComponent(debugID, element) {
     if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, null, debugID);
+      validateProperties(element.type, element.props, debugID);
     }
   },
 };
