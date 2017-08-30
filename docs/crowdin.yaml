@@ -1,0 +1,61 @@
+project_identifier_env: CROWDIN_REACT_PROJECT_ID
+api_key_env: CROWDIN_REACT_API_KEY
+base_path: "./"
+preserve_hierarchy: true
+
+files:
+  -
+    source: '/docs/*.md'
+    translation: '/docs/i18n/%locale%/%original_file_name%'
+    languages_mapping: &anchor
+      locale:
+        'af': 'af'
+        'ar': 'ar'
+        'bs-BA': 'bs-BA'
+        'ca': 'ca'
+        'cs': 'cs'
+        'da': 'da'
+        'de': 'de'
+        'el': 'el'
+        'es-ES': 'es-ES'
+        'fa': 'fa-IR'
+        'fi': 'fi'
+        'fr': 'fr'
+        'he': 'he'
+        'hu': 'hu'
+        'id': 'id-ID'
+        'it': 'it'
+        'ja': 'ja'
+        'ko': 'ko'
+        'mr': 'mr-IN'
+        'nl': 'nl'
+        'no': 'no-NO'
+        'pl': 'pl'
+        'pt-BR': 'pt-BR'
+        'pt-PT': 'pt-PT'
+        'ro': 'ro'
+        'ru': 'ru'
+        'sk': 'sk-SK'
+        'sr': 'sr'
+        'sv-SE': 'sv-SE'
+        'tr': 'tr'
+        'uk': 'uk'
+        'vi': 'vi'
+        'zh-CN': 'zh-Hans'
+        'zh-TW': 'zh-Hant'
+  -
+    source: '/tutorial/*.md'
+    translation: '/tutorial/%locale%/%original_file_name%'
+    languages_mapping: *anchor
+  -
+    source: '/community/*.md'
+    translation: '/community/%locale%/%original_file_name%'
+    languages_mapping: *anchor
+  -
+    source: '/contributing/*.md'
+    translation: '/contributing/%locale%/%original_file_name%'
+    languages_mapping: *anchor
+  -
+    source: '/_data/*.yml'
+    translation: '/_data/%locale%/%original_file_name%'
+    languages_mapping: *anchor
