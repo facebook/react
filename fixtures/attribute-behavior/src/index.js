@@ -5,7 +5,7 @@ import './index.css';
   await loadScript('https://unpkg.com/react@15.6.1/dist/react.js');
   await loadScript('https://unpkg.com/react-dom@15.6.1/dist/react-dom.js');
   await loadScript(
-    'https://unpkg.com/react-dom@15.6.1/dist/react-dom-server.js',
+    'https://unpkg.com/react-dom@15.6.1/dist/react-dom-server.js'
   );
   window.React15 = window.React;
   window.ReactDOM15 = window.ReactDOM;
@@ -26,6 +26,6 @@ import './index.css';
 
   ReactDOM.render(
     React.createElement(App.default),
-    document.getElementById('root'),
+    document.getElementById('root')
   );
 })();

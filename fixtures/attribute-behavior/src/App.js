@@ -18,8 +18,6 @@ const ReactDOM16 = global.ReactDOM16;
 const ReactDOMServer15 = global.ReactDOMServer15;
 const ReactDOMServer16 = global.ReactDOMServer16;
 
-console.log(ReactDOMServer15, ReactDOMServer16);
-
 const types = [
   {
     name: 'string',
@@ -2528,8 +2526,7 @@ function warn(str) {
   _didWarn = true;
 }
 
-function getRenderedAttributeValue(renderer, attribute, type) {
-  _didWarn = false;
+function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   const originalConsoleError = console.error;
   console.error = warn;
 
@@ -2543,73 +2540,113 @@ function getRenderedAttributeValue(renderer, attribute, type) {
     container = document.createElement(containerTagName);
   }
 
-  let testValue;
+  const read = attribute.read || getProperty(attribute.name);
+  let testValue = type.testValue;
+  if (attribute.overrideStringValue !== undefined) {
+    switch (type.name) {
+      case 'string':
+        testValue = attribute.overrideStringValue;
+        break;
+      case 'array with string':
+        testValue = [attribute.overrideStringValue];
+        break;
+      default:
+        break;
+    }
+  }
+  let baseProps = {};
+  if (attribute.type) {
+    baseProps.type = attribute.type;
+  }
+  const props = {
+    ...baseProps,
+    [attribute.name]: testValue,
+  };
+
   let defaultValue;
-  let canonicalDefaultValue;
+  let result;
+  let canonicalResult;
+  let ssrResult;
+  let canonicalSsrResult;
+  let didWarn;
+  let didError;
+  let ssrDidWarn;
+  let ssrDidError;
+
+  _didWarn = false;
   try {
-    const read = attribute.read || getProperty(attribute.name);
-
-    testValue = type.testValue;
-    if (attribute.overrideStringValue !== undefined) {
-      switch (type.name) {
-        case 'string':
-          testValue = attribute.overrideStringValue;
-          break;
-        case 'array with string':
-          testValue = [attribute.overrideStringValue];
-          break;
-        default:
-          break;
-      }
-    }
-
-    let baseProps = {};
-    if (attribute.type) {
-      baseProps.type = attribute.type;
-    }
     renderer.render(React.createElement(tagName, baseProps), container);
     defaultValue = read(container.firstChild);
-    canonicalDefaultValue = getCanonicalizedValue(defaultValue);
-
-    const props = {
-      ...baseProps,
-      [attribute.name]: testValue,
-    };
     renderer.render(React.createElement(tagName, props), container);
-
-    const result = read(container.firstChild);
-
-    return {
-      tagName,
-      containerTagName,
-      testValue,
-      defaultValue,
-      result,
-      canonicalResult: getCanonicalizedValue(result),
-      canonicalDefaultValue,
-      didWarn: _didWarn,
-      didError: false,
-    };
+    result = read(container.firstChild);
+    canonicalResult = getCanonicalizedValue(result);
+    didWarn = _didWarn;
+    didError = false;
   } catch (error) {
-    return {
-      tagName,
-      containerTagName,
-      testValue,
-      defaultValue,
-      result: null,
-      canonicalResult: getCanonicalizedValue(null),
-      canonicalDefaultValue,
-      didWarn: _didWarn,
-      didError: true,
-    };
-  } finally {
-    console.error = originalConsoleError;
+    result = null;
+    didWarn = _didWarn;
+    didError = true;
   }
+
+  _didWarn = false;
+  try {
+    const html = serverRenderer.renderToString(
+      React.createElement(tagName, props)
+    );
+    container.innerHTML = html;
+    ssrResult = read(container.firstChild);
+    canonicalSsrResult = getCanonicalizedValue(ssrResult);
+    ssrDidWarn = _didWarn;
+    ssrDidError = false;
+  } catch (error) {
+    ssrResult = null;
+    ssrDidWarn = _didWarn;
+    ssrDidError = true;
+  }
+
+  console.error = originalConsoleError;
+
+  let ssrHasSameBehavior;
+  if (didError && ssrDidError) {
+    ssrHasSameBehavior = true;
+  } else if (!didError && !ssrDidError) {
+    ssrHasSameBehavior =
+      didWarn === ssrDidWarn && canonicalResult === canonicalSsrResult;
+  } else {
+    ssrHasSameBehavior = false;
+  }
+
+  return {
+    tagName,
+    containerTagName,
+    testValue,
+    defaultValue,
+    result,
+    canonicalResult,
+    canonicalDefaultValue: getCanonicalizedValue(defaultValue),
+    didWarn,
+    didError,
+    ssrResult,
+    canonicalSsrResult,
+    ssrDidWarn,
+    ssrDidError,
+    ssrHasSameBehavior,
+  };
 }
 
 function getRenderedAttributeValues(attribute, type) {
-  const react15Value = getRenderedAttributeValue(ReactDOM15, attribute, type);
-  const react16Value = getRenderedAttributeValue(ReactDOM16, attribute, type);
+  const react15Value = getRenderedAttributeValue(
+    ReactDOM15,
+    ReactDOMServer15,
+    attribute,
+    type
+  );
+  const react16Value = getRenderedAttributeValue(
+    ReactDOM16,
+    ReactDOMServer16,
+    attribute,
+    type
+  );
 
   let hasSameBehavior;
   if (react15Value.didError && react16Value.didError) {
@@ -2683,6 +2720,7 @@ function RendererResult({
   canonicalDefaultValue,
   didWarn,
   didError,
+  ssrHasSameBehavior,
 }) {
   let backgroundColor;
   if (didError) {
@@ -2703,6 +2741,10 @@ function RendererResult({
     width: '100%',
     backgroundColor,
   };
+
+  if (!ssrHasSameBehavior) {
+    style.border = '3px dotted magenta';
+  }
 
   return <div css={style}>{canonicalResult}</div>;
 }
