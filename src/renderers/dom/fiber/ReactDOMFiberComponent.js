@@ -370,7 +370,7 @@ var ReactDOMFiberComponent = {
   ): void {
     var isCustomComponentTag = isCustomComponent(tag, rawProps);
     if (__DEV__) {
-      validatePropertiesInDevelopment(tag, rawProps, domElement);
+      validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
@@ -541,7 +541,7 @@ var ReactDOMFiberComponent = {
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
-      validatePropertiesInDevelopment(tag, nextRawProps, domElement);
+      validatePropertiesInDevelopment(tag, nextRawProps);
     }
 
     var updatePayload: null | Array<any> = null;
@@ -780,7 +780,7 @@ var ReactDOMFiberComponent = {
   ): null | Array<mixed> {
     if (__DEV__) {
       var isCustomComponentTag = isCustomComponent(tag, rawProps);
-      validatePropertiesInDevelopment(tag, rawProps, domElement);
+      validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
         warning(
           false,
