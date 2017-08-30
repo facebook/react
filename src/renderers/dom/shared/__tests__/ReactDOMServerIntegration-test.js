@@ -846,9 +846,10 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.hasAttribute('aria-label')).toBe(false);
       });
 
-      itRenders('no "aria" attribute', async render => {
+      itRenders('"aria" attribute with a warning', async render => {
+        // Reserved for future use.
         const e = await render(<div aria="hello" />, 1);
-        expect(e.hasAttribute('aria')).toBe(false);
+        expect(e.getAttribute('aria')).toBe('hello');
       });
     });
 

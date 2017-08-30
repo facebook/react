@@ -108,7 +108,7 @@ if (__DEV__) {
     if (lowerCasedName === 'aria') {
       warning(
         false,
-        'The `aria` attribute is reserved for future use in React, and will be ignored. ' +
+        'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
       );
       warnedProperties[name] = true;

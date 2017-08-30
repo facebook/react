@@ -832,7 +832,7 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<div aria="hello" />);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'The `aria` attribute is reserved for future use in React, and will be ignored. ' +
+        'The `aria` attribute is reserved for future use in React. ' +
           'Pass individual `aria-` attributes instead.',
       );
     });
