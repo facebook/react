@@ -13,7 +13,12 @@ const React = global.React;
 const {Component} = React;
 
 const ReactDOM15 = global.ReactDOM15;
-const ReactDOM16 = global.ReactDOM;
+const ReactDOM16 = global.ReactDOM16;
+
+const ReactDOMServer15 = global.ReactDOMServer15;
+const ReactDOMServer16 = global.ReactDOMServer16;
+
+console.log(ReactDOMServer15, ReactDOMServer16);
 
 const types = [
   {
