@@ -174,7 +174,7 @@ const sharedStyles = {
     },
 
     '& h3': {
-      marginTop: 45,
+      paddingTop: 45,
 
       [media.xlargeUp]: {
         fontSize: 25,
