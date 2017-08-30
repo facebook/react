@@ -1139,6 +1139,30 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
 
+  it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
+    class Foo extends React.Component {
+      componentDidMount() {
+        const limit = 1200;
+        for (let i = 0; i < limit; i++) {
+          if (i < limit - 1) {
+            ReactDOM.render(<div />, document.createElement('div'));
+          } else {
+            ReactDOM.render(<div />, document.createElement('div'), () => {
+              // The "nested update limit" error isn't thrown until setState
+              this.setState({});
+            });
+          }
+        }
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+  });
+
   it('does not fall into an infinite update loop', () => {
     class NonTerminating extends React.Component {
       state = {step: 0};

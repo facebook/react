@@ -236,7 +236,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // Use these to prevent an infinite loop of nested updates
   const NESTED_UPDATE_LIMIT = 1000;
-  let nestedUpdateCount = 0;
+  let nestedUpdateCount: number = 0;
+  let nextRenderedTree: FiberRoot | null = null;
 
   function resetContextStack() {
     // Reset the stack
@@ -301,11 +302,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         highestPriorityRoot.current,
         highestPriorityLevel,
       );
+      if (highestPriorityRoot !== nextRenderedTree) {
+        // We've switched trees. Reset the nested update counter.
+        nestedUpdateCount = 0;
+        nextRenderedTree = highestPriorityRoot;
+      }
       return;
     }
 
     nextPriorityLevel = NoWork;
     nextUnitOfWork = null;
+    nextRenderedTree = null;
     return;
   }
 
@@ -969,8 +976,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
     isPerformingWork = true;
 
-    nestedUpdateCount = 0;
-
     // The priority context changes during the render phase. We'll need to
     // reset it at the end.
     const previousPriorityContext = priorityContext;
@@ -1081,6 +1086,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     firstUncaughtError = null;
     capturedErrors = null;
     failedBoundaries = null;
+    nextRenderedTree = null;
+    nestedUpdateCount = 0;
+
     if (__DEV__) {
       stopWorkLoopTimer();
     }
