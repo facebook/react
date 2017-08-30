@@ -23,8 +23,6 @@ var RESERVED_PROPS = {
   defaultchecked: true,
   innerhtml: true,
   suppresscontenteditablewarning: true,
-  onfocusin: true,
-  onfocusout: true,
   style: true,
 };
 
