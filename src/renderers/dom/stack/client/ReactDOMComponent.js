@@ -498,10 +498,7 @@ ReactDOMComponent.Mixin = {
       namespaceURI = Namespaces.html;
     }
     if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(
-        this._tag,
-        props,
-      );
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
     }
     if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
@@ -699,10 +696,7 @@ ReactDOMComponent.Mixin = {
           propValue = createMarkupForStyles(propValue, this);
         }
         var markup = null;
-        if (
-          this._tag != null &&
-          isCustomComponent(this._tag, props)
-        ) {
+        if (this._tag != null && isCustomComponent(this._tag, props)) {
           if (!DOMProperty.isReservedProp(propKey)) {
             markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
@@ -885,10 +879,7 @@ ReactDOMComponent.Mixin = {
     }
 
     assertValidProps(this, nextProps);
-    var isCustomComponentTag = isCustomComponent(
-      this._tag,
-      nextProps,
-    );
+    var isCustomComponentTag = isCustomComponent(this._tag, nextProps);
     this._updateDOMProperties(
       lastProps,
       nextProps,
