@@ -2654,7 +2654,8 @@ function getRenderedAttributeValues(attribute, type) {
   } else if (!react15Value.didError && !react16Value.didError) {
     hasSameBehavior =
       react15Value.didWarn === react16Value.didWarn &&
-      react15Value.canonicalResult === react16Value.canonicalResult;
+      react15Value.canonicalResult === react16Value.canonicalResult &&
+      react15Value.ssrHasSameBehavior === react16Value.ssrHasSameBehavior;
   } else {
     hasSameBehavior = false;
   }
