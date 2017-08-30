@@ -68,11 +68,6 @@ type SecretInternalsType = {
     name: string,
     callback: ViewConfigGetter,
   ): any,
-  ReactNativeViewConfigRegistry: {
-    register(viewConfig: ReactNativeBaseComponentViewConfig): string,
-    registerLazy(name: string, callback: ViewConfigGetter): string,
-    get(name: string): ReactNativeBaseComponentViewConfig,
-  },
   ReactNativeComponentTree: any,
   ReactNativePropRegistry: any,
   // TODO (bvaughn) Decide which additional types to expose here?
