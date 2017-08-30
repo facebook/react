@@ -50,6 +50,19 @@ files:
   -
     source: '/community/*.md'
     translation: '/community/%locale%/%original_file_name%'
+    ignore:
+      - '/community/complementary-tools.it-IT.md'
+      - '/community/complementary-tools.ko-KR.md'
+      - '/community/complementary-tools.zh-CN.md'
+      - '/community/conferences.it-IT.md'
+      - '/community/conferences.ko-KR.md'
+      - '/community/conferences.zh-CN.md'
+      - '/community/examples.it-IT.md'
+      - '/community/examples.ko-KR.md'
+      - '/community/examples.zh-CN.md'
+      - '/community/videos.it-IT.md'
+      - '/community/videos.ko-KR.md'
+      - '/community/videos.zh-CN.md'
     languages_mapping: *anchor
   -
     source: '/contributing/*.md'
@@ -58,4 +71,16 @@ files:
   -
     source: '/_data/*.yml'
     translation: '/_data/%locale%/%original_file_name%'
+    languages_mapping: *anchor
+  -
+    source: '/warnings/*.md'
+    translation: '/warnings/%locale%/%original_file_name%'
+    languages_mapping: *anchor
+  -
+    source: '/index.md'
+    translation: '/%locale%/index.md'
+    languages_mapping: *anchor
+  -
+    source: '/jsx-compiler.md'
+    translation: '/%locale%/jsx-compiler.md'
     languages_mapping: *anchor
