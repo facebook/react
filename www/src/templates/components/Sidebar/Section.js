@@ -26,20 +26,19 @@ const toAnchor = (href = '') => {
 
 // TODO Account for redirect_from URLs somehow; they currently won't match.
 
-// HACK Use window.location instead because Gatsby's location.hash doesn't update
-const isItemActive = item => {
-  if (window.location.hash) {
+const isItemActive = (location, item) => {
+  if (location.hash) {
     if (item.href) {
-      return window.location.hash === toAnchor(item.href);
+      return location.hash === toAnchor(item.href);
     }
   } else if (item.id.includes('html')) {
-    return window.location.pathname.includes(item.id);
+    return location.pathname.includes(item.id);
   } else {
-    return window.location.pathname.includes(slugify(item.id));
+    return location.pathname.includes(slugify(item.id));
   }
 };
 
-const Section = ({isActive, onClick, section}) => (
+const Section = ({isActive, location, onClick, section}) => (
   <div>
     <h2 css={{margin: '1rem 0'}}>
       <a
@@ -60,13 +59,13 @@ const Section = ({isActive, onClick, section}) => (
       <ul css={{marginBottom: 10}}>
         {section.items.map(item => (
           <li key={item.id}>
-            {CreateLink(section, item)}
+            {CreateLink(location, section, item)}
 
             {item.subitems &&
               <ul css={{marginLeft: 20}}>
                 {item.subitems.map(subitem => (
                   <li key={subitem.id}>
-                    {CreateLink(section, subitem)}
+                    {CreateLink(location, section, subitem)}
                   </li>
                 ))}
               </ul>}
@@ -101,17 +100,19 @@ const linkCss = {
   },
 };
 
-const CreateLink = (section, item) => {
+const CreateLink = (location, section, item) => {
   if (item.id.includes('.html')) {
     return (
-      <Link css={[linkCss, isItemActive(item) && activeLinkCss]} to={item.id}>
+      <Link
+        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
+        to={item.id}>
         {item.title}
       </Link>
     );
   } else if (item.forceInternal) {
     return (
       <Link
-        css={[linkCss, isItemActive(item) && activeLinkCss]}
+        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
         to={item.href}>
         {item.title}
       </Link>
@@ -140,7 +141,7 @@ const CreateLink = (section, item) => {
   } else {
     return (
       <Link
-        css={[linkCss, isItemActive(item) && activeLinkCss]}
+        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
         to={slugify(item.id, section.directory)}>
         {item.title}
       </Link>
