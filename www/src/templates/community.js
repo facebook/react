@@ -17,6 +17,10 @@ import React from 'react';
 
 import sectionList from '../../../docs/_data/nav_community.yml';
 
+sectionList.forEach(item => {
+  item.directory = 'community';
+});
+
 const Community = ({data, location}) => (
   <MarkdownPage
     location={location}
