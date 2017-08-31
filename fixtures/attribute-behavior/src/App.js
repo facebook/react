@@ -2530,7 +2530,7 @@ let _didWarn = false;
 function warn(str) {
   _didWarn = true;
 }
-
+const UNKNOWN_HTML_TAGS = new Set(['keygen', 'time', 'command']);
 function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   const originalConsoleError = console.error;
   console.error = warn;
@@ -2598,7 +2598,8 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   }
 
   _didWarn = false;
-  let tagMismatch = false;
+  let hasTagMismatch = false;
+  let hasUnknownElement = false;
   try {
     const html = serverRenderer.renderToString(
       React.createElement(tagName, props)
@@ -2610,7 +2611,14 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
       !container.lastChild ||
       container.lastChild.tagName.toLowerCase() !== tagName.toLowerCase()
     ) {
-      tagMismatch = true;
+      hasTagMismatch = true;
+    }
+
+    if (
+      container.lastChild instanceof HTMLUnknownElement &&
+      !UNKNOWN_HTML_TAGS.has(container.lastChild.tagName.toLowerCase())
+    ) {
+      hasUnknownElement = true;
     }
 
     ssrResult = read(container.lastChild);
@@ -2625,8 +2633,11 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
 
   console.error = originalConsoleError;
 
-  if (tagMismatch) {
+  if (hasTagMismatch) {
     throw new Error('Tag mismatch. Expected: ' + tagName);
+  }
+  if (hasUnknownElement) {
+    throw new Error('Unexpected unknown element: ' + tagName);
   }
 
   let ssrHasSameBehavior;
