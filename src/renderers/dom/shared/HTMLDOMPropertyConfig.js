@@ -78,19 +78,12 @@ var HTMLDOMPropertyConfig = {
     value: 0,
     // The following attributes expect boolean values. They must be in
     // the whitelist to allow boolean attribute assignment:
-    autoComplete: 0,
     // IE only true/false iFrame attribute
     // https://msdn.microsoft.com/en-us/library/ms533072(v=vs.85).aspx
     allowTransparency: 0,
     contentEditable: 0,
     draggable: 0,
     spellCheck: 0,
-    // autoCapitalize and autoCorrect are supported in Mobile Safari for
-    // keyboard hints.
-    autoCapitalize: 0,
-    autoCorrect: 0,
-    // autoSave allows WebKit/Blink to persist values of input fields on page reloads
-    autoSave: 0,
   },
   DOMAttributeNames: {
     acceptCharset: 'accept-charset',
