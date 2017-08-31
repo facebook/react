@@ -10,7 +10,8 @@
     "react-virtualized": "^9.9.0"
   },
   "scripts": {
-    "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
+    "prestart":
+      "cp ../../build/dist/{react,react-dom,react-dom-server.browser}.development.js public/",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test --env=jsdom",

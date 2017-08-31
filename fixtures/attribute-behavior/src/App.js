@@ -13,7 +13,10 @@ const React = global.React;
 const {Component} = React;
 
 const ReactDOM15 = global.ReactDOM15;
-const ReactDOM16 = global.ReactDOM;
+const ReactDOM16 = global.ReactDOM16;
+
+const ReactDOMServer15 = global.ReactDOMServer15;
+const ReactDOMServer16 = global.ReactDOMServer16;
 
 const types = [
   {
@@ -480,7 +483,7 @@ const attributes = [
     read: getSVGAttribute('color-rendering'),
   },
   {name: 'cols', tagName: 'textarea'},
-  {name: 'colSpan', tagName: 'td'},
+  {name: 'colSpan', containerTagName: 'tr', tagName: 'td'},
   {name: 'content', tagName: 'meta'},
   {name: 'contentEditable'},
   {
@@ -863,7 +866,7 @@ const attributes = [
   {name: 'formMethod', tagName: 'input', overrideStringValue: 'POST'},
   {name: 'formNoValidate', tagName: 'input'},
   {name: 'formTarget', tagName: 'input'},
-  {name: 'frameBorder', tagName: 'frame'},
+  {name: 'frameBorder', tagName: 'iframe'},
   {
     name: 'from',
     read: getSVGAttribute('from'),
@@ -987,7 +990,7 @@ const attributes = [
   // Disabled because it crashes other tests with React 15.
   // TODO: re-enable when we no longer compare to 15.
   // {name: 'hasOwnProperty', read: getAttribute('hasOwnProperty')},
-  {name: 'headers', tagName: 'td'},
+  {name: 'headers', containerTagName: 'tr', tagName: 'td'},
   {name: 'height', tagName: 'img'},
   {
     name: 'height',
@@ -1213,8 +1216,8 @@ const attributes = [
   {name: 'loop', tagName: 'audio'},
   {name: 'low', tagName: 'meter'},
   {name: 'manifest', read: getAttribute('manifest')},
-  {name: 'marginHeight', tagName: 'frame'},
-  {name: 'marginWidth', tagName: 'frame'},
+  {name: 'marginHeight', containerTagName: 'frameset', tagName: 'frame'},
+  {name: 'marginWidth', containerTagName: 'frameset', tagName: 'frame'},
   {
     name: 'marker-end',
     containerTagName: 'svg',
@@ -1647,7 +1650,7 @@ const attributes = [
     tagName: 'altGlyph',
   },
   {name: 'rows', tagName: 'textarea'},
-  {name: 'rowSpan', tagName: 'td'},
+  {name: 'rowSpan', containerTagName: 'tr', tagName: 'td'},
   {
     name: 'rx',
     read: getSVGProperty('rx'),
@@ -1673,7 +1676,12 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'feDisplacementMap',
   },
-  {name: 'scope', tagName: 'th', overrideStringValue: 'row'},
+  {
+    name: 'scope',
+    containerTagName: 'tr',
+    tagName: 'th',
+    overrideStringValue: 'row',
+  },
   {name: 'scoped', tagName: 'style', read: getAttribute('scoped')},
   {name: 'scrolling', tagName: 'iframe', overrideStringValue: 'no'},
   {name: 'seamless', tagName: 'iframe', read: getAttribute('seamless')},
@@ -1712,7 +1720,7 @@ const attributes = [
     tagName: 'textPath',
     overrideStringValue: 'auto',
   },
-  {name: 'span', tagName: 'col'},
+  {name: 'span', containerTagName: 'colgroup', tagName: 'col'},
   {
     name: 'specularConstant',
     read: getSVGProperty('specularConstant'),
@@ -2212,7 +2220,7 @@ const attributes = [
     tagName: 'line',
     read: getSVGAttribute('vector-effect'),
   },
-  {name: 'version', tagName: 'html'},
+  {name: 'version', containerTagName: 'document', tagName: 'html'},
   {name: 'version', tagName: 'svg', read: getSVGAttribute('version')},
   {
     name: 'vert-adv-y',
@@ -2522,89 +2530,163 @@ let _didWarn = false;
 function warn(str) {
   _didWarn = true;
 }
-
-function getRenderedAttributeValue(renderer, attribute, type) {
-  _didWarn = false;
+const UNKNOWN_HTML_TAGS = new Set(['keygen', 'time', 'command']);
+function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   const originalConsoleError = console.error;
   console.error = warn;
 
   const containerTagName = attribute.containerTagName || 'div';
   const tagName = attribute.tagName || 'div';
 
-  let container;
-  if (containerTagName === 'svg') {
-    container = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  } else {
-    container = document.createElement(containerTagName);
+  function createContainer() {
+    if (containerTagName === 'svg') {
+      return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    } else if (containerTagName === 'document') {
+      return document.implementation.createHTMLDocument('');
+    } else {
+      return document.createElement(containerTagName);
+    }
   }
+  let container = createContainer();
 
-  let testValue;
+  const read = attribute.read || getProperty(attribute.name);
+  let testValue = type.testValue;
+  if (attribute.overrideStringValue !== undefined) {
+    switch (type.name) {
+      case 'string':
+        testValue = attribute.overrideStringValue;
+        break;
+      case 'array with string':
+        testValue = [attribute.overrideStringValue];
+        break;
+      default:
+        break;
+    }
+  }
+  let baseProps = {};
+  if (attribute.type) {
+    baseProps.type = attribute.type;
+  }
+  const props = {
+    ...baseProps,
+    [attribute.name]: testValue,
+  };
+
   let defaultValue;
-  let canonicalDefaultValue;
+  let result;
+  let canonicalResult;
+  let ssrResult;
+  let canonicalSsrResult;
+  let didWarn;
+  let didError;
+  let ssrDidWarn;
+  let ssrDidError;
+
+  _didWarn = false;
   try {
-    const read = attribute.read || getProperty(attribute.name);
-
-    testValue = type.testValue;
-    if (attribute.overrideStringValue !== undefined) {
-      switch (type.name) {
-        case 'string':
-          testValue = attribute.overrideStringValue;
-          break;
-        case 'array with string':
-          testValue = [attribute.overrideStringValue];
-          break;
-        default:
-          break;
-      }
-    }
-
-    let baseProps = {};
-    if (attribute.type) {
-      baseProps.type = attribute.type;
-    }
     renderer.render(React.createElement(tagName, baseProps), container);
     defaultValue = read(container.firstChild);
-    canonicalDefaultValue = getCanonicalizedValue(defaultValue);
-
-    const props = {
-      ...baseProps,
-      [attribute.name]: testValue,
-    };
     renderer.render(React.createElement(tagName, props), container);
-
-    const result = read(container.firstChild);
-
-    return {
-      tagName,
-      containerTagName,
-      testValue,
-      defaultValue,
-      result,
-      canonicalResult: getCanonicalizedValue(result),
-      canonicalDefaultValue,
-      didWarn: _didWarn,
-      didError: false,
-    };
+    result = read(container.firstChild);
+    canonicalResult = getCanonicalizedValue(result);
+    didWarn = _didWarn;
+    didError = false;
   } catch (error) {
-    return {
-      tagName,
-      containerTagName,
-      testValue,
-      defaultValue,
-      result: null,
-      canonicalResult: getCanonicalizedValue(null),
-      canonicalDefaultValue,
-      didWarn: _didWarn,
-      didError: true,
-    };
-  } finally {
-    console.error = originalConsoleError;
+    result = null;
+    didWarn = _didWarn;
+    didError = true;
   }
+
+  _didWarn = false;
+  let hasTagMismatch = false;
+  let hasUnknownElement = false;
+  try {
+    const html = serverRenderer.renderToString(
+      React.createElement(tagName, props)
+    );
+    container = createContainer();
+    container.innerHTML = html;
+
+    if (
+      !container.lastChild ||
+      container.lastChild.tagName.toLowerCase() !== tagName.toLowerCase()
+    ) {
+      hasTagMismatch = true;
+    }
+
+    if (
+      container.lastChild instanceof HTMLUnknownElement &&
+      !UNKNOWN_HTML_TAGS.has(container.lastChild.tagName.toLowerCase())
+    ) {
+      hasUnknownElement = true;
+    }
+
+    ssrResult = read(container.lastChild);
+    canonicalSsrResult = getCanonicalizedValue(ssrResult);
+    ssrDidWarn = _didWarn;
+    ssrDidError = false;
+  } catch (error) {
+    ssrResult = null;
+    ssrDidWarn = _didWarn;
+    ssrDidError = true;
+  }
+
+  console.error = originalConsoleError;
+
+  if (hasTagMismatch) {
+    throw new Error('Tag mismatch. Expected: ' + tagName);
+  }
+  if (hasUnknownElement) {
+    throw new Error('Unexpected unknown element: ' + tagName);
+  }
+
+  let ssrHasSameBehavior;
+  let ssrHasSameBehaviorExceptWarnings;
+  if (didError && ssrDidError) {
+    ssrHasSameBehavior = true;
+  } else if (!didError && !ssrDidError) {
+    if (canonicalResult === canonicalSsrResult) {
+      ssrHasSameBehaviorExceptWarnings = true;
+      ssrHasSameBehavior = didWarn === ssrDidWarn;
+    }
+    ssrHasSameBehavior =
+      didWarn === ssrDidWarn && canonicalResult === canonicalSsrResult;
+  } else {
+    ssrHasSameBehavior = false;
+  }
+
+  return {
+    tagName,
+    containerTagName,
+    testValue,
+    defaultValue,
+    result,
+    canonicalResult,
+    canonicalDefaultValue: getCanonicalizedValue(defaultValue),
+    didWarn,
+    didError,
+    ssrResult,
+    canonicalSsrResult,
+    ssrDidWarn,
+    ssrDidError,
+    ssrHasSameBehavior,
+    ssrHasSameBehaviorExceptWarnings,
+  };
 }
 
 function getRenderedAttributeValues(attribute, type) {
-  const react15Value = getRenderedAttributeValue(ReactDOM15, attribute, type);
-  const react16Value = getRenderedAttributeValue(ReactDOM16, attribute, type);
+  const react15Value = getRenderedAttributeValue(
+    ReactDOM15,
+    ReactDOMServer15,
+    attribute,
+    type
+  );
+  const react16Value = getRenderedAttributeValue(
+    ReactDOM16,
+    ReactDOMServer16,
+    attribute,
+    type
+  );
 
   let hasSameBehavior;
   if (react15Value.didError && react16Value.didError) {
@@ -2612,7 +2694,8 @@ function getRenderedAttributeValues(attribute, type) {
   } else if (!react15Value.didError && !react16Value.didError) {
     hasSameBehavior =
       react15Value.didWarn === react16Value.didWarn &&
-      react15Value.canonicalResult === react16Value.canonicalResult;
+      react15Value.canonicalResult === react16Value.canonicalResult &&
+      react15Value.ssrHasSameBehavior === react16Value.ssrHasSameBehavior;
   } else {
     hasSameBehavior = false;
   }
@@ -2678,6 +2761,8 @@ function RendererResult({
   canonicalDefaultValue,
   didWarn,
   didError,
+  ssrHasSameBehavior,
+  ssrHasSameBehaviorExceptWarnings,
 }) {
   let backgroundColor;
   if (didError) {
@@ -2698,6 +2783,11 @@ function RendererResult({
     width: '100%',
     backgroundColor,
   };
+
+  if (!ssrHasSameBehavior) {
+    const color = ssrHasSameBehaviorExceptWarnings ? 'gray' : 'magenta';
+    style.border = `3px dotted ${color}`;
+  }
 
   return <div css={style}>{canonicalResult}</div>;
 }
