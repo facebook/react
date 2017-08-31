@@ -7,12 +7,13 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @providesModule isCustomComponent
+ * @flow
  */
 
 'use strict';
 
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
+function isCustomComponent(tagName: string, props: Object) {
+  return tagName.indexOf('-') >= 0 || typeof props.is === 'string';
 }
 
 module.exports = isCustomComponent;

@@ -40,10 +40,10 @@ if (__DEV__) {
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
   var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
   var {
-    validateProperties: validateInputPropertes,
+    validateProperties: validateInputProperties,
   } = ReactDOMNullInputValuePropHook;
   var {
-    validateProperties: validateUnknownPropertes,
+    validateProperties: validateUnknownProperties,
   } = ReactDOMUnknownPropertyHook;
 }
 
@@ -72,8 +72,8 @@ if (__DEV__) {
 
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
-    validateInputPropertes(type, props);
-    validateUnknownPropertes(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props);
   };
 
   var warnForTextDifference = function(serverText: string, clientText: string) {
@@ -233,7 +233,7 @@ function setInitialDOMProperties(
     } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
-      if (nextProp) {
+      if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
@@ -305,11 +305,9 @@ var ReactDOMFiberComponent = {
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
-    if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(type, props);
-    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
+        var isCustomComponentTag = isCustomComponent(type, props);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
         warning(
@@ -328,7 +326,7 @@ var ReactDOMFiberComponent = {
         // This is guaranteed to yield a script element.
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
-      } else if (props.is) {
+      } else if (typeof props.is === 'string') {
         // $FlowIssue `createElement` should be updated for Web Components
         domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
@@ -707,7 +705,7 @@ var ReactDOMFiberComponent = {
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
         // Noop
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
+        if (nextProp != null) {
           // We eagerly listen to this even though we haven't committed yet.
           if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
@@ -951,7 +949,7 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
+        if (nextProp != null) {
           if (__DEV__ && typeof nextProp !== 'function') {
             warnForInvalidEventListener(propKey, nextProp);
           }
