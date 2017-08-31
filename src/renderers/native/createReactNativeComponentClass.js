@@ -14,20 +14,21 @@
 
 const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
 
-import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
+import type {ViewConfigGetter} from 'ReactNativeTypes';
 
 /**
  * Creates a renderable ReactNative host component.
- * Use this method when the view config is defined within JavaScript.
- * Use lazilyCreateReactNativeComponentClass() for view configs retrieved from UIManager.
+ * Use this method for view configs that are loaded from UIManager.
+ * Use createReactNativeComponentClass() for view configs defined within JavaScript.
  *
  * @param {string} config iOS View configuration.
  * @private
  */
 const createReactNativeComponentClass = function(
-  viewConfig: ReactNativeBaseComponentViewConfig,
+  name: string,
+  callback: ViewConfigGetter,
 ): string {
-  return ReactNativeViewConfigRegistry.register(viewConfig);
+  return ReactNativeViewConfigRegistry.register(name, callback);
 };
 
 module.exports = createReactNativeComponentClass;

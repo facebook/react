@@ -62,9 +62,6 @@ export type NativeMethodsMixinType = {
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
   createReactNativeComponentClass(
-    viewConfig: ReactNativeBaseComponentViewConfig,
-  ): any,
-  lazilyCreateReactNativeComponentClass(
     name: string,
     callback: ViewConfigGetter,
   ): any,

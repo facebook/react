@@ -19,46 +19,32 @@ import type {
   ViewConfigGetter,
 } from 'ReactNativeTypes';
 
-const registeredViewNames = new Map();
 const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
 
 const ReactNativeViewConfigRegistry = {
-  /**
-   * Registers a native view/component.
-   * This method is intended for views with JavaScript-defined configs.
-   * If the config is loaded from UIManager, use registerLazy() instead.
-   */
-  register(viewConfig: ReactNativeBaseComponentViewConfig) {
-    const name = viewConfig.uiViewClassName;
-    invariant(
-      !registeredViewNames.has(name),
-      'Tried to register two views with the same name %s',
-      name,
-    );
-    viewConfigs.set(name, viewConfig);
-    registeredViewNames.set(name);
-    return name;
-  },
-
   /**
    * Registers a native view/component by name.
    * A callback is provided to load the view config from UIManager.
    * The callback is deferred until the view is actually rendered.
    * This is done to avoid causing Prepack deopts.
    */
-  registerLazy(name: string, callback: ViewConfigGetter) {
+  register(name: string, callback: ViewConfigGetter): string {
     invariant(
-      !registeredViewNames.has(name),
+      !viewConfigCallbacks.has(name),
       'Tried to register two views with the same name %s',
       name,
     );
     viewConfigCallbacks.set(name, callback);
-    registeredViewNames.set(name);
     return name;
   },
 
-  get(name: string) {
+  /**
+   * Retrieves a config for the specified view.
+   * If this is the first time the view has been used,
+   * This configuration will be lazy-loaded from UIManager.
+   */
+  get(name: string): ReactNativeBaseComponentViewConfig {
     let viewConfig;
     if (!viewConfigs.has(name)) {
       const callback = viewConfigCallbacks.get(name);
