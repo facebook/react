@@ -15,23 +15,120 @@ const Platform = require('Platform');
 
 const emptyObject = require('fbjs/lib/emptyObject');
 
-const ANDROID_BUBBLING_EVENT_TYPES = {
-  topTouchMove: {
+const COMMON_BUBBLING_EVENT_TYPES = {
+  topBlur: {
     phasedRegistrationNames: {
-      bubbled: 'onTouchMove',
-      captured: 'onTouchMoveCapture',
-    },
-  },
-  topFocus: {
-    phasedRegistrationNames: {
-      bubbled: 'onFocus',
-      captured: 'onFocusCapture',
+      captured: 'onBlurCapture',
+      bubbled: 'onBlur',
     },
   },
   topChange: {
     phasedRegistrationNames: {
-      bubbled: 'onChange',
       captured: 'onChangeCapture',
+      bubbled: 'onChange',
+    },
+  },
+  topEndEditing: {
+    phasedRegistrationNames: {
+      captured: 'onEndEditingCapture',
+      bubbled: 'onEndEditing',
+    },
+  },
+  topFocus: {
+    phasedRegistrationNames: {
+      captured: 'onFocusCapture',
+      bubbled: 'onFocus',
+    },
+  },
+  topSubmitEditing: {
+    phasedRegistrationNames: {
+      captured: 'onSubmitEditingCapture',
+      bubbled: 'onSubmitEditing',
+    },
+  },
+  topTouchEnd: {
+    phasedRegistrationNames: {
+      captured: 'onTouchEndCapture',
+      bubbled: 'onTouchEnd',
+    },
+  },
+  topTouchMove: {
+    phasedRegistrationNames: {
+      captured: 'onTouchMoveCapture',
+      bubbled: 'onTouchMove',
+    },
+  },
+  topTouchStart: {
+    phasedRegistrationNames: {
+      captured: 'onTouchStartCapture',
+      bubbled: 'onTouchStart',
+    },
+  },
+};
+
+const COMMON_DIRECT_EVENT_TYPES = {
+  topError: {
+    registrationName: 'onError',
+  },
+  topLayout: {
+    registrationName: 'onLayout',
+  },
+  topLoad: {
+    registrationName: 'onLoad',
+  },
+  topLoadEnd: {
+    registrationName: 'onLoadEnd',
+  },
+  topLoadStart: {
+    registrationName: 'onLoadStart',
+  },
+  topLoadingError: {
+    registrationName: 'onLoadingError',
+  },
+  topLoadingFinish: {
+    registrationName: 'onLoadingFinish',
+  },
+  topLoadingStart: {
+    registrationName: 'onLoadingStart',
+  },
+  topMessage: {
+    registrationName: 'onMessage',
+  },
+  topMomentumScrollBegin: {
+    registrationName: 'onMomentumScrollBegin',
+  },
+  topMomentumScrollEnd: {
+    registrationName: 'onMomentumScrollEnd',
+  },
+  topRefresh: {
+    registrationName: 'onRefresh',
+  },
+  topScroll: {
+    registrationName: 'onScroll',
+  },
+  topScrollAnimationEnd: {
+    registrationName: 'onScrollAnimationEnd',
+  },
+  topScrollBeginDrag: {
+    registrationName: 'onScrollBeginDrag',
+  },
+  topScrollEndDrag: {
+    registrationName: 'onScrollEndDrag',
+  },
+  topSelectionChange: {
+    registrationName: 'onSelectionChange',
+  },
+  topShow: {
+    registrationName: 'onShow',
+  },
+};
+
+const ANDROID_BUBBLING_EVENT_TYPES = {
+  ...COMMON_BUBBLING_EVENT_TYPES,
+  topSelect: {
+    phasedRegistrationNames: {
+      bubbled: 'onSelect',
+      captured: 'onSelectCapture',
     },
   },
   topTextInput: {
@@ -40,244 +137,60 @@ const ANDROID_BUBBLING_EVENT_TYPES = {
       captured: 'onTextInputCapture',
     },
   },
-  topSelect: {
-    phasedRegistrationNames: {
-      bubbled: 'onSelect',
-      captured: 'onSelectCapture',
-    },
-  },
-  topTouchEnd: {
-    phasedRegistrationNames: {
-      bubbled: 'onTouchEnd',
-      captured: 'onTouchEndCapture',
-    },
-  },
-  topBlur: {
-    phasedRegistrationNames: {
-      bubbled: 'onBlur',
-      captured: 'onBlurCapture',
-    },
-  },
-  topEndEditing: {
-    phasedRegistrationNames: {
-      bubbled: 'onEndEditing',
-      captured: 'onEndEditingCapture',
-    },
-  },
-  topSubmitEditing: {
-    phasedRegistrationNames: {
-      bubbled: 'onSubmitEditing',
-      captured: 'onSubmitEditingCapture',
-    },
-  },
-  topTouchStart: {
-    phasedRegistrationNames: {
-      bubbled: 'onTouchStart',
-      captured: 'onTouchStartCapture',
-    },
-  },
 };
 
 const ANDROID_DIRECT_EVENT_TYPES = {
-  topMomentumScrollEnd: {
-    registrationName: 'onMomentumScrollEnd',
-  },
-  topScrollBeginDrag: {
-    registrationName: 'onScrollBeginDrag',
-  },
-  topPageScrollStateChanged: {
-    registrationName: 'onPageScrollStateChanged',
-  },
-  topLayout: {
-    registrationName: 'onLayout',
-  },
-  topVideoStateChange: {
-    registrationName: 'onStateChange',
-  },
-  topRefresh: {
-    registrationName: 'onRefresh',
-  },
-  topError: {
-    registrationName: 'onError',
-  },
-  topLoadStart: {
-    registrationName: 'onLoadStart',
-  },
-  topShow: {
-    registrationName: 'onShow',
-  },
-  topMessage: {
-    registrationName: 'onMessage',
-  },
-  topVideoProgress: {
-    registrationName: 'onProgress',
-  },
-  topScrollAnimationEnd: {
-    registrationName: 'onScrollAnimationEnd',
-  },
-  topPageScroll: {
-    registrationName: 'onPageScroll',
-  },
-  topDrawerSlide: {
-    registrationName: 'onDrawerSlide',
-  },
-  topZoom: {
-    registrationName: 'onZoom',
-  },
-  topLoadEnd: {
-    registrationName: 'onLoadEnd',
-  },
-  topDrawerStateChanged: {
-    registrationName: 'onDrawerStateChanged',
-  },
-  topDrawerOpened: {
-    registrationName: 'onDrawerOpen',
-  },
-  topRequestClose: {
-    registrationName: 'onRequestClose',
-  },
+  ...COMMON_DIRECT_EVENT_TYPES,
   topContentSizeChange: {
     registrationName: 'onContentSizeChange',
-  },
-  topLoadingFinish: {
-    registrationName: 'onLoadingFinish',
-  },
-  topMomentumScrollBegin: {
-    registrationName: 'onMomentumScrollBegin',
-  },
-  topPageSelected: {
-    registrationName: 'onPageSelected',
-  },
-  topSelectionChange: {
-    registrationName: 'onSelectionChange',
-  },
-  topScrollEndDrag: {
-    registrationName: 'onScrollEndDrag',
-  },
-  topVideoSizeDetected: {
-    registrationName: 'onVideoSizeDetected',
-  },
-  topLoad: {
-    registrationName: 'onLoad',
-  },
-  topScroll: {
-    registrationName: 'onScroll',
-  },
-  topSlidingComplete: {
-    registrationName: 'onSlidingComplete',
-  },
-  topLoadingError: {
-    registrationName: 'onLoadingError',
-  },
-  topLoadingStart: {
-    registrationName: 'onLoadingStart',
   },
   topDrawerClosed: {
     registrationName: 'onDrawerClose',
   },
+  topDrawerOpened: {
+    registrationName: 'onDrawerOpen',
+  },
+  topDrawerSlide: {
+    registrationName: 'onDrawerSlide',
+  },
+  topDrawerStateChanged: {
+    registrationName: 'onDrawerStateChanged',
+  },
+  topPageScroll: {
+    registrationName: 'onPageScroll',
+  },
+  topPageScrollStateChanged: {
+    registrationName: 'onPageScrollStateChanged',
+  },
+  topPageSelected: {
+    registrationName: 'onPageSelected',
+  },
+  topRequestClose: {
+    registrationName: 'onRequestClose',
+  },
+  topSlidingComplete: {
+    registrationName: 'onSlidingComplete',
+  },
+  topVideoProgress: {
+    registrationName: 'onProgress',
+  },
+  topVideoSizeDetected: {
+    registrationName: 'onVideoSizeDetected',
+  },
+  topVideoStateChange: {
+    registrationName: 'onStateChange',
+  },
+  topZoom: {
+    registrationName: 'onZoom',
+  },
 };
 
 const IOS_BUBBLING_EVENT_TYPES = {
-  topContentSizeChange: {
-    phasedRegistrationNames: {
-      captured: 'onContentSizeChangeCapture',
-      bubbled: 'onContentSizeChange',
-    },
-  },
-  topTouchCancel: {
-    phasedRegistrationNames: {
-      captured: 'onTouchCancelCapture',
-      bubbled: 'onTouchCancel',
-    },
-  },
-  topAnnotationFocus: {
-    phasedRegistrationNames: {
-      captured: 'onAnnotationFocusCapture',
-      bubbled: 'onAnnotationFocus',
-    },
-  },
-  topPress: {
-    phasedRegistrationNames: {
-      captured: 'onPressCapture',
-      bubbled: 'onPress',
-    },
-  },
-  topSlidingComplete: {
-    phasedRegistrationNames: {
-      captured: 'onSlidingCompleteCapture',
-      bubbled: 'onSlidingComplete',
-    },
-  },
-  topEndEditing: {
-    phasedRegistrationNames: {
-      captured: 'onEndEditingCapture',
-      bubbled: 'onEndEditing',
-    },
-  },
-  topChange: {
-    phasedRegistrationNames: {
-      captured: 'onChangeCapture',
-      bubbled: 'onChange',
-    },
-  },
-  topLeftButtonPress: {
-    phasedRegistrationNames: {
-      captured: 'onLeftButtonPressCapture',
-      bubbled: 'onLeftButtonPress',
-    },
-  },
+  ...COMMON_BUBBLING_EVENT_TYPES,
   topAnnotationBlur: {
     phasedRegistrationNames: {
       captured: 'onAnnotationBlurCapture',
       bubbled: 'onAnnotationBlur',
-    },
-  },
-  topTouchMove: {
-    phasedRegistrationNames: {
-      captured: 'onTouchMoveCapture',
-      bubbled: 'onTouchMove',
-    },
-  },
-  topKeyPress: {
-    phasedRegistrationNames: {
-      captured: 'onKeyPressCapture',
-      bubbled: 'onKeyPress',
-    },
-  },
-  topNavigationComplete: {
-    phasedRegistrationNames: {
-      captured: 'onNavigationCompleteCapture',
-      bubbled: 'onNavigationComplete',
-    },
-  },
-  topSubmitEditing: {
-    phasedRegistrationNames: {
-      captured: 'onSubmitEditingCapture',
-      bubbled: 'onSubmitEditing',
-    },
-  },
-  topTouchStart: {
-    phasedRegistrationNames: {
-      captured: 'onTouchStartCapture',
-      bubbled: 'onTouchStart',
-    },
-  },
-  topValueChange: {
-    phasedRegistrationNames: {
-      captured: 'onValueChangeCapture',
-      bubbled: 'onValueChange',
-    },
-  },
-  topRightButtonPress: {
-    phasedRegistrationNames: {
-      captured: 'onRightButtonPressCapture',
-      bubbled: 'onRightButtonPress',
-    },
-  },
-  topTouchEnd: {
-    phasedRegistrationNames: {
-      captured: 'onTouchEndCapture',
-      bubbled: 'onTouchEnd',
     },
   },
   topAnnotationDragStateChange: {
@@ -286,104 +199,99 @@ const IOS_BUBBLING_EVENT_TYPES = {
       bubbled: 'onAnnotationDragStateChange',
     },
   },
-  topBlur: {
+  topAnnotationFocus: {
     phasedRegistrationNames: {
-      captured: 'onBlurCapture',
-      bubbled: 'onBlur',
+      captured: 'onAnnotationFocusCapture',
+      bubbled: 'onAnnotationFocus',
     },
   },
-  topFocus: {
+  topContentSizeChange: {
     phasedRegistrationNames: {
-      captured: 'onFocusCapture',
-      bubbled: 'onFocus',
+      captured: 'onContentSizeChangeCapture',
+      bubbled: 'onContentSizeChange',
+    },
+  },
+  topKeyPress: {
+    phasedRegistrationNames: {
+      captured: 'onKeyPressCapture',
+      bubbled: 'onKeyPress',
+    },
+  },
+  topLeftButtonPress: {
+    phasedRegistrationNames: {
+      captured: 'onLeftButtonPressCapture',
+      bubbled: 'onLeftButtonPress',
+    },
+  },
+  topNavigationComplete: {
+    phasedRegistrationNames: {
+      captured: 'onNavigationCompleteCapture',
+      bubbled: 'onNavigationComplete',
+    },
+  },
+  topPress: {
+    phasedRegistrationNames: {
+      captured: 'onPressCapture',
+      bubbled: 'onPress',
+    },
+  },
+  topRightButtonPress: {
+    phasedRegistrationNames: {
+      captured: 'onRightButtonPressCapture',
+      bubbled: 'onRightButtonPress',
+    },
+  },
+  topSlidingComplete: {
+    phasedRegistrationNames: {
+      captured: 'onSlidingCompleteCapture',
+      bubbled: 'onSlidingComplete',
+    },
+  },
+  topTouchCancel: {
+    phasedRegistrationNames: {
+      captured: 'onTouchCancelCapture',
+      bubbled: 'onTouchCancel',
+    },
+  },
+  topValueChange: {
+    phasedRegistrationNames: {
+      captured: 'onValueChangeCapture',
+      bubbled: 'onValueChange',
     },
   },
 };
 
 const IOS_DIRECT_EVENT_TYPES = {
-  topStateChange: {
-    registrationName: 'onStateChange',
-  },
-  topSelectionChange: {
-    registrationName: 'onSelectionChange',
-  },
-  topProgress: {
-    registrationName: 'onProgress',
-  },
-  topTextInput: {
-    registrationName: 'onTextInput',
-  },
-  topShow: {
-    registrationName: 'onShow',
-  },
-  topMessage: {
-    registrationName: 'onMessage',
-  },
-  topMomentumScrollEnd: {
-    registrationName: 'onMomentumScrollEnd',
-  },
-  topRefresh: {
-    registrationName: 'onRefresh',
-  },
-  topScrollAnimationEnd: {
-    registrationName: 'onScrollAnimationEnd',
-  },
-  topLoad: {
-    registrationName: 'onLoad',
-  },
-  topScroll: {
-    registrationName: 'onScroll',
-  },
-  topNavigationProgress: {
-    registrationName: 'onNavigationProgress',
+  ...COMMON_DIRECT_EVENT_TYPES,
+  topAccessibilityTap: {
+    registrationName: 'onAccessibilityTap',
   },
   topMagicTap: {
     registrationName: 'onMagicTap',
   },
+  topNavigationProgress: {
+    registrationName: 'onNavigationProgress',
+  },
   topOrientationChange: {
     registrationName: 'onOrientationChange',
-  },
-  topLoadingStart: {
-    registrationName: 'onLoadingStart',
-  },
-  topLoadingError: {
-    registrationName: 'onLoadingError',
   },
   topPartialLoad: {
     registrationName: 'onPartialLoad',
   },
-  topLoadStart: {
-    registrationName: 'onLoadStart',
-  },
-  topError: {
-    registrationName: 'onError',
-  },
-  topTextLayout: {
-    registrationName: 'onTextLayout',
-  },
-  topMomentumScrollBegin: {
-    registrationName: 'onMomentumScrollBegin',
+  topProgress: {
+    registrationName: 'onProgress',
   },
   topShouldStartLoadWithRequest: {
     registrationName: 'onShouldStartLoadWithRequest',
   },
-  topScrollEndDrag: {
-    registrationName: 'onScrollEndDrag',
+  topStateChange: {
+    registrationName: 'onStateChange',
   },
-  topLoadingFinish: {
-    registrationName: 'onLoadingFinish',
+  topTextInput: {
+    registrationName: 'onTextInput',
   },
-  topScrollBeginDrag: {
-    registrationName: 'onScrollBeginDrag',
-  },
-  topLoadEnd: {
-    registrationName: 'onLoadEnd',
-  },
-  topLayout: {
-    registrationName: 'onLayout',
-  },
-  topAccessibilityTap: {
-    registrationName: 'onAccessibilityTap',
+  topTextLayout: {
+    registrationName: 'onTextLayout',
   },
 };
 
