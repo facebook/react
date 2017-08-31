@@ -41,32 +41,32 @@ const Footer = () => (
         }}>
         <FooterNav>
           <FooterTitle>Docs</FooterTitle>
-          <FooterLink to="#">Quick Start</FooterLink>
-          <FooterLink to="#">Thinking in React</FooterLink>
-          <FooterLink to="#">Tutorial</FooterLink>
-          <FooterLink to="#">Advanced Guides</FooterLink>
+          <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
+          <FooterLink to="/docs/thinking-in-react.html">Thinking in React</FooterLink>
+          <FooterLink to="/tutorial/tutorial.html">Tutorial</FooterLink>
+          <FooterLink to="/docs/jsx-in-depth.html">Advanced Guides</FooterLink>
         </FooterNav>
         <FooterNav>
           <FooterTitle>Community</FooterTitle>
-          <FooterLink to="#">Stack Overflow</FooterLink>
-          <FooterLink to="#">Discussion Forum</FooterLink>
-          <FooterLink to="#">Reactiflux Chat</FooterLink>
-          <FooterLink to="#">Facebook</FooterLink>
-          <FooterLink to="#">Twitter</FooterLink>
+          <FooterLink to="http://stackoverflow.com/questions/tagged/reactjs" target="_blank">Stack Overflow</FooterLink>
+          <FooterLink to="https://discuss.reactjs.org" target="_blank">Discussion Forum</FooterLink>
+          <FooterLink to="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">Reactiflux Chat</FooterLink>
+          <FooterLink to="https://www.facebook.com/react" target="_blank">Facebook</FooterLink>
+          <FooterLink to="https://twitter.com/reactjs" target="_blank">Twitter</FooterLink>
         </FooterNav>
         <FooterNav>
           <FooterTitle>Resources</FooterTitle>
-          <FooterLink to="#">Conferences</FooterLink>
-          <FooterLink to="#">Videos</FooterLink>
-          <FooterLink to="#">Examples</FooterLink>
-          <FooterLink to="#">Complementary Tools</FooterLink>
+          <FooterLink to="/community/conferences.html">Conferences</FooterLink>
+          <FooterLink to="/community/videos.html">Videos</FooterLink>
+          <FooterLink to="https://github.com/facebook/react/wiki/Examples" target="_blank">Examples</FooterLink>
+          <FooterLink to="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank">Complementary Tools</FooterLink>
         </FooterNav>
         <FooterNav>
           <FooterTitle>More</FooterTitle>
-          <FooterLink to="#">Blog</FooterLink>
-          <FooterLink to="#">GitHub</FooterLink>
-          <FooterLink to="#">React Native</FooterLink>
-          <FooterLink to="#">Acknowledgements</FooterLink>
+          <FooterLink to="/blog.html">Blog</FooterLink>
+          <FooterLink to="https://github.com/facebook/react" target="_blank">GitHub</FooterLink>
+          <FooterLink to="http://facebook.github.io/react-native/" target="_blank">React Native</FooterLink>
+          <FooterLink to="/acknowledgements.html">Acknowledgements</FooterLink>
         </FooterNav>
         <section
           css={{
@@ -80,7 +80,7 @@ const Footer = () => (
               paddingTop: 40,
             },
           }}>
-          <a href="https://code.facebook.com/projects/">
+          <a href="https://code.facebook.com/projects/" target="_blank">
             <img
               alt="Facebook Open Source"
               css={{

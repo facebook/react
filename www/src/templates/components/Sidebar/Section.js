@@ -112,7 +112,7 @@ const CreateLink = (section, item) => {
     return (
       <Link
         css={[linkCss, isItemActive(item) && activeLinkCss]}
-        to={toAnchor(item.href)}>
+        to={item.href}>
         {item.title}
       </Link>
     );
