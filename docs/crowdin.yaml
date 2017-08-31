@@ -72,6 +72,9 @@ files:
     source: '/_data/*.yml'
     translation: '/_data/%locale%/%original_file_name%'
     languages_mapping: *anchor
+    ignore:
+      - '/_data/acknowledgements.yml'
+      - '/_data/authors.md'
   -
     source: '/warnings/*.md'
     translation: '/warnings/%locale%/%original_file_name%'
