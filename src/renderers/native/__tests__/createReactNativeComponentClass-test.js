@@ -34,8 +34,14 @@ describe('createReactNativeComponentClass', () => {
       uiViewClassName: 'View',
     };
 
-    const Text = createReactNativeComponentClass(textViewConfig);
-    const View = createReactNativeComponentClass(viewViewConfig);
+    const Text = createReactNativeComponentClass(
+      textViewConfig.uiViewClassName,
+      () => textViewConfig,
+    );
+    const View = createReactNativeComponentClass(
+      viewViewConfig.uiViewClassName,
+      () => viewViewConfig,
+    );
 
     expect(Text).not.toBe(View);
 
@@ -53,10 +59,16 @@ describe('createReactNativeComponentClass', () => {
       uiViewClassName: 'Text', // Same
     };
 
-    createReactNativeComponentClass(textViewConfig);
+    createReactNativeComponentClass(
+      textViewConfig.uiViewClassName,
+      () => textViewConfig,
+    );
 
     expect(() => {
-      createReactNativeComponentClass(altTextViewConfig);
+      createReactNativeComponentClass(
+        altTextViewConfig.uiViewClassName,
+        () => altTextViewConfig,
+      );
     }).toThrow('Tried to register two views with the same name Text');
   });
 });

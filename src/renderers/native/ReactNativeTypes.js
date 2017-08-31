@@ -34,6 +34,14 @@ export type MeasureLayoutOnSuccessCallback = (
   height: number,
 ) => void;
 
+export type ReactNativeBaseComponentViewConfig = {
+  validAttributes: Object,
+  uiViewClassName: string,
+  propTypes?: Object,
+};
+
+export type ViewConfigGetter = () => ReactNativeBaseComponentViewConfig;
+
 /**
  * This type keeps ReactNativeFiberHostComponent and NativeMethodsMixin in sync.
  * It can also provide types for ReactNative applications that use NMM or refs.
@@ -51,16 +59,11 @@ export type NativeMethodsMixinType = {
   setNativeProps(nativeProps: Object): void,
 };
 
-type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object,
-  uiViewClassName: string,
-  propTypes?: Object,
-};
-
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
   createReactNativeComponentClass(
-    viewConfig: ReactNativeBaseComponentViewConfig,
+    name: string,
+    callback: ViewConfigGetter,
   ): any,
   ReactNativeComponentTree: any,
   ReactNativePropRegistry: any,

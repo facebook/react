@@ -24,11 +24,9 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
+  ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeTypes';
 import type {Instance} from 'ReactNativeFiberRenderer';
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
