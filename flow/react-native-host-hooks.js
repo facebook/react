@@ -32,6 +32,9 @@ declare module 'ExceptionsManager' {
     isFatal: boolean,
   ) : void;
 }
+declare module 'Platform' {
+  declare var OS : string;
+}
 declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
