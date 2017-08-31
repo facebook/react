@@ -68,29 +68,24 @@ describe('ReactMount', () => {
     });
   });
 
-  it('throws when given a string', () => {
-    expect(function() {
-      ReactTestUtils.renderIntoDocument('div');
-    }).toThrowError(
-      'ReactDOM.render(): Invalid component element. Instead of passing a ' +
-        "string like 'div', pass React.createElement('div') or <div />.",
-    );
-  });
-
-  it('throws when given a factory', () => {
-    class Component extends React.Component {
-      render() {
-        return <div />;
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('warns when given a factory', () => {
+      spyOn(console, 'error');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
       }
-    }
 
-    expect(function() {
       ReactTestUtils.renderIntoDocument(Component);
-    }).toThrowError(
-      'ReactDOM.render(): Invalid component element. Instead of passing a ' +
-        'class like Foo, pass React.createElement(Foo) or <Foo />.',
-    );
-  });
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Functions are not valid as a React child. ' +
+          'This may happen if you return a Component instead of <Component /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.',
+      );
+    });
+  }
 
   it('should render different components in same root', () => {
     var container = document.createElement('container');
@@ -401,9 +396,6 @@ describe('ReactMount', () => {
       let mountPoint;
 
       beforeEach(() => {
-        const ReactFeatureFlags = require('ReactFeatureFlags');
-        ReactFeatureFlags.disableNewFiberFeatures = false;
-
         containerDiv = document.createElement('div');
         containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
         mountPoint = containerDiv.childNodes[1];

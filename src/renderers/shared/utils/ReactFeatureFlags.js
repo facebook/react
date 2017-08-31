@@ -13,7 +13,6 @@
 'use strict';
 
 var ReactFeatureFlags = {
-  disableNewFiberFeatures: false,
   enableAsyncSubtreeAPI: true,
 };
 

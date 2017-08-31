@@ -19,7 +19,6 @@ var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
 var PropTypes;
-var ReactFeatureFlags;
 
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
@@ -35,9 +34,6 @@ describe('ReactDOMServer', () => {
     ReactMarkupChecksum = require('ReactMarkupChecksum');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
-
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;

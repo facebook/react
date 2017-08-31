@@ -13,16 +13,12 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('ReactNoopEntry');
-
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function span(prop) {
