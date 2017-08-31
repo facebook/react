@@ -7011,9 +7011,9 @@ react-hot-loader@^3.0.0-beta.6:
     redbox-react "^1.3.6"
     source-map "^0.4.4"
 
-react-live@^1.7.0:
-  version "1.7.0"
-  resolved "https://registry.yarnpkg.com/react-live/-/react-live-1.7.0.tgz#014ae5cce62fe8262a4b116be4820119653af9f7"
+react-live@^1.7.1:
+  version "1.7.1"
+  resolved "https://registry.yarnpkg.com/react-live/-/react-live-1.7.1.tgz#a4fc7a4d23c2596cf7d4ed10f62dca9a02915e26"
   dependencies:
     buble "^0.15.2"
     core-js "^2.4.1"
@@ -7051,7 +7051,7 @@ react-router-dom@^4.1.1:
     prop-types "^15.5.4"
     react-router "^4.1.1"
 
-"react-router-scroll@github:ytase/react-router-scroll#build":
+react-router-scroll@ytase/react-router-scroll#build:
   version "0.4.1"
   resolved "https://codeload.github.com/ytase/react-router-scroll/tar.gz/991ecddb08885e1fb80ec1e9dbf3a35844b7d4cd"
   dependencies:
