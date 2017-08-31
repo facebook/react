@@ -17,12 +17,12 @@ var invariant = require('fbjs/lib/invariant');
 // case insensitive checks
 var RESERVED_PROPS = {
   children: true,
-  dangerouslysetinnerhtml: true,
-  autofocus: true,
-  defaultvalue: true,
-  defaultchecked: true,
-  innerhtml: true,
-  suppresscontenteditablewarning: true,
+  dangerouslySetInnerHTML: true,
+  autoFocus: true,
+  defaultValue: true,
+  defaultChecked: true,
+  innerHTML: true,
+  suppressContentEditableWarning: true,
   style: true,
 };
 
@@ -259,7 +259,7 @@ var DOMProperty = {
    * @return {boolean} If the name is within reserved props
    */
   isReservedProp(name) {
-    return RESERVED_PROPS.hasOwnProperty(name.toLowerCase());
+    return RESERVED_PROPS.hasOwnProperty(name);
   },
 
   injection: DOMPropertyInjection,

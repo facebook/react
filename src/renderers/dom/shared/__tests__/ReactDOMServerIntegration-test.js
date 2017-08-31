@@ -894,6 +894,11 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('data-foo')).toBe('bar');
       });
 
+      itRenders('badly cased reserved attributes', async render => {
+        const e = await render(<div CHILDREN="5" />, 1);
+        expect(e.getAttribute('CHILDREN')).toBe('5');
+      });
+
       itRenders('"data" attribute', async render => {
         // For `<object />` acts as `src`.
         const e = await render(<object data="hello" />);

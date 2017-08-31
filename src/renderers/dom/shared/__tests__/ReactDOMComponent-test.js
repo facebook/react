@@ -226,6 +226,17 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should warn for badly cased React attributes', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div CHILDREN="5" />, container);
+      expect(container.firstChild.getAttribute('CHILDREN')).toBe('5');
+      expectDev(console.error.calls.count(0)).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
+      );
+    });
+
     it('should not warn for "0" as a unitless style value', () => {
       spyOn(console, 'error');
 
