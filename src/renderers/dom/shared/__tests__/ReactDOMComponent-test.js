@@ -178,6 +178,54 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should warn for unknown string event handlers', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div onUnknown="alert(&quot;hack&quot;)" />, container);
+      expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
+      expect(container.firstChild.onUnknown).toBe(undefined);
+      ReactDOM.render(<div onunknown="alert(&quot;hack&quot;)" />, container);
+      expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
+      expect(container.firstChild.onunknown).toBe(undefined);
+      ReactDOM.render(<div on-unknown="alert(&quot;hack&quot;)" />, container);
+      expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
+      expect(container.firstChild['on-unknown']).toBe(undefined);
+      expectDev(console.error.calls.count(0)).toBe(3);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
+        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+      );
+    });
+
+    it('should warn for unknown function event handlers', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<div onUnknown={function() {}} />, container);
+      expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
+      expect(container.firstChild.onUnknown).toBe(undefined);
+      ReactDOM.render(<div onunknown={function() {}} />, container);
+      expect(container.firstChild.hasAttribute('onunknown')).toBe(false);
+      expect(container.firstChild.onunknown).toBe(undefined);
+      ReactDOM.render(<div on-unknown={function() {}} />, container);
+      expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
+      expect(container.firstChild['on-unknown']).toBe(undefined);
+      expectDev(console.error.calls.count(0)).toBe(3);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
+        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+      );
+    });
+
     it('should not warn for "0" as a unitless style value', () => {
       spyOn(console, 'error');
 

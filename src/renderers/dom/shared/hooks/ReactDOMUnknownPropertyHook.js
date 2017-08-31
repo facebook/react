@@ -79,6 +79,17 @@ if (__DEV__) {
       return true;
     }
 
+    if (lowerCasedName.indexOf('on') === 0) {
+      warning(
+        false,
+        'Unknown event handler property `%s`. It will be ignored.%s',
+        name,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+
     // Let the ARIA attribute hook validate ARIA attributes
     if (ARIA_NAME_REGEX.test(name)) {
       return true;
