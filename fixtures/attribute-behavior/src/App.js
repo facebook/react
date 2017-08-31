@@ -483,7 +483,7 @@ const attributes = [
     read: getSVGAttribute('color-rendering'),
   },
   {name: 'cols', tagName: 'textarea'},
-  {name: 'colSpan', tagName: 'td'},
+  {name: 'colSpan', containerTagName: 'tr', tagName: 'td'},
   {name: 'content', tagName: 'meta'},
   {name: 'contentEditable'},
   {
@@ -866,7 +866,7 @@ const attributes = [
   {name: 'formMethod', tagName: 'input', overrideStringValue: 'POST'},
   {name: 'formNoValidate', tagName: 'input'},
   {name: 'formTarget', tagName: 'input'},
-  {name: 'frameBorder', tagName: 'frame'},
+  {name: 'frameBorder', tagName: 'iframe'},
   {
     name: 'from',
     read: getSVGAttribute('from'),
@@ -990,7 +990,7 @@ const attributes = [
   // Disabled because it crashes other tests with React 15.
   // TODO: re-enable when we no longer compare to 15.
   // {name: 'hasOwnProperty', read: getAttribute('hasOwnProperty')},
-  {name: 'headers', tagName: 'td'},
+  {name: 'headers', containerTagName: 'tr', tagName: 'td'},
   {name: 'height', tagName: 'img'},
   {
     name: 'height',
@@ -1216,8 +1216,8 @@ const attributes = [
   {name: 'loop', tagName: 'audio'},
   {name: 'low', tagName: 'meter'},
   {name: 'manifest', read: getAttribute('manifest')},
-  {name: 'marginHeight', tagName: 'frame'},
-  {name: 'marginWidth', tagName: 'frame'},
+  {name: 'marginHeight', containerTagName: 'frameset', tagName: 'frame'},
+  {name: 'marginWidth', containerTagName: 'frameset', tagName: 'frame'},
   {
     name: 'marker-end',
     containerTagName: 'svg',
@@ -1650,7 +1650,7 @@ const attributes = [
     tagName: 'altGlyph',
   },
   {name: 'rows', tagName: 'textarea'},
-  {name: 'rowSpan', tagName: 'td'},
+  {name: 'rowSpan', containerTagName: 'tr', tagName: 'td'},
   {
     name: 'rx',
     read: getSVGProperty('rx'),
@@ -1676,7 +1676,12 @@ const attributes = [
     containerTagName: 'svg',
     tagName: 'feDisplacementMap',
   },
-  {name: 'scope', tagName: 'th', overrideStringValue: 'row'},
+  {
+    name: 'scope',
+    containerTagName: 'tr',
+    tagName: 'th',
+    overrideStringValue: 'row',
+  },
   {name: 'scoped', tagName: 'style', read: getAttribute('scoped')},
   {name: 'scrolling', tagName: 'iframe', overrideStringValue: 'no'},
   {name: 'seamless', tagName: 'iframe', read: getAttribute('seamless')},
@@ -1715,7 +1720,7 @@ const attributes = [
     tagName: 'textPath',
     overrideStringValue: 'auto',
   },
-  {name: 'span', tagName: 'col'},
+  {name: 'span', containerTagName: 'colgroup', tagName: 'col'},
   {
     name: 'specularConstant',
     read: getSVGProperty('specularConstant'),
@@ -2215,7 +2220,7 @@ const attributes = [
     tagName: 'line',
     read: getSVGAttribute('vector-effect'),
   },
-  {name: 'version', tagName: 'html'},
+  {name: 'version', containerTagName: 'document', tagName: 'html'},
   {name: 'version', tagName: 'svg', read: getSVGAttribute('version')},
   {
     name: 'vert-adv-y',
@@ -2533,12 +2538,16 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   const containerTagName = attribute.containerTagName || 'div';
   const tagName = attribute.tagName || 'div';
 
-  let container;
-  if (containerTagName === 'svg') {
-    container = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-  } else {
-    container = document.createElement(containerTagName);
+  function createContainer() {
+    if (containerTagName === 'svg') {
+      return document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    } else if (containerTagName === 'document') {
+      return document.implementation.createHTMLDocument('');
+    } else {
+      return document.createElement(containerTagName);
+    }
   }
+  let container = createContainer();
 
   const read = attribute.read || getProperty(attribute.name);
   let testValue = type.testValue;
@@ -2589,12 +2598,22 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   }
 
   _didWarn = false;
+  let tagMismatch = false;
   try {
     const html = serverRenderer.renderToString(
       React.createElement(tagName, props)
     );
+    container = createContainer();
     container.innerHTML = html;
-    ssrResult = read(container.firstChild);
+
+    if (
+      !container.lastChild ||
+      container.lastChild.tagName.toLowerCase() !== tagName.toLowerCase()
+    ) {
+      tagMismatch = true;
+    }
+
+    ssrResult = read(container.lastChild);
     canonicalSsrResult = getCanonicalizedValue(ssrResult);
     ssrDidWarn = _didWarn;
     ssrDidError = false;
@@ -2605,6 +2624,10 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   }
 
   console.error = originalConsoleError;
+
+  if (tagMismatch) {
+    throw new Error('Tag mismatch. Expected: ' + tagName);
+  }
 
   let ssrHasSameBehavior;
   let ssrHasSameBehaviorExceptWarnings;
