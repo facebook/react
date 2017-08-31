@@ -2573,6 +2573,7 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   };
 
   let defaultValue;
+  let canonicalDefaultValue;
   let result;
   let canonicalResult;
   let ssrResult;
@@ -2586,6 +2587,7 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   try {
     renderer.render(React.createElement(tagName, baseProps), container);
     defaultValue = read(container.firstChild);
+    canonicalDefaultValue = getCanonicalizedValue(defaultValue);
     renderer.render(React.createElement(tagName, props), container);
     result = read(container.firstChild);
     canonicalResult = getCanonicalizedValue(result);
@@ -2662,7 +2664,7 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
     defaultValue,
     result,
     canonicalResult,
-    canonicalDefaultValue: getCanonicalizedValue(defaultValue),
+    canonicalDefaultValue,
     didWarn,
     didError,
     ssrResult,
