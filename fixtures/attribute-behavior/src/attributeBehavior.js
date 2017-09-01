@@ -2503,7 +2503,7 @@ function warn(str) {
   _didWarn = true;
 }
 const UNKNOWN_HTML_TAGS = new Set(['keygen', 'time', 'command']);
-function getRenderedAttributeValue(
+export function getRenderedAttributeValue(
   React,
   renderer,
   serverRenderer,
