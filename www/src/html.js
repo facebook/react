@@ -23,8 +23,8 @@ if (process.env.NODE_ENV === `production`) {
 }
 
 const JS_NPM_URLS = [
-  "//unpkg.com/docsearch.js@2.4.1/dist/cdn/docsearch.min.js",
-  "//unpkg.com/babel-standalone@6.26.0/babel.min.js",
+  '//unpkg.com/docsearch.js@2.4.1/dist/cdn/docsearch.min.js',
+  '//unpkg.com/babel-standalone@6.26.0/babel.min.js',
 ];
 
 export default class HTML extends Component {
@@ -39,7 +39,7 @@ export default class HTML extends Component {
       );
     }
 
-    const js = JS_NPM_URLS.map(url => <script key={url} src={url}></script>);
+    const js = JS_NPM_URLS.map(url => <script key={url} src={url} />);
 
     return (
       <html lang="en">

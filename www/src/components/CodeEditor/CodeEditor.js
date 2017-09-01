@@ -18,7 +18,8 @@ import Flex from 'components/Flex';
 import {LiveProvider, LiveEditor} from 'react-live';
 import {colors, media} from 'theme';
 
-const compile = code => Babel.transform(code, {presets: ['es2015', 'react']}).code;
+const compile = code =>
+  Babel.transform(code, {presets: ['es2015', 'react']}).code;
 
 class CodeEditor extends Component {
   constructor(props, context) {
