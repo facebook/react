@@ -14,12 +14,11 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import Remarkable from 'remarkable';
-import {transform} from 'babel-standalone';
 import Flex from 'components/Flex';
 import {LiveProvider, LiveEditor} from 'react-live';
 import {colors, media} from 'theme';
 
-const compile = code => transform(code, {presets: ['es2015', 'react']}).code;
+const compile = code => Babel.transform(code, {presets: ['es2015', 'react']}).code;
 
 class CodeEditor extends Component {
   constructor(props, context) {

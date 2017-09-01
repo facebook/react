@@ -11,7 +11,7 @@
 
 'use strict';
 
-import slugify from 'underscore.string/slugify';
+import slugify from 'slugify';
 
 export default (string, directory) => {
   const filename = slugify(string) + '.html';
