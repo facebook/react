@@ -18,8 +18,10 @@ import Flex from 'components/Flex';
 import {LiveProvider, LiveEditor} from 'react-live';
 import {colors, media} from 'theme';
 
+// eslint-disable-next-line no-undef
+const babel = Babel;
 const compile = code =>
-  Babel.transform(code, {presets: ['es2015', 'react']}).code;
+  babel.transform(code, {presets: ['es2015', 'react']}).code;
 
 class CodeEditor extends Component {
   constructor(props, context) {
