@@ -12,7 +12,6 @@
 'use strict';
 
 import React, {Component} from 'react';
-import Typekit from 'react-typekit';
 
 let stylesStr;
 if (process.env.NODE_ENV === `production`) {
@@ -23,10 +22,15 @@ if (process.env.NODE_ENV === `production`) {
   }
 }
 
+const JS_NPM_URLS = [
+  "//unpkg.com/docsearch.js@2.4.1/dist/cdn/docsearch.min.js",
+  "//unpkg.com/babel-standalone@6.26.0/babel.min.js",
+];
+
 export default class HTML extends Component {
   render() {
     let css;
-    if (process.env.NODE_ENV === `production`) {
+    if (process.env.NODE_ENV === 'production') {
       css = (
         <style
           id="gatsby-inlined-css"
@@ -34,6 +38,8 @@ export default class HTML extends Component {
         />
       );
     }
+
+    const js = JS_NPM_URLS.map(url => <script key={url} src={url}></script>);
 
     return (
       <html lang="en">
@@ -46,8 +52,8 @@ export default class HTML extends Component {
           />
           <link rel="icon" href="/favicon.ico" />
           {this.props.headComponents}
+          {js}
           {css}
-          <Typekit kitId="xnt6blw" />
         </head>
         <body>
           <div

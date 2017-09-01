@@ -6,8 +6,6 @@
     "url": "https://github.com/facebook/react"
   },
   "dependencies": {
-    "babel-standalone": "^6.26.0",
-    "docsearch.js": "^2.4.1",
     "gatsby": "^1.9.9",
     "gatsby-link": "^1.6.9",
     "gatsby-plugin-glamor": "^1.6.4",
@@ -28,20 +26,10 @@
     "gatsby-transformer-sharp": "^1.6.1",
     "glamor": "^2.20.40",
     "hex2rgba": "^0.0.1",
-    "lodash": "^4.15.0",
-    "moment": "^2.14.1",
     "react-live": "^1.7.1",
-    "react-responsive-grid": "^0.3.3",
     "react-sticky": "^6.0.1",
-    "react-typekit": "^1.1.0",
-    "react-typography": "^0.16.1",
     "remarkable": "^1.7.1",
-    "safe-access": "^0.1.0",
-    "typeface-merriweather": "^0.0.35",
-    "typeface-montserrat": "^0.0.37",
-    "typography": "^0.16.0",
-    "typography-theme-wordpress-2016": "^0.15.1",
-    "underscore.string": "^3.2.3"
+    "slugify": "^1.2.1"
   },
   "devDependencies": {
     "gh-pages": "^1.0.0",

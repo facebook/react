@@ -12,7 +12,6 @@
 'use strict';
 
 import React, {Component} from 'react';
-import docsearch from 'docsearch.js';
 import Flex from 'components/Flex';
 import Footer from 'components/LayoutFooter';
 import Header from 'components/LayoutHeader';
