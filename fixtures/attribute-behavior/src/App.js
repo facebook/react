@@ -2603,11 +2603,24 @@ function getRenderedAttributeValue(renderer, serverRenderer, attribute, type) {
   let hasTagMismatch = false;
   let hasUnknownElement = false;
   try {
-    const html = serverRenderer.renderToString(
-      React.createElement(tagName, props)
-    );
-    container = createContainer();
-    container.innerHTML = html;
+    if (containerTagName === 'document') {
+      const html = serverRenderer.renderToString(
+        React.createElement(tagName, props)
+      );
+      container = createContainer();
+      container.innerHTML = html;
+    } else {
+      const html = serverRenderer.renderToString(
+        React.createElement(
+          containerTagName,
+          null,
+          React.createElement(tagName, props)
+        )
+      );
+      const outerContainer = document.createElement('div');
+      outerContainer.innerHTML = html;
+      container = outerContainer.firstChild;
+    }
 
     if (
       !container.lastChild ||
