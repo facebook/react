@@ -1,9 +1,11 @@
 import cn from 'classnames';
 import semver from 'semver';
-import React from 'react';
 import PropTypes from 'prop-types';
+import IssueList from './IssueList';
 import {parse} from 'query-string';
 import {semverString} from './propTypes';
+
+const React = window.React;
 
 const propTypes = {
   children: PropTypes.node.isRequired,
@@ -36,6 +38,7 @@ class TestCase extends React.Component {
       resolvedIn,
       resolvedBy,
       affectedBrowsers,
+      relatedIssues,
       children,
     } = this.props;
 
@@ -93,6 +96,9 @@ class TestCase extends React.Component {
 
           {affectedBrowsers && <dt>Affected browsers: </dt>}
           {affectedBrowsers && <dd>{affectedBrowsers}</dd>}
+
+          {relatedIssues && <dt>Related Issues: </dt>}
+          {relatedIssues && <dd><IssueList issues={relatedIssues} /></dd>}
         </dl>
 
         <p className="test-case__desc">
