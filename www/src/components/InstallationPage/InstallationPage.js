@@ -57,7 +57,8 @@ function display(type, value) {
   console.log('type is ', type);
   console.log('value is ', value);
   setSelected(value);
-  var container = document.getElementsByTagName('section')[0].parentNode;
+  var container =
+    document.getElementsByTagName('section')[0].parentNode.parentNode;
   container.className = 'display-' + type + '-' + value + ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
 }

@@ -107,7 +107,7 @@ React is flexible and can be used in a variety of projects. You can create new a
 <div>
 <section id="fiddletab" role="tabpanel" class="fiddle">
 
-## Trying Out React
+### Trying Out React
 
 If you're just interested in playing around with React, you can use CodePen. Try starting from [this Hello World example code](http://codepen.io/gaearon/pen/rrpgNB?editors=0010). You don't need to install anything; you can just modify the code and see if it works.
 
@@ -118,7 +118,7 @@ If you want to use it for a full application, there are two popular ways to get 
 
 <section id="newapptab" role="tabpanel" class="newapp">
 
-## Creating a New Application
+### Creating a New Application
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
@@ -137,7 +137,7 @@ When you're ready to deploy to production, running `npm run build` will create a
 
 <section id="existingapptab" role="tabpanel" class="existingapp">
 
-## Adding React to an Existing Application
+### Adding React to an Existing Application
 
 You don't need to rewrite your app to start using React.
 
