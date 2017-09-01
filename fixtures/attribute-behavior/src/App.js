@@ -235,7 +235,6 @@ function getRenderedAttributeValue(
       return document.createElement(containerTagName);
     }
   }
-  let container = createContainer();
 
   const read = attribute.read;
   let testValue = type.testValue;
@@ -251,7 +250,9 @@ function getRenderedAttributeValue(
         break;
     }
   }
-  let baseProps = {};
+  let baseProps = {
+    ...attribute.extraProps
+  };
   if (attribute.type) {
     baseProps.type = attribute.type;
   }
@@ -273,9 +274,12 @@ function getRenderedAttributeValue(
 
   _didWarn = false;
   try {
+    let container = createContainer();
     renderer.render(react.createElement(tagName, baseProps), container);
     defaultValue = read(container.firstChild);
     canonicalDefaultValue = getCanonicalizedValue(defaultValue);
+
+    container = createContainer();
     renderer.render(react.createElement(tagName, props), container);
     result = read(container.firstChild);
     canonicalResult = getCanonicalizedValue(result);
@@ -291,6 +295,7 @@ function getRenderedAttributeValue(
   let hasTagMismatch = false;
   let hasUnknownElement = false;
   try {
+    let container;
     if (containerTagName === 'document') {
       const html = serverRenderer.renderToString(
         react.createElement(tagName, props)
