@@ -11,7 +11,6 @@
 
 'use strict';
 
-var EventListener = require('fbjs/lib/EventListener');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactGenericBatching = require('ReactGenericBatching');
@@ -138,12 +137,12 @@ var ReactDOMEventListener = {
    */
   trapBubbledEvent: function(topLevelType, handlerBaseName, element) {
     if (!element) {
-      return null;
+      return;
     }
-    return EventListener.listen(
-      element,
+    element.addEventListener(
       handlerBaseName,
       ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
+      false,
     );
   },
 
@@ -159,12 +158,12 @@ var ReactDOMEventListener = {
    */
   trapCapturedEvent: function(topLevelType, handlerBaseName, element) {
     if (!element) {
-      return null;
+      return;
     }
-    return EventListener.capture(
-      element,
+    element.addEventListener(
       handlerBaseName,
       ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
+      true,
     );
   },
 

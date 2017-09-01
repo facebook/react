@@ -15,7 +15,6 @@ var ReactDOMSelection = require('ReactDOMSelection');
 var {ELEMENT_NODE} = require('HTMLNodeType');
 
 var containsNode = require('fbjs/lib/containsNode');
-var focusNode = require('fbjs/lib/focusNode');
 var getActiveElement = require('fbjs/lib/getActiveElement');
 
 function isInDocument(node) {
@@ -76,7 +75,7 @@ var ReactInputSelection = {
         }
       }
 
-      focusNode(priorFocusedElem);
+      priorFocusedElem.focus();
 
       for (let i = 0; i < ancestors.length; i++) {
         const info = ancestors[i];

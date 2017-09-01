@@ -22,6 +22,7 @@ var EventPluginRegistry = require('EventPluginRegistry');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentFlags = require('ReactDOMComponentFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMEventListener = require('ReactDOMEventListener');
 var ReactDOMInput = require('ReactDOMInput');
 var ReactDOMOption = require('ReactDOMOption');
 var ReactDOMSelect = require('ReactDOMSelect');
@@ -276,11 +277,24 @@ function trapBubbledEventsLocal() {
   var node = getNode(inst);
   invariant(node, 'trapBubbledEvent(...): Requires node to be rendered.');
 
+  function trapBubbledEvent(topLevelType, handlerBaseName, element) {
+    if (!element) {
+      return;
+    }
+    var callback = ReactDOMEventListener.dispatchEvent.bind(null, topLevelType);
+    element.addEventListener(handlerBaseName, callback, false);
+    return {
+      remove() {
+        element.removeEventListener(handlerBaseName, callback, false);
+      },
+    };
+  }
+
   switch (inst._tag) {
     case 'iframe':
     case 'object':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node),
+        trapBubbledEvent('topLoad', 'load', node),
       ];
       break;
     case 'video':
@@ -290,47 +304,39 @@ function trapBubbledEventsLocal() {
       for (var event in mediaEvents) {
         if (mediaEvents.hasOwnProperty(event)) {
           inst._wrapperState.listeners.push(
-            ReactBrowserEventEmitter.trapBubbledEvent(
-              event,
-              mediaEvents[event],
-              node,
-            ),
+            trapBubbledEvent(event, mediaEvents[event], node),
           );
         }
       }
       break;
     case 'source':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node),
+        trapBubbledEvent('topError', 'error', node),
       ];
       break;
     case 'img':
     case 'image':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent('topError', 'error', node),
-        ReactBrowserEventEmitter.trapBubbledEvent('topLoad', 'load', node),
+        trapBubbledEvent('topError', 'error', node),
+        trapBubbledEvent('topLoad', 'load', node),
       ];
       break;
     case 'form':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent('topReset', 'reset', node),
-        ReactBrowserEventEmitter.trapBubbledEvent('topSubmit', 'submit', node),
+        trapBubbledEvent('topReset', 'reset', node),
+        trapBubbledEvent('topSubmit', 'submit', node),
       ];
       break;
     case 'input':
     case 'select':
     case 'textarea':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent(
-          'topInvalid',
-          'invalid',
-          node,
-        ),
+        trapBubbledEvent('topInvalid', 'invalid', node),
       ];
       break;
     case 'details':
       inst._wrapperState.listeners = [
-        ReactBrowserEventEmitter.trapBubbledEvent('topToggle', 'toggle', node),
+        trapBubbledEvent('topToggle', 'toggle', node),
       ];
       break;
   }

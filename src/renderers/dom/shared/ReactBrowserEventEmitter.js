@@ -225,7 +225,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 
   trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
-    return ReactDOMEventListener.trapBubbledEvent(
+    ReactDOMEventListener.trapBubbledEvent(
       topLevelType,
       handlerBaseName,
       handle,
@@ -233,7 +233,7 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 
   trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
-    return ReactDOMEventListener.trapCapturedEvent(
+    ReactDOMEventListener.trapCapturedEvent(
       topLevelType,
       handlerBaseName,
       handle,
