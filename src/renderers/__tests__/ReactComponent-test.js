@@ -496,10 +496,6 @@ describe('ReactComponent', () => {
 
   if (ReactDOMFeatureFlags.useFiber) {
     describe('with new features', () => {
-      beforeEach(() => {
-        require('ReactFeatureFlags').disableNewFiberFeatures = false;
-      });
-
       it('warns on function as a return value from a function', () => {
         function Foo() {
           return Foo;

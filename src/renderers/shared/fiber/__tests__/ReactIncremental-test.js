@@ -13,7 +13,6 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 var PropTypes;
 
 describe('ReactIncremental', () => {
@@ -22,9 +21,6 @@ describe('ReactIncremental', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     PropTypes = require('prop-types');
-
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   it('should render a simple component', () => {

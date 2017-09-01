@@ -323,7 +323,6 @@ function resetModules() {
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
 
-  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
@@ -334,7 +333,6 @@ function resetModules() {
   // Resetting is important because we want to avoid any shared state
   // influencing the tests.
   jest.resetModuleRegistry();
-  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMServer = require('react-dom/server');
 }
 

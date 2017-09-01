@@ -197,6 +197,7 @@ describe('ReactDOMProduction', () => {
   });
 
   it('should throw with an error code in production', () => {
+    const errorCode = ReactDOMFeatureFlags.useFiber ? 152 : 109;
     expect(function() {
       class Component extends React.Component {
         render() {
@@ -207,8 +208,8 @@ describe('ReactDOMProduction', () => {
       var container = document.createElement('div');
       ReactDOM.render(<Component />, container);
     }).toThrowError(
-      'Minified React error #109; visit ' +
-        'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
+      `Minified React error #${errorCode}; visit ` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=Component` +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );

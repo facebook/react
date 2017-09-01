@@ -16,7 +16,6 @@ const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 describe('ReactChildren', () => {
   var React;
   var ReactTestUtils;
-  var ReactFeatureFlags;
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/at .+?:\d+/g, 'at **');
@@ -883,11 +882,6 @@ describe('ReactChildren', () => {
 
   if (ReactDOMFeatureFlags.useFiber) {
     describe('with fragments enabled', () => {
-      beforeEach(() => {
-        ReactFeatureFlags = require('ReactFeatureFlags');
-        ReactFeatureFlags.disableNewFiberFeatures = false;
-      });
-
       it('warns for keys for arrays of elements in a fragment', () => {
         spyOn(console, 'error');
         class ComponentReturningArray extends React.Component {

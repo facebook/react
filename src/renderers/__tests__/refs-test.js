@@ -394,11 +394,6 @@ describe('string refs between fiber and stack', () => {
 });
 
 describe('root level refs', () => {
-  beforeEach(() => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
-  });
-
   it('attaches and detaches root refs', () => {
     var ReactDOM = require('react-dom');
     var inst = null;

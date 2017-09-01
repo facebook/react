@@ -21,7 +21,6 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
@@ -31,7 +30,6 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var ReactVersion = require('ReactVersion');
-var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
 var {
   ELEMENT_NODE,
@@ -659,38 +657,6 @@ var ReactDOMFiber = {
     container: DOMContainer,
     callback: ?Function,
   ) {
-    if (ReactFeatureFlags.disableNewFiberFeatures) {
-      // Top-level check occurs here instead of inside child reconciler
-      // because requirements vary between renderers. E.g. React Art
-      // allows arrays.
-      if (!isValidElement(element)) {
-        if (typeof element === 'string') {
-          invariant(
-            false,
-            'ReactDOM.render(): Invalid component element. Instead of ' +
-              "passing a string like 'div', pass " +
-              "React.createElement('div') or <div />.",
-          );
-        } else if (typeof element === 'function') {
-          invariant(
-            false,
-            'ReactDOM.render(): Invalid component element. Instead of ' +
-              'passing a class like Foo, pass React.createElement(Foo) ' +
-              'or <Foo />.',
-          );
-        } else if (element != null && typeof element.props !== 'undefined') {
-          // Check if it quacks like an element
-          invariant(
-            false,
-            'ReactDOM.render(): Invalid component element. This may be ' +
-              'caused by unintentionally loading two independent copies ' +
-              'of React.',
-          );
-        } else {
-          invariant(false, 'ReactDOM.render(): Invalid component element.');
-        }
-      }
-    }
     return renderSubtreeIntoContainer(
       null,
       element,
