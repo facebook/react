@@ -445,20 +445,24 @@ describe('ReactErrorBoundaries', () => {
     ErrorBoundary = class extends React.Component {
       constructor(props) {
         super(props);
-        this.state = {error: null};
+        this.state = {error: null, errorInfo: null};
         log.push(`${this.props.logName} constructor`);
       }
       render() {
         if (this.state.error && !this.props.forceRetry) {
           log.push(`${this.props.logName} render error`);
-          return this.props.renderError(this.state.error, this.props);
+          return this.props.renderError(
+            this.state.error,
+            this.state.errorInfo,
+            this.props,
+          );
         }
         log.push(`${this.props.logName} render success`);
         return <div>{this.props.children}</div>;
       }
-      componentDidCatch(error) {
+      componentDidCatch(error, errorInfo) {
         log.push(`${this.props.logName} componentDidCatch`);
-        this.setState({error});
+        this.setState({error, errorInfo});
       }
       componentWillMount() {
         log.push(`${this.props.logName} componentWillMount`);
@@ -481,7 +485,7 @@ describe('ReactErrorBoundaries', () => {
     };
     ErrorBoundary.defaultProps = {
       logName: 'ErrorBoundary',
-      renderError(error, props) {
+      renderError(error, errorInfo, props) {
         return (
           <div ref={props.errorMessageRef}>
             Caught an error: {error.message}.
@@ -2226,6 +2230,42 @@ describe('ReactErrorBoundaries', () => {
       expect(errors).toEqual(['child sad', 'parent sad']);
       // Error should be the first thrown
       expect(caughtError.message).toBe('child sad');
+    });
+
+    it('passes an error info parameter with a :componentStack string', () => {
+      function renderError(error, errorInfo) {
+        return <div>{errorInfo.componentStack}</div>;
+      }
+
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary renderError={renderError}>
+          <BrokenRender />
+        </ErrorBoundary>,
+        container,
+      );
+      expect(container.textContent).toContain('in BrokenRender');
+      expect(container.textContent).toContain('in ErrorBoundary');
+    });
+
+    it('passes an error info parameter with a :componentStackFrames array', () => {
+      function renderError(error, errorInfo) {
+        return (
+          <div>
+            {errorInfo.componentStackFrames.map(frame => frame.name).join(',')}
+          </div>
+        );
+      }
+
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <ErrorBoundary renderError={renderError}>
+          <BrokenRender />
+        </ErrorBoundary>,
+        container,
+      );
+      expect(container.textContent).toContain('BrokenRender');
+      expect(container.textContent).toContain('ErrorBoundary');
     });
   }
 });

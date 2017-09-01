@@ -17,10 +17,12 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
+import type {StackFrame} from 'ReactFiberComponentTreeHook';
 
 export type CapturedError = {
   componentName: ?string,
   componentStack: string,
+  componentStackFrames: Array<StackFrame>,
   error: mixed,
   errorBoundary: ?Object,
   errorBoundaryFound: boolean,
@@ -30,12 +32,14 @@ export type CapturedError = {
 
 export type HandleErrorInfo = {
   componentStack: string,
+  componentStackFrames: Array<StackFrame>,
 };
 
 var {popContextProvider} = require('ReactFiberContext');
 const {reset} = require('ReactFiberStack');
 var {
   getStackAddendumByWorkInProgressFiber,
+  getStackFramesByWorkInProgressFiber,
 } = require('ReactFiberComponentTreeHook');
 var {logCapturedError} = require('ReactFiberErrorLogger');
 var {
@@ -1191,6 +1195,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // The risk is that the return path from this Fiber may not be accurate.
       // That risk is acceptable given the benefit of providing users more context.
       const componentStack = getStackAddendumByWorkInProgressFiber(failedWork);
+      const componentStackFrames = getStackFramesByWorkInProgressFiber(
+        failedWork,
+      );
       const componentName = getComponentName(failedWork);
 
       // Add to the collection of captured errors. This is stored as a global
@@ -1204,6 +1211,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       const capturedError = {
         componentName,
         componentStack,
+        componentStackFrames,
         error,
         errorBoundary: errorBoundaryFound ? boundary.stateNode : null,
         errorBoundaryFound,
@@ -1289,6 +1297,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
         const info: HandleErrorInfo = {
           componentStack: capturedError.componentStack,
+          componentStackFrames: capturedError.componentStackFrames,
         };
 
         // Allow the boundary to handle the error, usually by scheduling
