@@ -965,18 +965,11 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      // This is currently broken (and has been broken for a while).
-      // We had a fix based on reading namespace, but it was too convoluted.
-      // TODO: a proper fix that would happen at the diffing stage.
-      //
-      // itRenders(
-      //   'known SVG attributes for elements with dashes in tag',
-      //   async render => {
-      //     const e = await render(<svg><font-face accentHeight={10} /></svg>);
-      //     expect(e.firstChild.hasAttribute('accentHeight')).toBe(false);
-      //     expect(e.firstChild.getAttribute('accent-height')).toBe('10');
-      //   },
-      // );
+      itRenders('SVG tags with dashes in them', async render => {
+        const e = await render(<svg><font-face accentHeight={10} /></svg>);
+        expect(e.firstChild.hasAttribute('accentHeight')).toBe(false);
+        expect(e.firstChild.getAttribute('accent-height')).toBe('10');
+      });
 
       itRenders('cased custom attributes', async render => {
         const e = await render(<div fooBar="test" />);
