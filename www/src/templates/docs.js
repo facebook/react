@@ -11,6 +11,7 @@
 
 'use strict';
 
+import InstallationPage from 'components/InstallationPage';
 import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -30,13 +31,25 @@ const sectionList = sectionListA
     }),
   );
 
-const Docs = ({data, location}) => (
-  <MarkdownPage
-    location={location}
-    markdownRemark={data.markdownRemark}
-    sectionList={sectionList}
-  />
-);
+const Docs = ({data, location}) => {
+  console.log('location is ', location);
+  if (location.pathname === '/docs/installation.html') {
+    console.log('about to render InstallationPage');
+    return (
+      <InstallationPage
+        markdownRemark={data.markdownRemark}
+        sectionList={sectionList}
+      />
+    );
+  }
+  return (
+    <MarkdownPage
+      location={location}
+      markdownRemark={data.markdownRemark}
+      sectionList={sectionList}
+    />
+  );
+};
 
 Docs.propTypes = {
   data: PropTypes.object.isRequired,

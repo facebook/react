@@ -73,7 +73,7 @@ React is flexible and can be used in a variety of projects. You can create new a
       background-color: #05A5D1;
       color: white;
     }
-    block {
+    section {
       display: none;
     }
     .display-target-fiddle .fiddle,
@@ -104,7 +104,8 @@ React is flexible and can be used in a variety of projects. You can create new a
     </ul>
 </div>
 
-<block id="fiddletab" role="tabpanel" class="fiddle"  />
+<div>
+<section id="fiddletab" role="tabpanel" class="fiddle">
 
 ## Trying Out React
 
@@ -113,8 +114,9 @@ If you're just interested in playing around with React, you can use CodePen. Try
 If you prefer to use your own text editor, you can also <a href="/react/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
 If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.
+</section>
 
-<block id="newapptab" role="tabpanel" class="newapp" />
+<section id="newapptab" role="tabpanel" class="newapp">
 
 ## Creating a New Application
 
@@ -131,8 +133,9 @@ npm start
 Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.
 
 When you're ready to deploy to production, running `npm run build` will create an optimized build of your app in the `build` folder. You can learn more about Create React App [from its README](https://github.com/facebookincubator/create-react-app#create-react-app-) and the [User Guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#table-of-contents).
+</section>
 
-<block id="existingapptab" role="tabpanel" class="existingapp" />
+<section id="existingapptab" role="tabpanel" class="existingapp">
 
 ## Adding React to an Existing Application
 
@@ -246,96 +249,5 @@ We also recommend to verify that the CDN you are using sets the `Access-Control-
 ![Access-Control-Allow-Origin: *](/react/img/docs/cdn-cors-header.png)
 
 This enables a better [error handling experience](/react/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
-
-<script>
-/**
- * The code below is based on a snippet from React Native Getting Started page.
- */
-
-// Convert <div>...<span><block /></span>...</div>
-// Into <div>...<block />...</div>
-var blocks = document.getElementsByTagName('block');
-for (var i = 0; i < blocks.length; ++i) {
-  var block = blocks[i];
-  var span = blocks[i].parentNode;
-  var container = span.parentNode;
-  container.insertBefore(block, span);
-  container.removeChild(span);
-}
-// Convert <div>...<block />content<block />...</div>
-// Into <div>...<block>content</block><block />...</div>
-blocks = document.getElementsByTagName('block');
-for (var i = 0; i < blocks.length; ++i) {
-  var block = blocks[i];
-  while (block.nextSibling && block.nextSibling.tagName !== 'BLOCK') {
-    block.appendChild(block.nextSibling);
-  }
-}
-
-function setSelected(value){
-  var tabs = document.querySelectorAll('li[role="tab"]');
-  for (var i = 0; i < tabs.length; ++i) {
-    var tab = tabs[i];
-    if (tab.className === 'button-' + value) {
-      tabs[i].setAttribute('aria-selected', 'true');
-      tabs[i].setAttribute('tabindex', '0');
-    } else {
-      tabs[i].setAttribute('aria-selected', 'false');
-      tabs[i].setAttribute('tabindex', '-1');
-    }
-  }
-}
-
-function keyToggle(e, value, prevTab, nextTab){
-  if (e.keyCode === 37) {
-    document.getElementById(prevTab).focus();
-    display('target', prevTab);
-  }
-  if (e.keyCode === 39) {
-    document.getElementById(nextTab).focus();
-    display('target', nextTab);
-  }
-}
-
-function display(type, value) {
-  setSelected(value);
-  var container = document.getElementsByTagName('block')[0].parentNode;
-  container.className = 'display-' + type + '-' + value + ' ' +
-    container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
-}
-
-// If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
-// us as close as possible to the correct platform and dev os using the hashtag and block walk up.
-var foundHash = false;
-if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
-  // Hash links are added a bit later so we wait for them.
-  window.addEventListener('DOMContentLoaded', selectTabForHashLink);
-}
-
-function selectTabForHashLink() {
-  var hashLinks = document.querySelectorAll('a.hash-link');
-  for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
-    if (hashLinks[i].hash === window.location.hash) {
-      var parent = hashLinks[i].parentElement;
-      while (parent) {
-        if (parent.tagName === 'BLOCK') {
-          var target = null;
-          if (parent.className.indexOf('fiddle') > -1) {
-            target = 'fiddle';
-          } else if (parent.className.indexOf('newapp') > -1) {
-            target = 'newapp';
-          } else if (parent.className.indexOf('existingapp') > -1) {
-            target = 'existingapp';
-          } else {
-            break; // assume we don't have anything.
-          }
-          display('target', target);
-          foundHash = true;
-          break;
-        }
-        parent = parent.parentElement;
-      }
-    }
-  }
-}
-</script>
+</section>
+</div>
