@@ -644,8 +644,8 @@ function RowHeader({children, checked, onChange}) {
         display: 'flex',
         alignItems: 'center',
       }}>
-      {children}
       <input type="checkbox" checked={checked} onChange={onChange} />
+      {children}
     </div>
   );
 }
