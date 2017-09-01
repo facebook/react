@@ -72,6 +72,7 @@
     "platform": "^1.1.0",
     "prettier": "1.2.2",
     "prop-types": "^15.5.8",
+    "puppeteer": "^0.10.1",
     "rimraf": "^2.6.1",
     "rollup": "^0.41.6",
     "rollup-plugin-alias": "^1.2.1",

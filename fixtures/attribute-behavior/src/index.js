@@ -22,6 +22,11 @@ import './index.css';
   const ReactDOM = (window.ReactDOM16 = window.ReactDOM);
   window.ReactDOMServer16 = window.ReactDOMServer;
 
+  if (window.location.pathname === '/headless') {
+    import('./headless');
+    return;
+  }
+
   const App = await import('./App');
 
   ReactDOM.render(
