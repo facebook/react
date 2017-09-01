@@ -1,8 +1,8 @@
-const React = window.React;
-const ReactDOM = window.ReactDOM;
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
+
+const React = window.React;
+const ReactDOM = window.ReactDOM;
 
 class SelectFixture extends React.Component {
   state = {value: ''};
@@ -54,6 +54,13 @@ class SelectFixture extends React.Component {
               <option value="blue">Blue</option>
               <option value="green">Green</option>
             </select>
+          </fieldset>
+          <fieldset>
+            <legend>Controlled in nested subtree</legend>
+            <div ref={node => (this._nestedDOMNode = node)} />
+            <span className="hint">
+              This should synchronize in both direction with the "Controlled".
+            </span>
           </fieldset>
         </form>
 

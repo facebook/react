@@ -1,11 +1,11 @@
-const React = window.React;
-
 import cn from 'classnames';
 import semver from 'semver';
 import PropTypes from 'prop-types';
 import IssueList from './IssueList';
 import {parse} from 'query-string';
 import {semverString} from './propTypes';
+
+const React = window.React;
 
 const propTypes = {
   children: PropTypes.node.isRequired,
