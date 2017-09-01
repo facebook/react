@@ -840,11 +840,13 @@ class App extends React.Component {
     switch (sortOrder) {
       case ALPHABETICAL:
         return filteredAttributes.sort(
-          (attr1, attr2) => (attr1.name < attr2.name ? -1 : 1)
+          (attr1, attr2) =>
+            (attr1.name.toLowerCase() < attr2.name.toLowerCase() ? -1 : 1)
         );
       case REV_ALPHABETICAL:
         return filteredAttributes.sort(
-          (attr1, attr2) => (attr1.name < attr2.name ? 1 : -1)
+          (attr1, attr2) =>
+            (attr1.name.toLowerCase() < attr2.name.toLowerCase() ? 1 : -1)
         );
       case GROUPED_BY_ROW_PATTERN: {
         return filteredAttributes.sort((attr1, attr2) => {
