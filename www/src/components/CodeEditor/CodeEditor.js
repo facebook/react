@@ -48,10 +48,13 @@ class CodeEditor extends Component {
       <LiveProvider code={code} mountStylesheet={false}>
         <div
           css={{
-            display: 'flex',
-            flexDirection: 'row',
+            [media.xlargeUp]: {
+              display: 'flex',
+              flexDirection: 'row',
+            },
+
             [media.largeDown]: {
-              flexDirection: 'column',
+              display: 'block',
             },
           }}>
           {children &&
@@ -82,12 +85,15 @@ class CodeEditor extends Component {
 
           <div
             css={{
-              display: 'flex',
-              flex: '0 0 67%',
-              alignItems: 'stretch',
-              flexDirection: 'row',
+              [media.mediumUp]: {
+                flex: '0 0 67%',
+                display: 'flex',
+                alignItems: 'stretch',
+                flexDirection: 'row',
+              },
+
               [media.smallDown]: {
-                flexDirection: 'column',
+                display: 'block',
               },
             }}>
             <Flex shrink="0" basis="50%" halign="flex-end">
