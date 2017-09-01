@@ -377,7 +377,7 @@ function getRenderedAttributeValue(
   };
 }
 
-function prepareState(getGlobals, reportProgress) {
+function prepareState(initGlobals) {
   function getRenderedAttributeValues(attribute, type) {
     const {
       React15,
@@ -386,8 +386,7 @@ function prepareState(getGlobals, reportProgress) {
       React16,
       ReactDOM16,
       ReactDOMServer16,
-    } = getGlobals(type.name);
-    reportProgress(attribute.name, type.name);
+    } = initGlobals(attribute, type);
     const react15Value = getRenderedAttributeValue(
       React15,
       ReactDOM15,
@@ -758,16 +757,19 @@ class App extends React.Component {
     );
     const codesByIndex = await Promise.all(codePromises);
 
-    // This is a bit convoluted.
-    // We can't naïvely reuse the same global instances of React because they deduplicate warnings.
-    // However instantiating React for every single check would be extremely slow.
-    // This is why we cache them by *type*.
-    // The same property gets checked by different React for every comparison type.
-    // However Reacts will be reused across different properties.
-    let cachedGlobalsByType = {};
-    function getGlobals(comparisonTypeName) {
-      if (cachedGlobalsByType[comparisonTypeName]) {
-        return cachedGlobalsByType[comparisonTypeName];
+    const pool = [];
+    function initGlobals(attribute, type) {
+      document.title = `${attribute.name} (${type.name})`;
+
+      // Creating globals for every single test is too slow.
+      // However caching them between runs won't work for the same attribute names
+      // because warnings will be deduplicated. As a result, we only share globals
+      // between different attribute names.
+      for (let i = 0; i < pool.length; i++) {
+        if (!pool[i].testedAttributes.has(attribute.name)) {
+          pool[i].testedAttributes.add(attribute.name);
+          return pool[i].globals;
+        }
       }
 
       let globals = {};
@@ -775,16 +777,17 @@ class App extends React.Component {
         eval.call(window, codesByIndex[i]); // eslint-disable-line
         globals[name] = window[name.replace(/\d+/g, '')];
       });
-      cachedGlobalsByType[comparisonTypeName] = globals;
+
+      // Cache for future use (for different attributes).
+      pool.push({
+        globals,
+        testedAttributes: new Set([attribute.name]),
+      });
 
       return globals;
     }
 
-    function reportProgress(attributeName, comparisonTypeName) {
-      document.title = `${attributeName} (${comparisonTypeName})`;
-    }
-
-    const {table, rowPatternHashes} = prepareState(getGlobals, reportProgress);
+    const {table, rowPatternHashes} = prepareState(initGlobals);
     document.title = 'Ready';
 
     this.setState({
