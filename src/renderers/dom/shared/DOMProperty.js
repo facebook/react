@@ -17,14 +17,12 @@ var invariant = require('fbjs/lib/invariant');
 // case insensitive checks
 var RESERVED_PROPS = {
   children: true,
-  dangerouslysetinnerhtml: true,
-  autofocus: true,
-  defaultvalue: true,
-  defaultchecked: true,
-  innerhtml: true,
-  suppresscontenteditablewarning: true,
-  onfocusin: true,
-  onfocusout: true,
+  dangerouslySetInnerHTML: true,
+  autoFocus: true,
+  defaultValue: true,
+  defaultChecked: true,
+  innerHTML: true,
+  suppressContentEditableWarning: true,
   style: true,
 };
 
@@ -42,6 +40,7 @@ var DOMPropertyInjection = {
   HAS_NUMERIC_VALUE: 0x8,
   HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
   HAS_OVERLOADED_BOOLEAN_VALUE: 0x20,
+  HAS_STRING_BOOLEAN_VALUE: 0x40,
 
   /**
    * Inject some specialized knowledge about the DOM. This takes a config object
@@ -102,6 +101,10 @@ var DOMPropertyInjection = {
         hasOverloadedBooleanValue: checkMask(
           propConfig,
           Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
+        ),
+        hasStringBooleanValue: checkMask(
+          propConfig,
+          Injection.HAS_STRING_BOOLEAN_VALUE,
         ),
       };
       invariant(
@@ -201,26 +204,21 @@ var DOMProperty = {
     if (DOMProperty.isReservedProp(name)) {
       return false;
     }
-
+    if (
+      (name[0] === 'o' || name[0] === 'O') &&
+      (name[1] === 'n' || name[1] === 'N')
+    ) {
+      return false;
+    }
     if (value === null) {
       return true;
     }
-
-    var lowerCased = name.toLowerCase();
-
-    var propertyInfo = DOMProperty.properties[name];
-
     switch (typeof value) {
       case 'boolean':
-        if (propertyInfo) {
-          return true;
-        }
-        var prefix = lowerCased.slice(0, 5);
-        return prefix === 'data-' || prefix === 'aria-';
+        return DOMProperty.shouldAttributeAcceptBooleanValue(name);
       case 'undefined':
       case 'number':
       case 'string':
-        return true;
       case 'object':
         return true;
       default:
@@ -235,6 +233,22 @@ var DOMProperty = {
       : null;
   },
 
+  shouldAttributeAcceptBooleanValue(name) {
+    if (DOMProperty.isReservedProp(name)) {
+      return true;
+    }
+    let propertyInfo = DOMProperty.getPropertyInfo(name);
+    if (propertyInfo) {
+      return (
+        propertyInfo.hasBooleanValue ||
+        propertyInfo.hasStringBooleanValue ||
+        propertyInfo.hasOverloadedBooleanValue
+      );
+    }
+    var prefix = name.toLowerCase().slice(0, 5);
+    return prefix === 'data-' || prefix === 'aria-';
+  },
+
   /**
    * Checks to see if a property name is within the list of properties
    * reserved for internal React operations. These properties should
@@ -245,7 +259,7 @@ var DOMProperty = {
    * @return {boolean} If the name is within reserved props
    */
   isReservedProp(name) {
-    return RESERVED_PROPS.hasOwnProperty(name.toLowerCase());
+    return RESERVED_PROPS.hasOwnProperty(name);
   },
 
   injection: DOMPropertyInjection,

@@ -68,6 +68,9 @@ export type UpdateQueue = {
   isProcessing?: boolean,
 };
 
+let _queue1;
+let _queue2;
+
 function comparePriority(a: PriorityLevel, b: PriorityLevel): number {
   // When comparing update priorities, treat sync and Task work as equal.
   // TODO: Could we avoid the need for this by always coercing sync priority
@@ -160,7 +163,7 @@ function findInsertionPosition(queue, update): Update | null {
   return insertAfter;
 }
 
-function ensureUpdateQueues(fiber: Fiber): [UpdateQueue, UpdateQueue | null] {
+function ensureUpdateQueues(fiber: Fiber) {
   const alternateFiber = fiber.alternate;
 
   let queue1 = fiber.updateQueue;
@@ -178,12 +181,9 @@ function ensureUpdateQueues(fiber: Fiber): [UpdateQueue, UpdateQueue | null] {
     queue2 = null;
   }
 
-  // TODO: Refactor to avoid returning a tuple.
-  return [
-    queue1,
-    // Return null if there is no alternate queue, or if its queue is the same.
-    queue2 !== queue1 ? queue2 : null,
-  ];
+  _queue1 = queue1;
+  // Return null if there is no alternate queue, or if its queue is the same.
+  _queue2 = queue2 !== queue1 ? queue2 : null;
 }
 
 // The work-in-progress queue is a subset of the current queue (if it exists).
@@ -217,7 +217,9 @@ function ensureUpdateQueues(fiber: Fiber): [UpdateQueue, UpdateQueue | null] {
 // If the update is cloned, it returns the cloned update.
 function insertUpdate(fiber: Fiber, update: Update): Update | null {
   // We'll have at least one and at most two distinct update queues.
-  const [queue1, queue2] = ensureUpdateQueues(fiber);
+  ensureUpdateQueues(fiber);
+  const queue1 = _queue1;
+  const queue2 = _queue2;
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
@@ -370,7 +372,8 @@ function addTopLevelUpdate(
   if (isTopLevelUnmount) {
     // TODO: Redesign the top-level mount/update/unmount API to avoid this
     // special case.
-    const [queue1, queue2] = ensureUpdateQueues(fiber);
+    const queue1 = _queue1;
+    const queue2 = _queue2;
 
     // Drop all updates that are lower-priority, so that the tree is not
     // remounted. We need to do this for both queues.

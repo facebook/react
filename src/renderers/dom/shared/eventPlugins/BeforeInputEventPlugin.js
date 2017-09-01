@@ -273,7 +273,7 @@ function extractCompositionEvent(
 }
 
 /**
- * @param {string} topLevelType Record from `BrowserEventConstants`.
+ * @param {TopLevelTypes} topLevelType Record from `BrowserEventConstants`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The string corresponding to this `beforeInput` event.
  */

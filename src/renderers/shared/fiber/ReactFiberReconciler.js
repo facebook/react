@@ -160,7 +160,7 @@ export type Reconciler<C, I, TI> = {
   updateContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
-    parentComponent: ?ReactComponent<any, any, any>,
+    parentComponent: ?React$Component<any, any>,
     callback: ?Function,
   ): void,
   performWithPriority(priorityLevel: PriorityLevel, fn: Function): void,
@@ -172,7 +172,7 @@ export type Reconciler<C, I, TI> = {
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(
     container: OpaqueRoot,
-  ): ReactComponent<any, any, any> | TI | I | null,
+  ): React$Component<any, any> | TI | I | null,
 
   // Use for findDOMNode/findHostNode. Legacy API.
   findHostInstance(component: Fiber): I | TI | null,
@@ -256,7 +256,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     updateContainer(
       element: ReactNodeList,
       container: OpaqueRoot,
-      parentComponent: ?ReactComponent<any, any, any>,
+      parentComponent: ?React$Component<any, any>,
       callback: ?Function,
     ): void {
       // TODO: If this is a nested container, this won't be the root.
@@ -296,7 +296,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     getPublicRootInstance(
       container: OpaqueRoot,
-    ): ReactComponent<any, any, any> | PI | null {
+    ): React$Component<any, any> | PI | null {
       const containerFiber = container.current;
       if (!containerFiber.child) {
         return null;

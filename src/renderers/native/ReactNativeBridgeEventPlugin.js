@@ -13,10 +13,10 @@
 
 var EventPropagators = require('EventPropagators');
 var SyntheticEvent = require('SyntheticEvent');
-var UIManager = require('UIManager');
+var ReactNativeEventTypes = require('ReactNativeEventTypes');
 
-var customBubblingEventTypes = UIManager.customBubblingEventTypes;
-var customDirectEventTypes = UIManager.customDirectEventTypes;
+var customBubblingEventTypes = ReactNativeEventTypes.customBubblingEventTypes;
+var customDirectEventTypes = ReactNativeEventTypes.customDirectEventTypes;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

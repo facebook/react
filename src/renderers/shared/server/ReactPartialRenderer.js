@@ -28,6 +28,7 @@ var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var invariant = require('fbjs/lib/invariant');
 var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
 var omittedCloseTags = require('omittedCloseTags');
+var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
 
@@ -39,15 +40,15 @@ if (__DEV__) {
     validateProperties: validateARIAProperties,
   } = require('ReactDOMInvalidARIAHook');
   var {
-    validateProperties: validateInputPropertes,
+    validateProperties: validateInputProperties,
   } = require('ReactDOMNullInputValuePropHook');
   var {
-    validateProperties: validateUnknownPropertes,
+    validateProperties: validateUnknownProperties,
   } = require('ReactDOMUnknownPropertyHook');
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
-    validateInputPropertes(type, props);
-    validateUnknownPropertes(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props);
   };
 
   var describeComponentFrame = require('describeComponentFrame');
@@ -254,14 +255,11 @@ var RESERVED_PROPS = {
   suppressContentEditableWarning: null,
 };
 
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
-}
-
 function createOpenTagMarkup(
   tagVerbatim,
   tagLowercase,
   props,
+  namespace,
   makeStaticMarkup,
   isRootElement,
   instForDebug,
@@ -786,6 +784,7 @@ class ReactDOMServerRenderer {
       element.type,
       tag,
       props,
+      namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
       null,

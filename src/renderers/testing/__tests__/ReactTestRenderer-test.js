@@ -14,7 +14,6 @@
 var React = require('react');
 var ReactTestRenderer = require('react-test-renderer');
 var prettyFormat = require('pretty-format');
-var ReactFeatureFlags;
 
 // Kind of hacky, but we nullify all the instances to test the tree structure
 // with jasmine's deep equality function, and test the instances separate. We
@@ -40,11 +39,6 @@ function cleanNode(node) {
 }
 
 describe('ReactTestRenderer', () => {
-  beforeEach(() => {
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
-  });
-
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }

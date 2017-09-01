@@ -480,9 +480,6 @@ ReactDOMComponent.Mixin = {
 
     assertValidProps(this, props);
 
-    if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(this._tag, props);
-    }
     // We create tags in the namespace of their parent container, except HTML
     // tags get no namespace.
     var namespaceURI;
@@ -499,6 +496,9 @@ ReactDOMComponent.Mixin = {
       (namespaceURI === Namespaces.svg && parentTag === 'foreignobject')
     ) {
       namespaceURI = Namespaces.html;
+    }
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
     }
     if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
@@ -548,7 +548,7 @@ ReactDOMComponent.Mixin = {
           var div = ownerDocument.createElement('div');
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
-        } else if (props.is) {
+        } else if (typeof props.is === 'string') {
           el = ownerDocument.createElement(type, {is: props.is});
         } else {
           // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.

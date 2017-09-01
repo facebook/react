@@ -200,7 +200,7 @@ describe('ReactErrorUtils', () => {
         ReactErrorUtils.invokeGuardedCallback(
           null,
           function() {
-            throw null;
+            throw null; // eslint-disable-line no-throw-literal
           },
           null,
         );

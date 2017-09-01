@@ -24,11 +24,9 @@ import type {
   MeasureLayoutOnSuccessCallback,
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
+  ReactNativeBaseComponentViewConfig,
 } from 'ReactNativeTypes';
 import type {Instance} from 'ReactNativeFiberRenderer';
-import type {
-  ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeViewConfigRegistry';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -90,11 +88,16 @@ class ReactNativeFiberHostComponent {
       this.viewConfig.validAttributes,
     );
 
-    UIManager.updateView(
-      this._nativeTag,
-      this.viewConfig.uiViewClassName,
-      updatePayload,
-    );
+    // Avoid the overhead of bridge calls if there's no update.
+    // This is an expensive no-op for Android, and causes an unnecessary
+    // view invalidation for certain components (eg RCTTextInput) on iOS.
+    if (updatePayload != null) {
+      UIManager.updateView(
+        this._nativeTag,
+        this.viewConfig.uiViewClassName,
+        updatePayload,
+      );
+    }
   }
 }
 

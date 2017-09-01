@@ -32,6 +32,9 @@ declare module 'ExceptionsManager' {
     isFatal: boolean,
   ) : void;
 }
+declare module 'Platform' {
+  declare var OS : string;
+}
 declare module 'UIManager' {
   declare var customBubblingEventTypes : Object;
   declare var customDirectEventTypes : Object;
@@ -83,5 +86,5 @@ declare module 'UIManager' {
   ) : Promise<any>;
 }
 declare module 'View' {
-  declare var exports : typeof ReactComponent;
+  declare var exports : typeof React$Component;
 }

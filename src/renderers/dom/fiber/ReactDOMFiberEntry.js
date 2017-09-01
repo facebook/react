@@ -21,7 +21,6 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
@@ -31,7 +30,6 @@ var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var ReactVersion = require('ReactVersion');
-var {isValidElement} = require('react');
 var {injectInternals} = require('ReactFiberDevToolsHook');
 var {
   ELEMENT_NODE,
@@ -546,7 +544,7 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 var warnedAboutHydrateAPI = false;
 
 function renderSubtreeIntoContainer(
-  parentComponent: ?ReactComponent<any, any, any>,
+  parentComponent: ?React$Component<any, any>,
   children: ReactNodeList,
   container: DOMContainer,
   forceHydrate: boolean,
@@ -649,52 +647,16 @@ function renderSubtreeIntoContainer(
 }
 
 var ReactDOMFiber = {
-  hydrate(
-    element: ReactElement<any>,
-    container: DOMContainer,
-    callback: ?Function,
-  ) {
+  hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
     // TODO: throw or warn if we couldn't hydrate?
     return renderSubtreeIntoContainer(null, element, container, true, callback);
   },
 
   render(
-    element: ReactElement<any>,
+    element: React$Element<any>,
     container: DOMContainer,
     callback: ?Function,
   ) {
-    if (ReactFeatureFlags.disableNewFiberFeatures) {
-      // Top-level check occurs here instead of inside child reconciler
-      // because requirements vary between renderers. E.g. React Art
-      // allows arrays.
-      if (!isValidElement(element)) {
-        if (typeof element === 'string') {
-          invariant(
-            false,
-            'ReactDOM.render(): Invalid component element. Instead of ' +
-              "passing a string like 'div', pass " +
-              "React.createElement('div') or <div />.",
-          );
-        } else if (typeof element === 'function') {
-          invariant(
-            false,
-            'ReactDOM.render(): Invalid component element. Instead of ' +
-              'passing a class like Foo, pass React.createElement(Foo) ' +
-              'or <Foo />.',
-          );
-        } else if (element != null && typeof element.props !== 'undefined') {
-          // Check if it quacks like an element
-          invariant(
-            false,
-            'ReactDOM.render(): Invalid component element. This may be ' +
-              'caused by unintentionally loading two independent copies ' +
-              'of React.',
-          );
-        } else {
-          invariant(false, 'ReactDOM.render(): Invalid component element.');
-        }
-      }
-    }
     return renderSubtreeIntoContainer(
       null,
       element,
@@ -705,8 +667,8 @@ var ReactDOMFiber = {
   },
 
   unstable_renderSubtreeIntoContainer(
-    parentComponent: ReactComponent<any, any, any>,
-    element: ReactElement<any>,
+    parentComponent: React$Component<any, any>,
+    element: React$Element<any>,
     containerNode: DOMContainer,
     callback: ?Function,
   ) {
@@ -813,6 +775,7 @@ const foundDevTools = injectInternals({
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
+  rendererPackageName: 'react-dom',
 });
 
 if (__DEV__) {

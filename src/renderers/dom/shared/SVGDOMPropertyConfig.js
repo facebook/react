@@ -11,14 +11,22 @@
 
 'use strict';
 
+var DOMProperty = require('DOMProperty');
+
+var {HAS_STRING_BOOLEAN_VALUE} = DOMProperty.injection;
+
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
   xml: 'http://www.w3.org/XML/1998/namespace',
 };
 
 /**
- * This is a list of all SVG attributes that need special
- * casing, namespacing, or boolean value assignment.
+ * This is a list of all SVG attributes that need special casing,
+ * namespacing, or boolean value assignment.
+ *
+ * When adding attributes to this list, be sure to also add them to
+ * the `possibleStandardNames` module to ensure casing and incorrect
+ * name warnings.
  *
  * SVG Attributes List:
  * https://www.w3.org/TR/SVG/attindex.html
@@ -109,15 +117,19 @@ var ATTRS = [
   'xmlns:xlink',
   'xml:lang',
   'xml:space',
-  // The following attributes expect boolean values. They must be in
-  // the whitelist to allow boolean attribute assignment:
-  'autoReverse',
-  'externalResourcesRequired',
-  'preserveAlpha',
 ];
 
 var SVGDOMPropertyConfig = {
-  Properties: {},
+  Properties: {
+    autoReverse: HAS_STRING_BOOLEAN_VALUE,
+    externalResourcesRequired: HAS_STRING_BOOLEAN_VALUE,
+    preserveAlpha: HAS_STRING_BOOLEAN_VALUE,
+  },
+  DOMAttributeNames: {
+    autoReverse: 'autoReverse',
+    externalResourcesRequired: 'externalResourcesRequired',
+    preserveAlpha: 'preserveAlpha',
+  },
   DOMAttributeNamespaces: {
     xlinkActuate: NS.xlink,
     xlinkArcrole: NS.xlink,
@@ -130,7 +142,6 @@ var SVGDOMPropertyConfig = {
     xmlLang: NS.xml,
     xmlSpace: NS.xml,
   },
-  DOMAttributeNames: {},
 };
 
 var CAMELIZE = /[\-\:]([a-z])/g;

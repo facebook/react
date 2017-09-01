@@ -14,7 +14,6 @@
 describe('ReactDebugFiberPerf', () => {
   let React;
   let ReactCoroutine;
-  let ReactFeatureFlags;
   let ReactNoop;
   let ReactPortal;
   let PropTypes;
@@ -121,8 +120,6 @@ describe('ReactDebugFiberPerf', () => {
     // TODO: can we express this test with only public API?
     ReactCoroutine = require('ReactCoroutine');
     ReactPortal = require('ReactPortal');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
     PropTypes = require('prop-types');
   });
 
