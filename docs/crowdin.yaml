@@ -84,6 +84,18 @@ files:
     translation: '/%locale%/index.md'
     languages_mapping: *anchor
   -
+    source: '/README.md'
+    translation: '/%locale%/README.md'
+    languages_mapping: *anchor
+  -
+    source: '/acknowledgements.md'
+    translation: '/%locale%/acknowledgements.md'
+    languages_mapping: *anchor
+  -
+    source: '/404.md'
+    translation: '/%locale%/404.md'
+    languages_mapping: *anchor
+  -
     source: '/jsx-compiler.md'
     translation: '/%locale%/jsx-compiler.md'
     languages_mapping: *anchor
