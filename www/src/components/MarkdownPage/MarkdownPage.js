@@ -92,10 +92,10 @@ const MarkdownPage = ({
                 marginLeft: 'calc(9% + 40px)',
               }}>
               <StickySidebar
-                defaultActiveSection={findSectionForPath(
+                defaultActiveSection={location != null ? findSectionForPath(
                   location.pathname,
                   sectionList,
-                )}
+                ) : null}
                 location={location}
                 sectionList={sectionList}
               />
