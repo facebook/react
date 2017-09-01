@@ -27,7 +27,9 @@ const toAnchor = (href = '') => {
 // TODO Account for redirect_from URLs somehow; they currently won't match.
 
 const isItemActive = (location, item) => {
-  if (location.hash) {
+  if (location == null) {
+    return false; // Production build of Gatsby is eval'ed in Node
+  } else if (location.hash) {
     if (item.href) {
       return location.hash === toAnchor(item.href);
     }

@@ -41,6 +41,10 @@ function urlify(str) {
 
 // ?invariant=123&args[]=foo&args[]=bar
 function parseQueryString(location) {
+  if (location == null) {
+    return null; // Production build of Gatsby is eval'ed in Node
+  }
+
   const rawQueryString = location.search.substring(1);
   if (!rawQueryString) {
     return null;
