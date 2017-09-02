@@ -17,6 +17,7 @@
     "umd/"
   ],
   "main": "index.js",
+  "unpkg": "umd/react.production.min.js",
   "repository": "facebook/react",
   "engines": {
     "node": ">=0.10.0"
