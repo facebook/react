@@ -147,7 +147,6 @@ function getSVGAttribute(attributeName) {
 }
 
 const attributes = [
-  {name: 'imaginaryFriend', read: getAttribute('imaginaryFriend')},
   {name: 'about', read: getAttribute('about')},
   {name: 'aBoUt', read: getAttribute('about')},
   {
