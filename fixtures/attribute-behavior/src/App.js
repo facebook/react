@@ -4,6 +4,7 @@ import {createElement} from 'glamor/react'; // eslint-disable-line
 
 import {MultiGrid, AutoSizer} from 'react-virtualized';
 import 'react-virtualized/styles.css';
+import FileSaver from 'file-saver';
 
 import {
   inject as injectErrorOverlay,
@@ -872,6 +873,53 @@ class App extends React.Component {
     }
   }
 
+  handleSaveClick = () => {
+    let log = '';
+    for (let attribute of attributes) {
+      const attributeResults = this.state.table.get(attribute).results;
+      log += `<${attribute.tagName || 'div'} ${attribute.name}>\n`;
+      for (let type of types) {
+        const {
+          didError,
+          didWarn,
+          canonicalResult,
+          canonicalDefaultValue,
+          ssrDidError,
+          ssrHasSameBehavior,
+          ssrHasSameBehaviorExceptWarnings,
+        } = attributeResults.get(type.name).reactNext;
+
+        let descriptions = [];
+        if (canonicalResult === canonicalDefaultValue) {
+          descriptions.push('IGNORED');
+        }
+        if (didError) {
+          descriptions.push('ERROR');
+        }
+        if (didWarn) {
+          descriptions.push('WARN');
+        }
+
+        if (ssrDidError) {
+          descriptions.push('SSR ERROR');
+        }
+
+        if (!ssrHasSameBehavior) {
+          if (ssrHasSameBehaviorExceptWarnings) {
+            descriptions.push('SSR WARNS');
+          } else {
+            descriptions.push('SSR DEVIATION');
+          }
+        }
+
+        log += `\t${type.name} -> ${canonicalResult} ${descriptions.join(', ')}\n`;
+      }
+    }
+
+    const blob = new Blob([log], {type: 'text/plain;charset=utf-8'});
+    FileSaver.saveAs(blob, 'AttributeTableSnapshot.txt');
+  };
+
   render() {
     if (!this.state.table) {
       return (
@@ -916,6 +964,12 @@ class App extends React.Component {
               complete
             </option>
           </select>
+          <a
+            href="#"
+            style={{marginLeft: '10px'}}
+            onClick={this.handleSaveClick}>
+            Save latest results to a file 💾
+          </a>
         </div>
         <AutoSizer disableHeight={true}>
           {({width}) => (
