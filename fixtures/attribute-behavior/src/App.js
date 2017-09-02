@@ -990,12 +990,11 @@ class App extends React.Component {
               complete
             </option>
           </select>
-          <a
-            href="#"
-            style={{marginLeft: '10px'}}
-            onClick={this.handleSaveClick}>
-            Save latest results to a file 💾
-          </a>
+          <button style={{marginLeft: '10px'}} onClick={this.handleSaveClick}>
+            Save latest results to a file
+            {' '}
+            <span role="img" aria-label="Save">💾</span>
+          </button>
         </div>
         <AutoSizer disableHeight={true}>
           {({width}) => (
