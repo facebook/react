@@ -873,11 +873,15 @@ class App extends React.Component {
     }
   }
 
-  handleSaveClick = () => {
+  handleSaveClick = e => {
+    e.preventDefault();
     let log = '';
     for (let attribute of attributes) {
+      log += `## \`${attribute.name}\` (on \`<${attribute.containerTagName || 'div'}>\`)\n`;
+      log += '| Test Case | Flags | Result |\n';
+      log += '| --- | --- | --- |\n';
+
       const attributeResults = this.state.table.get(attribute).results;
-      log += `<${attribute.tagName || 'div'} ${attribute.name}>\n`;
       for (let type of types) {
         const {
           didError,
@@ -891,33 +895,36 @@ class App extends React.Component {
 
         let descriptions = [];
         if (canonicalResult === canonicalDefaultValue) {
-          descriptions.push('IGNORED');
+          descriptions.push('initial');
+        } else {
+          descriptions.push('changed');
         }
         if (didError) {
-          descriptions.push('ERROR');
+          descriptions.push('error');
         }
         if (didWarn) {
-          descriptions.push('WARN');
+          descriptions.push('warning');
         }
-
         if (ssrDidError) {
-          descriptions.push('SSR ERROR');
+          descriptions.push('ssr error');
         }
-
         if (!ssrHasSameBehavior) {
           if (ssrHasSameBehaviorExceptWarnings) {
-            descriptions.push('SSR WARNS');
+            descriptions.push('ssr warning');
           } else {
-            descriptions.push('SSR DEVIATION');
+            descriptions.push('ssr mismatch');
           }
         }
-
-        log += `\t${type.name} -> ${canonicalResult} ${descriptions.join(', ')}\n`;
+        log +=
+          `| \`${attribute.name}=(${type.name})\`` +
+          `| (${descriptions.join(', ')})` +
+          `| \`${canonicalResult || ''}\` |\n`;
       }
+      log += '\n';
     }
 
     const blob = new Blob([log], {type: 'text/plain;charset=utf-8'});
-    FileSaver.saveAs(blob, 'AttributeTableSnapshot.txt');
+    FileSaver.saveAs(blob, 'AttributeTableSnapshot.md');
   };
 
   render() {
