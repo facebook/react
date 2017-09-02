@@ -708,6 +708,8 @@ function restoreFromLocalStorage() {
   return new Set();
 }
 
+const useFastMode = /[?&]fast\b/.test(window.location.href);
+
 class App extends React.Component {
   state = {
     sortOrder: ALPHABETICAL,
@@ -765,7 +767,15 @@ class App extends React.Component {
 
     const pool = [];
     function initGlobals(attribute, type) {
-      document.title = `${attribute.name} (${type.name})`;
+      if (useFastMode) {
+        // Note: this is not giving correct results for warnings.
+        // But it's much faster.
+        if (pool[0]) {
+          return pool[0].globals;
+        }
+      } else {
+        document.title = `${attribute.name} (${type.name})`;
+      }
 
       // Creating globals for every single test is too slow.
       // However caching them between runs won't work for the same attribute names
@@ -875,6 +885,14 @@ class App extends React.Component {
 
   handleSaveClick = e => {
     e.preventDefault();
+
+    if (useFastMode) {
+      alert(
+        'Fast mode is not accurate. Please remove ?fast from the query string, and reload.'
+      );
+      return;
+    }
+
     let log = '';
     for (let attribute of attributes) {
       log += `## \`${attribute.name}\` (on \`<${attribute.containerTagName || 'div'}>\`)\n`;
@@ -932,7 +950,8 @@ class App extends React.Component {
       return (
         <div>
           <h1>Loading...</h1>
-          <h3>The progress is reported in the window title.</h3>
+          {!useFastMode &&
+            <h3>The progress is reported in the window title.</h3>}
         </div>
       );
     }
