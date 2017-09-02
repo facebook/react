@@ -385,43 +385,43 @@ function getRenderedAttributeValue(
 function prepareState(initGlobals) {
   function getRenderedAttributeValues(attribute, type) {
     const {
-      React15,
-      ReactDOM15,
-      ReactDOMServer15,
-      React16,
-      ReactDOM16,
-      ReactDOMServer16,
+      ReactStable,
+      ReactDOMStable,
+      ReactDOMServerStable,
+      ReactNext,
+      ReactDOMNext,
+      ReactDOMServerNext,
     } = initGlobals(attribute, type);
-    const react15Value = getRenderedAttributeValue(
-      React15,
-      ReactDOM15,
-      ReactDOMServer15,
+    const reactStableValue = getRenderedAttributeValue(
+      ReactStable,
+      ReactDOMStable,
+      ReactDOMServerStable,
       attribute,
       type
     );
-    const react16Value = getRenderedAttributeValue(
-      React16,
-      ReactDOM16,
-      ReactDOMServer16,
+    const reactNextValue = getRenderedAttributeValue(
+      ReactNext,
+      ReactDOMNext,
+      ReactDOMServerNext,
       attribute,
       type
     );
 
     let hasSameBehavior;
-    if (react15Value.didError && react16Value.didError) {
+    if (reactStableValue.didError && reactNextValue.didError) {
       hasSameBehavior = true;
-    } else if (!react15Value.didError && !react16Value.didError) {
+    } else if (!reactStableValue.didError && !reactNextValue.didError) {
       hasSameBehavior =
-        react15Value.didWarn === react16Value.didWarn &&
-        react15Value.canonicalResult === react16Value.canonicalResult &&
-        react15Value.ssrHasSameBehavior === react16Value.ssrHasSameBehavior;
+        reactStableValue.didWarn === reactNextValue.didWarn &&
+        reactStableValue.canonicalResult === reactNextValue.canonicalResult &&
+        reactStableValue.ssrHasSameBehavior === reactNextValue.ssrHasSameBehavior;
     } else {
       hasSameBehavior = false;
     }
 
     return {
-      react15: react15Value,
-      react16: react16Value,
+      reactStable: reactStableValue,
+      reactNext: reactNextValue,
       hasSameBehavior,
     };
   }
@@ -441,7 +441,7 @@ function prepareState(initGlobals) {
       if (!result.hasSameBehavior) {
         hasSameBehaviorForAll = false;
       }
-      rowPatternHash += [result.react15, result.react16]
+      rowPatternHash += [result.reactStable, result.reactNext]
         .map(res =>
           [
             res.canonicalResult,
@@ -479,7 +479,6 @@ const warnColor = 'yellow';
 const errorColor = 'red';
 
 function RendererResult({
-  version,
   result,
   canonicalResult,
   defaultValue,
@@ -526,8 +525,8 @@ function ResultPopover(props) {
       }}>
       {JSON.stringify(
         {
-          react15: props.react15,
-          react16: props.react16,
+          reactStable: props.reactStable,
+          reactNext: props.reactNext,
           hasSameBehavior: props.hasSameBehavior,
         },
         null,
@@ -561,7 +560,7 @@ class Result extends React.Component {
   }
 
   render() {
-    const {react15, react16, hasSameBehavior} = this.props;
+    const {reactStable, reactNext, hasSameBehavior} = this.props;
     const style = {
       position: 'absolute',
       width: '100%',
@@ -605,7 +604,7 @@ class Result extends React.Component {
         onMouseEnter={this.onMouseEnter}
         onMouseLeave={this.onMouseLeave}>
         <div css={{position: 'absolute', width: '50%', height: '100%'}}>
-          <RendererResult version={15} {...react15} />
+          <RendererResult {...reactStable} />
         </div>
         <div
           css={{
@@ -614,7 +613,7 @@ class Result extends React.Component {
             left: '50%',
             height: '100%',
           }}>
-          <RendererResult version={16} {...react16} />
+          <RendererResult {...reactNext} />
         </div>
         {highlight}
         {popover}
@@ -750,12 +749,12 @@ class App extends React.Component {
 
   async componentDidMount() {
     const sources = {
-      React15: 'https://unpkg.com/react@latest/dist/react.js',
-      ReactDOM15: 'https://unpkg.com/react-dom@latest/dist/react-dom.js',
-      ReactDOMServer15: 'https://unpkg.com/react-dom@latest/dist/react-dom-server.js',
-      React16: '/react.development.js',
-      ReactDOM16: '/react-dom.development.js',
-      ReactDOMServer16: '/react-dom-server.browser.development.js',
+      ReactStable: 'https://unpkg.com/react@latest/dist/react.js',
+      ReactDOMStable: 'https://unpkg.com/react-dom@latest/dist/react-dom.js',
+      ReactDOMServerStable: 'https://unpkg.com/react-dom@latest/dist/react-dom-server.js',
+      ReactNext: '/react.development.js',
+      ReactDOMNext: '/react-dom.development.js',
+      ReactDOMServerNext: '/react-dom-server.browser.development.js',
     };
     const codePromises = Object.values(sources).map(src =>
       fetch(src).then(res => res.text())
@@ -780,7 +779,7 @@ class App extends React.Component {
       let globals = {};
       Object.keys(sources).forEach((name, i) => {
         eval.call(window, codesByIndex[i]); // eslint-disable-line
-        globals[name] = window[name.replace(/\d+/g, '')];
+        globals[name] = window[name.replace(/Stable|Next/g, '')];
       });
 
       // Cache for future use (for different attributes).
