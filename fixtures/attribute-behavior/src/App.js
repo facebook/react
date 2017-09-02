@@ -251,7 +251,7 @@ function getRenderedAttributeValue(
     }
   }
   let baseProps = {
-    ...attribute.extraProps
+    ...attribute.extraProps,
   };
   if (attribute.type) {
     baseProps.type = attribute.type;
@@ -414,7 +414,8 @@ function prepareState(initGlobals) {
       hasSameBehavior =
         reactStableValue.didWarn === reactNextValue.didWarn &&
         reactStableValue.canonicalResult === reactNextValue.canonicalResult &&
-        reactStableValue.ssrHasSameBehavior === reactNextValue.ssrHasSameBehavior;
+        reactStableValue.ssrHasSameBehavior ===
+          reactNextValue.ssrHasSameBehavior;
     } else {
       hasSameBehavior = false;
     }

@@ -254,7 +254,7 @@ const attributes = [
     read: getAttribute('challenge'), // The property is not supported in Chrome.
   },
   {name: 'charSet', tagName: 'script', read: getProperty('charset')},
-  {name: 'checked', tagName: 'input', extraProps: {onChange(){}}},
+  {name: 'checked', tagName: 'input', extraProps: {onChange() {}}},
   {name: 'Checked', tagName: 'input', read: getAttribute('Checked')},
   {name: 'Children', read: getAttribute('children')},
   {name: 'children'},
@@ -2070,9 +2070,19 @@ const attributes = [
   },
   {name: 'value', tagName: 'input', extraProps: {onChange() {}}},
   {name: 'value', tagName: 'input', type: 'email', extraProps: {onChange() {}}},
-  {name: 'value', tagName: 'input', type: 'number', extraProps: {onChange() {}}},
+  {
+    name: 'value',
+    tagName: 'input',
+    type: 'number',
+    extraProps: {onChange() {}},
+  },
   {name: 'value', tagName: 'textarea', extraProps: {onChange() {}}},
-  {name: 'value', containerTagName: 'select', tagName: 'option', extraProps: {onChange() {}}},
+  {
+    name: 'value',
+    containerTagName: 'select',
+    tagName: 'option',
+    extraProps: {onChange() {}},
+  },
   {
     name: 'Value',
     containerTagName: 'select',
