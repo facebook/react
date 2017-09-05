@@ -30,15 +30,13 @@ const sectionList = sectionListA
     }),
   );
 
-const Docs = ({data, location}) => {
-  return (
-    <MarkdownPage
-      location={location}
-      markdownRemark={data.markdownRemark}
-      sectionList={sectionList}
-    />
-  );
-};
+const Docs = ({data, location}) => (
+  <MarkdownPage
+    location={location}
+    markdownRemark={data.markdownRemark}
+    sectionList={sectionList}
+  />
+);
 
 Docs.propTypes = {
   data: PropTypes.object.isRequired,
