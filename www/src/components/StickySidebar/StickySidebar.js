@@ -24,11 +24,11 @@ const StickySidebar = props => (
           css={{
             marginTop: 60,
 
-            [media.smallDown]: {
+            [media.lessThan('small')]: {
               marginTop: 40,
             },
 
-            [media.mediumToLarge]: {
+            [media.between('medium', 'large')]: {
               marginTop: 50,
             },
           }}>

@@ -27,11 +27,11 @@ const Container = ({children}) => (
       marginLeft: 'auto',
       marginRight: 'auto',
 
-      [media.mediumUp]: {
+      [media.greaterThan('medium')]: {
         width: '90%',
       },
 
-      [media.xxlarge]: {
+      [media.size('xxlarge')]: {
         maxWidth: 1260,
       },
     }}>

@@ -31,17 +31,17 @@ const style = {
   paddingRight: 15,
   fontWeight: 300,
 
-  [media.xsmall]: {
+  [media.size('xsmall')]: {
     paddingLeft: 8,
     paddingRight: 8,
   },
 
-  [media.small]: {
+  [media.size('small')]: {
     paddingLeft: 10,
     paddingRight: 10,
   },
 
-  [media.xlargeUp]: {
+  [media.greaterThan('xlarge')]: {
     paddingLeft: 20,
     paddingRight: 20,
     fontSize: 18,
@@ -56,7 +56,7 @@ const style = {
 const activeStyle = {
   color: colors.brand,
 
-  [media.xlargeUp]: {
+  [media.greaterThan('xlarge')]: {
     position: 'relative',
 
     ':after': {
