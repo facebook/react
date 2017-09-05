@@ -14,7 +14,6 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import Remarkable from 'remarkable';
-import Flex from 'components/Flex';
 import {LiveProvider, LiveEditor} from 'react-live';
 import {colors, media} from 'theme';
 
@@ -96,17 +95,30 @@ class CodeEditor extends Component {
                 display: 'block',
               },
             }}>
-            <Flex shrink="0" basis="50%" halign="flex-end">
+            <div
+              css={{
+                flex: '0 0 50%',
+                overflow: 'hidden',
+                borderRadius: '10px 0 0 10px',
+
+                [media.lessThan('small')]: {
+                  borderRadius: '10px 10px 0 0',
+                },
+              }}>
+              <div
+                css={{
+                  padding: '10px',
+                  background: colors.darker,
+                  color: colors.white,
+                }}>
+                Live JSX Editor
+              </div>
               <div
                 css={{
                   height: '100%',
                   width: '100%',
-                  borderRadius: '10px 0 0 10px !important',
+                  borderRadius: '0',
                   marginTop: '0 !important',
-
-                  [media.lessThan('small')]: {
-                    borderRadius: '10px 10px 0 0 !important',
-                  },
 
                   '& pre.prism-code[contenteditable]': {
                     maxHeight: '280px !important',
@@ -116,7 +128,7 @@ class CodeEditor extends Component {
                 className="gatsby-highlight">
                 <LiveEditor onChange={this._onChange} />
               </div>
-            </Flex>
+            </div>
             {error &&
               <div
                 css={{
@@ -131,7 +143,7 @@ class CodeEditor extends Component {
                 }}>
                 <div
                   css={{
-                    padding: '0 10px',
+                    padding: '10px',
                     background: colors.error,
                     color: colors.white,
                   }}>
