@@ -53,7 +53,9 @@ describe('ReactDOM unknown attribute', () => {
       testUnknownAttributeAssignment(true, null);
       testUnknownAttributeAssignment(false, null);
 
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toMatch(
         'Warning: Received `true` for non-boolean attribute `unknown`. ' +
           'If this is expected, cast the value to a string.\n' +
           '    in div (at **)',
@@ -84,7 +86,9 @@ describe('ReactDOM unknown attribute', () => {
       spyOn(console, 'error');
 
       testUnknownAttributeAssignment(NaN, 'NaN');
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toMatch(
         'Warning: Received NaN for numeric attribute `unknown`. ' +
           'If this is expected, cast the value to a string.\n' +
           '    in div (at **)',
@@ -109,9 +113,9 @@ describe('ReactDOM unknown attribute', () => {
       testUnknownAttributeRemoval(Symbol('foo'));
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid prop `unknown` on <div> tag. Either remove this ' +
-        'prop from the element, or pass a string or number value to keep it ' +
-        'in the DOM. For details, see https://fb.me/react-unknown-prop\n' +
-        '    in div (at **)',
+          'prop from the element, or pass a string or number value to keep it ' +
+          'in the DOM. For details, see https://fb.me/react-unknown-prop\n' +
+          '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
     });
@@ -122,10 +126,10 @@ describe('ReactDOM unknown attribute', () => {
       testUnknownAttributeRemoval(function someFunction() {});
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
         'Warning: Invalid prop `unknown` on <div> tag. Either remove this ' +
-        'prop from the element, or pass a string or number value to ' +
-        'keep it in the DOM. For details, see '
-        + 'https://fb.me/react-unknown-prop\n'
-        + '    in div (at **)',
+          'prop from the element, or pass a string or number value to ' +
+          'keep it in the DOM. For details, see ' +
+          'https://fb.me/react-unknown-prop\n' +
+          '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
     });
