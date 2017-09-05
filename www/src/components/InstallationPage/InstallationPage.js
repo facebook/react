@@ -25,7 +25,7 @@ import {sharedStyles} from 'theme';
 
 // HACK: copied from 'installation.md'
 // TODO: clean this up.
-function setSelected(value){
+function setSelected(value) {
   var tabs = document.querySelectorAll('li[role="tab"]');
   for (var i = 0; i < tabs.length; ++i) {
     var tab = tabs[i];
@@ -39,7 +39,7 @@ function setSelected(value){
   }
 }
 
-function keyToggle(e, value, prevTab, nextTab){
+function keyToggle(e, value, prevTab, nextTab) {
   // left arrow <-
   if (e.keyCode === 37) {
     document.getElementById(prevTab).focus();
@@ -57,9 +57,14 @@ function display(type, value) {
   console.log('type is ', type);
   console.log('value is ', value);
   setSelected(value);
-  var container =
-    document.getElementsByTagName('section')[0].parentNode.parentNode;
-  container.className = 'display-' + type + '-' + value + ' ' +
+  var container = document.getElementsByTagName('section')[0].parentNode
+    .parentNode;
+  container.className =
+    'display-' +
+    type +
+    '-' +
+    value +
+    ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
 }
 window.display = display;
@@ -96,7 +101,8 @@ class InstallationPage extends Component {
     // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
     // us as close as possible to the correct platform and dev os using the hashtag and section walk up.
     var foundHash = false;
-    if (window.location.hash !== '' && window.location.hash !== 'content') { // content is default
+    if (window.location.hash !== '' && window.location.hash !== 'content') {
+      // content is default
       // Hash links are added a bit later so we wait for them.
       window.addEventListener('DOMContentLoaded', selectTabForHashLink);
     }
@@ -105,10 +111,7 @@ class InstallationPage extends Component {
 
   render() {
     console.log('rendering InstallationPage');
-    const {
-      markdownRemark,
-      sectionList,
-    } = this.props;
+    const {markdownRemark, sectionList} = this.props;
 
     return (
       <Flex
@@ -171,7 +174,7 @@ class InstallationPage extends Component {
       </Flex>
     );
   }
-};
+}
 
 InstallationPage.propTypes = {
   markdownRemark: PropTypes.object.isRequired,
