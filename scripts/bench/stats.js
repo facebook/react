@@ -93,7 +93,7 @@ function addBenchmarkResults(table, localResults, remoteMasterResults) {
   });
 }
 
-function addBundleSizeComparions(table, localResults, remoteMasterResults) {
+function addBundleSizeComparsions(table, localResults, remoteMasterResults) {
   const bundlesRowHeader = [chalk.white.bold('Bundles')];
   if (remoteMasterResults) {
     bundlesRowHeader.push(chalk.white.bold('Size'));
@@ -152,7 +152,7 @@ function printResults(localResults, remoteMasterResults) {
   }
   const table = new Table({head});
 
-  addBundleSizeComparions(table, localResults, remoteMasterResults);
+  addBundleSizeComparsions(table, localResults, remoteMasterResults);
   addBenchmarkResults(table, localResults, remoteMasterResults);
 
   console.log(table.toString());
