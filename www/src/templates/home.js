@@ -289,7 +289,7 @@ class Timer extends React.Component {
     this.state = {secondsElapsed: 0};
   }
 
-  tick() { 
+  tick() {
     this.setState((prevState) => ({
       secondsElapsed: prevState.secondsElapsed + 1
     }));

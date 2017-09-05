@@ -36,6 +36,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   const errorDecoderTemplate = resolve('./src/templates/error-decoder.js');
   const tutorialTemplate = resolve('./src/templates/tutorial.js');
   const homeTemplate = resolve('./src/templates/home.js');
+  const installationTemplate = resolve('./src/templates/installation.js');
 
   const allMarkdown = await graphql(`
     {
@@ -65,6 +66,14 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       createPage({
         path: '/',
         component: homeTemplate,
+        context: {
+          slug,
+        },
+      });
+    } else if (slug === 'docs/installation.html') {
+      createPage({
+        path: slug,
+        component: installationTemplate,
         context: {
           slug,
         },

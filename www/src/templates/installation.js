@@ -1,8 +1,10 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
+ * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
 */
@@ -13,15 +15,27 @@ import Container from 'components/Container';
 import Flex from 'components/Flex';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
+import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
-import TitleAndMetaTags from 'components/TitleAndMetaTags';
-import {createLinkDocs} from 'utils/createLink';
+import StickySidebar from 'components/StickySidebar';
 import findSectionForPath from 'utils/findSectionForPath';
-import {sectionListDocs} from 'utils/sectionList';
 import {sharedStyles} from 'theme';
-import createOgUrl from 'utils/createOgUrl';
+
+import sectionListA from '../../../docs/_data/nav_docs.yml';
+import sectionListB from '../../../docs/_data/nav_contributing.yml';
+
+const sectionList = sectionListA
+  .map(item => {
+    item.directory = 'docs';
+    return item;
+  })
+  .concat(
+    sectionListB.map(item => {
+      item.directory = 'contributing';
+      return item;
+    }),
+  );
 
 // HACK: copied from 'installation.md'
 // TODO: clean this up.
@@ -51,6 +65,7 @@ function keyToggle(e, value, prevTab, nextTab) {
     display('target', nextTab);
   }
 }
+window.keyToggle = keyToggle;
 
 function display(type, value) {
   setSelected(value);
@@ -64,12 +79,13 @@ function display(type, value) {
     ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
 }
+window.display = display;
 
 var foundHash = false;
-function selectTabForHashLink(location) {
+function selectTabForHashLink() {
   var hashLinks = document.querySelectorAll('a.anchor');
   for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
-    if (location && hashLinks[i].hash === location.hash) {
+    if (hashLinks[i].hash === window.location.hash) {
       var parent = hashLinks[i].parentElement;
       while (parent) {
         if (parent.tagName === 'SECTION') {
@@ -93,39 +109,20 @@ function selectTabForHashLink(location) {
   }
 }
 
-// HACK Expose toggle functions global for markup-defined event handlers.
-// Don't acceess the 'window' object without checking first though,
-// Because it would break the (Node only) Gatsby build step.
-if (typeof window !== 'undefined') {
-  window.keyToggle = keyToggle;
-  window.display = display;
-}
-
 class InstallationPage extends Component {
   componentDidMount() {
-    const location = this.props.location;
     // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
     // us as close as possible to the correct platform and dev os using the hashtag and section walk up.
-    if (location && location.hash !== '' && location.hash !== 'content') {
+    if (window.location.hash !== '' && window.location.hash !== 'content') {
       // content is default
       // Hash links are added a bit later so we wait for them.
-      // HACK we don't have a window object if/when Gatsby executes this in node
-      if (
-        typeof window !== 'undefined' &&
-        typeof window.addEventListener === 'function'
-      ) {
-        window.addEventListener(
-          'DOMContentLoaded',
-          selectTabForHashLink.bind(null, location),
-        );
-      }
+      window.addEventListener('DOMContentLoaded', selectTabForHashLink);
     }
     display('target', 'fiddle');
   }
 
   render() {
-    const {data, location} = this.props;
-    const {markdownRemark} = data;
+    const {markdownRemark} = this.props.data;
 
     return (
       <Flex
@@ -139,55 +136,49 @@ class InstallationPage extends Component {
           position: 'relative',
           zIndex: 0,
         }}>
-        <TitleAndMetaTags
-          title="Installation - React"
-          ogUrl={createOgUrl(markdownRemark.fields.slug)}
-        />
         <div css={{flex: '1 0 auto'}}>
           <Container>
-            <div css={sharedStyles.articleLayout.container}>
+            <StickyContainer
+              css={{
+                display: 'flex',
+              }}>
               <Flex type="article" direction="column" grow="1" halign="stretch">
                 <MarkdownHeader title={markdownRemark.frontmatter.title} />
-
-                <div css={sharedStyles.articleLayout.content}>
-                  <div
-                    css={[sharedStyles.markdown]}
-                    dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-                  />
-                  {markdownRemark.fields.path &&
-                    <div css={{marginTop: 80}}>
-                      <a
-                        css={sharedStyles.articleLayout.editLink}
-                        href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
-                        Edit this page
-                      </a>
-                    </div>}
-                </div>
+                <div
+                  css={[
+                    sharedStyles.markdown,
+                    {
+                      marginTop: 65,
+                      marginBottom: 120,
+                    },
+                  ]}
+                  dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+                />
               </Flex>
 
-              <div css={sharedStyles.articleLayout.sidebar}>
-                <StickyResponsiveSidebar
-                  createLink={createLinkDocs}
+              <div
+                css={{
+                  flex: '0 0 200px',
+                  marginLeft: 'calc(9% + 40px)',
+                }}>
+                <StickySidebar
                   defaultActiveSection={findSectionForPath(
                     location.pathname,
-                    sectionListDocs,
+                    sectionList,
                   )}
                   location={location}
-                  sectionList={sectionListDocs}
-                  title="Installation"
+                  sectionList={sectionList}
                 />
               </div>
-            </div>
+            </StickyContainer>
           </Container>
         </div>
 
         {/* TODO Read prev/next from index map, not this way */}
-        {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
-          <NavigationFooter
-            location={location}
-            next={markdownRemark.frontmatter.next}
-            prev={markdownRemark.frontmatter.prev}
-          />}
+        <NavigationFooter
+          next={markdownRemark.frontmatter.next}
+          prev={markdownRemark.frontmatter.prev}
+        />
       </Flex>
     );
   }
@@ -196,7 +187,6 @@ class InstallationPage extends Component {
 InstallationPage.propTypes = {
   data: PropTypes.shape({markdownRemark: PropTypes.object.isRequired})
     .isRequired,
-  location: PropTypes.object.isRequired,
 };
 
 // eslint-disable-next-line no-undef
@@ -208,10 +198,6 @@ export const pageQuery = graphql`
         title
         next
         prev
-      }
-      fields {
-        path
-        slug
       }
     }
   }
