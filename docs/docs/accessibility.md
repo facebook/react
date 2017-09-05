@@ -249,7 +249,7 @@ Testing with a screen reader should form part of your accessibility tests.
 
 Please note that browser / screen reader combinations matter. It is recommended that you test your application in the browser best suited to your screen reader of choice.
 
-#### NVDA in FireFox
+#### NVDA in Firefox
 
 [NonVisual Desktop Access](https://www.nvaccess.org/) or NVDA is an open source Windows screen reader that is widely used.
 
