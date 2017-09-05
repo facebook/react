@@ -133,5 +133,20 @@ describe('ReactDOM unknown attribute', () => {
       );
       expectDev(console.error.calls.count()).toBe(1);
     });
+
+    it('removes camelCased unknown props and warns', () => {
+      spyOn(console, 'error');
+
+      var el = document.createElement('div');
+      ReactDOM.render(<div hELLo="something" />, el);
+      expect(el.firstChild.hasAttribute('hELLo')).toBe(false);
+      expect(el.firstChild.hasAttribute('hello')).toBe(false);
+
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Invalid prop `hELLo` on <div> tag. Did you mean `hello`?' +
+          '    in div (at **)',
+      );
+      expectDev(console.error.calls.count()).toBe(1);
+    });
   });
 });
