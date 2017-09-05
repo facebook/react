@@ -11,7 +11,6 @@
 
 'use strict';
 
-import InstallationPage from 'components/InstallationPage';
 import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -32,14 +31,6 @@ const sectionList = sectionListA
   );
 
 const Docs = ({data, location}) => {
-  if (location.pathname === '/docs/installation.html') {
-    return (
-      <InstallationPage
-        markdownRemark={data.markdownRemark}
-        sectionList={sectionList}
-      />
-    );
-  }
   return (
     <MarkdownPage
       location={location}

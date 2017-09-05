@@ -22,6 +22,21 @@ import StickySidebar from 'components/StickySidebar';
 import findSectionForPath from 'utils/findSectionForPath';
 import {sharedStyles} from 'theme';
 
+import sectionListA from '../../../docs/_data/nav_docs.yml';
+import sectionListB from '../../../docs/_data/nav_contributing.yml';
+
+const sectionList = sectionListA
+  .map(item => {
+    item.directory = 'docs';
+    return item;
+  })
+  .concat(
+    sectionListB.map(item => {
+      item.directory = 'contributing';
+      return item;
+    }),
+  );
+
 // HACK: copied from 'installation.md'
 // TODO: clean this up.
 function setSelected(value) {
@@ -107,7 +122,7 @@ class InstallationPage extends Component {
   }
 
   render() {
-    const {markdownRemark, sectionList} = this.props;
+    const {markdownRemark} = this.props.data;
 
     return (
       <Flex
@@ -128,10 +143,7 @@ class InstallationPage extends Component {
                 display: 'flex',
               }}>
               <Flex type="article" direction="column" grow="1" halign="stretch">
-                <MarkdownHeader
-                  path={markdownRemark.fields.path}
-                  title={markdownRemark.frontmatter.title}
-                />
+                <MarkdownHeader title={markdownRemark.frontmatter.title} />
                 <div
                   css={[
                     sharedStyles.markdown,
@@ -173,8 +185,22 @@ class InstallationPage extends Component {
 }
 
 InstallationPage.propTypes = {
-  markdownRemark: PropTypes.object.isRequired,
-  sectionList: PropTypes.array.isRequired,
+  data: PropTypes.shape({markdownRemark: PropTypes.object.isRequired})
+    .isRequired,
 };
+
+// eslint-disable-next-line no-undef
+export const pageQuery = graphql`
+  query InstallationMarkdown($slug: String!) {
+    markdownRemark(fields: { slug: { eq: $slug } }) {
+      html
+      frontmatter {
+        title
+        next
+        prev
+      }
+    }
+  }
+`;
 
 export default InstallationPage;
