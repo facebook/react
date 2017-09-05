@@ -21,10 +21,10 @@ const FooterNav = ({children, title}) => (
       flexDirection: 'column',
       alignItems: 'center',
       width: '50%',
-      [media.mediumToLarge]: {
+      [media.between('medium', 'large')]: {
         width: '25%',
       },
-      [media.xlargeUp]: {
+      [media.greaterThan('xlarge')]: {
         width: 'calc(100% / 6)',
       },
     }}>

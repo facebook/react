@@ -48,12 +48,12 @@ class CodeEditor extends Component {
       <LiveProvider code={code} mountStylesheet={false}>
         <div
           css={{
-            [media.xlargeUp]: {
+            [media.greaterThan('xlarge')]: {
               display: 'flex',
               flexDirection: 'row',
             },
 
-            [media.largeDown]: {
+            [media.lessThan('large')]: {
               display: 'block',
             },
           }}>
@@ -62,7 +62,7 @@ class CodeEditor extends Component {
               css={{
                 flex: '0 0 33%',
 
-                [media.largeDown]: {
+                [media.lessThan('large')]: {
                   marginBottom: 20,
                 },
 
@@ -75,7 +75,7 @@ class CodeEditor extends Component {
                   marginTop: 15,
                   marginRight: 40,
 
-                  [media.xlargeUp]: {
+                  [media.greaterThan('xlarge')]: {
                     marginTop: 25,
                   },
                 },
@@ -85,14 +85,14 @@ class CodeEditor extends Component {
 
           <div
             css={{
-              [media.mediumUp]: {
+              [media.greaterThan('medium')]: {
                 flex: '0 0 67%',
                 display: 'flex',
                 alignItems: 'stretch',
                 flexDirection: 'row',
               },
 
-              [media.smallDown]: {
+              [media.lessThan('small')]: {
                 display: 'block',
               },
             }}>
@@ -104,7 +104,7 @@ class CodeEditor extends Component {
                   borderRadius: '10px 0 0 10px !important',
                   marginTop: '0 !important',
 
-                  [media.smallDown]: {
+                  [media.lessThan('small')]: {
                     borderRadius: '10px 10px 0 0 !important',
                   },
 
@@ -125,7 +125,7 @@ class CodeEditor extends Component {
                   border: `1px solid ${colors.error}`,
                   borderRadius: '0 10px 10px 0',
 
-                  [media.smallDown]: {
+                  [media.lessThan('small')]: {
                     borderRadius: '0 0 10px 10px',
                   },
                 }}>
@@ -155,7 +155,7 @@ class CodeEditor extends Component {
                   border: `1px solid ${colors.divider}`,
                   borderRadius: '0 10px 10px 0',
 
-                  [media.smallDown]: {
+                  [media.lessThan('small')]: {
                     borderRadius: '0 0 10px 10px',
                   },
                 }}>

@@ -37,7 +37,7 @@ const style = {
   display: 'inline-block',
   fontSize: 16,
 
-  [media.xlargeUp]: {
+  [media.greaterThan('xlarge')]: {
     fontSize: 20,
   },
 };
@@ -50,7 +50,7 @@ const primaryStyle = {
   whiteSpace: 'nowrap',
   transition: 'background-color 0.2s ease-out',
 
-  [media.xlargeUp]: {
+  [media.greaterThan('xlarge')]: {
     paddingTop: 15,
     paddingBottom: 15,
   },

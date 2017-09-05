@@ -28,7 +28,7 @@ const Footer = () => (
       paddingTop: 50,
       paddingBottom: 50,
 
-      [media.xxlarge]: {
+      [media.size('xxlarge')]: {
         paddingTop: 80,
       },
     }}>
@@ -98,11 +98,11 @@ const Footer = () => (
         </FooterNav>
         <section
           css={{
-            [media.xlargeUp]: {
+            [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
               order: -1,
             },
-            [media.largeDown]: {
+            [media.lessThan('large')]: {
               textAlign: 'center',
               width: '100%',
               paddingTop: 40,

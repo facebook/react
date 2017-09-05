@@ -77,10 +77,10 @@ const PrimaryLink = ({children, to}) => (
       transition: 'border-color 0.2s ease',
       fontSize: 30,
 
-      [media.largeDown]: {
+      [media.lessThan('large')]: {
         fontSize: 24,
       },
-      [media.xsmall]: {
+      [media.size('xsmall')]: {
         fontSize: 16,
       },
 

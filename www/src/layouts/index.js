@@ -54,10 +54,10 @@ class Template extends Component {
           css={{
             flex: '1 0 auto',
             marginTop: 60,
-            [media.mediumToLarge]: {
+            [media.between('medium', 'large')]: {
               marginTop: 50,
             },
-            [media.smallDown]: {
+            [media.lessThan('small')]: {
               marginTop: 40,
             },
           }}>

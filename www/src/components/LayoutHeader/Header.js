@@ -42,10 +42,10 @@ const Header = ({location}) => (
           flexDirection: 'row',
           alignItems: 'center',
           height: 60,
-          [media.mediumToLarge]: {
+          [media.between('medium', 'large')]: {
             height: 50,
           },
-          [media.smallDown]: {
+          [media.lessThan('small')]: {
             height: 40,
           },
         }}>
@@ -62,10 +62,10 @@ const Header = ({location}) => (
               marginLeft: 10,
               fontWeight: 700,
               fontSize: 20,
-              [media.largeDown]: {
+              [media.lessThan('large')]: {
                 fontSize: 16,
               },
-              [media.smallDown]: {
+              [media.lessThan('small')]: {
                 visibility: 'hidden',
               },
             }}>
@@ -81,13 +81,13 @@ const Header = ({location}) => (
             overflowX: 'auto',
             height: '100%',
             width: '50%',
-            [media.xsmall]: {
+            [media.size('xsmall')]: {
               width: 'calc(100% * 2/3)',
             },
-            [media.xlargeUp]: {
+            [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
             },
-            [media.smallDown]: {
+            [media.lessThan('small')]: {
               maskImage: 'linear-gradient(to right, transparent, black 20px, black 90%, transparent)',
             },
           }}>
@@ -119,13 +119,13 @@ const Header = ({location}) => (
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
-            [media.smallDown]: {
+            [media.lessThan('small')]: {
               justifyContent: 'flex-end',
             },
-            [media.smallToMedium]: {
+            [media.between('small', 'medium')]: {
               width: 'calc(100% / 3)',
             },
-            [media.xlargeUp]: {
+            [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
             },
           }}>
@@ -136,7 +136,7 @@ const Header = ({location}) => (
             css={{
               flexGrow: 1,
               paddingLeft: 10,
-              [media.xsmall]: {
+              [media.size('xsmall')]: {
                 display: 'none',
               },
             }}>
@@ -152,7 +152,7 @@ const Header = ({location}) => (
                 ':focus': {
                   outline: 'none',
                 },
-                [media.largeDown]: {
+                [media.lessThan('large')]: {
                   fontSize: 14,
                 },
               }}
@@ -165,10 +165,10 @@ const Header = ({location}) => (
 
         <div
           css={{
-            [media.mediumDown]: {
+            [media.lessThan('medium')]: {
               display: 'none',
             },
-            [media.largeUp]: {
+            [media.greaterThan('large')]: {
               width: 'calc(100% / 6)',
             },
           }}>

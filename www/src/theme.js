@@ -7,6 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
+ * @flow
 */
 
 'use strict';
@@ -43,52 +44,42 @@ const fonts = {
   },
 };
 
-// Generate a bunch of pre-defined @media queries using the ranges above.
-// These queries will have human-friendly identifiers,
-// eg 'media.xsmall', 'media.smallDown', 'media.mediumUp', 'media.smallToLarge'
-function generateMediaQueries(ranges) {
-  const mediaQueries = {};
+const SIZES = {
+  xsmall: {max: 599},
+  small: {min: 600, max: 739},
+  medium: {min: 740, max: 979},
+  large: {min: 980, max: 1279},
+  xlarge: {min: 1280, max: 1339},
+  xxlarge: {min: 1340},
+};
 
-  const keys = Object.keys(ranges);
-  for (let i = 0; i < keys.length; i++) {
-    const keyA = keys[i];
-    const [minA, maxA] = ranges[keyA];
+type Size = $Keys<typeof SIZES>;
 
-    if (minA && maxA) {
-      mediaQueries[`${keyA}Down`] = `@media (max-width: ${maxA}px)`;
-      mediaQueries[
-        keyA
-      ] = `@media (min-width: ${minA}px) and (max-width: ${maxA}px)`;
-      mediaQueries[`${keyA}Up`] = `@media (min-width: ${minA}px)`;
-    } else if (minA) {
-      mediaQueries[keyA] = `@media (min-width: ${minA}px)`;
-    } else if (maxA) {
-      mediaQueries[keyA] = `@media (max-width: ${maxA}px)`;
+const media = {
+  between(smallKey: Size, largeKey: Size) {
+    return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+  },
+
+  greaterThan(key: Size) {
+    return `@media (min-width: ${SIZES[key].min}px)`;
+  },
+
+  lessThan(key: Size) {
+    return `@media (max-width: ${SIZES[key].max}px)`;
+  },
+
+  size(key: Size) {
+    const size = SIZES[key];
+
+    if (size.min == null) {
+      return media.lessThan(key);
+    } else if (size.max == null) {
+      return media.greaterThan(key);
+    } else {
+      return media.between(key, key);
     }
-
-    for (let j = i + 1; j < keys.length; j++) {
-      const keyB = keys[j];
-      const [maxB] = ranges[keyB];
-
-      if (maxB) {
-        mediaQueries[
-          `${keyA}To${keyB.charAt(0).toUpperCase() + keyB.slice(1)}`
-        ] = `@media (min-width: ${minA}px) and (max-width: ${maxB}px)`;
-      }
-    }
-  }
-
-  return mediaQueries;
-}
-
-const media = generateMediaQueries({
-  xsmall: [null, 599],
-  small: [600, 739],
-  medium: [740, 979],
-  large: [980, 1279],
-  xlarge: [1280, 1339],
-  xxlarge: [1340, null],
-});
+  },
+};
 
 // Shared styles are generally better as components,
 // Except when they must be used within nested CSS selectors.
@@ -123,7 +114,7 @@ const sharedStyles = {
         marginTop: 0,
       },
 
-      [media.largeDown]: {
+      [media.lessThan('large')]: {
         fontSize: 16,
         lineHeight: '30px',
       },
@@ -142,19 +133,16 @@ const sharedStyles = {
     },
 
     '& h1': {
-      [media.xsmall]: {
+      [media.size('xsmall')]: {
         fontSize: 30,
-        // 30px, 700);
       },
 
-      [media.smallToLarge]: {
+      [media.between('small', 'large')]: {
         fontSize: 45,
-        // 45px, 700);
       },
 
-      [media.xlargeUp]: {
+      [media.greaterThan('xlarge')]: {
         fontSize: 60,
-        // 60px, 700);
       },
     },
 
@@ -163,22 +151,19 @@ const sharedStyles = {
       marginTop: 44,
       paddingTop: 40,
 
-      [media.largeDown]: {
+      [media.lessThan('large')]: {
         fontSize: 20,
-        // 25px, 700);
       },
-      [media.xlargeUp]: {
+      [media.greaterThan('xlarge')]: {
         fontSize: 35,
-        // 40px, 700);
       },
     },
 
     '& h3': {
       paddingTop: 45,
 
-      [media.xlargeUp]: {
+      [media.greaterThan('xlarge')]: {
         fontSize: 25,
-        // 30px, 700);
       },
     },
 

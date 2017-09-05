@@ -42,12 +42,12 @@ class Home extends Component {
               paddingTop: 45,
               paddingBottom: 20,
 
-              [media.smallUp]: {
+              [media.greaterThan('small')]: {
                 paddingTop: 60,
                 paddingBottom: 70,
               },
 
-              [media.xlargeUp]: {
+              [media.greaterThan('xlarge')]: {
                 paddingTop: 95,
                 paddingBottom: 85,
                 maxWidth: 1500, // Positioning of background logo
@@ -66,10 +66,10 @@ class Home extends Component {
                   textAlign: 'center',
                   margin: 0,
                   fontSize: 45,
-                  [media.xsmall]: {
+                  [media.size('xsmall')]: {
                     fontSize: 30,
                   },
-                  [media.xlargeUp]: {
+                  [media.greaterThan('xlarge')]: {
                     fontSize: 60,
                   },
                 }}>
@@ -81,14 +81,14 @@ class Home extends Component {
                   textAlign: 'center',
                   fontSize: 24,
 
-                  [media.xsmall]: {
+                  [media.size('xsmall')]: {
                     fontSize: 16,
                     maxWidth: '12em',
                     marginLeft: 'auto',
                     marginRight: 'auto',
                   },
 
-                  [media.xlargeUp]: {
+                  [media.greaterThan('xlarge')]: {
                     paddingTop: 20,
                     fontSize: 30,
                   },
@@ -100,7 +100,7 @@ class Home extends Component {
                 css={{
                   paddingTop: 40,
 
-                  [media.xlargeUp]: {
+                  [media.greaterThan('xlarge')]: {
                     paddingTop: 65,
                   },
                 }}>
@@ -165,7 +165,7 @@ const CtaItem = ({children}) => (
       width: '50%',
       paddingLeft: 20,
 
-      [media.xlargeUp]: {
+      [media.greaterThan('xlarge')]: {
         paddingLeft: 40,
       },
 
@@ -225,7 +225,7 @@ const markdownStyles = {
     display: 'flex',
     flexDirection: 'row',
 
-    [media.mediumDown]: {
+    [media.lessThan('medium')]: {
       flexDirection: 'column',
     },
   },
@@ -240,7 +240,7 @@ const markdownStyles = {
       marginLeft: 0,
     },
 
-    [media.mediumDown]: {
+    [media.lessThan('medium')]: {
       display: 'block',
       marginTop: 40,
       marginLeft: 0,
@@ -253,12 +253,12 @@ const markdownStyles = {
     '& h3': {
       color: colors.subtle,
 
-      [media.largeDown]: {
+      [media.lessThan('large')]: {
         fontSize: 18,
         fontWeight: 400,
       },
 
-      [media.xlargeUp]: {
+      [media.greaterThan('xlarge')]: {
         fontSize: 24,
         fontWeight: 500,
       },
