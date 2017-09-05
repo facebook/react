@@ -20,7 +20,6 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import StickySidebar from 'components/StickySidebar';
 import findSectionForPath from 'utils/findSectionForPath';
-import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 import {sharedStyles} from 'theme';
 
 // HACK: copied from 'installation.md'
@@ -54,8 +53,6 @@ function keyToggle(e, value, prevTab, nextTab) {
 window.keyToggle = keyToggle;
 
 function display(type, value) {
-  console.log('type is ', type);
-  console.log('value is ', value);
   setSelected(value);
   var container = document.getElementsByTagName('section')[0].parentNode
     .parentNode;
@@ -69,8 +66,9 @@ function display(type, value) {
 }
 window.display = display;
 
+var foundHash = false;
 function selectTabForHashLink() {
-  var hashLinks = document.querySelectorAll('a.hash-link');
+  var hashLinks = document.querySelectorAll('a.anchor');
   for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
     if (hashLinks[i].hash === window.location.hash) {
       var parent = hashLinks[i].parentElement;
@@ -100,7 +98,6 @@ class InstallationPage extends Component {
   componentDidMount() {
     // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
     // us as close as possible to the correct platform and dev os using the hashtag and section walk up.
-    var foundHash = false;
     if (window.location.hash !== '' && window.location.hash !== 'content') {
       // content is default
       // Hash links are added a bit later so we wait for them.
@@ -110,7 +107,6 @@ class InstallationPage extends Component {
   }
 
   render() {
-    console.log('rendering InstallationPage');
     const {markdownRemark, sectionList} = this.props;
 
     return (

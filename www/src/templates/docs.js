@@ -32,9 +32,7 @@ const sectionList = sectionListA
   );
 
 const Docs = ({data, location}) => {
-  console.log('location is ', location);
   if (location.pathname === '/docs/installation.html') {
-    console.log('about to render InstallationPage');
     return (
       <InstallationPage
         markdownRemark={data.markdownRemark}
