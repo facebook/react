@@ -221,5 +221,14 @@ var errorMap = {
   "219": "getInspectorDataForViewTag() is not available in production",
   "220": "Container does not support insertBefore operation",
   "221": "Tried to register two views with the same name %s",
-  "222": "View config not found for name %s"
+  "222": "View config not found for name %s",
+  "223": "Trying to release an event instance  into a pool of a different type.",
+  "224": "Can't read from currently-mounting component. This error is likely caused by a bug in React. Please file an issue.",
+  "225": "Unexpected object passed to ReactTestInstance constructor (tag: %s). This is probably a bug in React.",
+  "226": "Unsupported component type %s in test renderer. This is probably a bug in React.",
+  "227": "ReactDOM was loaded before React. Make sure you load the React package before loading ReactDOM.",
+  "228": "TestUtils.Simulate expected a DOM node as the first argument but received a React element. Pass the DOM node you wish to simulate the event on instead. Note that TestUtils.Simulate will not work if you are using shallow rendering.",
+  "229": "TestUtils.Simulate expected a DOM node as the first argument but received a component instance. Pass the DOM node you wish to simulate the event on instead.",
+  "230": "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.unstable_createPortal).",
+  "231": "Expected `%s` listener to be a function, instead got a value of `%s` type."
 };
