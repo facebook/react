@@ -708,6 +708,8 @@ function restoreFromLocalStorage() {
   return new Set();
 }
 
+const useFastMode = /[?&]fast\b/.test(window.location.href);
+
 class App extends React.Component {
   state = {
     sortOrder: ALPHABETICAL,
@@ -765,7 +767,15 @@ class App extends React.Component {
 
     const pool = [];
     function initGlobals(attribute, type) {
-      document.title = `${attribute.name} (${type.name})`;
+      if (useFastMode) {
+        // Note: this is not giving correct results for warnings.
+        // But it's much faster.
+        if (pool[0]) {
+          return pool[0].globals;
+        }
+      } else {
+        document.title = `${attribute.name} (${type.name})`;
+      }
 
       // Creating globals for every single test is too slow.
       // However caching them between runs won't work for the same attribute names
@@ -873,11 +883,23 @@ class App extends React.Component {
     }
   }
 
-  handleSaveClick = () => {
+  handleSaveClick = e => {
+    e.preventDefault();
+
+    if (useFastMode) {
+      alert(
+        'Fast mode is not accurate. Please remove ?fast from the query string, and reload.'
+      );
+      return;
+    }
+
     let log = '';
     for (let attribute of attributes) {
+      log += `## \`${attribute.name}\` (on \`<${attribute.containerTagName || 'div'}>\`)\n`;
+      log += '| Test Case | Flags | Result |\n';
+      log += '| --- | --- | --- |\n';
+
       const attributeResults = this.state.table.get(attribute).results;
-      log += `<${attribute.tagName || 'div'} ${attribute.name}>\n`;
       for (let type of types) {
         const {
           didError,
@@ -891,33 +913,36 @@ class App extends React.Component {
 
         let descriptions = [];
         if (canonicalResult === canonicalDefaultValue) {
-          descriptions.push('IGNORED');
+          descriptions.push('initial');
+        } else {
+          descriptions.push('changed');
         }
         if (didError) {
-          descriptions.push('ERROR');
+          descriptions.push('error');
         }
         if (didWarn) {
-          descriptions.push('WARN');
+          descriptions.push('warning');
         }
-
         if (ssrDidError) {
-          descriptions.push('SSR ERROR');
+          descriptions.push('ssr error');
         }
-
         if (!ssrHasSameBehavior) {
           if (ssrHasSameBehaviorExceptWarnings) {
-            descriptions.push('SSR WARNS');
+            descriptions.push('ssr warning');
           } else {
-            descriptions.push('SSR DEVIATION');
+            descriptions.push('ssr mismatch');
           }
         }
-
-        log += `\t${type.name} -> ${canonicalResult} ${descriptions.join(', ')}\n`;
+        log +=
+          `| \`${attribute.name}=(${type.name})\`` +
+          `| (${descriptions.join(', ')})` +
+          `| \`${canonicalResult || ''}\` |\n`;
       }
+      log += '\n';
     }
 
     const blob = new Blob([log], {type: 'text/plain;charset=utf-8'});
-    FileSaver.saveAs(blob, 'AttributeTableSnapshot.txt');
+    FileSaver.saveAs(blob, 'AttributeTableSnapshot.md');
   };
 
   render() {
@@ -925,7 +950,8 @@ class App extends React.Component {
       return (
         <div>
           <h1>Loading...</h1>
-          <h3>The progress is reported in the window title.</h3>
+          {!useFastMode &&
+            <h3>The progress is reported in the window title.</h3>}
         </div>
       );
     }
@@ -964,12 +990,11 @@ class App extends React.Component {
               complete
             </option>
           </select>
-          <a
-            href="#"
-            style={{marginLeft: '10px'}}
-            onClick={this.handleSaveClick}>
-            Save latest results to a file 💾
-          </a>
+          <button style={{marginLeft: '10px'}} onClick={this.handleSaveClick}>
+            Save latest results to a file
+            {' '}
+            <span role="img" aria-label="Save">💾</span>
+          </button>
         </div>
         <AutoSizer disableHeight={true}>
           {({width}) => (
