@@ -26,10 +26,11 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
  *
  */
 
+var PropTypes = require('prop-types');
 var React = require('react');
-var ReactART = require('./ReactART');
+var ReactART = require('..');
 
-var PropTypes = React.PropTypes;
+var createReactClass = require('create-react-class');
 
 var Shape = ReactART.Shape;
 var Path = ReactART.Path;
@@ -38,7 +39,7 @@ var Path = ReactART.Path;
  * Wedge is a React component for drawing circles, wedges and arcs.  Like other
  * ReactART components, it must be used in a <Surface>.
  */
-var Wedge = React.createClass({
+var Wedge = createReactClass({
   displayName: 'Wedge',
 
 

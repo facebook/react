@@ -30,10 +30,11 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
  *
  */
 
+var PropTypes = require('prop-types');
 var React = require('react');
-var ReactART = require('./ReactART');
+var ReactART = require('..');
 
-var PropTypes = React.PropTypes;
+var createReactClass = require('create-react-class');
 
 var Shape = ReactART.Shape;
 var Path = ReactART.Path;
@@ -42,7 +43,7 @@ var Path = ReactART.Path;
  * Rectangle is a React component for drawing rectangles. Like other ReactART
  * components, it must be used in a <Surface>.
  */
-var Rectangle = React.createClass({
+var Rectangle = createReactClass({
   displayName: 'Rectangle',
 
   propTypes: {
