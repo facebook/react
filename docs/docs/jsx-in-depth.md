@@ -164,7 +164,10 @@ const components = {
 function Story(props) {
   // Correct! JSX type can be a capitalized variable.
   const SpecificStory = components[props.storyType];
-  return <SpecificStory story={props.story} />;
+  return (<div>
+  <SpecificStory story={props.story} />
+  </div> 
+  )
 }
 ```
 
