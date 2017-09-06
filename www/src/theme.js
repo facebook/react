@@ -109,7 +109,7 @@ const sharedStyles = {
     lineHeight: '25px',
 
     '& .gatsby-highlight': {
-      marginTop: 30,
+      marginTop: 25,
     },
 
     '& a:not(.anchor)': linkStyle,
@@ -118,8 +118,13 @@ const sharedStyles = {
       marginTop: 30,
       fontSize: 18,
       lineHeight: '35px',
+      maxWidth: '42em',
 
       '&:first-of-type': {
+        marginTop: 15,
+      },
+
+      '&:first-child': {
         marginTop: 0,
       },
 
@@ -129,9 +134,15 @@ const sharedStyles = {
       },
     },
 
+    '& h3 + p, & h3 + p:first-of-type': {
+      marginTop: 20,
+    },
+
     '& p > code, & li > code': {
-      background: hex2rgba(colors.note, 0.5),
+      background: hex2rgba(colors.note, 0.3),
       padding: '0 3px',
+      fontSize: 16,
+      color: colors.text,
     },
 
     '& hr': {
@@ -163,6 +174,12 @@ const sharedStyles = {
       marginTop: 44,
       paddingTop: 40,
 
+      ':first-child': {
+        borderTop: 0,
+        marginTop: 0,
+        paddingTop: 0
+      },
+
       [media.largeDown]: {
         fontSize: 20,
         // 25px, 700);
@@ -178,22 +195,68 @@ const sharedStyles = {
 
       [media.xlargeUp]: {
         fontSize: 25,
+        lineHeight: 1.3,
         // 30px, 700);
       },
     },
 
-    // TODO Implement a better style for blockquotes
+    '& h2 + h3, & h2 + h3:first-of-type': {
+      paddingTop: 30,
+    },
+
+    '& h4': {
+      fontSize: 20,
+      color: colors.subtle,
+      lineHeight: 1.3,
+      marginTop: 50,
+      fontWeight: 400,
+
+    },
+
+    '& h4 + p': {
+      marginTop: 20,
+    },
+
+    '& ol, & ul': {
+      marginTop: 20,
+      fontSize: 16,
+      color: colors.subtle,
+
+      '& p, & p:first-of-type': {
+        fontSize: 16,
+        marginTop: 0,
+        lineHeight: 1.2,
+        color: colors.subtle,
+      },
+
+      '& li': {
+        marginTop: 10,
+      }
+    },
+
+    '& ol': {
+      listStyle: 'decimal',
+    },
+
+    '& ul': {
+      listStyle: 'disc',
+    },
+
     '& blockquote': {
-      backgroundColor: colors.divider,
-      padding: '0.5rem 1rem',
-      borderRadius: 10,
+      backgroundColor: hex2rgba('#ffe564', 0.3),
+      borderLeftColor: colors.note,
+      borderLeftWidth: 5,
+      borderLeftStyle: 'solid',
+      padding: '20px 15px',
       marginBottom: 30,
+      marginTop: 20,
 
       '& p': {
         marginTop: 15,
 
         '&:first-of-type': {
           fontWeight: 'bold',
+          marginTop: 0,
         },
 
         '&:nth-of-type(2)': {
