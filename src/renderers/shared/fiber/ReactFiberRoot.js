@@ -15,6 +15,7 @@ import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {createHostRootFiber} = require('ReactFiber');
+const {getUpdateQueueExpirationTime} = require('ReactFiberUpdateQueue');
 const {Done} = require('ReactFiberExpirationTime');
 
 export type FiberRoot = {
@@ -26,9 +27,12 @@ export type FiberRoot = {
   isScheduled: boolean,
   // The time at which this root completed.
   completedAt: ExpirationTime,
+  // A queue that represents times at which this root is blocked
+  // from committing.
+  blockers: UpdateQueue<null> | null,
   // A queue of callbacks that fire once their corresponding expiration time
   // has completed. Only fired once.
-  completionCallbacks: UpdateQueue,
+  completionCallbacks: UpdateQueue<null> | null,
   // The work schedule is a linked list.
   nextScheduledRoot: FiberRoot | null,
   // Top context object, used by renderSubtreeIntoContainer
@@ -36,14 +40,16 @@ export type FiberRoot = {
   pendingContext: Object | null,
 };
 
-// Indicates whether the root is blocked from committing at a particular
-// expiration time.
 exports.isRootBlocked = function(
   root: FiberRoot,
-  time: ExpirationTime,
-): boolean {
-  // TODO: Implementation
-  return false;
+  expirationTime: ExpirationTime,
+) {
+  const blockers = root.blockers;
+  if (blockers === null) {
+    return false;
+  }
+  const blockedAt = getUpdateQueueExpirationTime(blockers);
+  return blockedAt !== Done && blockedAt <= expirationTime;
 };
 
 exports.createFiberRoot = function(containerInfo: any): FiberRoot {
@@ -55,6 +61,7 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     containerInfo: containerInfo,
     isScheduled: false,
     completedAt: Done,
+    blockers: null,
     completionCallbacks: null,
     nextScheduledRoot: null,
     context: null,

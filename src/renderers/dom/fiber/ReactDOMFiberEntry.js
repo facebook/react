@@ -730,9 +730,9 @@ function createPortal(
 }
 
 type PublicRoot = {
-  render(children: ReactNodeList, callback: () => mixed): Work,
-  prerender(children: ReactNodeList, callback: () => mixed): Work,
-  unmount(callback: () => mixed): Work,
+  render(children: ReactNodeList, callback: ?() => mixed): void,
+  prerender(children: ReactNodeList): Work,
+  unmount(callback: ?() => mixed): Work,
 
   _reactRootContainer: *,
   _getComponent: () => DOMContainer,
@@ -760,23 +760,29 @@ function PublicRootNode(
 }
 PublicRootNode.prototype.render = function(
   children: ReactNodeList,
-  callback: () => mixed,
-): Work {
-  return DOMRenderer.updateContainer(
-    children,
-    this._reactRootContainer,
-    null,
-    callback,
-  );
+  callback: ?() => mixed,
+): void {
+  const work = DOMRenderer.updateRoot(children, this._reactRootContainer, null);
+  callback = callback === undefined ? null : callback;
+  work.then(() => {
+    work.commit();
+    if (callback !== null) {
+      (callback: any)();
+    }
+  });
 };
-PublicRootNode.prototype.prerender = function() {};
-PublicRootNode.prototype.unmount = function() {
-  return DOMRenderer.updateContainer(
-    null,
-    this._reactRootContainer,
-    null,
-    null,
-  );
+PublicRootNode.prototype.prerender = function(children: ReactNodeList): Work {
+  return DOMRenderer.updateRoot(children, this._reactRootContainer, null);
+};
+PublicRootNode.prototype.unmount = function(callback) {
+  const work = DOMRenderer.updateRoot(null, this._reactRootContainer, null);
+  callback = callback === undefined ? null : callback;
+  work.then(() => {
+    work.commit();
+    if (callback !== null) {
+      (callback: any)();
+    }
+  });
 };
 
 var ReactDOMFiber = {

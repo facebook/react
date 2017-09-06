@@ -31,15 +31,15 @@ type PartialState<State, Props> =
 // Callbacks are not validated until invocation
 type Callback = mixed;
 
-export type Update = {
+export type Update<State> = {
   priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
-  partialState: PartialState<any, any>,
+  partialState: PartialState<State, any>,
   callback: Callback | null,
   isReplace: boolean,
   isForced: boolean,
   isTopLevelUnmount: boolean,
-  next: Update | null,
+  next: Update<State> | null,
 };
 
 // Singly linked-list of updates. When an update is scheduled, it is added to
@@ -53,9 +53,9 @@ export type Update = {
 // The work-in-progress queue is always a subset of the current queue.
 //
 // When the tree is committed, the work-in-progress becomes the current.
-export type UpdateQueue = {
-  first: Update | null,
-  last: Update | null,
+export type UpdateQueue<State> = {
+  first: Update<State> | null,
+  last: Update<State> | null,
   hasForceUpdate: boolean,
   callbackList: null | Array<Callback>,
 
@@ -66,7 +66,7 @@ export type UpdateQueue = {
 let _queue1;
 let _queue2;
 
-function createUpdateQueue(): UpdateQueue {
+function createUpdateQueue<State>(): UpdateQueue<State> {
   const queue: UpdateQueue = {
     first: null,
     last: null,
@@ -78,8 +78,9 @@ function createUpdateQueue(): UpdateQueue {
   }
   return queue;
 }
+exports.createUpdateQueue = createUpdateQueue;
 
-function cloneUpdate(update: Update): Update {
+function cloneUpdate(update: Update<State>): Update<State> {
   return {
     priorityLevel: update.priorityLevel,
     expirationTime: update.expirationTime,
@@ -95,10 +96,10 @@ function cloneUpdate(update: Update): Update {
 const COALESCENCE_THRESHOLD: ExpirationTime = 10;
 
 function insertUpdateIntoPosition(
-  queue: UpdateQueue,
-  update: Update,
-  insertAfter: Update | null,
-  insertBefore: Update | null,
+  queue: UpdateQueue<State>,
+  update: Update<State>,
+  insertAfter: Update<State> | null,
+  insertBefore: Update<State> | null,
   currentTime: ExpirationTime,
 ) {
   if (insertAfter !== null) {
@@ -135,7 +136,10 @@ function insertUpdateIntoPosition(
 
 // Returns the update after which the incoming update should be inserted into
 // the queue, or null if it should be inserted at beginning.
-function findInsertionPosition(queue, update): Update | null {
+function findInsertionPosition(
+  queue: UpdateQueue<State>,
+  update: Update<State>,
+): Update<State> | null {
   const expirationTime = update.expirationTime;
   let insertAfter = null;
   let insertBefore = null;
@@ -210,9 +214,9 @@ function ensureUpdateQueues(fiber: Fiber) {
 // If the update is cloned, it returns the cloned update.
 function insertUpdateIntoFiber(
   fiber: Fiber,
-  update: Update,
+  update: Update<State>,
   currentTime: ExpirationTime,
-): Update | null {
+): Update<State> | null {
   // We'll have at least one and at most two distinct update queues.
   ensureUpdateQueues(fiber);
   const queue1 = _queue1;
@@ -300,7 +304,7 @@ exports.insertUpdateIntoFiber = insertUpdateIntoFiber;
 
 function insertUpdateIntoQueue(
   queue: UpdateQueue,
-  update: Update,
+  update: Update<State>,
   currentTime: ExpirationTime,
 ) {
   const insertAfter = findInsertionPosition(queue, update);
@@ -323,9 +327,16 @@ function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
     return Done;
   }
-  return updateQueue.first !== null ? updateQueue.first.expirationTime : Done;
+  return getUpdateQueueExpirationTime(updateQueue);
 }
 exports.getUpdateExpirationTime = getUpdateExpirationTime;
+
+function getUpdateQueueExpirationTime<State>(
+  updateQueue: UpdateQueue<State>,
+): ExpirationTime {
+  return updateQueue.first !== null ? updateQueue.first.expirationTime : Done;
+}
+exports.getUpdateQueueExpirationTime = getUpdateQueueExpirationTime;
 
 function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
@@ -338,12 +349,12 @@ function getStateFromUpdate(update, instance, prevState, props) {
 }
 
 function processUpdateQueue(
-  queue: UpdateQueue,
+  queue: UpdateQueue<State>,
   instance: mixed,
-  prevState: Object,
+  prevState: State,
   props: mixed,
   renderExpirationTime: ExpirationTime,
-): mixed {
+): State {
   if (__DEV__) {
     // Set this flag so we can warn if setState is called inside the update
     // function of another setState.
@@ -408,17 +419,17 @@ function processUpdateQueue(
 
   return state;
 }
-exports.insertUpdateIntoQueue = insertUpdateIntoQueue;
+exports.processUpdateQueue = processUpdateQueue;
 
 function beginUpdateQueue(
   current: Fiber | null,
   workInProgress: Fiber,
-  queue: UpdateQueue,
+  queue: UpdateQueue<State>,
   instance: any,
   prevState: any,
   props: any,
   renderExpirationTime: ExpirationTime,
-): any {
+): State {
   if (current !== null && current.updateQueue === queue) {
     // We need to create a work-in-progress queue, by cloning the current queue.
     const currentQueue = queue;

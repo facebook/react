@@ -93,7 +93,10 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {getUpdateExpirationTime} = require('ReactFiberUpdateQueue');
+var {
+  getUpdateExpirationTime,
+  processUpdateQueue,
+} = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
 
@@ -218,11 +221,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let nextUnitOfWork: Fiber | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = Done;
+  // If not null, all work up to and including this time should be
+  // flushed before the end of the current batch.
+  let forceExpire: ExpirationTime | null = null;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
 
   let pendingCommit: Fiber | null = null;
+
+  let rootCompletionCallbackList: Array<() => mixed> | null = null;
 
   // Linked list of roots with scheduled work on them.
   let nextScheduledRoot: FiberRoot | null = null;
@@ -346,6 +354,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // Indicates whether the root should be worked on. Not the same as whether a
   // root has work, because work could be blocked.
+  // TODO: Find a better name for this function. It also schedules completion
+  // callbacks, if a root is blocked.
   function shouldWorkOnRoot(root: FiberRoot): ExpirationTime {
     const completedAt = root.completedAt;
     const expirationTime = root.current.expirationTime;
@@ -368,8 +378,38 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If it's still blocked, return Done, as if it has no more work. If it's
       // no longer blocked, return the time at which it completed so that we
       // can commit it.
-      const isBlocked = isRootBlocked(root, expirationTime);
-      return isBlocked ? Done : completedAt;
+      if (isRootBlocked(root, completedAt)) {
+        // Process pending completion callbacks so that they are called at
+        // the end of the current batch.
+        const completionCallbacks = root.completionCallbacks;
+        if (completionCallbacks !== null) {
+          processUpdateQueue(
+            completionCallbacks,
+            null,
+            null,
+            null,
+            completedAt,
+          );
+          const callbackList = completionCallbacks.callbackList;
+          if (callbackList !== null) {
+            // Add new callbacks to list of completion callbacks
+            if (rootCompletionCallbackList === null) {
+              rootCompletionCallbackList = callbackList;
+            } else {
+              for (let i = 0; i < callbackList.length; i++) {
+                rootCompletionCallbackList.push(callbackList[i]);
+              }
+            }
+            completionCallbacks.callbackList = null;
+            if (completionCallbacks.first === null) {
+              root.completionCallbacks = null;
+            }
+          }
+        }
+        return Done;
+      }
+
+      return completedAt;
     }
 
     return expirationTime;
@@ -754,13 +794,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress = returnFiber;
         continue;
       } else {
-        // We've reached the root. Mark the root as pending commit. Depending
-        // on how much time we have left, we'll either commit it now or in
-        // the next frame.
         const root = workInProgress.stateNode;
+        // We've reached the root. Mark the root as complete. Depending on how
+        // much time we have left, we'll either commit it now or in the
+        // next frame.
         if (isRootBlocked(root, nextRenderExpirationTime)) {
+          // The root is blocked from committing. Mark it as complete so we
+          // know we can commit it later without starting new work.
           root.completedAt = workInProgress.expirationTime = nextRenderExpirationTime;
         } else {
+          // The root is not blocked, so we can commit it now.
           pendingCommit = workInProgress;
         }
         return null;
@@ -865,13 +908,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         }
         if (nextUnitOfWork === null) {
-          invariant(
-            pendingCommit !== null,
-            'Should have a pending commit. This error is likely caused by ' +
-              'a bug in React. Please file an issue.',
-          );
-          // We just completed a root. Commit it now.
-          commitAllWork(pendingCommit);
+          if (pendingCommit !== null) {
+            // We just completed a root. Commit it now.
+            commitAllWork(pendingCommit);
+          } else {
+            resetNextUnitOfWork();
+          }
           if (
             capturedErrors === null ||
             capturedErrors.size === 0 ||
@@ -889,8 +931,52 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function shouldContinueWorking(
+    minPriorityLevel: PriorityLevel,
+    nextPriorityLevel: PriorityLevel,
+    deadline: Deadline | null,
+  ): boolean {
+    // There might be work left. Depending on the priority, we should
+    // either perform it now or schedule a callback to perform it later.
+    switch (nextPriorityLevel) {
+      case SynchronousPriority:
+      case TaskPriority:
+        // We have remaining synchronous or task work. Keep performing it,
+        // regardless of whether we're inside a callback.
+        if (nextPriorityLevel <= minPriorityLevel) {
+          return true;
+        }
+        return false;
+      case HighPriority:
+      case LowPriority:
+      case OffscreenPriority:
+        // We have remaining async work.
+        if (deadline === null) {
+          // We're not inside a callback. Exit and perform the work during
+          // the next callback.
+          return false;
+        }
+        // We are inside a callback.
+        if (!deadlineHasExpired && nextPriorityLevel <= minPriorityLevel) {
+          // We still have time. Keep working.
+          return true;
+        }
+        // We've run out of time. Exit.
+        return false;
+      case NoWork:
+        // No work left. We can exit.
+        return false;
+      default:
+        invariant(
+          false,
+          'Switch statement should be exhuastive. ' +
+            'This error is likely caused by a bug in React. Please file an issue.',
+        );
+    }
+  }
+
   function workLoop(
-    minExpirationTime: ExpirationTime,
+    minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
   ) {
     if (pendingCommit !== null) {
@@ -900,33 +986,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       resetNextUnitOfWork();
     }
 
-    if (
-      nextRenderExpirationTime === Done ||
-      nextRenderExpirationTime > minExpirationTime
-    ) {
-      return;
-    }
+    let nextPriorityLevel = expirationTimeToPriorityLevel(
+      recalculateCurrentTime(),
+      nextRenderExpirationTime,
+    );
 
-    loop: do {
+    loop: while (
+      shouldContinueWorking(minPriorityLevel, nextPriorityLevel, deadline)
+    ) {
       if (nextRenderExpirationTime <= mostRecentCurrentTime) {
         // Flush all expired work.
         while (nextUnitOfWork !== null) {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
           if (nextUnitOfWork === null) {
-            invariant(
-              pendingCommit !== null,
-              'Should have a pending commit. This error is likely caused by ' +
-                'a bug in React. Please file an issue.',
-            );
-            // We just completed a root. Commit it now.
-            commitAllWork(pendingCommit);
-            // Clear any errors that were scheduled during the commit phase.
-            handleCommitPhaseErrors();
+            if (pendingCommit !== null) {
+              // We just completed a root. Commit it now.
+              commitAllWork(pendingCommit);
+              // Clear any errors that were scheduled during the commit phase.
+              handleCommitPhaseErrors();
+            } else {
+              resetNextUnitOfWork();
+            }
             // The render time may have changed. Check again.
+            nextPriorityLevel = expirationTimeToPriorityLevel(
+              recalculateCurrentTime(),
+              nextRenderExpirationTime,
+            );
             if (
-              nextRenderExpirationTime === Done ||
-              nextRenderExpirationTime > minExpirationTime ||
-              nextRenderExpirationTime > mostRecentCurrentTime
+              nextPriorityLevel === NoWork ||
+              nextPriorityLevel > minPriorityLevel ||
+              nextPriorityLevel > TaskPriority
             ) {
               // We've completed all the expired work.
               break;
@@ -943,22 +1032,24 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             // omit either of the checks in the following condition, but we need
             // both to satisfy Flow.
             if (nextUnitOfWork === null) {
-              invariant(
-                pendingCommit !== null,
-                'Should have a pending commit. This error is likely caused by ' +
-                  'a bug in React. Please file an issue.',
-              );
-              // We just completed a root. If we have time, commit it now.
-              // Otherwise, we'll commit it in the next frame.
               if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-                commitAllWork(pendingCommit);
-                // Clear any errors that were scheduled during the commit phase.
-                handleCommitPhaseErrors();
+                if (pendingCommit !== null) {
+                  // We just completed a root. Commit it now.
+                  commitAllWork(pendingCommit);
+                  // Clear any errors that were scheduled during the commit phase.
+                  handleCommitPhaseErrors();
+                } else {
+                  resetNextUnitOfWork();
+                }
                 // The render time may have changed. Check again.
+                nextPriorityLevel = expirationTimeToPriorityLevel(
+                  recalculateCurrentTime(),
+                  nextRenderExpirationTime,
+                );
                 if (
-                  nextRenderExpirationTime === Done ||
-                  nextRenderExpirationTime > minExpirationTime ||
-                  nextRenderExpirationTime <= mostRecentCurrentTime
+                  nextPriorityLevel === NoWork ||
+                  nextPriorityLevel > minPriorityLevel ||
+                  nextPriorityLevel <= TaskPriority
                 ) {
                   // We've completed all the async work.
                   break;
@@ -972,58 +1063,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         }
       }
-
-      // There might be work left. Depending on the priority, we should
-      // either perform it now or schedule a callback to perform it later.
-      const currentTime = recalculateCurrentTime();
-      switch (expirationTimeToPriorityLevel(
-        currentTime,
-        nextRenderExpirationTime,
-      )) {
-        case SynchronousPriority:
-        case TaskPriority:
-          // We have remaining synchronous or task work. Keep performing it,
-          // regardless of whether we're inside a callback.
-          if (nextRenderExpirationTime <= minExpirationTime) {
-            continue loop;
-          }
-          break loop;
-        case HighPriority:
-        case LowPriority:
-        case OffscreenPriority:
-          // We have remaining async work.
-          if (deadline === null) {
-            // We're not inside a callback. Exit and perform the work during
-            // the next callback.
-            break loop;
-          }
-          // We are inside a callback.
-          if (
-            !deadlineHasExpired &&
-            nextRenderExpirationTime <= minExpirationTime
-          ) {
-            // We still have time. Keep working.
-            continue loop;
-          }
-          // We've run out of time. Exit.
-          break loop;
-        case NoWork:
-          // No work left. We can exit.
-          break loop;
-        default:
-          invariant(
-            false,
-            'Switch statement should be exhuastive. ' +
-              'This error is likely caused by a bug in React. Please file an issue.',
-          );
-      }
-    } while (true);
+    }
   }
 
   function performWorkCatchBlock(
     failedWork: Fiber,
     boundary: Fiber,
-    minExpirationTime: ExpirationTime,
+    minPriorityLevel: PriorityLevel,
     deadline: Deadline | null,
   ) {
     // We're going to restart the error boundary that captured the error.
@@ -1039,7 +1085,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     nextUnitOfWork = performFailedUnitOfWork(boundary);
 
     // Continue working.
-    workLoop(minExpirationTime, deadline);
+    workLoop(minPriorityLevel, deadline);
   }
 
   function performWork(
@@ -1057,32 +1103,27 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     );
     isPerformingWork = true;
 
+    rootCompletionCallbackList = null;
+
     // Updates that occur during the commit phase should have task priority
     // by default. (Render phase updates are special; getPriorityContext
     // accounts for their behavior.)
     const previousPriorityContext = priorityContext;
     priorityContext = TaskPriority;
 
-    // Read the current time from the host environment.
-    const currentTime = recalculateCurrentTime();
-    const minExpirationTime = getExpirationTimeForPriority(
-      currentTime,
-      minPriorityLevel,
-    );
-
     nestedUpdateCount = 0;
 
     let didError = false;
     let error = null;
     if (__DEV__) {
-      invokeGuardedCallback(null, workLoop, null, minExpirationTime, deadline);
+      invokeGuardedCallback(null, workLoop, null, minPriorityLevel, deadline);
       if (hasCaughtError()) {
         didError = true;
         error = clearCaughtError();
       }
     } else {
       try {
-        workLoop(minExpirationTime, deadline);
+        workLoop(minPriorityLevel, deadline);
       } catch (e) {
         didError = true;
         error = e;
@@ -1129,7 +1170,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           null,
           failedWork,
           boundary,
-          minExpirationTime,
+          minPriorityLevel,
           deadline,
         );
         if (hasCaughtError()) {
@@ -1142,7 +1183,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           performWorkCatchBlock(
             failedWork,
             boundary,
-            minExpirationTime,
+            minPriorityLevel,
             deadline,
           );
           error = null;
@@ -1190,6 +1231,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // It's safe to throw any unhandled errors.
     if (errorToThrow !== null) {
       throw errorToThrow;
+    }
+
+    // Call completion callbacks. These callbacks may call performWork. This
+    // is the one place where recursion is allowed.
+    if (rootCompletionCallbackList !== null) {
+      const list = rootCompletionCallbackList;
+      for (let i = 0; i < list.length; i++) {
+        list[i]();
+      }
     }
   }
 
@@ -1623,8 +1673,27 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function recalculateCurrentTime(): ExpirationTime {
+    if (forceExpire !== null) {
+      return forceExpire;
+    }
     mostRecentCurrentTime = msToExpirationTime(now());
     return mostRecentCurrentTime;
+  }
+
+  function expireWork(expirationTime: ExpirationTime): void {
+    invariant(
+      !isPerformingWork,
+      'Cannot commit while already performing work.',
+    );
+    // Override the current time with the given time. This has the effect of
+    // expiring all work up to and including that time.
+    forceExpire = mostRecentCurrentTime = expirationTime;
+    try {
+      performWork(TaskPriority, null);
+    } finally {
+      forceExpire = null;
+      recalculateCurrentTime();
+    }
   }
 
   function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
@@ -1691,6 +1760,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getPriorityContext: getPriorityContext,
     recalculateCurrentTime: recalculateCurrentTime,
     getExpirationTimeForPriority: getExpirationTimeForPriority,
+    expireWork: expireWork,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,
