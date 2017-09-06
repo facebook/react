@@ -15,6 +15,7 @@ import Link from 'gatsby-link';
 import React from 'react';
 import slugify from 'utils/slugify';
 import {colors} from 'theme';
+import MetaTitle from '../MetaTitle';
 
 const toAnchor = (href = '') => {
   const index = href.indexOf('#');
@@ -42,21 +43,15 @@ const isItemActive = (location, item) => {
 
 const Section = ({isActive, location, onClick, section}) => (
   <div>
-    <h2 css={{margin: '1rem 0'}}>
-      <a
-        css={{
-          color: isActive ? colors.text : colors.subtle,
-          transition: 'color 0.2s ease',
-          cursor: 'pointer',
-
-          ':hover': {
-            color: colors.text,
-          },
-        }}
-        onClick={onClick}>
-        {section.title}
-      </a>
-    </h2>
+    <MetaTitle onClick={onClick} cssProps={{
+      color: isActive ? colors.text : colors.subtle,
+      marginTop: 10,
+      ':hover': {
+        color: colors.text,
+      },
+    }}>
+      {section.title}
+    </MetaTitle>
     {isActive &&
       <ul css={{marginBottom: 10}}>
         {section.items.map(item => (

@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -14,11 +12,17 @@
 import React from 'react';
 import {colors} from 'theme';
 
-const MetaTitle = ({children, title, cssProps = {}, onClick}) => (
+const MetaTitle = ({
+  children,
+  title,
+  cssProps = {},
+  onClick,
+  onDark = false,
+}) => (
   <div
     onClick={onClick}
     css={{
-      color: colors.subtle,
+      color: onDark ? colors.subtleOnDark : colors.subtle,
       cursor: onClick ? 'pointer' : null,
       fontSize: 14,
       fontWeight: 700,

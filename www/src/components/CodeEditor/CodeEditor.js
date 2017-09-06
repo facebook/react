@@ -68,11 +68,13 @@ class CodeEditor extends Component {
                 '& h3': {
                   color: colors.dark,
                   maxWidth: '11em',
+                  paddingTop: 0,
                 },
 
                 '& p': {
                   marginTop: 15,
                   marginRight: 40,
+                  lineHeight: 1.7,
 
                   [media.greaterThan('xlarge')]: {
                     marginTop: 25,
