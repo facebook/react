@@ -65,7 +65,6 @@ function keyToggle(e, value, prevTab, nextTab) {
     display('target', nextTab);
   }
 }
-window.keyToggle = keyToggle;
 
 function display(type, value) {
   setSelected(value);
@@ -79,7 +78,6 @@ function display(type, value) {
     ' ' +
     container.className.replace(RegExp('display-' + type + '-[a-z]+ ?'), '');
 }
-window.display = display;
 
 var foundHash = false;
 function selectTabForHashLink() {
@@ -109,20 +107,29 @@ function selectTabForHashLink() {
   }
 }
 
+// HACK Expose toggle functions global for markup-deifned event handlers.
+// Don't acceess the 'window' object without checking first though,
+// Because it would break the (Node only) Gatsby build step.
+if (typeof window !== 'undefined') {
+  window.keyToggle = keyToggle;
+  window.display = display;
+}
+
 class InstallationPage extends Component {
   componentDidMount() {
     // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
     // us as close as possible to the correct platform and dev os using the hashtag and section walk up.
-    if (window.location.hash !== '' && window.location.hash !== 'content') {
+    if (this.props.location.hash !== '' && this.props.location.hash !== 'content') {
       // content is default
       // Hash links are added a bit later so we wait for them.
-      window.addEventListener('DOMContentLoaded', selectTabForHashLink);
+      this.props.addEventListener('DOMContentLoaded', selectTabForHashLink);
     }
     display('target', 'fiddle');
   }
 
   render() {
-    const {markdownRemark} = this.props.data;
+    const {data, location} = this.props;
+    const {markdownRemark} = data;
 
     return (
       <Flex
@@ -162,10 +169,11 @@ class InstallationPage extends Component {
                   marginLeft: 'calc(9% + 40px)',
                 }}>
                 <StickySidebar
-                  defaultActiveSection={findSectionForPath(
-                    location.pathname,
-                    sectionList,
-                  )}
+                  defaultActiveSection={
+                    location != null
+                      ? findSectionForPath(location.pathname, sectionList)
+                      : null
+                  }
                   location={location}
                   sectionList={sectionList}
                 />
