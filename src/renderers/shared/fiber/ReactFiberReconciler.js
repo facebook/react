@@ -20,7 +20,9 @@ var ReactFeatureFlags = require('ReactFeatureFlags');
 
 var {
   insertUpdateIntoFiber,
+  insertUpdateIntoQueue,
   createUpdateQueue,
+  processUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 
 var {
@@ -58,7 +60,7 @@ type Awaitable<T> = {
   then(resolve: (result: T) => mixed): void,
 };
 
-type Work = Awaitable<void> & {
+export type Work = Awaitable<void> & {
   commit(): void,
 
   _reactRootContainer: *,
@@ -208,12 +210,17 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
 export type Reconciler<C, I, TI> = {
   createContainer(containerInfo: C): OpaqueRoot,
+  updateRoot(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
+  ): Work,
   updateContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
-  ): Work,
+  ): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -255,6 +262,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getPriorityContext,
     getExpirationTimeForPriority,
     recalculateCurrentTime,
+    expireWork,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -262,8 +270,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = ReactFiberScheduler(config);
 
   function scheduleTopLevelUpdate(
-    current: Fiber,
+    root: FiberRoot,
     element: ReactNodeList,
+    currentTime: ExpirationTime,
+    isPrerender: boolean,
     callback: ?Function,
   ): ExpirationTime {
     if (__DEV__) {
@@ -284,6 +294,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
+    const current = root.current;
+
     // Check if the top-level element is an async wrapper component. If so, treat
     // updates to the root as async. This is a bit weird but lets us avoid a separate
     // `renderAsync` API.
@@ -294,7 +306,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       element.type.prototype != null &&
       (element.type.prototype: any).unstable_isAsyncReactComponent === true;
     const priorityLevel = getPriorityContext(current, forceAsync);
-    const currentTime = recalculateCurrentTime();
     const expirationTime = getExpirationTimeForPriority(
       currentTime,
       priorityLevel,
@@ -342,6 +353,24 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
+    if (isPrerender) {
+      // Block the root from committing at this expiration time.
+      if (root.blockers === null) {
+        root.blockers = createUpdateQueue();
+      }
+      const blockUpdate = {
+        priorityLevel: null,
+        expirationTime,
+        partialState: nextState,
+        callback: null,
+        isReplace: false,
+        isForced: false,
+        isTopLevelUnmount: false,
+        next: null,
+      };
+      insertUpdateIntoQueue(root.blockers, blockUpdate, currentTime);
+    }
+
     scheduleUpdate(current, expirationTime);
     return expirationTime;
   }
@@ -350,13 +379,38 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     this._reactRootContainer = root;
     this._expirationTime = expirationTime;
   }
-  WorkNode.prototype.commit = function() {};
-  WorkNode.prototype.then = function(resolve) {
-    // const fiber = this._reactRootContainer.current;
-    // const expirationTime = this._expirationTime;
-    // const currentTime = recalculateCurrentTime();
-    // addCallback(fiber, resolve, null, expirationTime, currentTime);
-    // scheduleUpdate(fiber, expirationTime);
+  WorkNode.prototype.commit = function() {
+    const root = this._reactRootContainer;
+    const expirationTime = this._expirationTime;
+    const blockers = root.blockers;
+    if (blockers === null) {
+      return;
+    }
+    processUpdateQueue(blockers, null, null, null, expirationTime);
+    expireWork(expirationTime);
+  };
+  WorkNode.prototype.then = function(callback) {
+    const root = this._reactRootContainer;
+    const expirationTime = this._expirationTime;
+
+    // Add callback to queue of callbacks on the root. It will be called once
+    // the root completes at the corresponding expiration time.
+    const update = {
+      priorityLevel: null,
+      expirationTime,
+      partialState: null,
+      callback,
+      isReplace: false,
+      isForced: false,
+      isTopLevelUnmount: false,
+      next: null,
+    };
+    const currentTime = recalculateCurrentTime();
+    if (root.completionCallbacks === null) {
+      root.completionCallbacks = createUpdateQueue();
+    }
+    insertUpdateIntoQueue(root.completionCallbacks, update, currentTime);
+    scheduleUpdate(root.current, expirationTime);
   };
 
   return {
@@ -368,8 +422,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       element: ReactNodeList,
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
-      didComplete: ?Function,
-    ) {
+    ): Work {
       const current = container.current;
 
       if (__DEV__) {
@@ -391,14 +444,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         container.pendingContext = context;
       }
 
-      const expirationTime = scheduleTopLevelUpdate(current, element);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = scheduleTopLevelUpdate(
+        container,
+        element,
+        currentTime,
+        true,
+        null,
+      );
 
       let completionCallbacks = container.completionCallbacks;
       if (completionCallbacks === null) {
         completionCallbacks = createUpdateQueue();
       }
-
-      // TODO: Add didComplete to root's completionCallbacks
 
       return new WorkNode(container, expirationTime);
     },
@@ -408,7 +466,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
       callback: ?Function,
-    ): Work {
+    ): void {
       // TODO: If this is a nested container, this won't be the root.
       const current = container.current;
 
@@ -431,7 +489,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         container.pendingContext = context;
       }
 
-      scheduleTopLevelUpdate(current, element, callback);
+      const currentTime = recalculateCurrentTime();
+      scheduleTopLevelUpdate(container, element, currentTime, false, callback);
     },
 
     batchedUpdates,
