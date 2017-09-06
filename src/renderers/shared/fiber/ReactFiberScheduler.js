@@ -991,7 +991,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       nextRenderExpirationTime,
     );
 
-    loop: while (
+    while (
       shouldContinueWorking(minPriorityLevel, nextPriorityLevel, deadline)
     ) {
       if (nextRenderExpirationTime <= mostRecentCurrentTime) {
