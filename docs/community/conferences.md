@@ -59,7 +59,8 @@ October 25–27, Bratislava, Slovakia
 
 [Website](https://reactiveconf.com)
 
-
+### AgentConf 2018
+January 25-28 in Dornbirn, Austria
 
 ## Past Conferences
 
