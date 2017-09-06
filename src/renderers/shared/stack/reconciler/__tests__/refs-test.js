@@ -319,33 +319,45 @@ describe('creating element with ref in constructor', () => {
     'for the full message or use the non-minified dev environment for full errors and additional ' +
     'helpful warnings.';
 
-  it('throws an error when __DEV__ = true', () => {
-    ReactTestUtils = require('ReactTestUtils');
+  describe('when in development', () => {
+    it('throws an error', () => {
+      ReactTestUtils = require('ReactTestUtils');
 
-    var originalDev = __DEV__;
-    __DEV__ = true;
-
-    try {
       expect(function() {
         ReactTestUtils.renderIntoDocument(<RefTest />);
       }).toThrowError(
         ReactDOMFeatureFlags.useFiber ? fiberDevErrorMessage : devErrorMessage,
       );
-    } finally {
-      __DEV__ = originalDev;
-    }
+    });
   });
 
-  it('throws an error when __DEV__ = false', () => {
-    ReactTestUtils = require('ReactTestUtils');
+  describe('when in production', () => {
+    var oldProcess;
 
-    var originalDev = __DEV__;
-    var originalEnv = process.env.NODE_ENV;
+    beforeEach(() => {
+      __DEV__ = false;
 
-    __DEV__ = false;
-    process.env.NODE_ENV = 'production';
+      // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+      // wrong thing. If you change this, make sure to test with jest --no-cache.
+      oldProcess = process;
+      global.process = {
+        ...process,
+        env: {...process.env, NODE_ENV: 'production'},
+      };
 
-    try {
+      jest.resetModules();
+      React = require('React');
+      ReactTestUtils = require('ReactTestUtils');
+      ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+      reactComponentExpect = require('reactComponentExpect');
+    });
+
+    afterEach(() => {
+      __DEV__ = true;
+      global.process = oldProcess;
+    });
+
+    it('throws an error', () => {
       expect(function() {
         ReactTestUtils.renderIntoDocument(<RefTest />);
       }).toThrowError(
@@ -353,9 +365,6 @@ describe('creating element with ref in constructor', () => {
           ? fiberProdErrorMessage
           : prodErrorMessage,
       );
-    } finally {
-      __DEV__ = originalDev;
-      process.env.NODE_ENV = originalEnv;
-    }
+    });
   });
 });
