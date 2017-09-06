@@ -119,7 +119,10 @@ class InstallationPage extends Component {
   componentDidMount() {
     // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
     // us as close as possible to the correct platform and dev os using the hashtag and section walk up.
-    if (this.props.location.hash !== '' && this.props.location.hash !== 'content') {
+    if (
+      this.props.location.hash !== '' &&
+      this.props.location.hash !== 'content'
+    ) {
       // content is default
       // Hash links are added a bit later so we wait for them.
       this.props.addEventListener('DOMContentLoaded', selectTabForHashLink);
