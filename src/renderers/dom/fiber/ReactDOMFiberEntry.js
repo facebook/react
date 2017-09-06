@@ -802,7 +802,7 @@ function createPortal(
 type PublicRoot = {
   render(children: ReactNodeList, callback: ?() => mixed): void,
   prerender(children: ReactNodeList): Work,
-  unmount(callback: ?() => mixed): Work,
+  unmount(callback: ?() => mixed): void,
 
   _reactRootContainer: *,
   _getComponent: () => DOMContainer,

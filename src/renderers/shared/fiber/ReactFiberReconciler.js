@@ -361,7 +361,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       const blockUpdate = {
         priorityLevel: null,
         expirationTime,
-        partialState: nextState,
+        partialState: null,
         callback: null,
         isReplace: false,
         isForced: false,
