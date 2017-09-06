@@ -14,7 +14,7 @@
 import Container from 'components/Container';
 import FooterLink from './FooterLink';
 import FooterNav from './FooterNav';
-import FooterTitle from './FooterTitle';
+import MetaTitle from 'templates/components/MetaTitle';
 import React from 'react';
 import {colors, media} from 'theme';
 
@@ -40,7 +40,7 @@ const Footer = () => (
           flexWrap: 'wrap',
         }}>
         <FooterNav>
-          <FooterTitle>Docs</FooterTitle>
+          <MetaTitle>Docs</MetaTitle>
           <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
           <FooterLink to="/docs/thinking-in-react.html">
             Thinking in React
@@ -49,7 +49,7 @@ const Footer = () => (
           <FooterLink to="/docs/jsx-in-depth.html">Advanced Guides</FooterLink>
         </FooterNav>
         <FooterNav>
-          <FooterTitle>Community</FooterTitle>
+          <MetaTitle>Community</MetaTitle>
           <FooterLink
             to="http://stackoverflow.com/questions/tagged/reactjs"
             target="_blank">
@@ -69,7 +69,7 @@ const Footer = () => (
           </FooterLink>
         </FooterNav>
         <FooterNav>
-          <FooterTitle>Resources</FooterTitle>
+          <MetaTitle>Resources</MetaTitle>
           <FooterLink to="/community/conferences.html">Conferences</FooterLink>
           <FooterLink to="/community/videos.html">Videos</FooterLink>
           <FooterLink
@@ -84,7 +84,7 @@ const Footer = () => (
           </FooterLink>
         </FooterNav>
         <FooterNav>
-          <FooterTitle>More</FooterTitle>
+          <MetaTitle>More</MetaTitle>
           <FooterLink to="/blog.html">Blog</FooterLink>
           <FooterLink to="https://github.com/facebook/react" target="_blank">
             GitHub

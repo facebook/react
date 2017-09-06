@@ -245,6 +245,14 @@ const markdownStyles = {
         fontWeight: 500,
       },
     },
+
+    '& p': {
+      lineHeight: 1.7,
+    },
+
+    '& h3 + p': {
+      marginTop: 20,
+    }
   },
 
   '& .example': {
