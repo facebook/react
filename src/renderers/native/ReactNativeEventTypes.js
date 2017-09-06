@@ -284,6 +284,9 @@ const IOS_DIRECT_EVENT_TYPES = {
   topShouldStartLoadWithRequest: {
     registrationName: 'onShouldStartLoadWithRequest',
   },
+  topSnapshotReady: {
+    registrationName: 'onSnapshotReady',
+  },
   topStateChange: {
     registrationName: 'onStateChange',
   },
