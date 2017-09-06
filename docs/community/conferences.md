@@ -67,6 +67,8 @@ December 2, Berlin, Germany
 ### AgentConf 2018
 January 25-28 in Dornbirn, Austria
 
+[Website](http://agent.sh/)
+
 ## Past Conferences
 
 ### React.js Conf 2015
