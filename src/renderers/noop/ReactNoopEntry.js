@@ -25,7 +25,6 @@ import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
-var {TaskPriority} = require('ReactPriorityLevel');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 var expect = require('jest-matchers');
@@ -349,10 +348,6 @@ var ReactNoop = {
 
   hasScheduledCallback() {
     return !!scheduledCallback;
-  },
-
-  taskUpdates(fn: Function) {
-    NoopRenderer.performWithPriority(TaskPriority, fn);
   },
 
   batchedUpdates: NoopRenderer.batchedUpdates,
