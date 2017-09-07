@@ -8,8 +8,8 @@ function testMinificationUsedDCE() {
   try {
     // use scoped variable for our initial test, in case
     // 'top-level' mangling is not enabled.
-    const source = testMinificationUsedDCE.toString();
-    const longVariableName = true;
+    var source = testMinificationUsedDCE.toString();
+    var longVariableName = true;
     if (longVariableName && source.match(/longVariableName/g).length === 3) {
       // We are not minified.
       // This might be a Node environment where DCE is not expected anyway.
