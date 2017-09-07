@@ -34,11 +34,6 @@ id: home
         JSX. Input data that is passed into the component can be accessed by
         `render()` via `this.props`.
       </p>
-      <p>
-        <strong>JSX is optional and not required to use React.</strong> Try
-        clicking on "Compiled JS" to see the raw JavaScript code produced by
-        the JSX compiler.
-      </p>
       <div id="helloExample"></div>
     </div>
     <div class="example">
