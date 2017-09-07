@@ -1,6 +1,7 @@
 # We can probably lint these later but not important at this point
 src/renderers/art
 src/__mocks__/vendor
+packages/react-art/lib
 # But not in docs/_js/examples/*
 docs/_js/*.js
 docs/js/

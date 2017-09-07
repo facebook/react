@@ -8,6 +8,7 @@
  */
 'use strict';
 
+var Circle = require('react-art/lib/Circle.art');
 var React = require('react');
 var ReactART = require('react-art');
 var Group = ReactART.Group;
@@ -93,7 +94,9 @@ class VectorWidget extends React.Component {
           <Shape fill="#A6BD8A" d={GREEN_DOT_PATH} />
           <Group x={55} y={29}>
             <Group rotation={rotation} originX={84} originY={89}>
-              <Shape fill="#FFFFFF" d={CENTER_DOT_PATH} />
+              <Group x={84} y={89}>
+                <Circle fill="#FFFFFF" radius={16} />
+              </Group>
               <Group>
                 <Shape d={RING_ONE_PATH} stroke="#FFFFFF" strokeWidth={8} />
                 <Shape
@@ -129,8 +132,6 @@ var YELLOW_DOT_PATH =
   'M31.5,17 C35.0898511,17 38,14.0898511 38,10.5 C38,6.91014895 35.0898511,4 31.5,4 C27.9101489,4 25,6.91014895 25,10.5 C25,14.0898511 27.9101489,17 31.5,17 Z M31.5,17';
 var GREEN_DOT_PATH =
   'M50.5,17 C54.0898511,17 57,14.0898511 57,10.5 C57,6.91014895 54.0898511,4 50.5,4 C46.9101489,4 44,6.91014895 44,10.5 C44,14.0898511 46.9101489,17 50.5,17 Z M50.5,17';
-var CENTER_DOT_PATH =
-  'M84,105 C92.8365564,105 100,97.8365564 100,89 C100,80.1634436 92.8365564,73 84,73 C75.1634436,73 68,80.1634436 68,89 C68,97.8365564 75.1634436,105 84,105 Z M84,105';
 var RING_ONE_PATH =
   'M84,121 C130.391921,121 168,106.673113 168,89 C168,71.3268871 130.391921,57 84,57 C37.6080787,57 0,71.3268871 0,89 C0,106.673113 37.6080787,121 84,121 Z M84,121';
 var RING_TWO_PATH =

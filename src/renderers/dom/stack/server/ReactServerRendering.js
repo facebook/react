@@ -27,6 +27,7 @@ var pendingTransactions = 0;
 
 /**
  * @param {ReactElement} element
+ * @param {boolean} makeStaticMarkup
  * @return {string} the HTML markup
  */
 function renderToStringImpl(element, makeStaticMarkup) {
