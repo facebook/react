@@ -59,6 +59,11 @@ October 25–27, Bratislava, Slovakia
 
 [Website](https://reactiveconf.com)
 
+### React Day Berlin
+December 2, Berlin, Germany
+
+[Website](https://reactday.berlin) - [Twitter](https://twitter.com/reactdayberlin) - [Facebook](https://www.facebook.com/reactdayberlin/)
+
 ### AgentConf 2018
 January 25-28 in Dornbirn, Austria
 
