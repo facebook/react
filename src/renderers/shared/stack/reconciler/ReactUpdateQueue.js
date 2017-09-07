@@ -123,7 +123,7 @@ var ReactUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {?function} callback Called after component is updated.
-   * @param {?string} Name of the calling function in the public API.
+   * @param {?string} callerName Name of the calling function in the public API.
    * @internal
    */
   enqueueForceUpdate: function(publicInstance, callback, callerName) {

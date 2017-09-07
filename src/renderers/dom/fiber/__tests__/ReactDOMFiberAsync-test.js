@@ -26,18 +26,28 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   if (ReactDOMFeatureFlags.useFiber) {
-    it('renders synchronously when feature flag is disabled', () => {
-      ReactDOM.render(
-        <AsyncComponent><div>Hi</div></AsyncComponent>,
-        container,
-      );
-      expect(container.textContent).toEqual('Hi');
+    describe('with feature flag disabled', () => {
+      beforeEach(() => {
+        jest.resetModules();
+        ReactFeatureFlags = require('ReactFeatureFlags');
+        container = document.createElement('div');
+        ReactFeatureFlags.enableAsyncSubtreeAPI = false;
+        ReactDOM = require('react-dom');
+      });
 
-      ReactDOM.render(
-        <AsyncComponent><div>Bye</div></AsyncComponent>,
-        container,
-      );
-      expect(container.textContent).toEqual('Bye');
+      it('renders synchronously', () => {
+        ReactDOM.render(
+          <AsyncComponent><div>Hi</div></AsyncComponent>,
+          container,
+        );
+        expect(container.textContent).toEqual('Hi');
+
+        ReactDOM.render(
+          <AsyncComponent><div>Bye</div></AsyncComponent>,
+          container,
+        );
+        expect(container.textContent).toEqual('Bye');
+      });
     });
 
     describe('with feature flag enabled', () => {

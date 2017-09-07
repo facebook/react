@@ -18,6 +18,7 @@ const Bundles = require('./bundles');
 const propertyMangleWhitelist = require('./mangle').propertyMangleWhitelist;
 const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
+const syncReactDom = require('./sync').syncReactDom;
 const syncReactNative = require('./sync').syncReactNative;
 const Packaging = require('./packaging');
 const Header = require('./header');
@@ -40,6 +41,7 @@ const requestedBundleNames = (argv._[0] || '')
   .split(',')
   .map(type => type.toLowerCase());
 const syncFbsource = argv['sync-fbsource'];
+const syncWww = argv['sync-www'];
 
 // used for when we property mangle with uglify/gcc
 const mangleRegex = new RegExp(
@@ -514,6 +516,8 @@ rimraf('build', () => {
     tasks.push(() =>
       syncReactNative(join('build', 'react-native'), syncFbsource)
     );
+  } else if (syncWww) {
+    tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
   }
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output

@@ -34,10 +34,10 @@ beforeEach(() => {
 it('handles events', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = createReactNativeComponentClass({
+  var View = createReactNativeComponentClass('View', () => ({
     validAttributes: {foo: true},
     uiViewClassName: 'View',
-  });
+  }));
 
   var log = [];
   ReactNative.render(
@@ -94,10 +94,10 @@ it('handles events on text nodes', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
-  var Text = createReactNativeComponentClass({
+  var Text = createReactNativeComponentClass('Text', () => ({
     validAttributes: {foo: true},
     uiViewClassName: 'Text',
-  });
+  }));
 
   class ContextHack extends React.Component {
     static childContextTypes = {isInAParentText: PropTypes.bool};
@@ -179,10 +179,10 @@ it('handles events on text nodes', () => {
 
 it('handles when a responder is unmounted while a touch sequence is in progress', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = createReactNativeComponentClass({
+  var View = createReactNativeComponentClass('View', () => ({
     validAttributes: {id: true},
     uiViewClassName: 'View',
-  });
+  }));
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
@@ -273,10 +273,10 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 
 it('handles events without target', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = createReactNativeComponentClass({
+  var View = createReactNativeComponentClass('View', () => ({
     validAttributes: {id: true},
     uiViewClassName: 'View',
-  });
+  }));
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(

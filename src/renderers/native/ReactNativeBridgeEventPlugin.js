@@ -13,10 +13,11 @@
 
 var EventPropagators = require('EventPropagators');
 var SyntheticEvent = require('SyntheticEvent');
-var UIManager = require('UIManager');
+var ReactNativeEventTypes = require('ReactNativeEventTypes');
+var invariant = require('fbjs/lib/invariant');
 
-var customBubblingEventTypes = UIManager.customBubblingEventTypes;
-var customDirectEventTypes = UIManager.customDirectEventTypes;
+var customBubblingEventTypes = ReactNativeEventTypes.customBubblingEventTypes;
+var customDirectEventTypes = ReactNativeEventTypes.customDirectEventTypes;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -44,6 +45,11 @@ var ReactNativeBridgeEventPlugin = {
   ): ?Object {
     var bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
     var directDispatchConfig = customDirectEventTypes[topLevelType];
+    invariant(
+      bubbleDispatchConfig || directDispatchConfig,
+      'Unsupported top level event type "%s" dispatched',
+      topLevelType,
+    );
     var event = SyntheticEvent.getPooled(
       bubbleDispatchConfig || directDispatchConfig,
       targetInst,

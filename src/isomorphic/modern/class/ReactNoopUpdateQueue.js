@@ -58,7 +58,7 @@ var ReactNoopUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {?function} callback Called after component is updated.
-   * @param {?string} Name of the calling function in the public API.
+   * @param {?string} callerName name of the calling function in the public API.
    * @internal
    */
   enqueueForceUpdate: function(publicInstance, callback, callerName) {
@@ -75,7 +75,7 @@ var ReactNoopUpdateQueue = {
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} completeState Next state.
    * @param {?function} callback Called after component is updated.
-   * @param {?string} Name of the calling function in the public API.
+   * @param {?string} callerName name of the calling function in the public API.
    * @internal
    */
   enqueueReplaceState: function(

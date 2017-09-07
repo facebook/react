@@ -95,12 +95,12 @@ var ReactNativeEventEmitter = {
    *
    * @param {rootNodeID} rootNodeID React root node ID that event occurred on.
    * @param {TopLevelType} topLevelType Top level type of event.
-   * @param {object} nativeEventParam Object passed from native.
+   * @param {?object} nativeEventParam Object passed from native.
    */
   _receiveRootNodeIDEvent: function(
     rootNodeID: number,
     topLevelType: string,
-    nativeEventParam: Object,
+    nativeEventParam: ?Object,
   ) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
     var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
@@ -124,11 +124,10 @@ var ReactNativeEventEmitter = {
    * @param {object} nativeEventParam Object passed from native.
    */
   receiveEvent: function(
-    tag: number,
+    rootNodeID: number,
     topLevelType: string,
     nativeEventParam: Object,
   ) {
-    var rootNodeID = tag;
     ReactNativeEventEmitter._receiveRootNodeIDEvent(
       rootNodeID,
       topLevelType,

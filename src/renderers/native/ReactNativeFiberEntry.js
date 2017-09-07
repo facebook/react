@@ -22,7 +22,7 @@ const ReactNativeFiberInspector = require('ReactNativeFiberInspector');
 const ReactVersion = require('ReactVersion');
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = require('findNumericNodeHandleFiber');
+const findNumericNodeHandle = require('findNumericNodeHandle');
 
 const {injectInternals} = require('ReactFiberDevToolsHook');
 
@@ -48,7 +48,7 @@ const ReactNativeFiber: ReactNativeType = {
 
   findNodeHandle: findNumericNodeHandle,
 
-  render(element: ReactElement<any>, containerTag: any, callback: ?Function) {
+  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
     let root = roots.get(containerTag);
 
     if (!root) {
@@ -100,7 +100,7 @@ const ReactNativeFiber: ReactNativeType = {
     ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
     ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
     TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg Text
+    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg RCTText, RCTView, ReactNativeART
     takeSnapshot: require('takeSnapshot'), // react-native-implementation
   },
 };
@@ -123,6 +123,7 @@ injectInternals({
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
+  rendererPackageName: 'react-native',
 });
 
 module.exports = ReactNativeFiber;

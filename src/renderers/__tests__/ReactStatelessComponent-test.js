@@ -157,15 +157,17 @@ describe('ReactStatelessComponent', () => {
     });
   }
 
-  it('should throw when stateless component returns undefined', () => {
-    function NotAComponent() {}
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrowError(
-      'NotAComponent(...): A valid React element (or null) must be returned. ' +
-        'You may have returned undefined, an array or some other invalid object.',
-    );
-  });
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('should throw when stateless component returns undefined', () => {
+      function NotAComponent() {}
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+      }).toThrowError(
+        'NotAComponent(...): Nothing was returned from render. ' +
+          'This usually means a return statement is missing. Or, to render nothing, return null.',
+      );
+    });
+  }
 
   it('should throw on string refs in pure functions', () => {
     function Child() {

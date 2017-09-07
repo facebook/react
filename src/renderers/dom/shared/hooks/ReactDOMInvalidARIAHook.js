@@ -12,12 +12,15 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var isCustomComponent = require('isCustomComponent');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
 var rARIACamel = new RegExp(
   '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
 );
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -42,7 +45,7 @@ function getStackAddendum(debugID) {
 }
 
 function validateProperty(tagName, name, debugID) {
-  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+  if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
   }
 
@@ -143,7 +146,7 @@ function warnInvalidARIAProps(type, props, debugID) {
 }
 
 function validateProperties(type, props, debugID /* Stack only */) {
-  if (type.indexOf('-') >= 0 || props.is) {
+  if (isCustomComponent(type, props)) {
     return;
   }
   warnInvalidARIAProps(type, props, debugID);

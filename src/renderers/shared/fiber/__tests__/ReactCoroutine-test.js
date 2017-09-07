@@ -14,7 +14,6 @@
 var React;
 var ReactNoop;
 var ReactCoroutine;
-var ReactFeatureFlags;
 
 describe('ReactCoroutine', () => {
   beforeEach(() => {
@@ -23,8 +22,6 @@ describe('ReactCoroutine', () => {
     ReactNoop = require('react-noop-renderer');
     // TODO: can we express this test with only public API?
     ReactCoroutine = require('ReactCoroutine');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function div(...children) {

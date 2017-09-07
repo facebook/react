@@ -280,8 +280,8 @@ module.exports = SyntheticEvent;
 /**
   * Helper to nullify syntheticEvent instance properties when destructing
   *
-  * @param {object} SyntheticEvent
   * @param {String} propName
+  * @param {?object} getVal
   * @return {object} defineProperty object
   */
 function getPooledWarningPropertyDefinition(propName, getVal) {

@@ -34,15 +34,16 @@ var setTextContent = require('setTextContent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
   var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
   var {
-    validateProperties: validateInputPropertes,
+    validateProperties: validateInputProperties,
   } = ReactDOMNullInputValuePropHook;
   var {
-    validateProperties: validateUnknownPropertes,
+    validateProperties: validateUnknownProperties,
   } = ReactDOMUnknownPropertyHook;
 }
 
@@ -71,8 +72,8 @@ if (__DEV__) {
 
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
-    validateInputPropertes(type, props);
-    validateUnknownPropertes(type, props);
+    validateInputProperties(type, props);
+    validateUnknownProperties(type, props);
   };
 
   var warnForTextDifference = function(serverText: string, clientText: string) {
@@ -116,6 +117,16 @@ if (__DEV__) {
       names.push(name);
     });
     warning(false, 'Extra attributes from the server: %s', names);
+  };
+
+  var warnForInvalidEventListener = function(registrationName, listener) {
+    warning(
+      false,
+      'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
+      registrationName,
+      typeof listener,
+      getCurrentFiberStackAddendum(),
+    );
   };
 
   var testDocument;
@@ -222,7 +233,10 @@ function setInitialDOMProperties(
     } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
-      if (nextProp) {
+      if (nextProp != null) {
+        if (__DEV__ && typeof nextProp !== 'function') {
+          warnForInvalidEventListener(propKey, nextProp);
+        }
         ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (isCustomComponentTag) {
@@ -291,11 +305,9 @@ var ReactDOMFiberComponent = {
     if (namespaceURI === HTML_NAMESPACE) {
       namespaceURI = getIntrinsicNamespace(type);
     }
-    if (__DEV__) {
-      var isCustomComponentTag = isCustomComponent(type, props);
-    }
     if (namespaceURI === HTML_NAMESPACE) {
       if (__DEV__) {
+        var isCustomComponentTag = isCustomComponent(type, props);
         // Should this check be gated by parent namespace? Not sure we want to
         // allow <SVG> or <mATH>.
         warning(
@@ -314,7 +326,7 @@ var ReactDOMFiberComponent = {
         // This is guaranteed to yield a script element.
         var firstChild = ((div.firstChild: any): HTMLScriptElement);
         domElement = div.removeChild(firstChild);
-      } else if (props.is) {
+      } else if (typeof props.is === 'string') {
         // $FlowIssue `createElement` should be updated for Web Components
         domElement = ownerDocument.createElement(type, {is: props.is});
       } else {
@@ -693,8 +705,11 @@ var ReactDOMFiberComponent = {
       } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
         // Noop
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
+        if (nextProp != null) {
           // We eagerly listen to this even though we haven't committed yet.
+          if (__DEV__ && typeof nextProp !== 'function') {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           ensureListeningTo(rootContainerElement, propKey);
         }
         if (!updatePayload && lastProp !== nextProp) {
@@ -934,7 +949,10 @@ var ReactDOMFiberComponent = {
           }
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
-        if (nextProp) {
+        if (nextProp != null) {
+          if (__DEV__ && typeof nextProp !== 'function') {
+            warnForInvalidEventListener(propKey, nextProp);
+          }
           ensureListeningTo(rootContainerElement, propKey);
         }
       } else if (__DEV__) {

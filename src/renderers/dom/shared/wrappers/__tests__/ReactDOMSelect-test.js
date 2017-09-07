@@ -128,6 +128,22 @@ describe('ReactDOMSelect', () => {
     expect(node.value).toEqual('gorilla');
   });
 
+  it('should default to the first non-disabled option', () => {
+    var stub = (
+      <select defaultValue="">
+        <option disabled={true}>Disabled</option>
+        <option disabled={true}>Still Disabled</option>
+        <option>0</option>
+        <option disabled={true}>Also Disabled</option>
+      </select>
+    );
+    var container = document.createElement('div');
+    stub = ReactDOM.render(stub, container);
+    var node = ReactDOM.findDOMNode(stub);
+    expect(node.options[0].selected).toBe(false);
+    expect(node.options[2].selected).toBe(true);
+  });
+
   it('should allow setting `value` to __proto__', () => {
     var stub = (
       <select value="__proto__" onChange={noop}>

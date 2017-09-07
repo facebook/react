@@ -13,15 +13,12 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 describe('ReactIncrementalUpdates', () => {
   beforeEach(() => {
     jest.resetModuleRegistry();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
   });
 
   function span(prop) {

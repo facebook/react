@@ -323,7 +323,6 @@ function resetModules() {
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('ExecutionEnvironment');
 
-  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   PropTypes = require('prop-types');
   React = require('react');
   ReactDOM = require('react-dom');
@@ -334,7 +333,6 @@ function resetModules() {
   // Resetting is important because we want to avoid any shared state
   // influencing the tests.
   jest.resetModuleRegistry();
-  require('ReactFeatureFlags').disableNewFiberFeatures = false;
   ReactDOMServer = require('react-dom/server');
 }
 
@@ -596,16 +594,14 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('class')).toBe('');
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with true value', async render => {
-        const e = await render(<div className={true} />);
-        expect(e.getAttribute('class')).toBe('true');
+      itRenders('no className prop with true value', async render => {
+        const e = await render(<div className={true} />, 1);
+        expect(e.hasAttribute('class')).toBe(false);
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('className prop with false value', async render => {
-        const e = await render(<div className={false} />);
-        expect(e.getAttribute('class')).toBe('false');
+      itRenders('no className prop with false value', async render => {
+        const e = await render(<div className={false} />, 1);
+        expect(e.hasAttribute('class')).toBe(false);
       });
 
       itRenders('no className prop with null value', async render => {
@@ -663,16 +659,14 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('for')).toBe('');
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('htmlFor prop with true value', async render => {
-        const e = await render(<div htmlFor={true} />);
-        expect(e.getAttribute('for')).toBe('true');
+      itRenders('no htmlFor prop with true value', async render => {
+        const e = await render(<div htmlFor={true} />, 1);
+        expect(e.hasAttribute('for')).toBe(false);
       });
 
-      // this probably is just masking programmer error, but it is existing behavior.
-      itRenders('htmlFor prop with false value', async render => {
-        const e = await render(<div htmlFor={false} />);
-        expect(e.getAttribute('for')).toBe('false');
+      itRenders('no htmlFor prop with false value', async render => {
+        const e = await render(<div htmlFor={false} />, 1);
+        expect(e.hasAttribute('for')).toBe(false);
       });
 
       itRenders('no htmlFor prop with null value', async render => {
@@ -849,6 +843,12 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div aria-label={null} />);
         expect(e.hasAttribute('aria-label')).toBe(false);
       });
+
+      itRenders('"aria" attribute with a warning', async render => {
+        // Reserved for future use.
+        const e = await render(<div aria="hello" />, 1);
+        expect(e.getAttribute('aria')).toBe('hello');
+      });
     });
 
     describe('cased attributes', function() {
@@ -890,6 +890,17 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('unknown data- attributes', async render => {
         const e = await render(<div data-foo="bar" />);
         expect(e.getAttribute('data-foo')).toBe('bar');
+      });
+
+      itRenders('badly cased reserved attributes', async render => {
+        const e = await render(<div CHILDREN="5" />, 1);
+        expect(e.getAttribute('CHILDREN')).toBe('5');
+      });
+
+      itRenders('"data" attribute', async render => {
+        // For `<object />` acts as `src`.
+        const e = await render(<object data="hello" />);
+        expect(e.getAttribute('data')).toBe('hello');
       });
 
       itRenders('no unknown data- attributes with null value', async render => {
@@ -954,6 +965,12 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
+      itRenders('SVG tags with dashes in them', async render => {
+        const e = await render(<svg><font-face accentHeight={10} /></svg>);
+        expect(e.firstChild.hasAttribute('accentHeight')).toBe(false);
+        expect(e.firstChild.getAttribute('accent-height')).toBe('10');
+      });
+
       itRenders('cased custom attributes', async render => {
         const e = await render(<div fooBar="test" />);
         expect(e.getAttribute('fooBar')).toBe('test');
@@ -965,6 +982,14 @@ describe('ReactDOMServerIntegration', () => {
       expect(e.getAttribute('onClick')).toBe(null);
       expect(e.getAttribute('onClick')).toBe(null);
       expect(e.getAttribute('click')).toBe(null);
+    });
+
+    itRenders('no unknown events', async render => {
+      const e = await render(
+        <div onunknownevent="alert(&quot;hack&quot;)" />,
+        1,
+      );
+      expect(e.getAttribute('onunknownevent')).toBe(null);
     });
   });
 

@@ -43,28 +43,16 @@ var eventTypes = {
   },
 };
 
-function shouldUseChangeEvent(elem) {
-  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
-  return (
-    nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
-  );
-}
-
-function createAndAccumulateChangeEvent(
-  inst,
-  nativeEvent,
-  nativeEventTarget,
-  virtualTarget,
-) {
+function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   var event = SyntheticEvent.getPooled(
     eventTypes.change,
     inst,
     nativeEvent,
-    nativeEventTarget,
+    target,
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(virtualTarget);
+  ReactControlledComponent.enqueueStateRestore(target);
   EventPropagators.accumulateTwoPhaseDispatches(event);
   return event;
 }
@@ -305,7 +293,6 @@ var ChangeEventPlugin = {
           inst,
           nativeEvent,
           nativeEventTarget,
-          targetNode,
         );
         return event;
       }

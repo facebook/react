@@ -18,18 +18,14 @@ var ReactTestUtils = require('react-dom/test-utils');
 var PropTypes = require('prop-types');
 
 describe('ReactDOMFiber', () => {
+  function normalizeCodeLocInfo(str) {
+    return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+  }
+
   var container;
-  var ReactFeatureFlags;
 
   beforeEach(() => {
     container = document.createElement('div');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
-  });
-
-  afterEach(() => {
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = true;
   });
 
   it('should render strings as children', () => {
@@ -913,6 +909,24 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
+    it('should warn for non-functional event listeners', () => {
+      spyOn(console, 'error');
+      class Example extends React.Component {
+        render() {
+          return <div onClick="woops" />;
+        }
+      }
+      ReactDOM.render(<Example />, container);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
+          '    in div (at **)\n' +
+          '    in Example (at **)',
+      );
+    });
+
     it('should not update event handlers until commit', () => {
       let ops = [];
       const handlerA = () => ops.push('A');
@@ -1080,69 +1094,4 @@ describe('ReactDOMFiber', () => {
       );
     });
   }
-});
-
-// disableNewFiberFeatures currently defaults to true in test
-describe('disableNewFiberFeatures', () => {
-  var container;
-  var ReactFeatureFlags;
-
-  beforeEach(() => {
-    container = document.createElement('div');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = true;
-  });
-
-  afterEach(() => {
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
-  });
-
-  it('throws if non-element passed to top-level render', () => {
-    const message = 'render(): Invalid component element.';
-    expect(() => ReactDOM.render(null, container)).toThrow(message, container);
-    expect(() => ReactDOM.render(undefined, container)).toThrow(
-      message,
-      container,
-    );
-    expect(() => ReactDOM.render(false, container)).toThrow(message, container);
-    expect(() => ReactDOM.render('Hi', container)).toThrow(message, container);
-    expect(() => ReactDOM.render(999, container)).toThrow(message, container);
-    expect(() => ReactDOM.render([<div key="a" />], container)).toThrow(
-      message,
-      container,
-    );
-  });
-
-  it('throws if something other than false, null, or an element is returned from render', () => {
-    function Render(props) {
-      return props.children;
-    }
-
-    expect(() => ReactDOM.render(<Render>Hi</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
-    expect(() => ReactDOM.render(<Render>{999}</Render>, container)).toThrow(
-      /You may have returned undefined/,
-    );
-    expect(() =>
-      ReactDOM.render(<Render>[<div key="a" />]</Render>, container),
-    ).toThrow(/You may have returned undefined/);
-  });
-
-  it('treats mocked render functions as if they return null', () => {
-    class Mocked extends React.Component {}
-    Mocked.prototype.render = jest.fn();
-    ReactDOM.render(<Mocked />, container);
-    expect(container.textContent).toEqual('');
-  });
-
-  it('throws if the React package cannot be loaded', () => {
-    jest.resetModules();
-    jest.mock('react', () => undefined);
-    expect(() => require('react-dom')).toThrow(
-      'ReactDOM was loaded before React.',
-    );
-    jest.resetModules();
-  });
 });
