@@ -344,8 +344,8 @@ function getPlugins(
         commonjs(getCommonJsConfig(bundleType)),
         closure({
           compilationLevel: 'SIMPLE',
-          languageIn: 'ES5',
-          languageOut: 'ES5',
+          languageIn: 'ECMASCRIPT5_STRICT',
+          languageOut: 'ECMASCRIPT5_STRICT',
           env: 'CUSTOM',
           warningLevel: 'QUIET',
           assumeFunctionWrapper: true,
