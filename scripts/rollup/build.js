@@ -89,7 +89,7 @@ function getBanner(bundleType, hasteName, filename) {
       banner += `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
       return banner;
     case NODE_PROD:
-      return '';
+      return Header.getHeader(filename, reactVersion);
     // All FB and RN bundles need Haste headers.
     // DEV bundle is guarded to help weak dead code elimination.
     case FB_DEV:
