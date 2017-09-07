@@ -1443,9 +1443,8 @@ exports.cloneChildFibers = function(
   let newChild = createWorkInProgress(
     currentChild,
     currentChild.pendingWorkPriority,
+    currentChild.pendingProps,
   );
-  // TODO: Pass this as an argument, since it's easy to forget.
-  newChild.pendingProps = currentChild.pendingProps;
   workInProgress.child = newChild;
 
   newChild.return = workInProgress;
@@ -1454,8 +1453,8 @@ exports.cloneChildFibers = function(
     newChild = newChild.sibling = createWorkInProgress(
       currentChild,
       currentChild.pendingWorkPriority,
+      currentChild.pendingProps,
     );
-    newChild.pendingProps = currentChild.pendingProps;
     newChild.return = workInProgress;
   }
   newChild.sibling = null;
