@@ -103,7 +103,7 @@ const sharedStyles = {
       marginTop: 25,
     },
 
-    '& a:not(.anchor)': linkStyle,
+    '& a:not(.anchor):not(.gatsby-resp-image-link)': linkStyle,
 
     '& p': {
       marginTop: 30,
@@ -217,6 +217,10 @@ const sharedStyles = {
       '& li': {
         marginTop: 10,
       }
+    },
+
+    '& img': {
+      maxWidth: '100%',
     },
 
     '& ol': {
