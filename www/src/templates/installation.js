@@ -80,10 +80,10 @@ function display(type, value) {
 }
 
 var foundHash = false;
-function selectTabForHashLink() {
+function selectTabForHashLink(location) {
   var hashLinks = document.querySelectorAll('a.anchor');
   for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
-    if (hashLinks[i].hash === window.location.hash) {
+    if (location && (hashLinks[i].hash === location.hash)) {
       var parent = hashLinks[i].parentElement;
       while (parent) {
         if (parent.tagName === 'SECTION') {
@@ -107,7 +107,7 @@ function selectTabForHashLink() {
   }
 }
 
-// HACK Expose toggle functions global for markup-deifned event handlers.
+// HACK Expose toggle functions global for markup-defined event handlers.
 // Don't acceess the 'window' object without checking first though,
 // Because it would break the (Node only) Gatsby build step.
 if (typeof window !== 'undefined') {
@@ -117,15 +117,22 @@ if (typeof window !== 'undefined') {
 
 class InstallationPage extends Component {
   componentDidMount() {
+    const location = this.props.location;
     // If we are coming to the page with a hash in it (i.e. from a search, for example), try to get
     // us as close as possible to the correct platform and dev os using the hashtag and section walk up.
-    if (
-      this.props.location.hash !== '' &&
-      this.props.location.hash !== 'content'
-    ) {
+    if (location && location.hash !== '' && location.hash !== 'content') {
       // content is default
       // Hash links are added a bit later so we wait for them.
-      this.props.addEventListener('DOMContentLoaded', selectTabForHashLink);
+      // HACK we don't have a window object if/when Gatsby executes this in node
+      if (
+        typeof window !== 'undefined'
+        && typeof window.addEventListener === 'function'
+      ) {
+        window.addEventListener(
+          'DOMContentLoaded',
+          selectTabForHashLink.bind(null, location),
+        );
+      }
     }
     display('target', 'fiddle');
   }
