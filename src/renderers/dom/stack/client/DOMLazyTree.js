@@ -26,7 +26,7 @@ var setTextContent = require('setTextContent');
  * In other browsers, doing so is slower or neutral compared to the other order
  * (in Firefox, twice as slow) so we only do this inversion in IE.
  *
- * See https://github.com/spicyj/innerhtml-vs-createelement-vs-clonenode.
+ * See https://github.com/sophiebits/innerhtml-vs-createelement-vs-clonenode.
  */
 var enableLazy =
   (typeof document !== 'undefined' &&
