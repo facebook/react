@@ -51,8 +51,8 @@ function Swapper(props) {
     });
   } else {
     children = createFragment({
-      left: props.leftChildren,
-      right: props.rightChildren
+      right: props.leftChildren,
+      left: props.rightChildren
     });
   }
   return <div>{children}</div>;
