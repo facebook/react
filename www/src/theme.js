@@ -45,19 +45,23 @@ const fonts = {
 };
 
 const SIZES = {
-  xsmall: {max: 599},
+  xsmall: {min: 0, max: 599},
   small: {min: 600, max: 739},
   medium: {min: 740, max: 979},
   large: {min: 980, max: 1279},
   xlarge: {min: 1280, max: 1339},
-  xxlarge: {min: 1340},
+  xxlarge: {min: 1340, max: Infinity},
 };
 
 type Size = $Keys<typeof SIZES>;
 
 const media = {
   between(smallKey: Size, largeKey: Size) {
-    return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+    if (SIZES[largeKey].max === Infinity) {
+      return `@media (min-width: ${SIZES[smallKey].min}px)`;
+    } else {
+      return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+    }
   },
 
   greaterThan(key: Size) {
