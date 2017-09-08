@@ -13,22 +13,21 @@
 
 import Container from 'components/Container';
 import Flex from 'components/Flex';
-import Helmet from 'react-helmet';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React from 'react';
 import StickySidebar from 'components/StickySidebar';
+import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 import {sharedStyles} from 'theme';
 
-// TODO Use 'react-helmet' to set metadata
-
 const MarkdownPage = ({
   authors,
   date,
+  ogDescription,
   location,
   markdownRemark,
   sectionList,
@@ -49,7 +48,11 @@ const MarkdownPage = ({
         position: 'relative',
         zIndex: 0,
       }}>
-      <Helmet title={`${titlePrefix}${titlePostfix}`} />
+      <TitleAndMetaTags
+        title={`${titlePrefix}${titlePostfix}`}
+        ogUrl={location.pathname}
+        ogDescription={ogDescription}
+      />
       <div css={{flex: '1 0 auto'}}>
         <Container>
           <StickyContainer
@@ -59,7 +62,7 @@ const MarkdownPage = ({
             <Flex type="article" direction="column" grow="1" halign="stretch">
               <MarkdownHeader
                 path={markdownRemark.fields.path}
-                title={markdownRemark.frontmatter.title}
+                title={titlePrefix}
               />
 
               {(date || hasAuthors) &&

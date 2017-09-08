@@ -13,13 +13,13 @@
 
 import Container from 'components/Container';
 import Flex from 'components/Flex';
-import Helmet from 'react-helmet';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import StickySidebar from 'components/StickySidebar';
+import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import {sharedStyles} from 'theme';
 
@@ -147,7 +147,10 @@ class InstallationPage extends Component {
           position: 'relative',
           zIndex: 0,
         }}>
-        <Helmet title='Installation - React' />
+        <TitleAndMetaTags
+          title='Installation - React'
+          ogUrl={location.pathname}
+        />
         <div css={{flex: '1 0 auto'}}>
           <Container>
             <StickyContainer
