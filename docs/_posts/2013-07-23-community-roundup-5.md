@@ -7,7 +7,7 @@ We launched the [React Facebook Page](https://www.facebook.com/react) along with
 
 ## Cross-browser onChange
 
-[Ben Alpert](http://benalpert.com/) from [Khan Academy](https://www.khanacademy.org/) worked on a cross-browser implementation of `onChange` event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.
+[Sophie Alpert](http://benalpert.com/) from [Khan Academy](https://www.khanacademy.org/) worked on a cross-browser implementation of `onChange` event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.
 
 > First off, what is the input event? If you have an `<input>` element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn't catch input that doesn't involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.
 >

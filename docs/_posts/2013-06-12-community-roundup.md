@@ -7,7 +7,7 @@ React was open sourced two weeks ago and it's time for a little round-up of what
 
 ## Khan Academy Question Editor
 
-It looks like [Ben Alpert](http://benalpert.com/) is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC ([#reactjs on Freenode](irc://chat.freenode.net/reactjs)). Ben wrote about his experience using React:
+It looks like [Sophie Alpert](http://benalpert.com/) is the first person outside of Facebook and Instagram to push React code to production. We are very grateful for his contributions in form of pull requests, bug reports and presence on IRC ([#reactjs on Freenode](irc://chat.freenode.net/reactjs)). Ben wrote about his experience using React:
 
 > I just rewrote a 2000-line project in React and have now made a handful of pull requests to React. Everything about React I've seen so far seems really well thought-out and I'm proud to be the first non-FB/IG production user of React.
 >
