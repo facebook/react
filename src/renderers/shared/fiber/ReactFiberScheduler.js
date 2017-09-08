@@ -95,6 +95,8 @@ var {
 var {
   getUpdateExpirationTime,
   processUpdateQueue,
+  createUpdateQueue,
+  insertUpdateIntoQueue,
 } = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
@@ -373,11 +375,26 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (completedAt !== NoWork) {
       // The root completed but was blocked from committing.
-
       if (expirationTime < completedAt) {
-        // We have work that expires earlier than the completed root. Regardless
-        // of whether the root is blocked, we should work on it.
+        // We have work that expires earlier than the completed root.
         return expirationTime;
+      }
+
+      // If the expiration time of the pending work is equal to the time at
+      // which we completed the work-in-progress, it's possible additional
+      // work was scheduled that happens to fall within the same expiration
+      // bucket. We need to check the work-in-progress fiber.
+      if (expirationTime === completedAt) {
+        const workInProgress = root.current.alternate;
+        if (
+          workInProgress !== null &&
+          (workInProgress.expirationTime !== NoWork &&
+            workInProgress.expirationTime <= expirationTime)
+        ) {
+          // We have more work. Restart the completed tree.
+          root.completedAt = NoWork;
+          return expirationTime;
+        }
       }
 
       // There have been no higher priority updates since we completed the root.
@@ -808,7 +825,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         if (isRootBlocked(root, nextRenderExpirationTime)) {
           // The root is blocked from committing. Mark it as complete so we
           // know we can commit it later without starting new work.
-          root.completedAt = workInProgress.expirationTime = nextRenderExpirationTime;
+          root.completedAt = nextRenderExpirationTime;
         } else {
           // The root is not blocked, so we can commit it now.
           pendingCommit = workInProgress;
@@ -1625,6 +1642,37 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function scheduleCompletionCallback(
+    root: FiberRoot,
+    callback: () => mixed,
+    expirationTime: ExpirationTime,
+  ) {
+    // Add callback to queue of callbacks on the root. It will be called once
+    // the root completes at the corresponding expiration time.
+    const update = {
+      priorityLevel: null,
+      expirationTime,
+      partialState: null,
+      callback,
+      isReplace: false,
+      isForced: false,
+      isTopLevelUnmount: false,
+      next: null,
+    };
+    const currentTime = recalculateCurrentTime();
+    if (root.completionCallbacks === null) {
+      root.completionCallbacks = createUpdateQueue();
+    }
+    insertUpdateIntoQueue(root.completionCallbacks, update, currentTime);
+    if (expirationTime === root.completedAt) {
+      // The tree already completed at this expiration time. Resolve the
+      // callback synchronously.
+      performWork(TaskPriority, null);
+    } else {
+      scheduleUpdate(root.current, expirationTime);
+    }
+  }
+
   function getPriorityContext(
     fiber: Fiber,
     forceAsync: boolean,
@@ -1766,6 +1814,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   return {
     scheduleUpdate: scheduleUpdate,
+    scheduleCompletionCallback: scheduleCompletionCallback,
     getPriorityContext: getPriorityContext,
     recalculateCurrentTime: recalculateCurrentTime,
     getExpirationTimeForPriority: getExpirationTimeForPriority,

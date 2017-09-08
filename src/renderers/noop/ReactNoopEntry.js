@@ -24,6 +24,7 @@ var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
 
 var expect = require('jest-matchers');
 
@@ -281,6 +282,27 @@ var ReactNoop = {
         rootContainers.delete(rootID);
       });
     }
+  },
+
+  create(rootID: string) {
+    rootID = typeof rootID === 'string' ? rootID : DEFAULT_ROOT_ID;
+    invariant(
+      !roots.has(rootID),
+      'Root with id %s already exists. Choose a different id.',
+      rootID,
+    );
+    const container = {rootID: rootID, children: []};
+    rootContainers.set(rootID, container);
+    const root = NoopRenderer.createContainer(container);
+    roots.set(rootID, root);
+    return {
+      prerender(children: any) {
+        return NoopRenderer.updateRoot(children, root, null);
+      },
+      getChildren() {
+        return ReactNoop.getChildren(rootID);
+      },
+    };
   },
 
   findInstance(

@@ -12,7 +12,6 @@
 
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 import type {ReactNodeList} from 'ReactTypes';
 
@@ -259,6 +258,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   var {
     scheduleUpdate,
+    scheduleCompletionCallback,
     getPriorityContext,
     getExpirationTimeForPriority,
     recalculateCurrentTime,
@@ -358,7 +358,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (root.blockers === null) {
         root.blockers = createUpdateQueue();
       }
-      const blockUpdate = {
+      const block = {
         priorityLevel: null,
         expirationTime,
         partialState: null,
@@ -368,7 +368,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         isTopLevelUnmount: false,
         next: null,
       };
-      insertUpdateIntoQueue(root.blockers, blockUpdate, currentTime);
+      insertUpdateIntoQueue(root.blockers, block, currentTime);
     }
 
     scheduleUpdate(current, expirationTime);
@@ -392,25 +392,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   WorkNode.prototype.then = function(callback) {
     const root = this._reactRootContainer;
     const expirationTime = this._expirationTime;
-
-    // Add callback to queue of callbacks on the root. It will be called once
-    // the root completes at the corresponding expiration time.
-    const update = {
-      priorityLevel: null,
-      expirationTime,
-      partialState: null,
-      callback,
-      isReplace: false,
-      isForced: false,
-      isTopLevelUnmount: false,
-      next: null,
-    };
-    const currentTime = recalculateCurrentTime();
-    if (root.completionCallbacks === null) {
-      root.completionCallbacks = createUpdateQueue();
-    }
-    insertUpdateIntoQueue(root.completionCallbacks, update, currentTime);
-    scheduleUpdate(root.current, expirationTime);
+    scheduleCompletionCallback(root, callback, expirationTime);
   };
 
   return {
