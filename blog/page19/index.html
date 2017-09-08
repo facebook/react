@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,93 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/12/19/react-v0.8.0.html">React v0.8</a>
+
+</h1>
+
+<p class="meta">
+  December 19, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>I&#39;ll start by answering the obvious question:</p>
+
+<blockquote>
+<p>What happened to 0.6 and 0.7?</p>
+</blockquote>
+
+<p>It&#39;s become increasingly obvious since our launch in May that people want to use React on the server. With the server-side rendering abilities, that&#39;s a perfect fit. However using the same copy of React on the server and then packaging it up for the client is surprisingly a harder problem. People have been using our <code>react-tools</code> module which includes React, but when browserifying that ends up packaging all of <code>esprima</code> and some other dependencies that aren&#39;t needed on the client. So we wanted to make this whole experience better.</p>
+
+<p>We talked with <a href="https://github.com/jeffbski">Jeff Barczewski</a> who was the owner of the <code>react</code> module on npm. He was kind enough to transition ownership to us and release his package under a different name: <code>autoflow</code>. I encourage you to <a href="https://github.com/jeffbski/autoflow">check it out</a> if you&#39;re writing a lot of asynchronous code. In order to not break all of <code>react</code>&#39;s current users of 0.7.x, we decided to bump our version to 0.8 and skip the issue entirely. We&#39;re also including a warning if you use our <code>react</code> module like you would use the previous package.</p>
+
+<p>In order to make the transition to 0.8 for our current users as painless as possible, we decided to make 0.8 primarily a bug fix release on top of 0.5. No public APIs were changed (even if they were already marked as deprecated). We haven&#39;t added any of the new features we have in master, though we did take the opportunity to pull in some improvements to internals.</p>
+
+<p>We hope that by releasing <code>react</code> on npm, we will enable a new set of uses that have been otherwise difficult. All feedback is welcome!</p>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
+<ul>
+<li>Added support for more attributes:
+
+<ul>
+<li><code>rows</code> &amp; <code>cols</code> for <code>&lt;textarea&gt;</code></li>
+<li><code>defer</code> &amp; <code>async</code> for <code>&lt;script&gt;</code></li>
+<li><code>loop</code> for <code>&lt;audio&gt;</code> &amp; <code>&lt;video&gt;</code></li>
+<li><code>autoCorrect</code> for form fields (a non-standard attribute only supported by mobile WebKit)</li>
+</ul></li>
+<li>Improved error messages</li>
+<li>Fixed Selection events in IE11</li>
+<li>Added <code>onContextMenu</code> events</li>
+</ul>
+
+<h3>React with Addons</h3>
+
+<ul>
+<li>Fixed bugs with TransitionGroup when children were undefined</li>
+<li>Added support for <code>onTransition</code></li>
+</ul>
+
+<h3>react-tools</h3>
+
+<ul>
+<li>Upgraded <code>jstransform</code> and <code>esprima-fb</code></li>
+</ul>
+
+<h3>JSXTransformer</h3>
+
+<ul>
+<li>Added support for use in IE8</li>
+<li>Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -455,87 +536,6 @@ Is this some sort of template language? Specifically no. This might have been th
 
 <ul>
 <li>Fixed bug with transition and animation event detection.</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a>
-
-</h1>
-
-<p class="meta">
-  October 16, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&#39;ve worked hard to improve performance and memory usage. We&#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.</p>
-
-<p>The biggest change you&#39;ll notice as a developer is that we no longer support <code>class</code> in JSX as a way to provide CSS classes. Since this prop was being converted to <code>className</code> at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are <a href="https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156">a few exceptions</a> where we deviate slightly in an attempt to be consistent internally.</p>
-
-<p>The other major change in v0.5 is that we&#39;ve added an additional build - <code>react-with-addons</code> - which adds support for some extras that we&#39;ve been working on including animations and two-way binding. <a href="/react/docs/addons.html">Read more about these addons in the docs</a>.</p>
-
-<h2>Thanks to Our Community</h2>
-
-<p>We added <em>22 new people</em> to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our <code>AUTHORS</code> file, that means we&#39;ve nearly doubled the number of contributors in that time period. We&#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&#39;ve also had people tell us about talks they&#39;ve given in their local community about React.</p>
-
-<p>It&#39;s been awesome to see the things that people are building with React, and we can&#39;t wait to see what you come up with next!</p>
-
-<h2>Changelog</h2>
-
-<h3>React</h3>
-
-<ul>
-<li>Memory usage improvements - reduced allocations in core which will help with GC pauses</li>
-<li>Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.</li>
-<li>Standardized prop -&gt; DOM attribute process. This previously resulting in additional type checking and overhead as well as confusing cases for users. Now we will always convert your value to a string before inserting it into the DOM.</li>
-<li>Support for Selection events.</li>
-<li>Support for <a href="https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent">Composition events</a>.</li>
-<li>Support for additional DOM properties (<code>charSet</code>, <code>content</code>, <code>form</code>, <code>httpEquiv</code>, <code>rowSpan</code>, <code>autoCapitalize</code>).</li>
-<li>Support for additional SVG properties (<code>rx</code>, <code>ry</code>).</li>
-<li>Support for using <code>getInitialState</code> and <code>getDefaultProps</code> in mixins.</li>
-<li>Support mounting into iframes.</li>
-<li>Bug fixes for controlled form components.</li>
-<li>Bug fixes for SVG element creation.</li>
-<li>Added <code>React.version</code>.</li>
-<li>Added <code>React.isValidClass</code> - Used to determine if a value is a valid component constructor.</li>
-<li>Removed <code>React.autoBind</code> - This was deprecated in v0.4 and now properly removed.</li>
-<li>Renamed  <code>React.unmountAndReleaseReactRootNode</code> to <code>React.unmountComponentAtNode</code>.</li>
-<li>Began laying down work for refined performance analysis.</li>
-<li>Better support for server-side rendering - <a href="https://github.com/facebook/react-page">react-page</a> has helped improve the stability for server-side rendering.</li>
-<li>Made it possible to use React in environments enforcing a strict <a href="https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy">Content Security Policy</a>. This also makes it possible to use React to build Chrome extensions.</li>
-</ul>
-
-<h3>React with Addons (New!)</h3>
-
-<ul>
-<li>Introduced a separate build with several &quot;addons&quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. <a href="/react/docs/addons.html">Read more in the docs</a>.</li>
-</ul>
-
-<h3>JSX</h3>
-
-<ul>
-<li>No longer transform <code>class</code> to <code>className</code> as part of the transform! This is a breaking change - if you were using <code>class</code>, you <em>must</em> change this to <code>className</code> or your components will be visually broken.</li>
-<li>Added warnings to the in-browser transformer to make it clear it is not intended for production use.</li>
-<li>Improved compatibility for Windows</li>
-<li>Improved support for maintaining line numbers when transforming.</li>
 </ul>
 
 </div>

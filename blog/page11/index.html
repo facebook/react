@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,229 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a>
+
+</h1>
+
+<p class="meta">
+  February 24, 2015
+  by
+  
+    
+      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React v0.13 is right around the corner and so we wanted to discuss some upcoming changes to ReactElement. In particular, we added several warnings to some esoteric use cases of ReactElement. There are no runtime behavior changes for ReactElement - we&#39;re adding these warnings in the hope that we can change some behavior in v0.14 if the changes are valuable to the community.</p>
+
+<p>If you use React in an idiomatic way, chances are, you’ll never see any of these warnings. In that case, you can skip this blog post. You can just enjoy the benefits! These changes will unlock simplified semantics, better error messages, stack traces and compiler optimizations!</p>
+
+<h2>Immutable Props</h2>
+
+<p>In React 0.12, the props object was mutable. It allows you to do patterns like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Foo</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">shouldUseFoo</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">element</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+  <span class="nx">element</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">bar</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The problem is that we don’t have a convenient way to tell when you’re done mutating.</p>
+
+<h3>Problem: Mutating Props You Don’t Own</h3>
+
+<p>If you mutate something, you destroy the original value. Therefore, there is nothing to diff against. Imagine something like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">child</span><span class="p">;</span>
+<span class="nx">element</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">count</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">;</span>
+<span class="k">return</span> <span class="nx">element</span><span class="p">;</span>
+</code></pre></div>
+<p>You take a ReactElement through <code>props.child</code> and mutate its property before rendering it. If this component&#39;s state updates, this render function won&#39;t actually get a new ReactElement in <code>props.child</code>. It will be the same one. You&#39;re mutating the same props.</p>
+
+<p>You could imagine that this would work. However, this disables the ability for any component to use <code>shouldComponentUpdate</code>. It looks like the component never changed because the previous value is always the same as the next one. Since the DOM layer does diffing, this pattern doesn&#39;t even work in this case. The change will never propagate down to the DOM except the first time.</p>
+
+<p>Additionally, if this element is reused in other places or used to switch back and forth between two modes, then you have all kinds of weird race conditions.</p>
+
+<p>It has always been broken to mutate the props of something passed into you. The problem is that we can’t warn you about this special case if you accidentally do this.</p>
+
+<h3>Problem: Too Late Validation</h3>
+
+<p>In React 0.12, we do PropType validation very deep inside React during mounting. This means that by the time you get an error, the debugger stack is long gone. This makes it difficult to find complex issues during debugging. We have to do this since it is fairly common for extra props to be added between the call to React.createElement and the mount time. So the type is incomplete until then.</p>
+
+<p>The static analysis in Flow is also impaired by this. There is no convenient place in the code where Flow can determine that the props are finalized.</p>
+
+<h3>Solution: Immutable Props</h3>
+
+<p>Therefore, we would like to be able to freeze the element.props object so that it is immediately immutable at the JSX callsite (or createElement). In React 0.13 we will start warning you if you mutate <code>element.props</code> after this point.</p>
+
+<p>You can generally refactor these pattern to simply use two different JSX calls:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">if</span> <span class="p">(</span><span class="nx">shouldUseFoo</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Foo</span> <span class="nx">foo</span><span class="o">=</span><span class="p">{</span><span class="mi">10</span><span class="p">}</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Foo</span> <span class="nx">bar</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>However, if you really need to dynamically build up your props you can just use a temporary object and spread it into JSX:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">props</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">bar</span><span class="o">:</span> <span class="kc">false</span> <span class="p">};</span>
+<span class="k">if</span> <span class="p">(</span><span class="nx">shouldUseFoo</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">props</span><span class="p">.</span><span class="nx">foo</span> <span class="o">=</span> <span class="mi">10</span><span class="p">;</span>
+  <span class="nx">props</span><span class="p">.</span><span class="nx">bar</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+<span class="p">}</span>
+<span class="k">return</span> <span class="o">&lt;</span><span class="nx">Foo</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>It is still OK to do deep mutations of objects. E.g:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="k">return</span> <span class="o">&lt;</span><span class="nx">Foo</span> <span class="nx">nestedObject</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">myModel</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">;</span>
+</code></pre></div>
+<p>In this case it&#39;s still ok to mutate the myModel object in state. We recommend that you use fully immutable models. E.g. by using immutable-js. However, we realize that mutable models are still convenient in many cases. Therefore we&#39;re only considering shallow freezing the props object that belongs to the ReactElement itself. Not nested objects.</p>
+
+<h3>Solution: Early PropType Warnings</h3>
+
+<p>We will also start warning you for PropTypes at the JSX or createElement callsite. This will help debugging as you’ll have the stack trace right there. Similarly, Flow also validates PropTypes at this callsite.</p>
+
+<p>Note: There are valid patterns that clones a ReactElement and adds additional props to it. In that case these additional props needs to be optional.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">element1</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">Foo</span> <span class="o">/&gt;</span><span class="p">;</span> <span class="c1">// extra prop is optional</span>
+<span class="kd">var</span> <span class="nx">element2</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">cloneWithProps</span><span class="p">(</span><span class="nx">element1</span><span class="p">,</span> <span class="p">{</span> <span class="nx">extra</span><span class="o">:</span> <span class="s1">&#39;prop&#39;</span> <span class="p">});</span>
+</code></pre></div>
+<h2>Owner</h2>
+
+<p>In React each child has both a &quot;parent&quot; and an “owner”. The owner is the component that created a ReactElement. I.e. the render method which contains the JSX or createElement callsite.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Foo</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;&lt;</span><span class="nx">span</span> <span class="o">/&gt;&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In this example, the owner of the <code>span</code> is <code>Foo</code> but the parent is the <code>div</code>.</p>
+
+<p>There is also an undocumented feature called &quot;context&quot; that also relies on the concept of an “owner” to pass hidden props down the tree.</p>
+
+<h3>Problem: The Semantics are Opaque and Confusing</h3>
+
+<p>The problem is that these are hidden artifacts attached to the ReactElement. In fact, you probably didn’t even know about it. It silently changes semantics. Take this for example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">foo</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;foo&quot;</span> <span class="o">/&gt;</span><span class="p">;</span>
+<span class="kr">class</span> <span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="nx">bar</span> <span class="o">?</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;bar&quot;</span> <span class="o">/&gt;</span> <span class="o">:</span> <span class="nx">foo</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>These two inputs have different owners, therefore React will not keep its state when the conditional switches. There is nothing in the code to indicate that. Similarly, if you use <code>React.addons.cloneWithProps</code>, the owner changes.</p>
+
+<h3>Problem: Timing Matters</h3>
+
+<p>The owner is tracked by the currently executing stack. This means that the semantics of a ReactElement varies depending on when it is executed. Take this example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">A</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">B</span> <span class="nx">renderer</span><span class="o">=</span><span class="p">{</span><span class="nx">text</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">text</span><span class="p">}</span><span class="o">&lt;</span><span class="sr">/span&gt;} /</span><span class="o">&gt;</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+<span class="kr">class</span> <span class="nx">B</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">renderer</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>The owner of the <code>span</code> is actually <code>B</code>, not <code>A</code> because of the timing of the callback. This all adds complexity and suffers from similar problems as mutation.</p>
+
+<h3>Problem: It Couples JSX to React</h3>
+
+<p>Have you wondered why JSX depends on React? Couldn’t the transpiler have that built-in to its runtime? The reason you need to have <code>React.createElement</code> in scope is because we depend on internal state of React to capture the current &quot;owner&quot;. Without this, you wouldn’t need to have React in scope.</p>
+
+<h3>Solution: Make Context Parent-Based Instead of Owner-Based</h3>
+
+<p>The first thing we’re doing is warning you if you’re using the &quot;owner&quot; feature in a way that relies on it propagating through owners. Instead, we’re planning on propagating it through parents to its children. In almost all cases, this shouldn’t matter. In fact, parent-based contexts is simply a superset.</p>
+
+<h3>Solution: Remove the Semantic Implications of Owner</h3>
+
+<p>It turns out that there are very few cases where owners are actually important part of state-semantics. As a precaution, we’ll warn you if it turns out that the owner is important to determine state. In almost every case this shouldn’t matter. Unless you’re doing some weird optimizations, you shouldn’t see this warning.</p>
+
+<h3>Pending: Change the refs Semantics</h3>
+
+<p>Refs are still based on &quot;owner&quot;. We haven’t fully solved this special case just yet.</p>
+
+<p>In 0.13 we introduced a new callback-refs API that doesn’t suffer from these problems but we’ll keep on a nice declarative alternative to the current semantics for refs. As always, we won’t deprecate something until we’re sure that you’ll have a nice upgrade path.</p>
+
+<h2>Keyed Objects as Maps</h2>
+
+<p>In React 0.12, and earlier, you could use keyed objects to provide an external key to an element or a set. This pattern isn’t actually widely used. It shouldn’t be an issue for most of you.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span> <span class="p">{</span><span class="nx">a</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="o">/&gt;</span><span class="p">}</span> <span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<h3>Problem: Relies on Enumeration Order</h3>
+
+<p>The problem with this pattern is that it relies on enumeration order of objects. This is technically unspecified, even though implementations now agree to use insertion order. Except for the special case when numeric keys are used.</p>
+
+<h3>Problem: Using Objects as Maps is Bad</h3>
+
+<p>It is generally accepted that using objects as maps screw up type systems, VM optimizations, compilers etc. It is much better to use a dedicated data structure like ES6 Maps.</p>
+
+<p>More importantly, this can have important security implications. For example this has a potential security problem:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="p">{};</span>
+<span class="nx">items</span><span class="p">.</span><span class="nx">forEach</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="nx">children</span><span class="p">[</span><span class="nx">item</span><span class="p">.</span><span class="nx">title</span><span class="p">]</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="o">/&gt;</span><span class="p">);</span>
+<span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+</code></pre></div>
+<p>Imagine if <code>item.title === &#39;__proto__&#39;</code> for example.</p>
+
+<h3>Problem: Can’t be Differentiated from Arbitrary Objects</h3>
+
+<p>Since these objects can have any keys with almost any value, we can’t differentiate them from a mistake. If you put some random object, we will try our best to traverse it and render it, instead of failing with a helpful warning. In fact, this is one of the few places where you can accidentally get an infinite loop in React.</p>
+
+<p>To differentiate ReactElements from one of these objects, we have to tag them with <code>_isReactElement</code>. This is another issue preventing us from inlining ReactElements as simple object literals.</p>
+
+<h3>Solution: Just use an Array and key={…}</h3>
+
+<p>Most of the time you can just use an array with keyed ReactElements.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">children</span> <span class="o">=</span> <span class="nx">items</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="nx">item</span> <span class="o">=&gt;</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">key</span><span class="o">=</span><span class="p">{</span><span class="nx">item</span><span class="p">.</span><span class="nx">title</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">);</span>
+<span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<h3>Solution: React.addons.createFragment</h3>
+
+<p>However, this is not always possible if you’re trying to add a prefix key to an unknown set (e.g. this.props.children). It is also not always the easiest upgrade path. Therefore, we are adding a helper to <code>React.addons</code> called <code>createFragment()</code>. This accepts a keyed object and returns an opaque type.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">React</span><span class="p">.</span><span class="nx">addons</span><span class="p">.</span><span class="nx">createFragment</span><span class="p">({</span> <span class="nx">a</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">b</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/div&gt;</span>
+</code></pre></div>
+<p>The exact signature of this kind of fragment will be determined later. It will likely be some kind of immutable sequence.</p>
+
+<p>Note: This will still not be valid as the direct return value of <code>render()</code>. Unfortunately, they still need to be wrapped in a <code>&lt;div /&gt;</code> or some other element.</p>
+
+<h2>Compiler Optimizations: Unlocked!</h2>
+
+<p>These changes also unlock several possible compiler optimizations for static content in React 0.14. These optimizations were previously only available to template-based frameworks. They will now also be possible for React code! Both for JSX and <code>React.createElement/Factory</code>*!</p>
+
+<p>See these GitHub Issues for a deep dive into compiler optimizations:</p>
+
+<ul>
+<li><a href="https://github.com/facebook/react/issues/3226">Reuse Constant Value Types</a></li>
+<li><a href="https://github.com/facebook/react/issues/3227">Tagging ReactElements</a></li>
+<li><a href="https://github.com/facebook/react/issues/3228">Inline ReactElements</a></li>
+</ul>
+
+<p>* If you use the recommended pattern of explicit React.createFactory calls on the consumer side - since they are easily statically analyzed.</p>
+
+<h2>Rationale</h2>
+
+<p>I thought that these changes were particularly important because the mere existence of these patterns means that even components that DON’T use these patterns have to pay the price. There are other problematic patterns such as mutating state, but they’re at least localized to a component subtree so they don’t harm the ecosystem.</p>
+
+<p>As always, we’d love to hear your feedback and if you have any trouble upgrading, please let us know.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -715,73 +932,6 @@ Facebook will make determinations on scholarship recipients in its sole discreti
 <li>Must currently be studying or working in Computer Science or a related field</li>
 <li>International applicants are welcome, but you will be responsible for securing your own visa to attend the conference</li>
 <li>You must be available to attend the full duration of React.js conf on January 28 and 29 at Facebook Headquarters in Menlo Park</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/12/18/react-v0.12.2.html">React v0.12.2</a>
-
-</h1>
-
-<p class="meta">
-  December 18, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We just shipped React v0.12.2, bringing the 0.12 branch up to date with a few small fixes that landed in master over the past 2 months.</p>
-
-<p>You may have noticed that we did not do an announcement for v0.12.1. That release was snuck out in anticipation of <a href="http://flowtype.org/">Flow</a>, with only transform-related changes. Namely we added a flag to the <code>jsx</code> executable which allowed you to safely transform Flow-based code to vanilla JS. If you didn&#39;t update for that release, you can safely skip it and move directly to v0.12.2.</p>
-
-<p>The release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.12.2.js">https://fb.me/react-0.12.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.12.2.min.js">https://fb.me/react-0.12.2.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.12.2.js">https://fb.me/react-with-addons-0.12.2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.min.js">https://fb.me/react-with-addons-0.12.2.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.12.2.js">https://fb.me/JSXTransformer-0.12.2.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.12.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower. <code>0.12.1</code> is also available in the same locations if need those.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<ul>
-<li>Added support for more HTML attributes: <code>formAction</code>, <code>formEncType</code>, <code>formMethod</code>, <code>formTarget</code>, <code>marginHeight</code>, <code>marginWidth</code></li>
-<li>Added <code>strokeOpacity</code> to the list of unitless CSS properties</li>
-<li>Removed trailing commas (allows npm module to be bundled and used in IE8)</li>
-<li>Fixed bug resulting in error when passing <code>undefined</code> to <code>React.createElement</code> - now there is a useful warning</li>
-</ul>
-
-<h3>React Tools</h3>
-
-<ul>
-<li>JSX-related transforms now always use double quotes for props and <code>displayName</code></li>
 </ul>
 
 </div>

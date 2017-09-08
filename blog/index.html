@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,180 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a>
+
+</h1>
+
+<p class="meta">
+  September  8, 2017
+  by
+  
+    
+      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>In the past, React used to ignore unknown DOM attributes. If you wrote JSX with an attribute that React doesn&#39;t recognize, React would just skip it. For example, this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Your code:</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">mycustomattribute</span><span class="o">=</span><span class="s2">&quot;something&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>would render an empty div to the DOM with React 15:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// React 15 output:</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>In React 16, we are making a change. Now, any unknown attributes will end up in the DOM:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// React 16 output:</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">mycustomattribute</span><span class="o">=</span><span class="s2">&quot;something&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<h2>Why Are We Changing This?</h2>
+
+<p>React has always provided a JavaScript-centric API to the DOM. Since React components often take both custom and DOM-related props, it makes sense for React to use the <code>camelCase</code> convention just like the DOM APIs:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabIndex</span><span class="o">=</span><span class="s2">&quot;-1&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>This has not changed. However, the way we enforced it in the past forced us to maintain a whitelist of all valid React DOM attributes in the bundle:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// ...</span>
+<span class="nx">summary</span><span class="o">:</span> <span class="s1">&#39;summary&#39;</span><span class="p">,</span>
+<span class="nx">tabIndex</span><span class="o">:</span> <span class="s1">&#39;tabindex&#39;</span>
+<span class="nx">target</span><span class="o">:</span> <span class="s1">&#39;target&#39;</span><span class="p">,</span>
+<span class="nx">title</span><span class="o">:</span> <span class="s1">&#39;title&#39;</span><span class="p">,</span>
+<span class="c1">// ...</span>
+</code></pre></div>
+<p>This had two downsides:</p>
+
+<ul>
+<li><p>You could not <a href="https://github.com/facebook/react/issues/140">pass a custom attribute</a>. This is useful for supplying browser-specific non-standard attributes, trying new DOM APIs, and integrating with opinionated third-party libraries.</p></li>
+<li><p>The attribute list kept growing over time, but most React canonical attribute names are already valid in the DOM. Removing most of the whitelist helped us reduce the bundle size a little bit.</p></li>
+</ul>
+
+<p>With the new approach, both of these problems are solved. With React 16, you can now pass custom attributes to all HTML and SVG elements, and React doesn&#39;t have to include the whole attribute whitelist in the production version.</p>
+
+<p><strong>Note that you should still use the canonical React naming for known attributes:</strong></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Yes, please</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabIndex</span><span class="o">=</span><span class="s2">&quot;-1&quot;</span> <span class="o">/&gt;</span>
+
+<span class="c1">// Warning: Invalid DOM property `tabindex`. Did you mean `tabIndex`?</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabindex</span><span class="o">=</span><span class="s2">&quot;-1&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>In other words, the way you use DOM components in React hasn&#39;t changed, but now you have some new capabilities.</p>
+
+<h2>Should I Keep Data in Custom Attributes?</h2>
+
+<p>No. We don&#39;t encourage you to keep data in DOM attributes. Even if you have to, <code>data-</code> attributes are probably a better approach, but in most cases data should be kept in React component state or external stores.</p>
+
+<p>However, the new feature is handy if you need to use a non-standard or a new DOM attribute, or if you need to integrate with a third-party library that relies on such attributes.</p>
+
+<h2>Data and ARIA Attributes</h2>
+
+<p>Just like before, React lets you pass <code>data-</code> and <code>aria-</code> attributes freely:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">data</span><span class="o">-</span><span class="nx">foo</span><span class="o">=</span><span class="s2">&quot;42&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="nx">button</span> <span class="nx">aria</span><span class="o">-</span><span class="nx">label</span><span class="o">=</span><span class="s2">&quot;Close&quot;</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">onClose</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>This has not changed.</p>
+
+<p><a href="/react/docs/accessibility.html">Accessibility</a> is very important, so even though React 16 passes any attributes through, it still validates that <code>aria-</code> props have correct names in development mode, just like React 15 did.</p>
+
+<h2>Migration Path</h2>
+
+<p>We have included <a href="/react/warnings/unknown-prop.html">a warning about unknown attributes</a> since <a href="https://github.com/facebook/react/releases/tag/v15.2.0">React 15.2.0</a> which came out more than a year ago. The vast majority of third-party libraries have already updated their code. If your app doesn&#39;t produce warnings with React 15.2.0 or higher, this change should not require modifications in your application code.</p>
+
+<p>If you still accidentally forward non-DOM props to DOM components, with React 16 you will start seeing those attributes in the DOM, for example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">myData</span><span class="o">=</span><span class="s1">&#39;[Object object]&#39;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>This is somewhat safe (the browser will just ignore them) but we recommend to fix these cases when you see them. One potential hazard is if you pass an object that implements a custom <code>toString()</code> or <code>valueOf()</code> method that throws. Another possible issue is that legacy HTML attributes like <code>align</code> and <code>valign</code> will now be passed to the DOM. They used to be stripped out because React didn&#39;t support them.</p>
+
+<p>To avoid these problems, we suggest to fix the warnings you see in React 15 before upgrading to React 16.</p>
+
+<h2>Changes in Detail</h2>
+
+<p>We&#39;ve made a few other changes to make the behavior more predictable and help ensure you&#39;re not making mistakes. We don&#39;t anticipate that these changes are likely to break real-world applications.</p>
+
+<p><strong>These changes only affect DOM components like <code>&lt;div&gt;</code>, not your own components.</strong>  </p>
+
+<p>Below is a detailed list of them.</p>
+
+<ul>
+<li><p><strong>Unknown attributes with string, number, and object values:</strong>  </p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">mycustomattribute</span><span class="o">=</span><span class="s2">&quot;value&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">mycustomattribute</span><span class="o">=</span><span class="p">{</span><span class="mi">42</span><span class="p">}</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">mycustomattribute</span><span class="o">=</span><span class="p">{</span><span class="nx">myObject</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>React 15: Warns and ignores them.<br>
+React 16: Converts values to strings and passes them through.</p>
+
+<p><em>Note: attributes starting with <code>on</code> are not passed through as an exception because this could become a potential security hole.</em></p></li>
+<li><p><strong>Known attributes with a different canonical React name:</strong>  </p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabindex</span><span class="o">=</span><span class="s2">&quot;-1&quot;</span> <span class="o">/&gt;</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="kr">class</span><span class="o">=</span><span class="s2">&quot;hi&quot;</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>React 15: Warns and ignores them.<br>
+React 16: Warns but converts values to strings and passes them through.</p>
+
+<p><em>Note: always use the canonical React naming for all supported attributes.</em></p></li>
+<li><p><strong>Non-boolean attributes with boolean values:</strong>  </p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="kc">false</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>React 15: Converts booleans to strings and passes them through.<br>
+React 16: Warns and ignores them.</p></li>
+<li><p><strong>Non-event attributes with function values:</strong>  </p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="kd">function</span><span class="p">()</span> <span class="p">{}}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>React 15: Converts functions to strings and passes them through.<br>
+React 16: Warns and ignores them.</p></li>
+<li><p><strong>Attributes with Symbol values:</strong></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="nx">Symbol</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>React 15: Crashes.<br>
+React 16: Warns and ignores them.</p></li>
+<li><p><strong>Attributes with <code>NaN</code> values:</strong></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabIndex</span><span class="o">=</span><span class="p">{</span><span class="mi">0</span> <span class="o">/</span> <span class="mi">0</span><span class="p">}</span> <span class="o">/&gt;</span>
+</code></pre></div>
+<p>React 15: Converts <code>NaN</code>s to strings and passes them through.<br>
+React 16: Warns and ignores them.</p></li>
+</ul>
+
+<p>While testing this release, we have also <a href="https://github.com/facebook/react/blob/master/fixtures/attribute-behavior/AttributeTableSnapshot.md">created an automatically generated table</a> for all known attributes to track potential regressions.</p>
+
+<h2>Try It!</h2>
+
+<p>You can try the change in <a href="https://codepen.io/gaearon/pen/gxNVdP?editors=0010">this CodePen</a>.<br>
+It uses React 16 RC, and you can <a href="https://github.com/facebook/react/issues/10294">help us by testing the RC in your project!</a></p>
+
+<h2>Thanks</h2>
+
+<p>This effort was largely driven by <a href="https://github.com/nhunzaker">Nathan Hunzaker</a> who has been a <a href="https://github.com/facebook/react/pulls?q=is%3Apr+author%3Anhunzaker+is%3Aclosed">prolific outside contributor to React</a>.</p>
+
+<p>You can find his work on this issue in several PRs over the course of last year: <a href="https://github.com/facebook/react/pull/6459">#6459</a>, <a href="https://github.com/facebook/react/pull/7311">#7311</a>, <a href="https://github.com/facebook/react/pull/10229">#10229</a>, <a href="https://github.com/facebook/react/pull/10397">#10397</a>, <a href="https://github.com/facebook/react/pull/10385">#10385</a>, and <a href="https://github.com/facebook/react/pull/10470">#10470</a>.</p>
+
+<p>Major changes in a popular project can take a lot of time and research. Nathan demonstrated perseverance and commitment to getting this change through, and we are very thankful to him for this and other efforts.</p>
+
+<p>We would also like to thank <a href="https://github.com/aweary">Brandon Dail</a> and <a href="https://github.com/jquense">Jason Quense</a> for their invaluable help maintaining React this year.</p>
+
+<h2>Future Work</h2>
+
+<p>We are not changing how <a href="https://developer.mozilla.org/en-US/docs/Web/Web_Components/Custom_Elements">custom elements</a> work in React 16, but there are <a href="https://github.com/facebook/react/issues/7249">existing discussions</a> about setting properties instead of attributes, and we might revisit this in React 17. Feel free to chime in if you&#39;d like to help!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -728,208 +896,6 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.5.0/dist/
 <li>Removed <code>peerDependencies</code> so that addons continue to work indefinitely. (<a href="https://github.com/acdlite">@acdlite</a> and <a href="https://github.com/bvaughn">@bvaughn</a> in <a href="https://github.com/facebook/react/commit/8a06cd7a786822fce229197cac8125a551e8abfa">8a06cd7</a> and <a href="https://github.com/facebook/react/commit/67a8db3650d724a51e70be130e9008806402678a">67a8db3</a>)</li>
 <li>Updated to remove references to <code>React.createClass</code> and <code>React.PropTypes</code> (<a href="https://github.com/acdlite">@acdlite</a> in <a href="https://github.com/facebook/react/commit/12a96b94823d6b6de6b1ac13bd576864abd50175">12a96b9</a>)</li>
 <li><code>react-addons-test-utils</code> is deprecated. Use <code>react-dom/test-utils</code> and <code>react-test-renderer/shallow</code> instead. (<a href="https://github.com/bvaughn">@bvaughn</a>)</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2016/11/16/react-v15.4.0.html">React v15.4.0</a>
-
-</h1>
-
-<p class="meta">
-  November 16, 2016
-  by
-  
-    
-      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we are releasing React 15.4.0.</p>
-
-<p>We didn&#39;t announce the <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1510-may-20-2016">previous</a> <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1520-july-1-2016">minor</a> <a href="https://github.com/facebook/react/blob/master/CHANGELOG.md#1530-july-29-2016">releases</a> on the blog because most of the changes were bug fixes. However, 15.4.0 is a special release, and we would like to highlight a few notable changes in it.</p>
-
-<h3>Separating React and React DOM</h3>
-
-<p><a href="/react/blog/2015/09/10/react-v0.14-rc1.html#two-packages-react-and-react-dom">More than a year ago</a>, we started separating React and React DOM into separate packages. We deprecated <code>React.render()</code> in favor of <code>ReactDOM.render()</code> in React 0.14, and removed DOM-specific APIs from <code>React</code> completely in React 15. However, the React DOM implementation still <a href="https://www.reddit.com/r/javascript/comments/3m6wyu/found_this_line_in_the_react_codebase_made_me/cvcyo4a/">secretly lived inside the React package</a>.</p>
-
-<p>In React 15.4.0, we are finally moving React DOM implementation to the React DOM package. The React package will now contain only the renderer-agnostic code such as <code>React.Component</code> and <code>React.createElement()</code>.</p>
-
-<p>This solves a few long-standing issues, such as <a href="https://github.com/facebook/react/issues/7386">errors</a> when you import React DOM in the same file as the <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">snapshot testing</a> renderer.</p>
-
-<p><strong>If you only use the official and documented React APIs you won&#39;t need to change anything in your application.</strong></p>
-
-<p>However, there is a possibility that you imported private APIs from <code>react/lib/*</code>, or that a package you rely on might use them. We would like to remind you that this was never supported, and that your apps should not rely on internal APIs. The React internals will keep changing as we work to make React better.</p>
-
-<p>Another thing to watch out for is that React DOM Server is now about the same size as React DOM since it contains its own copy of the React reconciler. We don&#39;t recommend using React DOM Server on the client in most cases.</p>
-
-<h3>Profiling Components with Chrome Timeline</h3>
-
-<p>You can now visualize React components in the Chrome Timeline. This lets you see which components exactly get mounted, updated, and unmounted, how much time they take relative to each other.</p>
-
-<p><center><img src="/react/img/blog/react-perf-chrome-timeline.png" width="651" height="228" alt="React components in Chrome timeline" /></center></p>
-
-<p>To use it:</p>
-
-<ol>
-<li><p>Load your app with <code>?react_perf</code> in the query string (for example, <code>http://localhost:3000/?react_perf</code>).</p></li>
-<li><p>Open the Chrome DevTools <strong>Timeline</strong> tab and press <strong>Record</strong>.</p></li>
-<li><p>Perform the actions you want to profile. Don&#39;t record more than 20 seconds or Chrome might hang.</p></li>
-<li><p>Stop recording.</p></li>
-<li><p>React events will be grouped under the <strong>User Timing</strong> label.</p></li>
-</ol>
-
-<p>Note that the numbers are relative so components will render faster in production. Still, this should help you realize when unrelated UI gets updated by mistake, and how deep and how often your UI updates occur.</p>
-
-<p>Currently Chrome, Edge, and IE are the only browsers supporting this feature, but we use the standard <a href="https://developer.mozilla.org/en-US/docs/Web/API/User_Timing_API">User Timing API</a> so we expect more browsers to add support for it.</p>
-
-<h3>Mocking Refs for Snapshot Testing</h3>
-
-<p>If you&#39;re using Jest <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">snapshot testing</a>, you might have had <a href="https://github.com/facebook/react/issues/7371">issues</a> with components that rely on refs. With React 15.4.0, we introduce a way to provide mock refs to the test renderer. For example, consider this component using a ref in <code>componentDidMount</code>:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
-
-<span class="kr">export</span> <span class="k">default</span> <span class="kr">class</span> <span class="nx">MyInput</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">componentDidMount</span><span class="p">()</span> <span class="p">{</span>
-<span class="hll">    <span class="k">this</span><span class="p">.</span><span class="nx">input</span><span class="p">.</span><span class="nx">focus</span><span class="p">();</span>
-</span>  <span class="p">}</span>
-
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">input</span>
-<span class="hll">        <span class="nx">ref</span><span class="o">=</span><span class="p">{</span><span class="nx">node</span> <span class="o">=&gt;</span> <span class="k">this</span><span class="p">.</span><span class="nx">input</span> <span class="o">=</span> <span class="nx">node</span><span class="p">}</span>
-</span>      <span class="o">/&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>With snapshot renderer, <code>this.input</code> will be <code>null</code> because there is no DOM. React 15.4.0 lets us avoid such crashes by passing a custom <code>createNodeMock</code> function to the snapshot renderer in an <code>options</code> argument:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">MyInput</span> <span class="nx">from</span> <span class="s1">&#39;./MyInput&#39;</span><span class="p">;</span>
-<span class="kr">import</span> <span class="nx">renderer</span> <span class="nx">from</span> <span class="s1">&#39;react-test-renderer&#39;</span><span class="p">;</span>
-
-<span class="hll"><span class="kd">function</span> <span class="nx">createNodeMock</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">  <span class="k">if</span> <span class="p">(</span><span class="nx">element</span><span class="p">.</span><span class="nx">type</span> <span class="o">===</span> <span class="s1">&#39;input&#39;</span><span class="p">)</span> <span class="p">{</span>
-</span><span class="hll">    <span class="k">return</span> <span class="p">{</span>
-</span><span class="hll">      <span class="nx">focus</span><span class="p">()</span> <span class="p">{},</span>
-</span><span class="hll">    <span class="p">};</span>
-</span><span class="hll">  <span class="p">}</span>
-</span><span class="hll">  <span class="k">return</span> <span class="kc">null</span><span class="p">;</span>
-</span><span class="hll"><span class="p">}</span>
-</span>
-<span class="nx">it</span><span class="p">(</span><span class="s1">&#39;renders correctly&#39;</span><span class="p">,</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-  <span class="kr">const</span> <span class="nx">options</span> <span class="o">=</span> <span class="p">{</span><span class="nx">createNodeMock</span><span class="p">};</span>
-<span class="hll">  <span class="kr">const</span> <span class="nx">tree</span> <span class="o">=</span> <span class="nx">renderer</span><span class="p">.</span><span class="nx">create</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyInput</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">options</span><span class="p">);</span>
-</span>  <span class="nx">expect</span><span class="p">(</span><span class="nx">tree</span><span class="p">).</span><span class="nx">toMatchSnapshot</span><span class="p">();</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>We would like to thank <a href="https://github.com/Aweary">Brandon Dail</a> for implementing this feature.</p>
-
-<p>You can learn more about snapshot testing in <a href="https://facebook.github.io/jest/blog/2016/07/27/jest-14.html">this Jest blog post</a>.</p>
-
-<hr>
-
-<h2>Installation</h2>
-
-<p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
-
-<p>To install React with Yarn, run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react@15.4.0 react-dom@15.4.0
-</code></pre></div>
-<p>To install React with npm, run:</p>
-<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react@15.4.0 react-dom@15.4.0
-</code></pre></div>
-<p>We recommend using a bundler like <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
-
-<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to <a href="/react/docs/installation.html#development-and-production-versions">compile it in production mode</a>.</p>
-
-<p>In case you don&#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can <a href="/react/docs/installation.html#using-a-cdn">include as script tags</a> on your page:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://unpkg.com/react@15.4.0/dist/react.js">react/dist/react.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react@15.4.0/dist/react.min.js">react/dist/react.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://unpkg.com/react@15.4.0/dist/react-with-addons.js">react/dist/react-with-addons.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react@15.4.0/dist/react-with-addons.min.js">react/dist/react-with-addons.min.js</a><br></li>
-<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom.js">react-dom/dist/react-dom.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom.min.js">react-dom/dist/react-dom.min.js</a><br></li>
-<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br>
-Dev build with warnings: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.js">react-dom/dist/react-dom-server.js</a><br>
-Minified build for production: <a href="https://unpkg.com/react-dom@15.4.0/dist/react-dom-server.min.js">react-dom/dist/react-dom-server.min.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>15.4.0</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>Changelog</h2>
-
-<h3>React</h3>
-
-<ul>
-<li>React package and browser build no longer &quot;secretly&quot; includes React DOM.<br>
-<small>(<a href="https://github.com/sebmarkbage">@sebmarkbage</a> in <a href="https://github.com/facebook/react/pull/7164">#7164</a> and <a href="https://github.com/facebook/react/pull/7168">#7168</a>)</small></li>
-<li>Required PropTypes now fail with specific messages for null and undefined.<br>
-<small>(<a href="https://github.com/chenglou">@chenglou</a> in <a href="https://github.com/facebook/react/pull/7291">#7291</a>)</small></li>
-<li>Improved development performance by freezing children instead of copying.<br>
-<small>(<a href="https://github.com/keyanzhang">@keyanzhang</a> in <a href="https://github.com/facebook/react/pull/7455">#7455</a>)</small></li>
-</ul>
-
-<h3>React DOM</h3>
-
-<ul>
-<li>Fixed occasional test failures when React DOM is used together with shallow renderer.<br>
-<small>(<a href="https://github.com/goatslacker">@goatslacker</a> in <a href="https://github.com/facebook/react/pull/8097">#8097</a>)</small></li>
-<li>Added a warning for invalid <code>aria-</code> attributes.<br>
-<small>(<a href="https://github.com/jessebeach">@jessebeach</a> in <a href="https://github.com/facebook/react/pull/7744">#7744</a>)</small></li>
-<li>Added a warning for using <code>autofocus</code> rather than <code>autoFocus</code>.<br>
-<small>(<a href="https://github.com/hkal">@hkal</a> in <a href="https://github.com/facebook/react/pull/7694">#7694</a>)</small></li>
-<li>Removed an unnecessary warning about polyfilling <code>String.prototype.split</code>.<br>
-<small>(<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/7629">#7629</a>)</small></li>
-<li>Clarified the warning about not calling PropTypes manually.<br>
-<small>(<a href="https://github.com/jedwards1211">@jedwards1211</a> in <a href="https://github.com/facebook/react/pull/7777">#7777</a>)</small></li>
-<li>The unstable <code>batchedUpdates</code> API now passes the wrapped function&#39;s return value through.<br>
-<small>(<a href="https://github.com/bgnorlov">@bgnorlov</a> in <a href="https://github.com/facebook/react/pull/7444">#7444</a>)</small></li>
-<li>Fixed a bug with updating text in IE 8.<br>
-<small>(<a href="https://github.com/mnpenner">@mnpenner</a> in <a href="https://github.com/facebook/react/pull/7832">#7832</a>)</small></li>
-</ul>
-
-<h3>React Perf</h3>
-
-<ul>
-<li>When ReactPerf is started, you can now view the relative time spent in components as a chart in Chrome Timeline.<br>
-<small>(<a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/7549">#7549</a>)</small></li>
-</ul>
-
-<h3>React Test Utils</h3>
-
-<ul>
-<li>If you call <code>Simulate.click()</code> on a <code>&lt;input disabled onClick={foo} /&gt;</code> then <code>foo</code> will get called whereas it didn&#39;t before.<br>
-<small>(<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/7642">#7642</a>)</small></li>
-</ul>
-
-<h3>React Test Renderer</h3>
-
-<ul>
-<li>Due to packaging changes, it no longer crashes when imported together with React DOM in the same file.<br>
-<small>(<a href="https://github.com/sebmarkbage">@sebmarkbage</a> in <a href="https://github.com/facebook/react/pull/7164">#7164</a> and <a href="https://github.com/facebook/react/pull/7168">#7168</a>)</small></li>
-<li><code>ReactTestRenderer.create()</code> now accepts <code>{createNodeMock: element =&gt; mock}</code> as an optional argument so you can mock refs with snapshot testing.<br>
-<small>(<a href="https://github.com/Aweary">@Aweary</a> in <a href="https://github.com/facebook/react/pull/7649">#7649</a> and <a href="https://github.com/facebook/react/pull/8261">#8261</a>)</small></li>
 </ul>
 
 </div>

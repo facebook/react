@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,58 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/05/06/flux.html">Flux: An Application Architecture for React</a>
+
+</h1>
+
+<p class="meta">
+  May  6, 2014
+  by
+  
+    
+      <a href="https://twitter.com/fisherwebdev">Bill Fisher</a>
+    
+     and 
+  
+    
+      <a href="https://twitter.com/jingc">Jing Chen</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We recently spoke at one of f8&#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:</p>
+
+<figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&start=621" frameborder="0" allowfullscreen></iframe></figure>
+
+<p>To summarize, Flux works well for us because the single directional data flow makes it easy to understand and modify an application as it becomes more complicated. We found that two-way data bindings lead to cascading updates, where changing one data model led to another data model updating, making it very difficult to predict what would change as the result of a single user interaction.</p>
+
+<p>In Flux, the Dispatcher is a singleton that directs the flow of data and ensures that updates do not cascade. As an application grows, the Dispatcher becomes more vital, as it can also manage dependencies between stores by invoking the registered callbacks in a specific order.</p>
+
+<p>When a user interacts with a React view, the view sends an action (usually represented as a JavaScript object with some fields) through the dispatcher, which notifies the various stores that hold the application&#39;s data and business logic. When the stores change state, they notify the views that something has updated. This works especially well with React&#39;s declarative model, which allows the stores to send updates without specifying how to transition views between states.</p>
+
+<p>Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example of this architecture</a> is available, along with more <a href="https://facebook.github.io/flux/docs/overview.html">detailed documentation</a> and a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Look for more examples to come in the future.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -452,140 +498,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0-r
 <ul>
 <li>Added an option argument to <code>transform</code> function. The only option supported is <code>harmony</code>, which behaves the same as <code>jsx --harmony</code> on the command line. This uses the ES6 transforms from <a href="https://github.com/facebook/jstransform">jstransform</a>.</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/03/14/community-roundup-18.html">Community Round-up #18</a>
-
-</h1>
-
-<p class="meta">
-  March 14, 2014
-  by
-  
-    
-      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>In this Round-up, we are taking a few closer looks at React&#39;s interplay with different frameworks and architectures.</p>
-
-<h2>&quot;Little framework BIG splash&quot;</h2>
-
-<p>Let&#39;s start with yet another refreshing introduction to React: Craig Savolainen (<a href="https://twitter.com/maedhr">@maedhr</a>) walks through some first steps, demonstrating <a href="http://infinitemonkeys.influitive.com/little-framework-big-splash">how to build a Google Maps component</a> using React.</p>
-
-<h2>Architecting your app with react</h2>
-
-<p>Brandon Konkle (<a href="https://twitter.com/bkonkle">@bkonkle</a>)
-<a href="http://lincolnloop.com/blog/architecting-your-app-react-part-1/">Architecting your app with react</a>
-We&#39;re looking forward to part 2!</p>
-
-<blockquote>
-<p>React is not a full MVC framework, and this is actually one of its strengths. Many who adopt React choose to do so alongside their favorite MVC framework, like Backbone. React has no opinions about routing or syncing data, so you can easily use your favorite tools to handle those aspects of your frontend application. You&#39;ll often see React used to manage specific parts of an application&#39;s UI and not others. React really shines, however, when you fully embrace its strategies and make it the core of your application&#39;s interface.</p>
-
-<p><a href="http://lincolnloop.com/blog/architecting-your-app-react-part-1/">Read the full article...</a></p>
-</blockquote>
-
-<h2>React vs. async DOM manipulation</h2>
-
-<p>Eliseu Monar (<a href="https://twitter.com/eliseumds">@eliseumds</a>)&#39;s post &quot;<a href="http://eliseumds.tumblr.com/post/77843550010/vitalbox-pchr-reactjs-vs-async-concurrent-rendering">ReactJS vs async concurrent rendering</a>&quot; is a great example of how React quite literally renders a whole array of common web development work(arounds) obsolete.</p>
-
-<h2>React, Scala and the Play Framework</h2>
-
-<p><a href="http://matthiasnehlsen.com/">Matthias Nehlsen</a> wrote a detailed introductory piece on <a href="http://matthiasnehlsen.com/blog/2014/01/05/play-framework-and-facebooks-react-library/">React and the Play Framework</a>, including a helpful architectural diagram of a typical React app.</p>
-
-<p>Nehlsen&#39;s React frontend is the second implementation of his chat application&#39;s frontend, following an AngularJS version. Both implementations are functionally equivalent and offer some perspective on differences between the two frameworks.</p>
-
-<p>In <a href="http://matthiasnehlsen.com/blog/2014/01/24/scala-dot-js-and-reactjs/">another article</a>, he walks us through the process of using React with scala.js to implement app-wide undo functionality.</p>
-
-<p>Also check out his <a href="http://m.ustream.tv/recorded/42780242">talk</a> at Ping Conference 2014, in which he walks through a lot of the previously content in great detail.</p>
-
-<h2>React and Backbone</h2>
-
-<p>The folks over at <a href="https://venmo.com/">Venmo</a> are using React in conjunction with Backbone.
-Thomas Boyt (<a href="https://twitter.com/thomasaboyt">@thomasaboyt</a>) wrote <a href="http://www.thomasboyt.com/2013/12/17/using-reactjs-as-a-backbone-view.html">this detailed piece</a> about why React and Backbone are &quot;a fantastic pairing&quot;.</p>
-
-<h2>React vs. Ember</h2>
-
-<p>Eric Berry (<a href="https://twitter.com/coderberry">@coderberry</a>) developed Ember equivalents for some of the official React examples. Read his post for a side-by-side comparison of the respective implementations: <a href="https://instructure.github.io/blog/2013/12/17/facebook-react-vs-ember/">&quot;Facebook React vs. Ember&quot;</a>.</p>
-
-<h2>React and plain old HTML</h2>
-
-<p>Daniel Lo Nigro (<a href="https://twitter.com/Daniel15">@Daniel15</a>) created <a href="https://github.com/reactjs/react-magic">React-Magic</a>, which leverages React to ajaxify plain old html pages and even <a href="http://stuff.dan.cx/facebook/react-hacks/magic/red.php">allows CSS transitions between pageloads</a>.</p>
-
-<blockquote>
-<p>React-Magic intercepts all navigation (link clicks and form posts) and loads the requested page via an AJAX request. React is then used to &quot;diff&quot; the old HTML with the new HTML, and only update the parts of the DOM that have been changed.</p>
-
-<p><a href="https://github.com/reactjs/react-magic">Check out the project on GitHub...</a></p>
-</blockquote>
-
-<p>On a related note, <a href="https://turbo-react.herokuapp.com/">Reactize</a> by Ross Allen (<a href="https://twitter.com/ssorallen">@ssorallen</a>) is a similarly awesome project: A wrapper for Rails&#39; <a href="https://github.com/rails/turbolinks/">Turbolinks</a>, which seems to have inspired John Lynch (<a href="https://twitter.com/johnrlynch">@johnrlynch</a>) to then create <a href="http://www.rigelgroupllc.com/blog/2014/01/12/react-jsx-transformer-in-rails-middleware/">a server-rendered version using the JSX transformer in Rails middleware</a>.</p>
-
-<h2>React and Object.observe</h2>
-
-<p>Check out <a href="https://github.com/fdecampredon">François de Campredon</a>&#39;s implementation of <a href="https://github.com/fdecampredon/react-observe-todomvc/">TodoMVC based on React and ES6&#39;s Object.observe</a>.</p>
-
-<h2>React and Angular</h2>
-
-<p>Ian Bicking (<a href="https://twitter.com/ianbicking">@ianbicking</a>) of Mozilla Labs <a href="https://plus.google.com/+IanBicking/posts/Qj8R5SWAsfE">explains why he &quot;decided to go with React instead of Angular.js&quot;</a>.</p>
-
-<h3>ng-React Update</h3>
-
-<p><a href="https://github.com/davidchang">David Chang</a> works through some performance improvements of his <a href="https://github.com/davidchang/ngReact">ngReact</a> project. His post <a href="http://davidandsuzi.com/ngreact-update/">&quot;ng-React Update - React 0.9 and Angular Track By&quot;</a> includes some helpful advice on boosting render performance for Angular components.</p>
-
-<blockquote>
-<p>Angular gives you a ton of functionality out of the box - a full MV* framework - and I am a big fan, but I&#39;ll admit that you need to know how to twist the right knobs to get performance.</p>
-
-<p>That said, React gives you a very strong view component out of the box with the performance baked right in. Try as I did, I couldn&#39;t actually get it any faster. So pretty impressive stuff.</p>
-
-<p><a href="http://davidandsuzi.com/ngreact-update/">Read the full post...</a></p>
-</blockquote>
-
-<p>React was also recently mentioned at ng-conf, where the Angular team commented on React&#39;s concept of the virtual DOM:</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
-
-<h2>React and Web Components</h2>
-
-<p>Jonathan Krause (<a href="https://twitter.com/jonykrause">@jonykrause</a>) offers his thoughts regarding <a href="http://jonykrau.se/posts/the-value-of-react">parallels between React and Web Components</a>, highlighting the value of React&#39;s ability to render pages on the server practically for free.</p>
-
-<h2>Immutable React</h2>
-
-<p><a href="http://pk11.kinja.com/">Peter Hausel</a> shows how to build a Wikipedia auto-complete demo based on immutable data structures (similar to <a href="https://npmjs.org/package/mori">mori</a>), really taking advantage of the framework&#39;s one-way reactive data binding:</p>
-
-<blockquote>
-<p>Its truly reactive design makes DOM updates finally sane and when combined with persistent data structures one can experience JavaScript development like it was never done before.</p>
-
-<p><a href="http://tech.kinja.com/immutable-react-1495205675">Read the full post</a></p>
-</blockquote>
-
-<h2>D3 and React</h2>
-
-<p><a href="http://10consulting.com/">Ben Smith</a> built some great SVG-based charting components using a little less of D3 and a little more of React: <a href="http://10consulting.com/2014/02/19/d3-plus-reactjs-for-charting/">D3 and React - the future of charting components?</a></p>
-
-<h2>Om and React</h2>
-
-<p>Josh Haberman (<a href="https://twitter.com/JoshHaberman">@joshhaberman</a>) discusses performance differences between React, Om and traditional MVC frameworks in &quot;<a href="http://blog.reverberate.org/2014/02/on-future-of-javascript-mvc-frameworks.html">A closer look at OM vs React performance</a>&quot;.</p>
-
-<p>Speaking of Om: <a href="https://github.com/sgrove/omchaya">Omchaya</a> by Sean Grove (<a href="https://twitter.com/sgrove">@sgrove</a>) is a neat Cljs/Om example project.</p>
-
-<h2>Random Tweets</h2>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>Worked for 2 hours on a [@react_js](https://twitter.com/react_js) app sans internet. Love that I could get stuff done with it without googling every question.</p>&mdash; John Shimek (@varikin) <a href="https://twitter.com/varikin/status/436606891657949185">February 20, 2014</a></blockquote></div>
 
 </div>
 

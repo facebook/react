@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,394 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/12/18/react-components-elements-and-instances.html">React Components, Elements, and Instances</a>
+
+</h1>
+
+<p class="meta">
+  December 18, 2015
+  by
+  
+    
+      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>The difference between <strong>components, their instances, and elements</strong> confuses many React beginners. Why are there three different terms to refer to something that is painted on screen?</p>
+
+<h2>Managing the Instances</h2>
+
+<p>If you’re new to React, you probably only worked with component classes and instances before. For example, you may declare a <code>Button</code> <em>component</em> by creating a class. When the app is running, you may have several <em>instances</em> of this component on screen, each with its own properties and local state. This is the traditional object-oriented UI programming. Why introduce <em>elements</em>?</p>
+
+<p>In this traditional UI model, it is up to you to take care of creating and destroying child component instances. If a <code>Form</code> component wants to render a <code>Button</code> component, it needs to create its instance, and manually keep it up to date with any new information.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">Form</span> <span class="kr">extends</span> <span class="nx">TraditionalObjectOrientedView</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Read some data passed to the view</span>
+    <span class="kr">const</span> <span class="p">{</span> <span class="nx">isSubmitted</span><span class="p">,</span> <span class="nx">buttonText</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">attrs</span><span class="p">;</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">isSubmitted</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Form is not yet submitted. Create the button!</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">button</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Button</span><span class="p">({</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="nx">buttonText</span><span class="p">,</span>
+        <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span>
+      <span class="p">});</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">el</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// The button is visible. Update its text!</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">attrs</span><span class="p">.</span><span class="nx">children</span> <span class="o">=</span> <span class="nx">buttonText</span><span class="p">;</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">render</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isSubmitted</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Form was submitted. Destroy the button!</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">removeChild</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">el</span><span class="p">);</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">button</span><span class="p">.</span><span class="nx">destroy</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">if</span> <span class="p">(</span><span class="nx">isSubmitted</span> <span class="o">&amp;&amp;</span> <span class="o">!</span><span class="k">this</span><span class="p">.</span><span class="nx">message</span><span class="p">)</span> <span class="p">{</span>
+      <span class="c1">// Form was submitted. Show the success message!</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">message</span> <span class="o">=</span> <span class="k">new</span> <span class="nx">Message</span><span class="p">({</span> <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span> <span class="p">});</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">el</span><span class="p">.</span><span class="nx">appendChild</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">el</span><span class="p">);</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is pseudocode, but it is more or less what you end up with when you write composite UI code that behaves consistently in an object-oriented way using a library like Backbone.</p>
+
+<p>Each component instance has to keep references to its DOM node and to the instances of the children components, and create, update, and destroy them when the time is right. The lines of code grow as the square of the number of possible states of the component, and the parents have direct access to their children component instances, making it hard to decouple them in the future.</p>
+
+<p>So how is React different?</p>
+
+<h2>Elements Describe the Tree</h2>
+
+<p>In React, this is where the <em>elements</em> come to rescue. <strong>An element is a plain object <em>describing</em> a component instance or DOM node and its desired properties.</strong> It contains only information about the component type (for example, a <code>Button</code>), its properties (for example, its <code>color</code>), and any child elements inside it.</p>
+
+<p>An element is not an actual instance. Rather, it is a way to tell React what you <em>want</em> to see on the screen. You can’t call any methods on the element. It’s just an immutable description object with two fields: <code>type: (string | ReactClass)</code> and <code>props: Object</code><sup id="fnref1"><a href="#fn1" rel="footnote">1</a></sup>.</p>
+
+<h3>DOM Elements</h3>
+
+<p>When an element’s <code>type</code> is a string, it represents a DOM node with that tag name, and <code>props</code> correspond to its attributes. This is what React will render. For example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-blue&#39;</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This element is just a way to represent the following HTML as a plain object:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;button</span> <span class="na">class=</span><span class="s">&#39;button button-blue&#39;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;b&gt;</span>
+    OK!
+  <span class="nt">&lt;/b&gt;</span>
+<span class="nt">&lt;/button&gt;</span>
+</code></pre></div>
+<p>Note how elements can be nested. By convention, when we want to create an element tree, we specify one or more child elements as the <code>children</code> prop of their containing element.</p>
+
+<p>What’s important is that both child and parent elements are <em>just descriptions and not the actual instances</em>. They don’t refer to anything on the screen when you create them. You can create them and throw them away, and it won’t matter much.</p>
+
+<p>React elements are easy to traverse, don’t need to be parsed, and of course they are much lighter than the actual DOM elements—they’re just objects!</p>
+
+<h3>Component Elements</h3>
+
+<p>However, the <code>type</code> of an element can also be a function or a class corresponding to a React component:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is the core idea of React.</p>
+
+<p><strong>An element describing a component is also an element, just like an element describing the DOM node. They can be nested and mixed with each other.</strong></p>
+
+<p>This feature lets you define a <code>DangerButton</code> component as a <code>Button</code> with a specific <code>color</code> property value without worrying about whether <code>Button</code> renders to a DOM <code>&lt;button&gt;</code>, a <code>&lt;div&gt;</code>, or something else entirely:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">DangerButton</span> <span class="o">=</span> <span class="p">({</span> <span class="nx">children</span> <span class="p">})</span> <span class="o">=&gt;</span> <span class="p">({</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;red&#39;</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="nx">children</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>You can mix and match DOM and component elements in a single element tree:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">DeleteAccount</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">({</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;div&#39;</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="p">[{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;p&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;Are you sure?&#39;</span>
+      <span class="p">}</span>
+    <span class="p">},</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="nx">DangerButton</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;Yep&#39;</span>
+      <span class="p">}</span>
+    <span class="p">},</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;Cancel&#39;</span>
+      <span class="p">}</span>
+   <span class="p">}]</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Or, if you prefer JSX:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">DeleteAccount</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+    <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">Are</span> <span class="nx">you</span> <span class="nx">sure</span><span class="o">?&lt;</span><span class="err">/p&gt;</span>
+    <span class="o">&lt;</span><span class="nx">DangerButton</span><span class="o">&gt;</span><span class="nx">Yep</span><span class="o">&lt;</span><span class="err">/DangerButton&gt;</span>
+    <span class="o">&lt;</span><span class="nx">Button</span> <span class="nx">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="o">&gt;</span><span class="nx">Cancel</span><span class="o">&lt;</span><span class="err">/Button&gt;</span>
+  <span class="o">&lt;</span><span class="err">/div&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>This mix and matching helps keep components decoupled from each other, as they can express both <em>is-a</em> and <em>has-a</em> relationships exclusively through composition:</p>
+
+<ul>
+<li><code>Button</code> is a DOM <code>&lt;button&gt;</code> with specific properties.</li>
+<li><code>DangerButton</code> is a <code>Button</code> with specific properties.</li>
+<li><code>DeleteAccount</code> contains a <code>Button</code> and a <code>DangerButton</code> inside a <code>&lt;div&gt;</code>.</li>
+</ul>
+
+<h3>Components Encapsulate Element Trees</h3>
+
+<p>When React sees an element with a function or class <code>type</code>, it knows to ask <em>that</em> component what element it renders to, given the corresponding <code>props</code>.</p>
+
+<p>When it sees this element:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>React will ask <code>Button</code> what it renders to. The <code>Button</code> will return this element:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-blue&#39;</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>React will repeat this process until it knows the underlying DOM tag elements for every component on the page.</p>
+
+<p>React is like a child asking “what is Y” for every “X is Y” you explain to them until they figure out every little thing in the world.</p>
+
+<p>Remember the <code>Form</code> example above? It can be written in React as follows<sup id="fnref1"><a href="#fn1" rel="footnote">1</a></sup>:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">Form</span> <span class="o">=</span> <span class="p">({</span> <span class="nx">isSubmitted</span><span class="p">,</span> <span class="nx">buttonText</span> <span class="p">})</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="nx">isSubmitted</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// Form submitted! Return a message element.</span>
+    <span class="k">return</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="nx">Message</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;Success!&#39;</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+
+  <span class="c1">// Form is still visible! Return a button element.</span>
+  <span class="k">return</span> <span class="p">{</span>
+    <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
+    <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">children</span><span class="o">:</span> <span class="nx">buttonText</span><span class="p">,</span>
+      <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span>
+    <span class="p">}</span>
+  <span class="p">};</span>
+<span class="p">};</span>
+</code></pre></div>
+<p>That’s it! For a React component, props are the input, and an element tree is the output.</p>
+
+<p><strong>The returned element tree can contain both elements describing DOM nodes, and elements describing other components. This lets you compose independent parts of UI without relying on their internal DOM structure.</strong></p>
+
+<p>We let React create, update, and destroy instances. We <em>describe</em> them with elements we return from the components, and React takes care of managing the instances.</p>
+
+<h3>Components Can Be Classes or Functions</h3>
+
+<p>In the code above, <code>Form</code>, <code>Message</code>, and <code>Button</code> are React components. They can either be written as functions, like above, or as classes descending from <code>React.Component</code>. These three ways to declare a component are mostly equivalent:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// 1) As a function of props</span>
+<span class="kr">const</span> <span class="nx">Button</span> <span class="o">=</span> <span class="p">({</span> <span class="nx">children</span><span class="p">,</span> <span class="nx">color</span> <span class="p">})</span> <span class="o">=&gt;</span> <span class="p">({</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-&#39;</span> <span class="o">+</span> <span class="nx">color</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="nx">children</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// 2) Using the React.createClass() factory</span>
+<span class="kr">const</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="p">{</span> <span class="nx">children</span><span class="p">,</span> <span class="nx">color</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-&#39;</span> <span class="o">+</span> <span class="nx">color</span><span class="p">,</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+          <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">children</span><span class="o">:</span> <span class="nx">children</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="c1">// 3) As an ES6 class descending from React.Component</span>
+<span class="kr">class</span> <span class="nx">Button</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
+  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kr">const</span> <span class="p">{</span> <span class="nx">children</span><span class="p">,</span> <span class="nx">color</span> <span class="p">}</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">;</span>
+    <span class="k">return</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-&#39;</span> <span class="o">+</span> <span class="nx">color</span><span class="p">,</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
+          <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+          <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+            <span class="nx">children</span><span class="o">:</span> <span class="nx">children</span>
+          <span class="p">}</span>
+        <span class="p">}</span>
+      <span class="p">}</span>
+    <span class="p">};</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>When a component is defined as a class, it is a little bit more powerful than a functional component. It can store some local state and perform custom logic when the corresponding DOM node is created or destroyed.</p>
+
+<p>A functional component is less powerful but is simpler, and acts like a class component with just a single <code>render()</code> method. Unless you need features available only in a class, we encourage you to use functional components instead.</p>
+
+<p><strong>However, whether functions or classes, fundamentally they are all components to React. They take the props as their input, and return the elements as their output.</strong></p>
+
+<h3>Top-Down Reconciliation</h3>
+
+<p>When you call:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">({</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">Form</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">isSubmitted</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nx">buttonText</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+  <span class="p">}</span>
+<span class="p">},</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">));</span>
+</code></pre></div>
+<p>React will ask the <code>Form</code> component what element tree it returns, given those <code>props</code>. It will gradually “refine” its understanding of your component tree in terms of simpler primitives:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// React: You told me this...</span>
+<span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">Form</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">isSubmitted</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span>
+    <span class="nx">buttonText</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// React: ...And Form told me this...</span>
+<span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="nx">Button</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span><span class="p">,</span>
+    <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;blue&#39;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+
+<span class="c1">// React: ...and Button told me this! I guess I&#39;m done.</span>
+<span class="p">{</span>
+  <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;button&#39;</span><span class="p">,</span>
+  <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+    <span class="nx">className</span><span class="o">:</span> <span class="s1">&#39;button button-blue&#39;</span><span class="p">,</span>
+    <span class="nx">children</span><span class="o">:</span> <span class="p">{</span>
+      <span class="nx">type</span><span class="o">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span>
+      <span class="nx">props</span><span class="o">:</span> <span class="p">{</span>
+        <span class="nx">children</span><span class="o">:</span> <span class="s1">&#39;OK!&#39;</span>
+      <span class="p">}</span>
+    <span class="p">}</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This is a part of the process that React calls <a href="/react/docs/reconciliation.html">reconciliation</a> which starts when you call <a href="/react/docs/top-level-api.html#reactdom.render"><code>ReactDOM.render()</code></a> or <a href="/react/docs/component-api.html#setstate"><code>setState()</code></a>. By the end of the reconciliation, React knows the result DOM tree, and a renderer like <code>react-dom</code> or <code>react-native</code> applies the minimal set of changes necessary to update the DOM nodes (or the platform-specific views in case of React Native).</p>
+
+<p>This gradual refining process is also the reason React apps are easy to optimize. If some parts of your component tree become too large for React to visit efficiently, you can tell it to <a href="/react/docs/advanced-performance.html">skip this “refining” and diffing certain parts of the tree if the relevant props have not changed</a>. It is very fast to calculate whether the props have changed if they are immutable, so React and immutability work great together, and can provide great optimizations with the minimal effort.</p>
+
+<p>You might have noticed that this blog entry talks a lot about components and elements, and not so much about the instances. The truth is, instances have much less importance in React than in most object-oriented UI frameworks.</p>
+
+<p>Only components declared as classes have instances, and you never create them directly: React does that for you. While <a href="/react/docs/more-about-refs.html">mechanisms for a parent component instance to access a child component instance</a> exist, they are only used for imperative actions (such as setting focus on a field), and should generally be avoided.</p>
+
+<p>React takes care of creating an instance for every class component, so you can write components in an object-oriented way with methods and local state, but other than that, instances are not very important in the React’s programming model and are managed by React itself.</p>
+
+<h2>Summary</h2>
+
+<p>An <em>element</em> is a plain object describing what you want to appear on the screen in terms of the DOM nodes or other components. Elements can contain other elements in their props. Creating a React element is cheap. Once an element is created, it is never mutated.</p>
+
+<p>A <em>component</em> can be declared in several different ways. It can be a class with a <code>render()</code> method. Alternatively, in simple cases, it can be defined as a function. In either case, it takes props as an input, and returns an element tree as the output.</p>
+
+<p>When a component receives some props as an input, it is because a particular parent component returned an element with its <code>type</code> and these props. This is why people say that the props flows one way in React: from parents to children.</p>
+
+<p>An <em>instance</em> is what you refer to as <code>this</code> in the component class you write. It is useful for <a href="/react/docs/component-api.html">storing local state and reacting to the lifecycle events</a>.</p>
+
+<p>Functional components don’t have instances at all. Class components have instances, but you never need to create a component instance directly—React takes care of this.</p>
+
+<p>Finally, to create elements, use <a href="/react/docs/top-level-api.html#react.createelement"><code>React.createElement()</code></a>, <a href="/react/docs/jsx-in-depth.html">JSX</a>, or an <a href="/react/docs/top-level-api.html#react.createfactory">element factory helper</a>. Don’t write elements as plain objects in the real code—just know that they are plain objects under the hood.</p>
+
+<h2>Further Reading</h2>
+
+<ul>
+<li><a href="/react/blog/2014/10/14/introducing-react-elements.html">Introducing React Elements</a></li>
+<li><a href="/react/blog/2015/02/24/streamlining-react-elements.html">Streamlining React Elements</a></li>
+<li><a href="/react/docs/glossary.html">React (Virtual) DOM Terminology</a></li>
+</ul>
+
+<div class="footnotes">
+<hr>
+<ol>
+
+<li id="fn1">
+<p>All React elements require an additional <code>$$typeof: Symbol.for(&#39;react.element&#39;)</code> field declared on the object for <a href="https://github.com/facebook/react/pull/4832">security reasons</a>. It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add <code>$$typeof</code> to the elements, or change the code to use <code>React.createElement()</code> or JSX.&nbsp;<a href="#fnref1" rev="footnote">&#8617;</a></p>
+</li>
+
+</ol>
+</div>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -402,85 +784,6 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.2.min.js">h
 <li>Added support for <code>integrity</code> attribute</li>
 <li>Fixed bug resulting in <code>children</code> prop being coerced to a string for custom elements, which was not the desired behavior.</li>
 <li>Moved <code>react</code> from <code>dependencies</code> to <code>peerDependencies</code> to match expectations and align with <code>react-addons-*</code> packages</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/10/28/react-v0.14.1.html">React v0.14.1</a>
-
-</h1>
-
-<p class="meta">
-  October 28, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>After a couple weeks of having more people use v0.14, we&#39;re ready to ship a patch release addressing a few issues. Thanks to everybody who has reported issues and written patches!</p>
-
-<p>The release is now available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.14.1.js">https://fb.me/react-0.14.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.14.1.min.js">https://fb.me/react-0.14.1.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.1.js">https://fb.me/react-with-addons-0.14.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.14.1.min.js">https://fb.me/react-with-addons-0.14.1.min.js</a><br></li>
-<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-0.14.1.js">https://fb.me/react-dom-0.14.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-0.14.1.min.js">https://fb.me/react-dom-0.14.1.min.js</a><br></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.14.1</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>Changelog</h2>
-
-<h3>React DOM</h3>
-
-<ul>
-<li>Fixed bug where events wouldn&#39;t fire in old browsers when using React in development mode</li>
-<li>Fixed bug preventing use of <code>dangerouslySetInnerHTML</code> with Closure Compiler Advanced mode</li>
-<li>Added support for <code>srcLang</code>, <code>default</code>, and <code>kind</code> attributes for <code>&lt;track&gt;</code> elements</li>
-<li>Added support for <code>color</code> attribute</li>
-<li>Ensured legacy <code>.props</code> access on DOM nodes is updated on re-renders</li>
-</ul>
-
-<h3>React TestUtils Add-on</h3>
-
-<ul>
-<li>Fixed <code>scryRenderedDOMComponentsWithClass</code> so it works with SVG</li>
-</ul>
-
-<h3>React CSSTransitionGroup Add-on</h3>
-
-<ul>
-<li>Fix bug preventing <code>0</code> to be used as a timeout value</li>
-</ul>
-
-<h3>React on Bower</h3>
-
-<ul>
-<li>Added <code>react-dom.js</code> to <code>main</code> to improve compatibility with tooling</li>
 </ul>
 
 </div>

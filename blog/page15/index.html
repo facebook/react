@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,88 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/07/25/react-v0.11.1.html">React v0.11.1</a>
+
+</h1>
+
+<p class="meta">
+  July 25, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re releasing React v0.11.1 to address a few small issues. Thanks to everybody who has reported them as they&#39;ve begun upgrading.</p>
+
+<p>The first of these is the most major and resulted in a regression with the use of <code>setState</code> inside <code>componentWillMount</code> when using React on the server. These <code>setState</code> calls are batched into the initial render. A change we made to our batching code resulted in this path hitting DOM specific code when run server-side, in turn throwing an error as <code>document</code> is not defined.</p>
+
+<p>There are several fixes we&#39;re including in v0.11.1 that are focused around the newly supported <code>event.getModifierState()</code> function. We made some adjustments to improve this cross-browser standardization.</p>
+
+<p>The final fix we&#39;re including is to better support a workaround for some IE8 behavior. The edge-case bug we&#39;re fixing was also present in v0.9 and v0.10, so while it wasn&#39;t a short-term regression, we wanted to make sure we support IE8 to the best of our abilities.</p>
+
+<p>We&#39;d also like to call out a couple additional breaking changes that we failed to originally mention in the release notes for v0.11. We updated that blog post and the changelog, so we encourage you to go read about the changes around <a href="/react/blog/2014/07/17/react-v0.11.html#descriptors">Descriptors</a> and <a href="/react/blog/2014/07/17/react-v0.11.html#prop-type-validation">Prop Type Validation</a>.</p>
+
+<p>The release is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.11.1.js">https://fb.me/react-0.11.1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.11.1.min.js">https://fb.me/react-0.11.1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.11.1.js">https://fb.me/react-with-addons-0.11.1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.11.1.min.js">https://fb.me/react-with-addons-0.11.1.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.11.1.js">https://fb.me/JSXTransformer-0.11.1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.11.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li><code>setState</code> can be called inside <code>componentWillMount</code> in non-DOM environments</li>
+<li><code>SyntheticMouseEvent.getEventModifierState</code> correctly renamed to <code>getModifierState</code></li>
+<li><code>getModifierState</code> correctly returns a <code>boolean</code></li>
+<li><code>getModifierState</code> is now correctly case sensitive</li>
+<li>Empty Text node used in IE8 <code>innerHTML</code> workaround is now removed, fixing rerendering in certain cases</li>
+</ul>
+
+<h3>JSXTransformer</h3>
+
+<ul>
+<li>Fix duplicate variable declaration (caused issues in some browsers)</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -607,52 +683,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <p>Fast forward one year, React has strongly <a href="https://news.ycombinator.com/item?id=7489959">grown in popularity</a>. Special acknowledgments go to Khan Academy, the ClojureScript community, and established frameworks such as Ember and Angular for contributing to and debating on our work. We&#39;d also like to thank all the <a href="https://github.com/facebook/react/graphs/contributors">individual contributors</a> who have taken the time to help out over the past year. React, as a library and as a new paradigm on the web, wouldn&#39;t have gained as much traction without them. In the future, we will continue to try to set an example of what&#39;s possible to achieve when we rethink about current “best practices”.</p>
 
 <p>Here’s to another year!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/05/06/flux.html">Flux: An Application Architecture for React</a>
-
-</h1>
-
-<p class="meta">
-  May  6, 2014
-  by
-  
-    
-      <a href="https://twitter.com/fisherwebdev">Bill Fisher</a>
-    
-     and 
-  
-    
-      <a href="https://twitter.com/jingc">Jing Chen</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We recently spoke at one of f8&#39;s breakout session about Flux, a data flow architecture that works well with React.  Check out the video here:</p>
-
-<figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/nYkdrAPrdcw?list=PLb0IAmt7-GS188xDYE-u1ShQmFFGbrk0v&start=621" frameborder="0" allowfullscreen></iframe></figure>
-
-<p>To summarize, Flux works well for us because the single directional data flow makes it easy to understand and modify an application as it becomes more complicated. We found that two-way data bindings lead to cascading updates, where changing one data model led to another data model updating, making it very difficult to predict what would change as the result of a single user interaction.</p>
-
-<p>In Flux, the Dispatcher is a singleton that directs the flow of data and ensures that updates do not cascade. As an application grows, the Dispatcher becomes more vital, as it can also manage dependencies between stores by invoking the registered callbacks in a specific order.</p>
-
-<p>When a user interacts with a React view, the view sends an action (usually represented as a JavaScript object with some fields) through the dispatcher, which notifies the various stores that hold the application&#39;s data and business logic. When the stores change state, they notify the views that something has updated. This works especially well with React&#39;s declarative model, which allows the stores to send updates without specifying how to transition views between states.</p>
-
-<p>Flux is more of a pattern than a formal framework, so you can start using Flux immediately without a lot of new code. An <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example of this architecture</a> is available, along with more <a href="https://facebook.github.io/flux/docs/overview.html">detailed documentation</a> and a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Look for more examples to come in the future.</p>
 
 </div>
 

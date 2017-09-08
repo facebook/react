@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,79 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/12/18/react-v0.12.2.html">React v0.12.2</a>
+
+</h1>
+
+<p class="meta">
+  December 18, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We just shipped React v0.12.2, bringing the 0.12 branch up to date with a few small fixes that landed in master over the past 2 months.</p>
+
+<p>You may have noticed that we did not do an announcement for v0.12.1. That release was snuck out in anticipation of <a href="http://flowtype.org/">Flow</a>, with only transform-related changes. Namely we added a flag to the <code>jsx</code> executable which allowed you to safely transform Flow-based code to vanilla JS. If you didn&#39;t update for that release, you can safely skip it and move directly to v0.12.2.</p>
+
+<p>The release is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.12.2.js">https://fb.me/react-0.12.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.12.2.min.js">https://fb.me/react-0.12.2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.12.2.js">https://fb.me/react-with-addons-0.12.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.12.2.min.js">https://fb.me/react-with-addons-0.12.2.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.12.2.js">https://fb.me/JSXTransformer-0.12.2.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.12.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower. <code>0.12.1</code> is also available in the same locations if need those.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<ul>
+<li>Added support for more HTML attributes: <code>formAction</code>, <code>formEncType</code>, <code>formMethod</code>, <code>formTarget</code>, <code>marginHeight</code>, <code>marginWidth</code></li>
+<li>Added <code>strokeOpacity</code> to the list of unitless CSS properties</li>
+<li>Removed trailing commas (allows npm module to be bundled and used in IE8)</li>
+<li>Fixed bug resulting in error when passing <code>undefined</code> to <code>React.createElement</code> - now there is a useful warning</li>
+</ul>
+
+<h3>React Tools</h3>
+
+<ul>
+<li>JSX-related transforms now always use double quotes for props and <code>displayName</code></li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -502,179 +569,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.m
 <p>Here are some areas of research we want to explore during the conference if you need some inspiration: server-side rendering, data fetching, language features (eg es6, clojure), immutability, rendering targets (eg svg, canvas), real-time updates...</p>
 
 <p>We look forward to seeing many of you in person in just a few short months!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/10/17/community-roundup-23.html">Community Round-up #23</a>
-
-</h1>
-
-<p class="meta">
-  October 17, 2014
-  by
-  
-    
-      <a href="https://twitter.com/loukan42">Lou Husson</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This round-up is a special edition on <a href="https://facebook.github.io/flux/">Flux</a>. If you expect to see diagrams showing arrows that all point in the same direction, you won&#39;t be disappointed!</p>
-
-<h2>React And Flux at ForwardJS</h2>
-
-<p>Facebook engineers <a href="https://github.com/jingc">Jing Chen</a> and <a href="https://github.com/fisherwebdev">Bill Fisher</a> gave a talk about Flux and React at <a href="http://forwardjs.com/">ForwardJS</a>, and how using an application architecture with a unidirectional data flow helped solve recurring bugs.</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
-
-<h1>Yahoo</h1>
-
-<p>Yahoo is converting Yahoo Mail to React and Flux and in the process, they open sourced several components. This will help you get an isomorphic application up and running.</p>
-
-<ul>
-<li><a href="https://github.com/yahoo/flux-router-component">Flux Router Component</a></li>
-<li><a href="https://github.com/yahoo/dispatchr">Dispatchr</a></li>
-<li><a href="https://github.com/yahoo/fetchr">Fetchr</a></li>
-<li><a href="https://github.com/yahoo/flux-examples">Flux Examples</a></li>
-</ul>
-
-<h2>Reflux</h2>
-
-<p><a href="https://spoike.ghost.io/">Mikael Brassman</a> wrote <a href="https://github.com/spoike/refluxjs">Reflux</a>, a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains <a href="https://spoike.ghost.io/deconstructing-reactjss-flux/">the reasons why in a blog post</a>.</p>
-
-<p><center>
-<a href="https://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="/react/img/blog/reflux-flux.png" width="400" /></a>
-</center></p>
-
-<h2>React and Flux Interview</h2>
-
-<p><a href="http://ianobermiller.com/">Ian Obermiller</a>, engineer at Facebook, <a href="http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/">made a lengthy interview</a> on the experience of using React and Flux in order to build probably the biggest React application ever written so far.</p>
-
-<blockquote>
-<p>I’ve actually said this many times to my team too, I love React. It’s really great for making these complex applications. One thing that really surprised me with it is that React combined with a sane module system like CommonJS, and making sure that you actually modulize your stuff properly has scaled really well to a team of almost 10 developers working on hundreds of files and tens of thousands of lines of code.</p>
-
-<p>Really, a fairly large code base... stuff just works. You don’t have to worry about mutating, and the state of the DOM just really makes stuff easy. Just conceptually it’s easier just to think about here’s what I have, here’s my data, here’s how it renders, I don’t care about anything else. For most cases that is really simplifying and makes it really fast to do stuff.</p>
-
-<p><a href="http://ianobermiller.com/blog/2014/09/15/react-and-flux-interview/">Read the full interview...</a></p>
-</blockquote>
-
-<h2>Adobe&#39;s Brackets Project Tree</h2>
-
-<p><a href="http://www.kevindangoor.com/">Kevin Dangoor</a> is converting the project tree of <a href="http://brackets.io/">Adobe&#39;s Bracket text editor</a> to React and Flux. He wrote about his experience <a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/">using Flux</a>.</p>
-
-<p><center>
-<a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/"><img src="/react/img/blog/flux-diagram.png" width="400" /></a>
-</center></p>
-
-<h2>Async Requests with Flux Revisited</h2>
-
-<p><a href="http://www.code-experience.com/the-code-experience/">Reto Schläpfer</a> came back to a Flux project he hasn&#39;t worked on for a month and <a href="http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/">saw many ways to improve the way he implemented Flux</a>. He summarized his learnings in a blog post.</p>
-
-<blockquote>
-<p>The smarter way is to call the Web Api directly from an Action Creator and then make the Api dispatch an event with the request result as a payload. The Store(s) can choose to listen on those request actions and change their state accordingly.</p>
-
-<p>Before I show some updated code snippets, let me explain why this is superior:</p>
-
-<ul>
-<li><p>There should be only one channel for all state changes: The Dispatcher. This makes debugging easy because it just requires a single console.log in the dispatcher to observe every single state change trigger.</p></li>
-<li><p>Asynchronously executed callbacks should not leak into Stores. The consequences of it are just too hard to fully foresee. This leads to elusive bugs. Stores should only execute synchronous code. Otherwise they are too hard to understand.</p></li>
-<li><p>Avoiding actions firing other actions makes your app simple. We use the newest Dispatcher implementation from Facebook that does not allow a new dispatch while dispatching. It forces you to do things right.</p></li>
-</ul>
-
-<p><a href="http://www.code-experience.com/async-requests-with-react-js-and-flux-revisited/">Read the full article...</a></p>
-</blockquote>
-
-<h2>Undo-Redo with Immutable Data Structures</h2>
-
-<p><a href="https://github.com/ameyakarve">Ameya Karve</a> explained how to use <a href="https://github.com/swannodette/mori">Mori</a>, a library that provides immutable data structures, in order to <a href="http://ameyakarve.com/jekyll/update/2014/02/06/Undo-React-Flux-Mori.html">implement undo-redo</a>. This usually very challenging feature only takes a few lines of code with Flux!</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">undo</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">redoStates</span> <span class="o">=</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">conj</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">redoStates</span><span class="p">,</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">first</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">));</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span> <span class="o">=</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">drop</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">);</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">todosState</span> <span class="o">=</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">first</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">);</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">canUndo</span> <span class="o">=</span> <span class="nx">Mori</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">;</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">canRedo</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-  <span class="k">if</span> <span class="p">(</span><span class="nx">Mori</span><span class="p">.</span><span class="nx">count</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">undoStates</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">todos</span> <span class="o">=</span> <span class="nx">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">todosState</span><span class="p">);</span>
-  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">todos</span> <span class="o">=</span> <span class="p">[];</span>
-  <span class="p">}</span>
-  <span class="k">this</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;change&#39;</span><span class="p">);</span>
-<span class="p">},</span>
-</code></pre></div>
-<h2>Flux in practice</h2>
-
-<p><a href="https://twitter.com/garychambers108">Gary Chambers</a> wrote a <a href="https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a">guide to get started with Flux</a>. This is a very practical introduction to Flux.</p>
-
-<blockquote>
-<p>So, what does it actually mean to write an application in the Flux way? At that moment of inspiration, when faced with an empty text editor, how should you begin? This post follows the process of building a Flux-compliant application from scratch.</p>
-
-<p><a href="https://medium.com/@garychambers108/flux-in-practice-ec08daa9041a">Read the full guide...</a></p>
-</blockquote>
-
-<h2>Components, React and Flux</h2>
-
-<p><a href="https://twitter.com/dan_abramov">Dan Abramov</a> working at Stampsy made a talk about React and Flux. It&#39;s a very good overview of the concepts at play.</p>
-
-<iframe src="//slides.com/danabramov/components-react-flux-wip/embed"  width="100%" height="315" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-
-<h2>React and Flux</h2>
-
-<p><a href="https://github.com/christianalfoni">Christian Alfoni</a> wrote an article where <a href="https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html">he compares Backbone, Angular and Flux</a> on a simple example that&#39;s representative of a real project he worked on.</p>
-
-<blockquote>
-<p>Wow, that was a bit more code! Well, try to think of it like this. In the above examples, if we were to do any changes to the application we would probably have to move things around. In the FLUX example we have considered that from the start.</p>
-
-<p>Any changes to the application is adding, not moving things around. If you need a new store, just add it and make components dependant of it. If you need more views, create a component and use it inside any other component without affecting their current &quot;parent controller or models&quot;.</p>
-
-<p><a href="https://christianalfoni.github.io/javascript/2014/08/20/react-js-and-flux.html">Read the full article...</a></p>
-</blockquote>
-
-<h2>Flux: Step by Step approach</h2>
-
-<p><a href="https://github.com/durdn">Nicola Paolucci</a> from Atlassian wrote a great guide to help your getting understand <a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/">Flux step by step</a>.</p>
-
-<p><center>
-<a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="/react/img/blog/flux-chart.png" width="400" /></a>
-</center></p>
-
-<h2>DeLorean: Back to the future!</h2>
-
-<p><a href="https://github.com/deloreanjs/delorean">DeLorean</a> is a tiny Flux pattern implementation developed by <a href="https://github.com/f">Fatih Kadir Akin</a>.</p>
-
-<blockquote>
-<ul>
-<li>Unidirectional data flow, it makes your app logic simpler than MVC</li>
-<li>Automatically listens to data changes and keeps your data updated</li>
-<li>Makes data more consistent across your whole application</li>
-<li>It&#39;s framework agnostic, completely. There&#39;s no view framework dependency</li>
-<li>Very small, just 4K gzipped</li>
-<li>Built-in React.js integration, easy to use with Flight.js and Ractive.js and probably all others</li>
-<li>Improve your UI/data consistency using rollbacks</li>
-</ul>
-</blockquote>
-
-<h2>Facebook&#39;s iOS Infrastructure</h2>
-
-<p>Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
-
-<h2>Random Tweet</h2>
-
-<blockquote class="twitter-tweet" lang="en"><p>If you build your app with flux, you can swap out React for a canvas or svg view layer and keep 85% of your code. (or the thing after React)</p>&mdash; Ryan Florence (@ryanflorence) <a href="https://twitter.com/ryanflorence/status/507309645372076034">September 3, 2014</a></blockquote>
 
 </div>
 

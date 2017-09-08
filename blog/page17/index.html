@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,146 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/03/14/community-roundup-18.html">Community Round-up #18</a>
+
+</h1>
+
+<p class="meta">
+  March 14, 2014
+  by
+  
+    
+      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>In this Round-up, we are taking a few closer looks at React&#39;s interplay with different frameworks and architectures.</p>
+
+<h2>&quot;Little framework BIG splash&quot;</h2>
+
+<p>Let&#39;s start with yet another refreshing introduction to React: Craig Savolainen (<a href="https://twitter.com/maedhr">@maedhr</a>) walks through some first steps, demonstrating <a href="http://infinitemonkeys.influitive.com/little-framework-big-splash">how to build a Google Maps component</a> using React.</p>
+
+<h2>Architecting your app with react</h2>
+
+<p>Brandon Konkle (<a href="https://twitter.com/bkonkle">@bkonkle</a>)
+<a href="http://lincolnloop.com/blog/architecting-your-app-react-part-1/">Architecting your app with react</a>
+We&#39;re looking forward to part 2!</p>
+
+<blockquote>
+<p>React is not a full MVC framework, and this is actually one of its strengths. Many who adopt React choose to do so alongside their favorite MVC framework, like Backbone. React has no opinions about routing or syncing data, so you can easily use your favorite tools to handle those aspects of your frontend application. You&#39;ll often see React used to manage specific parts of an application&#39;s UI and not others. React really shines, however, when you fully embrace its strategies and make it the core of your application&#39;s interface.</p>
+
+<p><a href="http://lincolnloop.com/blog/architecting-your-app-react-part-1/">Read the full article...</a></p>
+</blockquote>
+
+<h2>React vs. async DOM manipulation</h2>
+
+<p>Eliseu Monar (<a href="https://twitter.com/eliseumds">@eliseumds</a>)&#39;s post &quot;<a href="http://eliseumds.tumblr.com/post/77843550010/vitalbox-pchr-reactjs-vs-async-concurrent-rendering">ReactJS vs async concurrent rendering</a>&quot; is a great example of how React quite literally renders a whole array of common web development work(arounds) obsolete.</p>
+
+<h2>React, Scala and the Play Framework</h2>
+
+<p><a href="http://matthiasnehlsen.com/">Matthias Nehlsen</a> wrote a detailed introductory piece on <a href="http://matthiasnehlsen.com/blog/2014/01/05/play-framework-and-facebooks-react-library/">React and the Play Framework</a>, including a helpful architectural diagram of a typical React app.</p>
+
+<p>Nehlsen&#39;s React frontend is the second implementation of his chat application&#39;s frontend, following an AngularJS version. Both implementations are functionally equivalent and offer some perspective on differences between the two frameworks.</p>
+
+<p>In <a href="http://matthiasnehlsen.com/blog/2014/01/24/scala-dot-js-and-reactjs/">another article</a>, he walks us through the process of using React with scala.js to implement app-wide undo functionality.</p>
+
+<p>Also check out his <a href="http://m.ustream.tv/recorded/42780242">talk</a> at Ping Conference 2014, in which he walks through a lot of the previously content in great detail.</p>
+
+<h2>React and Backbone</h2>
+
+<p>The folks over at <a href="https://venmo.com/">Venmo</a> are using React in conjunction with Backbone.
+Thomas Boyt (<a href="https://twitter.com/thomasaboyt">@thomasaboyt</a>) wrote <a href="http://www.thomasboyt.com/2013/12/17/using-reactjs-as-a-backbone-view.html">this detailed piece</a> about why React and Backbone are &quot;a fantastic pairing&quot;.</p>
+
+<h2>React vs. Ember</h2>
+
+<p>Eric Berry (<a href="https://twitter.com/coderberry">@coderberry</a>) developed Ember equivalents for some of the official React examples. Read his post for a side-by-side comparison of the respective implementations: <a href="https://instructure.github.io/blog/2013/12/17/facebook-react-vs-ember/">&quot;Facebook React vs. Ember&quot;</a>.</p>
+
+<h2>React and plain old HTML</h2>
+
+<p>Daniel Lo Nigro (<a href="https://twitter.com/Daniel15">@Daniel15</a>) created <a href="https://github.com/reactjs/react-magic">React-Magic</a>, which leverages React to ajaxify plain old html pages and even <a href="http://stuff.dan.cx/facebook/react-hacks/magic/red.php">allows CSS transitions between pageloads</a>.</p>
+
+<blockquote>
+<p>React-Magic intercepts all navigation (link clicks and form posts) and loads the requested page via an AJAX request. React is then used to &quot;diff&quot; the old HTML with the new HTML, and only update the parts of the DOM that have been changed.</p>
+
+<p><a href="https://github.com/reactjs/react-magic">Check out the project on GitHub...</a></p>
+</blockquote>
+
+<p>On a related note, <a href="https://turbo-react.herokuapp.com/">Reactize</a> by Ross Allen (<a href="https://twitter.com/ssorallen">@ssorallen</a>) is a similarly awesome project: A wrapper for Rails&#39; <a href="https://github.com/rails/turbolinks/">Turbolinks</a>, which seems to have inspired John Lynch (<a href="https://twitter.com/johnrlynch">@johnrlynch</a>) to then create <a href="http://www.rigelgroupllc.com/blog/2014/01/12/react-jsx-transformer-in-rails-middleware/">a server-rendered version using the JSX transformer in Rails middleware</a>.</p>
+
+<h2>React and Object.observe</h2>
+
+<p>Check out <a href="https://github.com/fdecampredon">François de Campredon</a>&#39;s implementation of <a href="https://github.com/fdecampredon/react-observe-todomvc/">TodoMVC based on React and ES6&#39;s Object.observe</a>.</p>
+
+<h2>React and Angular</h2>
+
+<p>Ian Bicking (<a href="https://twitter.com/ianbicking">@ianbicking</a>) of Mozilla Labs <a href="https://plus.google.com/+IanBicking/posts/Qj8R5SWAsfE">explains why he &quot;decided to go with React instead of Angular.js&quot;</a>.</p>
+
+<h3>ng-React Update</h3>
+
+<p><a href="https://github.com/davidchang">David Chang</a> works through some performance improvements of his <a href="https://github.com/davidchang/ngReact">ngReact</a> project. His post <a href="http://davidandsuzi.com/ngreact-update/">&quot;ng-React Update - React 0.9 and Angular Track By&quot;</a> includes some helpful advice on boosting render performance for Angular components.</p>
+
+<blockquote>
+<p>Angular gives you a ton of functionality out of the box - a full MV* framework - and I am a big fan, but I&#39;ll admit that you need to know how to twist the right knobs to get performance.</p>
+
+<p>That said, React gives you a very strong view component out of the box with the performance baked right in. Try as I did, I couldn&#39;t actually get it any faster. So pretty impressive stuff.</p>
+
+<p><a href="http://davidandsuzi.com/ngreact-update/">Read the full post...</a></p>
+</blockquote>
+
+<p>React was also recently mentioned at ng-conf, where the Angular team commented on React&#39;s concept of the virtual DOM:</p>
+
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
+
+<h2>React and Web Components</h2>
+
+<p>Jonathan Krause (<a href="https://twitter.com/jonykrause">@jonykrause</a>) offers his thoughts regarding <a href="http://jonykrau.se/posts/the-value-of-react">parallels between React and Web Components</a>, highlighting the value of React&#39;s ability to render pages on the server practically for free.</p>
+
+<h2>Immutable React</h2>
+
+<p><a href="http://pk11.kinja.com/">Peter Hausel</a> shows how to build a Wikipedia auto-complete demo based on immutable data structures (similar to <a href="https://npmjs.org/package/mori">mori</a>), really taking advantage of the framework&#39;s one-way reactive data binding:</p>
+
+<blockquote>
+<p>Its truly reactive design makes DOM updates finally sane and when combined with persistent data structures one can experience JavaScript development like it was never done before.</p>
+
+<p><a href="http://tech.kinja.com/immutable-react-1495205675">Read the full post</a></p>
+</blockquote>
+
+<h2>D3 and React</h2>
+
+<p><a href="http://10consulting.com/">Ben Smith</a> built some great SVG-based charting components using a little less of D3 and a little more of React: <a href="http://10consulting.com/2014/02/19/d3-plus-reactjs-for-charting/">D3 and React - the future of charting components?</a></p>
+
+<h2>Om and React</h2>
+
+<p>Josh Haberman (<a href="https://twitter.com/JoshHaberman">@joshhaberman</a>) discusses performance differences between React, Om and traditional MVC frameworks in &quot;<a href="http://blog.reverberate.org/2014/02/on-future-of-javascript-mvc-frameworks.html">A closer look at OM vs React performance</a>&quot;.</p>
+
+<p>Speaking of Om: <a href="https://github.com/sgrove/omchaya">Omchaya</a> by Sean Grove (<a href="https://twitter.com/sgrove">@sgrove</a>) is a neat Cljs/Om example project.</p>
+
+<h2>Random Tweets</h2>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>Worked for 2 hours on a [@react_js](https://twitter.com/react_js) app sans internet. Love that I could get stuff done with it without googling every question.</p>&mdash; John Shimek (@varikin) <a href="https://twitter.com/varikin/status/436606891657949185">February 20, 2014</a></blockquote></div>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -657,161 +791,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.9.0-rc
 
 <div><blockquote class="twitter-tweet" lang="en"><p>brb rewriting everything with react
 </p>&mdash; Ben Smithett (@bensmithett) <a href="https://twitter.com/bensmithett/status/430671242186592256">February 4, 2014</a></blockquote></div>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/02/05/community-roundup-15.html">Community Round-up #15</a>
-
-</h1>
-
-<p class="meta">
-  February  5, 2014
-  by
-  
-    
-      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Interest in React seems to have surged ever since David Nolen (<a href="https://twitter.com/swannodette">@swannodette</a>)&#39;s introduction of <a href="https://github.com/swannodette/om">Om</a> in his post <a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">&quot;The Future of JavaScript MVC Frameworks&quot;</a>.</p>
-
-<p>In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.</p>
-
-<h2>&quot;React: Another Level of Indirection&quot;</h2>
-
-<p>To start things off, Eric Normand (<a href="https://twitter.com/ericnormand">@ericnormand</a>) of <a href="http://lispcast.com">LispCast</a> makes the case for <a href="http://www.lispcast.com/react-another-level-of-indirection">React from a general functional programming standpoint</a> and explains how React&#39;s &quot;Virtual DOM provides the last piece of the Web Frontend Puzzle for ClojureScript&quot;.</p>
-
-<blockquote>
-<p>The Virtual DOM is an indirection mechanism that solves the difficult problem of DOM programming: how to deal with incremental changes to a stateful tree structure. By abstracting away the statefulness, the Virtual DOM turns the real DOM into an immediate mode GUI, which is perfect for functional programming.</p>
-
-<p><a href="http://www.lispcast.com/react-another-level-of-indirection">Read the full post...</a></p>
-</blockquote>
-
-<h2>Reagent: Minimalistic React for ClojureScript</h2>
-
-<p>Dan Holmsand (<a href="https://twitter.com/holmsand">@holmsand</a>) created <a href="https://holmsand.github.io/reagent/">Reagent</a>, a simplistic ClojureScript API to React.</p>
-
-<blockquote>
-<p>It allows you to define efficient React components using nothing but plain ClojureScript functions and data, that describe your UI using a Hiccup-like syntax.</p>
-
-<p>The goal of Reagent is to make it possible to define arbitrarily complex UIs using just a couple of basic concepts, and to be fast enough by default that you rarely have to care about performance.</p>
-
-<p><a href="https://holmsand.github.io/reagent/">Check it out on GitHub...</a></p>
-</blockquote>
-
-<h2>Functional DOM programming</h2>
-
-<p>React&#39;s one-way data-binding naturally lends itself to a functional programming approach. Facebook&#39;s Pete Hunt (<a href="https://twitter.com/floydophone">@floydophone</a>) explores how one would go about <a href="https://medium.com/p/67d81637d43">writing web apps in a functional manner</a>. Spoiler alert:</p>
-
-<blockquote>
-<p>This is React. It’s not about templates, or data binding, or DOM manipulation. It’s about using functional programming with a virtual DOM representation to build ambitious, high-performance apps with JavaScript.</p>
-
-<p><a href="https://medium.com/p/67d81637d43">Read the full post...</a></p>
-</blockquote>
-
-<p>Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
-
-<h2>Kioo: Separating markup and logic</h2>
-
-<p><a href="https://github.com/ckirkendall">Creighton Kirkendall</a> created <a href="https://github.com/ckirkendall/kioo">Kioo</a>, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.</p>
-
-<p>A basic example from github:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
-<span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
-  <span class="nt">&lt;body&gt;</span>
-    <span class="nt">&lt;header&gt;</span>
-      <span class="nt">&lt;h1&gt;</span>Header placeholder<span class="nt">&lt;/h1&gt;</span>
-      <span class="nt">&lt;ul</span> <span class="na">id=</span><span class="s">&quot;navigation&quot;</span><span class="nt">&gt;</span>
-        <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">&quot;nav-item&quot;</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;#&quot;</span><span class="nt">&gt;</span>Placeholder<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
-      <span class="nt">&lt;/ul&gt;</span>
-    <span class="nt">&lt;/header&gt;</span>
-    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;</span>place holder<span class="nt">&lt;/div&gt;</span>
-  <span class="nt">&lt;/body&gt;</span>
-<span class="nt">&lt;/html&gt;</span>
-</code></pre></div><div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="nv">...</span>
-
-<span class="p">(</span><span class="kd">defn </span><span class="nv">my-nav-item</span> <span class="p">[[</span><span class="nv">caption</span> <span class="nv">func</span><span class="p">]]</span>
-  <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span> <span class="p">[</span><span class="ss">:.nav-item</span><span class="p">]</span>
-    <span class="p">{[</span><span class="ss">:a</span><span class="p">]</span> <span class="p">(</span><span class="nf">do-&gt;</span> <span class="p">(</span><span class="nf">content</span> <span class="nv">caption</span><span class="p">)</span>
-                <span class="p">(</span><span class="nf">set-attr</span> <span class="ss">:onClick</span> <span class="nv">func</span><span class="p">))}))</span>
-
-<span class="p">(</span><span class="kd">defn </span><span class="nv">my-header</span> <span class="p">[</span><span class="nv">heading</span> <span class="nv">nav-elms</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span> <span class="p">[</span><span class="ss">:header</span><span class="p">]</span>
-    <span class="p">{[</span><span class="ss">:h1</span><span class="p">]</span> <span class="p">(</span><span class="nf">content</span> <span class="nv">heading</span><span class="p">)</span>
-     <span class="p">[</span><span class="ss">:ul</span><span class="p">]</span> <span class="p">(</span><span class="nf">content</span> <span class="p">(</span><span class="nb">map </span><span class="nv">my-nav-item</span> <span class="nv">nav-elms</span><span class="p">))}))</span>
-
-<span class="p">(</span><span class="kd">defn </span><span class="nv">my-page</span> <span class="p">[</span><span class="nv">data</span><span class="p">]</span>
-  <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span>
-    <span class="p">{[</span><span class="ss">:header</span><span class="p">]</span> <span class="p">(</span><span class="nf">substitute</span> <span class="p">(</span><span class="nf">my-header</span> <span class="p">(</span><span class="ss">:heading</span> <span class="nv">data</span><span class="p">)</span>
-                                      <span class="p">(</span><span class="ss">:navigation</span> <span class="nv">data</span><span class="p">)))</span>
-     <span class="p">[</span><span class="ss">:.content</span><span class="p">]</span> <span class="p">(</span><span class="nf">content</span> <span class="p">(</span><span class="ss">:content</span> <span class="nv">data</span><span class="p">))}))</span>
-
-<span class="p">(</span><span class="k">def </span><span class="nv">app-state</span> <span class="p">(</span><span class="nf">atom</span> <span class="p">{</span><span class="ss">:heading</span>    <span class="s">&quot;main&quot;</span>
-                      <span class="ss">:content</span>    <span class="s">&quot;Hello World&quot;</span>
-                      <span class="ss">:navigation</span> <span class="p">[[</span><span class="s">&quot;home&quot;</span> <span class="o">#</span><span class="p">(</span><span class="nf">js/alert</span> <span class="nv">%</span><span class="p">)]</span>
-                                   <span class="p">[</span><span class="s">&quot;next&quot;</span> <span class="o">#</span><span class="p">(</span><span class="nf">js/alert</span> <span class="nv">%</span><span class="p">)]]}))</span>
-
-<span class="p">(</span><span class="nf">om/root</span> <span class="nv">app-state</span> <span class="nv">my-page</span> <span class="p">(</span><span class="nf">.-body</span> <span class="nv">js/document</span><span class="p">))</span>
-</code></pre></div>
-<h2>Om</h2>
-
-<p>In an interview with David Nolen, Tom Coupland (<a href="https://twitter.com/tcoupland">@tcoupland</a>) of InfoQ provides a nice summary of recent developments around Om (&quot;<a href="http://www.infoq.com/news/2014/01/om-react">Om: Enhancing Facebook&#39;s React with Immutability</a>&quot;).</p>
-
-<blockquote>
-<p>David [Nolen]: I think people are starting to see the limitations of just JavaScript and jQuery and even more structured solutions like Backbone, Angular, Ember, etc. React is a fresh approach to the DOM problem that seems obvious in hindsight.</p>
-
-<p><a href="http://www.infoq.com/news/2014/01/om-react">Read the full interview...</a></p>
-</blockquote>
-
-<h3>A slice of React, ClojureScript and Om</h3>
-
-<p>Fredrik Dyrkell (<a href="https://twitter.com/lexicallyscoped">@lexicallyscoped</a>) rewrote part of the <a href="http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html">React tutorial in both ClojureScript and Om</a>, along with short, helpful explanations.</p>
-
-<blockquote>
-<p>React has sparked a lot of interest in the Clojure community lately [...]. At the very core, React lets you build up your DOM representation in a functional fashion by composing pure functions and you have a simple building block for everything: React components.</p>
-
-<p><a href="http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html">Read the full post...</a></p>
-</blockquote>
-
-<p>In a separate post, Dyrkell breaks down <a href="http://www.lexicallyscoped.com/2014/01/23/ClojureScript-react-om-binary-clock.html">how to build a binary clock component</a> in Om.</p>
-
-<p>[<a href="http://www.lexicallyscoped.com/demo/binclock/">Demo</a>] [<a href="https://github.com/fredyr/binclock/blob/master/src/binclock/core.cljs">Code</a>]</p>
-
-<h3>Time Travel: Implementing undo in Om</h3>
-
-<p>David Nolen shows how to leverage immutable data structures to <a href="https://swannodette.github.io/2013/12/31/time-travel/">add global undo</a> functionality to an app – using just 13 lines of ClojureScript.</p>
-
-<h3>A Step-by-Step Om Walkthrough</h3>
-
-<p><a href="http://www.joshlehman.me">Josh Lehman</a> took the time to create an extensive <a href="http://www.joshlehman.me/rewriting-the-react-tutorial-in-om/">step-by-step walkthrough</a> of the React tutorial in Om. The well-documented source is on <a href="https://github.com/jalehman/omtut-starter">github</a>.</p>
-
-<h3>Omkara</h3>
-
-<p><a href="https://github.com/brendanyounger">brendanyounger</a> created <a href="https://github.com/brendanyounger/omkara">omkara</a>, a starting point for ClojureScript web apps based on Om/React. It aims to take advantage of server-side rendering and comes with a few tips on getting started with Om/React projects.</p>
-
-<h3>Om Experience Report</h3>
-
-<p>Adam Solove (<a href="https://twitter.com/asolove/">@asolove</a>) <a href="http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html">dives a little deeper into Om, React and ClojureScript</a>. He shares some helpful tips he gathered while building his <a href="https://github.com/asolove/carto-crayon">CartoCrayon</a> prototype.</p>
-
-<h2>Not-so-random Tweet</h2>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.</p>&mdash; Adam Solove (@asolove) <a href="https://twitter.com/asolove/status/420294067637858304">January 6, 2014</a></blockquote></div>
 
 </div>
 

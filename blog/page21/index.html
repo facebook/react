@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,116 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/08/05/community-roundup-6.html">Community Round-up #6</a>
+
+</h1>
+
+<p class="meta">
+  August  5, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It&#39;s great to see the adoption of React growing.</p>
+
+<h2>React Game Tutorial</h2>
+
+<p><a href="https://twitter.com/CalebCassel">Caleb Cassel</a> wrote a <a href="https://rawgithub.com/calebcassel/react-demo/master/part1.html">step-by-step tutorial</a> about making a small game. It covers JSX, State and Events, Embedded Components and Integration with Backbone.
+<figure><a href="https://rawgithub.com/calebcassel/react-demo/master/part1.html"><img src="/react/img/blog/dog-tutorial.png" alt=""></a></figure></p>
+
+<h2>Reactify</h2>
+
+<p><a href="http://andreypopp.com/">Andrey Popp</a> created a <a href="http://browserify.org/">Browserify</a> helper to compile JSX files.</p>
+
+<blockquote>
+<p>Browserify v2 transform for <code>text/jsx</code>. Basic usage is:</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">% browserify -t reactify main.jsx
+</code></pre></div>
+<p><code>reactify</code> transform activates for files with either <code>.jsx</code> extension or <code>/** @jsx React.DOM */</code> pragma as a first line for any <code>.js</code> file.</p>
+
+<p><a href="https://github.com/andreypopp/reactify">Check it out on GitHub...</a></p>
+</blockquote>
+
+<h2>React Integration with Este</h2>
+
+<p><a href="http://daniel.steigerwald.cz/">Daniel Steigerwald</a> is now using React within <a href="https://github.com/steida/este">Este</a>, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.</p>
+<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
+  <span class="nv">render: </span><span class="nf">-&gt;</span>
+    <span class="nx">@div</span> <span class="p">[</span>
+      <span class="nx">este</span><span class="p">.</span><span class="nx">demos</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">todoList</span> <span class="s">&#39;items&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]</span>
+      <span class="k">if</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span>
+        <span class="nx">@p</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span><span class="si">}</span><span class="s"> items.&quot;</span>
+      <span class="nx">@form</span> <span class="s">&#39;onSubmit&#39;</span><span class="o">:</span> <span class="nx">@onFormSubmit</span><span class="p">,</span> <span class="p">[</span>
+        <span class="nx">@input</span>
+          <span class="s">&#39;onChange&#39;</span><span class="o">:</span> <span class="nx">@onChange</span>
+          <span class="s">&#39;value&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;text&#39;</span><span class="p">]</span>
+          <span class="s">&#39;autoFocus&#39;</span><span class="o">:</span> <span class="kc">true</span>
+          <span class="s">&#39;ref&#39;</span><span class="o">:</span> <span class="s">&#39;textInput&#39;</span>
+        <span class="nx">@button</span> <span class="s">&quot;Add #</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
+      <span class="p">]</span>
+    <span class="p">]</span>
+</code></pre></div>
+<p><a href="https://github.com/steida/este-library/blob/master/este/demos/thirdparty/react/start.coffee">Check it out on GitHub...</a></p>
+
+<h2>React Stylus Boilerplate</h2>
+
+<p><a href="https://zaim.github.io/">Zaim Bakar</a> shared his boilerplate to get started with Stylus CSS processor.</p>
+
+<blockquote>
+<p>This is my boilerplate React project using Grunt as the build tool, and Stylus as my CSS preprocessor.</p>
+
+<ul>
+<li>Very minimal HTML boilerplate</li>
+<li>Uses Stylus, with nib included</li>
+<li>Uses two build targets:
+
+<ul>
+<li><code>grunt build</code> to compile JSX and Stylus into a development build</li>
+<li><code>grunt dist</code> to minify and optimize the development build for production</li>
+</ul></li>
+</ul>
+
+<p><a href="https://github.com/zaim/react-stylus-boilerplate">Check it out on GitHub...</a></p>
+</blockquote>
+
+<h2>WebFUI</h2>
+
+<p><a href="http://lisperati.com/">Conrad Barski</a>, author of the popular book <a href="http://landoflisp.com/">Land of Lisp</a>, wants to use React for his ClojureScript library called <a href="https://github.com/drcode/webfui">WebFUI</a>.</p>
+
+<blockquote>
+<p>I&#39;m the author of &quot;<a href="http://landoflisp.com/">Land of Lisp</a>&quot; and I love your framework. I built a somewhat similar framework a year ago <a href="https://github.com/drcode/webfui">WebFUI</a> aimed at ClojureScript. My framework also uses global event delegates, a global &quot;render&quot; function, DOM reconciliation, etc just like react.js. (Of course these ideas all have been floating around the ether for ages, always great to see more people building on them.)</p>
+
+<p>Your implementation is more robust, and so I think the next point release of webfui will simply delegate all the &quot;hard work&quot; to react.js and will only focus on the areas where it adds value (enabling purely functional UI programming in clojurescript, and some other stuff related to streamlining event handling)
+<figure><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ"><img src="/react/img/blog/landoflisp.png" alt=""></a></figure></p>
+
+<p><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ">Read the full post...</a></p>
+</blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -410,82 +514,6 @@ If you were using React without JSX previously, your code should still work.</li
 <li>Fixed a number of bugs when transforming directories</li>
 <li>No longer re-write <code>require()</code>s to be relative unless specified</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">New in React v0.4: Prop Validation and Default Values</a>
-
-</h1>
-
-<p class="meta">
-  July 11, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Many of the questions we got following the public launch of React revolved around <code>props</code>, specifically that people wanted to do validation and to make sure their components had sensible defaults.</p>
-
-<h2>Validation</h2>
-
-<p>Oftentimes you want to validate your <code>props</code> before you use them. Perhaps you want to ensure they are a specific type. Or maybe you want to restrict your prop to specific values. Or maybe you want to make a specific prop required. This was always possible — you could have written validations in your <code>render</code> or <code>componentWillReceiveProps</code> functions, but that gets clunky fast.</p>
-
-<p>React v0.4 will provide a nice easy way for you to use built-in validators, or to even write your own.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">propTypes</span><span class="o">:</span> <span class="p">{</span>
-    <span class="c1">// An optional string prop named &quot;description&quot;.</span>
-    <span class="nx">description</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span>
-
-    <span class="c1">// A required enum prop named &quot;category&quot;.</span>
-    <span class="nx">category</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">oneOf</span><span class="p">([</span><span class="s1">&#39;News&#39;</span><span class="p">,</span><span class="s1">&#39;Photos&#39;</span><span class="p">]).</span><span class="nx">isRequired</span><span class="p">,</span>
-
-    <span class="c1">// A prop named &quot;dialog&quot; that requires an instance of Dialog.</span>
-    <span class="nx">dialog</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">instanceOf</span><span class="p">(</span><span class="nx">Dialog</span><span class="p">).</span><span class="nx">isRequired</span>
-  <span class="p">},</span>
-  <span class="p">...</span>
-<span class="p">});</span>
-</code></pre></div>
-<h2>Default Values</h2>
-
-<p>One common pattern we&#39;ve seen with our React code is to do something like this:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">value</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">value</span> <span class="o">||</span> <span class="s1">&#39;default value&#39;</span><span class="p">;</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">value</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>Do this for a few <code>props</code> across a few components and now you have a lot of redundant code. Starting with React v0.4, you can provide default values in a declarative way:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">getDefaultProps</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span>
-      <span class="nx">value</span><span class="o">:</span> <span class="s1">&#39;default value&#39;</span>
-    <span class="p">};</span>
-  <span class="p">}</span>
-  <span class="p">...</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>We will use the cached result of this function before each <code>render</code>. We also perform all validations before each <code>render</code> to ensure that you have all of the data you need in the right form before you try to use it.</p>
-
-<hr>
-
-<p>Both of these features are entirely optional. We&#39;ve found them to be increasingly valuable at Facebook as our applications grow and evolve, and we hope others find them useful as well.</p>
 
 </div>
 

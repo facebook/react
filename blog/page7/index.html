@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,219 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/09/10/react-v0.14-rc1.html">React v0.14 Release Candidate</a>
+
+</h1>
+
+<p class="meta">
+  September 10, 2015
+  by
+  
+    
+      <a href="http://benalpert.com">Ben Alpert</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We’re happy to announce our first release candidate for React 0.14! We gave you a <a href="/react/blog/2015/07/03/react-v0.14-beta-1.html">sneak peek in July</a> at the upcoming changes but we’ve now stabilized the release more and we’d love for you to try it out before we release the final version.</p>
+
+<p>Let us know if you run into any problems by filing issues on our <a href="https://github.com/facebook/react">GitHub repo</a>.</p>
+
+<h2>Installation</h2>
+
+<p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single package:</p>
+
+<ul>
+<li><code>npm install --save react@0.14.0-rc1</code></li>
+<li><code>npm install --save react-dom@0.14.0-rc1</code></li>
+</ul>
+
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the <code>NODE_ENV</code> environment variable to <code>production</code> to use the production build of React which does not include the development warnings and runs significantly faster.</p>
+
+<p>If you can’t use <code>npm</code> yet, we also provide pre-built browser builds for your convenience:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.14.0-rc1.js">https://fb.me/react-0.14.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.14.0-rc1.min.js">https://fb.me/react-0.14.0-rc1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.0-rc1.js">https://fb.me/react-with-addons-0.14.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.14.0-rc1.min.js">https://fb.me/react-with-addons-0.14.0-rc1.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-0.14.0-rc1.js">https://fb.me/react-dom-0.14.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.js">https://fb.me/react-dom-0.14.0-rc1.min.js</a><br></li>
+</ul>
+
+<p>These builds are also available in the <code>react</code> package on bower.</p>
+
+<h2>Changelog</h2>
+
+<h3>Major changes</h3>
+
+<ul>
+<li><h4>Two Packages: React and React DOM</h4>
+
+<p>As we look at packages like <a href="https://github.com/facebook/react-native">react-native</a>, <a href="https://github.com/reactjs/react-art">react-art</a>, <a href="https://github.com/Flipboard/react-canvas">react-canvas</a>, and <a href="https://github.com/Izzimach/react-three">react-three</a>, it has become clear that the beauty and essence of React has nothing to do with browsers or the DOM.</p>
+
+<p>To make this more clear and to make it easier to build more environments that React can render to, we’re splitting the main <code>react</code> package into two: <code>react</code> and <code>react-dom</code>. <strong>This paves the way to writing components that can be shared between the web version of React and React Native.</strong> We don’t expect all the code in an app to be shared, but we want to be able to share the components that do behave the same across platforms.</p>
+
+<p>The <code>react</code> package contains <code>React.createElement</code>, <code>.createClass</code>, <code>.Component</code>, <code>.PropTypes</code>, <code>.Children</code>, and the other helpers related to elements and component classes. We think of these as the <a href="http://nerds.airbnb.com/isomorphic-javascript-future-web-apps/"><em>isomorphic</em></a> or <a href="https://medium.com/@mjackson/universal-javascript-4761051b7ae9"><em>universal</em></a> helpers that you need to build components.</p>
+
+<p>The <code>react-dom</code> package has <code>ReactDOM.render</code>, <code>.unmountComponentAtNode</code>, and <code>.findDOMNode</code>. In <code>react-dom/server</code> we have server-side rendering support with <code>ReactDOMServer.renderToString</code> and <code>.renderToStaticMarkup</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">ReactDOM</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">node</span><span class="p">);</span>
+</code></pre></div>
+<p>We’ve published the <a href="https://github.com/reactjs/react-codemod/blob/master/README.md">automated codemod script</a> we used at Facebook to help you with this transition.</p>
+
+<p>The add-ons have moved to separate packages as well: <code>react-addons-clone-with-props</code>, <code>react-addons-create-fragment</code>, <code>react-addons-css-transition-group</code>, <code>react-addons-linked-state-mixin</code>, <code>react-addons-perf</code>, <code>react-addons-pure-render-mixin</code>, <code>react-addons-shallow-compare</code>, <code>react-addons-test-utils</code>, <code>react-addons-transition-group</code>, and <code>react-addons-update</code>, plus <code>ReactDOM.unstable_batchedUpdates</code> in <code>react-dom</code>.</p>
+
+<p>For now, please use matching versions of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems.</p></li>
+<li><h4>DOM node refs</h4>
+
+<p>The other big change we’re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a React DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node. <strong>Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.</strong></p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Zoo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Giraffe</span> <span class="nx">name</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;giraffe&quot;</span> <span class="o">/&gt;&lt;</span><span class="err">/div&gt;;</span>
+  <span class="p">},</span>
+  <span class="nx">showName</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// Previously: var input = this.refs.giraffe.getDOMNode();</span>
+    <span class="kd">var</span> <span class="nx">input</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">giraffe</span><span class="p">;</span>
+    <span class="nx">alert</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>This change also applies to the return result of <code>ReactDOM.render</code> when passing a DOM node as the top component. As with refs, this change does not affect custom components. With these changes, we’re deprecating <code>.getDOMNode()</code> and replacing it with <code>ReactDOM.findDOMNode</code> (see below).</p></li>
+<li><h4>Stateless function components</h4>
+
+<p>In idiomatic React code, most of the components you write will be stateless, simply composing other components. We’re introducing a new, simpler syntax for these components where you can take <code>props</code> as an argument and return the element you want to render:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Using an ES2015 (ES6) arrow function:</span>
+<span class="kd">var</span> <span class="nx">Aquarium</span> <span class="o">=</span> <span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="o">=&gt;</span> <span class="p">{</span>
+  <span class="kd">var</span> <span class="nx">fish</span> <span class="o">=</span> <span class="nx">getFish</span><span class="p">(</span><span class="nx">props</span><span class="p">.</span><span class="nx">species</span><span class="p">);</span>
+  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">Tank</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">fish</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/Tank&gt;;</span>
+<span class="p">};</span>
+
+<span class="c1">// Or with destructuring and an implicit return, simply:</span>
+<span class="kd">var</span> <span class="nx">Aquarium</span> <span class="o">=</span> <span class="p">({</span><span class="nx">species</span><span class="p">})</span> <span class="o">=&gt;</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">Tank</span><span class="o">&gt;</span>
+    <span class="p">{</span><span class="nx">getFish</span><span class="p">(</span><span class="nx">species</span><span class="p">)}</span>
+  <span class="o">&lt;</span><span class="err">/Tank&gt;</span>
+<span class="p">);</span>
+
+<span class="c1">// Then use: &lt;Aquarium species=&quot;rainbowfish&quot; /&gt;</span>
+</code></pre></div>
+<p>This pattern is designed to encourage the creation of these simple components that should comprise large portions of your apps. In the future, we’ll also be able to make performance optimizations specific to these components by avoiding unnecessary checks and memory allocations.</p></li>
+<li><h4>Deprecation of react-tools</h4>
+
+<p>The <code>react-tools</code> package and <code>JSXTransformer.js</code> browser file <a href="/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">have been deprecated</a>. You can continue using version <code>0.13.3</code> of both, but we no longer support them and recommend migrating to <a href="http://babeljs.io/">Babel</a>, which has built-in support for React and JSX.</p></li>
+<li><h4>Compiler optimizations</h4>
+
+<p>React now supports two compiler optimizations that can be enabled in Babel 5.8.23 and newer. Both of these transforms <strong>should be enabled only in production</strong> (e.g., just before minifying your code) because although they improve runtime performance, they make warning messages more cryptic and skip important checks that happen in development mode, including propTypes.</p>
+
+<p><strong>Inlining React elements:</strong> The <code>optimisation.react.inlineElements</code> transform converts JSX elements to object literals like <code>{type: &#39;div&#39;, props: ...}</code> instead of calls to <code>React.createElement</code>.</p>
+
+<p><strong>Constant hoisting for React elements:</strong> The <code>optimisation.react.constantElements</code> transform hoists element creation to the top level for subtrees that are fully static, which reduces calls to <code>React.createElement</code> and the resulting allocations. More importantly, it tells React that the subtree hasn’t changed so React can completely skip it when reconciling.</p></li>
+</ul>
+
+<h3>Breaking changes</h3>
+
+<p>As always, we have a few breaking changes in this release. Whenever we make large changes, we warn for at least one release so you have time to update your code. The Facebook codebase has over 15,000 React components, so on the React team, we always try to minimize the pain of breaking changes.</p>
+
+<p>These three breaking changes had a warning in 0.13, so you shouldn’t have to do anything if your code is already free of warnings:</p>
+
+<ul>
+<li>The <code>props</code> object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, <a href="/react/docs/top-level-api.html#react.cloneelement"><code>React.cloneElement</code></a> should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.</li>
+<li>Plain objects are no longer supported as React children; arrays should be used instead. You can use the <a href="/react/docs/create-fragment.html"><code>createFragment</code></a> helper to migrate, which now returns an array.</li>
+<li>Add-Ons: <code>classSet</code> has been removed. Use <a href="https://github.com/JedWatson/classnames">classnames</a> instead.</li>
+</ul>
+
+<p>And these two changes did not warn in 0.13 but should be easy to find and clean up:</p>
+
+<ul>
+<li><code>React.initializeTouchEvents</code> is no longer necessary and has been removed completely. Touch events now work automatically.</li>
+<li>Add-Ons: Due to the DOM node refs change mentioned above, <code>TestUtils.findAllInRenderedTree</code> and related helpers are no longer able to take a DOM component, only a custom component.</li>
+</ul>
+
+<h3>New deprecations, introduced with a warning</h3>
+
+<ul>
+<li><p>Due to the DOM node refs change mentioned above, <code>this.getDOMNode()</code> is now deprecated and <code>ReactDOM.findDOMNode(this)</code> can be used instead. Note that in most cases, calling <code>findDOMNode</code> is now unnecessary – see the example above in the “DOM node refs” section.</p>
+
+<p>If you have a large codebase, you can use our <a href="https://github.com/facebook/react/blob/master/packages/react-codemod/README.md">automated codemod script</a> to change your code automatically.</p></li>
+<li><p><code>setProps</code> and <code>replaceProps</code> are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.</p></li>
+<li><p>ES6 component classes must now extend <code>React.Component</code> in order to enable stateless function components. The <a href="/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages">ES3 module pattern</a> will continue to work.</p></li>
+<li><p>Reusing and mutating a <code>style</code> object between renders has been deprecated. This mirrors our change to freeze the <code>props</code> object.</p></li>
+<li><p>Add-Ons: <code>cloneWithProps</code> is now deprecated. Use <a href="/react/docs/top-level-api.html#react.cloneelement"><code>React.cloneElement</code></a> instead (unlike <code>cloneWithProps</code>, <code>cloneElement</code> does not merge <code>className</code> or <code>style</code> automatically; you can merge them manually if needed).</p></li>
+<li><p>Add-Ons: To improve reliability, <code>CSSTransitionGroup</code> will no longer listen to transition events. Instead, you should specify transition durations manually using props such as <code>transitionEnterTimeout={500}</code>.</p></li>
+</ul>
+
+<h3>Notable enhancements</h3>
+
+<ul>
+<li>Added <code>React.Children.toArray</code> which takes a nested children object and returns a flat array with keys assigned to each child. This helper makes it easier to manipulate collections of children in your <code>render</code> methods, especially if you want to reorder or slice <code>this.props.children</code> before passing it down. In addition, <code>React.Children.map</code> now returns plain arrays too.</li>
+<li>React uses <code>console.error</code> instead of <code>console.warn</code> for warnings so that browsers show a full stack trace in the console. (Our warnings appear when you use patterns that will break in future releases and for code that is likely to behave unexpectedly, so we do consider our warnings to be “must-fix” errors.)</li>
+<li>Previously, including untrusted objects as React children <a href="http://danlec.com/blog/xss-via-a-spoofed-react-element">could result in an XSS security vulnerability</a>. This problem should be avoided by properly validating input at the application layer and by never passing untrusted objects around your application code. As an additional layer of protection, <a href="https://github.com/facebook/react/pull/4832">React now tags elements</a> with a specific <a href="http://www.2ality.com/2014/12/es6-symbols.html">ES2015 (ES6) <code>Symbol</code></a> in browsers that support it, in order to ensure that React never considers untrusted JSON to be a valid element. If this extra security protection is important to you, you should add a <code>Symbol</code> polyfill for older browsers, such as the one included by <a href="http://babeljs.io/docs/usage/polyfill/">Babel’s polyfill</a>.</li>
+<li>When possible, React DOM now generates XHTML-compatible markup.</li>
+<li>React DOM now supports these standard HTML attributes: <code>capture</code>, <code>challenge</code>, <code>inputMode</code>, <code>is</code>, <code>keyParams</code>, <code>keyType</code>, <code>minLength</code>, <code>summary</code>, <code>wrap</code>. It also now supports these non-standard attributes: <code>autoSave</code>, <code>results</code>, <code>security</code>.</li>
+<li>React DOM now supports these SVG attributes, which render into namespaced attributes: <code>xlinkActuate</code>, <code>xlinkArcrole</code>, <code>xlinkHref</code>, <code>xlinkRole</code>, <code>xlinkShow</code>, <code>xlinkTitle</code>, <code>xlinkType</code>, <code>xmlBase</code>, <code>xmlLang</code>, <code>xmlSpace</code>.</li>
+<li>The <code>image</code> SVG tag is now supported by React DOM.</li>
+<li>In React DOM, arbitrary attributes are supported on custom elements (those with a hyphen in the tag name or an <code>is=&quot;...&quot;</code> attribute).</li>
+<li>React DOM now supports these media events on <code>audio</code> and <code>video</code> tags: <code>onAbort</code>, <code>onCanPlay</code>, <code>onCanPlayThrough</code>, <code>onDurationChange</code>, <code>onEmptied</code>, <code>onEncrypted</code>, <code>onEnded</code>, <code>onError</code>, <code>onLoadedData</code>, <code>onLoadedMetadata</code>, <code>onLoadStart</code>, <code>onPause</code>, <code>onPlay</code>, <code>onPlaying</code>, <code>onProgress</code>, <code>onRateChange</code>, <code>onSeeked</code>, <code>onSeeking</code>, <code>onStalled</code>, <code>onSuspend</code>, <code>onTimeUpdate</code>, <code>onVolumeChange</code>, <code>onWaiting</code>.</li>
+<li>Many small performance improvements have been made.</li>
+<li>Many warnings show more context than before.</li>
+<li>Add-Ons: A <a href="https://github.com/facebook/react/pull/3355"><code>shallowCompare</code></a> add-on has been added as a migration path for <code>PureRenderMixin</code> in ES6 classes.</li>
+<li>Add-Ons: <code>CSSTransitionGroup</code> can now use <a href="https://github.com/facebook/react/blob/48942b85/docs/docs/10.1-animation.md#custom-classes">custom class names</a> instead of appending <code>-enter-active</code> or similar to the transition name.</li>
+</ul>
+
+<h3>New helpful warnings</h3>
+
+<ul>
+<li>React DOM now warns you when nesting HTML elements invalidly, which helps you avoid surprising errors during updates.</li>
+<li>Passing <code>document.body</code> directly as the container to <code>ReactDOM.render</code> now gives a warning as doing so can cause problems with browser extensions that modify the DOM.</li>
+<li>Using multiple instances of React together is not supported, so we now warn when we detect this case to help you avoid running into the resulting problems.</li>
+</ul>
+
+<h3>Notable bug fixes</h3>
+
+<ul>
+<li>Click events are handled by React DOM more reliably in mobile browsers, particularly in Mobile Safari.</li>
+<li>SVG elements are created with the correct namespace in more cases.</li>
+<li>React DOM now renders <code>&lt;option&gt;</code> elements with multiple text children properly and renders <code>&lt;select&gt;</code> elements on the server with the correct option selected.</li>
+<li>When two separate copies of React add nodes to the same document (including when a browser extension uses React), React DOM tries harder not to throw exceptions during event handling.</li>
+<li>Using non-lowercase HTML tag names in React DOM (e.g., <code>React.createElement(&#39;DIV&#39;)</code>) no longer causes problems, though we continue to recommend lowercase for consistency with the JSX tag name convention (lowercase names refer to built-in components, capitalized names refer to custom components).</li>
+<li>React DOM understands that these CSS properties are unitless and does not append “px” to their values: <code>animationIterationCount</code>, <code>boxOrdinalGroup</code>, <code>flexOrder</code>, <code>tabSize</code>, <code>stopOpacity</code>.</li>
+<li>Add-Ons: When using the test utils, <code>Simulate.mouseEnter</code> and <code>Simulate.mouseLeave</code> now work.</li>
+<li>Add-Ons: ReactTransitionGroup now correctly handles multiple nodes being removed simultaneously.</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -424,100 +631,6 @@ for more info.</p>
 
 <p>A second beta is out, with a number of bugfixes. It is also listed on the
 <a href="https://github.com/facebook/react-devtools/releases">releases page</a>.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/07/03/react-v0.14-beta-1.html">React v0.14 Beta 1</a>
-
-</h1>
-
-<p class="meta">
-  July  3, 2015
-  by
-  
-    
-      <a href="http://benalpert.com">Ben Alpert</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This week, many people in the React community are at <a href="https://www.react-europe.org/">ReactEurope</a> in the beautiful (and very warm) city of Paris, the second React conference that&#39;s been held to date. At our last conference, we released the first beta of React 0.13, and we figured we&#39;d do the same today with our first beta of React 0.14, giving you something to play with if you&#39;re not at the conference or you&#39;re looking for something to do on the way home.</p>
-
-<p>With React 0.14, we&#39;re continuing to let React mature and to make minor changes as the APIs continue to settle down. I&#39;ll talk only about the two largest changes in this blog post; when we publish the final release we&#39;ll be sure to update all of our documentation and include a full changelog.</p>
-
-<p>You can install the new beta with <code>npm install react@0.14.0-beta1</code> and <code>npm install react-dom@0.14.0-beta1</code>. As mentioned in <a href="https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html">Deprecating react-tools</a>, we&#39;re no longer updating the react-tools package so this release doesn&#39;t include a new version of it. Please try the new version out and let us know what you think, and please do file issues on our GitHub repo if you run into any problems.</p>
-
-<h2>Two Packages</h2>
-
-<p>As we look at packages like <a href="https://github.com/facebook/react-native">react-native</a>, <a href="https://github.com/reactjs/react-art">react-art</a>, <a href="https://github.com/Flipboard/react-canvas">react-canvas</a>, and <a href="https://github.com/Izzimach/react-three">react-three</a>, it&#39;s become clear that the beauty and essence of React has nothing to do with browsers or the DOM.</p>
-
-<p>We think the true foundations of React are simply ideas of components and elements: being able to describe what you want to render in a declarative way. These are the pieces shared by all of these different packages. The parts of React specific to certain rendering targets aren&#39;t usually what we think of when we think of React. As one example, DOM diffing currently enables us to build React for the browser and make it fast enough to be useful, but if the DOM didn&#39;t have a stateful, imperative API, we might not need diffing at all.</p>
-
-<p>To make this more clear and to make it easier to build more environments that React can render to, we&#39;re splitting the main <code>react</code> package into two: <code>react</code> and <code>react-dom</code>.</p>
-
-<p>The <code>react</code> package contains <code>React.createElement</code>, <code>React.createClass</code> and <code>React.Component</code>, <code>React.PropTypes</code>, <code>React.Children</code>, and the other helpers related to elements and component classes. We think of these as the <a href="http://nerds.airbnb.com/isomorphic-javascript-future-web-apps/"><em>isomorphic</em></a> or <a href="https://medium.com/@mjackson/universal-javascript-4761051b7ae9"><em>universal</em></a> helpers that you need to build components.</p>
-
-<p>The <code>react-dom</code> package contains <code>ReactDOM.render</code>, <code>ReactDOM.unmountComponentAtNode</code>, and <code>ReactDOM.findDOMNode</code>, and in <code>react-dom/server</code> we have server-side rendering support with <code>ReactDOMServer.renderToString</code> and <code>ReactDOMServer.renderToStaticMarkup</code>.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react&#39;</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">ReactDOM</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom&#39;</span><span class="p">);</span>
-
-<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="nx">World</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">node</span><span class="p">);</span>
-</code></pre></div>
-<p>We anticipate that most components will need to depend only on the <code>react</code> package, which is lightweight and doesn&#39;t include any of the actual rendering logic. To start, we expect people to render DOM-based components with our <code>react-dom</code> package, but there&#39;s nothing stopping someone from diving deep on performance and writing a <code>awesome-faster-react-dom</code> package which can render <em>the exact same DOM-based components</em>. By decoupling the component definitions from the rendering, this becomes possible.</p>
-
-<p>More importantly, this paves the way to writing components that can be shared between the web version of React and React Native. This isn&#39;t yet easily possible, but we intend to make this easy in a future version so you can share React code between your website and native apps.</p>
-
-<p>The addons have moved to separate packages as well: <code>react-addons-clone-with-props</code>, <code>react-addons-create-fragment</code>, <code>react-addons-css-transition-group</code>, <code>react-addons-linked-state-mixin</code>, <code>react-addons-pure-render-mixin</code>, <code>react-addons-shallow-compare</code>, <code>react-addons-transition-group</code>, and <code>react-addons-update</code>, plus <code>ReactDOM.unstable_batchedUpdates</code> in <code>react-dom</code>.</p>
-
-<p>For now, please use the same version of <code>react</code> and <code>react-dom</code> in your apps to avoid versioning problems -- but we plan to remove this requirement later. (This release includes the old methods in the <code>react</code> package with a deprecation warning, but they&#39;ll be removed completely in 0.15.)</p>
-
-<h2>DOM node refs</h2>
-
-<p>The other big change we&#39;re making in this release is exposing refs to DOM components as the DOM node itself. That means: we looked at what you can do with a <code>ref</code> to a DOM component and realized that the only useful thing you can do with it is call <code>this.refs.giraffe.getDOMNode()</code> to get the underlying DOM node. In this release, <code>this.refs.giraffe</code> <em>is</em> the actual DOM node.</p>
-
-<p>Refs to custom component classes work exactly as before.</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">Zoo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="nx">Giraffe</span><span class="err">&#39;</span><span class="nx">s</span> <span class="nx">name</span><span class="o">:</span> <span class="o">&lt;</span><span class="nx">input</span> <span class="nx">ref</span><span class="o">=</span><span class="s2">&quot;giraffe&quot;</span> <span class="o">/&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="nx">showName</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="c1">// Previously:</span>
-    <span class="c1">// var input = this.refs.giraffe.getDOMNode();</span>
-    <span class="kd">var</span> <span class="nx">input</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">refs</span><span class="p">.</span><span class="nx">giraffe</span><span class="p">;</span>
-
-    <span class="nx">alert</span><span class="p">(</span><span class="nx">input</span><span class="p">.</span><span class="nx">value</span><span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>This change also applies to the return result of <code>ReactDOM.render</code> when passing a DOM node as the top component. As with refs, this change does not affect custom components (eg. <code>&lt;MyFancyMenu&gt;</code> or <code>&lt;MyContextProvider&gt;</code>), which remain unaffected by this change.</p>
-
-<p>Along with this change, we&#39;re also replacing <code>component.getDOMNode()</code> with <code>ReactDOM.findDOMNode(component)</code>. The <code>findDOMNode</code> method drills down to find which DOM node was rendered by a component, but it returns its argument when passed a DOM node so it&#39;s safe to call on a DOM component too. We introduced this function quietly in the last release, but now we&#39;re deprecating <code>.getDOMNode()</code> completely: it should be easy to change all existing calls in your code to be <code>ReactDOM.findDOMNode</code>. We also have an <a href="https://www.npmjs.com/package/react-codemod">automated codemod script</a> to help you with this transition. Note that the <code>findDOMNode</code> calls are unnecessary when you already have a DOM component ref (as in the example above), so you can (and should) skip them in most cases going forward.</p>
-
-<p>We hope you&#39;re as excited about this release as we are! Let us know what you think of it.</p>
 
 </div>
 

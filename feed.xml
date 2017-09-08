@@ -7,6 +7,152 @@
 		<atom:link href="https://facebook.github.io/react/feed.xml" rel="self" type="application/rss+xml" />
 		
 			<item>
+				<title>DOM Attributes in React 16</title>
+				<description>&lt;p&gt;In the past, React used to ignore unknown DOM attributes. If you wrote JSX with an attribute that React doesn&amp;#39;t recognize, React would just skip it. For example, this:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Your code:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mycustomattribute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;something&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;would render an empty div to the DOM with React 15:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// React 15 output:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In React 16, we are making a change. Now, any unknown attributes will end up in the DOM:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// React 16 output:&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mycustomattribute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;something&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;h2&gt;Why Are We Changing This?&lt;/h2&gt;
+
+&lt;p&gt;React has always provided a JavaScript-centric API to the DOM. Since React components often take both custom and DOM-related props, it makes sense for React to use the &lt;code&gt;camelCase&lt;/code&gt; convention just like the DOM APIs:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tabIndex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;-1&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This has not changed. However, the way we enforced it in the past forced us to maintain a whitelist of all valid React DOM attributes in the bundle:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;summary&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;summary&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;tabIndex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;tabindex&amp;#39;&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;target&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;target&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;nx&quot;&gt;title&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;:&lt;/span&gt; &lt;span class=&quot;s1&quot;&gt;&amp;#39;title&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;,&lt;/span&gt;
+&lt;span class=&quot;c1&quot;&gt;// ...&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This had two downsides:&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;You could not &lt;a href=&quot;https://github.com/facebook/react/issues/140&quot;&gt;pass a custom attribute&lt;/a&gt;. This is useful for supplying browser-specific non-standard attributes, trying new DOM APIs, and integrating with opinionated third-party libraries.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;The attribute list kept growing over time, but most React canonical attribute names are already valid in the DOM. Removing most of the whitelist helped us reduce the bundle size a little bit.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;With the new approach, both of these problems are solved. With React 16, you can now pass custom attributes to all HTML and SVG elements, and React doesn&amp;#39;t have to include the whole attribute whitelist in the production version.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;Note that you should still use the canonical React naming for known attributes:&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;c1&quot;&gt;// Yes, please&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tabIndex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;-1&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+
+&lt;span class=&quot;c1&quot;&gt;// Warning: Invalid DOM property `tabindex`. Did you mean `tabIndex`?&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tabindex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;-1&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;In other words, the way you use DOM components in React hasn&amp;#39;t changed, but now you have some new capabilities.&lt;/p&gt;
+
+&lt;h2&gt;Should I Keep Data in Custom Attributes?&lt;/h2&gt;
+
+&lt;p&gt;No. We don&amp;#39;t encourage you to keep data in DOM attributes. Even if you have to, &lt;code&gt;data-&lt;/code&gt; attributes are probably a better approach, but in most cases data should be kept in React component state or external stores.&lt;/p&gt;
+
+&lt;p&gt;However, the new feature is handy if you need to use a non-standard or a new DOM attribute, or if you need to integrate with a third-party library that relies on such attributes.&lt;/p&gt;
+
+&lt;h2&gt;Data and ARIA Attributes&lt;/h2&gt;
+
+&lt;p&gt;Just like before, React lets you pass &lt;code&gt;data-&lt;/code&gt; and &lt;code&gt;aria-&lt;/code&gt; attributes freely:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;data&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;foo&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;42&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;button&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;aria&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;-&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;label&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;Close&amp;quot;&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;onClick&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;onClose&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This has not changed.&lt;/p&gt;
+
+&lt;p&gt;&lt;a href=&quot;/react/docs/accessibility.html&quot;&gt;Accessibility&lt;/a&gt; is very important, so even though React 16 passes any attributes through, it still validates that &lt;code&gt;aria-&lt;/code&gt; props have correct names in development mode, just like React 15 did.&lt;/p&gt;
+
+&lt;h2&gt;Migration Path&lt;/h2&gt;
+
+&lt;p&gt;We have included &lt;a href=&quot;/react/warnings/unknown-prop.html&quot;&gt;a warning about unknown attributes&lt;/a&gt; since &lt;a href=&quot;https://github.com/facebook/react/releases/tag/v15.2.0&quot;&gt;React 15.2.0&lt;/a&gt; which came out more than a year ago. The vast majority of third-party libraries have already updated their code. If your app doesn&amp;#39;t produce warnings with React 15.2.0 or higher, this change should not require modifications in your application code.&lt;/p&gt;
+
+&lt;p&gt;If you still accidentally forward non-DOM props to DOM components, with React 16 you will start seeing those attributes in the DOM, for example:&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;myData&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;[Object object]&amp;#39;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;This is somewhat safe (the browser will just ignore them) but we recommend to fix these cases when you see them. One potential hazard is if you pass an object that implements a custom &lt;code&gt;toString()&lt;/code&gt; or &lt;code&gt;valueOf()&lt;/code&gt; method that throws. Another possible issue is that legacy HTML attributes like &lt;code&gt;align&lt;/code&gt; and &lt;code&gt;valign&lt;/code&gt; will now be passed to the DOM. They used to be stripped out because React didn&amp;#39;t support them.&lt;/p&gt;
+
+&lt;p&gt;To avoid these problems, we suggest to fix the warnings you see in React 15 before upgrading to React 16.&lt;/p&gt;
+
+&lt;h2&gt;Changes in Detail&lt;/h2&gt;
+
+&lt;p&gt;We&amp;#39;ve made a few other changes to make the behavior more predictable and help ensure you&amp;#39;re not making mistakes. We don&amp;#39;t anticipate that these changes are likely to break real-world applications.&lt;/p&gt;
+
+&lt;p&gt;&lt;strong&gt;These changes only affect DOM components like &lt;code&gt;&amp;lt;div&amp;gt;&lt;/code&gt;, not your own components.&lt;/strong&gt;  &lt;/p&gt;
+
+&lt;p&gt;Below is a detailed list of them.&lt;/p&gt;
+
+&lt;ul&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Unknown attributes with string, number, and object values:&lt;/strong&gt;  &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mycustomattribute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;value&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mycustomattribute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;42&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;mycustomattribute&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;myObject&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 15: Warns and ignores them.&lt;br&gt;
+React 16: Converts values to strings and passes them through.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note: attributes starting with &lt;code&gt;on&lt;/code&gt; are not passed through as an exception because this could become a potential security hole.&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Known attributes with a different canonical React name:&lt;/strong&gt;  &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tabindex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;-1&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;kr&quot;&gt;class&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;s2&quot;&gt;&amp;quot;hi&amp;quot;&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 15: Warns and ignores them.&lt;br&gt;
+React 16: Warns but converts values to strings and passes them through.&lt;/p&gt;
+
+&lt;p&gt;&lt;em&gt;Note: always use the canonical React naming for all supported attributes.&lt;/em&gt;&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Non-boolean attributes with boolean values:&lt;/strong&gt;  &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kc&quot;&gt;false&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 15: Converts booleans to strings and passes them through.&lt;br&gt;
+React 16: Warns and ignores them.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Non-event attributes with function values:&lt;/strong&gt;  &lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;kd&quot;&gt;function&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;()&lt;/span&gt; &lt;span class=&quot;p&quot;&gt;{}}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 15: Converts functions to strings and passes them through.&lt;br&gt;
+React 16: Warns and ignores them.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Attributes with Symbol values:&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;className&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;Symbol&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;(&lt;/span&gt;&lt;span class=&quot;s1&quot;&gt;&amp;#39;foo&amp;#39;&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;)}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 15: Crashes.&lt;br&gt;
+React 16: Warns and ignores them.&lt;/p&gt;&lt;/li&gt;
+&lt;li&gt;&lt;p&gt;&lt;strong&gt;Attributes with &lt;code&gt;NaN&lt;/code&gt; values:&lt;/strong&gt;&lt;/p&gt;
+&lt;div class=&quot;highlight&quot;&gt;&lt;pre&gt;&lt;code class=&quot;language-js&quot; data-lang=&quot;js&quot;&gt;&lt;span class=&quot;o&quot;&gt;&amp;lt;&lt;/span&gt;&lt;span class=&quot;nx&quot;&gt;div&lt;/span&gt; &lt;span class=&quot;nx&quot;&gt;tabIndex&lt;/span&gt;&lt;span class=&quot;o&quot;&gt;=&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;{&lt;/span&gt;&lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&lt;/span&gt; &lt;span class=&quot;mi&quot;&gt;0&lt;/span&gt;&lt;span class=&quot;p&quot;&gt;}&lt;/span&gt; &lt;span class=&quot;o&quot;&gt;/&amp;gt;&lt;/span&gt;
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;
+&lt;p&gt;React 15: Converts &lt;code&gt;NaN&lt;/code&gt;s to strings and passes them through.&lt;br&gt;
+React 16: Warns and ignores them.&lt;/p&gt;&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;While testing this release, we have also &lt;a href=&quot;https://github.com/facebook/react/blob/master/fixtures/attribute-behavior/AttributeTableSnapshot.md&quot;&gt;created an automatically generated table&lt;/a&gt; for all known attributes to track potential regressions.&lt;/p&gt;
+
+&lt;h2&gt;Try It!&lt;/h2&gt;
+
+&lt;p&gt;You can try the change in &lt;a href=&quot;https://codepen.io/gaearon/pen/gxNVdP?editors=0010&quot;&gt;this CodePen&lt;/a&gt;.&lt;br&gt;
+It uses React 16 RC, and you can &lt;a href=&quot;https://github.com/facebook/react/issues/10294&quot;&gt;help us by testing the RC in your project!&lt;/a&gt;&lt;/p&gt;
+
+&lt;h2&gt;Thanks&lt;/h2&gt;
+
+&lt;p&gt;This effort was largely driven by &lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;Nathan Hunzaker&lt;/a&gt; who has been a &lt;a href=&quot;https://github.com/facebook/react/pulls?q=is%3Apr+author%3Anhunzaker+is%3Aclosed&quot;&gt;prolific outside contributor to React&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;You can find his work on this issue in several PRs over the course of last year: &lt;a href=&quot;https://github.com/facebook/react/pull/6459&quot;&gt;#6459&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebook/react/pull/7311&quot;&gt;#7311&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebook/react/pull/10229&quot;&gt;#10229&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebook/react/pull/10397&quot;&gt;#10397&lt;/a&gt;, &lt;a href=&quot;https://github.com/facebook/react/pull/10385&quot;&gt;#10385&lt;/a&gt;, and &lt;a href=&quot;https://github.com/facebook/react/pull/10470&quot;&gt;#10470&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;Major changes in a popular project can take a lot of time and research. Nathan demonstrated perseverance and commitment to getting this change through, and we are very thankful to him for this and other efforts.&lt;/p&gt;
+
+&lt;p&gt;We would also like to thank &lt;a href=&quot;https://github.com/aweary&quot;&gt;Brandon Dail&lt;/a&gt; and &lt;a href=&quot;https://github.com/jquense&quot;&gt;Jason Quense&lt;/a&gt; for their invaluable help maintaining React this year.&lt;/p&gt;
+
+&lt;h2&gt;Future Work&lt;/h2&gt;
+
+&lt;p&gt;We are not changing how &lt;a href=&quot;https://developer.mozilla.org/en-US/docs/Web/Web_Components/Custom_Elements&quot;&gt;custom elements&lt;/a&gt; work in React 16, but there are &lt;a href=&quot;https://github.com/facebook/react/issues/7249&quot;&gt;existing discussions&lt;/a&gt; about setting properties instead of attributes, and we might revisit this in React 17. Feel free to chime in if you&amp;#39;d like to help!&lt;/p&gt;
+</description>
+				<pubDate>2017-09-08T00:00:00-07:00</pubDate>
+				<link>https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html</link>
+				<guid isPermaLink="true">https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html</guid>
+			</item>
+		
+			<item>
 				<title>Error Handling in React 16</title>
 				<description>&lt;p&gt;As React 16 release is getting closer, we would like to announce a few changes to how React handles JavaScript errors inside components. These changes are included in React 16 beta versions, and will be a part of React 16.&lt;/p&gt;
 
@@ -1789,31 +1935,6 @@ The console output is tuned to be minimal to help you focus on the problems:&lt;
 				<pubDate>2016-07-13T00:00:00-07:00</pubDate>
 				<link>https://facebook.github.io/react/blog/2016/07/13/mixins-considered-harmful.html</link>
 				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/07/13/mixins-considered-harmful.html</guid>
-			</item>
-		
-			<item>
-				<title>Introducing React&#39;s Error Code System</title>
-				<description>&lt;p&gt;Building a better developer experience has been one of the things that React deeply cares about, and a crucial part of it is to detect anti-patterns/potential errors early and provide helpful error messages when things (may) go wrong. However, most of these only exist in development mode; in production, we avoid having extra expensive assertions and sending down full error messages in order to reduce the number of bytes sent over the wire.&lt;/p&gt;
-
-&lt;p&gt;Prior to this release, we stripped out error messages at build-time and this is why you might have seen this message in production:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Minified exception occurred; use the non-minified dev environment for the full error message and additional helpful warnings.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;In order to make debugging in production easier, we&amp;#39;re introducing an Error Code System in &lt;a href=&quot;https://github.com/facebook/react/releases/tag/v15.2.0&quot;&gt;15.2.0&lt;/a&gt;. We developed a &lt;a href=&quot;https://github.com/facebook/react/blob/master/scripts/error-codes/gulp-extract-errors.js&quot;&gt;gulp script&lt;/a&gt; that collects all of our &lt;code&gt;invariant&lt;/code&gt; error messages and folds them to a &lt;a href=&quot;https://github.com/facebook/react/blob/master/scripts/error-codes/codes.json&quot;&gt;JSON file&lt;/a&gt;, and at build-time Babel uses the JSON to &lt;a href=&quot;https://github.com/facebook/react/blob/master/scripts/error-codes/dev-expression-with-codes.js&quot;&gt;rewrite&lt;/a&gt; our &lt;code&gt;invariant&lt;/code&gt; calls in production to reference the corresponding error IDs. Now when things go wrong in production, the error that React throws will contain a URL with an error ID and relevant information. The URL will point you to a page in our documentation where the original error message gets reassembled.&lt;/p&gt;
-
-&lt;p&gt;While we hope you don&amp;#39;t see errors often, you can see how it works &lt;a href=&quot;/react/docs/error-decoder.html?invariant=109&amp;amp;args%5B%5D=Foo&quot;&gt;here&lt;/a&gt;. This is what the same error from above will look like:&lt;/p&gt;
-
-&lt;blockquote&gt;
-&lt;p&gt;Minified React error #109; visit https://facebook.github.io/react/docs/error-decoder.html?invariant=109&amp;amp;args[]=Foo for the full message or use the non-minified dev environment for full errors and additional helpful warnings.&lt;/p&gt;
-&lt;/blockquote&gt;
-
-&lt;p&gt;We do this so that the developer experience is as good as possible, while also keeping the production bundle size as small as possible. This feature shouldn&amp;#39;t require any changes on your side — use the &lt;code&gt;min.js&lt;/code&gt; files in production or bundle your application code with &lt;code&gt;process.env.NODE_ENV === &amp;#39;production&amp;#39;&lt;/code&gt; and you should be good to go!&lt;/p&gt;
-</description>
-				<pubDate>2016-07-11T00:00:00-07:00</pubDate>
-				<link>https://facebook.github.io/react/blog/2016/07/11/introducing-reacts-error-code-system.html</link>
-				<guid isPermaLink="true">https://facebook.github.io/react/blog/2016/07/11/introducing-reacts-error-code-system.html</guid>
 			</item>
 		
 	</channel>

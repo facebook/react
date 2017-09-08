@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,141 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/09/12/community-round-up-22.html">Community Round-up #22</a>
+
+</h1>
+
+<p class="meta">
+  September 12, 2014
+  by
+  
+    
+      <a href="https://twitter.com/loukan42">Lou Husson</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb and Reddit announced that they were using React!</p>
+
+<table><tr><td>
+<blockquote width="300" class="twitter-tweet" data-cards="hidden" lang="en"><p>Our friends at <a href="https://twitter.com/Yahoo">@yahoo</a> talk about migrating Yahoo! Mail from YUI to ReactJS at the next <a href="https://twitter.com/hashtag/ReactJS?src=hash">#ReactJS</a> meetup! <a href="http://t.co/Cu2AaE0sVE">http://t.co/Cu2AaE0sVE</a></p>&mdash; Facebook Open Source (@fbOpenSource) <a href="https://twitter.com/fbOpenSource/status/510258065900572672">September 12, 2014</a></blockquote>
+</td><td valign="top">
+<blockquote width="300" class="twitter-tweet" lang="en"><p>I guess <a href="https://twitter.com/reactjs">@reactjs</a> is getting into Firefox :-) Thanks <a href="https://twitter.com/n1k0">@n1k0</a> ! <a href="https://t.co/kipfUS0hu4">https://t.co/kipfUS0hu4</a></p>&mdash; David Bruant (@DavidBruant) <a href="https://twitter.com/DavidBruant/status/484956929933213696">July 4, 2014</a></blockquote>
+</td></tr><tr><td>
+<blockquote width="300" class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/AirbnbNerds">@AirbnbNerds</a> just launched our first user-facing React.js feature to production! We love it so far. <a href="https://t.co/KtyudemcIW">https://t.co/KtyudemcIW</a> /<a href="https://twitter.com/floydophone">@floydophone</a></p>&mdash; spikebrehm (@spikebrehm) <a href="https://twitter.com/spikebrehm/statuses/491645223643013121">July 22, 2014</a></blockquote>
+</td><td>
+<blockquote width="300" class="twitter-tweet" lang="en"><p>We shipped reddit&#39;s first production <a href="https://twitter.com/reactjs">@reactjs</a> code last week, our checkout process.&#10;&#10;<a href="https://t.co/KUInwsCmAF">https://t.co/KUInwsCmAF</a></p>&mdash; Brian Holt (@holtbt) <a href="https://twitter.com/holtbt/statuses/493852312604254208">July 28, 2014</a></blockquote>
+</td></tr></table>
+
+<h2>React&#39;s Architecture</h2>
+
+<p><a href="http://blog.vjeux.com/">Vjeux</a>, from the React team, gave a talk at OSCON on the history of React and the various optimizations strategies that are implemented. You can also check out the <a href="https://speakerdeck.com/vjeux/oscon-react-architecture">annotated slides</a> or <a href="http://thenewstack.io/author/chrisdawson/">Chris Dawson</a>&#39;s notes titled <a href="http://thenewstack.io/javascripts-history-and-how-it-led-to-reactjs/">JavaScript’s History and How it Led To React</a>.</p>
+
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
+
+<h2>v8 optimizations</h2>
+
+<p>Jakob Kummerow landed <a href="http://www.chromium.org/developers/speed-hall-of-fame#TOC-2014-06-18">two optimizations to V8</a> specifically targeted at optimizing React. That&#39;s really exciting to see browser vendors helping out on performance!</p>
+
+<h2>Reusable Components by Khan Academy</h2>
+
+<p><a href="https://www.khanacademy.org/">Khan Academy</a> released <a href="https://khan.github.io/react-components/">many high quality standalone components</a> they are using. This is a good opportunity to see what React code used in production look like.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">TeX</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-components/js/tex.jsx&#39;</span><span class="p">);</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">TeX</span><span class="o">&gt;</span><span class="err">\</span><span class="nx">nabla</span> <span class="err">\</span><span class="nx">cdot</span> <span class="nx">E</span> <span class="o">=</span> <span class="mi">4</span> <span class="err">\</span><span class="nx">pi</span> <span class="err">\</span><span class="nx">rho</span><span class="o">&lt;</span><span class="err">/TeX&gt;, domNode);</span>
+
+<span class="kd">var</span> <span class="nx">translated</span> <span class="o">=</span> <span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">$_</span> <span class="nx">first</span><span class="o">=</span><span class="s2">&quot;Motoko&quot;</span> <span class="nx">last</span><span class="o">=</span><span class="s2">&quot;Kusanagi&quot;</span><span class="o">&gt;</span>
+    <span class="nx">Hello</span><span class="p">,</span> <span class="o">%</span><span class="p">(</span><span class="nx">first</span><span class="p">)</span><span class="nx">s</span> <span class="o">%</span><span class="p">(</span><span class="nx">last</span><span class="p">)</span><span class="nx">s</span><span class="o">!</span>
+  <span class="o">&lt;</span><span class="err">/$_&gt;</span>
+<span class="p">);</span>
+</code></pre></div>
+<h2>React + Browserify + Gulp</h2>
+
+<p><a href="http://truongtx.me/">Trường</a> wrote a little guide to help your <a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/">getting started using React, Browserify and Gulp</a>.</p>
+
+<figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="/react/img/blog/react-browserify-gulp.jpg" /></a></figure>
+
+<h2>React Style</h2>
+
+<p>After React put HTML inside of JavaScript, Sander Spies takes the same approach with CSS: <a href="https://github.com/SanderSpies/react-style">IntegratedCSS</a>. It seems weird at first but this is the direction where React is heading.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Button</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">normalStyle</span><span class="o">:</span> <span class="nx">ReactStyle</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span> <span class="nx">backgroundColor</span><span class="o">:</span> <span class="nx">vars</span><span class="p">.</span><span class="nx">orange</span> <span class="p">};</span>
+  <span class="p">}),</span>
+  <span class="nx">activeStyle</span><span class="o">:</span> <span class="nx">ReactStyle</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">active</span><span class="p">)</span> <span class="p">{</span>
+      <span class="k">return</span> <span class="p">{</span> <span class="nx">color</span><span class="o">:</span> <span class="s1">&#39;yellow&#39;</span><span class="p">,</span> <span class="nx">padding</span><span class="o">:</span> <span class="s1">&#39;10px&#39;</span> <span class="p">};</span>
+    <span class="p">}</span>
+  <span class="p">}),</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">styles</span><span class="o">=</span><span class="p">{[</span><span class="k">this</span><span class="p">.</span><span class="nx">normalStyle</span><span class="p">(),</span> <span class="k">this</span><span class="p">.</span><span class="nx">activeStyle</span><span class="p">()]}</span><span class="o">&gt;</span>
+        <span class="nx">Hello</span><span class="p">,</span> <span class="nx">I</span><span class="err">&#39;</span><span class="nx">m</span> <span class="nx">styled</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<h2>Virtual DOM in Elm</h2>
+
+<p><a href="http://evan.czaplicki.us">Evan Czaplicki</a> explains how Elm implements the idea of a Virtual DOM and a diffing algorithm. This is great to see React ideas spread to other languages.</p>
+
+<blockquote>
+<p>Performance is a good hook, but the real benefit is that this approach leads to code that is easier to understand and maintain. In short, it becomes very simple to create reusable HTML widgets and abstract out common patterns. This is why people with larger code bases should be interested in virtual DOM approaches.</p>
+
+<p><a href="http://elm-lang.org/blog/Blazing-Fast-Html.elm">Read the full article</a></p>
+</blockquote>
+
+<h2>Components Tutorial</h2>
+
+<p>If you are getting started with React, <a href="http://www.joemaddalone.com/">Joe Maddalone</a> made a good tutorial on how to build your first component.</p>
+
+<iframe width="100%" height="200" src="//www.youtube-nocookie.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
+
+<h2>Saving time &amp; staying sane?</h2>
+
+<p>When <a href="http://http://kentwilliam.com/">Kent William Innholt</a> who works at <a href="http://mpath.com/">M&gt;Path</a> summed up his experience using React in an <a href="http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js">article</a>.</p>
+
+<blockquote>
+<p>We&#39;re building an ambitious new web app, where the UI complexity represents most of the app&#39;s complexity overall. It includes a tremendous amount of UI widgets as well as a lot rules on what-to-show-when. This is exactly the sort of situation React.js was built to simplify.</p>
+
+<ul>
+<li><strong>Big win</strong>: Tighter coupling of markup and behavior</li>
+<li><strong>Jury&#39;s still out</strong>: CSS lives outside React.js</li>
+<li><strong>Big win</strong>: Cascading updates and functional thinking</li>
+<li><strong>Jury&#39;s still out</strong>: Verbose propagation</li>
+</ul>
+
+<p><a href="http://kentwilliam.com/articles/saving-time-staying-sane-pros-cons-of-react-js">Read the article...</a></p>
+</blockquote>
+
+<h2>Weather</h2>
+
+<p>To finish this round-up, Andrew Gleave made a page that displays the <a href="https://github.com/andrewgleave/react-weather">Weather</a>. It&#39;s great to see that React is also used for small prototypes.</p>
+
+<figure><a href="https://github.com/andrewgleave/react-weather"><img src="/react/img/blog/weather.png" /></a></figure>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -451,82 +580,6 @@ This is not the intended way to use React but can be useful as last resort if yo
 <h2>Random Tweet</h2>
 
 <blockquote class="twitter-tweet" data-conversation="none" lang="en"><p>“<a href="https://twitter.com/apphacker">@apphacker</a>: I take back the mean things I said about <a href="https://twitter.com/reactjs">@reactjs</a> I actually like it.” Summarizing the life of ReactJS in a single tweet.</p>&mdash; Jordan (@jordwalke) <a href="https://twitter.com/jordwalke/statuses/490747339607265280">July 20, 2014</a></blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/07/25/react-v0.11.1.html">React v0.11.1</a>
-
-</h1>
-
-<p class="meta">
-  July 25, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today we&#39;re releasing React v0.11.1 to address a few small issues. Thanks to everybody who has reported them as they&#39;ve begun upgrading.</p>
-
-<p>The first of these is the most major and resulted in a regression with the use of <code>setState</code> inside <code>componentWillMount</code> when using React on the server. These <code>setState</code> calls are batched into the initial render. A change we made to our batching code resulted in this path hitting DOM specific code when run server-side, in turn throwing an error as <code>document</code> is not defined.</p>
-
-<p>There are several fixes we&#39;re including in v0.11.1 that are focused around the newly supported <code>event.getModifierState()</code> function. We made some adjustments to improve this cross-browser standardization.</p>
-
-<p>The final fix we&#39;re including is to better support a workaround for some IE8 behavior. The edge-case bug we&#39;re fixing was also present in v0.9 and v0.10, so while it wasn&#39;t a short-term regression, we wanted to make sure we support IE8 to the best of our abilities.</p>
-
-<p>We&#39;d also like to call out a couple additional breaking changes that we failed to originally mention in the release notes for v0.11. We updated that blog post and the changelog, so we encourage you to go read about the changes around <a href="/react/blog/2014/07/17/react-v0.11.html#descriptors">Descriptors</a> and <a href="/react/blog/2014/07/17/react-v0.11.html#prop-type-validation">Prop Type Validation</a>.</p>
-
-<p>The release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.11.1.js">https://fb.me/react-0.11.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.11.1.min.js">https://fb.me/react-0.11.1.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.11.1.js">https://fb.me/react-with-addons-0.11.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.11.1.min.js">https://fb.me/react-with-addons-0.11.1.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.11.1.js">https://fb.me/JSXTransformer-0.11.1.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.11.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li><code>setState</code> can be called inside <code>componentWillMount</code> in non-DOM environments</li>
-<li><code>SyntheticMouseEvent.getEventModifierState</code> correctly renamed to <code>getModifierState</code></li>
-<li><code>getModifierState</code> correctly returns a <code>boolean</code></li>
-<li><code>getModifierState</code> is now correctly case sensitive</li>
-<li>Empty Text node used in IE8 <code>innerHTML</code> workaround is now removed, fixing rerendering in certain cases</li>
-</ul>
-
-<h3>JSXTransformer</h3>
-
-<ul>
-<li>Fix duplicate variable declaration (caused issues in some browsers)</li>
-</ul>
 
 </div>
 

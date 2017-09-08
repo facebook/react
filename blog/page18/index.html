@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,167 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/02/05/community-roundup-15.html">Community Round-up #15</a>
+
+</h1>
+
+<p class="meta">
+  February  5, 2014
+  by
+  
+    
+      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Interest in React seems to have surged ever since David Nolen (<a href="https://twitter.com/swannodette">@swannodette</a>)&#39;s introduction of <a href="https://github.com/swannodette/om">Om</a> in his post <a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">&quot;The Future of JavaScript MVC Frameworks&quot;</a>.</p>
+
+<p>In this React Community Round-up, we are taking a closer look at React from a functional programming perspective.</p>
+
+<h2>&quot;React: Another Level of Indirection&quot;</h2>
+
+<p>To start things off, Eric Normand (<a href="https://twitter.com/ericnormand">@ericnormand</a>) of <a href="http://lispcast.com">LispCast</a> makes the case for <a href="http://www.lispcast.com/react-another-level-of-indirection">React from a general functional programming standpoint</a> and explains how React&#39;s &quot;Virtual DOM provides the last piece of the Web Frontend Puzzle for ClojureScript&quot;.</p>
+
+<blockquote>
+<p>The Virtual DOM is an indirection mechanism that solves the difficult problem of DOM programming: how to deal with incremental changes to a stateful tree structure. By abstracting away the statefulness, the Virtual DOM turns the real DOM into an immediate mode GUI, which is perfect for functional programming.</p>
+
+<p><a href="http://www.lispcast.com/react-another-level-of-indirection">Read the full post...</a></p>
+</blockquote>
+
+<h2>Reagent: Minimalistic React for ClojureScript</h2>
+
+<p>Dan Holmsand (<a href="https://twitter.com/holmsand">@holmsand</a>) created <a href="https://holmsand.github.io/reagent/">Reagent</a>, a simplistic ClojureScript API to React.</p>
+
+<blockquote>
+<p>It allows you to define efficient React components using nothing but plain ClojureScript functions and data, that describe your UI using a Hiccup-like syntax.</p>
+
+<p>The goal of Reagent is to make it possible to define arbitrarily complex UIs using just a couple of basic concepts, and to be fast enough by default that you rarely have to care about performance.</p>
+
+<p><a href="https://holmsand.github.io/reagent/">Check it out on GitHub...</a></p>
+</blockquote>
+
+<h2>Functional DOM programming</h2>
+
+<p>React&#39;s one-way data-binding naturally lends itself to a functional programming approach. Facebook&#39;s Pete Hunt (<a href="https://twitter.com/floydophone">@floydophone</a>) explores how one would go about <a href="https://medium.com/p/67d81637d43">writing web apps in a functional manner</a>. Spoiler alert:</p>
+
+<blockquote>
+<p>This is React. It’s not about templates, or data binding, or DOM manipulation. It’s about using functional programming with a virtual DOM representation to build ambitious, high-performance apps with JavaScript.</p>
+
+<p><a href="https://medium.com/p/67d81637d43">Read the full post...</a></p>
+</blockquote>
+
+<p>Pete also explains this in detail at his #MeteorDevShop talk (about 30 Minutes):</p>
+
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/Lqcs6hPOcFw?start=2963" frameborder="0" allowfullscreen></iframe>
+
+<h2>Kioo: Separating markup and logic</h2>
+
+<p><a href="https://github.com/ckirkendall">Creighton Kirkendall</a> created <a href="https://github.com/ckirkendall/kioo">Kioo</a>, which adds Enlive-style templating to React. HTML templates are separated from the application logic. Kioo comes with separate examples for both Om and Reagent.</p>
+
+<p>A basic example from github:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="cp">&lt;!DOCTYPE html&gt;</span>
+<span class="nt">&lt;html</span> <span class="na">lang=</span><span class="s">&quot;en&quot;</span><span class="nt">&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;header&gt;</span>
+      <span class="nt">&lt;h1&gt;</span>Header placeholder<span class="nt">&lt;/h1&gt;</span>
+      <span class="nt">&lt;ul</span> <span class="na">id=</span><span class="s">&quot;navigation&quot;</span><span class="nt">&gt;</span>
+        <span class="nt">&lt;li</span> <span class="na">class=</span><span class="s">&quot;nav-item&quot;</span><span class="nt">&gt;&lt;a</span> <span class="na">href=</span><span class="s">&quot;#&quot;</span><span class="nt">&gt;</span>Placeholder<span class="nt">&lt;/a&gt;&lt;/li&gt;</span>
+      <span class="nt">&lt;/ul&gt;</span>
+    <span class="nt">&lt;/header&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">class=</span><span class="s">&quot;content&quot;</span><span class="nt">&gt;</span>place holder<span class="nt">&lt;/div&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div><div class="highlight"><pre><code class="language-clojure" data-lang="clojure"><span class="nv">...</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">my-nav-item</span> <span class="p">[[</span><span class="nv">caption</span> <span class="nv">func</span><span class="p">]]</span>
+  <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span> <span class="p">[</span><span class="ss">:.nav-item</span><span class="p">]</span>
+    <span class="p">{[</span><span class="ss">:a</span><span class="p">]</span> <span class="p">(</span><span class="nf">do-&gt;</span> <span class="p">(</span><span class="nf">content</span> <span class="nv">caption</span><span class="p">)</span>
+                <span class="p">(</span><span class="nf">set-attr</span> <span class="ss">:onClick</span> <span class="nv">func</span><span class="p">))}))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">my-header</span> <span class="p">[</span><span class="nv">heading</span> <span class="nv">nav-elms</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span> <span class="p">[</span><span class="ss">:header</span><span class="p">]</span>
+    <span class="p">{[</span><span class="ss">:h1</span><span class="p">]</span> <span class="p">(</span><span class="nf">content</span> <span class="nv">heading</span><span class="p">)</span>
+     <span class="p">[</span><span class="ss">:ul</span><span class="p">]</span> <span class="p">(</span><span class="nf">content</span> <span class="p">(</span><span class="nb">map </span><span class="nv">my-nav-item</span> <span class="nv">nav-elms</span><span class="p">))}))</span>
+
+<span class="p">(</span><span class="kd">defn </span><span class="nv">my-page</span> <span class="p">[</span><span class="nv">data</span><span class="p">]</span>
+  <span class="p">(</span><span class="nf">kioo/component</span> <span class="s">&quot;main.html&quot;</span>
+    <span class="p">{[</span><span class="ss">:header</span><span class="p">]</span> <span class="p">(</span><span class="nf">substitute</span> <span class="p">(</span><span class="nf">my-header</span> <span class="p">(</span><span class="ss">:heading</span> <span class="nv">data</span><span class="p">)</span>
+                                      <span class="p">(</span><span class="ss">:navigation</span> <span class="nv">data</span><span class="p">)))</span>
+     <span class="p">[</span><span class="ss">:.content</span><span class="p">]</span> <span class="p">(</span><span class="nf">content</span> <span class="p">(</span><span class="ss">:content</span> <span class="nv">data</span><span class="p">))}))</span>
+
+<span class="p">(</span><span class="k">def </span><span class="nv">app-state</span> <span class="p">(</span><span class="nf">atom</span> <span class="p">{</span><span class="ss">:heading</span>    <span class="s">&quot;main&quot;</span>
+                      <span class="ss">:content</span>    <span class="s">&quot;Hello World&quot;</span>
+                      <span class="ss">:navigation</span> <span class="p">[[</span><span class="s">&quot;home&quot;</span> <span class="o">#</span><span class="p">(</span><span class="nf">js/alert</span> <span class="nv">%</span><span class="p">)]</span>
+                                   <span class="p">[</span><span class="s">&quot;next&quot;</span> <span class="o">#</span><span class="p">(</span><span class="nf">js/alert</span> <span class="nv">%</span><span class="p">)]]}))</span>
+
+<span class="p">(</span><span class="nf">om/root</span> <span class="nv">app-state</span> <span class="nv">my-page</span> <span class="p">(</span><span class="nf">.-body</span> <span class="nv">js/document</span><span class="p">))</span>
+</code></pre></div>
+<h2>Om</h2>
+
+<p>In an interview with David Nolen, Tom Coupland (<a href="https://twitter.com/tcoupland">@tcoupland</a>) of InfoQ provides a nice summary of recent developments around Om (&quot;<a href="http://www.infoq.com/news/2014/01/om-react">Om: Enhancing Facebook&#39;s React with Immutability</a>&quot;).</p>
+
+<blockquote>
+<p>David [Nolen]: I think people are starting to see the limitations of just JavaScript and jQuery and even more structured solutions like Backbone, Angular, Ember, etc. React is a fresh approach to the DOM problem that seems obvious in hindsight.</p>
+
+<p><a href="http://www.infoq.com/news/2014/01/om-react">Read the full interview...</a></p>
+</blockquote>
+
+<h3>A slice of React, ClojureScript and Om</h3>
+
+<p>Fredrik Dyrkell (<a href="https://twitter.com/lexicallyscoped">@lexicallyscoped</a>) rewrote part of the <a href="http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html">React tutorial in both ClojureScript and Om</a>, along with short, helpful explanations.</p>
+
+<blockquote>
+<p>React has sparked a lot of interest in the Clojure community lately [...]. At the very core, React lets you build up your DOM representation in a functional fashion by composing pure functions and you have a simple building block for everything: React components.</p>
+
+<p><a href="http://www.lexicallyscoped.com/2013/12/25/slice-of-reactjs-and-cljs.html">Read the full post...</a></p>
+</blockquote>
+
+<p>In a separate post, Dyrkell breaks down <a href="http://www.lexicallyscoped.com/2014/01/23/ClojureScript-react-om-binary-clock.html">how to build a binary clock component</a> in Om.</p>
+
+<p>[<a href="http://www.lexicallyscoped.com/demo/binclock/">Demo</a>] [<a href="https://github.com/fredyr/binclock/blob/master/src/binclock/core.cljs">Code</a>]</p>
+
+<h3>Time Travel: Implementing undo in Om</h3>
+
+<p>David Nolen shows how to leverage immutable data structures to <a href="https://swannodette.github.io/2013/12/31/time-travel/">add global undo</a> functionality to an app – using just 13 lines of ClojureScript.</p>
+
+<h3>A Step-by-Step Om Walkthrough</h3>
+
+<p><a href="http://www.joshlehman.me">Josh Lehman</a> took the time to create an extensive <a href="http://www.joshlehman.me/rewriting-the-react-tutorial-in-om/">step-by-step walkthrough</a> of the React tutorial in Om. The well-documented source is on <a href="https://github.com/jalehman/omtut-starter">github</a>.</p>
+
+<h3>Omkara</h3>
+
+<p><a href="https://github.com/brendanyounger">brendanyounger</a> created <a href="https://github.com/brendanyounger/omkara">omkara</a>, a starting point for ClojureScript web apps based on Om/React. It aims to take advantage of server-side rendering and comes with a few tips on getting started with Om/React projects.</p>
+
+<h3>Om Experience Report</h3>
+
+<p>Adam Solove (<a href="https://twitter.com/asolove/">@asolove</a>) <a href="http://adamsolove.com/js/clojure/2014/01/06/om-experience-report.html">dives a little deeper into Om, React and ClojureScript</a>. He shares some helpful tips he gathered while building his <a href="https://github.com/asolove/carto-crayon">CartoCrayon</a> prototype.</p>
+
+<h2>Not-so-random Tweet</h2>
+
+<div><blockquote class="twitter-tweet" lang="en"><p>[@swannodette](https://twitter.com/swannodette) No thank you! It's honestly a bit weird because Om is exactly what I didn't know I wanted for doing functional UI work.</p>&mdash; Adam Solove (@asolove) <a href="https://twitter.com/asolove/status/420294067637858304">January 6, 2014</a></blockquote></div>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -502,87 +657,6 @@ componentDidUpdate: function() {
 <h2>Random Tweet</h2>
 
 <p><center><blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/jordwalke">@jordwalke</a> lays down some truth <a href="http://t.co/AXAn0UlUe3">http://t.co/AXAn0UlUe3</a>, optimizing your JS application shouldn&#39;t force you to rewrite so much code <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/statuses/413780079249215488">December 19, 2013</a></blockquote></center></p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/12/19/react-v0.8.0.html">React v0.8</a>
-
-</h1>
-
-<p class="meta">
-  December 19, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>I&#39;ll start by answering the obvious question:</p>
-
-<blockquote>
-<p>What happened to 0.6 and 0.7?</p>
-</blockquote>
-
-<p>It&#39;s become increasingly obvious since our launch in May that people want to use React on the server. With the server-side rendering abilities, that&#39;s a perfect fit. However using the same copy of React on the server and then packaging it up for the client is surprisingly a harder problem. People have been using our <code>react-tools</code> module which includes React, but when browserifying that ends up packaging all of <code>esprima</code> and some other dependencies that aren&#39;t needed on the client. So we wanted to make this whole experience better.</p>
-
-<p>We talked with <a href="https://github.com/jeffbski">Jeff Barczewski</a> who was the owner of the <code>react</code> module on npm. He was kind enough to transition ownership to us and release his package under a different name: <code>autoflow</code>. I encourage you to <a href="https://github.com/jeffbski/autoflow">check it out</a> if you&#39;re writing a lot of asynchronous code. In order to not break all of <code>react</code>&#39;s current users of 0.7.x, we decided to bump our version to 0.8 and skip the issue entirely. We&#39;re also including a warning if you use our <code>react</code> module like you would use the previous package.</p>
-
-<p>In order to make the transition to 0.8 for our current users as painless as possible, we decided to make 0.8 primarily a bug fix release on top of 0.5. No public APIs were changed (even if they were already marked as deprecated). We haven&#39;t added any of the new features we have in master, though we did take the opportunity to pull in some improvements to internals.</p>
-
-<p>We hope that by releasing <code>react</code> on npm, we will enable a new set of uses that have been otherwise difficult. All feedback is welcome!</p>
-
-<h2>Changelog</h2>
-
-<h3>React</h3>
-
-<ul>
-<li>Added support for more attributes:
-
-<ul>
-<li><code>rows</code> &amp; <code>cols</code> for <code>&lt;textarea&gt;</code></li>
-<li><code>defer</code> &amp; <code>async</code> for <code>&lt;script&gt;</code></li>
-<li><code>loop</code> for <code>&lt;audio&gt;</code> &amp; <code>&lt;video&gt;</code></li>
-<li><code>autoCorrect</code> for form fields (a non-standard attribute only supported by mobile WebKit)</li>
-</ul></li>
-<li>Improved error messages</li>
-<li>Fixed Selection events in IE11</li>
-<li>Added <code>onContextMenu</code> events</li>
-</ul>
-
-<h3>React with Addons</h3>
-
-<ul>
-<li>Fixed bugs with TransitionGroup when children were undefined</li>
-<li>Added support for <code>onTransition</code></li>
-</ul>
-
-<h3>react-tools</h3>
-
-<ul>
-<li>Upgraded <code>jstransform</code> and <code>esprima-fb</code></li>
-</ul>
-
-<h3>JSXTransformer</h3>
-
-<ul>
-<li>Added support for use in IE8</li>
-<li>Upgraded browserify, which reduced file size by ~65KB (16KB gzipped)</li>
-</ul>
 
 </div>
 

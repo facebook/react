@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,100 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/04/18/react-v0.13.2.html">React v0.13.2</a>
+
+</h1>
+
+<p class="meta">
+  April 18, 2015
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Yesterday the <a href="/react/blog/2015/04/17/react-native-v0.4.html">React Native team shipped v0.4</a>. Those of us working on the web team just a few feet away couldn&#39;t just be shown up like that so we&#39;re shipping v0.13.2 today as well! This is a bug fix release to address a few things while we continue to work towards v0.14.</p>
+
+<p>The release is now available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.13.2.js">https://fb.me/react-0.13.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.13.2.min.js">https://fb.me/react-0.13.2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.2.js">https://fb.me/react-with-addons-0.13.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.13.2.min.js">https://fb.me/react-with-addons-0.13.2.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.13.2.js">https://fb.me/JSXTransformer-0.13.2.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.13.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
+<ul>
+<li>Added <code>strokeDashoffset</code>, <code>flexPositive</code>, <code>flexNegative</code> to the list of unitless CSS properties</li>
+<li>Added support for more DOM properties:
+
+<ul>
+<li><code>scoped</code> - for <code>&lt;style&gt;</code> elements</li>
+<li><code>high</code>, <code>low</code>, <code>optimum</code> - for <code>&lt;meter&gt;</code> elements</li>
+<li><code>unselectable</code> - IE-specific property to prevent user selection</li>
+</ul></li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Fixed a case where re-rendering after rendering null didn&#39;t properly pass context</li>
+<li>Fixed a case where re-rendering after rendering with <code>style={null}</code> didn&#39;t properly update <code>style</code></li>
+<li>Update <code>uglify</code> dependency to prevent a bug in IE8</li>
+<li>Improved warnings</li>
+</ul>
+
+<h3>React with Add-Ons</h3>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Immutabilty Helpers: Ensure it supports <code>hasOwnProperty</code> as an object key</li>
+</ul>
+
+<h3>React Tools</h3>
+
+<ul>
+<li>Improve documentation for new options</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -525,85 +613,6 @@
 </ul>
 
 <p>But Relay has many more tricks up its sleeve. For example, it&#39;s built from the start to handle reads and writes, allowing for features like optimistic client updates with transactional rollback. Relay can also defer fetching select parts of queries, and it uses a local data store to avoid fetching the same data twice. These are all powerful features that we hope to explore in future posts.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/03/16/react-v0.13.1.html">React v0.13.1</a>
-
-</h1>
-
-<p class="meta">
-  March 16, 2015
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>It&#39;s been less than a week since we shipped v0.13.0 but it&#39;s time to do another quick release. We just released v0.13.1 which contains bugfixes for a number of small issues.</p>
-
-<p>Thanks all of you who have been upgrading your applications and taking the time to report issues. And a huge thank you to those of you who submitted pull requests for the issues you found! 2 of the 6 fixes that went out today came from people who aren&#39;t on the core team!</p>
-
-<p>The release is now available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.13.1.js">https://fb.me/react-0.13.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.13.1.min.js">https://fb.me/react-0.13.1.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.1.js">https://fb.me/react-with-addons-0.13.1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.13.1.min.js">https://fb.me/react-with-addons-0.13.1.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.13.1.js">https://fb.me/JSXTransformer-0.13.1.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.13.1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>Don&#39;t throw when rendering empty <code>&lt;select&gt;</code> elements</li>
-<li>Ensure updating <code>style</code> works when transitioning from <code>null</code></li>
-</ul>
-
-<h3>React with Add-Ons</h3>
-
-<h3>Bug Fixes</h3>
-
-<ul>
-<li>TestUtils: Don&#39;t warn about <code>getDOMNode</code> for ES6 classes</li>
-<li>TestUtils: Ensure wrapped full page components (<code>&lt;html&gt;</code>, <code>&lt;head&gt;</code>, <code>&lt;body&gt;</code>) are treated as DOM components</li>
-<li>Perf: Stop double-counting DOM components</li>
-</ul>
-
-<h3>React Tools</h3>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>Fix option parsing for <code>--non-strict-es6module</code></li>
-</ul>
 
 </div>
 

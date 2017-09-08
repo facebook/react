@@ -76,6 +76,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
+      
         <li><a href="/react/blog/2017/07/26/error-handling-in-react-16.html">Error Handling in React 16</a></li>
       
         <li><a href="/react/blog/2017/06/13/react-v15.6.0.html">React v15.6.0</a></li>
@@ -94,14 +96,93 @@
       
         <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
       
-        <li><a href="/react/blog/2016/07/11/introducing-reacts-error-code-system.html">Introducing React's Error Code System</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/10/16/react-v0.5.0.html">React v0.5</a>
+
+</h1>
+
+<p class="meta">
+  October 16, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>This release is the result of several months of hard work from members of the team and the community. While there are no groundbreaking changes in core, we&#39;ve worked hard to improve performance and memory usage. We&#39;ve also worked hard to make sure we are being consistent in our usage of DOM properties.</p>
+
+<p>The biggest change you&#39;ll notice as a developer is that we no longer support <code>class</code> in JSX as a way to provide CSS classes. Since this prop was being converted to <code>className</code> at the transform step, it caused some confusion when trying to access it in composite components. As a result we decided to make our DOM properties mirror their counterparts in the JS DOM API. There are <a href="https://github.com/facebook/react/blob/master/src/dom/DefaultDOMPropertyConfig.js#L156">a few exceptions</a> where we deviate slightly in an attempt to be consistent internally.</p>
+
+<p>The other major change in v0.5 is that we&#39;ve added an additional build - <code>react-with-addons</code> - which adds support for some extras that we&#39;ve been working on including animations and two-way binding. <a href="/react/docs/addons.html">Read more about these addons in the docs</a>.</p>
+
+<h2>Thanks to Our Community</h2>
+
+<p>We added <em>22 new people</em> to the list of authors since we launched React v0.4.1 nearly 3 months ago. With a total of 48 names in our <code>AUTHORS</code> file, that means we&#39;ve nearly doubled the number of contributors in that time period. We&#39;ve seen the number of people contributing to discussion on IRC, mailing lists, Stack Overflow, and GitHub continue rising. We&#39;ve also had people tell us about talks they&#39;ve given in their local community about React.</p>
+
+<p>It&#39;s been awesome to see the things that people are building with React, and we can&#39;t wait to see what you come up with next!</p>
+
+<h2>Changelog</h2>
+
+<h3>React</h3>
+
+<ul>
+<li>Memory usage improvements - reduced allocations in core which will help with GC pauses</li>
+<li>Performance improvements - in addition to speeding things up, we made some tweaks to stay out of slow path code in V8 and Nitro.</li>
+<li>Standardized prop -&gt; DOM attribute process. This previously resulting in additional type checking and overhead as well as confusing cases for users. Now we will always convert your value to a string before inserting it into the DOM.</li>
+<li>Support for Selection events.</li>
+<li>Support for <a href="https://developer.mozilla.org/en-US/docs/Web/API/CompositionEvent">Composition events</a>.</li>
+<li>Support for additional DOM properties (<code>charSet</code>, <code>content</code>, <code>form</code>, <code>httpEquiv</code>, <code>rowSpan</code>, <code>autoCapitalize</code>).</li>
+<li>Support for additional SVG properties (<code>rx</code>, <code>ry</code>).</li>
+<li>Support for using <code>getInitialState</code> and <code>getDefaultProps</code> in mixins.</li>
+<li>Support mounting into iframes.</li>
+<li>Bug fixes for controlled form components.</li>
+<li>Bug fixes for SVG element creation.</li>
+<li>Added <code>React.version</code>.</li>
+<li>Added <code>React.isValidClass</code> - Used to determine if a value is a valid component constructor.</li>
+<li>Removed <code>React.autoBind</code> - This was deprecated in v0.4 and now properly removed.</li>
+<li>Renamed  <code>React.unmountAndReleaseReactRootNode</code> to <code>React.unmountComponentAtNode</code>.</li>
+<li>Began laying down work for refined performance analysis.</li>
+<li>Better support for server-side rendering - <a href="https://github.com/facebook/react-page">react-page</a> has helped improve the stability for server-side rendering.</li>
+<li>Made it possible to use React in environments enforcing a strict <a href="https://developer.mozilla.org/en-US/docs/Security/CSP/Introducing_Content_Security_Policy">Content Security Policy</a>. This also makes it possible to use React to build Chrome extensions.</li>
+</ul>
+
+<h3>React with Addons (New!)</h3>
+
+<ul>
+<li>Introduced a separate build with several &quot;addons&quot; which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. <a href="/react/docs/addons.html">Read more in the docs</a>.</li>
+</ul>
+
+<h3>JSX</h3>
+
+<ul>
+<li>No longer transform <code>class</code> to <code>className</code> as part of the transform! This is a breaking change - if you were using <code>class</code>, you <em>must</em> change this to <code>className</code> or your components will be visually broken.</li>
+<li>Added warnings to the in-browser transformer to make it clear it is not intended for production use.</li>
+<li>Improved compatibility for Windows</li>
+<li>Improved support for maintaining line numbers when transforming.</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -488,110 +569,6 @@
 <p><strong>Dependencies</strong>: PyReact uses <a href="https://github.com/doloopwhile/PyExecJS">PyExecJS</a> to execute the bundled React code, which requires that a JS runtime environment is installed on your machine. We don&#39;t explicitly set a dependency on a runtime environment; Mac OS X comes bundled with one. If you&#39;re on a different platform, we recommend <a href="https://code.google.com/p/pyv8/">PyV8</a>.</p>
 
 <p>For the initial release, we&#39;ve only tested on Python 2.7. Look out for support for Python 3 in the future, and if you see anything that can be improved, we welcome your <a href="https://github.com/facebook/react-python/blob/master/CONTRIBUTING.md">contributions</a>!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/08/05/community-roundup-6.html">Community Round-up #6</a>
-
-</h1>
-
-<p class="meta">
-  August  5, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This is the first Community Round-up where none of the items are from Facebook/Instagram employees. It&#39;s great to see the adoption of React growing.</p>
-
-<h2>React Game Tutorial</h2>
-
-<p><a href="https://twitter.com/CalebCassel">Caleb Cassel</a> wrote a <a href="https://rawgithub.com/calebcassel/react-demo/master/part1.html">step-by-step tutorial</a> about making a small game. It covers JSX, State and Events, Embedded Components and Integration with Backbone.
-<figure><a href="https://rawgithub.com/calebcassel/react-demo/master/part1.html"><img src="/react/img/blog/dog-tutorial.png" alt=""></a></figure></p>
-
-<h2>Reactify</h2>
-
-<p><a href="http://andreypopp.com/">Andrey Popp</a> created a <a href="http://browserify.org/">Browserify</a> helper to compile JSX files.</p>
-
-<blockquote>
-<p>Browserify v2 transform for <code>text/jsx</code>. Basic usage is:</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">% browserify -t reactify main.jsx
-</code></pre></div>
-<p><code>reactify</code> transform activates for files with either <code>.jsx</code> extension or <code>/** @jsx React.DOM */</code> pragma as a first line for any <code>.js</code> file.</p>
-
-<p><a href="https://github.com/andreypopp/reactify">Check it out on GitHub...</a></p>
-</blockquote>
-
-<h2>React Integration with Este</h2>
-
-<p><a href="http://daniel.steigerwald.cz/">Daniel Steigerwald</a> is now using React within <a href="https://github.com/steida/este">Este</a>, which is a development stack for web apps in CoffeeScript that are statically typed using the Closure Library.</p>
-<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">este.demos.react.todoApp = </span><span class="nx">este</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">create</span> <span class="p">(</span><span class="o">`</span><span class="sr">/** @lends {React.ReactComponent.prototype} */</span><span class="o">`</span><span class="p">)</span>
-  <span class="nv">render: </span><span class="nf">-&gt;</span>
-    <span class="nx">@div</span> <span class="p">[</span>
-      <span class="nx">este</span><span class="p">.</span><span class="nx">demos</span><span class="p">.</span><span class="nx">react</span><span class="p">.</span><span class="nx">todoList</span> <span class="s">&#39;items&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">]</span>
-      <span class="k">if</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span>
-        <span class="nx">@p</span> <span class="s">&quot;</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span><span class="si">}</span><span class="s"> items.&quot;</span>
-      <span class="nx">@form</span> <span class="s">&#39;onSubmit&#39;</span><span class="o">:</span> <span class="nx">@onFormSubmit</span><span class="p">,</span> <span class="p">[</span>
-        <span class="nx">@input</span>
-          <span class="s">&#39;onChange&#39;</span><span class="o">:</span> <span class="nx">@onChange</span>
-          <span class="s">&#39;value&#39;</span><span class="o">:</span> <span class="nx">@state</span><span class="p">[</span><span class="s">&#39;text&#39;</span><span class="p">]</span>
-          <span class="s">&#39;autoFocus&#39;</span><span class="o">:</span> <span class="kc">true</span>
-          <span class="s">&#39;ref&#39;</span><span class="o">:</span> <span class="s">&#39;textInput&#39;</span>
-        <span class="nx">@button</span> <span class="s">&quot;Add #</span><span class="si">#{</span><span class="nx">@state</span><span class="p">[</span><span class="s">&#39;items&#39;</span><span class="p">].</span><span class="nx">length</span> <span class="o">+</span> <span class="mi">1</span><span class="si">}</span><span class="s">&quot;</span>
-      <span class="p">]</span>
-    <span class="p">]</span>
-</code></pre></div>
-<p><a href="https://github.com/steida/este-library/blob/master/este/demos/thirdparty/react/start.coffee">Check it out on GitHub...</a></p>
-
-<h2>React Stylus Boilerplate</h2>
-
-<p><a href="https://zaim.github.io/">Zaim Bakar</a> shared his boilerplate to get started with Stylus CSS processor.</p>
-
-<blockquote>
-<p>This is my boilerplate React project using Grunt as the build tool, and Stylus as my CSS preprocessor.</p>
-
-<ul>
-<li>Very minimal HTML boilerplate</li>
-<li>Uses Stylus, with nib included</li>
-<li>Uses two build targets:
-
-<ul>
-<li><code>grunt build</code> to compile JSX and Stylus into a development build</li>
-<li><code>grunt dist</code> to minify and optimize the development build for production</li>
-</ul></li>
-</ul>
-
-<p><a href="https://github.com/zaim/react-stylus-boilerplate">Check it out on GitHub...</a></p>
-</blockquote>
-
-<h2>WebFUI</h2>
-
-<p><a href="http://lisperati.com/">Conrad Barski</a>, author of the popular book <a href="http://landoflisp.com/">Land of Lisp</a>, wants to use React for his ClojureScript library called <a href="https://github.com/drcode/webfui">WebFUI</a>.</p>
-
-<blockquote>
-<p>I&#39;m the author of &quot;<a href="http://landoflisp.com/">Land of Lisp</a>&quot; and I love your framework. I built a somewhat similar framework a year ago <a href="https://github.com/drcode/webfui">WebFUI</a> aimed at ClojureScript. My framework also uses global event delegates, a global &quot;render&quot; function, DOM reconciliation, etc just like react.js. (Of course these ideas all have been floating around the ether for ages, always great to see more people building on them.)</p>
-
-<p>Your implementation is more robust, and so I think the next point release of webfui will simply delegate all the &quot;hard work&quot; to react.js and will only focus on the areas where it adds value (enabling purely functional UI programming in clojurescript, and some other stuff related to streamlining event handling)
-<figure><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ"><img src="/react/img/blog/landoflisp.png" alt=""></a></figure></p>
-
-<p><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ">Read the full post...</a></p>
-</blockquote>
 
 </div>
 
