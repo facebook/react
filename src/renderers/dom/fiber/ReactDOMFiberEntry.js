@@ -740,7 +740,7 @@ type PublicRoot = {
 
 function PublicRootNode(
   container: DOMContainer | (() => DOMContainer),
-  namespace: ?string,
+  namespace?: string,
 ) {
   if (typeof container === 'function') {
     if (typeof namespace !== 'string') {
@@ -788,7 +788,7 @@ PublicRootNode.prototype.unmount = function(callback) {
 var ReactDOMFiber = {
   unstable_createRoot(
     container: DOMContainer | (() => DOMContainer),
-    namespace: ?string,
+    namespace?: string,
   ): PublicRoot {
     return new PublicRootNode(container, namespace);
   },
