@@ -786,7 +786,7 @@ PublicRootNode.prototype.unmount = function(callback) {
 };
 
 var ReactDOMFiber = {
-  unstable_create(
+  unstable_createRoot(
     container: DOMContainer | (() => DOMContainer),
     namespace: ?string,
   ): PublicRoot {
