@@ -285,14 +285,15 @@ function toJSON(inst: Instance | TextInstance): ReactTestRendererNode {
   }
 }
 
-function nodeAndSiblingsArray(nodeWithSibling: ?Fiber) {
+function nodeAndSiblingsTrees(nodeWithSibling: ?Fiber) {
   var array = [];
   var node = nodeWithSibling;
   while (node != null) {
     array.push(node);
     node = node.sibling;
   }
-  return array;
+  const trees = array.map(toTree);
+  return trees.length ? trees : null;
 }
 
 function toTree(node: ?Fiber) {
@@ -308,7 +309,7 @@ function toTree(node: ?Fiber) {
         type: node.type,
         props: {...node.memoizedProps},
         instance: node.stateNode,
-        rendered: toTree(node.child),
+        rendered: nodeAndSiblingsTrees(node.child),
       };
     case FunctionalComponent: // 1
       return {
@@ -316,7 +317,7 @@ function toTree(node: ?Fiber) {
         type: node.type,
         props: {...node.memoizedProps},
         instance: null,
-        rendered: toTree(node.child),
+        rendered: nodeAndSiblingsTrees(node.child),
       };
     case HostComponent: // 5
       return {
@@ -324,7 +325,7 @@ function toTree(node: ?Fiber) {
         type: node.type,
         props: {...node.memoizedProps},
         instance: null, // TODO: use createNodeMock here somehow?
-        rendered: nodeAndSiblingsArray(node.child).map(toTree),
+        rendered: nodeAndSiblingsTrees(node.child),
       };
     case HostText: // 6
       return node.stateNode.text;
