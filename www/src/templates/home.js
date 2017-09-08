@@ -252,7 +252,7 @@ const markdownStyles = {
 
     '& h3 + p': {
       marginTop: 20,
-    }
+    },
   },
 
   '& .example': {

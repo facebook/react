@@ -43,13 +43,15 @@ const isItemActive = (location, item) => {
 
 const Section = ({isActive, location, onClick, section}) => (
   <div>
-    <MetaTitle onClick={onClick} cssProps={{
-      color: isActive ? colors.text : colors.subtle,
-      marginTop: 10,
-      ':hover': {
-        color: colors.text,
-      },
-    }}>
+    <MetaTitle
+      onClick={onClick}
+      cssProps={{
+        color: isActive ? colors.text : colors.subtle,
+        marginTop: 10,
+        ':hover': {
+          color: colors.text,
+        },
+      }}>
       {section.title}
     </MetaTitle>
     {isActive &&
