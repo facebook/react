@@ -265,7 +265,7 @@ exports.createWorkInProgress = function(
   } else {
     // We already have an alternate.
     // Reset the effect tag.
-    workInProgress.effectTag = NoWork;
+    workInProgress.effectTag = NoEffect;
 
     // The effect list is no longer valid.
     workInProgress.nextEffect = null;
