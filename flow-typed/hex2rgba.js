@@ -1,3 +1,3 @@
 declare module 'hex2rgba' {
-  declare module.exports: function;
+  declare module.exports: (hex : string, alpha? : number) => string;
 }
