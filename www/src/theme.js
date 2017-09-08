@@ -165,7 +165,7 @@ const sharedStyles = {
       ':first-child': {
         borderTop: 0,
         marginTop: 0,
-        paddingTop: 0
+        paddingTop: 0,
       },
 
       [media.lessThan('large')]: {
@@ -195,7 +195,6 @@ const sharedStyles = {
       lineHeight: 1.3,
       marginTop: 50,
       fontWeight: 400,
-
     },
 
     '& h4 + p': {
@@ -216,7 +215,7 @@ const sharedStyles = {
 
       '& li': {
         marginTop: 10,
-      }
+      },
     },
 
     '& img': {
