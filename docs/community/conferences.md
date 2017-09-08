@@ -29,6 +29,11 @@ September 14 in Bangalore, India
 
 [Website](https://reactfoo.in/2017/)
 
+### WarsawJS Workshop #10 - React.js for beginners
+September 17 in Warsaw, Poland
+
+[Website](https://www.meetup.com/pl-PL/WarsawJS/events/243141164)
+
 ### React Boston 2017
 September 23-24 in Boston, Massachusetts USA
 
