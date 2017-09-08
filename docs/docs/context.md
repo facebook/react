@@ -36,7 +36,7 @@ Suppose you have a structure like:
 class Button extends React.Component {
   render() {
     return (
-      <button style={{'{{'}}background: this.props.color}}>
+      <button style={{ background: this.props.color }}>
         {this.props.children}
       </button>
     );
@@ -55,11 +55,15 @@ class Message extends React.Component {
 
 class MessageList extends React.Component {
   render() {
-    const color = "purple";
-    const children = this.props.messages.map((message) =>
+    const color = 'purple';
+    const children = this.props.messages.map(message =>
       <Message text={message.text} color={color} />
     );
-    return <div>{children}</div>;
+    return (
+      <div>
+        {children}
+      </div>
+    );
   }
 }
 ```
@@ -72,7 +76,7 @@ const PropTypes = require('prop-types');
 class Button extends React.Component {
   render() {
     return (
-      <button style={{'{{'}}background: this.context.color}}>
+      <button style={{ background: this.context.color }}>
         {this.props.children}
       </button>
     );
@@ -80,7 +84,7 @@ class Button extends React.Component {
 }
 
 Button.contextTypes = {
-  color: PropTypes.string
+  color: PropTypes.string,
 };
 
 class Message extends React.Component {
@@ -95,19 +99,23 @@ class Message extends React.Component {
 
 class MessageList extends React.Component {
   getChildContext() {
-    return {color: "purple"};
+    return { color: 'purple' };
   }
 
   render() {
-    const children = this.props.messages.map((message) =>
+    const children = this.props.messages.map(message =>
       <Message text={message.text} />
     );
-    return <div>{children}</div>;
+    return (
+      <div>
+        {children}
+      </div>
+    );
   }
 }
 
 MessageList.childContextTypes = {
-  color: PropTypes.string
+  color: PropTypes.string,
 };
 ```
 
@@ -122,13 +130,19 @@ Context can also let you build an API where parents and children communicate. Fo
 ```javascript
 import { BrowserRouter as Router, Route, Link } from 'react-router-dom';
 
-const BasicExample = () => (
+const BasicExample = () =>
   <Router>
     <div>
       <ul>
-        <li><Link to="/">Home</Link></li>
-        <li><Link to="/about">About</Link></li>
-        <li><Link to="/topics">Topics</Link></li>
+        <li>
+          <Link to="/">Home</Link>
+        </li>
+        <li>
+          <Link to="/about">About</Link>
+        </li>
+        <li>
+          <Link to="/topics">Topics</Link>
+        </li>
       </ul>
 
       <hr />
@@ -137,8 +151,7 @@ const BasicExample = () => (
       <Route path="/about" component={About} />
       <Route path="/topics" component={Topics} />
     </div>
-  </Router>
-);
+  </Router>;
 ```
 
 By passing down some information from the `Router` component, each `Link` and `Route` can communicate back to the containing `Router`.
@@ -162,12 +175,12 @@ Stateless functional components are also able to reference `context` if `context
 ```javascript
 const PropTypes = require('prop-types');
 
-const Button = ({children}, context) =>
-  <button style={{'{{'}}background: context.color}}>
+const Button = ({ children }, context) =>
+  <button style={{ background: context.color }}>
     {children}
   </button>;
 
-Button.contextTypes = {color: PropTypes.string};
+Button.contextTypes = { color: PropTypes.string };
 ```
 
 ## Updating Context
@@ -184,18 +197,20 @@ const PropTypes = require('prop-types');
 class MediaQuery extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {type:'desktop'};
+    this.state = { type: 'desktop' };
   }
 
   getChildContext() {
-    return {type: this.state.type};
+    return { type: this.state.type };
   }
 
   componentDidMount() {
     const checkMediaQuery = () => {
-      const type = window.matchMedia("(min-width: 1025px)").matches ? 'desktop' : 'mobile';
+      const type = window.matchMedia('(min-width: 1025px)').matches
+        ? 'desktop'
+        : 'mobile';
       if (type !== this.state.type) {
-        this.setState({type});
+        this.setState({ type });
       }
     };
 
@@ -209,7 +224,7 @@ class MediaQuery extends React.Component {
 }
 
 MediaQuery.childContextTypes = {
-  type: PropTypes.string
+  type: PropTypes.string,
 };
 ```
 
