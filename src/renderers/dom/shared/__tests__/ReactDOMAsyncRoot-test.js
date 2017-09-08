@@ -28,7 +28,7 @@ describe('ReactDOMAsyncRoot', () => {
   if (ReactDOMFeatureFlags.useFiber) {
     it('works in easy mode', () => {
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_create(container);
+      const root = ReactDOM.unstable_createRoot(container);
       root.render(<div>Foo</div>);
       expect(container.textContent).toEqual('Foo');
       root.render(<div>Bar</div>);
@@ -40,7 +40,7 @@ describe('ReactDOMAsyncRoot', () => {
     it('can defer commit using prerender', () => {
       const Async = React.unstable_AsyncComponent;
       const container = document.createElement('div');
-      const root = ReactDOM.unstable_create(container);
+      const root = ReactDOM.unstable_createRoot(container);
       const work = root.prerender(<Async>Foo</Async>);
 
       // Hasn't updated yet

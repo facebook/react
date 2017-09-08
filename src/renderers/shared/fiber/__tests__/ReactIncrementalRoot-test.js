@@ -24,7 +24,7 @@ describe('ReactIncrementalRoot', () => {
   }
 
   it('prerenders roots', () => {
-    const root = ReactNoop.create();
+    const root = ReactNoop.createRoot();
     const work = root.prerender(<span prop="A" />);
     expect(root.getChildren()).toEqual([]);
     work.commit();
@@ -32,7 +32,7 @@ describe('ReactIncrementalRoot', () => {
   });
 
   it('resolves `then` callback synchronously if tree is already completed', () => {
-    const root = ReactNoop.create();
+    const root = ReactNoop.createRoot();
     const work = root.prerender(<span prop="A" />);
     ReactNoop.flush();
     let wasCalled = false;
@@ -48,7 +48,7 @@ describe('ReactIncrementalRoot', () => {
       ops.push('Foo');
       return <span prop={props.children} />;
     }
-    const root = ReactNoop.create();
+    const root = ReactNoop.createRoot();
     const work = root.prerender(<Foo>Hi</Foo>);
 
     ReactNoop.flush();
@@ -76,7 +76,7 @@ describe('ReactIncrementalRoot', () => {
       ops.push('Foo: ' + props.children);
       return <span prop={props.children} />;
     }
-    const root = ReactNoop.create();
+    const root = ReactNoop.createRoot();
     root.prerender(<Foo>A</Foo>);
     ReactNoop.flush();
 
