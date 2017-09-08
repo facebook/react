@@ -284,7 +284,7 @@ var ReactNoop = {
     }
   },
 
-  create(rootID: string) {
+  createRoot(rootID: string) {
     rootID = typeof rootID === 'string' ? rootID : DEFAULT_ROOT_ID;
     invariant(
       !roots.has(rootID),
