@@ -38,6 +38,7 @@ const Blog = ({data, location}) => (
     location={location}
     markdownRemark={data.markdownRemark}
     sectionList={toSectionList(data.allMarkdownRemark)}
+    titlePostfix=' - React Blog'
   />
 );
 

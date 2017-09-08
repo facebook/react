@@ -14,6 +14,7 @@
 import ButtonLink from './components/ButtonLink';
 import Container from 'components/Container';
 import Flex from 'components/Flex';
+import Helmet from 'react-helmet';
 import mountCodeExample from 'utils/mountCodeExample';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -32,6 +33,7 @@ class Home extends Component {
 
     return (
       <div css={{width: '100%'}}>
+        <Helmet title='React - A JavaScript library for building user interfaces' />
         <header
           css={{
             backgroundColor: colors.dark,

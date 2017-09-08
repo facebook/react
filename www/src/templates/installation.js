@@ -13,6 +13,7 @@
 
 import Container from 'components/Container';
 import Flex from 'components/Flex';
+import Helmet from 'react-helmet';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
@@ -146,6 +147,7 @@ class InstallationPage extends Component {
           position: 'relative',
           zIndex: 0,
         }}>
+        <Helmet title='Installation - React' />
         <div css={{flex: '1 0 auto'}}>
           <Container>
             <StickyContainer

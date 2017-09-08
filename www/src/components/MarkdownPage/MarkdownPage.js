@@ -13,6 +13,7 @@
 
 import Container from 'components/Container';
 import Flex from 'components/Flex';
+import Helmet from 'react-helmet';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
@@ -31,8 +32,10 @@ const MarkdownPage = ({
   location,
   markdownRemark,
   sectionList,
+  titlePostfix,
 }) => {
   const hasAuthors = authors.length > 0;
+  const titlePrefix = markdownRemark.frontmatter.title;
 
   return (
     <Flex
@@ -46,6 +49,7 @@ const MarkdownPage = ({
         position: 'relative',
         zIndex: 0,
       }}>
+      <Helmet title={`${titlePrefix}${titlePostfix}`} />
       <div css={{flex: '1 0 auto'}}>
         <Container>
           <StickyContainer
