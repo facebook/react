@@ -170,7 +170,7 @@ While testing this release, we have also [created an automatically generated tab
 ## Try It!
 
 You can try the change in [this CodePen](https://codepen.io/gaearon/pen/gxNVdP?editors=0010).  
-It uses React 16 RC, and you can [help us by testing it in your project!](https://github.com/facebook/react/issues/10294)
+It uses React 16 RC, and you can [help us by testing the RC in your project!](https://github.com/facebook/react/issues/10294)
 
 ## Thanks
 
