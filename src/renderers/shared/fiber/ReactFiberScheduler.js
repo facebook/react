@@ -1501,16 +1501,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     scheduleUpdateImpl(fiber, TaskPriority, true);
   }
 
-  function performWithPriority(priorityLevel: PriorityLevel, fn: Function) {
-    const previousPriorityContext = priorityContext;
-    priorityContext = priorityLevel;
-    try {
-      fn();
-    } finally {
-      priorityContext = previousPriorityContext;
-    }
-  }
-
   function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
     const previousIsBatchingUpdates = isBatchingUpdates;
     isBatchingUpdates = true;
@@ -1573,7 +1563,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   return {
     scheduleUpdate: scheduleUpdate,
     getPriorityContext: getPriorityContext,
-    performWithPriority: performWithPriority,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,
