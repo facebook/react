@@ -402,33 +402,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // no longer blocked, return the time at which it completed so that we
       // can commit it.
       if (isRootBlocked(root, completedAt)) {
-        // Process pending completion callbacks so that they are called at
-        // the end of the current batch.
-        const completionCallbacks = root.completionCallbacks;
-        if (completionCallbacks !== null) {
-          processUpdateQueue(
-            completionCallbacks,
-            null,
-            null,
-            null,
-            completedAt,
-          );
-          const callbackList = completionCallbacks.callbackList;
-          if (callbackList !== null) {
-            // Add new callbacks to list of completion callbacks
-            if (rootCompletionCallbackList === null) {
-              rootCompletionCallbackList = callbackList;
-            } else {
-              for (let i = 0; i < callbackList.length; i++) {
-                rootCompletionCallbackList.push(callbackList[i]);
-              }
-            }
-            completionCallbacks.callbackList = null;
-            if (completionCallbacks.first === null) {
-              root.completionCallbacks = null;
-            }
-          }
-        }
+        // We usually process completion callbacks right after a root is
+        // completed. But this root already completed, and it's possible that
+        // we received new completion callbacks since then.
+        processCompletionCallbacks(root, completedAt);
         return NoWork;
       }
 
@@ -436,6 +413,33 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     return expirationTime;
+  }
+
+  function processCompletionCallbacks(
+    root: FiberRoot,
+    completedAt: ExpirationTime,
+  ) {
+    // Process pending completion callbacks so that they are called at
+    // the end of the current batch.
+    const completionCallbacks = root.completionCallbacks;
+    if (completionCallbacks !== null) {
+      processUpdateQueue(completionCallbacks, null, null, null, completedAt);
+      const callbackList = completionCallbacks.callbackList;
+      if (callbackList !== null) {
+        // Add new callbacks to list of completion callbacks
+        if (rootCompletionCallbackList === null) {
+          rootCompletionCallbackList = callbackList;
+        } else {
+          for (let i = 0; i < callbackList.length; i++) {
+            rootCompletionCallbackList.push(callbackList[i]);
+          }
+        }
+        completionCallbacks.callbackList = null;
+        if (completionCallbacks.first === null) {
+          root.completionCallbacks = null;
+        }
+      }
+    }
   }
 
   function commitAllHostEffects() {
@@ -830,6 +834,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // The root is not blocked, so we can commit it now.
           pendingCommit = workInProgress;
         }
+        processCompletionCallbacks(root, nextRenderExpirationTime);
         return null;
       }
     }
@@ -1614,12 +1619,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
                 }
                 break;
               case TaskPriority:
-                invariant(
-                  isBatchingUpdates,
-                  'Task updates can only be scheduled as a nested update or ' +
-                    'inside batchedUpdates. This error is likely caused by a ' +
-                    'bug in React. Please file an issue.',
-                );
+                if (!isPerformingWork && !isBatchingUpdates) {
+                  performWork(TaskPriority, null);
+                }
                 break;
               default:
                 // This update is async. Schedule a callback.
