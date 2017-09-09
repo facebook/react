@@ -93,7 +93,62 @@ describe('ReactIncrementalRoot', () => {
     expect(root.getChildren()).toEqual([]);
   });
 
-  it(
-    'does not work on on a blocked tree if the expiration time is greater than the blocked update',
-  );
+  it('does not work on on a blocked tree if the expiration time is greater than the blocked update', () => {
+    let ops = [];
+    function Foo(props) {
+      ops.push('Foo: ' + props.children);
+      return <span prop={props.children} />;
+    }
+    const root = ReactNoop.createRoot();
+    root.prerender(<Foo>A</Foo>);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Foo: A']);
+    expect(root.getChildren()).toEqual([]);
+
+    // workB has a later expiration time
+    ReactNoop.expire(1000);
+    root.prerender(<Foo>B</Foo>);
+    ReactNoop.flush();
+
+    // Should not have re-rendered the root at the later expiration time
+    expect(ops).toEqual(['Foo: A']);
+    expect(root.getChildren()).toEqual([]);
+  });
+
+  it('commits earlier work without committing later work', () => {
+    const root = ReactNoop.createRoot();
+    const work1 = root.prerender(<span prop="A" />);
+    ReactNoop.flush();
+
+    expect(root.getChildren()).toEqual([]);
+
+    // Second prerender has a later expiration time
+    ReactNoop.expire(1000);
+    root.prerender(<span prop="B" />);
+
+    work1.commit();
+
+    // Should not have re-rendered the root at the later expiration time
+    expect(root.getChildren()).toEqual([span('A')]);
+  });
+
+  it('flushes ealier work if later work is committed', () => {
+    let ops = [];
+    const root = ReactNoop.createRoot();
+    const work1 = root.prerender(<span prop="A" />);
+    // Second prerender has a later expiration time
+    ReactNoop.expire(1000);
+    const work2 = root.prerender(<span prop="B" />);
+
+    work1.then(() => ops.push('complete 1'));
+    work2.then(() => ops.push('complete 2'));
+
+    work2.commit();
+
+    // Because the later prerender was committed, the earlier one should have
+    // committed, too.
+    expect(root.getChildren()).toEqual([span('B')]);
+    expect(ops).toEqual(['complete 1', 'complete 2']);
+  });
 });
