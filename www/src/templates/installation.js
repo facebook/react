@@ -83,7 +83,7 @@ var foundHash = false;
 function selectTabForHashLink(location) {
   var hashLinks = document.querySelectorAll('a.anchor');
   for (var i = 0; i < hashLinks.length && !foundHash; ++i) {
-    if (location && (hashLinks[i].hash === location.hash)) {
+    if (location && hashLinks[i].hash === location.hash) {
       var parent = hashLinks[i].parentElement;
       while (parent) {
         if (parent.tagName === 'SECTION') {
@@ -125,8 +125,8 @@ class InstallationPage extends Component {
       // Hash links are added a bit later so we wait for them.
       // HACK we don't have a window object if/when Gatsby executes this in node
       if (
-        typeof window !== 'undefined'
-        && typeof window.addEventListener === 'function'
+        typeof window !== 'undefined' &&
+        typeof window.addEventListener === 'function'
       ) {
         window.addEventListener(
           'DOMContentLoaded',
