@@ -19,7 +19,7 @@ We've also reached a point where there are too many questions for us to handle d
 >
 > **PETE:**  Exactly, exactly. In order to implement that, we communicate it as a fake DOM. What we'll do is rather than throw out the actual browser html and event handlers, we have an internal representation of what the page looks like and then we generate a brand new representation of what we want the page to look like. Then we perform this really, really fast diffing algorithm between those two page representations, DOM representations. Then React will compute the minimum set of DOM mutations it needs to make to bring the page up to date.
 >
-> Then to finally get to answer your question, that set of DOM mutations then goes into a queue and we can plug in arbitrary flushing strategies for that. For example, when we originally launched React in open source, every setState would immediately trigger a flush to the DOM. That wasn't part of the contract of setState, but that was just our strategy and it worked pretty well. Then this totally awesome open source contributor Ben Alpert at Khan Academy built a new batching strategy which would basically queue up every single DOM update and state change that happened within an event tick and would execute them in bulk at the end of the event tick.
+> Then to finally get to answer your question, that set of DOM mutations then goes into a queue and we can plug in arbitrary flushing strategies for that. For example, when we originally launched React in open source, every setState would immediately trigger a flush to the DOM. That wasn't part of the contract of setState, but that was just our strategy and it worked pretty well. Then this totally awesome open source contributor Sophie Alpert at Khan Academy built a new batching strategy which would basically queue up every single DOM update and state change that happened within an event tick and would execute them in bulk at the end of the event tick.
 >
 > [Read the full conversation ...](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/)
 
@@ -53,8 +53,8 @@ While this is not going to work for all the attributes since they are camelCased
 
 ## Markdown in React
 
-[Ben Alpert](http://benalpert.com/) converted [marked](https://github.com/chjj/marked), a Markdown JavaScript implementation, in React: [marked-react](https://github.com/spicyj/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
-<figure>[![](/react/img/blog/markdown_refactor.png)](https://github.com/spicyj/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457)</figure>
+[Sophie Alpert](http://sophiebits.com/) converted [marked](https://github.com/chjj/marked), a Markdown JavaScript implementation, in React: [marked-react](https://github.com/sophiebits/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
+<figure>[![](/react/img/blog/markdown_refactor.png)](https://github.com/sophiebits/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457)</figure>
 
 
 ## Unite from BugBusters

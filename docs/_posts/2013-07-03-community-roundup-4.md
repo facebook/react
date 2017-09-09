@@ -7,7 +7,7 @@ React reconciliation process appears to be very well suited to implement a text 
 
 ## Khan Academy
 
-[Ben Kamens](http://bjk5.com/) explains how [Ben Alpert](http://benalpert.com/) and [Joel Burget](http://joelburget.com/) are promoting React inside of [Khan Academy](https://www.khanacademy.org/). They now have three projects in the works using React.
+[Ben Kamens](http://bjk5.com/) explains how [Sophie Alpert](http://sophiebits.com/) and [Joel Burget](http://joelburget.com/) are promoting React inside of [Khan Academy](https://www.khanacademy.org/). They now have three projects in the works using React.
 
 > Recently two Khan Academy devs dropped into our team chat and said they were gonna use React to write a new feature. They even hinted that we may want to adopt it product-wide.
 >
