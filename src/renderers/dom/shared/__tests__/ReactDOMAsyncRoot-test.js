@@ -56,6 +56,18 @@ describe('ReactDOMAsyncRoot', () => {
 
       jest.runAllTimers();
     });
+
+    it('resolves `then` callback synchronously if update is sync', () => {
+      const container = document.createElement('div');
+      const root = ReactDOM.unstable_createRoot(container);
+      const work = root.prerender(<div>Hi</div>);
+      work.then(() => {
+        work.commit();
+        expect(container.textContent).toEqual('Hi');
+      });
+      // `then` should have synchronously resolved
+      expect(container.textContent).toEqual('Hi');
+    });
   } else {
     it('does not apply to stack');
   }
