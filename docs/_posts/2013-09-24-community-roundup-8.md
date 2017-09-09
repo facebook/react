@@ -53,7 +53,7 @@ While this is not going to work for all the attributes since they are camelCased
 
 ## Markdown in React
 
-[Sophie Alpert](http://benalpert.com/) converted [marked](https://github.com/chjj/marked), a Markdown JavaScript implementation, in React: [marked-react](https://github.com/sophiebits/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
+[Sophie Alpert](http://sophiebits.com/) converted [marked](https://github.com/chjj/marked), a Markdown JavaScript implementation, in React: [marked-react](https://github.com/sophiebits/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
 <figure>[![](/react/img/blog/markdown_refactor.png)](https://github.com/sophiebits/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457)</figure>
 
 
