@@ -362,7 +362,7 @@ The usual pattern here is pass down a function from Board to Square that gets ca
   }
 ```
 
-We split the returned element into multiple lines for readability, and added parens around it so that JavaScript doesn't insert a semicolon after `return` and break our code.
+We split the returned element into multiple lines for readability, and added parents around it so that JavaScript doesn't insert a semicolon after `return` and break our code.
 
 Now we're passing down two props from Board to Square: `value` and `onClick`. The latter is a function that Square can call. Let's make the following changes to Square:
 
