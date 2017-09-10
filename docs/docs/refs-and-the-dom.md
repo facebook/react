@@ -39,10 +39,10 @@ When the `ref` attribute is used on an HTML element, the `ref` callback receives
 class CustomTextInput extends React.Component {
   constructor(props) {
     super(props);
-    this.focus = this.focus.bind(this);
+    this.focusTextInput = this.focusTextInput.bind(this);
   }
 
-  focus() {
+  focusTextInput() {
     // Explicitly focus the text input using the raw DOM API
     this.textInput.focus();
   }
@@ -77,7 +77,7 @@ When the `ref` attribute is used on a custom component declared as a class, the 
 ```javascript{3,9}
 class AutoFocusTextInput extends React.Component {
   componentDidMount() {
-    this.textInput.focus();
+    this.textInput.focusTextInput();
   }
 
   render() {
