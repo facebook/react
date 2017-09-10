@@ -59,6 +59,11 @@ October 25–27, Bratislava, Slovakia
 
 [Website](https://reactiveconf.com)
 
+### React Seoul 2017
+November 4 in Seoul, South Korea
+
+[Website](http://seoul.reactjs.kr/en)
+
 ### React Day Berlin
 December 2, Berlin, Germany
 
