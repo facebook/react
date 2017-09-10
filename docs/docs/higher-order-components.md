@@ -279,14 +279,14 @@ This form may seem confusing or unnecessary, but it has a useful property. Singl
 
 ```js
 // Instead of doing this...
-const EnhancedComponent = connect(commentSelector)(withRouter(WrappedComponent))
+const EnhancedComponent = withRouter(connect(commentSelector)(WrappedComponent))
 
 // ... you can use a function composition utility
 // compose(f, g, h) is the same as (...args) => f(g(h(...args)))
 const enhance = compose(
   // These are both single-argument HOCs
-  connect(commentSelector),
-  withRouter
+  withRouter,
+  connect(commentSelector)
 )
 const EnhancedComponent = enhance(WrappedComponent)
 ```
