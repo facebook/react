@@ -162,8 +162,8 @@ Stateless functional components are also able to reference `context` if `context
 ```javascript
 const PropTypes = require('prop-types');
 
-const Button = ({children}, context) =>
-  <button style={{'{{'}}background: context.color}}>
+const Button = (children, context) =>
+  <button style={{background: context.color}}>
     {children}
   </button>;
 
