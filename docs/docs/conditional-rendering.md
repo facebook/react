@@ -187,6 +187,59 @@ render() {
 
 Just like in JavaScript, it is up to you to choose an appropriate style based on what you and your team consider more readable. Also remember that whenever conditions become too complex, it might be a good time to [extract a component](/react/docs/components-and-props.html#extracting-components).
 
+### Replacing switch with Logical Operators
+
+Instead of writing a switch statement as such:
+
+```js{5,7,9}
+render() {
+  const pageToShow = this.state.page;
+  return (
+    <div>
+      {
+        (function() {
+          switch (pageToShow) {
+            case 'home-page':
+              return <HomePage />
+
+            case 'about-me':
+              return <AboutMe />
+
+            case 'contact-us':
+              return <ContactUs />
+
+            default:
+              return <PageNotFound />
+          }
+        })()
+      }
+    </div>
+  );
+}
+```
+
+This can be also written as:
+
+```js{5,7,9}
+render() {
+  const pageToShow = this.state.page;
+  return (
+    <div>
+      {
+        (pageToShow === 'home-page' && <HomePage />)
+        ||
+        (pageToShow === 'about-me' && <AboutMe />)
+        ||
+        (pageToShow === 'contact-us' && <ContactUs />)
+        ||
+        <PageNotFound />
+      }
+    </div>
+  );
+}
+```
+
+
 ### Preventing Component from Rendering
 
 In rare cases you might want a component to hide itself even though it was rendered by another component. To do this return `null` instead of its render output.
