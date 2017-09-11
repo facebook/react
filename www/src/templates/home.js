@@ -19,6 +19,8 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import {colors, media, sharedStyles} from 'theme';
+import {urlRoot} from 'constants';
+
 
 class Home extends Component {
   componentDidMount() {
@@ -37,7 +39,7 @@ class Home extends Component {
       <div css={{width: '100%'}}>
         <TitleAndMetaTags
           title={title}
-          ogUrl={location.pathname}
+          ogUrl={`${urlRoot}${location.pathname}`}
         />
         <header
           css={{

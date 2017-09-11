@@ -23,6 +23,7 @@ import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
 import {sharedStyles} from 'theme';
+import {urlRoot} from 'constants';
 
 const MarkdownPage = ({
   authors,
@@ -50,7 +51,7 @@ const MarkdownPage = ({
       }}>
       <TitleAndMetaTags
         title={`${titlePrefix}${titlePostfix}`}
-        ogUrl={location.pathname}
+        ogUrl={`${urlRoot}${location.pathname}`}
         ogDescription={ogDescription}
       />
       <div css={{flex: '1 0 auto'}}>

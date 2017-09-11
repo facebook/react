@@ -22,6 +22,7 @@ import StickySidebar from 'components/StickySidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import {sharedStyles} from 'theme';
+import {urlRoot} from 'constants';
 
 import sectionListA from '../../../docs/_data/nav_docs.yml';
 import sectionListB from '../../../docs/_data/nav_contributing.yml';
@@ -149,7 +150,7 @@ class InstallationPage extends Component {
         }}>
         <TitleAndMetaTags
           title='Installation - React'
-          ogUrl={location.pathname}
+          ogUrl={`${urlRoot}${location.pathname}`}
         />
         <div css={{flex: '1 0 auto'}}>
           <Container>
