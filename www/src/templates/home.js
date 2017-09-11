@@ -21,7 +21,6 @@ import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import {colors, media, sharedStyles} from 'theme';
 import {urlRoot} from 'constants';
 
-
 class Home extends Component {
   componentDidMount() {
     mountCodeExample('helloExample', HELLO_COMPONENT);
@@ -32,8 +31,7 @@ class Home extends Component {
 
   render() {
     const {data, location} = this.props;
-    const title =
-      'React - A JavaScript library for building user interfaces';
+    const title = 'React - A JavaScript library for building user interfaces';
 
     return (
       <div css={{width: '100%'}}>

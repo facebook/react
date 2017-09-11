@@ -149,7 +149,7 @@ class InstallationPage extends Component {
           zIndex: 0,
         }}>
         <TitleAndMetaTags
-          title='Installation - React'
+          title="Installation - React"
           ogUrl={`${urlRoot}${location.pathname}`}
         />
         <div css={{flex: '1 0 auto'}}>

@@ -22,11 +22,15 @@ const TitleAndMetaTags = ({title, ogDescription, ogUrl}) => {
     <Helmet title={title}>
       <meta property="og:title" content={title} />
       <meta property="og:type" content="website" />
-      {ogUrl &&
-      <meta property="og:url" content={ogUrl} />
-      }
-      <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png" />
-      <meta property="og:description" content={ogDescription || defaultDescription} />
+      {ogUrl && <meta property="og:url" content={ogUrl} />}
+      <meta
+        property="og:image"
+        content="https://facebook.github.io/react/img/logo_og.png"
+      />
+      <meta
+        property="og:description"
+        content={ogDescription || defaultDescription}
+      />
       <meta property="fb:app_id" content="623268441017527" />
     </Helmet>
   );
