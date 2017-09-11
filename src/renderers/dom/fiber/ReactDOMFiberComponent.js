@@ -912,7 +912,7 @@ var ReactDOMFiberComponent = {
           case 'selected':
             break;
           default:
-            extraAttributeNames.add(attributes[i].name);
+            extraAttributeNames.add(name);
         }
       }
     }

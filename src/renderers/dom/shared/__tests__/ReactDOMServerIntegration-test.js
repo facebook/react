@@ -1325,18 +1325,29 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
       });
 
-      itRenders('svg child element', async render => {
-        let e = await render(
-          <svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>,
-        );
-        e = e.firstChild;
+      itRenders('svg child element with an attribute', async render => {
+        let e = await render(<svg viewBox="0 0 0 0" />);
         expect(e.childNodes.length).toBe(0);
-        expect(e.tagName).toBe('image');
+        expect(e.tagName).toBe('svg');
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
-        expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
-          'http://i.imgur.com/w7GCRPb.png',
-        );
+        expect(e.getAttribute('viewBox')).toBe('0 0 0 0');
       });
+
+      itRenders(
+        'svg child element with a namespace attribute',
+        async render => {
+          let e = await render(
+            <svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>,
+          );
+          e = e.firstChild;
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName).toBe('image');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+          expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
+            'http://i.imgur.com/w7GCRPb.png',
+          );
+        },
+      );
 
       itRenders('svg child element with a badly cased alias', async render => {
         let e = await render(
