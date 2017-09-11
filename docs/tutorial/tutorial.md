@@ -53,7 +53,7 @@ This is more work, but lets you work from the comfort of your editor.
 If you want to do it, here are the steps to follow:
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
-2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
+2. Follow the [installation instructions](https://facebook.github.io/react/docs/installation.html#creating-a-new-application) to create a new project.
 3. Delete all files in the `src/` folder of the new project.
 4. Add a file named `index.css` in the `src/` folder with [this CSS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0100).
 5. Add a file named `index.js` in the `src/` folder with [this JS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010), and then add three lines to the top of it:
