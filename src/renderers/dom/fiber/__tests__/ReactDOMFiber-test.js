@@ -182,10 +182,7 @@ describe('ReactDOMFiber', () => {
     var expectMath = {ref: el => mathEls.push(el)};
 
     var usePortal = function(tree) {
-      return ReactDOM.unstable_createPortal(
-        tree,
-        document.createElement('div'),
-      );
+      return ReactDOM.createPortal(tree, document.createElement('div'));
     };
 
     var assertNamespacesMatch = function(tree) {
@@ -210,6 +207,24 @@ describe('ReactDOMFiber', () => {
     };
 
     it('should render one portal', () => {
+      var portalContainer = document.createElement('div');
+
+      ReactDOM.render(
+        <div>
+          {ReactDOM.createPortal(<div>portal</div>, portalContainer)}
+        </div>,
+        container,
+      );
+      expect(portalContainer.innerHTML).toBe('<div>portal</div>');
+      expect(container.innerHTML).toBe('<div></div>');
+
+      ReactDOM.unmountComponentAtNode(container);
+      expect(portalContainer.innerHTML).toBe('');
+      expect(container.innerHTML).toBe('');
+    });
+
+    // TODO: remove in React 17
+    it('should support unstable_createPortal alias', () => {
       var portalContainer = document.createElement('div');
 
       ReactDOM.render(
@@ -260,12 +275,12 @@ describe('ReactDOMFiber', () => {
           const {step} = this.props;
           return [
             <Child key="a" name={`normal[0]:${step}`} />,
-            ReactDOM.unstable_createPortal(
+            ReactDOM.createPortal(
               <Child key="b" name={`portal1[0]:${step}`} />,
               portalContainer1,
             ),
             <Child key="c" name={`normal[1]:${step}`} />,
-            ReactDOM.unstable_createPortal(
+            ReactDOM.createPortal(
               [
                 <Child key="d" name={`portal2[0]:${step}`} />,
                 <Child key="e" name={`portal2[1]:${step}`} />,
@@ -334,14 +349,14 @@ describe('ReactDOMFiber', () => {
       ReactDOM.render(
         [
           <div key="a">normal[0]</div>,
-          ReactDOM.unstable_createPortal(
+          ReactDOM.createPortal(
             [
               <div key="b">portal1[0]</div>,
-              ReactDOM.unstable_createPortal(
+              ReactDOM.createPortal(
                 <div key="c">portal2[0]</div>,
                 portalContainer2,
               ),
-              ReactDOM.unstable_createPortal(
+              ReactDOM.createPortal(
                 <div key="d">portal3[0]</div>,
                 portalContainer3,
               ),
@@ -374,7 +389,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(<div>portal:1</div>, portalContainer)}
+          {ReactDOM.createPortal(<div>portal:1</div>, portalContainer)}
         </div>,
         container,
       );
@@ -383,7 +398,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(<div>portal:2</div>, portalContainer)}
+          {ReactDOM.createPortal(<div>portal:2</div>, portalContainer)}
         </div>,
         container,
       );
@@ -392,7 +407,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(<p>portal:3</p>, portalContainer)}
+          {ReactDOM.createPortal(<p>portal:3</p>, portalContainer)}
         </div>,
         container,
       );
@@ -401,7 +416,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(['Hi', 'Bye'], portalContainer)}
+          {ReactDOM.createPortal(['Hi', 'Bye'], portalContainer)}
         </div>,
         container,
       );
@@ -410,7 +425,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(['Bye', 'Hi'], portalContainer)}
+          {ReactDOM.createPortal(['Bye', 'Hi'], portalContainer)}
         </div>,
         container,
       );
@@ -419,7 +434,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div>
-          {ReactDOM.unstable_createPortal(null, portalContainer)}
+          {ReactDOM.createPortal(null, portalContainer)}
         </div>,
         container,
       );
@@ -700,7 +715,7 @@ describe('ReactDOMFiber', () => {
         }
 
         render() {
-          return ReactDOM.unstable_createPortal(<Component />, portalContainer);
+          return ReactDOM.createPortal(<Component />, portalContainer);
         }
       }
 
@@ -741,7 +756,7 @@ describe('ReactDOMFiber', () => {
         }
 
         render() {
-          return ReactDOM.unstable_createPortal(<Component />, portalContainer);
+          return ReactDOM.createPortal(<Component />, portalContainer);
         }
       }
 
@@ -781,7 +796,7 @@ describe('ReactDOMFiber', () => {
         }
 
         render() {
-          return ReactDOM.unstable_createPortal(<Component />, portalContainer);
+          return ReactDOM.createPortal(<Component />, portalContainer);
         }
       }
 
@@ -821,7 +836,7 @@ describe('ReactDOMFiber', () => {
 
       ReactDOM.render(
         <div onClick={() => ops.push('parent clicked')}>
-          {ReactDOM.unstable_createPortal(
+          {ReactDOM.createPortal(
             <div
               onClick={() => ops.push('portal clicked')}
               ref={n => (portal = n)}>
@@ -874,7 +889,7 @@ describe('ReactDOMFiber', () => {
             onMouseEnter={() => ops.push('enter parent')}
             onMouseLeave={() => ops.push('leave parent')}>
             <div ref={n => (firstTarget = n)} />
-            {ReactDOM.unstable_createPortal(
+            {ReactDOM.createPortal(
               <div
                 onMouseEnter={() => ops.push('enter portal')}
                 onMouseLeave={() => ops.push('leave portal')}
@@ -907,6 +922,15 @@ describe('ReactDOMFiber', () => {
         'leave portal',
         'leave parent', // Only when we leave the portal does onMouseLeave fire.
       ]);
+    });
+
+    it('should throw on bad createPortal argument', () => {
+      expect(() => {
+        ReactDOM.createPortal(<div>portal</div>, null);
+      }).toThrow('Target container is not a DOM element.');
+      expect(() => {
+        ReactDOM.createPortal(<div>portal</div>, document.createTextNode('hi'));
+      }).toThrow('Target container is not a DOM element.');
     });
 
     it('should warn for non-functional event listeners', () => {

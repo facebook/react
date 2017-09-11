@@ -646,7 +646,22 @@ function renderSubtreeIntoContainer(
   return DOMRenderer.getPublicRootInstance(root);
 }
 
+function createPortal(
+  children: ReactNodeList,
+  container: DOMContainer,
+  key: ?string = null,
+) {
+  invariant(
+    isValidContainer(container),
+    'Target container is not a DOM element.',
+  );
+  // TODO: pass ReactDOM portal implementation as third argument
+  return ReactPortal.createPortal(children, container, null, key);
+}
+
 var ReactDOMFiber = {
+  createPortal,
+
   hydrate(element: React$Node, container: DOMContainer, callback: ?Function) {
     // TODO: throw or warn if we couldn't hydrate?
     return renderSubtreeIntoContainer(null, element, container, true, callback);
@@ -742,14 +757,9 @@ var ReactDOMFiber = {
 
   findDOMNode: findDOMNode,
 
-  unstable_createPortal(
-    children: ReactNodeList,
-    container: DOMContainer,
-    key: ?string = null,
-  ) {
-    // TODO: pass ReactDOM portal implementation as third argument
-    return ReactPortal.createPortal(children, container, null, key);
-  },
+  // Temporary alias since we already shipped React 16 RC with it.
+  // TODO: remove in React 17.
+  unstable_createPortal: createPortal,
 
   unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
 

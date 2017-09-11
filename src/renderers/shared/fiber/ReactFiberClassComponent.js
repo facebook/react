@@ -71,7 +71,7 @@ if (__DEV__) {
           'a React 15 tree inside a React 16 tree using ' +
           "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
           'to make sure you have only one copy of React (and ideally, switch ' +
-          'to ReactDOM.unstable_createPortal).',
+          'to ReactDOM.createPortal).',
       );
     },
   });
