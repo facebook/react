@@ -87,7 +87,7 @@ function findNodeHandle(componentOrHandle: any): any {
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
   var internalInstance: Fiber = ReactInstanceMap.get(component);
-  if (internalInstance) {
+  if (internalInstance !== undefined) {
     return ReactNativeFiberRenderer.findHostInstance(internalInstance);
   } else {
     if (component) {

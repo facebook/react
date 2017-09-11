@@ -62,7 +62,7 @@ const findDOMNode = function(
   }
 
   var inst = ReactInstanceMap.get(componentOrElement);
-  if (inst) {
+  if (inst !== undefined) {
     if (typeof inst.tag === 'number') {
       return findFiber(inst);
     } else {

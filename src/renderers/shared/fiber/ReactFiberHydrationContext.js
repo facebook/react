@@ -295,7 +295,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     popToNextHostParent(fiber);
-    nextHydratableInstance = hydrationParentFiber
+    nextHydratableInstance = hydrationParentFiber !== null
       ? getNextHydratableSibling(fiber.stateNode)
       : null;
     return true;

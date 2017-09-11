@@ -160,7 +160,7 @@ var SelectEventPlugin = {
       return null;
     }
 
-    var targetNode = targetInst
+    var targetNode = targetInst !== null
       ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
       : window;
 

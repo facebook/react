@@ -126,25 +126,26 @@ function precacheChildNodes(inst, node) {
  * ReactDOMTextComponent instance ancestor.
  */
 function getClosestInstanceFromNode(node) {
-  if (node[internalInstanceKey]) {
-    return node[internalInstanceKey];
+  let inst = node[internalInstanceKey];
+  if (inst !== undefined) {
+    return inst;
   }
 
   // Walk up the tree until we find an ancestor whose instance we have cached.
   var parents = [];
-  while (!node[internalInstanceKey]) {
+  do {
     parents.push(node);
     if (node.parentNode) {
       node = node.parentNode;
+      inst = node[internalInstanceKey];
     } else {
       // Top of the tree. This node must not be part of a React tree (or is
       // unmounted, potentially).
       return null;
     }
-  }
+  } while (inst === undefined);
 
   var closest;
-  var inst = node[internalInstanceKey];
   if (inst.tag === HostComponent || inst.tag === HostText) {
     // In Fiber, this will always be the deepest root.
     return inst;
@@ -165,7 +166,7 @@ function getClosestInstanceFromNode(node) {
  */
 function getInstanceFromNode(node) {
   var inst = node[internalInstanceKey];
-  if (inst) {
+  if (inst !== undefined) {
     if (inst.tag === HostComponent || inst.tag === HostText) {
       return inst;
     } else if (inst._hostNode === node) {

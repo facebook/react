@@ -26,9 +26,8 @@ function getParent(inst) {
       // host node but that wouldn't work for React Native and doesn't let us
       // do the portal feature.
     } while (inst && inst.tag !== HostComponent);
-    if (inst) {
-      return inst;
-    }
+    // Possibly null.
+    return inst;
   }
   return null;
 }
@@ -117,7 +116,9 @@ function traverseTwoPhase(inst, fn, arg) {
  * "entered" or "left" that element.
  */
 function traverseEnterLeave(from, to, fn, argFrom, argTo) {
-  var common = from && to ? getLowestCommonAncestor(from, to) : null;
+  var common = from !== null && to !== null
+    ? getLowestCommonAncestor(from, to)
+    : null;
   var pathFrom = [];
   while (from && from !== common) {
     pathFrom.push(from);

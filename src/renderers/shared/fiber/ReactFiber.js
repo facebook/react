@@ -351,7 +351,7 @@ function createFiberFromElementType(
   type: mixed,
   key: null | string,
   internalContextTag: TypeOfInternalContext,
-  debugOwner: null | Fiber | ReactInstance,
+  debugOwner: ?(Fiber | ReactInstance),
 ): Fiber {
   let fiber;
   if (typeof type === 'function') {
@@ -387,7 +387,9 @@ function createFiberFromElementType(
           ' You likely forgot to export your component from the file ' +
           "it's defined in.";
       }
-      const ownerName = debugOwner ? getComponentName(debugOwner) : null;
+      const ownerName = debugOwner != null
+        ? getComponentName(debugOwner)
+        : null;
       if (ownerName) {
         info += '\n\nCheck the render method of `' + ownerName + '`.';
       }

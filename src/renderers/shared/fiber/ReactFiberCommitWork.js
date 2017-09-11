@@ -385,7 +385,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // itself will be GC:ed when the parent updates the next time.
     current.return = null;
     current.child = null;
-    if (current.alternate) {
+    if (current.alternate !== null) {
       current.alternate.child = null;
       current.alternate.return = null;
     }

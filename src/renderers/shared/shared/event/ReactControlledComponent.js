@@ -34,7 +34,7 @@ function restoreStateOfTarget(target) {
   // We perform this translation at the end of the event loop so that we
   // always receive the correct fiber here
   var internalInstance = EventPluginUtils.getInstanceFromNode(target);
-  if (!internalInstance) {
+  if (internalInstance === null) {
     // Unmounted
     return;
   }

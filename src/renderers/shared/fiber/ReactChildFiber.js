@@ -121,28 +121,20 @@ function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef !== null && typeof mixedRef !== 'function') {
-    if (element._owner) {
-      const owner: ?(Fiber | ReactInstance) = (element._owner: any);
+    const owner: ?(Fiber | ReactInstance) = (element._owner: any);
+    if (owner != null) {
       let inst;
-      if (owner) {
-        if (typeof owner.tag === 'number') {
-          const ownerFiber = ((owner: any): Fiber);
-          invariant(
-            ownerFiber.tag === ClassComponent,
-            'Stateless function components cannot have refs.',
-          );
-          inst = ownerFiber.stateNode;
-        } else {
-          // Stack
-          inst = (owner: any).getPublicInstance();
-        }
+      if (typeof owner.tag === 'number') {
+        const ownerFiber = ((owner: any): Fiber);
+        invariant(
+          ownerFiber.tag === ClassComponent,
+          'Stateless function components cannot have refs.',
+        );
+        inst = ownerFiber.stateNode;
+      } else {
+        // Stack
+        inst = (owner: any).getPublicInstance();
       }
-      invariant(
-        inst,
-        'Missing owner for string ref %s. This error is likely caused by a ' +
-          'bug in React. Please file an issue.',
-        mixedRef,
-      );
       const stringRef = '' + mixedRef;
       // Check if previous string ref matches new string ref
       if (
@@ -875,7 +867,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           newChildren[newIdx],
           priority,
         );
-        if (!newFiber) {
+        if (newFiber === null) {
           continue;
         }
         lastPlacedIndex = placeChild(newFiber, lastPlacedIndex, newIdx);
@@ -902,7 +894,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         newChildren[newIdx],
         priority,
       );
-      if (newFiber) {
+      if (newFiber !== null) {
         if (shouldTrackSideEffects) {
           if (newFiber.alternate !== null) {
             // The new fiber is a work in progress, but if there exists a
@@ -1007,13 +999,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         // unfortunate because it triggers the slow path all the time. We need
         // a better way to communicate whether this was a miss or null,
         // boolean, undefined, etc.
-        if (!oldFiber) {
+        if (oldFiber === null) {
           oldFiber = nextOldFiber;
         }
         break;
       }
       if (shouldTrackSideEffects) {
-        if (oldFiber && newFiber.alternate === null) {
+        if (oldFiber !== null && newFiber.alternate === null) {
           // We matched the slot, but we didn't reuse the existing fiber, so we
           // need to delete the existing child.
           deleteChild(returnFiber, oldFiber);

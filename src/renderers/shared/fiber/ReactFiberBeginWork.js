@@ -177,7 +177,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function markRef(current: Fiber | null, workInProgress: Fiber) {
     const ref = workInProgress.ref;
-    if (ref !== null && (!current || current.ref !== ref)) {
+    if (ref !== null && (current === null || current.ref !== ref)) {
       // Schedule a Ref effect
       workInProgress.effectTag |= Ref;
     }

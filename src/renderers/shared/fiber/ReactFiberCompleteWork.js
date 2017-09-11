@@ -85,7 +85,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function appendAllYields(yields: Array<mixed>, workInProgress: Fiber) {
     let node = workInProgress.stateNode;
-    if (node) {
+    if (node !== null) {
       node.return = workInProgress;
     }
     while (node !== null) {
