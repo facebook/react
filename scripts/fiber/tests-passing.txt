@@ -2031,6 +2031,7 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should warn if controlled checkbox switches to uncontrolled with defaultChecked
 * should warn if uncontrolled checkbox (checked is undefined) switches to controlled
 * should warn if uncontrolled checkbox (checked is null) switches to controlled
+* should warn if checkbox has both value and onChange props but no checked prop
 * should warn if controlled radio switches to uncontrolled (checked is undefined)
 * should warn if controlled radio switches to uncontrolled (checked is null)
 * should warn if controlled radio switches to uncontrolled with defaultChecked

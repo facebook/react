@@ -36,6 +36,7 @@ var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;
 var didWarnUncontrolledToControlled = false;
+var didWarnMissingCheckedProp = false;
 
 function isControlled(props) {
   var usesChecked = props.type === 'checkbox' || props.type === 'radio';
@@ -132,6 +133,26 @@ var ReactDOMInput = {
           props.type,
         );
         didWarnValueDefaultValue = true;
+      }
+      if (
+        props.type === 'checkbox' &&
+        props.checked === undefined &&
+        props.value !== undefined &&
+        typeof props.onChange === 'function' &&
+        !didWarnMissingCheckedProp
+      ) {
+        warning(
+          false,
+          '%s contains an input of type %s with onChange and value props but not checked prop. ' +
+          'If you use value prop instead of checked prop with a controlled checkbox, ' +
+          'it looks like the component is working but it\'s not. The input remains ' +
+          'uncontrolled and if its value is updated in state elsewhere it won\'t ' +
+          'update in the DOM. More info: ' +
+          'https://fb.me/react-controlled-components',
+          getCurrentFiberOwnerName() || 'A component',
+          props.type,
+        );
+        didWarnMissingCheckedProp = true;
       }
     }
 

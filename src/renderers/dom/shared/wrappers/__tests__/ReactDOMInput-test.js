@@ -1035,6 +1035,26 @@ describe('ReactDOMInput', () => {
     );
   });
 
+  it('should warn if checkbox has both value and onChange props but no checked prop', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" checked={true} onChange={() => {}} />,
+    );
+    expectDev(console.error.calls.count()).toBe(0);
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="checkbox" value={true} onChange={() => {}} />,
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: A component contains an input of type checkbox with onChange and value props but not checked prop. ' +
+      'If you use value prop instead of checked prop with a controlled checkbox, ' +
+      'it looks like the component is working but it\'s not. The input remains ' +
+      'uncontrolled and if its value is updated in state elsewhere it won\'t ' +
+      'update in the DOM. More info: ' +
+      'https://fb.me/react-controlled-components',
+    );
+  });
+
   it('should warn if controlled radio switches to uncontrolled (checked is undefined)', () => {
     var stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     var container = document.createElement('div');
