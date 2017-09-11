@@ -350,7 +350,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return;
     }
     processUpdateQueue(blockers, null, null, null, expirationTime);
-    expireWork(expirationTime);
+    expireWork(root, expirationTime);
   };
   WorkNode.prototype.then = function(callback) {
     const root = this._reactRootContainer;

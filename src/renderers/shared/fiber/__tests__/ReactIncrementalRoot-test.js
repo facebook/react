@@ -133,7 +133,7 @@ describe('ReactIncrementalRoot', () => {
     expect(root.getChildren()).toEqual([span('A')]);
   });
 
-  it('flushes ealier work if later work is committed', () => {
+  it('flushes earlier work if later work is committed', () => {
     let ops = [];
     const root = ReactNoop.createRoot();
     const work1 = root.prerender(<span prop="A" />);
@@ -150,5 +150,33 @@ describe('ReactIncrementalRoot', () => {
     // committed, too.
     expect(root.getChildren()).toEqual([span('B')]);
     expect(ops).toEqual(['complete 1', 'complete 2']);
+  });
+
+  it('committing work on one tree does not commit or expire work in a separate tree', () => {
+    let ops = [];
+
+    const rootA = ReactNoop.createRoot('A');
+    const rootB = ReactNoop.createRoot('B');
+
+    function Foo(props) {
+      ops.push(props.label);
+      return <span prop={props.label} />;
+    }
+
+    // Prerender work on two separate roots
+    const workA = rootA.prerender(<Foo label="A" />);
+    rootB.prerender(<Foo label="B" />);
+
+    expect(rootA.getChildren()).toEqual([]);
+    expect(rootB.getChildren()).toEqual([]);
+    expect(ops).toEqual([]);
+
+    // Commit root A. This forces the remaining work on root A to expire, but
+    // should not expire work on root B.
+    workA.commit();
+
+    expect(rootA.getChildren()).toEqual([span('A')]);
+    expect(rootB.getChildren()).toEqual([]);
+    expect(ops).toEqual(['A']);
   });
 });
