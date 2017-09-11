@@ -909,6 +909,18 @@ describe('ReactDOMFiber', () => {
       ]);
     });
 
+    it('should throw on bad createPortal argument', () => {
+      expect(() => {
+        ReactDOM.unstable_createPortal(<div>portal</div>, null);
+      }).toThrow('Target container is not a DOM element.');
+      expect(() => {
+        ReactDOM.unstable_createPortal(
+          <div>portal</div>,
+          document.createTextNode('hi'),
+        );
+      }).toThrow('Target container is not a DOM element.');
+    });
+
     it('should warn for non-functional event listeners', () => {
       spyOn(console, 'error');
       class Example extends React.Component {

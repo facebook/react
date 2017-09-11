@@ -747,6 +747,10 @@ var ReactDOMFiber = {
     container: DOMContainer,
     key: ?string = null,
   ) {
+    invariant(
+      isValidContainer(container),
+      'Target container is not a DOM element.',
+    );
     // TODO: pass ReactDOM portal implementation as third argument
     return ReactPortal.createPortal(children, container, null, key);
   },
