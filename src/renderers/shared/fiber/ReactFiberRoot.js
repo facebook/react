@@ -34,6 +34,9 @@ export type FiberRoot = {
   // A queue of callbacks that fire once their corresponding expiration time
   // has completed. Only fired once.
   completionCallbacks: UpdateQueue<null> | null,
+  // When set, indicates that all work in this tree with this time or earlier
+  // should be flushed by the end of the batch, as if it has task priority.
+  forceExpire: null | ExpirationTime,
   // The work schedule is a linked list.
   nextScheduledRoot: FiberRoot | null,
   // Top context object, used by renderSubtreeIntoContainer
@@ -64,6 +67,7 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     completedAt: Done,
     blockers: null,
     completionCallbacks: null,
+    forceExpire: null,
     nextScheduledRoot: null,
     context: null,
     pendingContext: null,

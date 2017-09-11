@@ -229,9 +229,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let nextUnitOfWork: Fiber | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = Done;
-  // If not null, all work up to and including this time should be
-  // flushed before the end of the current batch.
-  let forceExpire: ExpirationTime | null = null;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
@@ -311,7 +308,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         (earliestExpirationTime === Done ||
           earliestExpirationTime > rootExpirationTime)
       ) {
-        earliestExpirationTime = root.current.expirationTime;
+        earliestExpirationTime = rootExpirationTime;
         earliestExpirationRoot = root;
       }
       // We didn't find anything to do in this root, so let's try the next one.
@@ -1729,25 +1726,30 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function recalculateCurrentTime(): ExpirationTime {
-    if (forceExpire !== null) {
-      return forceExpire;
+    if (nextRenderedTree !== null) {
+      // Check if the current root is being force expired.
+      const forceExpire = nextRenderedTree.forceExpire;
+      if (forceExpire !== null) {
+        // Override the current time with the `forceExpire` time. This has the
+        // effect of expiring all work up to and including that time.
+        mostRecentCurrentTime = forceExpire;
+        return forceExpire;
+      }
     }
     mostRecentCurrentTime = msToExpirationTime(now());
     return mostRecentCurrentTime;
   }
 
-  function expireWork(expirationTime: ExpirationTime): void {
+  function expireWork(root: FiberRoot, expirationTime: ExpirationTime): void {
     invariant(
       !isPerformingWork,
       'Cannot commit while already performing work.',
     );
-    // Override the current time with the given time. This has the effect of
-    // expiring all work up to and including that time.
-    forceExpire = mostRecentCurrentTime = expirationTime;
+    root.forceExpire = expirationTime;
     try {
       performWork(TaskPriority, null);
     } finally {
-      forceExpire = null;
+      root.forceExpire = null;
       recalculateCurrentTime();
     }
   }
