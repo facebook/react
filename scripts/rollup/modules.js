@@ -87,7 +87,7 @@ function createModuleMap(paths, extractErrors, bundleType) {
   return moduleMap;
 }
 
-function getNodeModules(bundleType) {
+function getNodeModules(bundleType, isRenderer) {
   // rather than adding the rollup node resolve plugin,
   // we can instead deal with the only node module that is used
   // for UMD bundles - object-assign
@@ -95,7 +95,11 @@ function getNodeModules(bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       return {
-        'object-assign': resolve('./node_modules/object-assign/index.js'),
+        // Bundle object-assign once in the isomorphic React, and then use
+        // that from the renderer UMD. Avoids bundling it in both UMDs.
+        'object-assign': isRenderer
+          ? resolve('./scripts/rollup/shims/rollup/assign.js')
+          : resolve('./node_modules/object-assign/index.js'),
         // include the ART package modules directly by aliasing them from node_modules
         'art/modes/current': resolve('./node_modules/art/modes/current.js'),
         'art/modes/fast-noSideEffects': resolve(
@@ -286,7 +290,7 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
       bundleType
     ),
     getInternalModules(),
-    getNodeModules(bundleType),
+    getNodeModules(bundleType, isRenderer),
     getFbjsModuleAliases(bundleType)
   );
 }
