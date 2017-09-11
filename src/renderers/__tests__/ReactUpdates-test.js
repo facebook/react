@@ -522,10 +522,7 @@ describe('ReactUpdates', () => {
         var portal = null;
         // If we're using Fiber, we use Portals instead to achieve this.
         if (ReactDOMFeatureFlags.useFiber) {
-          portal = ReactDOM.unstable_createPortal(
-            <B ref={n => (b = n)} />,
-            bContainer,
-          );
+          portal = ReactDOM.createPortal(<B ref={n => (b = n)} />, bContainer);
         }
         return <div>A{this.state.x}{portal}</div>;
       }

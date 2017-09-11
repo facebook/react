@@ -79,7 +79,7 @@ const ReactNativeFiber: ReactNativeType = {
     UIManager.removeRootView(containerTag);
   },
 
-  unstable_createPortal(
+  createPortal(
     children: ReactNodeList,
     containerTag: number,
     key: ?string = null,
