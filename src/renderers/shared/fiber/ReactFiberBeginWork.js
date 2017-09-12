@@ -305,7 +305,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return workInProgress.child;
   }
 
-  function updateHostRoot(current, workInProgress, priorityLevel) {
+  function pushHostRootContext(workInProgress) {
     const root = (workInProgress.stateNode: FiberRoot);
     if (root.pendingContext) {
       pushTopLevelContextObject(
@@ -317,9 +317,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // Should always be set
       pushTopLevelContextObject(workInProgress, root.context, false);
     }
-
     pushHostContainer(workInProgress, root.containerInfo);
+  }
 
+  function updateHostRoot(current, workInProgress, priorityLevel) {
+    pushHostRootContext(workInProgress);
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
@@ -777,8 +779,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         pushContextProvider(workInProgress);
         break;
       case HostRoot:
-        const root: FiberRoot = workInProgress.stateNode;
-        pushHostContainer(workInProgress, root.containerInfo);
+        pushHostRootContext(workInProgress);
         break;
       default:
         invariant(

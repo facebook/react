@@ -135,6 +135,11 @@ function popContextProvider(fiber: Fiber): void {
 }
 exports.popContextProvider = popContextProvider;
 
+exports.popTopLevelContextObject = function(fiber) {
+  pop(didPerformWorkStackCursor, fiber);
+  pop(contextStackCursor, fiber);
+};
+
 exports.pushTopLevelContextObject = function(
   fiber: Fiber,
   context: Object,
