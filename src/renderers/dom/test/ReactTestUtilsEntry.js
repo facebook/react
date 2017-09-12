@@ -197,38 +197,6 @@ var ReactTestUtils = {
     return constructor === type;
   },
 
-  // TODO: deprecate? It's undocumented and unused.
-  isCompositeComponentElement: function(inst) {
-    if (!React.isValidElement(inst)) {
-      return false;
-    }
-    // We check the prototype of the type that will get mounted, not the
-    // instance itself. This is a future proof way of duck typing.
-    var prototype = inst.type.prototype;
-    return (
-      typeof prototype.render === 'function' &&
-      typeof prototype.setState === 'function'
-    );
-  },
-
-  // TODO: deprecate? It's undocumented and unused.
-  isCompositeComponentElementWithType: function(inst, type) {
-    var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = internalInstance._currentElement.type;
-
-    return !!(ReactTestUtils.isCompositeComponentElement(inst) &&
-      constructor === type);
-  },
-
-  // TODO: deprecate? It's undocumented and unused.
-  getRenderedChildOfCompositeComponent: function(inst) {
-    if (!ReactTestUtils.isCompositeComponent(inst)) {
-      return null;
-    }
-    var internalInstance = ReactInstanceMap.get(inst);
-    return internalInstance._renderedComponent.getPublicInstance();
-  },
-
   findAllInRenderedTree: function(inst, test) {
     if (!inst) {
       return [];
