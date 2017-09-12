@@ -519,15 +519,13 @@ describe('ReactTestRenderer', () => {
         type: Qoo,
         props: {},
         instance: null,
-        rendered: [
-          {
-            nodeType: 'host',
-            type: 'span',
-            props: {className: 'Qoo'},
-            instance: null,
-            rendered: ['Hello World!'],
-          },
-        ],
+        rendered: {
+          nodeType: 'host',
+          type: 'span',
+          props: {className: 'Qoo'},
+          instance: null,
+          rendered: ['Hello World!'],
+        },
       }),
     );
   });
@@ -651,15 +649,13 @@ describe('ReactTestRenderer', () => {
                 nodeType: 'component',
                 props: {},
                 instance: null,
-                rendered: [
-                  {
-                    type: 'div',
-                    nodeType: 'host',
-                    props: {},
-                    instance: null,
-                    rendered: ['Three'],
-                  },
-                ],
+                rendered: {
+                  type: 'div',
+                  nodeType: 'host',
+                  props: {},
+                  instance: null,
+                  rendered: ['Three'],
+                },
               },
             ],
           },
@@ -726,7 +722,7 @@ describe('ReactTestRenderer', () => {
 
     // we test for the presence of instances before nulling them out
     expect(tree.instance).toBeInstanceOf(Bam);
-    expect(tree.rendered[0].instance).toBeInstanceOf(Bar);
+    expect(tree.rendered.instance).toBeInstanceOf(Bar);
 
     cleanNodeOrArray(tree);
 
@@ -736,54 +732,46 @@ describe('ReactTestRenderer', () => {
         nodeType: 'component',
         props: {},
         instance: null,
-        rendered: [
-          {
-            type: Bar,
+        rendered: {
+          type: Bar,
+          nodeType: 'component',
+          props: {special: true},
+          instance: null,
+          rendered: {
+            type: Foo,
             nodeType: 'component',
-            props: {special: true},
+            props: {className: 'special'},
             instance: null,
-            rendered: [
-              {
-                type: Foo,
-                nodeType: 'component',
-                props: {className: 'special'},
-                instance: null,
-                rendered: [
-                  {
-                    type: 'div',
+            rendered: {
+              type: 'div',
+              nodeType: 'host',
+              props: {className: 'Foo special'},
+              instance: null,
+              rendered: [
+                {
+                  type: 'span',
+                  nodeType: 'host',
+                  props: {className: 'Foo2'},
+                  instance: null,
+                  rendered: ['Literal'],
+                },
+                {
+                  type: Qoo,
+                  nodeType: 'component',
+                  props: {},
+                  instance: null,
+                  rendered: {
+                    type: 'span',
                     nodeType: 'host',
-                    props: {className: 'Foo special'},
+                    props: {className: 'Qoo'},
                     instance: null,
-                    rendered: [
-                      {
-                        type: 'span',
-                        nodeType: 'host',
-                        props: {className: 'Foo2'},
-                        instance: null,
-                        rendered: ['Literal'],
-                      },
-                      {
-                        type: Qoo,
-                        nodeType: 'component',
-                        props: {},
-                        instance: null,
-                        rendered: [
-                          {
-                            type: 'span',
-                            nodeType: 'host',
-                            props: {className: 'Qoo'},
-                            instance: null,
-                            rendered: ['Hello World!'],
-                          },
-                        ],
-                      },
-                    ],
+                    rendered: ['Hello World!'],
                   },
-                ],
-              },
-            ],
+                },
+              ],
+            },
           },
-        ],
+        },
       }),
     );
   });

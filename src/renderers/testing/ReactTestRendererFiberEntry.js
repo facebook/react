@@ -296,6 +296,10 @@ function nodeAndSiblingsTrees(nodeWithSibling: ?Fiber) {
   return trees.length ? trees : null;
 }
 
+function hasSiblings(node: ?Fiber) {
+  return node && node.sibling;
+}
+
 function toTree(node: ?Fiber) {
   if (node == null) {
     return null;
@@ -309,7 +313,9 @@ function toTree(node: ?Fiber) {
         type: node.type,
         props: {...node.memoizedProps},
         instance: node.stateNode,
-        rendered: nodeAndSiblingsTrees(node.child),
+        rendered: hasSiblings(node.child)
+          ? nodeAndSiblingsTrees(node.child)
+          : toTree(node.child),
       };
     case FunctionalComponent: // 1
       return {
@@ -317,7 +323,9 @@ function toTree(node: ?Fiber) {
         type: node.type,
         props: {...node.memoizedProps},
         instance: null,
-        rendered: nodeAndSiblingsTrees(node.child),
+        rendered: hasSiblings(node.child)
+          ? nodeAndSiblingsTrees(node.child)
+          : toTree(node.child),
       };
     case HostComponent: // 5
       return {
