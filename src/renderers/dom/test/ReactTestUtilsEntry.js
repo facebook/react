@@ -21,10 +21,6 @@ var SyntheticEvent = require('SyntheticEvent');
 
 var invariant = require('fbjs/lib/invariant');
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
 var {findDOMNode} = ReactDOM;
 var {
   EventPluginHub,
