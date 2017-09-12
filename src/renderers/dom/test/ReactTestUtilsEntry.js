@@ -16,15 +16,10 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactShallowRenderer = require('ReactShallowRendererEntry'); // TODO (bvaughn) Remove this import before 16.0.0
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var SyntheticEvent = require('SyntheticEvent');
 
 var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 var {findDOMNode} = ReactDOM;
 var {
@@ -43,20 +38,6 @@ var {
   HostComponent,
   HostText,
 } = ReactTypeOfWork;
-
-// TODO (bvaughn) Remove this warning before 16.0.0
-// It's only being added for temporary deprecation notice in RN.
-let warnedAboutShallowRenderer = false;
-function createRendererWithWarning() {
-  warning(
-    warnedAboutShallowRenderer,
-    'Shallow renderer has been moved to react-test-renderer/shallow. ' +
-      'Update references to remove this warning. ' +
-      'TestUtils.createRenderer will be removed completely in React 16.',
-  );
-  warnedAboutShallowRenderer = true;
-  return new ReactShallowRenderer();
-}
 
 function Event(suffix) {}
 
@@ -393,10 +374,6 @@ var ReactTestUtils = {
       touches: [{pageX: x, pageY: y}],
     };
   },
-
-  // TODO (bvaughn) Remove this warning accessor before 16.0.0.
-  // It's only being added for temporary deprecation notice in RN.
-  createRenderer: createRendererWithWarning,
 
   Simulate: null,
   SimulateNative: {},
