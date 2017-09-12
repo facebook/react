@@ -166,3 +166,29 @@ class List extends React.Component {
   }
 }
 ```
+
+There is one more way to do event binding that does not cause a `.bind()` to be called every on every render.  You can set your event handler to a method that is an arrow function which returns nested arrow function.  The ES6 syntax looks a little funny at first but it totally makes sense once you get what it is doing.  The first arrow function is given the arguments you would like to access in your handler. It gets invoked immediately during the first render and returns the inner arrow function.  The inner arrow function is what will be handling the click.  The inner arrow function has access to the parameters passed to the outer arrow function. In JavaScript, nested functions have access to variables declared in their outer scope.  It will only be called when the event occurs giving you a clean event handler:
+
+```js{2-5,14}
+class List extends React.Component {
+  handleListClick = (item, i) => (event) => {
+    console.log(`this item was clicked: ${item}`);
+    console.log(`it is item number ${i}`);
+  }
+
+  render () {
+    const listItems = ['Item One', 'Item Two', 'Item Three'];
+    return (
+      <ul>
+        {listItems.map((item, i) => {
+          return (
+            <li key={i}>
+              <a onClick={this.handleListClick(item, i)}>{item}</a>
+            </li>
+          )
+        })}
+      </ul>
+    )
+  }
+}
+```
