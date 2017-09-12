@@ -21,7 +21,10 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
 var {reconcileChildFibers} = require('ReactChildFiber');
-var {popContextProvider} = require('ReactFiberContext');
+var {
+  popContextProvider,
+  popTopLevelContextObject,
+} = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactPriorityLevel = require('ReactPriorityLevel');
@@ -211,7 +214,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
       case HostRoot: {
-        // TODO: Pop the host container after #8607 lands.
+        popHostContainer(workInProgress);
+        popTopLevelContextObject(workInProgress);
         const fiberRoot = (workInProgress.stateNode: FiberRoot);
         if (fiberRoot.pendingContext) {
           fiberRoot.context = fiberRoot.pendingContext;
