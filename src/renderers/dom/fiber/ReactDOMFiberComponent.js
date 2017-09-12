@@ -912,7 +912,9 @@ var ReactDOMFiberComponent = {
           case 'selected':
             break;
           default:
-            extraAttributeNames.add(name);
+            // Intentionally use the original name.
+            // See discussion in https://github.com/facebook/react/pull/10676.
+            extraAttributeNames.add(attributes[i].name);
         }
       }
     }
