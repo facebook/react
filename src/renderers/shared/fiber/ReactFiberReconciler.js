@@ -133,6 +133,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     type: T,
     props: P,
     rootContainerInstance: C,
+    hostContext: CX,
     internalInstanceHandle: OpaqueHandle,
   ) => null | PL,
   hydrateTextInstance?: (

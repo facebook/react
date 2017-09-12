@@ -776,6 +776,7 @@ var ReactDOMFiberComponent = {
     domElement: Element,
     tag: string,
     rawProps: Object,
+    parentNamespace: string,
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
@@ -1009,8 +1010,17 @@ var ReactDOMFiberComponent = {
               nextProp,
             );
           } else {
-            // $FlowFixMe - Should be inferred as not undefined.
-            extraAttributeNames.delete(propKey.toLowerCase());
+            let ownNamespace = parentNamespace;
+            if (ownNamespace === HTML_NAMESPACE) {
+              ownNamespace = getIntrinsicNamespace(tag);
+            }
+            if (ownNamespace === HTML_NAMESPACE) {
+              // $FlowFixMe - Should be inferred as not undefined.
+              extraAttributeNames.delete(propKey.toLowerCase());
+            } else {
+              // $FlowFixMe - Should be inferred as not undefined.
+              extraAttributeNames.delete(propKey);
+            }
             serverValue = DOMPropertyOperations.getValueForAttribute(
               domElement,
               propKey,
