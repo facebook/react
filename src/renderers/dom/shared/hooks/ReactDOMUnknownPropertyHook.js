@@ -180,9 +180,9 @@ if (__DEV__) {
       warning(
         false,
         'React does not recognize the `%s` prop on a DOM element. If you ' +
-          'intentionally wanted it to appear in the DOM as a custom ' +
-          'attribute, spell it as the lowercase `%s` instead. ' +
-          'If you passed it accidentally from a parent component, remove ' +
+          'intentionally want it to appear in the DOM as a custom ' +
+          'attribute, spell it as lowercase `%s` instead. ' +
+          'If you accidentally passed it from a parent component, remove ' +
           'it from the DOM element.%s',
         name,
         lowerCasedName,
