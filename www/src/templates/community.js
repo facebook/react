@@ -26,6 +26,7 @@ const Community = ({data, location}) => (
     location={location}
     markdownRemark={data.markdownRemark}
     sectionList={sectionList}
+    titlePostfix=" - React"
   />
 );
 

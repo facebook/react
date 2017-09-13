@@ -36,8 +36,10 @@ const Blog = ({data, location}) => (
     authors={data.markdownRemark.frontmatter.author}
     date={data.markdownRemark.fields.date}
     location={location}
+    ogDescription={data.markdownRemark.excerpt}
     markdownRemark={data.markdownRemark}
     sectionList={toSectionList(data.allMarkdownRemark)}
+    titlePostfix=" - React Blog"
   />
 );
 
@@ -50,6 +52,7 @@ export const pageQuery = graphql`
   query TemplateBlogMarkdown($slug: String!) {
     markdownRemark(fields: { slug: { eq: $slug } }) {
       html
+      excerpt(pruneLength: 500)
       frontmatter {
         title
         next
