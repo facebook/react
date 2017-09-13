@@ -39,7 +39,10 @@ if (__DEV__) {
   var warnedProperties = {};
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var EVENT_NAME_REGEX = /^on[A-Z]/;
-  var ARIA_NAME_REGEX = /^aria-/i;
+  var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
+  var rARIACamel = new RegExp(
+    '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
+  );
   var possibleStandardNames = require('possibleStandardNames');
 
   var validateProperty = function(tagName, name, value, debugID) {
@@ -91,7 +94,7 @@ if (__DEV__) {
     }
 
     // Let the ARIA attribute hook validate ARIA attributes
-    if (ARIA_NAME_REGEX.test(name)) {
+    if (rARIA.test(name) || rARIACamel.test(name)) {
       return true;
     }
 
@@ -155,6 +158,8 @@ if (__DEV__) {
       return true;
     }
 
+    const isReserved = DOMProperty.isReservedProp(name);
+
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
       var standardName = possibleStandardNames[lowerCasedName];
@@ -169,6 +174,22 @@ if (__DEV__) {
         warnedProperties[name] = true;
         return true;
       }
+    } else if (!isReserved && name !== lowerCasedName) {
+      // Unknown attributes should have lowercase casing since that's how they
+      // will be cased anyway with server rendering.
+      warning(
+        false,
+        'React does not recognize the `%s` prop on a DOM element. If you ' +
+          'intentionally want it to appear in the DOM as a custom ' +
+          'attribute, spell it as lowercase `%s` instead. ' +
+          'If you accidentally passed it from a parent component, remove ' +
+          'it from the DOM element.%s',
+        name,
+        lowerCasedName,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
     }
 
     if (typeof value === 'boolean') {
@@ -186,7 +207,7 @@ if (__DEV__) {
 
     // Now that we've validated casing, do not validate
     // data types for reserved props
-    if (DOMProperty.isReservedProp(name)) {
+    if (isReserved) {
       return true;
     }
 

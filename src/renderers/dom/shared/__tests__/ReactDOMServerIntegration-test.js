@@ -909,25 +909,25 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('unknown data- attributes with casing', async render => {
-        const e = await render(<div data-fooBar="true" />);
-        expect(e.getAttribute('data-fooBar')).toBe('true');
+        const e = await render(<div data-fooBar="true" />, 1);
+        expect(e.getAttribute('data-foobar')).toBe('true');
       });
 
       itRenders('unknown data- attributes with boolean true', async render => {
-        const e = await render(<div data-fooBar={true} />);
-        expect(e.getAttribute('data-fooBar')).toBe('true');
+        const e = await render(<div data-foobar={true} />);
+        expect(e.getAttribute('data-foobar')).toBe('true');
       });
 
       itRenders('unknown data- attributes with boolean false', async render => {
-        const e = await render(<div data-fooBar={false} />);
-        expect(e.getAttribute('data-fooBar')).toBe('false');
+        const e = await render(<div data-foobar={false} />);
+        expect(e.getAttribute('data-foobar')).toBe('false');
       });
 
       itRenders(
         'no unknown data- attributes with casing and null value',
         async render => {
-          const e = await render(<div data-fooBar={null} />);
-          expect(e.hasAttribute('data-fooBar')).toBe(false);
+          const e = await render(<div data-fooBar={null} />, 1);
+          expect(e.hasAttribute('data-foobar')).toBe(false);
         },
       );
 
@@ -972,8 +972,8 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('cased custom attributes', async render => {
-        const e = await render(<div fooBar="test" />);
-        expect(e.getAttribute('fooBar')).toBe('test');
+        const e = await render(<div fooBar="test" />, 1);
+        expect(e.getAttribute('foobar')).toBe('test');
       });
     });
 

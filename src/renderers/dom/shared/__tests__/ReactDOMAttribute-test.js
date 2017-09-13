@@ -96,7 +96,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(console.error.calls.count()).toBe(1);
     });
 
-    it('coerces objects to strings **and warns**', () => {
+    it('coerces objects to strings and warns', () => {
       const lol = {
         toString() {
           return 'lol';
@@ -132,6 +132,26 @@ describe('ReactDOM unknown attribute', () => {
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
+    });
+
+    it('allows camelCase unknown attributes and warns', () => {
+      spyOn(console, 'error');
+
+      var el = document.createElement('div');
+      ReactDOM.render(<div helloWorld="something" />, el);
+      expect(el.firstChild.getAttribute('helloworld')).toBe('something');
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toMatch(
+        'React does not recognize the `helloWorld` prop on a DOM element. ' +
+          'If you intentionally want it to appear in the DOM as a custom ' +
+          'attribute, spell it as lowercase `helloworld` instead. ' +
+          'If you accidentally passed it from a parent component, remove ' +
+          'it from the DOM element.\n' +
+          '    in div (at **)',
+      );
     });
   });
 });

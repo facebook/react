@@ -701,23 +701,23 @@
 ## `as` (on `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `as=(string)`| (changed)| `"a string"` |
+| `as=(string)`| (initial)| `<empty string>` |
 | `as=(empty string)`| (initial)| `<empty string>` |
-| `as=(array with string)`| (changed)| `"string"` |
+| `as=(array with string)`| (initial)| `<empty string>` |
 | `as=(empty array)`| (initial)| `<empty string>` |
-| `as=(object)`| (changed)| `"result of toString()"` |
-| `as=(numeric string)`| (changed)| `"42"` |
-| `as=(-1)`| (changed)| `"-1"` |
-| `as=(0)`| (changed)| `"0"` |
-| `as=(integer)`| (changed)| `"1"` |
-| `as=(NaN)`| (changed, warning)| `"NaN"` |
-| `as=(float)`| (changed)| `"99.99"` |
+| `as=(object)`| (initial)| `<empty string>` |
+| `as=(numeric string)`| (initial)| `<empty string>` |
+| `as=(-1)`| (initial)| `<empty string>` |
+| `as=(0)`| (initial)| `<empty string>` |
+| `as=(integer)`| (initial)| `<empty string>` |
+| `as=(NaN)`| (initial, warning)| `<empty string>` |
+| `as=(float)`| (initial)| `<empty string>` |
 | `as=(true)`| (initial, warning)| `<empty string>` |
 | `as=(false)`| (initial, warning)| `<empty string>` |
-| `as=(string 'true')`| (changed)| `"true"` |
-| `as=(string 'false')`| (changed)| `"false"` |
-| `as=(string 'on')`| (changed)| `"on"` |
-| `as=(string 'off')`| (changed)| `"off"` |
+| `as=(string 'true')`| (initial)| `<empty string>` |
+| `as=(string 'false')`| (initial)| `<empty string>` |
+| `as=(string 'on')`| (initial)| `<empty string>` |
+| `as=(string 'off')`| (initial)| `<empty string>` |
 | `as=(symbol)`| (initial, warning)| `<empty string>` |
 | `as=(function)`| (initial, warning)| `<empty string>` |
 | `as=(null)`| (initial)| `<empty string>` |
@@ -5251,52 +5251,52 @@
 ## `initialChecked` (on `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `initialChecked=(string)`| (changed)| `"a string"` |
-| `initialChecked=(empty string)`| (changed)| `<empty string>` |
-| `initialChecked=(array with string)`| (changed)| `"string"` |
-| `initialChecked=(empty array)`| (changed)| `<empty string>` |
-| `initialChecked=(object)`| (changed)| `"result of toString()"` |
-| `initialChecked=(numeric string)`| (changed)| `"42"` |
-| `initialChecked=(-1)`| (changed)| `"-1"` |
-| `initialChecked=(0)`| (changed)| `"0"` |
-| `initialChecked=(integer)`| (changed)| `"1"` |
+| `initialChecked=(string)`| (changed, warning)| `"a string"` |
+| `initialChecked=(empty string)`| (changed, warning)| `<empty string>` |
+| `initialChecked=(array with string)`| (changed, warning)| `"string"` |
+| `initialChecked=(empty array)`| (changed, warning)| `<empty string>` |
+| `initialChecked=(object)`| (changed, warning)| `"result of toString()"` |
+| `initialChecked=(numeric string)`| (changed, warning)| `"42"` |
+| `initialChecked=(-1)`| (changed, warning)| `"-1"` |
+| `initialChecked=(0)`| (changed, warning)| `"0"` |
+| `initialChecked=(integer)`| (changed, warning)| `"1"` |
 | `initialChecked=(NaN)`| (changed, warning)| `"NaN"` |
-| `initialChecked=(float)`| (changed)| `"99.99"` |
+| `initialChecked=(float)`| (changed, warning)| `"99.99"` |
 | `initialChecked=(true)`| (initial, warning)| `<null>` |
 | `initialChecked=(false)`| (initial, warning)| `<null>` |
-| `initialChecked=(string 'true')`| (changed)| `"true"` |
-| `initialChecked=(string 'false')`| (changed)| `"false"` |
-| `initialChecked=(string 'on')`| (changed)| `"on"` |
-| `initialChecked=(string 'off')`| (changed)| `"off"` |
+| `initialChecked=(string 'true')`| (changed, warning)| `"true"` |
+| `initialChecked=(string 'false')`| (changed, warning)| `"false"` |
+| `initialChecked=(string 'on')`| (changed, warning)| `"on"` |
+| `initialChecked=(string 'off')`| (changed, warning)| `"off"` |
 | `initialChecked=(symbol)`| (initial, warning)| `<null>` |
 | `initialChecked=(function)`| (initial, warning)| `<null>` |
-| `initialChecked=(null)`| (initial)| `<null>` |
-| `initialChecked=(undefined)`| (initial)| `<null>` |
+| `initialChecked=(null)`| (initial, warning)| `<null>` |
+| `initialChecked=(undefined)`| (initial, warning)| `<null>` |
 
 ## `initialValue` (on `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `initialValue=(string)`| (changed)| `"a string"` |
-| `initialValue=(empty string)`| (changed)| `<empty string>` |
-| `initialValue=(array with string)`| (changed)| `"string"` |
-| `initialValue=(empty array)`| (changed)| `<empty string>` |
-| `initialValue=(object)`| (changed)| `"result of toString()"` |
-| `initialValue=(numeric string)`| (changed)| `"42"` |
-| `initialValue=(-1)`| (changed)| `"-1"` |
-| `initialValue=(0)`| (changed)| `"0"` |
-| `initialValue=(integer)`| (changed)| `"1"` |
+| `initialValue=(string)`| (changed, warning)| `"a string"` |
+| `initialValue=(empty string)`| (changed, warning)| `<empty string>` |
+| `initialValue=(array with string)`| (changed, warning)| `"string"` |
+| `initialValue=(empty array)`| (changed, warning)| `<empty string>` |
+| `initialValue=(object)`| (changed, warning)| `"result of toString()"` |
+| `initialValue=(numeric string)`| (changed, warning)| `"42"` |
+| `initialValue=(-1)`| (changed, warning)| `"-1"` |
+| `initialValue=(0)`| (changed, warning)| `"0"` |
+| `initialValue=(integer)`| (changed, warning)| `"1"` |
 | `initialValue=(NaN)`| (changed, warning)| `"NaN"` |
-| `initialValue=(float)`| (changed)| `"99.99"` |
+| `initialValue=(float)`| (changed, warning)| `"99.99"` |
 | `initialValue=(true)`| (initial, warning)| `<null>` |
 | `initialValue=(false)`| (initial, warning)| `<null>` |
-| `initialValue=(string 'true')`| (changed)| `"true"` |
-| `initialValue=(string 'false')`| (changed)| `"false"` |
-| `initialValue=(string 'on')`| (changed)| `"on"` |
-| `initialValue=(string 'off')`| (changed)| `"off"` |
+| `initialValue=(string 'true')`| (changed, warning)| `"true"` |
+| `initialValue=(string 'false')`| (changed, warning)| `"false"` |
+| `initialValue=(string 'on')`| (changed, warning)| `"on"` |
+| `initialValue=(string 'off')`| (changed, warning)| `"off"` |
 | `initialValue=(symbol)`| (initial, warning)| `<null>` |
 | `initialValue=(function)`| (initial, warning)| `<null>` |
-| `initialValue=(null)`| (initial)| `<null>` |
-| `initialValue=(undefined)`| (initial)| `<null>` |
+| `initialValue=(null)`| (initial, warning)| `<null>` |
+| `initialValue=(undefined)`| (initial, warning)| `<null>` |
 
 ## `inlist` (on `<div>`)
 | Test Case | Flags | Result |
@@ -9276,27 +9276,27 @@
 ## `selectedIndex` (on `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `selectedIndex=(string)`| (initial)| `<number: -1>` |
-| `selectedIndex=(empty string)`| (initial)| `<number: -1>` |
-| `selectedIndex=(array with string)`| (initial)| `<number: -1>` |
-| `selectedIndex=(empty array)`| (initial)| `<number: -1>` |
-| `selectedIndex=(object)`| (initial)| `<number: -1>` |
-| `selectedIndex=(numeric string)`| (initial)| `<number: -1>` |
-| `selectedIndex=(-1)`| (initial)| `<number: -1>` |
-| `selectedIndex=(0)`| (initial)| `<number: -1>` |
-| `selectedIndex=(integer)`| (initial)| `<number: -1>` |
+| `selectedIndex=(string)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(empty string)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(array with string)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(empty array)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(object)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(numeric string)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(-1)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(0)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(integer)`| (initial, warning)| `<number: -1>` |
 | `selectedIndex=(NaN)`| (initial, warning)| `<number: -1>` |
-| `selectedIndex=(float)`| (initial)| `<number: -1>` |
+| `selectedIndex=(float)`| (initial, warning)| `<number: -1>` |
 | `selectedIndex=(true)`| (initial, warning)| `<number: -1>` |
 | `selectedIndex=(false)`| (initial, warning)| `<number: -1>` |
-| `selectedIndex=(string 'true')`| (initial)| `<number: -1>` |
-| `selectedIndex=(string 'false')`| (initial)| `<number: -1>` |
-| `selectedIndex=(string 'on')`| (initial)| `<number: -1>` |
-| `selectedIndex=(string 'off')`| (initial)| `<number: -1>` |
+| `selectedIndex=(string 'true')`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(string 'false')`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(string 'on')`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(string 'off')`| (initial, warning)| `<number: -1>` |
 | `selectedIndex=(symbol)`| (initial, warning)| `<number: -1>` |
 | `selectedIndex=(function)`| (initial, warning)| `<number: -1>` |
-| `selectedIndex=(null)`| (initial)| `<number: -1>` |
-| `selectedIndex=(undefined)`| (initial)| `<number: -1>` |
+| `selectedIndex=(null)`| (initial, warning)| `<number: -1>` |
+| `selectedIndex=(undefined)`| (initial, warning)| `<number: -1>` |
 
 ## `shape` (on `<div>`)
 | Test Case | Flags | Result |
