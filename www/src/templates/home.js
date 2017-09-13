@@ -17,7 +17,9 @@ import Flex from 'components/Flex';
 import mountCodeExample from 'utils/mountCodeExample';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
+import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import {colors, media, sharedStyles} from 'theme';
+import {urlRoot} from 'constants';
 
 class Home extends Component {
   componentDidMount() {
@@ -28,10 +30,15 @@ class Home extends Component {
   }
 
   render() {
-    const {data} = this.props;
+    const {data, location} = this.props;
+    const title = 'React - A JavaScript library for building user interfaces';
 
     return (
       <div css={{width: '100%'}}>
+        <TitleAndMetaTags
+          title={title}
+          ogUrl={`${urlRoot}${location.pathname}`}
+        />
         <header
           css={{
             backgroundColor: colors.dark,

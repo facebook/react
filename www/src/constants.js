@@ -7,10 +7,17 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
+ * @flow
 */
 
 'use strict';
 
-import TitleAndMetaTags from './TitleAndMetaTags';
+/**
+ * Variables shared by multiple components.
+ */
 
-export default TitleAndMetaTags;
+export default {
+  // NOTE: We can't just use `location.toString()` because when we are rendering
+  // the SSR part in node.js we won't have a proper location.
+  urlRoot: 'https://reactjs.org',
+};
