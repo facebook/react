@@ -19,6 +19,5 @@
 export default {
   // NOTE: We can't just use `location.toString()` because when we are rendering
   // the SSR part in node.js we won't have a proper location.
-  // TODO: update this once we move to https://react.com
-  urlRoot: 'https://facebook.github.io/react',
+  urlRoot: 'https://reactjs.org',
 };

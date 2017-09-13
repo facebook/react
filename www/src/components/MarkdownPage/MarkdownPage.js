@@ -32,10 +32,10 @@ const MarkdownPage = ({
   location,
   markdownRemark,
   sectionList,
-  titlePostfix,
+  titlePostfix = '',
 }) => {
   const hasAuthors = authors.length > 0;
-  const titlePrefix = markdownRemark.frontmatter.title;
+  const titlePrefix = markdownRemark.frontmatter.title || '';
 
   return (
     <Flex
