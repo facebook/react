@@ -91,17 +91,20 @@ ReactControlledComponent.injection.injectFiberControlledHostComponent(
 
 type DOMContainer =
   | (Element & {
-    _reactRootContainer: ?Object,
+    _reactRootContainer?: Object | null,
   })
   | (Document & {
-    _reactRootContainer: ?Object,
+    _reactRootContainer?: Object | null,
   });
 
-type Container =
-  | Element
-  | Document
-  // If the DOM container is lazily provided, the container is the namespace uri
-  | string;
+type LazyContainer = {
+  namespace: string,
+  ownerDocument: Document,
+  getContainer: () => Element | DOMContainer,
+  _reactRootContainer?: Object | null,
+};
+
+type Container = DOMContainer | LazyContainer;
 
 type Props = {
   autoFocus?: boolean,
@@ -122,10 +125,15 @@ type HostContext = HostContextDev | HostContextProd;
 let eventsEnabled: ?boolean = null;
 let selectionInformation: ?mixed = null;
 
+function isLazyContainer(container: Container): boolean {
+  return typeof (container: any).getContainer === 'function';
+}
+
 function getOwnerDocument(container: Container): Document {
   let ownerDocument;
-  if (typeof container === 'string') {
-    ownerDocument = document;
+  if (isLazyContainer(container)) {
+    const lazyContainer: LazyContainer = (container: any);
+    ownerDocument = lazyContainer.ownerDocument;
   } else if (container.nodeType === DOCUMENT_NODE) {
     ownerDocument = (container: any);
   } else {
@@ -134,14 +142,17 @@ function getOwnerDocument(container: Container): Document {
   return ownerDocument;
 }
 
-function ensureDOMContainer(container: Container): Element | Document {
+function ensureDOMContainer(container: Container): DOMContainer {
+  if (!isLazyContainer(container)) {
+    return ((container: any): DOMContainer);
+  }
+  const lazyContainer: LazyContainer = (container: any);
+  const domContainer = lazyContainer.getContainer();
   invariant(
-    typeof container !== 'string',
-    // TODO: Better error message. Probably should have errored already, when
-    // validating the result of getContainer.
+    container !== null && container !== undefined,
+    // TODO: Better error message.
     'Container should have resolved by now',
   );
-  const domContainer: Element | Document = (container: any);
   return domContainer;
 }
 
@@ -195,8 +206,9 @@ var DOMRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
-    if (typeof rootContainerInstance === 'string') {
-      namespace = rootContainerInstance;
+
+    if (isLazyContainer(rootContainerInstance)) {
+      namespace = ((rootContainerInstance: any): LazyContainer).namespace;
       if (__DEV__) {
         return {namespace, ancestorInfo: null};
       }
@@ -805,28 +817,21 @@ type PublicRoot = {
   unmount(callback: ?() => mixed): void,
 
   _reactRootContainer: *,
-  _getComponent: () => DOMContainer,
 };
 
-function PublicRootNode(
-  container: DOMContainer | (() => DOMContainer),
+type RootOptions = {
+  hydrate?: boolean,
+};
+
+type LazyRootOptions = {
   namespace?: string,
-) {
-  if (typeof container === 'function') {
-    if (typeof namespace !== 'string') {
-      // Default to HTML namespace
-      namespace = DOMNamespaces.html;
-    }
-    this._reactRootContainer = DOMRenderer.createContainer(namespace);
-    this._getComponent = container;
-  } else {
-    // Assume this is a DOM container
-    const domContainer: DOMContainer = (container: any);
-    this._reactRootContainer = DOMRenderer.createContainer(domContainer);
-    this._getComponent = function() {
-      return domContainer;
-    };
-  }
+  ownerDocument?: Document,
+};
+
+function PublicRootNode(container: Container, hydrate: boolean) {
+  const root = DOMRenderer.createContainer(container);
+  root.hydrate = hydrate;
+  this._reactRootContainer = root;
 }
 PublicRootNode.prototype.render = function(
   children: ReactNodeList,
@@ -857,10 +862,38 @@ PublicRootNode.prototype.unmount = function(callback) {
 
 var ReactDOMFiber = {
   unstable_createRoot(
-    container: DOMContainer | (() => DOMContainer),
-    namespace?: string,
+    container: DOMContainer,
+    options?: RootOptions,
   ): PublicRoot {
-    return new PublicRootNode(container, namespace);
+    let hydrate = false;
+    if (options != null && options.hydrate !== undefined) {
+      hydrate = options.hydrate;
+    }
+    return new PublicRootNode(container, hydrate);
+  },
+
+  unstable_createLazyRoot(
+    getContainer: () => DOMContainer,
+    options?: LazyRootOptions,
+  ): PublicRoot {
+    // Default to HTML namespace
+    let namespace = DOMNamespaces.html;
+    // Default to global document
+    let ownerDocument = document;
+    if (options != null) {
+      if (options.namespace != null) {
+        namespace = options.namespace;
+      }
+      if (options.ownerDocument != null) {
+        ownerDocument = options.ownerDocument;
+      }
+    }
+    const container = {
+      getContainer,
+      namespace,
+      ownerDocument,
+    };
+    return new PublicRootNode(container, false);
   },
 
   createPortal,
