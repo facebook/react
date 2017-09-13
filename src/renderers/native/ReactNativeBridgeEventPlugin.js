@@ -61,30 +61,36 @@ const ReactNativeBridgeEventPlugin = {
     const {bubblingEventTypes, directEventTypes} = viewConfig;
 
     if (__DEV__) {
+      if (bubblingEventTypes != null && directEventTypes != null) {
+        for (const topLevelType in directEventTypes) {
+          invariant(
+            bubblingEventTypes[topLevelType] == null,
+            'Event cannot be both direct and bubbling: %s',
+            topLevelType,
+          );
+        }
+      }
+    }
+
+    if (bubblingEventTypes != null) {
+      for (const topLevelType in bubblingEventTypes) {
+        if (customBubblingEventTypes[topLevelType] == null) {
+          ReactNativeBridgeEventPlugin.eventTypes[
+            topLevelType
+          ] = customBubblingEventTypes[topLevelType] =
+            bubblingEventTypes[topLevelType];
+        }
+      }
+    }
+
+    if (directEventTypes != null) {
       for (const topLevelType in directEventTypes) {
-        invariant(
-          bubblingEventTypes[topLevelType] == null,
-          'Event cannot be both direct and bubbling: %s',
-          topLevelType,
-        );
-      }
-    }
-
-    for (const topLevelType in bubblingEventTypes) {
-      if (customBubblingEventTypes[topLevelType] == null) {
-        ReactNativeBridgeEventPlugin.eventTypes[
-          topLevelType
-        ] = customBubblingEventTypes[topLevelType] =
-          bubblingEventTypes[topLevelType];
-      }
-    }
-
-    for (const topLevelType in directEventTypes) {
-      if (customDirectEventTypes[topLevelType] == null) {
-        ReactNativeBridgeEventPlugin.eventTypes[
-          topLevelType
-        ] = customDirectEventTypes[topLevelType] =
-          directEventTypes[topLevelType];
+        if (customDirectEventTypes[topLevelType] == null) {
+          ReactNativeBridgeEventPlugin.eventTypes[
+            topLevelType
+          ] = customDirectEventTypes[topLevelType] =
+            directEventTypes[topLevelType];
+        }
       }
     }
   },

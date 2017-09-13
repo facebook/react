@@ -48,8 +48,8 @@ type DirectEventType = {
 export type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
   uiViewClassName: string,
-  bubblingEventTypes: {[topLevelType: string]: BubblingEventType},
-  directEventTypes: {[topLevelType: string]: DirectEventType},
+  bubblingEventTypes?: {[topLevelType: string]: BubblingEventType},
+  directEventTypes?: {[topLevelType: string]: DirectEventType},
   propTypes?: Object,
 };
 
