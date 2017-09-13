@@ -42,6 +42,8 @@ export type FiberRoot = {
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
+  // Determines if we should attempt to hydrate on the initial mount
+  hydrate: boolean,
 };
 
 exports.isRootBlocked = function(
@@ -71,6 +73,7 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     nextScheduledRoot: null,
     context: null,
     pendingContext: null,
+    hydrate: true,
   };
   uninitializedFiber.stateNode = root;
   return root;

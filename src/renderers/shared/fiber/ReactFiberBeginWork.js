@@ -362,6 +362,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       const element = state.element;
       if (
+        root.hydrate &&
         (current === null || current.child === null) &&
         enterHydrationState(workInProgress)
       ) {
