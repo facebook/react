@@ -488,13 +488,27 @@ var DOMRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
     rootContainerInstance: Container,
+    hostContext: HostContext,
     internalInstanceHandle: Object,
   ): null | Array<mixed> {
     precacheFiberNode(internalInstanceHandle, instance);
     // TODO: Possibly defer this until the commit phase where all the events
     // get attached.
     updateFiberProps(instance, props);
-    return diffHydratedProperties(instance, type, props, rootContainerInstance);
+    let parentNamespace: string;
+    if (__DEV__) {
+      const hostContextDev = ((hostContext: any): HostContextDev);
+      parentNamespace = hostContextDev.namespace;
+    } else {
+      parentNamespace = ((hostContext: any): HostContextProd);
+    }
+    return diffHydratedProperties(
+      instance,
+      type,
+      props,
+      parentNamespace,
+      rootContainerInstance,
+    );
   },
 
   hydrateTextInstance(

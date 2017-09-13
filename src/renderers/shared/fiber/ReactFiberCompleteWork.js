@@ -53,7 +53,7 @@ var invariant = require('fbjs/lib/invariant');
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
-  hydrationContext: HydrationContext<C>,
+  hydrationContext: HydrationContext<C, CX>,
 ) {
   const {
     createInstance,
@@ -289,6 +289,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
               prepareToHydrateHostInstance(
                 workInProgress,
                 rootContainerInstance,
+                currentHostContext,
               )
             ) {
               // If changes to the hydrated node needs to be applied at the
