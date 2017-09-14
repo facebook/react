@@ -158,7 +158,6 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case RN_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
       externalModules.push('object-assign');
-
       if (isRenderer) {
         externalModules.push('react');
       }
@@ -166,6 +165,7 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case FB_DEV:
     case FB_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
+      externalModules.push('object-assign');
       externalModules.push('ReactCurrentOwner');
       externalModules.push('lowPriorityWarning');
       if (isRenderer) {
