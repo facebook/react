@@ -63,8 +63,8 @@ function SubComponent() {
 const testRenderer = TestRenderer.create(<MyComponent />);
 const testInstance = testRenderer.root;
 
-console.log(testInstance.findByType(SubComponent).props.foo); // bar
-console.log(testInstance.findByProps({className: "sub"}).children); // Sub
+expect(testInstance.findByType(SubComponent).props.foo).toBe('bar');
+expect(testInstance.findByProps({className: "sub"}).children).toEqual(['Sub']);
 ```
 
 ### TestRenderer
