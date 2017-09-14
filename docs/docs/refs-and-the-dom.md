@@ -58,7 +58,7 @@ class CustomTextInput extends React.Component {
         <input
           type="button"
           value="Focus the text input"
-          onClick={this.focus}
+          onClick={this.focusTextInput}
         />
       </div>
     );
