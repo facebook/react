@@ -25,36 +25,36 @@
       "gzip": 6767
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 647720,
-      "gzip": 148505
+      "size": 649861,
+      "gzip": 148892
     },
     "react-dom.production.min.js (UMD_PROD)": {
-      "size": 102839,
-      "gzip": 32049
+      "size": 102909,
+      "gzip": 32060
     },
     "react-dom.development.js (NODE_DEV)": {
-      "size": 608523,
-      "gzip": 139677
+      "size": 610662,
+      "gzip": 140053
     },
     "react-dom.production.min.js (NODE_PROD)": {
-      "size": 108067,
-      "gzip": 33876
+      "size": 108217,
+      "gzip": 33919
     },
     "ReactDOMFiber-dev.js (FB_DEV)": {
-      "size": 604907,
-      "gzip": 139057
+      "size": 607004,
+      "gzip": 139430
     },
     "ReactDOMFiber-prod.js (FB_PROD)": {
-      "size": 420109,
-      "gzip": 94276
+      "size": 420821,
+      "gzip": 94376
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
-      "size": 44954,
-      "gzip": 11677
+      "size": 43849,
+      "gzip": 11489
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 44385,
-      "gzip": 11593
+      "size": 43280,
+      "gzip": 11405
     },
     "react-dom-unstable-native-dependencies.development.js (UMD_DEV)": {
       "size": 88140,
@@ -81,76 +81,76 @@
       "gzip": 15742
     },
     "react-dom-server.browser.development.js (UMD_DEV)": {
-      "size": 134937,
-      "gzip": 34221
+      "size": 135734,
+      "gzip": 34429
     },
     "react-dom-server.browser.production.min.js (UMD_PROD)": {
       "size": 15077,
       "gzip": 5914
     },
     "react-dom-server.browser.development.js (NODE_DEV)": {
-      "size": 105249,
-      "gzip": 27271
+      "size": 106046,
+      "gzip": 27477
     },
     "react-dom-server.browser.production.min.js (NODE_PROD)": {
       "size": 15026,
       "gzip": 5911
     },
     "ReactDOMServer-dev.js (FB_DEV)": {
-      "size": 104539,
-      "gzip": 27162
+      "size": 105336,
+      "gzip": 27361
     },
     "ReactDOMServer-prod.js (FB_PROD)": {
       "size": 44314,
       "gzip": 12388
     },
     "react-dom-server.node.development.js (NODE_DEV)": {
-      "size": 107553,
-      "gzip": 27860
+      "size": 108350,
+      "gzip": 28060
     },
     "react-dom-server.node.production.min.js (NODE_PROD)": {
       "size": 15951,
       "gzip": 6238
     },
     "react-art.development.js (UMD_DEV)": {
-      "size": 370239,
-      "gzip": 81901
+      "size": 370627,
+      "gzip": 81946
     },
     "react-art.production.min.js (UMD_PROD)": {
-      "size": 82583,
-      "gzip": 25472
+      "size": 82602,
+      "gzip": 25488
     },
     "react-art.development.js (NODE_DEV)": {
-      "size": 293850,
-      "gzip": 62766
+      "size": 294238,
+      "gzip": 62798
     },
     "react-art.production.min.js (NODE_PROD)": {
-      "size": 52526,
-      "gzip": 16478
+      "size": 52631,
+      "gzip": 16464
     },
     "ReactARTFiber-dev.js (FB_DEV)": {
-      "size": 292451,
-      "gzip": 62774
+      "size": 292815,
+      "gzip": 62799
     },
     "ReactARTFiber-prod.js (FB_PROD)": {
-      "size": 218148,
-      "gzip": 45464
+      "size": 218509,
+      "gzip": 45489
     },
     "ReactNativeFiber-dev.js (RN_DEV)": {
-      "size": 310275,
-      "gzip": 53756
+      "size": 310705,
+      "gzip": 53793
     },
     "ReactNativeFiber-prod.js (RN_PROD)": {
-      "size": 224840,
-      "gzip": 38842
+      "size": 225255,
+      "gzip": 38887
     },
     "react-test-renderer.development.js (NODE_DEV)": {
-      "size": 298541,
-      "gzip": 63293
+      "size": 298929,
+      "gzip": 63322
     },
     "ReactTestRendererFiber-dev.js (FB_DEV)": {
-      "size": 297117,
-      "gzip": 63323
+      "size": 297481,
+      "gzip": 63343
     },
     "react-test-renderer-shallow.development.js (NODE_DEV)": {
       "size": 9938,
@@ -161,8 +161,8 @@
       "gzip": 2338
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 285410,
-      "gzip": 60030
+      "size": 285798,
+      "gzip": 60062
     },
     "react-dom-server.development.js (UMD_DEV)": {
       "size": 120897,
