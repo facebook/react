@@ -30,7 +30,7 @@ class Home extends Component {
   }
 
   render() {
-    const {data, location} = this.props;
+    const {data} = this.props;
     const title = 'React - A JavaScript library for building user interfaces';
 
     return (
