@@ -69,7 +69,7 @@ const media = {
   },
 
   lessThan(key: Size) {
-    return `@media (max-width: ${SIZES[key].max}px)`;
+    return `@media (max-width: ${SIZES[key].min}px)`;
   },
 
   size(key: Size) {
