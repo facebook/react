@@ -16,7 +16,7 @@ import {Sticky} from 'react-sticky';
 import Sidebar from 'templates/components/Sidebar';
 import {media} from 'theme';
 
-const StickySidebar = props => (
+const StickyResponsiveSidebar = props => (
   <Sticky>
     {({style}) => (
       <div style={style}>
@@ -39,4 +39,4 @@ const StickySidebar = props => (
   </Sticky>
 );
 
-export default StickySidebar;
+export default StickyResponsiveSidebar;

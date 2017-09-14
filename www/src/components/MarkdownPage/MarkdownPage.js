@@ -18,7 +18,7 @@ import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React from 'react';
-import StickySidebar from 'components/StickySidebar';
+import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
@@ -99,7 +99,7 @@ const MarkdownPage = ({
                 flex: '0 0 200px',
                 marginLeft: 'calc(9% + 40px)',
               }}>
-              <StickySidebar
+              <StickyResponsiveSidebar
                 defaultActiveSection={
                   location != null
                     ? findSectionForPath(location.pathname, sectionList)

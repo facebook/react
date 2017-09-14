@@ -18,7 +18,7 @@ import NavigationFooter from 'templates/components/NavigationFooter';
 import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
-import StickySidebar from 'components/StickySidebar';
+import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import {sharedStyles} from 'theme';
@@ -184,7 +184,7 @@ class InstallationPage extends Component {
                   flex: '0 0 200px',
                   marginLeft: 'calc(9% + 40px)',
                 }}>
-                <StickySidebar
+                <StickyResponsiveSidebar
                   defaultActiveSection={
                     location != null
                       ? findSectionForPath(location.pathname, sectionList)
