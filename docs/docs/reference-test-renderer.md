@@ -22,7 +22,7 @@ Essentially, this package makes it easy to grab a snapshot of the platform view 
 Example:
 
 ```javascript
-const TestRenderer = require('react-test-renderer');
+import TestRenderer from 'react-test-renderer';
 
 const testRenderer = TestRenderer.create(
   <Link page="https://www.facebook.com/">Facebook</Link>
@@ -39,7 +39,7 @@ You can use Jest's snapshot testing feature to automatically save a copy of the 
 You can also traverse a ReactElement by methods ReactTestInstance provides.
 
 ```javascript
-const TestRenderer = require('react-test-renderer');
+import TestRenderer from 'react-test-renderer';
 
 function MyComponent() {
   return (
@@ -103,7 +103,7 @@ You can pass `createNodeMock` function as the option, which allows for custom mo
 `createNodeMock` accepts the current element and should return a mock ref object.
 
 ```javascript
-const TestRenderer = require('react-test-renderer');
+import TestRenderer from 'react-test-renderer';
 
 class MyComponent extends React.Component {
   constructor(props) {
