@@ -1,7 +1,7 @@
 ---
-id: reference-test-renderer
+id: test-renderer
 title: Test Renderer
-permalink: docs/reference-test-renderer.html
+permalink: docs/test-renderer.html
 layout: docs
 category: Reference
 ---
