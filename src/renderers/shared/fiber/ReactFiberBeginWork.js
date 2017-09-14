@@ -686,6 +686,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {
+      case HostRoot:
+        pushHostRootContext(workInProgress);
+        break;
       case ClassComponent:
         pushContextProvider(workInProgress);
         break;
