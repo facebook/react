@@ -80,7 +80,7 @@ expect(testInstance.findByProps({className: "sub"}).children).toEqual(['Sub']);
 * [`testRenderer.getInstance()`](#testRenderer.getInstance)
 * [`testRenderer.root`](#testRenderer.root)
 
-### Test Instance
+### TestInstance
 
 * [`testInstance.find()`](#testInstance.find)
 * [`testInstance.findByType()`](#testInstance.findByType)
@@ -102,7 +102,7 @@ expect(testInstance.findByProps({className: "sub"}).children).toEqual(['Sub']);
 TestRenderer.create(element, options);
 ```
 
-Create a Test Renderer instance with a passed element, which has the following methods.
+Create a TestRenderer instance with a passed element, which has the following methods and properties.
 
 ### `testRenderer.toJSON()`
 
@@ -150,7 +150,7 @@ Return a root container instance.
 testRenderer.root
 ```
 
-`root` is a testInstance, which has the following methods.
+`root` is a testInstance, which has the following methods and properties.
 
 ### `testInstance.find()`
 
@@ -206,7 +206,7 @@ Find all testInstances that matches the provided props.
 testInstance.instance
 ```
 
-`instance` is a public instance of the testInstance.
+`instance` is a component instance of the testInstance.
 
 ### `testInstance.type`
 
@@ -230,7 +230,7 @@ testInstance.props
 testInstance.parent
 ```
 
-`parent` is a parent testInstance of the testInstance.
+`parent` is a parent testInstance.
 
 ### `testInstance.children`
 
@@ -238,7 +238,7 @@ testInstance.parent
 testInstance.children
 ```
 
-`children` is a children of the testInstance.
+`children` is children of the testInstance.
 
 ## Ideas
 
