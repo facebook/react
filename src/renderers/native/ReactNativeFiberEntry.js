@@ -96,6 +96,7 @@ const ReactNativeFiber: ReactNativeType = {
     NativeMethodsMixin: require('NativeMethodsMixin'),
 
     // Used by react-native-github/Libraries/ components
+    ReactNativeBridgeEventPlugin: require('ReactNativeBridgeEventPlugin'), // requireNativeComponent
     ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
     ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
     ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
