@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`fails if unknown/unsupported event types are dispatch 1`] = `
+exports[`fails if unknown/unsupported event types are dispatched 1`] = `
 "<native root> {}
   View null"
 `;

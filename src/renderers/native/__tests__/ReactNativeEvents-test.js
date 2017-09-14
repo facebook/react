@@ -77,25 +77,25 @@ beforeEach(() => {
   createReactNativeComponentClass = require('createReactNativeComponentClass');
 });
 
-it('fails if unknown/unsupported event types are dispatch', () => {
+it('fails if unknown/unsupported event types are dispatched', () => {
+  expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
+  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  var View = fakeRequireNativeComponent('View', {});
+
+  ReactNative.render(<View onUnspecifiedEvent={() => {}} />, 1);
+
+  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  expect(UIManager.createView.mock.calls.length).toBe(1);
+
+  const target = UIManager.createView.mock.calls[0][0];
+
   expect(() => {
-    expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
-    var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-    var View = fakeRequireNativeComponent('View', {});
-
-    ReactNative.render(<View onUnspecifiedEvent={() => {}} />, 1);
-
-    expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
-    expect(UIManager.createView.mock.calls.length).toBe(1);
-
-    const target = UIManager.createView.mock.calls[0][0];
-
     EventEmitter.receiveTouches(
       'unspecifiedEvent',
       [{target, identifier: 17}],
       [0],
     );
-  }).toThrow();
+  }).toThrow('Unsupported top level event type "unspecifiedEvent" dispatched');
 });
 
 it('handles events', () => {
