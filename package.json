@@ -1,7 +1,7 @@
 {
   "name": "react-build",
   "private": true,
-  "version": "16.0.0-rc.2",
+  "version": "16.0.0-rc.3",
   "devDependencies": {
     "art": "^0.10.1",
     "async": "^1.5.0",
