@@ -105,7 +105,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
 
       const createArticlePage = path =>
         createPage({
-          path,
+          path: path,
           component: template,
           context: {
             slug,

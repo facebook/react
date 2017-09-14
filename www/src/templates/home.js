@@ -37,7 +37,7 @@ class Home extends Component {
       <div css={{width: '100%'}}>
         <TitleAndMetaTags
           title={title}
-          ogUrl={`${urlRoot}${location.pathname}`}
+          ogUrl={`${urlRoot}/${data.markdownRemark.fields.path}`}
         />
         <header
           css={{
@@ -189,6 +189,9 @@ export const pageQuery = graphql`
       html
       frontmatter {
         title
+      }
+      fields {
+        path
       }
     }
   }
