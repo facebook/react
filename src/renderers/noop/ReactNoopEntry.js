@@ -405,7 +405,7 @@ var ReactNoop = {
       logHostInstances(container.children, depth + 1);
     }
 
-    function logUpdateQueue(updateQueue: UpdateQueue, depth) {
+    function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
       log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
       const firstUpdate = updateQueue.first;
       if (!firstUpdate) {

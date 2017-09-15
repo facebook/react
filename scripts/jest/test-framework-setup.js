@@ -68,4 +68,6 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     return expectation;
   };
   global.expectDev = expectDev;
+
+  require('jasmine-check').install();
 }

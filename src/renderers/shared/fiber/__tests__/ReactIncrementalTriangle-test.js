@@ -246,6 +246,7 @@ describe('ReactIncrementalTriangle', () => {
     simulate(step(1), flush(3), toggle(18), step(0));
     simulate(step(4), flush(52), expire(1476), flush(17), step(0));
     simulate(interrupt(), toggle(10), step(2), expire(990), flush(46));
+    simulate(interrupt(), step(6), step(7), toggle(6), interrupt());
   });
 
   it('fuzz tester', () => {
