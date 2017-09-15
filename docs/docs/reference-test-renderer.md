@@ -155,10 +155,10 @@ testRenderer.root
 ### `testInstance.find()`
 
 ```javascript
-testInstance.find(predicate)
+testInstance.find(test)
 ```
 
-Find a testInstance that matches the provided predicate.
+Find a descendant testInstance that `test(testInstance)` is `true`.
 
 ### `testInstance.findByType()`
 
@@ -166,7 +166,7 @@ Find a testInstance that matches the provided predicate.
 testInstance.findByType(type)
 ```
 
-Find a testInstance that matches the provided type.
+Find a descendant testInstance that matches the provided type.
 
 ### `testInstance.findByProps()`
 
@@ -174,15 +174,15 @@ Find a testInstance that matches the provided type.
 testInstance.findByProps(props)
 ```
 
-Find a testInstance that matches the provided props.
+Find a descendant testInstance that matches the provided props.
 
 ### `testInstance.findAll()`
 
 ```javascript
-testInstance.findAll(predicate)
+testInstance.findAll(test)
 ```
 
-Find all testInstances that matches the provided predicate.
+Find all descendant testInstances that `test(testInstance)` is `true`.
 
 ### `testInstance.findAllByType()`
 
@@ -190,7 +190,7 @@ Find all testInstances that matches the provided predicate.
 testInstance.findAllByType(type)
 ```
 
-Find all testInstances that matches the provided type.
+Find all descendant testInstances that matches the provided type.
 
 ### `testInstance.findAllByProps()`
 
@@ -198,7 +198,7 @@ Find all testInstances that matches the provided type.
 testInstance.findAllByProps(props)
 ```
 
-Find all testInstances that matches the provided props.
+Find all descendant testInstances that matches the provided props.
 
 ### `testInstance.instance`
 
