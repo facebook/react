@@ -51,7 +51,7 @@ const MarkdownPage = ({
       }}>
       <TitleAndMetaTags
         title={`${titlePrefix}${titlePostfix}`}
-        ogUrl={`${urlRoot}${location.pathname}`}
+        ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
         ogDescription={ogDescription}
       />
       <div css={{flex: '1 0 auto'}}>

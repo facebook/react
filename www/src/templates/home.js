@@ -30,14 +30,14 @@ class Home extends Component {
   }
 
   render() {
-    const {data, location} = this.props;
+    const {data} = this.props;
     const title = 'React - A JavaScript library for building user interfaces';
 
     return (
       <div css={{width: '100%'}}>
         <TitleAndMetaTags
           title={title}
-          ogUrl={`${urlRoot}${location.pathname}`}
+          ogUrl={`${urlRoot}/${data.markdownRemark.fields.path}`}
         />
         <header
           css={{
@@ -189,6 +189,9 @@ export const pageQuery = graphql`
       html
       frontmatter {
         title
+      }
+      fields {
+        path
       }
     }
   }

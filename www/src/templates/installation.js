@@ -157,7 +157,7 @@ class InstallationPage extends Component {
         }}>
         <TitleAndMetaTags
           title="Installation - React"
-          ogUrl={`${urlRoot}${location.pathname}`}
+          ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
         />
         <div css={{flex: '1 0 auto'}}>
           <Container>
@@ -222,6 +222,9 @@ export const pageQuery = graphql`
         title
         next
         prev
+      }
+      fields {
+        path
       }
     }
   }
