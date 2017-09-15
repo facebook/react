@@ -35,11 +35,16 @@ React supports a special attribute that you can attach to any component. The `re
 
 When the `ref` attribute is used on an HTML element, the `ref` callback receives the underlying DOM element as its argument. For example, this code uses the `ref` callback to store a reference to a DOM node:
 
-```javascript{8,9,19}
+```javascript{13,14,24}
 class CustomTextInput extends React.Component {
   constructor(props) {
     super(props);
+    this.inputElementRef = this.inputElementRef(this);
     this.focusTextInput = this.focusTextInput.bind(this);
+  }
+
+  inputElementRef(element) {
+    this.textInput = element;
   }
 
   focusTextInput() {
@@ -54,7 +59,7 @@ class CustomTextInput extends React.Component {
       <div>
         <input
           type="text"
-          ref={(input) => { this.textInput = input; }} />
+          ref={this.inputElementRef} />
         <input
           type="button"
           value="Focus the text input"
@@ -68,22 +73,31 @@ class CustomTextInput extends React.Component {
 
 React will call the `ref` callback with the DOM element when the component mounts, and call it with `null` when it unmounts.
 
-Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. The preferred way is to set the property in the `ref` callback like in the above example. There is even a shorter way to write it: `ref={input => this.textInput = input}`. 
+Using the `ref` callback just to set a property on the class is a common pattern for accessing DOM elements. The preferred way is to provide a listener when the element is initially rendered like in the above example. See [Handling Events](/react/docs/handling-events.md) guide for callback registration details.
 
 ### Adding a Ref to a Class Component
 
 When the `ref` attribute is used on a custom component declared as a class, the `ref` callback receives the mounted instance of the component as its argument. For example, if we wanted to wrap the `CustomTextInput` above to simulate it being clicked immediately after mounting:
 
-```javascript{3,9}
+```javascript{3,18}
 class AutoFocusTextInput extends React.Component {
+  constructor(props) {
+    super(props);
+    this.inputElementRef = this.inputElementRef.bind(this);
+  }
+
   componentDidMount() {
     this.textInput.focusTextInput();
+  }
+
+  inputElementRef(element) {
+    this.textInput = element;
   }
 
   render() {
     return (
       <CustomTextInput
-        ref={(input) => { this.textInput = input; }} />
+        ref={this.inputElementRef}} />
     );
   }
 }
@@ -101,17 +115,26 @@ class CustomTextInput extends React.Component {
 
 **You may not use the `ref` attribute on functional components** because they don't have instances:
 
-```javascript{1,7}
+```javascript{1,16}
 function MyFunctionalComponent() {
   return <input />;
 }
 
 class Parent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.inputElementRef = this.inputElementRef.bind(this);
+  }
+
+  inputElementRef(element) {
+    this.textInput = element;
+  }
+
   render() {
     // This will *not* work!
     return (
       <MyFunctionalComponent
-        ref={(input) => { this.textInput = input; }} />
+        ref={this.inputElementRef} />
     );
   }
 }
@@ -121,10 +144,14 @@ You should convert the component to a class if you need a ref to it, just like y
 
 You can, however, **use the `ref` attribute inside a functional component** as long as you refer to a DOM element or a class component:
 
-```javascript{2,3,6,13}
+```javascript{2,3,6,17}
 function CustomTextInput(props) {
   // textInput must be declared here so the ref callback can refer to it
   let textInput = null;
+
+  function inputElementRef(element) {
+    textInput = element;
+  }
 
   function handleClick() {
     textInput.focus();
@@ -134,14 +161,14 @@ function CustomTextInput(props) {
     <div>
       <input
         type="text"
-        ref={(input) => { textInput = input; }} />
+        ref={inputElementRef} />
       <input
         type="button"
         value="Focus the text input"
         onClick={handleClick}
       />
     </div>
-  );  
+  );
 }
 ```
 
@@ -155,7 +182,7 @@ Instead, in such cases we recommend exposing a special prop on the child. The ch
 
 This works both for classes and for functional components.
 
-```javascript{4,13}
+```javascript{4,22}
 function CustomTextInput(props) {
   return (
     <div>
@@ -165,10 +192,19 @@ function CustomTextInput(props) {
 }
 
 class Parent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.inputElementRef = this.inputElementRef.bind(this);
+  }
+
+  inputElementRef(element) {
+    this.inputElement = element;
+  }
+
   render() {
     return (
       <CustomTextInput
-        inputRef={el => this.inputElement = el}
+        inputRef={this.inputElementRef}
       />
     );
   }
@@ -183,7 +219,7 @@ This works even though `CustomTextInput` is a functional component. Unlike the s
 
 Another benefit of this pattern is that it works several components deep. For example, imagine `Parent` didn't need that DOM node, but a component that rendered `Parent` (let's call it `Grandparent`) needed access to it. Then we could let the `Grandparent` specify the `inputRef` prop to the `Parent`, and let `Parent` "forward" it to the `CustomTextInput`:
 
-```javascript{4,12,22}
+```javascript{4,12,31}
 function CustomTextInput(props) {
   return (
     <div>
@@ -202,10 +238,19 @@ function Parent(props) {
 
 
 class Grandparent extends React.Component {
+  constructor(props) {
+    super(props);
+    this.inputElementRef = this.inputElementRef.bind(this);
+  }
+
+  inputElementRef(element) {
+    this.inputElement = element;
+  }
+
   render() {
     return (
       <Parent
-        inputRef={el => this.inputElement = el}
+        inputRef={this.inputElementRef}
       />
     );
   }
