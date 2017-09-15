@@ -3370,12 +3370,12 @@ gatsby-plugin-offline@^1.0.4:
     sw-precache "^5.0.0"
 
 gatsby-plugin-preact@^1.0.3:
-  version "1.0.6"
-  resolved "https://registry.yarnpkg.com/gatsby-plugin-preact/-/gatsby-plugin-preact-1.0.6.tgz#69545ecf7e559dc19b972c08e4cd5c03656815eb"
+  version "1.0.11"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-preact/-/gatsby-plugin-preact-1.0.11.tgz#63afec7c4b73b2be8c86ab2aab4ca92a177da7f4"
   dependencies:
     babel-runtime "^6.26.0"
-    preact "^8.1.0"
-    preact-compat "^3.16.0"
+    preact "^8.2.5"
+    preact-compat "^3.17.0"
 
 gatsby-plugin-react-helmet@^1.0.3:
   version "1.0.6"
@@ -3419,12 +3419,12 @@ gatsby-remark-copy-linked-files@^1.5.2:
     unist-util-visit "^1.1.1"
 
 gatsby-remark-prismjs@^1.2.1:
-  version "1.2.7"
-  resolved "https://registry.yarnpkg.com/gatsby-remark-prismjs/-/gatsby-remark-prismjs-1.2.7.tgz#71101011ad20e2b0175d895b7dd2a724f4071c99"
+  version "1.2.8"
+  resolved "https://registry.yarnpkg.com/gatsby-remark-prismjs/-/gatsby-remark-prismjs-1.2.8.tgz#0ca9732c8c5034d1331f420ff75aa380fbc22c91"
   dependencies:
     babel-runtime "^6.26.0"
     parse-numeric-range "^0.0.2"
-    prismjs "^1.6.0"
+    prismjs "^1.7.0"
     unist-util-visit "^1.1.1"
 
 gatsby-remark-responsive-iframe@^1.4.3:
@@ -3497,8 +3497,8 @@ gatsby-transformer-sharp@^1.6.1:
     image-size "^0.6.0"
 
 gatsby@^1.9.9:
-  version "1.9.24"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.9.24.tgz#6ccf77c634d26762024eaff35594f29e92052e09"
+  version "1.9.29"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.9.29.tgz#eedca90870fd40ddf815d04d9d61fcebfe06fea9"
   dependencies:
     async "^2.1.2"
     babel-code-frame "^6.22.0"
@@ -6773,9 +6773,9 @@ postcss@^6.0.1:
     source-map "^0.5.6"
     supports-color "^4.1.0"
 
-preact-compat@^3.16.0:
-  version "3.16.0"
-  resolved "https://registry.yarnpkg.com/preact-compat/-/preact-compat-3.16.0.tgz#cf2bc1b2f8fca14900d68094f9e10b8b329cc41e"
+preact-compat@^3.17.0:
+  version "3.17.0"
+  resolved "https://registry.yarnpkg.com/preact-compat/-/preact-compat-3.17.0.tgz#528cfdfc301190c1a0f47567336be1f4be0266b3"
   dependencies:
     immutability-helper "^2.1.2"
     preact-render-to-string "^3.6.0"
@@ -6793,9 +6793,9 @@ preact-transition-group@^1.1.0:
   version "1.1.1"
   resolved "https://registry.yarnpkg.com/preact-transition-group/-/preact-transition-group-1.1.1.tgz#f0a49327ea515ece34ea2be864c4a7d29e5d6e10"
 
-preact@^8.1.0:
-  version "8.1.0"
-  resolved "https://registry.yarnpkg.com/preact/-/preact-8.1.0.tgz#f035b808eebb74e46d56246b02ca0f190b6d6574"
+preact@^8.2.5:
+  version "8.2.5"
+  resolved "https://registry.yarnpkg.com/preact/-/preact-8.2.5.tgz#cbfa3962a8012768159f6d01d46f9c1eb3213c0a"
 
 prepend-http@^1.0.0, prepend-http@^1.0.1:
   version "1.0.4"
@@ -6827,6 +6827,12 @@ pretty-format@^3.5.1:
 prismjs@^1.6.0:
   version "1.6.0"
   resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.6.0.tgz#118d95fb7a66dba2272e343b345f5236659db365"
+  optionalDependencies:
+    clipboard "^1.5.5"
+
+prismjs@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/prismjs/-/prismjs-1.7.0.tgz#6c03898d388762f460cb06d2773c7f4e6d2cd614"
   optionalDependencies:
     clipboard "^1.5.5"
 
@@ -7568,9 +7574,15 @@ right-align@^0.1.1:
   dependencies:
     align-text "^0.1.1"
 
-rimraf@2, rimraf@^2.2.6, rimraf@^2.2.8, rimraf@^2.3.2, rimraf@^2.4.4, rimraf@^2.5.0, rimraf@^2.5.1, rimraf@^2.5.4, rimraf@^2.6.1:
+rimraf@2, rimraf@^2.2.6, rimraf@^2.2.8, rimraf@^2.3.2, rimraf@^2.4.4, rimraf@^2.5.0, rimraf@^2.5.1, rimraf@^2.5.4:
   version "2.6.1"
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.6.1.tgz#c2338ec643df7a1b7fe5c54fa86f57428a55f33d"
+  dependencies:
+    glob "^7.0.5"
+
+rimraf@^2.6.1:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.6.2.tgz#2ed8150d24a16ea8651e6d6ef0f47c4158ce7a36"
   dependencies:
     glob "^7.0.5"
 
