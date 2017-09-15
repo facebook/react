@@ -284,8 +284,8 @@ describe('ReactDOMFiberAsync', () => {
 
       // Flush the async updates
       jest.runAllTimers();
-      expect(container.textContent).toEqual('BCAD');
-      expect(ops).toEqual(['BC', 'BCAD']);
+      expect(container.textContent).toEqual('ABCD');
+      expect(ops).toEqual(['BC', 'ABCD']);
     });
   });
 });

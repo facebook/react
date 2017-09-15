@@ -398,7 +398,7 @@ module.exports = function(
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
-    instance.state = state;
+    instance.state = workInProgress.memoizedState = state;
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -422,7 +422,6 @@ module.exports = function(
           workInProgress,
           updateQueue,
           instance,
-          state,
           props,
           renderExpirationTime,
         );
@@ -589,7 +588,6 @@ module.exports = function(
         workInProgress,
         workInProgress.updateQueue,
         instance,
-        oldState,
         newProps,
         renderExpirationTime,
       );
