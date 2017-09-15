@@ -414,21 +414,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // the end of the current batch.
     const completionCallbacks = root.completionCallbacks;
     if (completionCallbacks !== null) {
-      processUpdateQueue(completionCallbacks, null, null, null, completedAt);
-      const callbackList = completionCallbacks.callbackList;
-      if (callbackList !== null) {
-        // Add new callbacks to list of completion callbacks
+      processUpdateQueue(completionCallbacks, null, null, completedAt);
+      // Add new callbacks to list of completion callbacks
+      let callbackNode = completionCallbacks.firstCallback;
+      completionCallbacks.firstCallback = completionCallbacks.lastCallback = null;
+      while (callbackNode !== null) {
+        const callback: () => mixed = (callbackNode.callback: any);
+        // Remove this callback from the update object in case it's still part
+        // of the queue, so that we don't call it again.
+        callbackNode.callback = null;
         if (rootCompletionCallbackList === null) {
-          rootCompletionCallbackList = callbackList;
+          rootCompletionCallbackList = [callback];
         } else {
-          for (let i = 0; i < callbackList.length; i++) {
-            rootCompletionCallbackList.push(callbackList[i]);
-          }
+          rootCompletionCallbackList.push(callback);
         }
-        completionCallbacks.callbackList = null;
-        if (completionCallbacks.first === null) {
-          root.completionCallbacks = null;
-        }
+        const nextCallback = callbackNode.nextCallback;
+        callbackNode.nextCallback = null;
+        callbackNode = nextCallback;
       }
     }
   }
@@ -1648,12 +1650,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       callback,
       isReplace: false,
       isForced: false,
-      isTopLevelUnmount: false,
+      nextCallback: null,
       next: null,
     };
     const currentTime = recalculateCurrentTime();
     if (root.completionCallbacks === null) {
-      root.completionCallbacks = createUpdateQueue();
+      root.completionCallbacks = createUpdateQueue(null);
     }
     insertUpdateIntoQueue(root.completionCallbacks, update, currentTime);
     if (expirationTime === root.completedAt) {

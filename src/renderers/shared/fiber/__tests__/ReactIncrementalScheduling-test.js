@@ -57,11 +57,13 @@ describe('ReactIncrementalScheduling', () => {
         ReactNoop.render(<span prop={4} />);
       });
     });
+    // The sync updates flush first.
+    expect(ReactNoop.getChildren()).toEqual([span(4)]);
 
-    // The low pri update should be flushed last, even though it was scheduled
-    // before the sync updates.
+    // The terminal value should be the last update that was scheduled,
+    // regardless of priority. In this case, that's the last sync update.
     ReactNoop.flush();
-    expect(ReactNoop.getChildren()).toEqual([span(5)]);
+    expect(ReactNoop.getChildren()).toEqual([span(4)]);
   });
 
   it('schedules top-level updates with same priority in order of insertion', () => {

@@ -283,7 +283,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback,
       );
     }
-    const isTopLevelUnmount = nextState.element === null;
     const update = {
       priorityLevel,
       expirationTime,
@@ -291,35 +290,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       callback,
       isReplace: false,
       isForced: false,
-      isTopLevelUnmount,
+      nextCallback: null,
       next: null,
     };
-    const update2 = insertUpdateIntoFiber(current, update, currentTime);
-
-    if (isTopLevelUnmount) {
-      // TODO: Redesign the top-level mount/update/unmount API to avoid this
-      // special case.
-      const queue1 = current.updateQueue;
-      const queue2 = current.alternate !== null
-        ? current.alternate.updateQueue
-        : null;
-
-      // Drop all updates that are lower-priority, so that the tree is not
-      // remounted. We need to do this for both queues.
-      if (queue1 !== null && update.next !== null) {
-        update.next = null;
-        queue1.last = update;
-      }
-      if (queue2 !== null && update2 !== null && update2.next !== null) {
-        update2.next = null;
-        queue2.last = update;
-      }
-    }
+    insertUpdateIntoFiber(current, update, currentTime);
 
     if (isPrerender) {
       // Block the root from committing at this expiration time.
       if (root.blockers === null) {
-        root.blockers = createUpdateQueue();
+        root.blockers = createUpdateQueue(null);
       }
       const block = {
         priorityLevel: null,
@@ -328,7 +307,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback: null,
         isReplace: false,
         isForced: false,
-        isTopLevelUnmount: false,
+        nextCallback: null,
         next: null,
       };
       insertUpdateIntoQueue(root.blockers, block, currentTime);
@@ -349,7 +328,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (blockers === null) {
       return;
     }
-    processUpdateQueue(blockers, null, null, null, expirationTime);
+    processUpdateQueue(blockers, null, null, expirationTime);
     expireWork(root, expirationTime);
   };
   WorkNode.prototype.then = function(callback) {
@@ -400,7 +379,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
       let completionCallbacks = container.completionCallbacks;
       if (completionCallbacks === null) {
-        completionCallbacks = createUpdateQueue();
+        completionCallbacks = createUpdateQueue(null);
       }
 
       return new WorkNode(container, expirationTime);

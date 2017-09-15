@@ -350,7 +350,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress,
         updateQueue,
         null,
-        prevState,
         null,
         renderExpirationTime,
       );
@@ -360,7 +359,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
-      const element = state.element;
+      const element = state !== null ? state.element : null;
       if (
         root.hydrate &&
         (current === null || current.child === null) &&

@@ -296,8 +296,17 @@ var ReactNoop = {
     const root = NoopRenderer.createContainer(container);
     roots.set(rootID, root);
     return {
+      render(children: any) {
+        const work = NoopRenderer.updateRoot(children, root, null);
+        work.then(() => work.commit());
+      },
       prerender(children: any) {
         return NoopRenderer.updateRoot(children, root, null);
+      },
+      unmount() {
+        roots.delete(rootID);
+        const work = NoopRenderer.updateRoot(null, root, null);
+        work.then(() => work.commit());
       },
       getChildren() {
         return ReactNoop.getChildren(rootID);

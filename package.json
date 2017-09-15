@@ -60,6 +60,7 @@
     "glob-stream": "^6.1.0",
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
+    "jasmine-check": "^1.0.0-rc.0",
     "jest": "20.1.0-delta.1",
     "jest-config": "20.1.0-delta.1",
     "jest-jasmine2": "20.1.0-delta.1",
