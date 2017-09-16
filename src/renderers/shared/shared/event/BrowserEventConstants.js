@@ -94,10 +94,17 @@ var topLevelTypes = {
   topWheel: 'wheel',
 };
 
+var eventPhases = {
+  bubbled: 1,
+  atTarget: 2,
+  captured: 3,
+};
+
 export type TopLevelTypes = $Enum<typeof topLevelTypes>;
 
 var BrowserEventConstants = {
   topLevelTypes,
+  eventPhases,
 };
 
 module.exports = BrowserEventConstants;

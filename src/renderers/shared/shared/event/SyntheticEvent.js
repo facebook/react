@@ -32,6 +32,7 @@ var shouldBeReleasedProperties = [
   'isPropagationStopped',
   '_dispatchListeners',
   '_dispatchInstances',
+  '_dispatchPhases',
 ];
 
 /**
