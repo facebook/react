@@ -2,6 +2,8 @@
 id: static-type-checking
 title: Static Type Checking
 permalink: docs/static-type-checking.html
+prev: typechecking-with-proptypes.html
+next: refs-and-the-dom.html
 ---
 
 When your project codebase growths and became more complicated you can decide that you need more flexibly approach for typechecking than used in PropTypes, or, if you didn't use PropTypes, to add typechecking from scratch with tools throws errors within JavaScript precompilation for more effectively development process.

@@ -2,6 +2,8 @@
 id: uncontrolled-components
 title: Uncontrolled Components
 permalink: docs/uncontrolled-components.html
+prev: refs-and-the-dom.html
+next: optimizing-performance.html
 ---
 
 In most cases, we recommend using [controlled components](/react/docs/forms.html) to implement forms. In a controlled component, form data is handled by a React component. The alternative is uncontrolled components, where form data is handled by the DOM itself.

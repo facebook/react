@@ -2,6 +2,8 @@
 id: integrating-with-other-libraries
 title: Integrating with Other Libraries
 permalink: docs/integrating-with-other-libraries.html
+prev: higher-order-components.html
+next: accessibility.html
 ---
 
 React can be used in any web application. It can be embedded in other applications and, with a little care, other applications can be embedded in React. This guide will examine some of the more common use cases, focusing on integration with [jQuery](https://jquery.com/) and [Backbone](http://backbonejs.org/), but the same ideas can be applied to integrating components with any existing code.
@@ -158,7 +160,7 @@ class Chosen extends React.Component {
     this.handleChange = this.handleChange.bind(this);
     this.$el.on('change', this.handleChange);
   }
-  
+
   componentDidUpdate(prevProps) {
     if (prevProps.children !== this.props.children) {
       this.$el.trigger("chosen:updated");
@@ -169,7 +171,7 @@ class Chosen extends React.Component {
     this.$el.off('change', this.handleChange);
     this.$el.chosen('destroy');
   }
-  
+
   handleChange(e) {
     this.props.onChange(e.target.value);
   }
