@@ -1119,7 +1119,7 @@ describe('ReactDOMFiber', () => {
       );
     });
 
-    fit('should render a text component with a text DOM node on the same document as the container', () => {
+    it('should render a text component with a text DOM node on the same document as the container', () => {
       // Arrange
       var newDocument = JSDom.jsdom('<!DOCTYPE html><html><body></body></html>');
       var newContainer = newDocument.createElement('div');
