@@ -69,6 +69,110 @@ For fast dive into Typescript, go [here](https://www.typescriptlang.org/play/).
 
 If you want to use Typescript in your React project, you can try [typescript-react-starter](https://github.com/Microsoft/TypeScript-React-Starter#typescript-react-starter).
 
+## Migration from PropTypes
+
+>**Note:**
+>
+>In the example below, prototype-based style rewritten using [ES7 property initializers](https://esdiscuss.org/topic/es7-property-initializers).
+
+```js{17-26}
+class Button extends React.Component {
+  handleClick() {
+    const checkCondition = this.props.checkCondition();
+    if (checkCondition) this.props.doSomething();
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick.bind(this)}>
+        <span className={this.props.iconClass} />
+        {this.props.caption}
+      </button>
+    );
+  }
+}
+
+Button.propTypes = {
+  caption: PropTypes.string.isRequired;
+  iconClass: PropTypes.string;
+  checkCondition: PropTypes.func.isRequired;
+  doSomething: PropTypes.func.isRequired;
+};
+
+Button.defaultProps = {
+  iconClass: 'custom'
+};
+```
+
+### To Flow
+
+```js{1-9,12-16}
+// @flow
+
+type Props = {
+  caption: string,
+  iconClass?: string,
+  checkCondition: () => boolean,
+  doSomething: () => void,
+  children?: React.Node
+};
+
+class Button extends React.Component {
+  static defaultProps: {
+    iconClass: 'custom'
+  };
+
+  static props: Props;
+
+  handleClick() {
+    const checkCondition = this.props.checkCondition();
+    if (checkCondition) this.props.doSomething();
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick.bind(this)}>
+        <span className={this.props.iconClass} />
+        {this.props.caption}
+      </button>
+    );
+  }
+}
+```
+
+### To TypeScript
+
+```ts{1-7,9-18}
+// Extend React.Props to handle this.props.children and other stuff
+interface Props extends React.Props<Button> {
+  caption: string;
+  iconClass?: string;
+  checkCondition: () => boolean;
+  doSomething: () => void;
+}
+
+// State is never set so we use the 'undefined' type.
+class Button extends React.Component<Props, undefined> {
+  public static defaultProps: Partial<Props> = {
+    iconClass: 'custom'
+  };
+
+  private handleClick() {
+    const checkCondition = this.props.checkCondition();
+    if (checkCondition) this.props.doSomething();
+  }
+
+  render() {
+    return (
+      <button onClick={this.handleClick.bind(this)}>
+        <span className={this.props.iconClass} />
+        {this.props.caption}
+      </button>
+    );
+  }
+}
+```
+
 ## Do not complicate things
 
 If you want more flexible typechecking for your project, you can use libraries like Flow or Typescript. But if you don't planned to build complex large application, for example if you want to build simple website or application on React, perhaps you should just use PropTypes package instead. Сome up to choice of development tools carefully.
