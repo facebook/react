@@ -21,7 +21,7 @@ Otherwise, [RVM](https://rvm.io/) and [rbenv](https://github.com/sstephenson/rbe
 
  - [Ruby](http://www.ruby-lang.org/) (version >= 1.8.7)
  - [RubyGems](http://rubygems.org/) (version >= 1.3.7)
- - [Bundler](http://gembundler.com/)
+ - [Bundler](http://bundler.io/)
 
 The version of the Pygment syntax highlighter used by Jekyll requires Python 2.7.x (not 3.x). macOS comes pre-installed with Python 2.7, but you may need to install it on other OSs.
 
