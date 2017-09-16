@@ -1121,14 +1121,19 @@ describe('ReactDOMFiber', () => {
 
     it('should render a text component with a text DOM node on the same document as the container', () => {
       // Arrange
-      var newDocument = JSDom.jsdom('<!DOCTYPE html><html><body></body></html>');
+      var newDocument = JSDom.jsdom(
+        '<!DOCTYPE html><html><body></body></html>',
+      );
       var newContainer = newDocument.createElement('div');
       var textContent = ' world ';
       newDocument.body.appendChild(newContainer);
 
       // Act
-      ReactDOM.render(<div><span id='pre'>hello</span>{textContent}<span>again</span></div>, newContainer);
-      
+      ReactDOM.render(
+        <div><span id="pre">hello</span>{textContent}<span>again</span></div>,
+        newContainer,
+      );
+
       // Assert
       var textNode = newDocument.getElementById('pre').nextSibling;
       expect(textNode.textContent).toBe(textContent);
