@@ -135,7 +135,13 @@ function executeDispatchesInOrder(event, simulated) {
       );
     }
   } else if (dispatchListeners) {
-    executeDispatch(event, simulated, dispatchListeners, dispatchInstances);
+    executeDispatch(
+      event,
+      simulated,
+      dispatchListeners,
+      dispatchInstances,
+      dispatchPhases,
+    );
   }
   event._dispatchListeners = null;
   event._dispatchInstances = null;
