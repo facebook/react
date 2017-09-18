@@ -369,12 +369,12 @@ var DOMRenderer = ReactFiberReconciler({
       validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
     }
 
-    var doc = rootContainerInstance;
-    if (rootContainerInstance.nodeType !== DOCUMENT_NODE && doc.ownerDocument) {
-      doc = ((doc: any): Element).ownerDocument;
-    }
+    var ownerDocument: Document = rootContainerInstance.nodeType ===
+      DOCUMENT_NODE
+      ? (rootContainerInstance: any)
+      : rootContainerInstance.ownerDocument;
 
-    var textNode: TextInstance = ((doc: any): Document).createTextNode(text);
+    var textNode: TextInstance = ownerDocument.createTextNode(text);
     precacheFiberNode(internalInstanceHandle, textNode);
     return textNode;
   },
