@@ -327,7 +327,8 @@ describe('ReactDOMServer', () => {
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expectDev(console.error.calls.count()).toBe(1);
-      if (ReactDOMFeatureFlags.useFiber) {
+
+      /* if (ReactDOMFeatureFlags.useFiber) {
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
           'Text content did not match. Server: "x" Client: "y"',
         );
@@ -338,7 +339,7 @@ describe('ReactDOMServer', () => {
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
           '(server) -- react-text: 3 -->x<!-- /react-text --',
         );
-      }
+      }*/
       console.error.calls.reset();
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);

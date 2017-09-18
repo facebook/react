@@ -79,6 +79,292 @@ if (__DEV__) {
         'polyfill in older browsers. http://fb.me/react-polyfills',
     );
   }
+
+  /* 
+    HydrationWarningRenderer module
+      - setContainer()
+        set the container dom element, this is required for 
+        constructing a warning in a tree structure.
+      - registerWarning()
+        instead of calling the old warningFor* methods during 
+        hydration, we call registerWarning method to save diffs 
+        in a central registry.
+      - flushWarnings()
+        this method is called in prepareForCommit when hydration is completed.
+        There are two steps to print out warnings, 
+        1. buildWarningTree, 2. warningTreeToText
+      - buildWarningTree()
+        starting from current container dom element, recursively build a tree, in
+        which each node is a pair of {curentDomNode, diffs}
+      - warningTreeToText()
+        recursivly convert diffsInfo into warning string and print out the whole
+        warning tree as formated string.
+
+  */
+  var HydrationWarningRenderer = {
+    /*
+      warningRegistry, a central registry for warnings 
+      saving diffs during hydration.
+
+      each warning node in warningNodes array has following structure, 
+      {
+        node: DOMElement <--- the dom node in problem
+        warningDetails: {
+          type: number <--- type 1, the node is going to be deleted
+                            type 2, there are some attribute diffs
+                                    which is recoreded in diffs section
+          diffs: [
+            {
+              propKey: string <--- the prop that has diff
+              server: string|number <--- server value
+              client: string|number <--- client value
+            }
+            ...
+          ]  
+        }  
+      }
+
+    */
+    warningRegistry: {container: null, warningNodes: []},
+    setContainer: function(rootContainerElement) {
+      if (rootContainerElement) {
+        const warningRegistry = HydrationWarningRenderer.warningRegistry;
+        if (
+          warningRegistry.container &&
+          warningRegistry.container !== rootContainerElement
+        ) {
+          // console.warn('unflushed warnings are being cleared');
+          warningRegistry.warningNodes = [];
+        }
+        warningRegistry.container = rootContainerElement;
+      }
+    },
+    registerWarning: function(instance, warningDetails) {
+      var warningRegistry = HydrationWarningRenderer.warningRegistry;
+      var warningNodeIndex = warningRegistry.warningNodes
+        .map(function(node) {
+          return node.instance;
+        })
+        .indexOf(instance);
+      if (warningNodeIndex > -1) {
+        var currentWarningDetails =
+          warningRegistry.warningNodes[warningNodeIndex].warningDetails;
+        if (currentWarningDetails.type === 1 && warningDetails.type === 1) {
+          currentWarningDetails.diffs = currentWarningDetails.diffs.concat(
+            warningDetails.diffs,
+          );
+        }
+      } else {
+        warningRegistry.warningNodes.push({instance, warningDetails});
+      }
+    },
+    buildWarningTree: function(root, warningNodes) {
+      // is current root itself a warningNode?
+      const index = warningNodes
+        .map(function(warningNode) {
+          return warningNode.instance;
+        })
+        .indexOf(root.instance);
+
+      if (index > -1) {
+        // remove from warning Nodes collection
+        // copy over warning Details
+        const matchedWarningNode = warningNodes.splice(index, 1)[0];
+        root.warningDetails = matchedWarningNode.warningDetails;
+      }
+      const childNodesArray = HydrationWarningRenderer.convertNlToArray(
+        root.instance.childNodes,
+      );
+
+      root.subWarningTrees = childNodesArray.map(function(domNode) {
+        const childrenWarningNodes = [];
+        HydrationWarningRenderer.findNodesInTree(
+          domNode,
+          warningNodes,
+          childrenWarningNodes,
+        );
+
+        if (childrenWarningNodes.length > 0) {
+          return HydrationWarningRenderer.buildWarningTree(
+            {instance: domNode},
+            childrenWarningNodes,
+          );
+        } else {
+          // a dom node that does not contain warning in subtree
+          // we just keep a placeholder
+          return {instance: domNode};
+        }
+      });
+      return root;
+    },
+    findNodesInTree: function(domRootNode, nodesToMatch, matched) {
+      if (nodesToMatch.length === matched.length) {
+        // all matched, terminate recursion
+        return;
+      }
+      const domNodesArray = nodesToMatch.map(function(node) {
+        return node.instance;
+      });
+      const index = domNodesArray.indexOf(domRootNode);
+
+      // check if the node can be marched.
+      if (index > -1) {
+        matched.push(nodesToMatch[index]);
+      }
+
+      HydrationWarningRenderer.convertNlToArray(
+        domRootNode.childNodes,
+      ).forEach(function(childNode) {
+        HydrationWarningRenderer.findNodesInTree(
+          childNode,
+          nodesToMatch,
+          matched,
+        );
+      });
+    },
+    warningsTreeToText: function(rootWarningNode) {
+      var subWarningsText = !rootWarningNode.subWarningTrees
+        ? rootWarningNode.instance.childNodes.length > 0 ? '...' : ''
+        : rootWarningNode.subWarningTrees
+            .map(function(subTree) {
+              return HydrationWarningRenderer.warningsTreeToText(subTree)
+                .split('\n')
+                .map(function(line) {
+                  return '  ' + line;
+                })
+                .join('\n'); // add indentation
+            })
+            .join('\n');
+
+      var tag = rootWarningNode.instance.tagName;
+      var warningsCode = rootWarningNode.warningDetails
+        ? rootWarningNode.warningDetails.type
+        : '';
+      return !rootWarningNode.warningDetails && !rootWarningNode.subWarningTrees
+        ? '...'
+        : HydrationWarningRenderer.renderWarningDetail(
+            rootWarningNode.instance,
+            rootWarningNode.warningDetails,
+            subWarningsText,
+          );
+    },
+    renderWarningDetail: function(instance, warningDetails, subWarningsText) {
+      var tag = instance.tagName;
+
+      if (!warningDetails) {
+        // when the instance is HTML document
+        if (!tag) {
+          return subWarningsText;
+        }
+
+        var attrsText = '';
+        if (instance.attributes) {
+          for (var i = 0; i < instance.attributes.length && i < 2; i++) {
+            attrsText = `${attrsText} ${instance.attributes[i].name}="${instance.attributes[i].value}"`;
+          }
+
+          attrsText = instance.attributes.length > 2
+            ? attrsText + ' ...'
+            : attrsText;
+        }
+
+        // no warning, return sub warnings
+        return `<${tag.toLowerCase()} ${attrsText}>\n${subWarningsText}\n</${tag.toLowerCase()}>`;
+      }
+
+      if (warningDetails.type === 1) {
+        if (instance.nodeType === 1 && Array.isArray(warningDetails.diffs)) {
+          var currentProps = warningDetails.diffs.reduce(function(
+            result,
+            diff,
+          ) {
+            return diff.server && diff.propKey
+              ? `${result} ${diff.propKey}="${diff.server}"`
+              : result;
+          }, '');
+
+          var hydratedProps = warningDetails.diffs.reduce(function(
+            result,
+            diff,
+          ) {
+            return diff.client && diff.propKey
+              ? `${result} ${diff.propKey}="${diff.client}"`
+              : result;
+          }, '');
+
+          var textProps = warningDetails.diffs.reduce(function(result, diff) {
+            return !diff.propKey
+              ? (diff.server ? `- ${diff.server}` : '') +
+                  (diff.server ? '\n' : '') +
+                  (diff.client ? `+ ${diff.client}` : '') +
+                  (diff.client ? '\n' : '') +
+                  result
+              : result;
+          }, '');
+
+          subWarningsText = subWarningsText ? `\n${subWarningsText}\n` : '\n';
+          subWarningsText = textProps
+            ? `\n${textProps}${subWarningsText}`
+            : subWarningsText;
+
+          return (
+            `- <${tag.toLowerCase()} ${currentProps} ...>\n` +
+            `+ <${tag.toLowerCase()} ${hydratedProps} ...>${subWarningsText}</${tag.toLowerCase()}>`
+          );
+        } else {
+          var serverTextValue = warningDetails.diffs.server;
+          var clientTextValue = warningDetails.diffs.client;
+          return `- ${serverTextValue}\n+ ${clientTextValue}`;
+        }
+      } else if (warningDetails.type === 2) {
+        if (instance.nodeType === 1) {
+          var attrsText = '';
+          for (var i = 0; i < instance.attributes.length && i < 2; i++) {
+            attrsText =
+              attrsText +
+              ' ' +
+              instance.attributes[i].name +
+              '=' +
+              instance.attributes[i].value;
+          }
+          attrsText = instance.attributes.length > 2
+            ? attrsText + '...'
+            : attrsText;
+          return `- <${tag.toLowerCase()} ${attrsText}>...</${tag.toLowerCase()}>`;
+        } else {
+          return `- "${instance.nodeValue} unknown warning type"`;
+        }
+      }
+    },
+    flushWarning: function() {
+      const warningRegistry = HydrationWarningRenderer.warningRegistry;
+      if (!warningRegistry.container) {
+        // no cotainer object, abort the warning
+        return;
+      }
+
+      if (warningRegistry.warningNodes.length > 0) {
+        var warningsTree = HydrationWarningRenderer.buildWarningTree(
+          {instance: warningRegistry.container},
+          warningRegistry.warningNodes,
+        );
+        warning(
+          false,
+          HydrationWarningRenderer.warningsTreeToText(warningsTree),
+        );
+      }
+
+      // reset
+      warningRegistry.container = null;
+      warningRegistry.warningNodes = [];
+    },
+    convertNlToArray: function(nl) {
+      const arr = [];
+      for (var i = 0, n; (n = nl[i]); ++i)
+        arr.push(n);
+      return arr;
+    },
+  };
 }
 
 require('ReactDOMClientInjection');
@@ -213,6 +499,9 @@ var DOMRenderer = ReactFiberReconciler({
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
     selectionInformation = ReactInputSelection.getSelectionInformation();
     ReactBrowserEventEmitter.setEnabled(false);
+    if (__DEV__) {
+      HydrationWarningRenderer.flushWarning();
+    }
   },
 
   resetAfterCommit(): void {
@@ -508,6 +797,7 @@ var DOMRenderer = ReactFiberReconciler({
       props,
       parentNamespace,
       rootContainerInstance,
+      HydrationWarningRenderer.registerWarning,
     );
   },
 
@@ -517,7 +807,11 @@ var DOMRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): boolean {
     precacheFiberNode(internalInstanceHandle, textInstance);
-    return diffHydratedText(textInstance, text);
+    return diffHydratedText(
+      textInstance,
+      text,
+      HydrationWarningRenderer.registerWarning,
+    );
   },
 
   didNotHydrateInstance(
@@ -525,8 +819,14 @@ var DOMRenderer = ReactFiberReconciler({
     instance: Instance | TextInstance,
   ) {
     if (instance.nodeType === 1) {
+      if (__DEV__) {
+        HydrationWarningRenderer.registerWarning(instance, {type: 2});
+      }
       warnForDeletedHydratableElement(parentInstance, (instance: any));
     } else {
+      if (__DEV__) {
+        HydrationWarningRenderer.registerWarning(instance, {type: 2});
+      }
       warnForDeletedHydratableText(parentInstance, (instance: any));
     }
   },
@@ -638,6 +938,7 @@ function renderSubtreeIntoContainer(
       }
     }
     if (__DEV__) {
+      HydrationWarningRenderer.setContainer(container);
       if (shouldHydrate && !forceHydrate && !warnedAboutHydrateAPI) {
         warnedAboutHydrateAPI = true;
         lowPriorityWarning(

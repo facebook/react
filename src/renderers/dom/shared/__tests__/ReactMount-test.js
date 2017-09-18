@@ -154,7 +154,7 @@ describe('ReactMount', () => {
     expectDev(console.error.calls.count()).toBe(1);
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node " " in <container>.',
+        '<container >\n  ...\n  - " "\n</container>',
       );
     } else {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -176,7 +176,7 @@ describe('ReactMount', () => {
     expectDev(console.error.calls.count()).toBe(1);
     if (ReactDOMFeatureFlags.useFiber) {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node " " in <container>.',
+        'Warning: <container >\n  - " "\n  ...\n</container>',
       );
     } else {
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -225,9 +225,16 @@ describe('ReactMount', () => {
         <div>This markup contains an nbsp entity: &nbsp; client text</div>,
         div,
       );
+      expectDev(console.error.calls.count()).toBe(1);
+
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        ' (client) nbsp entity: &nbsp; client text</div>\n' +
+          ' (server) nbsp entity: &nbsp; server text</div>',
+      );
     }
-    expectDev(console.error.calls.count()).toBe(1);
-    if (ReactDOMFeatureFlags.useFiber) {
+
+    /* if (!ReactDOMFeatureFlags.useFiber) {
+      // we can not test this here because the warnings are no flushed during prepareForCommit
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Server: "This markup contains an nbsp entity:   server text" ' +
           'Client: "This markup contains an nbsp entity:   client text"',
@@ -237,7 +244,7 @@ describe('ReactMount', () => {
         ' (client) nbsp entity: &nbsp; client text</div>\n' +
           ' (server) nbsp entity: &nbsp; server text</div>',
       );
-    }
+    } */
   });
 
   if (WebComponents !== undefined) {

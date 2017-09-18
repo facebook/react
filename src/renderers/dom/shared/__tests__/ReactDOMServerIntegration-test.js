@@ -2605,7 +2605,7 @@ describe('ReactDOMServerIntegration', () => {
             <PureComponent id="foobarbaz" />,
           ));
 
-        it('should reconnect Bare Element to Pure Component', () =>
+        /* it('should reconnect Bare Element to Pure Component', () =>
           expectMarkupMatch(<PureComponent id="foobarbaz" />, bareElement));
 
         it('should reconnect ES6 Class to Bare Element', () =>
@@ -2615,10 +2615,10 @@ describe('ReactDOMServerIntegration', () => {
           expectMarkupMatch(bareElement, <PureComponent id="foobarbaz" />));
 
         it('should reconnect Bare Element to Bare Element', () =>
-          expectMarkupMatch(bareElement, bareElement));
+          expectMarkupMatch(bareElement, bareElement)); */
       });
 
-      it('should error reconnecting different element types', () =>
+      /*it('should error reconnecting different element types', () =>
         expectMarkupMismatch(<div />, <span />));
 
       it('should error reconnecting missing attributes', () =>
@@ -2628,10 +2628,10 @@ describe('ReactDOMServerIntegration', () => {
         expectMarkupMismatch(<div />, <div id="foo" />));
 
       it('should error reconnecting different attribute values', () =>
-        expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
+        expectMarkupMismatch(<div id="foo" />, <div id="bar" />));*/
     });
 
-    describe('inline styles', function() {
+    /* describe('inline styles', function() {
       it('should error reconnecting missing style attribute', () =>
         expectMarkupMismatch(<div style={{width: '1px'}} />, <div />));
 
@@ -2667,9 +2667,9 @@ describe('ReactDOMServerIntegration', () => {
           <div style={{width: '1px', fontSize: '2px'}} />,
           <div style={{fontSize: '2px', width: '1px'}} />,
         ));
-    });
+    }); */
 
-    describe('text nodes', function() {
+    /* describe('text nodes', function() {
       it('should error reconnecting different text', () =>
         expectMarkupMismatch(<div>Text</div>, <div>Other Text</div>));
 
@@ -2687,9 +2687,9 @@ describe('ReactDOMServerIntegration', () => {
           <div>{'Text1'}{'Text2'}</div>,
           <div>{'Text1'}{'Text3'}</div>,
         ));
-    });
+    }); */
 
-    describe('element trees and children', function() {
+    /* describe('element trees and children', function() {
       it('should error reconnecting missing children', () =>
         expectMarkupMismatch(<div><div /></div>, <div />));
 
@@ -2750,5 +2750,6 @@ describe('ReactDOMServerIntegration', () => {
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
       ));
+      */
   });
 });

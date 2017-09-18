@@ -77,6 +77,9 @@ if (__DEV__) {
   };
 
   var warnForTextDifference = function(serverText: string, clientText: string) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (didWarnInvalidHydration) {
       return;
     }
@@ -94,6 +97,9 @@ if (__DEV__) {
     serverValue: mixed,
     clientValue: mixed,
   ) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (didWarnInvalidHydration) {
       return;
     }
@@ -108,6 +114,9 @@ if (__DEV__) {
   };
 
   var warnForExtraAttributes = function(attributeNames: Set<string>) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (didWarnInvalidHydration) {
       return;
     }
@@ -778,6 +787,7 @@ var ReactDOMFiberComponent = {
     rawProps: Object,
     parentNamespace: string,
     rootContainerElement: Element | Document,
+    registerWarning,
   ): null | Array<mixed> {
     if (__DEV__) {
       var isCustomComponentTag = isCustomComponent(tag, rawProps);
@@ -940,6 +950,10 @@ var ReactDOMFiberComponent = {
           if (domElement.textContent !== nextProp) {
             if (__DEV__) {
               warnForTextDifference(domElement.textContent, nextProp);
+              registerWarning(domElement, {
+                type: 1,
+                diffs: [{server: domElement.textContent, client: nextProp}],
+              });
             }
             updatePayload = [CHILDREN, nextProp];
           }
@@ -947,6 +961,10 @@ var ReactDOMFiberComponent = {
           if (domElement.textContent !== '' + nextProp) {
             if (__DEV__) {
               warnForTextDifference(domElement.textContent, nextProp);
+              registerWarning(domElement, {
+                type: 1,
+                diffs: [{server: domElement.textContent, client: nextProp}],
+              });
             }
             updatePayload = [CHILDREN, '' + nextProp];
           }
@@ -976,6 +994,10 @@ var ReactDOMFiberComponent = {
           const serverHTML = domElement.innerHTML;
           const expectedHTML = normalizeHTML(domElement, rawHtml);
           if (expectedHTML !== serverHTML) {
+            registerWarning(domElement, {
+              type: 1,
+              diffs: [{propKey, server: serverHTML, client: expectedHTML}],
+            });
             warnForPropDifference(propKey, serverHTML, expectedHTML);
           }
         } else if (propKey === STYLE) {
@@ -986,6 +1008,10 @@ var ReactDOMFiberComponent = {
           );
           serverValue = domElement.getAttribute('style');
           if (expectedStyle !== serverValue) {
+            registerWarning(domElement, {
+              type: 1,
+              diffs: [{propKey, server: serverValue, client: expectedStyle}],
+            });
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
         } else if (isCustomComponentTag) {
@@ -998,6 +1024,10 @@ var ReactDOMFiberComponent = {
           );
 
           if (nextProp !== serverValue) {
+            registerWarning(domElement, {
+              type: 1,
+              diffs: [{propKey, server: serverValue, client: nextProp}],
+            });
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
@@ -1029,6 +1059,10 @@ var ReactDOMFiberComponent = {
           }
 
           if (nextProp !== serverValue) {
+            registerWarning(domElement, {
+              type: 1,
+              diffs: [{propKey, server: serverValue, client: nextProp}],
+            });
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         }
@@ -1040,6 +1074,13 @@ var ReactDOMFiberComponent = {
       if (extraAttributeNames.size > 0) {
         // $FlowFixMe - Should be inferred as not undefined.
         warnForExtraAttributes(extraAttributeNames);
+        // TODO get server value, not ...
+        extraAttributeNames.forEach(function(name) {
+          registerWarning(domElement, {
+            type: 1,
+            diffs: [{propKey: name, server: '...', client: null}],
+          });
+        });
       }
     }
 
@@ -1075,11 +1116,15 @@ var ReactDOMFiberComponent = {
     return updatePayload;
   },
 
-  diffHydratedText(textNode: Text, text: string): boolean {
+  diffHydratedText(textNode: Text, text: string, registerWarning): boolean {
     const isDifferent = textNode.nodeValue !== text;
     if (__DEV__) {
       if (isDifferent) {
         warnForTextDifference(textNode.nodeValue, text);
+        registerWarning(textNode, {
+          type: 1,
+          diffs: {server: textNode.nodeValue, client: text},
+        });
       }
     }
     return isDifferent;
@@ -1089,6 +1134,9 @@ var ReactDOMFiberComponent = {
     parentNode: Element | Document,
     child: Element,
   ) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (__DEV__) {
       if (didWarnInvalidHydration) {
         return;
@@ -1104,6 +1152,9 @@ var ReactDOMFiberComponent = {
   },
 
   warnForDeletedHydratableText(parentNode: Element | Document, child: Text) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (__DEV__) {
       if (didWarnInvalidHydration) {
         return;
@@ -1123,6 +1174,9 @@ var ReactDOMFiberComponent = {
     tag: string,
     props: Object,
   ) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (__DEV__) {
       if (didWarnInvalidHydration) {
         return;
@@ -1138,6 +1192,9 @@ var ReactDOMFiberComponent = {
   },
 
   warnForInsertedHydratedText(parentNode: Element | Document, text: string) {
+    // TODO temperaily disable old warnings
+    // Completely remove later
+    return;
     if (__DEV__) {
       if (text === '') {
         // We expect to insert empty text nodes since they're not represented in
