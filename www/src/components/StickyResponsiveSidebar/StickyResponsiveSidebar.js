@@ -28,7 +28,7 @@ function findActiveItemTitle(location, defaultActiveSection) {
       return item.title;
     } else if (item.subitems && item.subitems.length) {
       const {subitems} = item;
-      for (let j = 0, len = subitems.length; j < len; j++) {
+      for (let j = 0, len2 = subitems.length; j < len2; j++) {
         const subitem = subitems[j];
         if (isItemActive(location, subitem)) {
           return subitem.title;
@@ -76,10 +76,9 @@ class StickyResponsiveSidebar extends Component {
       display: 'block',
     };
 
-    const bottomBarText =
-      this.state.open ?
-      'Close' :
-      findActiveItemTitle(location, defaultActiveSection);
+    const bottomBarText = this.state.open
+      ? 'Close'
+      : findActiveItemTitle(location, defaultActiveSection);
 
     return (
       <div>
