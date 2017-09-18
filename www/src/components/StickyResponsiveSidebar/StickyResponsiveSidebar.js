@@ -13,9 +13,33 @@
 
 import Container from 'components/Container';
 import {Component, React} from 'react';
+import isItemActive from 'utils/isItemActive';
 import {Sticky} from 'react-sticky';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
+
+// TODO: memoize to save doing O(n) on the active section items + subitems every
+// time.
+function findActiveItemTitle(location, defaultActiveSection) {
+  const {items} = defaultActiveSection;
+  for (let i = 0, len = items.length; i < len; i++) {
+    const item = items[i];
+    if (isItemActive(location, item)) {
+      return item.title;
+    } else if (item.subitems && item.subitems.length) {
+      const {subitems} = item;
+      for (let j = 0, len = subitems.length; j < len; j++) {
+        const subitem = subitems[j];
+        if (isItemActive(location, subitem)) {
+          return subitem.title;
+        }
+      }
+    }
+  }
+  // If nothing else is found, warn and default to section title
+  console.warn('No active item title found in <StickyResponsiveSidebar>');
+  return defaultActiveSection.title;
+}
 
 class StickyResponsiveSidebar extends Component {
   constructor(props, context) {
@@ -33,7 +57,9 @@ class StickyResponsiveSidebar extends Component {
   }
 
   render() {
-    const {defaultActiveSection} = this.props;
+    const {defaultActiveSection, location} = this.props;
+    console.log('the defaultActiveSection is ;', defaultActiveSection);
+    console.log('this.props are ', this.props);
     const smallScreenSidebarStyles = {
       // TODO: animate height instead of using display: none?
       // Changing height may be better a11y too
@@ -50,11 +76,10 @@ class StickyResponsiveSidebar extends Component {
       display: 'block',
     };
 
-    // TODO: use the location to find the active section item and use it's title
-    // instead
-    const activeSectionItemTitle = defaultActiveSection.title;
-
-    const bottomBarText = this.state.open ? 'Close' : activeSectionItemTitle;
+    const bottomBarText =
+      this.state.open ?
+      'Close' :
+      findActiveItemTitle(location, defaultActiveSection);
 
     return (
       <div>
