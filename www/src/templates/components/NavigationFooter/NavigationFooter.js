@@ -30,7 +30,7 @@ const NavigationFooter = ({next, prev}) => (
     }}>
     <Container>
       <Flex type="ul" halign="space-between">
-        <Flex basis="50%">
+        <Flex basis="50%" type="li">
           {prev &&
             <div>
               <SecondaryLabel>Previous article</SecondaryLabel>
@@ -43,6 +43,7 @@ const NavigationFooter = ({next, prev}) => (
           <Flex
             halign="flex-end"
             basis="50%"
+            type="li"
             css={{
               textAlign: 'right',
             }}>
@@ -70,7 +71,7 @@ const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
 const PrimaryLink = ({children, to}) => (
   <Link
     css={{
-      display: 'block',
+      display: 'inline-block',
       paddingTop: 10,
       textTransform: 'capitalize',
       borderColor: colors.subtle,
@@ -83,22 +84,22 @@ const PrimaryLink = ({children, to}) => (
       [media.size('xsmall')]: {
         fontSize: 16,
       },
-
-      ':after': {
-        display: 'block',
-        content: '',
-        borderTopWidth: 1,
-        borderTopStyle: 'solid',
-        borderColor: 'inherit',
-        marginBottom: -1,
-        position: 'relative',
-      },
       ':hover': {
         borderColor: colors.white,
       },
     }}
     to={to}>
     {children}
+    <span
+      css={{
+        borderTopWidth: 1,
+        borderTopStyle: 'solid',
+        borderColor: 'inherit',
+        marginBottom: -1,
+        position: 'relative',
+        display: 'block',
+      }}
+    />
   </Link>
 );
 

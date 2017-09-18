@@ -35,9 +35,16 @@ const Section = ({isActive, location, onClick, section}) => (
       {section.title}
     </MetaTitle>
     {isActive &&
-      <ul css={{marginBottom: 10}}>
+      <ul
+        css={{
+          marginBottom: 10,
+        }}>
         {section.items.map(item => (
-          <li key={item.id}>
+          <li
+            key={item.id}
+            css={{
+              marginTop: 5,
+            }}>
             {CreateLink(location, section, item)}
 
             {item.subitems &&
@@ -55,16 +62,17 @@ const Section = ({isActive, location, onClick, section}) => (
 );
 
 const activeLinkCss = {
-  color: colors.brand,
+  fontWeight: 'bold',
+};
 
-  ':before': {
-    content: '',
-    width: 4,
-    height: '100%',
-    borderLeft: `4px solid ${colors.brand}`,
-    marginLeft: -20,
-    paddingLeft: 16,
-  },
+const activeLinkBefore = {
+  width: 4,
+  height: 25,
+  borderLeft: `4px solid ${colors.brand}`,
+  paddingLeft: 16,
+  position: 'absolute',
+  left: 0,
+  marginTop: -3,
 };
 
 const linkCss = {
@@ -75,24 +83,23 @@ const linkCss = {
   marginTop: 5,
 
   '&:hover': {
-    color: colors.brand,
+    color: colors.subtle,
   },
 };
 
 const CreateLink = (location, section, item) => {
+  const isActive = isItemActive(location, item);
   if (item.id.includes('.html')) {
     return (
-      <Link
-        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
-        to={item.id}>
+      <Link css={[linkCss, isActive && activeLinkCss]} to={item.id}>
+        {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
     );
   } else if (item.forceInternal) {
     return (
-      <Link
-        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
-        to={item.href}>
+      <Link css={[linkCss, isActive && activeLinkCss]} to={item.href}>
+        {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
     );
@@ -120,8 +127,9 @@ const CreateLink = (location, section, item) => {
   } else {
     return (
       <Link
-        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
+        css={[linkCss, isActive && activeLinkCss]}
         to={slugify(item.id, section.directory)}>
+        {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
     );

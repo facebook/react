@@ -18,6 +18,7 @@ import {colors, media} from 'theme';
 const HeaderLink = ({isActive, title, to}) => (
   <Link css={[style, isActive && activeStyle]} to={to}>
     {title}
+    {isActive && <span css={activeAfterStyle} />}
   </Link>
 );
 
@@ -58,17 +59,18 @@ const activeStyle = {
 
   [media.greaterThan('xlarge')]: {
     position: 'relative',
+  },
+};
 
-    ':after': {
-      content: '',
-      position: 'absolute',
-      bottom: -1,
-      height: 4,
-      background: colors.brand,
-      left: 0,
-      right: 0,
-      zIndex: 1,
-    },
+const activeAfterStyle = {
+  [media.greaterThan('xlarge')]: {
+    position: 'absolute',
+    bottom: -1,
+    height: 4,
+    background: colors.brand,
+    left: 0,
+    right: 0,
+    zIndex: 1,
   },
 };
 

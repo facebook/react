@@ -19,8 +19,11 @@ const FooterNav = ({children, title}) => (
     css={{
       display: 'flex',
       flexDirection: 'column',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       width: '50%',
+      [media.lessThan('medium')]: {
+        paddingTop: 40,
+      },
       [media.between('medium', 'large')]: {
         width: '25%',
       },

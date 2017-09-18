@@ -14,48 +14,38 @@
 import Flex from 'components/Flex';
 import PropTypes from 'prop-types';
 import React from 'react';
-import {colors, fonts} from 'theme';
+import {colors, fonts, media} from 'theme';
 
-const MarkdownHeader = ({path, title}) => (
+const MarkdownHeader = ({title}) => (
   <Flex type="header" halign="space-between" valign="baseline">
     <h1
       css={{
         color: colors.dark,
-        marginRight: '5%',
         marginBottom: 0,
+        marginTop: 40,
         ...fonts.header,
+
+        [media.size('medium')]: {
+          marginTop: 60,
+        },
+
+        [media.greaterThan('large')]: {
+          marginTop: 80,
+        },
+
+        [media.greaterThan('xlarge')]: {
+          textAlign: 'center',
+          maxWidth: '12em',
+          marginLeft: 'auto',
+          marginRight: 'auto',
+        },
       }}>
       {title}
     </h1>
-    {path &&
-      <a
-        css={{
-          color: colors.subtle,
-          borderColor: colors.divider,
-          transition: 'all 0.2s ease',
-          transitionPropery: 'color, border-color',
-          whiteSpace: 'nowrap',
-
-          ':after': {
-            display: 'block',
-            content: '',
-            borderTopWidth: 1,
-            borderTopStyle: 'solid',
-          },
-
-          ':hover': {
-            color: colors.text,
-            borderColor: colors.text,
-          },
-        }}
-        href={`https://github.com/facebook/react/tree/master/docs/${path}`}>
-        Edit this page
-      </a>}
   </Flex>
 );
 
 MarkdownHeader.propTypes = {
-  path: PropTypes.string,
   title: PropTypes.string.isRequired,
 };
 

@@ -24,8 +24,10 @@ const colors = {
   darker: '#20232a', // really dark blue
   brand: '#61dafb', // electric blue
   brandLight: '#bbeffd',
+  brandOnWhite: '#10819b',
   text: '#1a1a1a', // very dark grey / black substitute
-  subtle: '#777', // light grey for text
+  subtle: '#6d6d6d', // light grey for text
+  subtleOnDark: '#999',
   divider: '#ececec', // very light grey
   note: '#ffe564', // yellow
   error: '#ff6464', // yellow
@@ -33,22 +35,12 @@ const colors = {
   black: '#000000',
 };
 
-const fonts = {
-  header: {
-    fontSize: 60,
-    lineHeight: '65px',
-    fontWeight: 700,
-  },
-  small: {
-    fontSize: 14,
-  },
-};
-
 const SIZES = {
   xsmall: {min: 0, max: 599},
   small: {min: 600, max: 739},
   medium: {min: 740, max: 979},
   large: {min: 980, max: 1279},
+  xlargeSmaller: {min: 1100, max: 1339},
   xlarge: {min: 1280, max: 1339},
   xxlarge: {min: 1340, max: Infinity},
 };
@@ -85,6 +77,22 @@ const media = {
   },
 };
 
+const fonts = {
+  header: {
+    fontSize: 60,
+    lineHeight: '65px',
+    fontWeight: 700,
+
+    [media.lessThan('medium')]: {
+      fontSize: 40,
+      lineHeight: '45px',
+    },
+  },
+  small: {
+    fontSize: 14,
+  },
+};
+
 // Shared styles are generally better as components,
 // Except when they must be used within nested CSS selectors.
 // This is the case for eg markdown content.
@@ -105,12 +113,27 @@ const sharedStyles = {
 
     '& .gatsby-highlight': {
       marginTop: 25,
+      marginLeft: -30,
+      marginRight: -30,
+      paddingLeft: 15,
+      paddingRight: 15,
     },
 
     '& a:not(.anchor):not(.gatsby-resp-image-link)': linkStyle,
 
+    '& > p:first-child': {
+      fontSize: 18,
+      lineHeight: '30px',
+      color: colors.subtle,
+
+      [media.greaterThan('xlarge')]: {
+        fontSize: 24,
+        lineHeight: '40px',
+      },
+    },
+
     '& p': {
-      marginTop: 30,
+      marginTop: 35,
       fontSize: 18,
       lineHeight: '35px',
       maxWidth: '42em',
@@ -208,17 +231,20 @@ const sharedStyles = {
     '& ol, & ul': {
       marginTop: 20,
       fontSize: 16,
-      color: colors.subtle,
+      color: colors.text,
+
+      [media.lessThan('small')]: {
+        paddingLeft: 20,
+      },
 
       '& p, & p:first-of-type': {
         fontSize: 16,
         marginTop: 0,
         lineHeight: 1.2,
-        color: colors.subtle,
       },
 
       '& li': {
-        marginTop: 10,
+        marginTop: 20,
       },
     },
 
@@ -237,11 +263,17 @@ const sharedStyles = {
     '& blockquote': {
       backgroundColor: hex2rgba('#ffe564', 0.3),
       borderLeftColor: colors.note,
-      borderLeftWidth: 5,
+      borderLeftWidth: 9,
       borderLeftStyle: 'solid',
-      padding: '20px 15px',
+      padding: '20px 45px 20px 26px',
       marginBottom: 30,
       marginTop: 20,
+      marginLeft: -30,
+      marginRight: -30,
+
+      [media.lessThan('small')]: {
+        marginLeft: -20,
+      },
 
       '& p': {
         marginTop: 15,
@@ -255,6 +287,10 @@ const sharedStyles = {
           marginTop: 0,
         },
       },
+    },
+
+    '& .gatsby-highlight + blockquote': {
+      marginTop: 40,
     },
   },
 };

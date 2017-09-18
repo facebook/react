@@ -28,6 +28,10 @@ const Footer = () => (
       paddingTop: 50,
       paddingBottom: 50,
 
+      [media.lessThan('medium')]: {
+        paddingTop: 10,
+      },
+
       [media.size('xxlarge')]: {
         paddingTop: 80,
       },
@@ -40,7 +44,7 @@ const Footer = () => (
           flexWrap: 'wrap',
         }}>
         <FooterNav>
-          <MetaTitle>Docs</MetaTitle>
+          <MetaTitle onDark={true}>Docs</MetaTitle>
           <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
           <FooterLink to="/docs/thinking-in-react.html">
             Thinking in React
@@ -49,42 +53,57 @@ const Footer = () => (
           <FooterLink to="/docs/jsx-in-depth.html">Advanced Guides</FooterLink>
         </FooterNav>
         <FooterNav>
-          <MetaTitle>Community</MetaTitle>
+          <MetaTitle onDark={true}>Community</MetaTitle>
           <FooterLink
             to="http://stackoverflow.com/questions/tagged/reactjs"
-            target="_blank">
+            target="_blank"
+            rel="noopener">
             Stack Overflow
           </FooterLink>
-          <FooterLink to="https://discuss.reactjs.org" target="_blank">
+          <FooterLink
+            to="https://discuss.reactjs.org"
+            target="_blank"
+            rel="noopener">
             Discussion Forum
           </FooterLink>
-          <FooterLink to="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">
+          <FooterLink
+            to="https://discord.gg/0ZcbPKXt5bZjGY5n"
+            target="_blank"
+            rel="noopener">
             Reactiflux Chat
           </FooterLink>
-          <FooterLink to="https://www.facebook.com/react" target="_blank">
+          <FooterLink
+            to="https://www.facebook.com/react"
+            target="_blank"
+            rel="noopener">
             Facebook
           </FooterLink>
-          <FooterLink to="https://twitter.com/reactjs" target="_blank">
+          <FooterLink
+            to="https://twitter.com/reactjs"
+            target="_blank"
+            rel="noopener">
             Twitter
           </FooterLink>
         </FooterNav>
         <FooterNav>
-          <MetaTitle>Resources</MetaTitle>
+          <MetaTitle onDark={true}>Resources</MetaTitle>
           <FooterLink to="/community/conferences.html">Conferences</FooterLink>
           <FooterLink to="/community/videos.html">Videos</FooterLink>
           <FooterLink
             to="https://github.com/facebook/react/wiki/Examples"
-            target="_blank">
+            target="_blank"
+            rel="noopener">
             Examples
           </FooterLink>
           <FooterLink
             to="https://github.com/facebook/react/wiki/Complementary-Tools"
-            target="_blank">
+            target="_blank"
+            rel="noopener">
             Complementary Tools
           </FooterLink>
         </FooterNav>
         <FooterNav>
-          <MetaTitle>More</MetaTitle>
+          <MetaTitle onDark={true}>More</MetaTitle>
           <FooterLink to="/blog.html">Blog</FooterLink>
           <FooterLink to="https://github.com/facebook/react" target="_blank">
             GitHub
@@ -120,7 +139,7 @@ const Footer = () => (
           </a>
           <p
             css={{
-              color: colors.subtle,
+              color: colors.subtleOnDark,
               paddingTop: 15,
             }}>
             Copyright © 2017 Facebook Inc.

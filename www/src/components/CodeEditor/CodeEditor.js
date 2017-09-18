@@ -121,6 +121,10 @@ class CodeEditor extends Component {
                   width: '100%',
                   borderRadius: '0',
                   marginTop: '0 !important',
+                  marginLeft: '0 !important',
+                  paddingLeft: '0 !important',
+                  marginRight: '0 !important',
+                  paddingRight: '0 !important',
 
                   '& pre.prism-code[contenteditable]': {
                     maxHeight: '280px !important',

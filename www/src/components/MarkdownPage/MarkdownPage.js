@@ -22,7 +22,7 @@ import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
-import {sharedStyles} from 'theme';
+import {colors, media, sharedStyles} from 'theme';
 import {urlRoot} from 'constants';
 
 const MarkdownPage = ({
@@ -59,12 +59,14 @@ const MarkdownPage = ({
           <StickyContainer
             css={{
               display: 'flex',
+              [media.greaterThan('xlarge')]: {
+                maxWidth: 800,
+                marginLeft: 'auto',
+                marginRight: 'auto',
+              },
             }}>
             <Flex type="article" direction="column" grow="1" halign="stretch">
-              <MarkdownHeader
-                path={markdownRemark.fields.path}
-                title={titlePrefix}
-              />
+              <MarkdownHeader title={titlePrefix} />
 
               {(date || hasAuthors) &&
                 <div css={{marginTop: 15}}>
@@ -83,21 +85,63 @@ const MarkdownPage = ({
                 </div>}
 
               <div
-                css={[
-                  sharedStyles.markdown,
-                  {
-                    marginTop: 65,
-                    marginBottom: 120,
+                css={{
+                  marginTop: 40,
+                  marginBottom: 120,
+
+                  [media.between('medium', 'large')]: {
+                    marginTop: 50,
                   },
-                ]}
-                dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-              />
+
+                  [media.greaterThan('xlarge')]: {
+                    marginTop: 85,
+                  },
+                }}>
+                <div
+                  css={[sharedStyles.markdown]}
+                  dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+                />
+
+                {markdownRemark.fields.path &&
+                  <div css={{marginTop: 80}}>
+                    <a
+                      css={{
+                        color: colors.subtle,
+                        borderColor: colors.divider,
+                        transition: 'all 0.2s ease',
+                        transitionPropery: 'color, border-color',
+                        whiteSpace: 'nowrap',
+
+                        ':after': {
+                          display: 'block',
+                          content: '',
+                          borderTopWidth: 1,
+                          borderTopStyle: 'solid',
+                        },
+
+                        ':hover': {
+                          color: colors.text,
+                          borderColor: colors.text,
+                        },
+                      }}
+                      href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
+                      Edit this page
+                    </a>
+                  </div>}
+              </div>
             </Flex>
 
             <div
               css={{
                 flex: '0 0 200px',
                 marginLeft: 'calc(9% + 40px)',
+                borderLeft: '1px solid #ececec',
+                display: 'flex',
+                flexDirection: 'column',
+
+                [media.greaterThan('xlargeSmaller')]: {
+                  flex: '0 0 300px',
+                },
               }}>
               <StickyResponsiveSidebar
                 defaultActiveSection={

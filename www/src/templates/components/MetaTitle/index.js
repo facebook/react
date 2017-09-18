@@ -14,11 +14,17 @@
 import React from 'react';
 import {colors} from 'theme';
 
-const MetaTitle = ({children, title, cssProps = {}, onClick}) => (
+const MetaTitle = ({
+  children,
+  title,
+  cssProps = {},
+  onClick,
+  onDark = false,
+}) => (
   <div
     onClick={onClick}
     css={{
-      color: colors.subtle,
+      color: onDark ? colors.subtleOnDark : colors.subtle,
       cursor: onClick ? 'pointer' : null,
       fontSize: 14,
       fontWeight: 700,
