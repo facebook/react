@@ -1,3 +1,53 @@
+## [Unreleased]
+<details>
+  <summary>
+    Changes that have landed in master but are not yet released.
+    Click to see more.
+  </summary>
+
+### JS Environment Requirements
+
+ * React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set). If you support older browsers and devices which may not yet provide these natively (eg <IE11), consider including a global polyfill in your bundled application, such as [core-js](https://github.com/zloirock/core-js) or [babel-polyfill](https://babeljs.io/docs/usage/polyfill/).
+
+#### Major Changes
+
+* **Improved error handling with introduction of "error boundaries".** [Error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
+- **There are several changes to the behavior of scheduling and lifecycle methods:**
+
+* `ReactDOM.render()` and `ReactDOM.unstable_renderIntoContainer()` now return `null` if called from inside a lifecycle method.
+  * To work around this, you can either use [the new portal API](https://github.com/facebook/react/issues/10309#issuecomment-318433235) or [refs](https://github.com/facebook/react/issues/10309#issuecomment-318434635).
+* `setState`:
+    * Calling `setState` with null no longer triggers an update. This allows you to decide in an updater function if you want to re-render.
+    * Calling `setState` directly in render always causes an update. This was not previously the case. Regardless, you should not be calling setState from render.
+    * `setState` callback (second argument) now fires immediately after `componentDidMount` / `componentDidUpdate` instead of after all components have rendered.
+* When replacing `<A />` with `<B />`,  `B.componentWillMount` now always happens before  `A.componentWillUnmount`. Previously, `A.componentWillUnmount` could fire first in some cases.
+* Previously, changing the ref to a component would always detach the ref before that component's render is called. Now, we change the ref later, when applying the changes to the DOM.
+* It is not safe to re-render into a container that was modified by something other than React. This worked previously in some cases but was never supported. We now emit a warning in this case. Instead you should clean up your component trees using `ReactDOM.unmountComponentAtNode`. [See this example.](https://github.com/facebook/react/issues/10294#issuecomment-318820987)
+* `componentDidUpdate` lifecycle no longer receives `prevContext` param. (See #8631)
+* Shallow renderer no longer calls `componentDidUpdate()` because DOM refs are not available. This also makes it consistent with `componentDidMount()` (which does not get called in previous versions either).
+* Shallow renderer does not implement `unstable_batchedUpdates()` anymore.
+- **The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds.** For example:
+  - react/dist/react.js → react/umd/react.development.js
+  - react/dist/react.min.js → react/umd/react.production.min.js
+  - react-dom/dist/react-dom.js → react-dom/umd/react-dom.development.js
+  - react-dom/dist/react-dom.min.js → react-dom/umd/react-dom.production.min.js
+* ReactDOM.createPortal() is official and stable
+  ([@gaearon](https://github.com/gaearon) in
+  [10675](https://github.com/facebook/react/pull/10675))
+* Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) (@nhunzaker in https://github.com/facebook/react/pull/10385 , https://github.com/facebook/react/pull/10564 , https://github.com/facebook/react/pull/10495 and others)
+
+#### Removed deprecations
+
+- **There is no react-with-addons.js build anymore.** All compatible addons are published separately on npm, and have single-file browser versions if you need them.
+- **The deprecations introduced in 15.x have been removed from the core package.** React.createClass is now available as create-react-class, React.PropTypes as prop-types, React.DOM as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
+
+### New helpful warnings
+
+  * Improve error message when ReactDOM loads without React (@aweary in https://github.com/facebook/react/pull/10449)
+  * Warn when nesting 15 subtree inside 16 (@sophiebits in https://github.com/facebook/react/pull/10434)
+
+</details>
+
 ## 15.6.1 (June 14, 2017)
 
 ### React DOM
