@@ -11,35 +11,15 @@
 
 'use strict';
 
+import isItemActive from 'utils/isItemActive';
 import Link from 'gatsby-link';
 import React from 'react';
 import slugify from 'utils/slugify';
 import {colors} from 'theme';
 import MetaTitle from '../MetaTitle';
 
-const toAnchor = (href = '') => {
-  const index = href.indexOf('#');
-  return index >= 0 ? href.substr(index) : '';
-};
-
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
-
-// TODO Account for redirect_from URLs somehow; they currently won't match.
-
-const isItemActive = (location, item) => {
-  if (location == null) {
-    return false; // Production build of Gatsby is eval'ed in Node
-  } else if (location.hash) {
-    if (item.href) {
-      return location.hash === toAnchor(item.href);
-    }
-  } else if (item.id.includes('html')) {
-    return location.pathname.includes(item.id);
-  } else {
-    return location.pathname.includes(slugify(item.id));
-  }
-};
 
 const Section = ({isActive, location, onClick, section}) => (
   <div>

@@ -11,6 +11,6 @@
 
 'use strict';
 
-import StickySidebar from './StickySidebar';
+import StickyResponsiveSidebar from './StickyResponsiveSidebar';
 
-export default StickySidebar;
+export default StickyResponsiveSidebar;
