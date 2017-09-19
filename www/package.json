@@ -27,7 +27,6 @@
     "glamor": "^2.20.40",
     "hex2rgba": "^0.0.1",
     "react-live": "^1.7.1",
-    "react-motion": "^0.5.1",
     "react-sticky": "^6.0.1",
     "remarkable": "^1.7.1",
     "slugify": "^1.2.1"
