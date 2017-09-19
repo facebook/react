@@ -125,7 +125,7 @@ const Header = ({location}) => (
 
         <form
           css={{
-            width: 'calc(100% / 8)',
+            width: 'calc(100% / 6)',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
@@ -160,7 +160,6 @@ const Header = ({location}) => (
                 fontSize: 18,
                 fontFamily: 'inherit',
                 position: 'relative',
-                marginLeft: 5,
                 ':focus': {
                   outline: 'none',
                 },
