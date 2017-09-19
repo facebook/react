@@ -74,6 +74,11 @@ January 25-28 in Dornbirn, Austria
 
 [Website](http://agent.sh/)
 
+### React Amsterdam 2018
+April 13 in Amsterdam, The Netherlands
+
+[Website](https://react.amsterdam) - [Twitter](https://twitter.com/reactamsterdam) - [Facebook](https://www.facebook.com/reactamsterdam)
+
 ## Past Conferences
 
 ### React.js Conf 2015
