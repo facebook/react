@@ -186,40 +186,6 @@
   }
 }
 
-.algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu {
-  right: 0 !important;
-  left: inherit !important;
-}
-
-.algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu:before {
-  right: 48px;
-}
-
-.algolia-autocomplete.algolia-autocomplete-left .ds-dropdown-menu {
-  left: 0 !important;
-  right: inherit !important;
-}
-
-.algolia-autocomplete.algolia-autocomplete-left .ds-dropdown-menu:before {
-  left: 48px;
-}
-
-.algolia-autocomplete .ds-dropdown-menu {
-  position: relative;
-  top: -6px;
-  border-radius: 4px;
-  margin: 6px 0 0;
-  padding: 0;
-  text-align: left;
-  height: auto;
-  position: relative;
-  background: transparent;
-  border: none;
-  z-index: 999;
-  max-width: 600px;
-  min-width: 500px;
-  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.2), 0 2px 3px 0 rgba(0, 0, 0, 0.1);
-}
 
 .algolia-autocomplete .ds-dropdown-menu:before {
   display: block;
@@ -235,6 +201,55 @@
   -webkit-transform: rotate(-45deg);
           transform: rotate(-45deg);
   border-radius: 2px;
+}
+
+.algolia-autocomplete .ds-dropdown-menu {
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.2), 0 2px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+@media (min-width: 601px) {
+  .algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu {
+    right: 0 !important;
+    left: inherit !important;
+  }
+
+  .algolia-autocomplete.algolia-autocomplete-right .ds-dropdown-menu:before {
+    right: 48px;
+  }
+
+  .algolia-autocomplete .ds-dropdown-menu {
+    position: relative;
+    top: -6px;
+    border-radius: 4px;
+    margin: 6px 0 0;
+    padding: 0;
+    text-align: left;
+    height: auto;
+    position: relative;
+    background: transparent;
+    border: none;
+    z-index: 999;
+    max-width: 600px;
+    min-width: 500px;
+  }
+}
+
+@media (max-width: 600px) {
+  .algolia-autocomplete .ds-dropdown-menu {
+    z-index: 100;
+    position: fixed !important;
+    top: 40px !important;
+    left: auto !important;
+    right: 1rem !important;
+    width: 600px;
+    max-width: calc(100% - 2rem);
+    max-height: calc(100% - 5rem);
+    display: block;
+  }
+
+  .algolia-autocomplete .ds-dropdown-menu:before {
+    right: 6rem;
+  }
 }
 
 .algolia-autocomplete .ds-dropdown-menu .ds-suggestions {
