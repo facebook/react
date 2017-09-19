@@ -25,18 +25,36 @@ const NavigationFooter = ({next, prev}) => (
       color: colors.white,
       paddingTop: 50,
       paddingBottom: 50,
-      position: 'relative',
-      zIndex: 1,
     }}>
-    <Container>
-      <Flex type="ul" halign="space-between">
+    <Container isFooter={true}>
+      <Flex
+        type="ul"
+        halign="space-between"
+        css={{
+          [media.between('small', 'medium')]: {
+            paddingRight: 240,
+          },
+
+          [media.between('large', 'xlargeSmaller')]: {
+            paddingRight: 280,
+          },
+
+          [media.between('xlargeSmaller', 'belowSidebarFixed')]: {
+            paddingRight: 380,
+          },
+        }}>
         <Flex basis="50%" type="li">
           {prev &&
             <div>
               <SecondaryLabel>Previous article</SecondaryLabel>
-              <PrimaryLink to={prev}>
-                {linkToTitle(prev)}
-              </PrimaryLink>
+              <div
+                css={{
+                  paddingTop: 10,
+                }}>
+                <PrimaryLink to={prev}>
+                  {linkToTitle(prev)}
+                </PrimaryLink>
+              </div>
             </div>}
         </Flex>
         {next &&
@@ -49,9 +67,14 @@ const NavigationFooter = ({next, prev}) => (
             }}>
             <div>
               <SecondaryLabel>Next article</SecondaryLabel>
-              <PrimaryLink to={next}>
-                {linkToTitle(next)}
-              </PrimaryLink>
+              <div
+                css={{
+                  paddingTop: 10,
+                }}>
+                <PrimaryLink to={next}>
+                  {linkToTitle(next)}
+                </PrimaryLink>
+              </div>
             </div>
           </Flex>}
       </Flex>
@@ -71,12 +94,13 @@ const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
 const PrimaryLink = ({children, to}) => (
   <Link
     css={{
-      display: 'inline-block',
-      paddingTop: 10,
+      display: 'inline',
       textTransform: 'capitalize',
       borderColor: colors.subtle,
       transition: 'border-color 0.2s ease',
       fontSize: 30,
+      borderBottomWidth: 1,
+      borderBottomStyle: 'solid',
 
       [media.lessThan('large')]: {
         fontSize: 24,
@@ -90,16 +114,6 @@ const PrimaryLink = ({children, to}) => (
     }}
     to={to}>
     {children}
-    <span
-      css={{
-        borderTopWidth: 1,
-        borderTopStyle: 'solid',
-        borderColor: 'inherit',
-        marginBottom: -1,
-        position: 'relative',
-        display: 'block',
-      }}
-    />
   </Link>
 );
 

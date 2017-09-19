@@ -14,7 +14,6 @@
 import Container from 'components/Container';
 import {Component, React} from 'react';
 import isItemActive from 'utils/isItemActive';
-import {Sticky} from 'react-sticky';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
 
@@ -70,6 +69,10 @@ class StickyResponsiveSidebar extends Component {
       right: 0,
       position: 'fixed',
       backgroundColor: colors.white,
+      zIndex: 2,
+      height: '100vh',
+      overflowY: 'auto',
+      WebkitOverflowScrolling: 'touch',
     };
 
     const smallScreenBottomBarStyles = {
@@ -82,32 +85,62 @@ class StickyResponsiveSidebar extends Component {
 
     return (
       <div>
-        <Sticky>
-          {({style}) => {
-            return (
-              <div
-                css={{
-                  [media.lessThan('small')]: smallScreenSidebarStyles,
-                  [media.greaterThan('small')]: style,
-                }}>
-                <div
-                  css={{
-                    marginTop: 60,
+        <div>
+          <div
+            css={{
+              [media.lessThan('small')]: smallScreenSidebarStyles,
 
-                    [media.lessThan('small')]: {
-                      marginTop: 40,
-                    },
+              [media.greaterThan('medium')]: {
+                marginRight: -999,
+                paddingRight: 999,
+                backgroundColor: '#f7f7f7',
+              },
 
-                    [media.between('medium', 'large')]: {
-                      marginTop: 50,
-                    },
-                  }}>
-                  <Sidebar {...this.props} />
-                </div>
-              </div>
-            );
-          }}
-        </Sticky>
+              [media.between('medium', 'belowSidebarFixed')]: {
+                position: 'fixed',
+                zIndex: 2,
+                height: '100%',
+              },
+
+              [media.size('small')]: {
+                height: 'calc(100vh - 40px)',
+              },
+
+              [media.between('medium', 'large')]: {
+                height: 'calc(100vh - 50px)',
+              },
+
+              [media.greaterThan('small')]: {
+                position: 'fixed',
+                zIndex: 2,
+                height: 'calc(100vh - 60px)',
+                overflowY: 'auto',
+                WebkitOverflowScrolling: 'touch',
+                marginRight: -999,
+                paddingRight: 999,
+                backgroundColor: '#f7f7f7',
+              },
+
+              [media.greaterThan('sidebarFixed')]: {
+                borderLeft: '1px solid #ececec',
+              },
+            }}>
+            <div
+              css={{
+                marginTop: 60,
+
+                [media.lessThan('small')]: {
+                  marginTop: 40,
+                },
+
+                [media.between('medium', 'large')]: {
+                  marginTop: 50,
+                },
+              }}>
+              <Sidebar {...this.props} />
+            </div>
+          </div>
+        </div>
         <div
           css={{
             backgroundColor: colors.darker,
@@ -119,7 +152,7 @@ class StickyResponsiveSidebar extends Component {
             position: 'fixed',
             right: 0,
             width: '100%',
-            zIndex: 1,
+            zIndex: 3,
             [media.lessThan('small')]: smallScreenBottomBarStyles,
           }}
           onClick={this.toggleOpen}>

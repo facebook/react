@@ -15,14 +15,13 @@ import Container from 'components/Container';
 import Flex from 'components/Flex';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
-import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React from 'react';
 import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
-import {colors, media, sharedStyles} from 'theme';
+import {sharedStyles} from 'theme';
 import {urlRoot} from 'constants';
 
 const MarkdownPage = ({
@@ -56,15 +55,7 @@ const MarkdownPage = ({
       />
       <div css={{flex: '1 0 auto'}}>
         <Container>
-          <StickyContainer
-            css={{
-              display: 'flex',
-              [media.greaterThan('xlarge')]: {
-                maxWidth: 800,
-                marginLeft: 'auto',
-                marginRight: 'auto',
-              },
-            }}>
+          <div css={sharedStyles.articleLayout.container}>
             <Flex type="article" direction="column" grow="1" halign="stretch">
               <MarkdownHeader title={titlePrefix} />
 
@@ -84,19 +75,7 @@ const MarkdownPage = ({
                     </span>}
                 </div>}
 
-              <div
-                css={{
-                  marginTop: 40,
-                  marginBottom: 120,
-
-                  [media.between('medium', 'large')]: {
-                    marginTop: 50,
-                  },
-
-                  [media.greaterThan('xlarge')]: {
-                    marginTop: 85,
-                  },
-                }}>
+              <div css={sharedStyles.articleLayout.content}>
                 <div
                   css={[sharedStyles.markdown]}
                   dangerouslySetInnerHTML={{__html: markdownRemark.html}}
@@ -105,25 +84,7 @@ const MarkdownPage = ({
                 {markdownRemark.fields.path &&
                   <div css={{marginTop: 80}}>
                     <a
-                      css={{
-                        color: colors.subtle,
-                        borderColor: colors.divider,
-                        transition: 'all 0.2s ease',
-                        transitionPropery: 'color, border-color',
-                        whiteSpace: 'nowrap',
-
-                        ':after': {
-                          display: 'block',
-                          content: '',
-                          borderTopWidth: 1,
-                          borderTopStyle: 'solid',
-                        },
-
-                        ':hover': {
-                          color: colors.text,
-                          borderColor: colors.text,
-                        },
-                      }}
+                      css={sharedStyles.articleLayout.editLink}
                       href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
                       Edit this page
                     </a>
@@ -131,18 +92,7 @@ const MarkdownPage = ({
               </div>
             </Flex>
 
-            <div
-              css={{
-                flex: '0 0 200px',
-                marginLeft: 'calc(9% + 40px)',
-                borderLeft: '1px solid #ececec',
-                display: 'flex',
-                flexDirection: 'column',
-
-                [media.greaterThan('xlargeSmaller')]: {
-                  flex: '0 0 300px',
-                },
-              }}>
+            <div css={sharedStyles.articleLayout.sidebar}>
               <StickyResponsiveSidebar
                 defaultActiveSection={
                   location != null
@@ -153,15 +103,16 @@ const MarkdownPage = ({
                 sectionList={sectionList}
               />
             </div>
-          </StickyContainer>
+          </div>
         </Container>
       </div>
 
       {/* TODO Read prev/next from index map, not this way */}
-      <NavigationFooter
-        next={markdownRemark.frontmatter.next}
-        prev={markdownRemark.frontmatter.prev}
-      />
+      {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
+        <NavigationFooter
+          next={markdownRemark.frontmatter.next}
+          prev={markdownRemark.frontmatter.prev}
+        />}
     </Flex>
   );
 };

@@ -40,9 +40,14 @@ const SIZES = {
   small: {min: 600, max: 739},
   medium: {min: 740, max: 979},
   large: {min: 980, max: 1279},
-  xlargeSmaller: {min: 1100, max: 1339},
   xlarge: {min: 1280, max: 1339},
   xxlarge: {min: 1340, max: Infinity},
+
+  // Tweakpoints
+  xlargeSmaller: {min: 1100, max: 1339},
+  belowSidebarFixed: {min: 740, max: 1559}, // Used for "between()"
+  sidebarFixed: {min: 1560, max: Infinity},
+  sidebarFixedNarrowFooter: {min: 1560, max: 2000},
 };
 
 type Size = $Keys<typeof SIZES>;
@@ -61,7 +66,7 @@ const media = {
   },
 
   lessThan(key: Size) {
-    return `@media (max-width: ${SIZES[key].min}px)`;
+    return `@media (max-width: ${SIZES[key].min - 1}px)`;
   },
 
   size(key: Size) {
@@ -108,6 +113,75 @@ const linkStyle = {
 };
 const sharedStyles = {
   link: linkStyle,
+
+  articleLayout: {
+    container: {
+      display: 'flex',
+      minHeight: 'calc(100vh - 60px)',
+      [media.greaterThan('sidebarFixed')]: {
+        maxWidth: 800,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+      },
+    },
+    content: {
+      marginTop: 40,
+      marginBottom: 120,
+
+      [media.between('medium', 'large')]: {
+        marginTop: 50,
+      },
+
+      [media.greaterThan('xlarge')]: {
+        marginTop: 85,
+      },
+    },
+    sidebar: {
+      display: 'flex',
+      flexDirection: 'column',
+
+      [media.between('small', 'sidebarFixed')]: {
+        borderLeft: '1px solid #ececec',
+        marginLeft: 80,
+      },
+
+      [media.between('small', 'xlargeSmaller')]: {
+        flex: '0 0 200px',
+        marginLeft: 80,
+      },
+
+      [media.between('small', 'medium')]: {
+        marginLeft: 40,
+      },
+
+      [media.greaterThan('xlargeSmaller')]: {
+        flex: '0 0 300px',
+      },
+
+      [media.greaterThan('sidebarFixed')]: {
+        position: 'fixed',
+        right: 0,
+        width: 300,
+        zIndex: 2,
+      },
+    },
+
+    editLink: {
+      color: colors.subtle,
+      borderColor: colors.divider,
+      transition: 'all 0.2s ease',
+      transitionPropery: 'color, border-color',
+      whiteSpace: 'nowrap',
+      borderBottomWidth: 1,
+      borderBottomStyle: 'solid',
+
+      ':hover': {
+        color: colors.text,
+        borderColor: colors.text,
+      },
+    },
+  },
+
   markdown: {
     lineHeight: '25px',
 
@@ -168,6 +242,11 @@ const sharedStyles = {
       marginBottom: -1,
       border: 'none',
       borderBottom: `1px solid ${colors.divider}`,
+      marginTop: 40,
+
+      ':first-child': {
+        marginTop: 0,
+      },
     },
 
     '& h1': {
@@ -201,6 +280,11 @@ const sharedStyles = {
       [media.greaterThan('xlarge')]: {
         fontSize: 35,
       },
+    },
+
+    '& hr + h2': {
+      borderTop: 0,
+      marginTop: 0,
     },
 
     '& h3': {
@@ -245,6 +329,10 @@ const sharedStyles = {
 
       '& li': {
         marginTop: 20,
+      },
+
+      '& li.button-newapp': {
+        marginTop: 0,
       },
     },
 

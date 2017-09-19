@@ -19,7 +19,7 @@ import {media} from 'theme';
  * This component wraps page content sections (eg header, footer, main).
  * It provides consistent margin and max width behavior.
  */
-const Container = ({children}) => (
+const Container = ({children, isFooter}) => (
   <div
     css={{
       paddingLeft: 20,
@@ -33,6 +33,12 @@ const Container = ({children}) => (
 
       [media.size('xxlarge')]: {
         maxWidth: 1260,
+      },
+
+      [media.size('sidebarFixedNarrowFooter')]: {
+        maxWidth: isFooter ? 800 : 1260,
+        paddingLeft: isFooter ? 0 : 20,
+        paddingRight: isFooter ? 0 : 20,
       },
     }}>
     {children}

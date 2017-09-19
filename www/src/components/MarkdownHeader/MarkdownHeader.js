@@ -33,7 +33,7 @@ const MarkdownHeader = ({title}) => (
           marginTop: 80,
         },
 
-        [media.greaterThan('xlarge')]: {
+        [media.greaterThan('sidebarFixed')]: {
           textAlign: 'center',
           maxWidth: '12em',
           marginLeft: 'auto',

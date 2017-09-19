@@ -98,6 +98,7 @@ class Home extends Component {
                   [media.greaterThan('xlarge')]: {
                     paddingTop: 20,
                     fontSize: 30,
+                    fontWeight: 300,
                   },
                 }}>
                 A JavaScript library for building user interfaces

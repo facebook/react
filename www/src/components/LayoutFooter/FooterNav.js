@@ -21,14 +21,16 @@ const FooterNav = ({children, title}) => (
       flexDirection: 'column',
       alignItems: 'flex-start',
       width: '50%',
-      [media.lessThan('medium')]: {
-        paddingTop: 40,
-      },
-      [media.between('medium', 'large')]: {
+      paddingTop: 40,
+
+      [media.size('sidebarFixed')]: {
+        paddingTop: 0,
         width: '25%',
       },
-      [media.greaterThan('xlarge')]: {
-        width: 'calc(100% / 6)',
+
+      [media.size('sidebarFixedNarrowFooter')]: {
+        width: '50%',
+        paddingTop: 40,
       },
     }}>
     <div
