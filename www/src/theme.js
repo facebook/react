@@ -35,17 +35,19 @@ const colors = {
   black: '#000000',
 };
 
-const SIZES = {
+let SIZES = {
   xsmall: {min: 0, max: 599},
   small: {min: 600, max: 739},
   medium: {min: 740, max: 979},
   large: {min: 980, max: 1279},
   xlarge: {min: 1280, max: 1339},
   xxlarge: {min: 1340, max: Infinity},
+};
 
-  // Tweakpoints
-  xlargeSmaller: {min: 1100, max: 1339},
-  belowSidebarFixed: {min: 740, max: 1559}, // Used for "between()"
+// Tweakpoints
+SIZES = {
+  ...SIZES,
+  largerSidebar: {min: 1100, max: SIZES.xlarge.max},
   sidebarFixed: {min: 1560, max: Infinity},
   sidebarFixedNarrowFooter: {min: 1560, max: 2000},
 };
@@ -53,11 +55,15 @@ const SIZES = {
 type Size = $Keys<typeof SIZES>;
 
 const media = {
-  between(smallKey: Size, largeKey: Size) {
-    if (SIZES[largeKey].max === Infinity) {
+  between(smallKey: Size, largeKey: Size, excludeLarge: Boolean = false) {
+    if (SIZES[largeKey].max === Infinity && !excludeLarge) {
       return `@media (min-width: ${SIZES[smallKey].min}px)`;
     } else {
-      return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+      if (excludeLarge) {
+        return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].min - 1}px)`;
+      } else {
+        return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+      }
     }
   },
 
@@ -145,7 +151,7 @@ const sharedStyles = {
         marginLeft: 80,
       },
 
-      [media.between('small', 'xlargeSmaller')]: {
+      [media.between('small', 'largerSidebar')]: {
         flex: '0 0 200px',
         marginLeft: 80,
       },
@@ -154,7 +160,7 @@ const sharedStyles = {
         marginLeft: 40,
       },
 
-      [media.greaterThan('xlargeSmaller')]: {
+      [media.greaterThan('largerSidebar')]: {
         flex: '0 0 300px',
       },
 

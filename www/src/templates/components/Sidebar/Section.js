@@ -74,7 +74,7 @@ const activeLinkBefore = {
   left: 0,
   marginTop: -3,
 
-  [media.greaterThan('xlargeSmaller')]: {
+  [media.greaterThan('largerSidebar')]: {
     left: 15,
   },
 };

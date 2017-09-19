@@ -47,10 +47,10 @@ const Footer = () => (
             paddingRight: 240,
           },
 
-          [media.between('large', 'xlargeSmaller')]: {
+          [media.between('large', 'largerSidebar')]: {
             paddingRight: 280,
           },
-          [media.between('xlargeSmaller', 'belowSidebarFixed')]: {
+          [media.between('largerSidebar', 'sidebarFixed', true)]: {
             paddingRight: 380,
           },
         }}>

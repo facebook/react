@@ -39,7 +39,7 @@ class Sidebar extends Component {
           paddingLeft: 20,
           position: 'relative',
 
-          [media.greaterThan('xlargeSmaller')]: {
+          [media.greaterThan('largerSidebar')]: {
             paddingLeft: 40,
           },
         }}>
