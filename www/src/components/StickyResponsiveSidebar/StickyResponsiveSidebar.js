@@ -59,8 +59,6 @@ class StickyResponsiveSidebar extends Component {
 
   render() {
     const {defaultActiveSection, location} = this.props;
-    console.log('the defaultActiveSection is ;', defaultActiveSection);
-    console.log('this.props are ', this.props);
     const smallScreenSidebarStyles = {
       top: 0,
       left: 0,
