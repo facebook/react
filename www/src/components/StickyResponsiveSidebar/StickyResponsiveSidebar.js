@@ -16,7 +16,6 @@ import {Component, React} from 'react';
 import isItemActive from 'utils/isItemActive';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
-import {Motion, spring} from 'react-motion';
 import ChevronSvg from './ChevronSvg';
 
 function findActiveItemTitle(location, defaultActiveSection) {
@@ -59,6 +58,7 @@ class StickyResponsiveSidebar extends Component {
 
   render() {
     const {defaultActiveSection, location} = this.props;
+    const {open} = this.state;
     const smallScreenSidebarStyles = {
       top: 0,
       left: 0,
@@ -70,7 +70,7 @@ class StickyResponsiveSidebar extends Component {
       height: '100vh',
       overflowY: 'auto',
       WebkitOverflowScrolling: 'touch',
-      pointerEvents: this.state.open ? 'auto' : 'none',
+      pointerEvents: open ? 'auto' : 'none',
     };
 
     const smallScreenBottomBarStyles = {
@@ -81,167 +81,161 @@ class StickyResponsiveSidebar extends Component {
       ? findActiveItemTitle(location, defaultActiveSection)
       : null;
 
+    const iconOffset = open ? 7 : 0;
+    const labelOffset = open ? -40 : 0;
+    const menuOpacity = open ? 1 : 0;
+    const menuOffset = open ? 0 : 40;
+
     return (
-      <Motion
-        defaultStyle={{
-          iconOffset: 0,
-          labelOffset: 0,
-          menuOpacity: 0,
-          menuOffset: 40,
-        }}
-        style={{
-          iconOffset: spring(this.state.open ? 7 : 0),
-          labelOffset: spring(this.state.open ? -40 : 0),
-          menuOpacity: spring(this.state.open ? 1 : 0),
-          menuOffset: spring(this.state.open ? 0 : 40),
-        }}>
-        {value => (
-          <div>
+      <div>
+        <div
+          style={{
+            opacity: menuOpacity,
+            transition: 'opacity 0.5s ease',
+          }}
+          css={{
+            [media.lessThan('small')]: smallScreenSidebarStyles,
+
+            [media.greaterThan('medium')]: {
+              marginRight: -999,
+              paddingRight: 999,
+              backgroundColor: '#f7f7f7',
+            },
+
+            [media.between('medium', 'sidebarFixed', true)]: {
+              position: 'fixed',
+              zIndex: 2,
+              height: '100%',
+            },
+
+            [media.greaterThan('small')]: {
+              position: 'fixed',
+              zIndex: 2,
+              height: 'calc(100vh - 60px)',
+              overflowY: 'auto',
+              WebkitOverflowScrolling: 'touch',
+              marginRight: -999,
+              paddingRight: 999,
+              backgroundColor: '#f7f7f7',
+              opacity: '1 !important',
+            },
+
+            [media.size('small')]: {
+              height: 'calc(100vh - 40px)',
+            },
+
+            [media.between('medium', 'large')]: {
+              height: 'calc(100vh - 50px)',
+            },
+
+            [media.greaterThan('sidebarFixed')]: {
+              borderLeft: '1px solid #ececec',
+            },
+          }}>
+          <div
+            style={{
+              transform: `translate(0px, ${menuOffset}px)`,
+              transition: 'transform 0.5s ease',
+            }}
+            css={{
+              marginTop: 60,
+
+              [media.lessThan('small')]: {
+                marginTop: 40,
+              },
+
+              [media.between('medium', 'large')]: {
+                marginTop: 50,
+              },
+
+              [media.greaterThan('small')]: {
+                tranform: 'none !important',
+              },
+            }}>
+            <Sidebar {...this.props} />
+          </div>
+        </div>
+        <div
+          css={{
+            backgroundColor: colors.darker,
+            bottom: 0,
+            color: colors.brand,
+            display: 'none', // gets overriden at small screen sizes
+            left: 0,
+            cursor: 'pointer',
+            position: 'fixed',
+            right: 0,
+            width: '100%',
+            zIndex: 3,
+            [media.lessThan('small')]: smallScreenBottomBarStyles,
+          }}
+          onClick={this.toggleOpen}>
+          <Container>
             <div
-              style={{
-                opacity: value.menuOpacity,
-              }}
               css={{
-                [media.lessThan('small')]: smallScreenSidebarStyles,
-
-                [media.greaterThan('medium')]: {
-                  marginRight: -999,
-                  paddingRight: 999,
-                  backgroundColor: '#f7f7f7',
-                },
-
-                [media.between('medium', 'sidebarFixed', true)]: {
-                  position: 'fixed',
-                  zIndex: 2,
-                  height: '100%',
-                },
-
-                [media.greaterThan('small')]: {
-                  position: 'fixed',
-                  zIndex: 2,
-                  height: 'calc(100vh - 60px)',
-                  overflowY: 'auto',
-                  WebkitOverflowScrolling: 'touch',
-                  marginRight: -999,
-                  paddingRight: 999,
-                  backgroundColor: '#f7f7f7',
-                  opacity: '1 !important',
-                },
-
-                [media.size('small')]: {
-                  height: 'calc(100vh - 40px)',
-                },
-
+                display: 'flex',
+                flexDirection: 'row',
+                alignItems: 'center',
+                height: 60,
                 [media.between('medium', 'large')]: {
-                  height: 'calc(100vh - 50px)',
+                  height: 50,
                 },
-
-                [media.greaterThan('sidebarFixed')]: {
-                  borderLeft: '1px solid #ececec',
+                [media.lessThan('small')]: {
+                  height: 40,
+                  overflow: 'hidden',
+                  alignItems: 'flex-start',
                 },
               }}>
               <div
-                style={{
-                  transform: `translate(0px, ${value.menuOffset}px)`,
-                }}
                 css={{
-                  marginTop: 60,
-
-                  [media.lessThan('small')]: {
-                    marginTop: 40,
-                  },
-
-                  [media.between('medium', 'large')]: {
-                    marginTop: 50,
-                  },
-
-                  [media.greaterThan('small')]: {
-                    tranform: 'none !important',
-                  },
+                  width: 20,
+                  marginRight: 10,
+                  alignSelf: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
                 }}>
-                <Sidebar {...this.props} />
+                <ChevronSvg
+                  cssProps={{
+                    transform: `translate(0, ${iconOffset}px) rotate(180deg)`,
+                    transition: 'transform 0.5s ease',
+                  }}
+                />
+                <ChevronSvg
+                  cssProps={{
+                    transform: `translate(0, ${0 - iconOffset}px)`,
+                    transition: 'transform 0.5s ease',
+                  }}
+                />
               </div>
-            </div>
-            <div
-              css={{
-                backgroundColor: colors.darker,
-                bottom: 0,
-                color: colors.brand,
-                display: 'none', // gets overriden at small screen sizes
-                left: 0,
-                cursor: 'pointer',
-                position: 'fixed',
-                right: 0,
-                width: '100%',
-                zIndex: 3,
-                [media.lessThan('small')]: smallScreenBottomBarStyles,
-              }}
-              onClick={this.toggleOpen}>
-              <Container>
+              <div
+                css={{
+                  flexGrow: 1,
+                }}>
                 <div
-                  css={{
-                    display: 'flex',
-                    flexDirection: 'row',
-                    alignItems: 'center',
-                    height: 60,
-                    [media.between('medium', 'large')]: {
-                      height: 50,
-                    },
-                    [media.lessThan('small')]: {
-                      height: 40,
-                      overflow: 'hidden',
-                      alignItems: 'flex-start',
-                    },
+                  style={{
+                    transform: `translate(0, ${labelOffset}px)`,
+                    transition: 'transform 0.5s ease',
                   }}>
                   <div
                     css={{
-                      width: 20,
-                      marginRight: 10,
-                      alignSelf: 'center',
-                      display: 'flex',
-                      flexDirection: 'column',
+                      height: 40,
+                      lineHeight: '40px',
                     }}>
-                    <ChevronSvg
-                      cssProps={{
-                        transform: `translate(0, ${value.iconOffset}px) rotate(180deg)`,
-                      }}
-                    />
-                    <ChevronSvg
-                      cssProps={{
-                        transform: `translate(0, ${0 - value.iconOffset}px)`,
-                      }}
-                    />
+                    {title}
                   </div>
                   <div
                     css={{
-                      flexGrow: 1,
+                      height: 40,
+                      lineHeight: '40px',
                     }}>
-                    <div
-                      style={{
-                        transform: `translate(0, ${value.labelOffset}px)`,
-                      }}>
-                      <div
-                        css={{
-                          height: 40,
-                          lineHeight: '40px',
-                        }}>
-                        {title}
-                      </div>
-                      <div
-                        css={{
-                          height: 40,
-                          lineHeight: '40px',
-                        }}>
-                        Close
-                      </div>
-                    </div>
+                    Close
                   </div>
                 </div>
-              </Container>
+              </div>
             </div>
-          </div>
-        )}
-      </Motion>
+          </Container>
+        </div>
+      </div>
     );
   }
 }
