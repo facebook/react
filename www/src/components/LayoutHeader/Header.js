@@ -15,7 +15,6 @@ import Container from 'components/Container';
 import HeaderLink from './HeaderLink';
 import Link from 'gatsby-link';
 import React from 'react';
-import SearchSvg from './SearchSvg';
 import {colors, fonts, media} from 'theme';
 
 import logoSvg from 'icons/logo.svg';
@@ -52,7 +51,13 @@ const Header = ({location}) => (
         <Link
           css={{
             display: 'flex',
-            width: 'calc(100% / 6)',
+
+            [media.greaterThan('small')]: {
+              width: 'calc(100% / 6)',
+            },
+            [media.lessThan('small')]: {
+              flex: '0 0 auto',
+            },
           }}
           to="/">
           <img src={logoSvg} alt="" height="20" />
@@ -125,53 +130,63 @@ const Header = ({location}) => (
 
         <form
           css={{
-            width: 'calc(100% / 6)',
             display: 'flex',
+            flex: '0 0 auto',
             flexDirection: 'row',
             alignItems: 'center',
+            paddingLeft: '0.5rem',
+
             [media.lessThan('small')]: {
               justifyContent: 'flex-end',
             },
             [media.between('small', 'medium')]: {
               width: 'calc(100% / 3)',
             },
+            [media.between('medium', 'xlarge')]: {
+              width: 'calc(100% / 6)',
+            },
             [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
             },
           }}>
-          <label htmlFor="algolia-doc-search">
-            <SearchSvg />
-          </label>
-          <div
+          <input
             css={{
-              flexGrow: 1,
-              paddingLeft: 10,
-              [media.size('xsmall')]: {
-                display: 'none',
+              appearance: 'none',
+              background: 'transparent',
+              border: 0,
+              color: colors.white,
+              fontSize: 18,
+              fontFamily: 'inherit',
+              position: 'relative',
+              paddingLeft: '24px',
+              backgroundImage: 'url(/search.svg)',
+              backgroundSize: '16px 16px',
+              backgroundRepeat: 'no-repeat',
+              backgroundPositionY: 'center',
+              backgroundPositionX: 'left',
+
+              [media.lessThan('large')]: {
+                fontSize: 14,
               },
-            }}>
-            <input
-              css={{
-                appearance: 'none',
-                background: 'transparent',
-                border: 0,
-                color: colors.white,
+              [media.greaterThan('small')]: {
                 width: '100%',
-                fontSize: 18,
-                fontFamily: 'inherit',
-                position: 'relative',
+              },
+              [media.lessThan('small')]: {
+                width: '16px',
+                transition: 'width 0.2s ease, padding 0.2s ease',
+                paddingLeft: '16px',
+
                 ':focus': {
+                  paddingLeft: '24px',
+                  width: '8rem',
                   outline: 'none',
                 },
-                [media.lessThan('large')]: {
-                  fontSize: 14,
-                },
-              }}
-              id="algolia-doc-search"
-              type="search"
-              placeholder="Search docs"
-            />
-          </div>
+              },
+            }}
+            id="algolia-doc-search"
+            type="search"
+            placeholder="Search docs"
+          />
         </form>
 
         <div
