@@ -36,7 +36,13 @@ const Footer = () => (
         paddingTop: 10,
       },
     }}>
-    <Container isFooter={true}>
+    <Container  cssProps={{
+      [media.size('sidebarFixedNarrowFooter')]: {
+        maxWidth: 800,
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
+    }}>
       <div
         css={{
           display: 'flex',
