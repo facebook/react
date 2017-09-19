@@ -15,7 +15,7 @@ import isItemActive from 'utils/isItemActive';
 import Link from 'gatsby-link';
 import React from 'react';
 import slugify from 'utils/slugify';
-import {colors} from 'theme';
+import {colors, media} from 'theme';
 import MetaTitle from '../MetaTitle';
 
 // TODO Update isActive link as document scrolls past anchor tags
@@ -73,6 +73,10 @@ const activeLinkBefore = {
   position: 'absolute',
   left: 0,
   marginTop: -3,
+
+  [media.greaterThan('xlargeSmaller')]: {
+    left: 15,
+  },
 };
 
 const linkCss = {
