@@ -19,7 +19,7 @@ const prismColors = {
   comment: '#999999',
   keyword: '#c4f1fe',
   lineHighlight: '#393d45',
-  primative: '#aa759f',
+  primative: '#c997c0',
   string: '#99c27c',
   variable: '#99c27c',
 };

@@ -25,32 +25,62 @@ const NavigationFooter = ({next, prev}) => (
       color: colors.white,
       paddingTop: 50,
       paddingBottom: 50,
-      position: 'relative',
-      zIndex: 1,
     }}>
-    <Container>
-      <Flex type="ul" halign="space-between">
-        <Flex basis="50%">
+    <Container cssProps={{
+      [media.size('sidebarFixedNarrowFooter')]: {
+        maxWidth: 800,
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
+    }}>
+      <Flex
+        type="ul"
+        halign="space-between"
+        css={{
+          [media.between('small', 'medium')]: {
+            paddingRight: 240,
+          },
+
+          [media.between('large', 'largerSidebar')]: {
+            paddingRight: 280,
+          },
+
+          [media.between('largerSidebar', 'sidebarFixed', true)]: {
+            paddingRight: 380,
+          },
+        }}>
+        <Flex basis="50%" type="li">
           {prev &&
             <div>
               <SecondaryLabel>Previous article</SecondaryLabel>
-              <PrimaryLink to={prev}>
-                {linkToTitle(prev)}
-              </PrimaryLink>
+              <div
+                css={{
+                  paddingTop: 10,
+                }}>
+                <PrimaryLink to={prev}>
+                  {linkToTitle(prev)}
+                </PrimaryLink>
+              </div>
             </div>}
         </Flex>
         {next &&
           <Flex
             halign="flex-end"
             basis="50%"
+            type="li"
             css={{
               textAlign: 'right',
             }}>
             <div>
               <SecondaryLabel>Next article</SecondaryLabel>
-              <PrimaryLink to={next}>
-                {linkToTitle(next)}
-              </PrimaryLink>
+              <div
+                css={{
+                  paddingTop: 10,
+                }}>
+                <PrimaryLink to={next}>
+                  {linkToTitle(next)}
+                </PrimaryLink>
+              </div>
             </div>
           </Flex>}
       </Flex>
@@ -70,28 +100,19 @@ const linkToTitle = link => link.replace(/-/g, ' ').replace('.html', '');
 const PrimaryLink = ({children, to}) => (
   <Link
     css={{
-      display: 'block',
-      paddingTop: 10,
+      display: 'inline',
       textTransform: 'capitalize',
       borderColor: colors.subtle,
       transition: 'border-color 0.2s ease',
       fontSize: 30,
+      borderBottomWidth: 1,
+      borderBottomStyle: 'solid',
 
       [media.lessThan('large')]: {
         fontSize: 24,
       },
       [media.size('xsmall')]: {
         fontSize: 16,
-      },
-
-      ':after': {
-        display: 'block',
-        content: '',
-        borderTopWidth: 1,
-        borderTopStyle: 'solid',
-        borderColor: 'inherit',
-        marginBottom: -1,
-        position: 'relative',
       },
       ':hover': {
         borderColor: colors.white,

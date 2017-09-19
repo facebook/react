@@ -11,35 +11,15 @@
 
 'use strict';
 
+import isItemActive from 'utils/isItemActive';
 import Link from 'gatsby-link';
 import React from 'react';
 import slugify from 'utils/slugify';
-import {colors} from 'theme';
+import {colors, media} from 'theme';
 import MetaTitle from '../MetaTitle';
-
-const toAnchor = (href = '') => {
-  const index = href.indexOf('#');
-  return index >= 0 ? href.substr(index) : '';
-};
 
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
-
-// TODO Account for redirect_from URLs somehow; they currently won't match.
-
-const isItemActive = (location, item) => {
-  if (location == null) {
-    return false; // Production build of Gatsby is eval'ed in Node
-  } else if (location.hash) {
-    if (item.href) {
-      return location.hash === toAnchor(item.href);
-    }
-  } else if (item.id.includes('html')) {
-    return location.pathname.includes(item.id);
-  } else {
-    return location.pathname.includes(slugify(item.id));
-  }
-};
 
 const Section = ({isActive, location, onClick, section}) => (
   <div>
@@ -55,9 +35,16 @@ const Section = ({isActive, location, onClick, section}) => (
       {section.title}
     </MetaTitle>
     {isActive &&
-      <ul css={{marginBottom: 10}}>
+      <ul
+        css={{
+          marginBottom: 10,
+        }}>
         {section.items.map(item => (
-          <li key={item.id}>
+          <li
+            key={item.id}
+            css={{
+              marginTop: 5,
+            }}>
             {CreateLink(location, section, item)}
 
             {item.subitems &&
@@ -75,15 +62,20 @@ const Section = ({isActive, location, onClick, section}) => (
 );
 
 const activeLinkCss = {
-  color: colors.brand,
+  fontWeight: 'bold',
+};
 
-  ':before': {
-    content: '',
-    width: 4,
-    height: '100%',
-    borderLeft: `4px solid ${colors.brand}`,
-    marginLeft: -20,
-    paddingLeft: 16,
+const activeLinkBefore = {
+  width: 4,
+  height: 25,
+  borderLeft: `4px solid ${colors.brand}`,
+  paddingLeft: 16,
+  position: 'absolute',
+  left: 0,
+  marginTop: -3,
+
+  [media.greaterThan('largerSidebar')]: {
+    left: 15,
   },
 };
 
@@ -95,24 +87,23 @@ const linkCss = {
   marginTop: 5,
 
   '&:hover': {
-    color: colors.brand,
+    color: colors.subtle,
   },
 };
 
 const CreateLink = (location, section, item) => {
+  const isActive = isItemActive(location, item);
   if (item.id.includes('.html')) {
     return (
-      <Link
-        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
-        to={item.id}>
+      <Link css={[linkCss, isActive && activeLinkCss]} to={item.id}>
+        {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
     );
   } else if (item.forceInternal) {
     return (
-      <Link
-        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
-        to={item.href}>
+      <Link css={[linkCss, isActive && activeLinkCss]} to={item.href}>
+        {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
     );
@@ -140,8 +131,9 @@ const CreateLink = (location, section, item) => {
   } else {
     return (
       <Link
-        css={[linkCss, isItemActive(location, item) && activeLinkCss]}
+        css={[linkCss, isActive && activeLinkCss]}
         to={slugify(item.id, section.directory)}>
+        {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
     );

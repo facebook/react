@@ -55,7 +55,7 @@ const Header = ({location}) => (
             width: 'calc(100% / 6)',
           }}
           to="/">
-          <img src={logoSvg} alt="React" height="20" />
+          <img src={logoSvg} alt="" height="20" />
           <span
             css={{
               color: colors.brand,
@@ -66,7 +66,15 @@ const Header = ({location}) => (
                 fontSize: 16,
               },
               [media.lessThan('small')]: {
-                visibility: 'hidden',
+                // Visually hidden
+                position: 'absolute',
+                overflow: 'hidden',
+                clip: 'rect(0 0 0 0)',
+                height: 1,
+                width: 1,
+                margin: -1,
+                padding: 0,
+                border: 0,
               },
             }}>
             React
@@ -79,10 +87,12 @@ const Header = ({location}) => (
             flexDirection: 'row',
             alignItems: 'stretch',
             overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch',
             height: '100%',
-            width: '50%',
+            width: '60%',
             [media.size('xsmall')]: {
-              width: 'calc(100% * 2/3)',
+              flexGrow: '1',
+              width: 'auto',
             },
             [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
@@ -115,7 +125,7 @@ const Header = ({location}) => (
 
         <form
           css={{
-            width: 'calc(100% / 6)',
+            width: 'calc(100% / 8)',
             display: 'flex',
             flexDirection: 'row',
             alignItems: 'center',
@@ -129,7 +139,7 @@ const Header = ({location}) => (
               width: 'calc(100% / 3)',
             },
           }}>
-          <label htmlFor="search">
+          <label htmlFor="algolia-doc-search">
             <SearchSvg />
           </label>
           <div
@@ -148,7 +158,9 @@ const Header = ({location}) => (
                 color: colors.white,
                 width: '100%',
                 fontSize: 18,
+                fontFamily: 'inherit',
                 position: 'relative',
+                marginLeft: 5,
                 ':focus': {
                   outline: 'none',
                 },
@@ -186,6 +198,7 @@ const Header = ({location}) => (
           <a
             css={{
               padding: '5px 10px',
+              marginLeft: 10,
               whiteSpace: 'nowrap',
               ...fonts.small,
             }}

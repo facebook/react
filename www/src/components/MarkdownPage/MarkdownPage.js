@@ -15,10 +15,9 @@ import Container from 'components/Container';
 import Flex from 'components/Flex';
 import MarkdownHeader from 'components/MarkdownHeader';
 import NavigationFooter from 'templates/components/NavigationFooter';
-import {StickyContainer} from 'react-sticky';
 import PropTypes from 'prop-types';
 import React from 'react';
-import StickySidebar from 'components/StickySidebar';
+import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import findSectionForPath from 'utils/findSectionForPath';
 import toCommaSeparatedList from 'utils/toCommaSeparatedList';
@@ -56,15 +55,9 @@ const MarkdownPage = ({
       />
       <div css={{flex: '1 0 auto'}}>
         <Container>
-          <StickyContainer
-            css={{
-              display: 'flex',
-            }}>
+          <div css={sharedStyles.articleLayout.container}>
             <Flex type="article" direction="column" grow="1" halign="stretch">
-              <MarkdownHeader
-                path={markdownRemark.fields.path}
-                title={titlePrefix}
-              />
+              <MarkdownHeader title={titlePrefix} />
 
               {(date || hasAuthors) &&
                 <div css={{marginTop: 15}}>
@@ -82,24 +75,25 @@ const MarkdownPage = ({
                     </span>}
                 </div>}
 
-              <div
-                css={[
-                  sharedStyles.markdown,
-                  {
-                    marginTop: 65,
-                    marginBottom: 120,
-                  },
-                ]}
-                dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-              />
+              <div css={sharedStyles.articleLayout.content}>
+                <div
+                  css={[sharedStyles.markdown]}
+                  dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+                />
+
+                {markdownRemark.fields.path &&
+                  <div css={{marginTop: 80}}>
+                    <a
+                      css={sharedStyles.articleLayout.editLink}
+                      href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
+                      Edit this page
+                    </a>
+                  </div>}
+              </div>
             </Flex>
 
-            <div
-              css={{
-                flex: '0 0 200px',
-                marginLeft: 'calc(9% + 40px)',
-              }}>
-              <StickySidebar
+            <div css={sharedStyles.articleLayout.sidebar}>
+              <StickyResponsiveSidebar
                 defaultActiveSection={
                   location != null
                     ? findSectionForPath(location.pathname, sectionList)
@@ -109,15 +103,16 @@ const MarkdownPage = ({
                 sectionList={sectionList}
               />
             </div>
-          </StickyContainer>
+          </div>
         </Container>
       </div>
 
       {/* TODO Read prev/next from index map, not this way */}
-      <NavigationFooter
-        next={markdownRemark.frontmatter.next}
-        prev={markdownRemark.frontmatter.prev}
-      />
+      {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
+        <NavigationFooter
+          next={markdownRemark.frontmatter.next}
+          prev={markdownRemark.frontmatter.prev}
+        />}
     </Flex>
   );
 };

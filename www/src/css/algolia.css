@@ -305,11 +305,14 @@
 .algolia-autocomplete .algolia-docsearch-suggestion--category-header {
   position: relative;
   display: none;
-  font-size: 1em;
+  font-size: 14px;
+  letter-spacing: 0.08em;
+  font-weight: 700;
   background-color: #373940;
+  text-transform: uppercase;
   color: #fff;
   margin: 0;
-  padding: 0 8px;
+  padding: 5px 8px;
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion--wrapper {

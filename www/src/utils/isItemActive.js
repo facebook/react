@@ -1,8 +1,10 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
+ * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
 */
@@ -17,10 +19,11 @@ const toAnchor = (href = '') => {
 };
 
 // TODO Account for redirect_from URLs somehow; they currently won't match.
-// This comment should not be true anymore since we're using 300 redirects
 
 const isItemActive = (location, item) => {
-  if (location.hash) {
+  if (location == null) {
+    return false; // Production build of Gatsby is eval'ed in Node
+  } else if (location.hash) {
     if (item.href) {
       return location.hash === toAnchor(item.href);
     }
