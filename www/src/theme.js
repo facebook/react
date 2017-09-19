@@ -51,7 +51,7 @@ const SIZES = {
 type Size = $Keys<typeof SIZES>;
 
 const media = {
-  between(smallKey: Size, largeKey: Size, excludeLarge: Boolean = false) {
+  between(smallKey: Size, largeKey: Size, excludeLarge: boolean = false) {
     if (excludeLarge) {
       return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].min - 1}px)`;
     } else {
