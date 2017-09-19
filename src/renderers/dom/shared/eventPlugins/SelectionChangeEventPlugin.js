@@ -118,7 +118,7 @@ var SelectionChangeEventPlugin = {
       : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
-    if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
+    if (!doc || !isListeningToAllDependencies('onSelectionChange', doc)) {
       return null;
     }
 
