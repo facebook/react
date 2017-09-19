@@ -47,6 +47,7 @@ const MarkdownPage = ({
         flex: '1 0 auto',
         position: 'relative',
         zIndex: 0,
+        overflow: 'auto', // This is required for the mobile footer layout
       }}>
       <TitleAndMetaTags
         title={`${titlePrefix}${titlePostfix}`}
