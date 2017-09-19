@@ -19,10 +19,9 @@ import {colors, media} from 'theme';
 import {Motion, spring} from 'react-motion';
 import ChevronSvg from './ChevronSvg';
 
-// TODO: memoize to save doing O(n) on the active section items + subitems every
-// time.
 function findActiveItemTitle(location, defaultActiveSection) {
   const {items} = defaultActiveSection;
+
   for (let i = 0, len = items.length; i < len; i++) {
     const item = items[i];
     if (isItemActive(location, item)) {
@@ -37,6 +36,7 @@ function findActiveItemTitle(location, defaultActiveSection) {
       }
     }
   }
+
   // If nothing else is found, warn and default to section title
   console.warn('No active item title found in <StickyResponsiveSidebar>');
   return defaultActiveSection.title;
@@ -76,6 +76,10 @@ class StickyResponsiveSidebar extends Component {
     const smallScreenBottomBarStyles = {
       display: 'block',
     };
+
+    const title = defaultActiveSection != null
+      ? findActiveItemTitle(location, defaultActiveSection)
+      : null;
 
     return (
       <Motion
@@ -221,7 +225,7 @@ class StickyResponsiveSidebar extends Component {
                           height: 40,
                           lineHeight: '40px',
                         }}>
-                        {findActiveItemTitle(location, defaultActiveSection)}
+                        {title}
                       </div>
                       <div
                         css={{
