@@ -21,6 +21,7 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMEventListener = require('ReactDOMEventListener');
 var SelectEventPlugin = require('SelectEventPlugin');
+var SelectionChangEventPlugin = require('SelectionChangeEventPlugin');
 var SimpleEventPlugin = require('SimpleEventPlugin');
 
 ReactDOMEventListener.setHandleTopLevel(
@@ -42,5 +43,6 @@ EventPluginHub.injection.injectEventPluginsByName({
   EnterLeaveEventPlugin: EnterLeaveEventPlugin,
   ChangeEventPlugin: ChangeEventPlugin,
   SelectEventPlugin: SelectEventPlugin,
+  SelectionChangEventPlugin: SelectionChangEventPlugin,
   BeforeInputEventPlugin: BeforeInputEventPlugin,
 });

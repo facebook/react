@@ -27,6 +27,7 @@ var DOMEventPluginOrder = [
   'EnterLeaveEventPlugin',
   'ChangeEventPlugin',
   'SelectEventPlugin',
+  'SelectionChangeEventPlugin',
   'BeforeInputEventPlugin',
 ];
 
