@@ -25,79 +25,138 @@ const Footer = () => (
     css={{
       backgroundColor: colors.darker,
       color: colors.white,
-      paddingTop: 50,
+      paddingTop: 10,
       paddingBottom: 50,
 
-      [media.size('xxlarge')]: {
+      [media.size('sidebarFixed')]: {
         paddingTop: 80,
       },
+
+      [media.size('sidebarFixedNarrowFooter')]: {
+        paddingTop: 10,
+      },
     }}>
-    <Container>
+    <Container  cssProps={{
+      [media.size('sidebarFixedNarrowFooter')]: {
+        maxWidth: 800,
+        paddingLeft: 0,
+        paddingRight: 0,
+      },
+    }}>
       <div
         css={{
           display: 'flex',
           flexDirection: 'row',
           flexWrap: 'wrap',
+
+          [media.between('small', 'medium')]: {
+            paddingRight: 240,
+          },
+
+          [media.between('large', 'largerSidebar')]: {
+            paddingRight: 280,
+          },
+          [media.between('largerSidebar', 'sidebarFixed', true)]: {
+            paddingRight: 380,
+          },
         }}>
-        <FooterNav>
-          <MetaTitle>Docs</MetaTitle>
-          <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
-          <FooterLink to="/docs/thinking-in-react.html">
-            Thinking in React
-          </FooterLink>
-          <FooterLink to="/tutorial/tutorial.html">Tutorial</FooterLink>
-          <FooterLink to="/docs/jsx-in-depth.html">Advanced Guides</FooterLink>
-        </FooterNav>
-        <FooterNav>
-          <MetaTitle>Community</MetaTitle>
-          <FooterLink
-            to="http://stackoverflow.com/questions/tagged/reactjs"
-            target="_blank">
-            Stack Overflow
-          </FooterLink>
-          <FooterLink to="https://discuss.reactjs.org" target="_blank">
-            Discussion Forum
-          </FooterLink>
-          <FooterLink to="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank">
-            Reactiflux Chat
-          </FooterLink>
-          <FooterLink to="https://www.facebook.com/react" target="_blank">
-            Facebook
-          </FooterLink>
-          <FooterLink to="https://twitter.com/reactjs" target="_blank">
-            Twitter
-          </FooterLink>
-        </FooterNav>
-        <FooterNav>
-          <MetaTitle>Resources</MetaTitle>
-          <FooterLink to="/community/conferences.html">Conferences</FooterLink>
-          <FooterLink to="/community/videos.html">Videos</FooterLink>
-          <FooterLink
-            to="https://github.com/facebook/react/wiki/Examples"
-            target="_blank">
-            Examples
-          </FooterLink>
-          <FooterLink
-            to="https://github.com/facebook/react/wiki/Complementary-Tools"
-            target="_blank">
-            Complementary Tools
-          </FooterLink>
-        </FooterNav>
-        <FooterNav>
-          <MetaTitle>More</MetaTitle>
-          <FooterLink to="/blog.html">Blog</FooterLink>
-          <FooterLink to="https://github.com/facebook/react" target="_blank">
-            GitHub
-          </FooterLink>
-          <FooterLink
-            to="http://facebook.github.io/react-native/"
-            target="_blank">
-            React Native
-          </FooterLink>
-          <FooterLink to="/acknowledgements.html">Acknowledgements</FooterLink>
-        </FooterNav>
+        <div
+          css={{
+            flexWrap: 'wrap',
+            display: 'flex',
+
+            [media.lessThan('large')]: {
+              width: '100%',
+            },
+            [media.greaterThan('xlarge')]: {
+              width: 'calc(100% / 3 * 2)',
+              paddingLeft: 40,
+            },
+          }}>
+          <FooterNav>
+            <MetaTitle onDark={true}>Docs</MetaTitle>
+            <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
+            <FooterLink to="/docs/thinking-in-react.html">
+              Thinking in React
+            </FooterLink>
+            <FooterLink to="/tutorial/tutorial.html">Tutorial</FooterLink>
+            <FooterLink to="/docs/jsx-in-depth.html">
+              Advanced Guides
+            </FooterLink>
+          </FooterNav>
+          <FooterNav>
+            <MetaTitle onDark={true}>Community</MetaTitle>
+            <FooterLink
+              to="http://stackoverflow.com/questions/tagged/reactjs"
+              target="_blank"
+              rel="noopener">
+              Stack Overflow
+            </FooterLink>
+            <FooterLink
+              to="https://discuss.reactjs.org"
+              target="_blank"
+              rel="noopener">
+              Discussion Forum
+            </FooterLink>
+            <FooterLink
+              to="https://discord.gg/0ZcbPKXt5bZjGY5n"
+              target="_blank"
+              rel="noopener">
+              Reactiflux Chat
+            </FooterLink>
+            <FooterLink
+              to="https://www.facebook.com/react"
+              target="_blank"
+              rel="noopener">
+              Facebook
+            </FooterLink>
+            <FooterLink
+              to="https://twitter.com/reactjs"
+              target="_blank"
+              rel="noopener">
+              Twitter
+            </FooterLink>
+          </FooterNav>
+          <FooterNav>
+            <MetaTitle onDark={true}>Resources</MetaTitle>
+            <FooterLink to="/community/conferences.html">
+              Conferences
+            </FooterLink>
+            <FooterLink to="/community/videos.html">Videos</FooterLink>
+            <FooterLink
+              to="https://github.com/facebook/react/wiki/Examples"
+              target="_blank"
+              rel="noopener">
+              Examples
+            </FooterLink>
+            <FooterLink
+              to="https://github.com/facebook/react/wiki/Complementary-Tools"
+              target="_blank"
+              rel="noopener">
+              Complementary Tools
+            </FooterLink>
+          </FooterNav>
+          <FooterNav>
+            <MetaTitle onDark={true}>More</MetaTitle>
+            <FooterLink to="/blog.html">Blog</FooterLink>
+            <FooterLink to="https://github.com/facebook/react" target="_blank">
+              GitHub
+            </FooterLink>
+            <FooterLink
+              to="http://facebook.github.io/react-native/"
+              target="_blank">
+              React Native
+            </FooterLink>
+            <FooterLink to="/acknowledgements.html">
+              Acknowledgements
+            </FooterLink>
+          </FooterNav>
+        </div>
         <section
           css={{
+            paddingTop: 40,
+            display: 'block !important', // Override 'Installation' <style> specifics
+
             [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
               order: -1,
@@ -120,7 +179,7 @@ const Footer = () => (
           </a>
           <p
             css={{
-              color: colors.subtle,
+              color: colors.subtleOnDark,
               paddingTop: 15,
             }}>
             Copyright © 2017 Facebook Inc.

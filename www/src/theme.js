@@ -25,7 +25,8 @@ const colors = {
   brand: '#61dafb', // electric blue
   brandLight: '#bbeffd',
   text: '#1a1a1a', // very dark grey / black substitute
-  subtle: '#777', // light grey for text
+  subtle: '#6d6d6d', // light grey for text
+  subtleOnDark: '#999',
   divider: '#ececec', // very light grey
   note: '#ffe564', // yellow
   error: '#ff6464', // yellow
@@ -33,18 +34,7 @@ const colors = {
   black: '#000000',
 };
 
-const fonts = {
-  header: {
-    fontSize: 60,
-    lineHeight: '65px',
-    fontWeight: 700,
-  },
-  small: {
-    fontSize: 14,
-  },
-};
-
-const SIZES = {
+let SIZES = {
   xsmall: {min: 0, max: 599},
   small: {min: 600, max: 739},
   medium: {min: 740, max: 979},
@@ -53,14 +43,26 @@ const SIZES = {
   xxlarge: {min: 1340, max: Infinity},
 };
 
+// Tweakpoints
+SIZES = {
+  ...SIZES,
+  largerSidebar: {min: 1100, max: SIZES.xlarge.max},
+  sidebarFixed: {min: 1560, max: Infinity},
+  sidebarFixedNarrowFooter: {min: 1560, max: 2000},
+};
+
 type Size = $Keys<typeof SIZES>;
 
 const media = {
-  between(smallKey: Size, largeKey: Size) {
-    if (SIZES[largeKey].max === Infinity) {
-      return `@media (min-width: ${SIZES[smallKey].min}px)`;
+  between(smallKey: Size, largeKey: Size, excludeLarge: Boolean = false) {
+    if (excludeLarge) {
+      return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].min - 1}px)`;
     } else {
-      return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+      if (SIZES[largeKey].max === Infinity) {
+        return `@media (min-width: ${SIZES[smallKey].min}px)`;
+      } else {
+        return `@media (min-width: ${SIZES[smallKey].min}px) and (max-width: ${SIZES[largeKey].max}px)`;
+      }
     }
   },
 
@@ -69,7 +71,7 @@ const media = {
   },
 
   lessThan(key: Size) {
-    return `@media (max-width: ${SIZES[key].max}px)`;
+    return `@media (max-width: ${SIZES[key].min - 1}px)`;
   },
 
   size(key: Size) {
@@ -82,6 +84,22 @@ const media = {
     } else {
       return media.between(key, key);
     }
+  },
+};
+
+const fonts = {
+  header: {
+    fontSize: 60,
+    lineHeight: '65px',
+    fontWeight: 700,
+
+    [media.lessThan('medium')]: {
+      fontSize: 40,
+      lineHeight: '45px',
+    },
+  },
+  small: {
+    fontSize: 14,
   },
 };
 
@@ -100,17 +118,101 @@ const linkStyle = {
 };
 const sharedStyles = {
   link: linkStyle,
+
+  articleLayout: {
+    container: {
+      display: 'flex',
+      minHeight: 'calc(100vh - 60px)',
+      [media.greaterThan('sidebarFixed')]: {
+        maxWidth: 800,
+        marginLeft: 'auto',
+        marginRight: 'auto',
+      },
+    },
+    content: {
+      marginTop: 40,
+      marginBottom: 120,
+
+      [media.between('medium', 'large')]: {
+        marginTop: 50,
+      },
+
+      [media.greaterThan('xlarge')]: {
+        marginTop: 85,
+      },
+    },
+    sidebar: {
+      display: 'flex',
+      flexDirection: 'column',
+
+      [media.between('small', 'sidebarFixed')]: {
+        borderLeft: '1px solid #ececec',
+        marginLeft: 80,
+      },
+
+      [media.between('small', 'largerSidebar')]: {
+        flex: '0 0 200px',
+        marginLeft: 80,
+      },
+
+      [media.between('small', 'medium')]: {
+        marginLeft: 40,
+      },
+
+      [media.greaterThan('largerSidebar')]: {
+        flex: '0 0 300px',
+      },
+
+      [media.greaterThan('sidebarFixed')]: {
+        position: 'fixed',
+        right: 0,
+        width: 300,
+        zIndex: 2,
+      },
+    },
+
+    editLink: {
+      color: colors.subtle,
+      borderColor: colors.divider,
+      transition: 'all 0.2s ease',
+      transitionPropery: 'color, border-color',
+      whiteSpace: 'nowrap',
+      borderBottomWidth: 1,
+      borderBottomStyle: 'solid',
+
+      ':hover': {
+        color: colors.text,
+        borderColor: colors.text,
+      },
+    },
+  },
+
   markdown: {
     lineHeight: '25px',
 
     '& .gatsby-highlight': {
       marginTop: 25,
+      marginLeft: -30,
+      marginRight: -30,
+      paddingLeft: 15,
+      paddingRight: 15,
     },
 
     '& a:not(.anchor):not(.gatsby-resp-image-link)': linkStyle,
 
+    '& > p:first-child': {
+      fontSize: 18,
+      lineHeight: '30px',
+      color: colors.subtle,
+
+      [media.greaterThan('xlarge')]: {
+        fontSize: 24,
+        lineHeight: '40px',
+      },
+    },
+
     '& p': {
-      marginTop: 30,
+      marginTop: 35,
       fontSize: 18,
       lineHeight: '35px',
       maxWidth: '42em',
@@ -145,6 +247,11 @@ const sharedStyles = {
       marginBottom: -1,
       border: 'none',
       borderBottom: `1px solid ${colors.divider}`,
+      marginTop: 40,
+
+      ':first-child': {
+        marginTop: 0,
+      },
     },
 
     '& h1': {
@@ -180,6 +287,11 @@ const sharedStyles = {
       },
     },
 
+    '& hr + h2': {
+      borderTop: 0,
+      marginTop: 0,
+    },
+
     '& h3': {
       paddingTop: 45,
 
@@ -208,17 +320,24 @@ const sharedStyles = {
     '& ol, & ul': {
       marginTop: 20,
       fontSize: 16,
-      color: colors.subtle,
+      color: colors.text,
+
+      [media.lessThan('small')]: {
+        paddingLeft: 20,
+      },
 
       '& p, & p:first-of-type': {
         fontSize: 16,
         marginTop: 0,
         lineHeight: 1.2,
-        color: colors.subtle,
       },
 
       '& li': {
-        marginTop: 10,
+        marginTop: 20,
+      },
+
+      '& li.button-newapp': {
+        marginTop: 0,
       },
     },
 
@@ -237,11 +356,17 @@ const sharedStyles = {
     '& blockquote': {
       backgroundColor: hex2rgba('#ffe564', 0.3),
       borderLeftColor: colors.note,
-      borderLeftWidth: 5,
+      borderLeftWidth: 9,
       borderLeftStyle: 'solid',
-      padding: '20px 15px',
+      padding: '20px 45px 20px 26px',
       marginBottom: 30,
       marginTop: 20,
+      marginLeft: -30,
+      marginRight: -30,
+
+      [media.lessThan('small')]: {
+        marginLeft: -20,
+      },
 
       '& p': {
         marginTop: 15,
@@ -255,6 +380,10 @@ const sharedStyles = {
           marginTop: 0,
         },
       },
+    },
+
+    '& .gatsby-highlight + blockquote': {
+      marginTop: 40,
     },
   },
 };

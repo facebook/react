@@ -14,6 +14,7 @@
 import React, {Component} from 'react';
 import Flex from 'components/Flex';
 import Section from './Section';
+import {media} from 'theme';
 
 class Sidebar extends Component {
   constructor(props, context) {
@@ -35,7 +36,12 @@ class Sidebar extends Component {
         halign="stretch"
         css={{
           width: '100%',
-          paddingLeft: '1rem',
+          paddingLeft: 20,
+          position: 'relative',
+
+          [media.greaterThan('largerSidebar')]: {
+            paddingLeft: 40,
+          },
         }}>
         {sectionList.map((section, index) => (
           <Section

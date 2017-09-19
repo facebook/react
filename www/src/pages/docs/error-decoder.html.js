@@ -18,7 +18,7 @@ import hex2rgba from 'hex2rgba';
 import MarkdownHeader from 'components/MarkdownHeader';
 import React from 'react';
 import {StickyContainer} from 'react-sticky';
-import StickySidebar from 'components/StickySidebar';
+import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import {colors, sharedStyles} from 'theme';
 import findSectionForPath from 'utils/findSectionForPath';
 
@@ -81,7 +81,7 @@ const ErrorPage = ({data, location}) => (
             flex: '0 0 200px',
             marginLeft: 'calc(9% + 40px)',
           }}>
-          <StickySidebar
+          <StickyResponsiveSidebar
             defaultActiveSection={
               location != null
                 ? findSectionForPath(location.pathname, sectionList)

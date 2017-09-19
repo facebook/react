@@ -98,6 +98,7 @@ class Home extends Component {
                   [media.greaterThan('xlarge')]: {
                     paddingTop: 20,
                     fontSize: 30,
+                    fontWeight: 300,
                   },
                 }}>
                 A JavaScript library for building user interfaces
@@ -164,11 +165,14 @@ Home.propTypes = {
   data: PropTypes.object.isRequired,
 };
 
-const CtaItem = ({children}) => (
+const CtaItem = ({children, primary = false}) => (
   <div
     css={{
       width: '50%',
-      paddingLeft: 20,
+
+      [media.between('small', 'large')]: {
+        paddingLeft: 20,
+      },
 
       [media.greaterThan('xlarge')]: {
         paddingLeft: 40,
@@ -176,6 +180,13 @@ const CtaItem = ({children}) => (
 
       '&:first-child': {
         textAlign: 'right',
+        paddingRight: 15,
+      },
+
+      '&:nth-child(2)': {
+        [media.greaterThan('small')]: {
+          paddingLeft: 15,
+        },
       },
     }}>
     {children}
@@ -202,8 +213,25 @@ export default Home;
 // TODO This nasty CSS is required because 'docs/index.md' defines hard-coded class names.
 const markdownStyles = {
   '& .home-section': {
-    marginTop: 60,
-    marginBottom: 65,
+    marginTop: 20,
+    marginBottom: 15,
+
+    [media.greaterThan('medium')]: {
+      marginTop: 60,
+      marginBottom: 65,
+    },
+  },
+
+  '& .home-section:first-child': {
+    [media.lessThan('medium')]: {
+      marginTop: 0,
+      marginBottom: 0,
+      overflowX: 'auto',
+      paddingTop: 30,
+      WebkitOverflowScrolling: 'touch',
+      position: 'relative',
+      maskImage: 'linear-gradient(to right, transparent, white 10px, white 90%, transparent)',
+    },
   },
 
   '& .homeDivider': {
@@ -218,7 +246,8 @@ const markdownStyles = {
     flexDirection: 'row',
 
     [media.lessThan('medium')]: {
-      flexDirection: 'column',
+      display: 'block',
+      whiteSpace: 'nowrap',
     },
   },
 
@@ -230,12 +259,20 @@ const markdownStyles = {
 
     '&:first-of-type': {
       marginLeft: 0,
+
+      [media.lessThan('medium')]: {
+        marginLeft: 10,
+      },
     },
 
     [media.lessThan('medium')]: {
-      display: 'block',
-      marginTop: 40,
+      display: 'inline-block',
+      verticalAlign: 'top',
       marginLeft: 0,
+      whiteSpace: 'normal',
+      width: '75%',
+      marginRight: 20,
+      paddingBottom: 40,
 
       '&:first-of-type': {
         marginTop: 0,
@@ -244,6 +281,7 @@ const markdownStyles = {
 
     '& h3': {
       color: colors.subtle,
+      paddingTop: 0,
 
       [media.lessThan('large')]: {
         fontSize: 18,
@@ -266,7 +304,15 @@ const markdownStyles = {
   },
 
   '& .example': {
-    marginTop: 80,
+    marginTop: 40,
+
+    '&:first-child': {
+      marginTop: 0,
+    },
+
+    [media.greaterThan('xlarge')]: {
+      marginTop: 80,
+    },
   },
 };
 
