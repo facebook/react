@@ -416,7 +416,7 @@ const BackboneNameInput = connectToBackboneModel(NameInput);
 
 function Example(props) {
   function handleChange(e) {
-    model.set('firstName', e.target.value);
+    props.model.set('firstName', e.target.value);
   }
 
   return (
