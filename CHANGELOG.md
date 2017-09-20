@@ -7,7 +7,7 @@
 
 ### JS Environment Requirements
 
- * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), consider including a global polyfill in your bundled application, such as [core-js](https://github.com/zloirock/core-js) or [babel-polyfill](https://babeljs.io/docs/usage/polyfill/).
+ * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as on [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), consider including a global polyfill in your bundled application, such as [core-js](https://github.com/zloirock/core-js) or [babel-polyfill](https://babeljs.io/docs/usage/polyfill/).
 
 ### Major Changes
 
@@ -39,11 +39,6 @@
 
 - **There is no react-with-addons.js build anymore.** All compatible addons are published separately on npm, and have single-file browser versions if you need them.
 - **The deprecations introduced in 15.x have been removed from the core package.** React.createClass is now available as create-react-class, React.PropTypes as prop-types, React.DOM as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
-
-### New helpful warnings
-
-  * Improve error message when ReactDOM loads without React (@aweary in https://github.com/facebook/react/pull/10449)
-  * Warn when nesting 15 subtree inside 16 (@sophiebits in https://github.com/facebook/react/pull/10434)
 
 </details>
 
