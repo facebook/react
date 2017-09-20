@@ -79,6 +79,7 @@ function getHeaderSanityCheck(bundleType, hasteName) {
 }
 
 function getBanner(bundleType, hasteName, filename) {
+  const isReconciler = /react-reconciler/.test(filename);
   switch (bundleType) {
     // UMDs are not wrapped in conditions.
     case UMD_DEV:
@@ -89,10 +90,15 @@ function getBanner(bundleType, hasteName, filename) {
       let banner = Header.getHeader(filename, reactVersion);
       // Wrap the contents of the if-DEV check with an IIFE.
       // Block-level function definitions can cause problems for strict mode.
-      banner += `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
+      banner += isReconciler
+        ? `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\nmodule.exports = function(config) {\n`
+        : `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
       return banner;
     case NODE_PROD:
-      return Header.getHeader(filename, reactVersion);
+      return (
+        Header.getHeader(filename, reactVersion) +
+        (isReconciler ? `\n\n'use strict';\n\n\nmodule.exports = function(config) {\n` : '')
+      );
     // All FB and RN bundles need Haste headers.
     // DEV bundle is guarded to help weak dead code elimination.
     case FB_DEV:
@@ -105,14 +111,20 @@ function getBanner(bundleType, hasteName, filename) {
       // Block-level function definitions can cause problems for strict mode.
       return (
         Header.getProvidesHeader(hasteFinalName) +
-        (isDev ? `\n\n'use strict';\n\n\nif (__DEV__) {\n(function() {\n` : '')
+        isDev ? `\n\n'use strict';\n\n\nif (__DEV__) {\n(function() {\n` : ''
       );
     default:
       throw new Error('Unknown type.');
   }
 }
 
-function getFooter(bundleType) {
+function getFooter(bundleType, filename) {
+  if (/react-reconciler/.test(filename)) {
+    return (
+      '\nreturn ReactFiberReconciler(config);\n};\n' +
+      (bundleType === NODE_DEV ? '}\n' : '')
+    );
+  }
   // Only need a footer if getBanner() has an opening brace.
   switch (bundleType) {
     // Non-UMD DEV bundles need conditions to help weak dead code elimination.
@@ -125,7 +137,7 @@ function getFooter(bundleType) {
   }
 }
 
-function updateBabelConfig(babelOpts, bundleType) {
+function updateBabelConfig(babelOpts, bundleType, filename) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
