@@ -82,13 +82,13 @@ const ErrorPage = ({data, location}) => (
             marginLeft: 'calc(9% + 40px)',
           }}>
           <StickyResponsiveSidebar
-            defaultActiveSection={
-              location != null
-                ? findSectionForPath(location.pathname, sectionList)
-                : null
-            }
+            defaultActiveSection={findSectionForPath(
+              location.pathname,
+              sectionList,
+            )}
             location={location}
             sectionList={sectionList}
+            title={data.markdownRemark.frontmatter.title}
           />
         </div>
       </StickyContainer>

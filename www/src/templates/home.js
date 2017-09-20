@@ -163,6 +163,7 @@ class Home extends Component {
 
 Home.propTypes = {
   data: PropTypes.object.isRequired,
+  location: PropTypes.object.isRequired,
 };
 
 const CtaItem = ({children, primary = false}) => (

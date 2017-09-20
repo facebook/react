@@ -182,13 +182,13 @@ class InstallationPage extends Component {
 
               <div css={sharedStyles.articleLayout.sidebar}>
                 <StickyResponsiveSidebar
-                  defaultActiveSection={
-                    location != null
-                      ? findSectionForPath(location.pathname, sectionList)
-                      : null
-                  }
+                  defaultActiveSection={findSectionForPath(
+                    location.pathname,
+                    sectionList,
+                  )}
                   location={location}
                   sectionList={sectionList}
+                  title="Installation"
                 />
               </div>
             </div>
@@ -209,6 +209,7 @@ class InstallationPage extends Component {
 InstallationPage.propTypes = {
   data: PropTypes.shape({markdownRemark: PropTypes.object.isRequired})
     .isRequired,
+  location: PropTypes.object.isRequired,
 };
 
 // eslint-disable-next-line no-undef
