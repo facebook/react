@@ -1,6 +1,6 @@
 {
   "name": "react-reconciler",
-  "description": "React is a JavaScript library for building user interfaces.",
+  "description": "React package for creating custom reconcilers.",
   "version": "16.0.0-rc.2",
   "keywords": [
     "react"

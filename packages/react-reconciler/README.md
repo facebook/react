@@ -1,16 +1,33 @@
-# react
+# react-reconciler
 
-An npm package to get you immediate access to [React](https://facebook.github.io/react/),
-without also requiring the JSX transformer. This is especially useful for cases where you
-want to [`browserify`](https://github.com/substack/node-browserify) your module using
-`React`.
-
-**Note:** by default, React will be in development mode. The development version includes extra warnings about common mistakes, whereas the production version includes extra performance optimizations and strips all error messages.
-
-To use React in production mode, set the environment variable `NODE_ENV` to `production`. A minifier that performs dead-code elimination such as [UglifyJS](https://github.com/mishoo/UglifyJS2) is recommended to completely remove the extra code present in development mode.
+An npm package to let you create custom reconcilers.
 
 ## Example Usage
 
 ```js
-var React = require('react');
+var createReconciler = require('react-reconciler');
+
+var ReconcilerConfig = { /* ... */ };
+var Reconciler = createReconciler(ReconcilerConfig);
+var Renderer = {
+  render(
+    element: React$Element<any>,
+    container: DOMContainer,
+    callback: ?Function,
+  ) {
+    let root = container._reactRootContainer;
+    if (!root) {
+      const newRoot = Renderer.createContainer(container);
+      root = container._reactRootContainer = newRoot;
+      // Initial mount should not be batched.
+      Renderer.unbatchedUpdates(() => {
+        Renderer.updateContainer(element, newRoot, null, callback);
+      });
+    } else {
+      Renderer.updateContainer(element, root, null, callback);
+    }
+  }
+};
+
+module.exports = Renderer;
 ```
