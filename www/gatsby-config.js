@@ -21,6 +21,7 @@ module.exports = {
   plugins: [
     'gatsby-transformer-authors-yaml',
     'gatsby-plugin-glamor',
+    'gatsby-plugin-react-next',
     {
       resolve: `gatsby-source-filesystem`,
       options: {
@@ -41,9 +42,9 @@ module.exports = {
       options: {
         plugins: [
           {
-            resolve: `gatsby-remark-responsive-image`,
+            resolve: `gatsby-remark-images`,
             options: {
-              maxWidth: 590,
+              maxWidth: 800,
             },
           },
           {
