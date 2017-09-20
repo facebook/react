@@ -6,9 +6,14 @@
  * LICENSE file in the root directory of this source tree. An additional grant
  * of patent rights can be found in the PATENTS file in the same directory.
  *
- * @providesModule ReactVersion
+ * @providesModule ReactNativeBridgeEventPlugin
  */
 
 'use strict';
 
-module.exports = '16.0.0-rc.3';
+const {
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+} = require('ReactNative');
+
+module.exports =
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactNativeBridgeEventPlugin;

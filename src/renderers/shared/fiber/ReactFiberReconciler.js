@@ -14,7 +14,6 @@
 
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ReactNodeList} from 'ReactTypes';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
@@ -134,6 +133,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     type: T,
     props: P,
     rootContainerInstance: C,
+    hostContext: CX,
     internalInstanceHandle: OpaqueHandle,
   ) => null | PL,
   hydrateTextInstance?: (
@@ -163,7 +163,6 @@ export type Reconciler<C, I, TI> = {
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
   ): void,
-  performWithPriority(priorityLevel: PriorityLevel, fn: Function): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -196,7 +195,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {
     scheduleUpdate,
     getPriorityContext,
-    performWithPriority,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -283,8 +281,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
       scheduleTopLevelUpdate(current, element, callback);
     },
-
-    performWithPriority,
 
     batchedUpdates,
 

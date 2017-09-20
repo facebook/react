@@ -72,7 +72,7 @@ if (__DEV__) {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
-  hydrationContext: HydrationContext<C>,
+  hydrationContext: HydrationContext<C, CX>,
   scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
   getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
 ) {
@@ -305,7 +305,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return workInProgress.child;
   }
 
-  function updateHostRoot(current, workInProgress, priorityLevel) {
+  function pushHostRootContext(workInProgress) {
     const root = (workInProgress.stateNode: FiberRoot);
     if (root.pendingContext) {
       pushTopLevelContextObject(
@@ -317,9 +317,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // Should always be set
       pushTopLevelContextObject(workInProgress, root.context, false);
     }
-
     pushHostContainer(workInProgress, root.containerInfo);
+  }
 
+  function updateHostRoot(current, workInProgress, priorityLevel) {
+    pushHostRootContext(workInProgress);
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
@@ -684,6 +686,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
     switch (workInProgress.tag) {
+      case HostRoot:
+        pushHostRootContext(workInProgress);
+        break;
       case ClassComponent:
         pushContextProvider(workInProgress);
         break;
@@ -777,8 +782,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         pushContextProvider(workInProgress);
         break;
       case HostRoot:
-        const root: FiberRoot = workInProgress.stateNode;
-        pushHostContainer(workInProgress, root.containerInfo);
+        pushHostRootContext(workInProgress);
         break;
       default:
         invariant(

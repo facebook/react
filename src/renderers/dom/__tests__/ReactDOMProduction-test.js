@@ -246,10 +246,7 @@ describe('ReactDOMProduction', () => {
       var expectSVG = {ref: el => svgEls.push(el)};
       var expectHTML = {ref: el => htmlEls.push(el)};
       var usePortal = function(tree) {
-        return ReactDOM.unstable_createPortal(
-          tree,
-          document.createElement('div'),
-        );
+        return ReactDOM.createPortal(tree, document.createElement('div'));
       };
       var assertNamespacesMatch = function(tree) {
         var container = document.createElement('div');

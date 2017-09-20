@@ -234,7 +234,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28�
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-qa"></a>Core Team Q&amp;A <a class="hash-link" href="#talk-qa">#</a></h3>
     <p>
-      <strong>Tom Occhino</strong>, <strong>Ben Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian Markbåge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
+      <strong>Tom Occhino</strong>, <strong>Sophie Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian Markbåge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
   </div>
   <div class="skinny-col">
     <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/EPpkboSKvPI" frameborder="0" allowfullscreen></iframe>

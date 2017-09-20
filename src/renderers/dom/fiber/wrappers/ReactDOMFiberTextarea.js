@@ -55,8 +55,9 @@ var ReactDOMTextarea = {
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.  We could add a check in setTextContent
     // to only set the value if/when the value differs from the node value (which would
-    // completely solve this IE9 bug), but Sebastian+Ben seemed to like this solution.
-    // The value can be a boolean or object so that's why it's forced to be a string.
+    // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
+    // solution. The value can be a boolean or object so that's why it's forced
+    // to be a string.
     var hostProps = Object.assign({}, props, {
       value: undefined,
       defaultValue: undefined,

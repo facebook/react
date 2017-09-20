@@ -2125,13 +2125,41 @@ describe('ReactDOMComponent', () => {
     });
 
     it('allows cased data attributes', function() {
+      spyOn(console, 'error');
+
       var el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
       expect(el.getAttribute('data-foobar')).toBe('true');
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toMatch(
+        'React does not recognize the `data-fooBar` prop on a DOM element. ' +
+          'If you intentionally want it to appear in the DOM as a custom ' +
+          'attribute, spell it as lowercase `data-foobar` instead. ' +
+          'If you accidentally passed it from a parent component, remove ' +
+          'it from the DOM element.\n' +
+          '    in div (at **)',
+      );
     });
 
     it('allows cased custom attributes', function() {
+      spyOn(console, 'error');
+
       var el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
       expect(el.getAttribute('foobar')).toBe('true');
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toMatch(
+        'React does not recognize the `fooBar` prop on a DOM element. ' +
+          'If you intentionally want it to appear in the DOM as a custom ' +
+          'attribute, spell it as lowercase `foobar` instead. ' +
+          'If you accidentally passed it from a parent component, remove ' +
+          'it from the DOM element.\n' +
+          '    in div (at **)',
+      );
     });
 
     it('warns on NaN attributes', function() {
@@ -2195,10 +2223,8 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<svg arabicForm={obj} />, container);
       expect(container.firstChild.getAttribute('arabic-form')).toBe('hello');
 
-      ReactDOM.render(<div customAttribute={obj} />, container);
-      expect(container.firstChild.getAttribute('customAttribute')).toBe(
-        'hello',
-      );
+      ReactDOM.render(<div unknown={obj} />, container);
+      expect(container.firstChild.getAttribute('unknown')).toBe('hello');
     });
 
     it('passes objects on known SVG attributes if they do not define toString', () => {
@@ -2215,8 +2241,8 @@ describe('ReactDOMComponent', () => {
       var obj = {};
       var container = document.createElement('div');
 
-      ReactDOM.render(<div customAttribute={obj} />, container);
-      expect(container.firstChild.getAttribute('customAttribute')).toBe(
+      ReactDOM.render(<div unknown={obj} />, container);
+      expect(container.firstChild.getAttribute('unknown')).toBe(
         '[object Object]',
       );
     });

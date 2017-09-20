@@ -34,9 +34,22 @@ export type MeasureLayoutOnSuccessCallback = (
   height: number,
 ) => void;
 
+type BubblingEventType = {
+  phasedRegistrationNames: {
+    captured: string,
+    bubbled: string,
+  },
+};
+
+type DirectEventType = {
+  registrationName: string,
+};
+
 export type ReactNativeBaseComponentViewConfig = {
   validAttributes: Object,
   uiViewClassName: string,
+  bubblingEventTypes?: {[topLevelType: string]: BubblingEventType},
+  directEventTypes?: {[topLevelType: string]: DirectEventType},
   propTypes?: Object,
 };
 
@@ -59,12 +72,17 @@ export type NativeMethodsMixinType = {
   setNativeProps(nativeProps: Object): void,
 };
 
+type ReactNativeBridgeEventPlugin = {
+  processEventTypes(viewConfig: ReactNativeBaseComponentViewConfig): void,
+};
+
 type SecretInternalsType = {
   NativeMethodsMixin: NativeMethodsMixinType,
   createReactNativeComponentClass(
     name: string,
     callback: ViewConfigGetter,
   ): any,
+  ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
   ReactNativeComponentTree: any,
   ReactNativePropRegistry: any,
   // TODO (bvaughn) Decide which additional types to expose here?

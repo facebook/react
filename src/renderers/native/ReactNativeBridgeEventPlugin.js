@@ -11,28 +11,17 @@
  */
 'use strict';
 
-var EventPropagators = require('EventPropagators');
-var SyntheticEvent = require('SyntheticEvent');
-var ReactNativeEventTypes = require('ReactNativeEventTypes');
-var invariant = require('fbjs/lib/invariant');
+const EventPropagators = require('EventPropagators');
+const SyntheticEvent = require('SyntheticEvent');
+const invariant = require('fbjs/lib/invariant');
 
-var customBubblingEventTypes = ReactNativeEventTypes.customBubblingEventTypes;
-var customDirectEventTypes = ReactNativeEventTypes.customDirectEventTypes;
+const customBubblingEventTypes = {};
+const customDirectEventTypes = {};
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
+import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
 
-  for (var directTypeName in customDirectEventTypes) {
-    warning(
-      !customBubblingEventTypes[directTypeName],
-      'Event cannot be both direct and bubbling: %s',
-      directTypeName,
-    );
-  }
-}
-
-var ReactNativeBridgeEventPlugin = {
-  eventTypes: {...customBubblingEventTypes, ...customDirectEventTypes},
+const ReactNativeBridgeEventPlugin = {
+  eventTypes: {},
 
   /**
    * @see {EventPluginHub.extractEvents}
@@ -43,14 +32,14 @@ var ReactNativeBridgeEventPlugin = {
     nativeEvent: Event,
     nativeEventTarget: Object,
   ): ?Object {
-    var bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
-    var directDispatchConfig = customDirectEventTypes[topLevelType];
+    const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
+    const directDispatchConfig = customDirectEventTypes[topLevelType];
     invariant(
       bubbleDispatchConfig || directDispatchConfig,
       'Unsupported top level event type "%s" dispatched',
       topLevelType,
     );
-    var event = SyntheticEvent.getPooled(
+    const event = SyntheticEvent.getPooled(
       bubbleDispatchConfig || directDispatchConfig,
       targetInst,
       nativeEvent,
@@ -64,6 +53,46 @@ var ReactNativeBridgeEventPlugin = {
       return null;
     }
     return event;
+  },
+
+  processEventTypes: function(
+    viewConfig: ReactNativeBaseComponentViewConfig,
+  ): void {
+    const {bubblingEventTypes, directEventTypes} = viewConfig;
+
+    if (__DEV__) {
+      if (bubblingEventTypes != null && directEventTypes != null) {
+        for (const topLevelType in directEventTypes) {
+          invariant(
+            bubblingEventTypes[topLevelType] == null,
+            'Event cannot be both direct and bubbling: %s',
+            topLevelType,
+          );
+        }
+      }
+    }
+
+    if (bubblingEventTypes != null) {
+      for (const topLevelType in bubblingEventTypes) {
+        if (customBubblingEventTypes[topLevelType] == null) {
+          ReactNativeBridgeEventPlugin.eventTypes[
+            topLevelType
+          ] = customBubblingEventTypes[topLevelType] =
+            bubblingEventTypes[topLevelType];
+        }
+      }
+    }
+
+    if (directEventTypes != null) {
+      for (const topLevelType in directEventTypes) {
+        if (customDirectEventTypes[topLevelType] == null) {
+          ReactNativeBridgeEventPlugin.eventTypes[
+            topLevelType
+          ] = customDirectEventTypes[topLevelType] =
+            directEventTypes[topLevelType];
+        }
+      }
+    }
   },
 };
 

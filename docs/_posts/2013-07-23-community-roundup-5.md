@@ -7,13 +7,13 @@ We launched the [React Facebook Page](https://www.facebook.com/react) along with
 
 ## Cross-browser onChange
 
-[Ben Alpert](http://benalpert.com/) from [Khan Academy](https://www.khanacademy.org/) worked on a cross-browser implementation of `onChange` event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.
+[Sophie Alpert](http://sophiebits.com/) from [Khan Academy](https://www.khanacademy.org/) worked on a cross-browser implementation of `onChange` event that landed in v0.4. She wrote a blog post explaining the various browser quirks she had to deal with.
 
 > First off, what is the input event? If you have an `<input>` element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn't catch input that doesn't involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.
 >
 > Both keydown and keypress do fire repeatedly when a key is held down, but both fire immediately before the value changes, so to read the new value you have to defer the handler to the next event loop using `setTimeout(fn, 0)` or similar, which slows down your app. Of course, like keyup, neither keydown nor keypress fires for non-keyboard input events, and all three can fire in cases where the value doesn't change at all (such as when pressing the arrow keys).
 >
-> [Read the full post...](http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html)
+> [Read the full post...](http://sophiebits.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html)
 
 
 ## React Samples

@@ -909,25 +909,25 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('unknown data- attributes with casing', async render => {
-        const e = await render(<div data-fooBar="true" />);
-        expect(e.getAttribute('data-fooBar')).toBe('true');
+        const e = await render(<div data-fooBar="true" />, 1);
+        expect(e.getAttribute('data-foobar')).toBe('true');
       });
 
       itRenders('unknown data- attributes with boolean true', async render => {
-        const e = await render(<div data-fooBar={true} />);
-        expect(e.getAttribute('data-fooBar')).toBe('true');
+        const e = await render(<div data-foobar={true} />);
+        expect(e.getAttribute('data-foobar')).toBe('true');
       });
 
       itRenders('unknown data- attributes with boolean false', async render => {
-        const e = await render(<div data-fooBar={false} />);
-        expect(e.getAttribute('data-fooBar')).toBe('false');
+        const e = await render(<div data-foobar={false} />);
+        expect(e.getAttribute('data-foobar')).toBe('false');
       });
 
       itRenders(
         'no unknown data- attributes with casing and null value',
         async render => {
-          const e = await render(<div data-fooBar={null} />);
-          expect(e.hasAttribute('data-fooBar')).toBe(false);
+          const e = await render(<div data-fooBar={null} />, 1);
+          expect(e.hasAttribute('data-foobar')).toBe(false);
         },
       );
 
@@ -972,8 +972,8 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('cased custom attributes', async render => {
-        const e = await render(<div fooBar="test" />);
-        expect(e.getAttribute('fooBar')).toBe('test');
+        const e = await render(<div fooBar="test" />, 1);
+        expect(e.getAttribute('foobar')).toBe('test');
       });
     });
 
@@ -1325,18 +1325,29 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
       });
 
-      itRenders('svg child element', async render => {
-        let e = await render(
-          <svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>,
-        );
-        e = e.firstChild;
+      itRenders('svg child element with an attribute', async render => {
+        let e = await render(<svg viewBox="0 0 0 0" />);
         expect(e.childNodes.length).toBe(0);
-        expect(e.tagName).toBe('image');
+        expect(e.tagName).toBe('svg');
         expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
-        expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
-          'http://i.imgur.com/w7GCRPb.png',
-        );
+        expect(e.getAttribute('viewBox')).toBe('0 0 0 0');
       });
+
+      itRenders(
+        'svg child element with a namespace attribute',
+        async render => {
+          let e = await render(
+            <svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>,
+          );
+          e = e.firstChild;
+          expect(e.childNodes.length).toBe(0);
+          expect(e.tagName).toBe('image');
+          expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+          expect(e.getAttributeNS('http://www.w3.org/1999/xlink', 'href')).toBe(
+            'http://i.imgur.com/w7GCRPb.png',
+          );
+        },
+      );
 
       itRenders('svg child element with a badly cased alias', async render => {
         let e = await render(

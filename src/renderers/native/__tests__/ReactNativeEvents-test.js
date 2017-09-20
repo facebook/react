@@ -15,9 +15,54 @@ var PropTypes;
 var RCTEventEmitter;
 var React;
 var ReactNative;
+var ReactNativeBridgeEventPlugin;
 var ResponderEventPlugin;
 var UIManager;
 var createReactNativeComponentClass;
+
+// Parallels requireNativeComponent() in that it lazily constructs a view config,
+// And registers view manager event types with ReactNativeBridgeEventPlugin.
+const fakeRequireNativeComponent = (uiViewClassName, validAttributes) => {
+  const getViewConfig = () => {
+    const viewConfig = {
+      uiViewClassName,
+      validAttributes,
+      bubblingEventTypes: {
+        topTouchCancel: {
+          phasedRegistrationNames: {
+            bubbled: 'onTouchCancel',
+            captured: 'onTouchCancelCapture',
+          },
+        },
+        topTouchEnd: {
+          phasedRegistrationNames: {
+            bubbled: 'onTouchEnd',
+            captured: 'onTouchEndCapture',
+          },
+        },
+        topTouchMove: {
+          phasedRegistrationNames: {
+            bubbled: 'onTouchMove',
+            captured: 'onTouchMoveCapture',
+          },
+        },
+        topTouchStart: {
+          phasedRegistrationNames: {
+            bubbled: 'onTouchStart',
+            captured: 'onTouchStartCapture',
+          },
+        },
+      },
+      directEventTypes: {},
+    };
+
+    ReactNativeBridgeEventPlugin.processEventTypes(viewConfig);
+
+    return viewConfig;
+  };
+
+  return createReactNativeComponentClass(uiViewClassName, getViewConfig);
+};
 
 beforeEach(() => {
   jest.resetModules();
@@ -26,18 +71,37 @@ beforeEach(() => {
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('react-native');
+  ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
   ResponderEventPlugin = require('ResponderEventPlugin');
   UIManager = require('UIManager');
   createReactNativeComponentClass = require('createReactNativeComponentClass');
 });
 
+it('fails if unknown/unsupported event types are dispatched', () => {
+  expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
+  var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
+  var View = fakeRequireNativeComponent('View', {});
+
+  ReactNative.render(<View onUnspecifiedEvent={() => {}} />, 1);
+
+  expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
+  expect(UIManager.createView.mock.calls.length).toBe(1);
+
+  const target = UIManager.createView.mock.calls[0][0];
+
+  expect(() => {
+    EventEmitter.receiveTouches(
+      'unspecifiedEvent',
+      [{target, identifier: 17}],
+      [0],
+    );
+  }).toThrow('Unsupported top level event type "unspecifiedEvent" dispatched');
+});
+
 it('handles events', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = createReactNativeComponentClass('View', () => ({
-    validAttributes: {foo: true},
-    uiViewClassName: 'View',
-  }));
+  var View = fakeRequireNativeComponent('View', {foo: true});
 
   var log = [];
   ReactNative.render(
@@ -93,11 +157,7 @@ it('handles events', () => {
 it('handles events on text nodes', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-
-  var Text = createReactNativeComponentClass('Text', () => ({
-    validAttributes: {foo: true},
-    uiViewClassName: 'Text',
-  }));
+  var Text = fakeRequireNativeComponent('Text', {});
 
   class ContextHack extends React.Component {
     static childContextTypes = {isInAParentText: PropTypes.bool};
@@ -179,10 +239,7 @@ it('handles events on text nodes', () => {
 
 it('handles when a responder is unmounted while a touch sequence is in progress', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = createReactNativeComponentClass('View', () => ({
-    validAttributes: {id: true},
-    uiViewClassName: 'View',
-  }));
+  var View = fakeRequireNativeComponent('View', {id: true});
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
@@ -273,10 +330,8 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 
 it('handles events without target', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = createReactNativeComponentClass('View', () => ({
-    validAttributes: {id: true},
-    uiViewClassName: 'View',
-  }));
+
+  var View = fakeRequireNativeComponent('View', {id: true});
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(

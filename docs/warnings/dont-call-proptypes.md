@@ -18,7 +18,7 @@ The normal usage of PropTypes is still supported:
 
 ```javascript
 Button.propTypes = {
-  highlighted: React.PropTypes.bool
+  highlighted: PropTypes.bool
 };
 ```
 
@@ -29,9 +29,9 @@ Nothing changes here.
 Using PropTypes in any other way than annotating React components with them is no longer supported:
 
 ```javascript
-var apiShape = React.PropTypes.shape({
-  body: React.PropTypes.object,
-  statusCode: React.PropTypes.number.isRequired
+var apiShape = PropTypes.shape({
+  body: PropTypes.object,
+  statusCode: PropTypes.number.isRequired
 }).isRequired;
 
 // Not supported!
@@ -49,13 +49,13 @@ Inspect the stack trace produced by the warning. You will find the component def
 ```js
 Button.propTypes = {
   highlighted: ThirdPartyPropTypes.deprecated(
-    React.PropTypes.bool,
+    PropTypes.bool,
     'Use `active` prop instead'
   )
 }
 ```
 
-In this case, `ThirdPartyPropTypes.deprecated` is a wrapper calling `React.PropTypes.bool`. This pattern by itself is fine, but triggers a false positive because React thinks you are calling PropTypes directly. The next section explains how to fix this problem for a library implementing something like `ThirdPartyPropTypes`. If it's not a library you wrote, you can file an issue against it.
+In this case, `ThirdPartyPropTypes.deprecated` is a wrapper calling `PropTypes.bool`. This pattern by itself is fine, but triggers a false positive because React thinks you are calling PropTypes directly. The next section explains how to fix this problem for a library implementing something like `ThirdPartyPropTypes`. If it's not a library you wrote, you can file an issue against it.
 
 ### Fixing the false positive in third party PropTypes
 
