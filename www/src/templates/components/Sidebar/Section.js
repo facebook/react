@@ -23,18 +23,26 @@ import ChevronSvg from '../ChevronSvg';
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
 
-const Section = ({isActive, location, onClick, section}) => (
-  <div>
-    <MetaTitle
-      onClick={onClick}
-      cssProps={{
-        marginTop: 10,
+function Section({
+  closeParentMenu,
+  isActive,
+  location,
+  onClick,
+  section,
+}) {
+  return (
+    <div>
+      <MetaTitle
+        onClick={onClick}
+        cssProps={{
+          marginTop: 10,
 
-        [media.greaterThan('small')]: {
-          color: isActive ? colors.text : colors.subtle,
+          [media.greaterThan('small')]: {
+            color: isActive ? colors.text : colors.subtle,
 
-          ':hover': {
-            color: colors.text,
+            ':hover': {
+              color: colors.text,
+            },
           },
         },
       }}>
@@ -71,7 +79,7 @@ const Section = ({isActive, location, onClick, section}) => (
             <ul css={{marginLeft: 20}}>
               {item.subitems.map(subitem => (
                 <li key={subitem.id}>
-                  {CreateLink(location, section, subitem)}
+                  {CreateLink(location, section, subitem, closeParentMenu)}
                 </li>
               ))}
             </ul>}
@@ -111,7 +119,7 @@ const linkCss = {
   },
 };
 
-const CreateLink = (location, section, item) => {
+const CreateLink = (location, section, item, closeParentMenu) => {
   const isActive = isItemActive(location, item);
   if (item.id.includes('.html')) {
     return (
@@ -121,8 +129,10 @@ const CreateLink = (location, section, item) => {
       </Link>
     );
   } else if (item.forceInternal) {
+    // We need to give the option for the parent menu to close if this link is
+    // in a pop-out menu.
     return (
-      <Link css={[linkCss, isActive && activeLinkCss]} to={item.href}>
+      <Link onClick={closeParentMenu} css={[linkCss, isActive && activeLinkCss]} to={item.href}>
         {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
