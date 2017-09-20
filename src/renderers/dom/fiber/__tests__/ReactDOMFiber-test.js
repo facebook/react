@@ -16,7 +16,6 @@ var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('react-dom/test-utils');
 var PropTypes = require('prop-types');
-var JSDom = require('jsdom');
 
 describe('ReactDOMFiber', () => {
   function normalizeCodeLocInfo(str) {
@@ -1121,24 +1120,34 @@ describe('ReactDOMFiber', () => {
 
     it('should render a text component with a text DOM node on the same document as the container', () => {
       // Arrange
-      var newDocument = JSDom.jsdom(
-        '<!DOCTYPE html><html><body></body></html>',
+      // 1. Create a new document through the use of iframe
+      // 2. Set up the spy to make asserts when a text component 
+      //    is rendered inside the iframe container
+      var textContent = 'Hello world';
+      var iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      var iframeDocument = iframe.contentDocument;
+      iframeDocument.write(
+        '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
       );
-      var newContainer = newDocument.createElement('div');
-      var textContent = ' world ';
-      newDocument.body.appendChild(newContainer);
+      iframeDocument.close();
+      var iframeContainer = iframeDocument.body.firstChild;
+
+      var actualDocument;
+      var textNode;
+      iframeContainer.appendChildBackup = iframeContainer.appendChild;
+
+      var appendChildSpy = spyOn(iframeContainer, 'appendChild').and.callFake(node => {
+        actualDocument = node.ownerDocument;
+        textNode = node;
+      });
 
       // Act
-      ReactDOM.render(
-        <div><span id="pre">hello</span>{textContent}<span>again</span></div>,
-        newContainer,
-      );
+      ReactDOM.render(textContent, iframeContainer);
 
       // Assert
-      var textNode = newDocument.getElementById('pre').nextSibling;
       expect(textNode.textContent).toBe(textContent);
-      expect(textNode.ownerDocument).toBe(newDocument);
-      expect(textNode.ownerDocument).not.toBe(document);
+      expect(actualDocument).not.toBe(document);
     });
   }
 });
