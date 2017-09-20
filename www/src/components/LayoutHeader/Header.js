@@ -24,8 +24,19 @@ import logoSvg from 'icons/logo.svg';
 // This is how the previous Jekyll site determined version though.
 const {version} = require('../../../../package.json');
 
+import {css} from 'glamor';
+
+css.global('#header', {
+  transition: 'transform 0.2s ease',
+});
+
+css.global('.is-menu-open #header', {
+  transform: 'translateY(-100%)',
+});
+
 const Header = ({location}) => (
   <header
+    id="header"
     css={{
       backgroundColor: colors.darker,
       color: colors.white,

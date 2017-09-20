@@ -129,6 +129,15 @@ const sharedStyles = {
       marginTop: 40,
       marginBottom: 120,
 
+      // Prevent a horizontal scroll bar in iOS Safari
+      [media.lessThan('small')]: {
+        overflowX: 'hidden',
+        marginLeft: -20,
+        marginRight: -20,
+        paddingLeft: 20,
+        paddingRight: 20,
+      },
+
       [media.greaterThan('medium')]: {
         marginTop: 50,
       },

@@ -47,7 +47,6 @@ const MarkdownPage = ({
         flex: '1 0 auto',
         position: 'relative',
         zIndex: 0,
-        overflow: 'auto', // This is required for the mobile footer layout
       }}>
       <TitleAndMetaTags
         title={`${titlePrefix}${titlePostfix}`}
@@ -57,7 +56,12 @@ const MarkdownPage = ({
       <div css={{flex: '1 0 auto'}}>
         <Container>
           <div css={sharedStyles.articleLayout.container}>
-            <Flex type="article" direction="column" grow="1" halign="stretch">
+            <Flex
+              type="article"
+              direction="column"
+              grow="1"
+              halign="stretch"
+              className="disable-scrolling">
               <MarkdownHeader title={titlePrefix} />
 
               {(date || hasAuthors) &&

@@ -25,11 +25,13 @@ const Flex = ({
   shrink = 1,
   type = 'div',
   valign = 'flex-start',
+  className,
   ...rest
 }) =>
   createElement(
     type,
     {
+      className,
       css: {
         display: 'flex',
         flexDirection: direction,
