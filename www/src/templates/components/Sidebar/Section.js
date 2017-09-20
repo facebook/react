@@ -26,38 +26,45 @@ const Section = ({isActive, location, onClick, section}) => (
     <MetaTitle
       onClick={onClick}
       cssProps={{
-        color: isActive ? colors.text : colors.subtle,
         marginTop: 10,
-        ':hover': {
-          color: colors.text,
+
+        [media.greaterThan('small')]: {
+          color: isActive ? colors.text : colors.subtle,
+
+          ':hover': {
+            color: colors.text,
+          },
         },
       }}>
       {section.title}
     </MetaTitle>
-    {isActive &&
-      <ul
-        css={{
-          marginBottom: 10,
-        }}>
-        {section.items.map(item => (
-          <li
-            key={item.id}
-            css={{
-              marginTop: 5,
-            }}>
-            {CreateLink(location, section, item)}
+    <ul
+      css={{
+        marginBottom: 10,
 
-            {item.subitems &&
-              <ul css={{marginLeft: 20}}>
-                {item.subitems.map(subitem => (
-                  <li key={subitem.id}>
-                    {CreateLink(location, section, subitem)}
-                  </li>
-                ))}
-              </ul>}
-          </li>
-        ))}
-      </ul>}
+        [media.greaterThan('small')]: {
+          display: isActive ? 'block' : 'none',
+        },
+      }}>
+      {section.items.map(item => (
+        <li
+          key={item.id}
+          css={{
+            marginTop: 5,
+          }}>
+          {CreateLink(location, section, item)}
+
+          {item.subitems &&
+            <ul css={{marginLeft: 20}}>
+              {item.subitems.map(subitem => (
+                <li key={subitem.id}>
+                  {CreateLink(location, section, subitem)}
+                </li>
+              ))}
+            </ul>}
+        </li>
+      ))}
+    </ul>
   </div>
 );
 
