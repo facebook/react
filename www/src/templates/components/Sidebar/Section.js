@@ -23,13 +23,7 @@ import ChevronSvg from '../ChevronSvg';
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
 
-function Section({
-  closeParentMenu,
-  isActive,
-  location,
-  onClick,
-  section,
-}) {
+function Section({closeParentMenu, isActive, location, onClick, section}) {
   return (
     <div>
       <MetaTitle
@@ -132,7 +126,10 @@ const CreateLink = (location, section, item, closeParentMenu) => {
     // We need to give the option for the parent menu to close if this link is
     // in a pop-out menu.
     return (
-      <Link onClick={closeParentMenu} css={[linkCss, isActive && activeLinkCss]} to={item.href}>
+      <Link
+        onClick={closeParentMenu}
+        css={[linkCss, isActive && activeLinkCss]}
+        to={item.href}>
         {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>
