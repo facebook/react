@@ -401,6 +401,32 @@ const bundles = [
       'src/shared/**/*.js',
     ],
   },
+
+  /******* React Reconciler *******/
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+      },
+      moduleName: 'ReactReconciler',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/shared/fiber/ReactFiberReconciler',
+    externals: ['react', 'prop-types/checkPropTypes'],
+    isRenderer: false,
+    label: 'react-reconciler',
+    manglePropertiesOnProd: false,
+    name: 'react-reconciler',
+    paths: [
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)
