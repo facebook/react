@@ -42,6 +42,10 @@ class Sidebar extends Component {
           [media.greaterThan('largerSidebar')]: {
             paddingLeft: 40,
           },
+
+          [media.lessThan('small')]: {
+            paddingBottom: 50,
+          },
         }}>
         {sectionList.map((section, index) => (
           <Section
