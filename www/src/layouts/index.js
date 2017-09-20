@@ -38,6 +38,12 @@ class Template extends Component {
   render() {
     const {children, location} = this.props;
 
+    // HACK
+    // https://github.com/gatsbyjs/gatsby/issues/2180
+    const childrenParams = typeof window === 'undefined'
+      ? {location}
+      : undefined;
+
     return (
       <div
         css={{
@@ -61,7 +67,7 @@ class Template extends Component {
               marginTop: 40,
             },
           }}>
-          {children()}
+          {children(childrenParams)}
         </Flex>
         <Footer />
       </div>

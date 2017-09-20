@@ -95,13 +95,13 @@ const MarkdownPage = ({
 
             <div css={sharedStyles.articleLayout.sidebar}>
               <StickyResponsiveSidebar
-                defaultActiveSection={
-                  location != null
-                    ? findSectionForPath(location.pathname, sectionList)
-                    : null
-                }
+                defaultActiveSection={findSectionForPath(
+                  location.pathname,
+                  sectionList,
+                )}
                 location={location}
                 sectionList={sectionList}
+                title={titlePrefix}
               />
             </div>
           </div>

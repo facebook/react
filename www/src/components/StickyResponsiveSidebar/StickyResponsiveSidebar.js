@@ -13,40 +13,15 @@
 
 import Container from 'components/Container';
 import {Component, React} from 'react';
-import isItemActive from 'utils/isItemActive';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
 import ChevronSvg from './ChevronSvg';
-
-function findActiveItemTitle(location, defaultActiveSection) {
-  const {items} = defaultActiveSection;
-
-  for (let i = 0, len = items.length; i < len; i++) {
-    const item = items[i];
-    if (isItemActive(location, item)) {
-      return item.title;
-    } else if (item.subitems && item.subitems.length) {
-      const {subitems} = item;
-      for (let j = 0, len2 = subitems.length; j < len2; j++) {
-        const subitem = subitems[j];
-        if (isItemActive(location, subitem)) {
-          return subitem.title;
-        }
-      }
-    }
-  }
-
-  // If nothing else is found, warn and default to section title
-  console.warn('No active item title found in <StickyResponsiveSidebar>');
-  return defaultActiveSection.title;
-}
 
 class StickyResponsiveSidebar extends Component {
   constructor(props, context) {
     super(props, context);
 
     this.state = {
-      activeSection: props.defaultActiveSection,
       open: false,
     };
     this.toggleOpen = this._toggleOpen.bind(this);
@@ -57,7 +32,7 @@ class StickyResponsiveSidebar extends Component {
   }
 
   render() {
-    const {defaultActiveSection, location} = this.props;
+    const {title} = this.props;
     const {open} = this.state;
     const smallScreenSidebarStyles = {
       top: 0,
@@ -76,10 +51,6 @@ class StickyResponsiveSidebar extends Component {
     const smallScreenBottomBarStyles = {
       display: 'block',
     };
-
-    const title = defaultActiveSection != null
-      ? findActiveItemTitle(location, defaultActiveSection)
-      : null;
 
     const iconOffset = open ? 7 : 0;
     const labelOffset = open ? -40 : 0;
