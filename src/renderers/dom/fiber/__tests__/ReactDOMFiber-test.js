@@ -1121,7 +1121,7 @@ describe('ReactDOMFiber', () => {
     it('should render a text component with a text DOM node on the same document as the container', () => {
       // Arrange
       // 1. Create a new document through the use of iframe
-      // 2. Set up the spy to make asserts when a text component 
+      // 2. Set up the spy to make asserts when a text component
       //    is rendered inside the iframe container
       var textContent = 'Hello world';
       var iframe = document.createElement('iframe');
@@ -1137,7 +1137,7 @@ describe('ReactDOMFiber', () => {
       var textNode;
       iframeContainer.appendChildBackup = iframeContainer.appendChild;
 
-      var appendChildSpy = spyOn(iframeContainer, 'appendChild').and.callFake(node => {
+      spyOn(iframeContainer, 'appendChild').and.callFake(node => {
         actualDocument = node.ownerDocument;
         textNode = node;
       });
