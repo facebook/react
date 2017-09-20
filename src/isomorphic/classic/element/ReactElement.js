@@ -29,26 +29,10 @@ var RESERVED_PROPS = {
 var specialPropKeyWarningShown, specialPropRefWarningShown;
 
 function hasValidRef(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'ref')) {
-      var getter = Object.getOwnPropertyDescriptor(config, 'ref').get;
-      if (getter && getter.isReactWarning) {
-        return false;
-      }
-    }
-  }
   return config.ref !== undefined;
 }
 
 function hasValidKey(config) {
-  if (__DEV__) {
-    if (hasOwnProperty.call(config, 'key')) {
-      var getter = Object.getOwnPropertyDescriptor(config, 'key').get;
-      if (getter && getter.isReactWarning) {
-        return false;
-      }
-    }
-  }
   return config.key !== undefined;
 }
 
@@ -129,49 +113,6 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     _owner: owner,
   };
 
-  if (__DEV__) {
-    // The validation flag is currently mutative. We put it on
-    // an external backing store so that we can freeze the whole object.
-    // This can be replaced with a WeakMap once they are implemented in
-    // commonly used development environments.
-    element._store = {};
-
-    // To make comparing ReactElements easier for testing purposes, we make
-    // the validation flag non-enumerable (where possible, which should
-    // include every environment we run tests in), so the test framework
-    // ignores it.
-    if (canDefineProperty) {
-      Object.defineProperty(element._store, 'validated', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: false,
-      });
-      // self and source are DEV only properties.
-      Object.defineProperty(element, '_self', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: self,
-      });
-      // Two elements created in two different places should be considered
-      // equal for testing purposes and therefore we hide it from enumeration.
-      Object.defineProperty(element, '_source', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: source,
-      });
-    } else {
-      element._store.validated = false;
-      element._self = self;
-      element._source = source;
-    }
-    if (Object.freeze) {
-      Object.freeze(element.props);
-      Object.freeze(element);
-    }
-  }
 
   return element;
 };
@@ -180,7 +121,11 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
  * Create and return a new ReactElement of the given type.
  * See https://facebook.github.io/react/docs/top-level-api.html#react.createelement
  */
+
 ReactElement.createElement = function(type, config, children) {
+  // type对应的就是jsx中的标签，可能是div这样的html元素，也可能是一个reactElement
+  // config 对应的是标签上的属性
+  // 对应孩子节点，可能会有多个
   var propName;
 
   // Reserved names are extracted
@@ -192,16 +137,20 @@ ReactElement.createElement = function(type, config, children) {
   var source = null;
 
   if (config != null) {
+    //如果config存在ref
     if (hasValidRef(config)) {
+      //设置ref值等于config中的ref
       ref = config.ref;
     }
+    //同理设置key
     if (hasValidKey(config)) {
+      //转为字符串
       key = '' + config.key;
     }
-
+    //初始化self和source
     self = config.__self === undefined ? null : config.__self;
     source = config.__source === undefined ? null : config.__source;
-    // Remaining properties are added to a new props object
+    //将config中的除了key ref __self __source放入props中
     for (propName in config) {
       if (
         hasOwnProperty.call(config, propName) &&
@@ -214,6 +163,7 @@ ReactElement.createElement = function(type, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
+  //设置props的children属性，children可能是一个对象/数组
   var childrenLength = arguments.length - 2;
   if (childrenLength === 1) {
     props.children = children;
@@ -222,38 +172,17 @@ ReactElement.createElement = function(type, config, children) {
     for (var i = 0; i < childrenLength; i++) {
       childArray[i] = arguments[i + 2];
     }
-    if (__DEV__) {
-      if (Object.freeze) {
-        Object.freeze(childArray);
-      }
-    }
     props.children = childArray;
   }
 
   // Resolve default props
+  // 设置defaultPorps，
+  //type可能是普通标签或者ReactElement,当是ReactElement时，会用其中的defaultProps覆盖对应config的props
   if (type && type.defaultProps) {
     var defaultProps = type.defaultProps;
     for (propName in defaultProps) {
       if (props[propName] === undefined) {
         props[propName] = defaultProps[propName];
-      }
-    }
-  }
-  if (__DEV__) {
-    if (key || ref) {
-      if (
-        typeof props.$$typeof === 'undefined' ||
-        props.$$typeof !== REACT_ELEMENT_TYPE
-      ) {
-        var displayName = typeof type === 'function'
-          ? type.displayName || type.name || 'Unknown'
-          : type;
-        if (key) {
-          defineKeyPropWarningGetter(props, displayName);
-        }
-        if (ref) {
-          defineRefPropWarningGetter(props, displayName);
-        }
       }
     }
   }
@@ -263,7 +192,7 @@ ReactElement.createElement = function(type, config, children) {
     ref,
     self,
     source,
-    ReactCurrentOwner.current,
+    ReactCurrentOwner.current, //null
     props,
   );
 };
@@ -321,8 +250,10 @@ ReactElement.cloneElement = function(element, config, children) {
   var owner = element._owner;
 
   if (config != null) {
+    // 如果config中存在ref
     if (hasValidRef(config)) {
       // Silently steal the ref from the parent.
+
       ref = config.ref;
       owner = ReactCurrentOwner.current;
     }
