@@ -1148,6 +1148,7 @@ describe('ReactDOMFiber', () => {
       // Assert
       expect(textNode.textContent).toBe(textContent);
       expect(actualDocument).not.toBe(document);
+      expect(actualDocument).toBe(iframeDocument);
     });
   }
 });
