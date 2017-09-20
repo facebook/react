@@ -18,7 +18,7 @@
     "lib/"
   ],
   "main": "react.js",
-  "browser": "dist/react.min.js",
+  "unpkg": "dist/react.min.js",
   "repository": "facebook/react",
   "engines": {
     "node": ">=0.10.0"
