@@ -53,6 +53,8 @@ const Header = ({location}) => (
           css={{
             display: 'flex',
             marginRight: 10,
+            height: '100%',
+            alignItems: 'center',
 
             [media.greaterThan('small')]: {
               width: 'calc(100% / 6)',
@@ -69,6 +71,7 @@ const Header = ({location}) => (
               marginLeft: 10,
               fontWeight: 700,
               fontSize: 20,
+              lineHeight: '20px',
               [media.lessThan('large')]: {
                 fontSize: 16,
                 marginTop: 1,
