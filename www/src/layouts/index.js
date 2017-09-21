@@ -44,6 +44,14 @@ class Template extends Component {
       ? {location}
       : undefined;
 
+    // TODO - is there a better way to check if we need we have a sidebar?
+    let layoutHasSidebar = false;
+    if (location.pathname.match(/^\/(docs|tutorial|community|blog)/)) {
+      layoutHasSidebar = true;
+    }
+
+    console.log("layoutHasSidebar", layoutHasSidebar);
+
     return (
       <div
         css={{
@@ -69,7 +77,7 @@ class Template extends Component {
           }}>
           {children(childrenParams)}
         </Flex>
-        <Footer />
+        <Footer layoutHasSidebar={layoutHasSidebar} />
       </div>
     );
   }

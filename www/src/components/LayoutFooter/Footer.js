@@ -16,11 +16,11 @@ import FooterLink from './FooterLink';
 import FooterNav from './FooterNav';
 import MetaTitle from 'templates/components/MetaTitle';
 import React from 'react';
-import {colors, media} from 'theme';
+import { colors, media } from 'theme';
 
 import ossLogoPng from 'images/oss_logo.png';
 
-const Footer = () => (
+const Footer = ({ layoutHasSidebar = false }) =>
   <footer
     css={{
       backgroundColor: colors.darker,
@@ -29,21 +29,25 @@ const Footer = () => (
       paddingBottom: 50,
 
       [media.size('sidebarFixed')]: {
-        paddingTop: 80,
+        paddingTop: 40,
       },
 
       [media.size('sidebarFixedNarrowFooter')]: {
         paddingTop: 10,
       },
-    }}>
+    }}
+  >
     <Container
       cssProps={{
-        [media.size('sidebarFixedNarrowFooter')]: {
-          maxWidth: 800,
-          paddingLeft: 0,
-          paddingRight: 0,
-        },
-      }}>
+        [media.size('sidebarFixedNarrowFooter')]: layoutHasSidebar
+          ? {
+              maxWidth: 800,
+              paddingLeft: 0,
+              paddingRight: 0,
+            }
+          : null,
+      }}
+    >
       <div
         css={{
           display: 'flex',
@@ -51,16 +55,17 @@ const Footer = () => (
           flexWrap: 'wrap',
 
           [media.between('small', 'medium')]: {
-            paddingRight: 240,
+            paddingRight: layoutHasSidebar ? 240 : null,
           },
 
           [media.between('large', 'largerSidebar')]: {
-            paddingRight: 280,
+            paddingRight: layoutHasSidebar ? 280 : null,
           },
           [media.between('largerSidebar', 'sidebarFixed', true)]: {
-            paddingRight: 380,
+            paddingRight: layoutHasSidebar ? 380 : null,
           },
-        }}>
+        }}
+      >
         <div
           css={{
             flexWrap: 'wrap',
@@ -73,84 +78,54 @@ const Footer = () => (
               width: 'calc(100% / 3 * 2)',
               paddingLeft: 40,
             },
-          }}>
-          <FooterNav>
+          }}
+        >
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>Docs</MetaTitle>
             <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
-            <FooterLink to="/docs/thinking-in-react.html">
-              Thinking in React
-            </FooterLink>
+            <FooterLink to="/docs/thinking-in-react.html">Thinking in React</FooterLink>
             <FooterLink to="/tutorial/tutorial.html">Tutorial</FooterLink>
-            <FooterLink to="/docs/jsx-in-depth.html">
-              Advanced Guides
-            </FooterLink>
+            <FooterLink to="/docs/jsx-in-depth.html">Advanced Guides</FooterLink>
           </FooterNav>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>Community</MetaTitle>
-            <FooterLink
-              to="http://stackoverflow.com/questions/tagged/reactjs"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="http://stackoverflow.com/questions/tagged/reactjs" target="_blank" rel="noopener">
               Stack Overflow
             </FooterLink>
-            <FooterLink
-              to="https://discuss.reactjs.org"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="https://discuss.reactjs.org" target="_blank" rel="noopener">
               Discussion Forum
             </FooterLink>
-            <FooterLink
-              to="https://discord.gg/0ZcbPKXt5bZjGY5n"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="https://discord.gg/0ZcbPKXt5bZjGY5n" target="_blank" rel="noopener">
               Reactiflux Chat
             </FooterLink>
-            <FooterLink
-              to="https://www.facebook.com/react"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="https://www.facebook.com/react" target="_blank" rel="noopener">
               Facebook
             </FooterLink>
-            <FooterLink
-              to="https://twitter.com/reactjs"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="https://twitter.com/reactjs" target="_blank" rel="noopener">
               Twitter
             </FooterLink>
           </FooterNav>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>Resources</MetaTitle>
-            <FooterLink to="/community/conferences.html">
-              Conferences
-            </FooterLink>
+            <FooterLink to="/community/conferences.html">Conferences</FooterLink>
             <FooterLink to="/community/videos.html">Videos</FooterLink>
-            <FooterLink
-              to="https://github.com/facebook/react/wiki/Examples"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="https://github.com/facebook/react/wiki/Examples" target="_blank" rel="noopener">
               Examples
             </FooterLink>
-            <FooterLink
-              to="https://github.com/facebook/react/wiki/Complementary-Tools"
-              target="_blank"
-              rel="noopener">
+            <FooterLink to="https://github.com/facebook/react/wiki/Complementary-Tools" target="_blank" rel="noopener">
               Complementary Tools
             </FooterLink>
           </FooterNav>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>More</MetaTitle>
             <FooterLink to="/blog.html">Blog</FooterLink>
             <FooterLink to="https://github.com/facebook/react" target="_blank">
               GitHub
             </FooterLink>
-            <FooterLink
-              to="http://facebook.github.io/react-native/"
-              target="_blank">
+            <FooterLink to="http://facebook.github.io/react-native/" target="_blank">
               React Native
             </FooterLink>
-            <FooterLink to="/acknowledgements.html">
-              Acknowledgements
-            </FooterLink>
+            <FooterLink to="/acknowledgements.html">Acknowledgements</FooterLink>
           </FooterNav>
         </div>
         <section
@@ -162,12 +137,17 @@ const Footer = () => (
               width: 'calc(100% / 3)',
               order: -1,
             },
+            [media.greaterThan('large')]: {
+              order: -1,
+              width: layoutHasSidebar ? null : 'calc(100% / 3)',
+            },
             [media.lessThan('large')]: {
               textAlign: 'center',
               width: '100%',
               paddingTop: 40,
             },
-          }}>
+          }}
+        >
           <a href="https://code.facebook.com/projects/" target="_blank">
             <img
               alt="Facebook Open Source"
@@ -182,13 +162,13 @@ const Footer = () => (
             css={{
               color: colors.subtleOnDark,
               paddingTop: 15,
-            }}>
+            }}
+          >
             Copyright © 2017 Facebook Inc.
           </p>
         </section>
       </div>
     </Container>
-  </footer>
-);
+  </footer>;
 
 export default Footer;
