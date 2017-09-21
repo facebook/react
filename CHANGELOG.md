@@ -9,9 +9,14 @@
 
  * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), [you may want to include a polyfill](https://gist.github.com/flarnie/7e82e4c4c52c8ed51b471e7abac6ad2d).
 
-### Major Changes
-
+### New Features
 * **Improved error handling with introduction of "error boundaries".** [Error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
+* `ReactDOM.createPortal()` is official and stable
+  ([@gaearon](https://github.com/gaearon) in
+  [10675](https://github.com/facebook/react/pull/10675))
+* Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
+
+### Breaking Changes
 - **There are several changes to the behavior of scheduling and lifecycle methods:**
   * `ReactDOM.render()` and `ReactDOM.unstable_renderIntoContainer()` now return `null` if called from inside a lifecycle method.
     * To work around this, you can either use [the new portal API](https://github.com/facebook/react/issues/10309#issuecomment-318433235) or [refs](https://github.com/facebook/react/issues/10309#issuecomment-318434635).
@@ -30,10 +35,7 @@
   - `react/dist/react.min.js` → `react/umd/react.production.min.js`
   - `react-dom/dist/react-dom.js` → `react-dom/umd/react-dom.development.js`
   - `react-dom/dist/react-dom.min.js` → `react-dom/umd/react-dom.production.min.js`
-* `ReactDOM.createPortal()` is official and stable
-  ([@gaearon](https://github.com/gaearon) in
-  [10675](https://github.com/facebook/react/pull/10675))
-* Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
+* When "unknown" props are passed to DOM components, in some cases, React will now render them in the DOM. [See this post for more details.](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
 ### Removed deprecations
 
