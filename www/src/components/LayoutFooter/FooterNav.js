@@ -14,7 +14,7 @@
 import React from 'react';
 import {media} from 'theme';
 
-const FooterNav = ({children, title}) => (
+const FooterNav = ({children, title, layoutHasSidebar = false}) => (
   <div
     css={{
       display: 'flex',
@@ -26,11 +26,6 @@ const FooterNav = ({children, title}) => (
       [media.size('sidebarFixed')]: {
         paddingTop: 0,
         width: '25%',
-      },
-
-      [media.size('sidebarFixedNarrowFooter')]: {
-        width: '50%',
-        paddingTop: 40,
       },
     }}>
     <div

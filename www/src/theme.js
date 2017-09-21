@@ -36,16 +36,15 @@ const colors = {
 
 const SIZES = {
   xsmall: {min: 0, max: 599},
-  small: {min: 600, max: 739},
-  medium: {min: 740, max: 979},
+  small: {min: 600, max: 779},
+  medium: {min: 780, max: 979},
   large: {min: 980, max: 1279},
   xlarge: {min: 1280, max: 1339},
   xxlarge: {min: 1340, max: Infinity},
 
   // Sidebar/nav related tweakpoints
   largerSidebar: {min: 1100, max: 1339},
-  sidebarFixed: {min: 1560, max: Infinity},
-  sidebarFixedNarrowFooter: {min: 1560, max: 2000},
+  sidebarFixed: {min: 2000, max: Infinity},
 };
 
 type Size = $Keys<typeof SIZES>;
@@ -121,7 +120,7 @@ const sharedStyles = {
       display: 'flex',
       minHeight: 'calc(100vh - 60px)',
       [media.greaterThan('sidebarFixed')]: {
-        maxWidth: 800,
+        maxWidth: 840,
         marginLeft: 'auto',
         marginRight: 'auto',
       },
@@ -130,12 +129,8 @@ const sharedStyles = {
       marginTop: 40,
       marginBottom: 120,
 
-      [media.between('medium', 'large')]: {
+      [media.greaterThan('medium')]: {
         marginTop: 50,
-      },
-
-      [media.greaterThan('xlarge')]: {
-        marginTop: 85,
       },
     },
     sidebar: {

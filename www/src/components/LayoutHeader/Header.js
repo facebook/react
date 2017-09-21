@@ -16,6 +16,7 @@ import HeaderLink from './HeaderLink';
 import Link from 'gatsby-link';
 import React from 'react';
 import {colors, fonts, media} from 'theme';
+import ExternalLinkSvg from 'templates/components/ExternalLinkSvg';
 
 import logoSvg from 'icons/logo.svg';
 
@@ -41,7 +42,7 @@ const Header = ({location}) => (
           flexDirection: 'row',
           alignItems: 'center',
           height: 60,
-          [media.between('medium', 'large')]: {
+          [media.between('small', 'large')]: {
             height: 50,
           },
           [media.lessThan('small')]: {
@@ -51,6 +52,9 @@ const Header = ({location}) => (
         <Link
           css={{
             display: 'flex',
+            marginRight: 10,
+            height: '100%',
+            alignItems: 'center',
 
             [media.greaterThan('small')]: {
               width: 'calc(100% / 6)',
@@ -67,8 +71,10 @@ const Header = ({location}) => (
               marginLeft: 10,
               fontWeight: 700,
               fontSize: 20,
+              lineHeight: '20px',
               [media.lessThan('large')]: {
                 fontSize: 16,
+                marginTop: 1,
               },
               [media.lessThan('small')]: {
                 // Visually hidden
@@ -92,6 +98,7 @@ const Header = ({location}) => (
             flexDirection: 'row',
             alignItems: 'stretch',
             overflowX: 'auto',
+            overflowY: 'hidden',
             WebkitOverflowScrolling: 'touch',
             height: '100%',
             width: '60%',
@@ -100,7 +107,7 @@ const Header = ({location}) => (
               width: 'auto',
             },
             [media.greaterThan('xlarge')]: {
-              width: 'calc(100% / 3)',
+              width: null,
             },
             [media.lessThan('small')]: {
               maskImage: 'linear-gradient(to right, transparent, black 20px, black 90%, transparent)',
@@ -139,14 +146,17 @@ const Header = ({location}) => (
             [media.lessThan('small')]: {
               justifyContent: 'flex-end',
             },
+            [media.lessThan('large')]: {
+              marginRight: 10,
+            },
             [media.between('small', 'medium')]: {
               width: 'calc(100% / 3)',
             },
             [media.between('medium', 'xlarge')]: {
               width: 'calc(100% / 6)',
             },
-            [media.greaterThan('xlarge')]: {
-              width: 'calc(100% / 3)',
+            [media.greaterThan('small')]: {
+              minWidth: 120,
             },
           }}>
           <input
@@ -166,7 +176,7 @@ const Header = ({location}) => (
               backgroundPositionX: 'left',
 
               [media.lessThan('large')]: {
-                fontSize: 14,
+                fontSize: 16,
               },
               [media.greaterThan('small')]: {
                 width: '100%',
@@ -215,9 +225,19 @@ const Header = ({location}) => (
               marginLeft: 10,
               whiteSpace: 'nowrap',
               ...fonts.small,
+              ':hover': {
+                color: colors.brand,
+              },
             }}
             href="https://github.com/facebook/react/">
             GitHub
+            <ExternalLinkSvg
+              cssProps={{
+                marginLeft: 5,
+                verticalAlign: -2,
+                color: colors.subtle,
+              }}
+            />
           </a>
         </div>
       </div>

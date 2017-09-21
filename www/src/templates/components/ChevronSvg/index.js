@@ -1,8 +1,10 @@
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright 2015-present, Facebook, Inc.
+ * All rights reserved.
  *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
 */
@@ -11,15 +13,15 @@
 
 import React from 'react';
 
-const ChevronSvg = ({size = 10, cssProps = {}}) => (
+const ChevronSvg = ({cssProps = {}}) => (
   <svg
     css={cssProps}
     viewBox="0 0 926.23699 573.74994"
     version="1.1"
     x="0px"
     y="0px"
-    width={size}
-    height={size}>
+    width="10px"
+    height="10px">
     <g transform="translate(904.92214,-879.1482)">
       <path
         d={`

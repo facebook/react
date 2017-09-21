@@ -15,7 +15,7 @@ import Container from 'components/Container';
 import {Component, React} from 'react';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
-import ChevronSvg from './ChevronSvg';
+import ChevronSvg from 'templates/components/ChevronSvg';
 
 class StickyResponsiveSidebar extends Component {
   constructor(props, context) {
@@ -111,8 +111,12 @@ class StickyResponsiveSidebar extends Component {
             css={{
               marginTop: 60,
 
-              [media.lessThan('small')]: {
+              [media.size('xsmall')]: {
                 marginTop: 40,
+              },
+
+              [media.between('small', 'medium')]: {
+                marginTop: 0,
               },
 
               [media.between('medium', 'large')]: {

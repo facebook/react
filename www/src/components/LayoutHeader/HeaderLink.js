@@ -37,7 +37,7 @@ const style = {
     paddingRight: 8,
   },
 
-  [media.size('small')]: {
+  [media.between('small', 'medium')]: {
     paddingLeft: 10,
     paddingRight: 10,
   },
@@ -57,13 +57,13 @@ const style = {
 const activeStyle = {
   color: colors.brand,
 
-  [media.greaterThan('xlarge')]: {
+  [media.greaterThan('small')]: {
     position: 'relative',
   },
 };
 
 const activeAfterStyle = {
-  [media.greaterThan('xlarge')]: {
+  [media.greaterThan('small')]: {
     position: 'absolute',
     bottom: -1,
     height: 4,

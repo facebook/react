@@ -32,13 +32,6 @@ const MarkdownHeader = ({title}) => (
         [media.greaterThan('large')]: {
           marginTop: 80,
         },
-
-        [media.greaterThan('sidebarFixed')]: {
-          textAlign: 'center',
-          maxWidth: '12em',
-          marginLeft: 'auto',
-          marginRight: 'auto',
-        },
       }}>
       {title}
     </h1>
