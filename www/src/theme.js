@@ -36,8 +36,8 @@ const colors = {
 
 const SIZES = {
   xsmall: {min: 0, max: 599},
-  small: {min: 600, max: 739},
-  medium: {min: 740, max: 979},
+  small: {min: 600, max: 779},
+  medium: {min: 780, max: 979},
   large: {min: 980, max: 1279},
   xlarge: {min: 1280, max: 1339},
   xxlarge: {min: 1340, max: Infinity},
