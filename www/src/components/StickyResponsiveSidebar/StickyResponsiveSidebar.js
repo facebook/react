@@ -123,7 +123,7 @@ class StickyResponsiveSidebar extends Component {
     const menuOpacity = open ? 1 : 0;
     const menuOffset = open ? 0 : 40;
 
-    console.log("this.context.menuIsOpen", this.context.menuIsOpen);
+    console.log('this.context.menuIsOpen', this.context.menuIsOpen);
 
     return (
       <div>

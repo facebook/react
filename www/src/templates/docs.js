@@ -30,14 +30,14 @@ const sectionList = sectionListA
     }),
   );
 
-const Docs = ({data, location}) => console.log('render Docs') || (
+const Docs = ({data, location}) =>
+  console.log('render Docs') ||
   <MarkdownPage
     location={location}
     markdownRemark={data.markdownRemark}
     sectionList={sectionList}
     titlePostfix=" - React"
-  />
-);
+  />;
 
 Docs.propTypes = {
   data: PropTypes.object.isRequired,

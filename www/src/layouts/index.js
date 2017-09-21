@@ -58,11 +58,13 @@ class Template extends Component {
 
   // Close the menu if it's resized to >= 'xsmall'
   _handleWindowResize() {
-    const greaterThanSmall = window.matchMedia(media.greaterThan('small').replace('@media ', '')).matches;
+    const greaterThanSmall = window.matchMedia(
+      media.greaterThan('small').replace('@media ', ''),
+    ).matches;
     if (greaterThanSmall) {
       this.setState({
         menuIsOpen: false,
-      })
+      });
     }
   }
 
