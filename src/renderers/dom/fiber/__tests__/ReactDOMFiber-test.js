@@ -1119,7 +1119,6 @@ describe('ReactDOMFiber', () => {
     });
 
     it('should render a text component with a text DOM node on the same document as the container', () => {
-      // Arrange
       // 1. Create a new document through the use of iframe
       // 2. Set up the spy to make asserts when a text component
       //    is rendered inside the iframe container
@@ -1142,10 +1141,8 @@ describe('ReactDOMFiber', () => {
         textNode = node;
       });
 
-      // Act
       ReactDOM.render(textContent, iframeContainer);
 
-      // Assert
       expect(textNode.textContent).toBe(textContent);
       expect(actualDocument).not.toBe(document);
       expect(actualDocument).toBe(iframeDocument);
