@@ -6205,10 +6205,6 @@ performance-now@^0.2.0:
   version "0.2.0"
   resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-0.2.0.tgz#33ef30c5c77d4ea21c5a53869d91b56d8f2555e5"
 
-performance-now@^2.1.0:
-  version "2.1.0"
-  resolved "https://registry.yarnpkg.com/performance-now/-/performance-now-2.1.0.tgz#6309f4e0e5fa913ec1c69307ae364b4b377c9e7b"
-
 pez@1.x.x:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/pez/-/pez-1.0.0.tgz#844318a5ce7092eeddffa295e18079ac779fa018"
@@ -6946,12 +6942,6 @@ querystringify@~1.0.0:
   version "1.0.0"
   resolved "https://registry.yarnpkg.com/querystringify/-/querystringify-1.0.0.tgz#6286242112c5b712fa654e526652bf6a13ff05cb"
 
-raf@^3.3.0:
-  version "3.3.2"
-  resolved "https://registry.yarnpkg.com/raf/-/raf-3.3.2.tgz#0c13be0b5b49b46f76d6669248d527cf2b02fe27"
-  dependencies:
-    performance-now "^2.1.0"
-
 randomatic@^1.1.3:
   version "1.1.7"
   resolved "https://registry.yarnpkg.com/randomatic/-/randomatic-1.1.7.tgz#c7abe9cc8b87c0baa876b19fde83fd464797e38c"
@@ -7076,13 +7066,6 @@ react-side-effect@^1.1.0:
   dependencies:
     exenv "^1.2.1"
     shallowequal "^1.0.1"
-
-react-sticky@^6.0.1:
-  version "6.0.1"
-  resolved "https://registry.yarnpkg.com/react-sticky/-/react-sticky-6.0.1.tgz#356988bdcc6fc8cd2d89746d2302edce67d86687"
-  dependencies:
-    prop-types "^15.5.8"
-    raf "^3.3.0"
 
 react@16.0.0-rc.3:
   version "16.0.0-rc.3"

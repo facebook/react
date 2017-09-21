@@ -17,7 +17,6 @@ import Flex from 'components/Flex';
 import hex2rgba from 'hex2rgba';
 import MarkdownHeader from 'components/MarkdownHeader';
 import React from 'react';
-import {StickyContainer} from 'react-sticky';
 import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import {colors, sharedStyles} from 'theme';
 import findSectionForPath from 'utils/findSectionForPath';
@@ -37,50 +36,47 @@ const ErrorPage = ({data, location}) => (
       zIndex: 0,
     }}>
     <Container>
-      <StickyContainer
-        css={{
-          display: 'flex',
-          overflow: 'auto',
-        }}>
-        <Flex type="article" direction="column" grow="1" halign="stretch">
+      <div css={sharedStyles.articleLayout.container}>
+
+        <Flex
+          type="article"
+          direction="column"
+          grow="1"
+          halign="stretch"
+          css={{
+            minHeight: 'calc(100vh - 40px)',
+          }}>
           <MarkdownHeader
             path={data.markdownRemark.fields.path}
             title={data.markdownRemark.frontmatter.title}
           />
 
-          <div
-            css={{
-              marginTop: 65,
-              marginBottom: 120,
-            }}>
+          <div css={sharedStyles.articleLayout.content}>
             <div
               css={sharedStyles.markdown}
               dangerouslySetInnerHTML={{__html: data.markdownRemark.html}}
             />
             <div
-              css={{
-                '& p': {
+              css={[
+                sharedStyles.markdown,
+                {
                   marginTop: 30,
+                  '& code': {
+                    display: 'block',
+                    marginTop: 30,
+                    padding: '1rem',
+                    borderRadius: '0.5rem',
+                    backgroundColor: hex2rgba(colors.error, 0.1),
+                    color: colors.error,
+                  },
                 },
-                '& code': {
-                  display: 'block',
-                  marginTop: 30,
-                  padding: '1rem',
-                  borderRadius: '0.5rem',
-                  backgroundColor: hex2rgba(colors.error, 0.1),
-                  color: colors.error,
-                },
-              }}>
+              ]}>
               <ErrorDecoder location={location} />
             </div>
           </div>
         </Flex>
 
-        <div
-          css={{
-            flex: '0 0 200px',
-            marginLeft: 'calc(9% + 40px)',
-          }}>
+        <div css={sharedStyles.articleLayout.sidebar}>
           <StickyResponsiveSidebar
             defaultActiveSection={findSectionForPath(
               location.pathname,
@@ -91,7 +87,8 @@ const ErrorPage = ({data, location}) => (
             title={data.markdownRemark.frontmatter.title}
           />
         </div>
-      </StickyContainer>
+
+      </div>
     </Container>
   </Flex>
 );

@@ -55,7 +55,7 @@ class Template extends Component {
         css={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          minHeight: 'calc(100vh - 40px)',
         }}>
         <Header location={location} />
         <Flex
