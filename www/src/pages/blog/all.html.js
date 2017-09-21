@@ -24,11 +24,12 @@ const AllBlogPosts = ({data}) => (
     <div css={sharedStyles.articleLayout.container}>
       <div css={sharedStyles.articleLayout.content}>
         <Header>All Posts</Header>
-        <ul css={{
-          display: 'flex',
-          flexWrap: 'wrap',
-          marginLeft: -40,
-        }}>
+        <ul
+          css={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            marginLeft: -40,
+          }}>
           {data.allMarkdownRemark.edges.map(({node}) => (
             <li
               css={{
@@ -47,18 +48,19 @@ const AllBlogPosts = ({data}) => (
                 },
               }}
               key={node.fields.slug}>
-              <h2 css={{
-                fontSize: 24,
-                color: colors.dark,
-                lineHeight: 1.3,
-                fontWeight: 600,
-              }}>
+              <h2
+                css={{
+                  fontSize: 24,
+                  color: colors.dark,
+                  lineHeight: 1.3,
+                  fontWeight: 600,
+                }}>
                 <Link
                   css={{
                     borderBottom: '1px solid #ececec',
                     ':hover': {
                       borderBottomColor: colors.black,
-                    }
+                    },
                   }}
                   key={node.fields.slug}
                   to={node.fields.slug}>
@@ -68,10 +70,11 @@ const AllBlogPosts = ({data}) => (
               <MetaTitle>
                 {node.fields.date}
               </MetaTitle>
-              <div css={{
-                color: colors.subtle,
-                marginTop: -5,
-              }}>
+              <div
+                css={{
+                  color: colors.subtle,
+                  marginTop: -5,
+                }}>
                 by
                 {' '}
                 {toCommaSeparatedList(node.frontmatter.author, author => (
