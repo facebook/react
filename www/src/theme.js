@@ -44,8 +44,7 @@ const SIZES = {
 
   // Sidebar/nav related tweakpoints
   largerSidebar: {min: 1100, max: 1339},
-  sidebarFixed: {min: 1560, max: Infinity},
-  sidebarFixedNarrowFooter: {min: 1560, max: 2000},
+  sidebarFixed: {min: 2000, max: Infinity},
 };
 
 type Size = $Keys<typeof SIZES>;
@@ -121,7 +120,7 @@ const sharedStyles = {
       display: 'flex',
       minHeight: 'calc(100vh - 60px)',
       [media.greaterThan('sidebarFixed')]: {
-        maxWidth: 800,
+        maxWidth: 840,
         marginLeft: 'auto',
         marginRight: 'auto',
       },

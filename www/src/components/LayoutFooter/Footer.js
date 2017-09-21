@@ -31,23 +31,9 @@ const Footer = ({ layoutHasSidebar = false }) =>
       [media.size('sidebarFixed')]: {
         paddingTop: 40,
       },
-
-      [media.size('sidebarFixedNarrowFooter')]: {
-        paddingTop: 10,
-      },
     }}
   >
-    <Container
-      cssProps={{
-        [media.size('sidebarFixedNarrowFooter')]: layoutHasSidebar
-          ? {
-              maxWidth: 800,
-              paddingLeft: 0,
-              paddingRight: 0,
-            }
-          : null,
-      }}
-    >
+    <Container>
       <div
         css={{
           display: 'flex',

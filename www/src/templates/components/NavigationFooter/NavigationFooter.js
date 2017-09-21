@@ -26,14 +26,7 @@ const NavigationFooter = ({next, prev}) => (
       paddingTop: 50,
       paddingBottom: 50,
     }}>
-    <Container
-      cssProps={{
-        [media.size('sidebarFixedNarrowFooter')]: {
-          maxWidth: 800,
-          paddingLeft: 0,
-          paddingRight: 0,
-        },
-      }}>
+    <Container>
       <Flex
         type="ul"
         halign="space-between"
