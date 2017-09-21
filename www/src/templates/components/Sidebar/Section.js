@@ -18,6 +18,7 @@ import slugify from 'utils/slugify';
 import {colors, media} from 'theme';
 import MetaTitle from '../MetaTitle';
 import ExternalLinkSvg from '../ExternalLinkSvg';
+import ChevronSvg from '../ChevronSvg';
 
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
@@ -38,6 +39,13 @@ const Section = ({isActive, location, onClick, section}) => (
         },
       }}>
       {section.title}
+      <ChevronSvg cssProps={{
+        marginLeft: 7,
+        transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
+        [media.lessThan('small')]: {
+          display: 'none',
+        },
+      }} />
     </MetaTitle>
     <ul
       css={{
