@@ -149,7 +149,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
 
   // Blog landing page should always show the most recent blog entry.
   createRedirect({
-    fromPath: '/blog.html',
+    fromPath: '/blog/',
     toPath: newestBlogEntry.data.allMarkdownRemark.edges[0].node.fields.slug,
   });
 };

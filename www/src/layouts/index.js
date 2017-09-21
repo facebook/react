@@ -38,12 +38,6 @@ class Template extends Component {
   render() {
     const {children, location} = this.props;
 
-    // HACK
-    // https://github.com/gatsbyjs/gatsby/issues/2180
-    const childrenParams = typeof window === 'undefined'
-      ? {location}
-      : undefined;
-
     // TODO - is there a better way to check if we need we have a sidebar?
     let layoutHasSidebar = false;
     if (location.pathname.match(/^\/(docs|tutorial|community|blog)/)) {
@@ -73,7 +67,7 @@ class Template extends Component {
               marginTop: 40,
             },
           }}>
-          {children(childrenParams)}
+          {children()}
         </Flex>
         <Footer layoutHasSidebar={layoutHasSidebar} />
       </div>
