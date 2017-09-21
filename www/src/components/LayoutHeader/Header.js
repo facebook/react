@@ -228,11 +228,13 @@ const Header = ({location}) => (
             }}
             href="https://github.com/facebook/react/">
             GitHub
-            <ExternalLinkSvg cssProps={{
-              marginLeft: 5,
-              verticalAlign: -2,
-              color: colors.subtle,
-            }} />
+            <ExternalLinkSvg
+              cssProps={{
+                marginLeft: 5,
+                verticalAlign: -2,
+                color: colors.subtle,
+              }}
+            />
           </a>
         </div>
       </div>

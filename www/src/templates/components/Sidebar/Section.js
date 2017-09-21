@@ -39,13 +39,15 @@ const Section = ({isActive, location, onClick, section}) => (
         },
       }}>
       {section.title}
-      <ChevronSvg cssProps={{
-        marginLeft: 7,
-        transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
-        [media.lessThan('small')]: {
-          display: 'none',
-        },
-      }} />
+      <ChevronSvg
+        cssProps={{
+          marginLeft: 7,
+          transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
+          [media.lessThan('small')]: {
+            display: 'none',
+          },
+        }}
+      />
     </MetaTitle>
     <ul
       css={{
@@ -127,12 +129,14 @@ const CreateLink = (location, section, item) => {
     return (
       <a css={[linkCss]} href={item.href}>
         {item.title}
-        <ExternalLinkSvg cssProps={{
-          verticalAlign: -2,
-          display: 'inline-block',
-          marginLeft: 5,
-          color: colors.subtle,
-        }} />
+        <ExternalLinkSvg
+          cssProps={{
+            verticalAlign: -2,
+            display: 'inline-block',
+            marginLeft: 5,
+            color: colors.subtle,
+          }}
+        />
       </a>
     );
   } else {

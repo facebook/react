@@ -28,12 +28,14 @@ const FooterLink = ({children, target, to}) => (
     target={target}>
     {children}
     {target === '_blank' &&
-      <ExternalLinkSvg cssProps={{
-        verticalAlign: -2,
-        display: 'inline-block',
-        marginLeft: 5,
-        color: colors.subtle,
-      }} />}
+      <ExternalLinkSvg
+        cssProps={{
+          verticalAlign: -2,
+          display: 'inline-block',
+          marginLeft: 5,
+          color: colors.subtle,
+        }}
+      />}
   </a>
 );
 
