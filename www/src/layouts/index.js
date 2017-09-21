@@ -69,7 +69,7 @@ class Template extends Component {
             [media.between('medium', 'large')]: {
               marginTop: 50,
             },
-            [media.lessThan('small')]: {
+            [media.lessThan('medium')]: {
               marginTop: 40,
             },
           }}>

@@ -111,8 +111,8 @@ class StickyResponsiveSidebar extends Component {
             css={{
               marginTop: 60,
 
-              [media.lessThan('small')]: {
-                marginTop: 40,
+              [media.lessThan('medium')]: {
+                marginTop: 0,
               },
 
               [media.between('medium', 'large')]: {

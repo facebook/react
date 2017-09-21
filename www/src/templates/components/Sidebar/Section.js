@@ -17,6 +17,7 @@ import React from 'react';
 import slugify from 'utils/slugify';
 import {colors, media} from 'theme';
 import MetaTitle from '../MetaTitle';
+import ExternalLinkSvg from '../ExternalLinkSvg';
 
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
@@ -116,23 +117,17 @@ const CreateLink = (location, section, item) => {
     );
   } else if (item.href) {
     return (
-      <a
-        css={[
-          linkCss,
-          {
-            paddingRight: 15,
-
-            ':hover': {
-              borderBottomColor: 'transparent',
-            },
-
-            ':after': {
-              content: '" " url(/external.png)', // TODO Move to a better relative location
-            },
-          },
-        ]}
-        href={item.href}>
+      <a css={[linkCss]} href={item.href}>
         {item.title}
+        <span
+          css={{
+            verticalAlign: -2,
+            display: 'inline-block',
+            marginLeft: 5,
+            color: colors.subtle,
+          }}>
+          <ExternalLinkSvg />
+        </span>
       </a>
     );
   } else {
