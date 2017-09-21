@@ -28,7 +28,7 @@ exports.modifyWebpackConfig = ({ config, stage }) => {
 };
 
 exports.createPages = async ({graphql, boundActionCreators}) => {
-  const {createPage} = boundActionCreators;
+  const {createPage, createRedirect} = boundActionCreators;
 
   const blogTemplate = resolve('./src/templates/blog.js');
   const communityTemplate = resolve('./src/templates/community.js');
@@ -130,10 +130,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
     }
   });
 
-  /* TODO Register '/blog.html' redirect to most recent blog entry.
-   * And delete redundant 'pages/blog.html.js'
-   * github.com/gatsbyjs/gatsby/pull/1068
-  const mostRecentBlogMarkdown = await graphql(`
+  const newestBlogEntry = await graphql(`
     {
       allMarkdownRemark(
         limit: 1,
@@ -150,7 +147,12 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       }
     }
   `);
-  */
+
+  // Blog landing page should always show the most recent blog entry.
+  createRedirect({
+    fromPath: '/blog.html',
+    toPath: newestBlogEntry.data.allMarkdownRemark.edges[0].node.fields.slug,
+  });
 };
 
 // Parse date information out of blog post filename.

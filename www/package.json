@@ -11,6 +11,7 @@
     "gatsby-plugin-glamor": "^1.6.4",
     "gatsby-plugin-google-analytics": "^1.0.4",
     "gatsby-plugin-manifest": "^1.0.4",
+    "gatsby-plugin-netlify": "^1.0.2",
     "gatsby-plugin-offline": "^1.0.4",
     "gatsby-plugin-react-helmet": "^1.0.3",
     "gatsby-plugin-react-next": "^1.0.3",
