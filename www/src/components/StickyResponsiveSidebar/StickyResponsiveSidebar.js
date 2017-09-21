@@ -13,6 +13,7 @@
 
 import Container from 'components/Container';
 import {Component, React} from 'react';
+import PropTypes from 'prop-types';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
 import ChevronSvg from 'templates/components/ChevronSvg';
@@ -52,10 +53,7 @@ class StickyResponsiveSidebar extends Component {
   }
 
   isMenuOpen() {
-    return (
-      this.state.open &&
-      window.matchMedia(media.greaterThan('small').replace('@media ', ''))
-    );
+    return this.context.menuIsOpen;
   }
 
   // Prevent background scroll
@@ -124,6 +122,8 @@ class StickyResponsiveSidebar extends Component {
     const labelOffset = open ? -40 : 0;
     const menuOpacity = open ? 1 : 0;
     const menuOffset = open ? 0 : 40;
+
+    console.log("this.context.menuIsOpen", this.context.menuIsOpen);
 
     return (
       <div>
@@ -303,5 +303,9 @@ class StickyResponsiveSidebar extends Component {
     );
   }
 }
+
+StickyResponsiveSidebar.contextTypes = {
+  menuIsOpen: PropTypes.bool.isRequired,
+};
 
 export default StickyResponsiveSidebar;
