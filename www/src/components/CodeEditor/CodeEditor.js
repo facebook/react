@@ -16,6 +16,7 @@ import ReactDOM from 'react-dom';
 import Remarkable from 'remarkable';
 import {LiveProvider, LiveEditor} from 'react-live';
 import {colors, media} from 'theme';
+import MetaTitle from 'templates/components/MetaTitle';
 
 const compile = code =>
   Babel.transform(code, {presets: ['es2015', 'react']}).code; // eslint-disable-line no-undef
@@ -61,7 +62,7 @@ class CodeEditor extends Component {
               css={{
                 flex: '0 0 33%',
 
-                [media.lessThan('large')]: {
+                [media.lessThan('xlarge')]: {
                   marginBottom: 20,
                 },
 
@@ -109,11 +110,11 @@ class CodeEditor extends Component {
               }}>
               <div
                 css={{
-                  padding: '10px',
+                  padding: '0px 10px',
                   background: colors.darker,
                   color: colors.white,
                 }}>
-                Live JSX Editor
+                <MetaTitle onDark={true}>Live JSX Editor</MetaTitle>
               </div>
               <div
                 css={{
@@ -149,11 +150,11 @@ class CodeEditor extends Component {
                 }}>
                 <div
                   css={{
-                    padding: '10px',
+                    padding: '0px 10px',
                     background: colors.error,
                     color: colors.white,
                   }}>
-                  Error
+                  <MetaTitle>Error</MetaTitle>
                 </div>
                 <pre
                   css={{
@@ -179,10 +180,10 @@ class CodeEditor extends Component {
                 }}>
                 <div
                   css={{
-                    padding: 10,
+                    padding: '0 10px',
                     backgroundColor: colors.divider,
                   }}>
-                  Result
+                  <MetaTitle>Result</MetaTitle>
                 </div>
                 <div
                   css={{

@@ -44,12 +44,18 @@ class Template extends Component {
       ? {location}
       : undefined;
 
+    // TODO - is there a better way to check if we need we have a sidebar?
+    let layoutHasSidebar = false;
+    if (location.pathname.match(/^\/(docs|tutorial|community|blog)/)) {
+      layoutHasSidebar = true;
+    }
+
     return (
       <div
         css={{
           display: 'flex',
           flexDirection: 'column',
-          minHeight: '100vh',
+          minHeight: 'calc(100vh - 40px)',
         }}>
         <Header location={location} />
         <Flex
@@ -63,13 +69,13 @@ class Template extends Component {
             [media.between('medium', 'large')]: {
               marginTop: 50,
             },
-            [media.lessThan('small')]: {
+            [media.lessThan('medium')]: {
               marginTop: 40,
             },
           }}>
           {children(childrenParams)}
         </Flex>
-        <Footer />
+        <Footer layoutHasSidebar={layoutHasSidebar} />
       </div>
     );
   }

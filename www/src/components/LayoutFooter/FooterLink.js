@@ -13,6 +13,7 @@
 
 import React from 'react';
 import {colors} from 'theme';
+import ExternalLinkSvg from 'templates/components/ExternalLinkSvg';
 
 const FooterLink = ({children, target, to}) => (
   <a
@@ -26,6 +27,15 @@ const FooterLink = ({children, target, to}) => (
     href={to}
     target={target}>
     {children}
+    {target === '_blank' &&
+      <ExternalLinkSvg
+        cssProps={{
+          verticalAlign: -2,
+          display: 'inline-block',
+          marginLeft: 5,
+          color: colors.subtle,
+        }}
+      />}
   </a>
 );
 

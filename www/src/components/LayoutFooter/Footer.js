@@ -20,7 +20,7 @@ import {colors, media} from 'theme';
 
 import ossLogoPng from 'images/oss_logo.png';
 
-const Footer = () => (
+const Footer = ({layoutHasSidebar = false}) => (
   <footer
     css={{
       backgroundColor: colors.darker,
@@ -29,21 +29,10 @@ const Footer = () => (
       paddingBottom: 50,
 
       [media.size('sidebarFixed')]: {
-        paddingTop: 80,
-      },
-
-      [media.size('sidebarFixedNarrowFooter')]: {
-        paddingTop: 10,
+        paddingTop: 40,
       },
     }}>
-    <Container
-      cssProps={{
-        [media.size('sidebarFixedNarrowFooter')]: {
-          maxWidth: 800,
-          paddingLeft: 0,
-          paddingRight: 0,
-        },
-      }}>
+    <Container>
       <div
         css={{
           display: 'flex',
@@ -51,14 +40,14 @@ const Footer = () => (
           flexWrap: 'wrap',
 
           [media.between('small', 'medium')]: {
-            paddingRight: 240,
+            paddingRight: layoutHasSidebar ? 240 : null,
           },
 
           [media.between('large', 'largerSidebar')]: {
-            paddingRight: 280,
+            paddingRight: layoutHasSidebar ? 280 : null,
           },
           [media.between('largerSidebar', 'sidebarFixed', true)]: {
-            paddingRight: 380,
+            paddingRight: layoutHasSidebar ? 380 : null,
           },
         }}>
         <div
@@ -74,7 +63,7 @@ const Footer = () => (
               paddingLeft: 40,
             },
           }}>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>Docs</MetaTitle>
             <FooterLink to="/docs/hello-world.html">Quick Start</FooterLink>
             <FooterLink to="/docs/thinking-in-react.html">
@@ -85,7 +74,7 @@ const Footer = () => (
               Advanced Guides
             </FooterLink>
           </FooterNav>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>Community</MetaTitle>
             <FooterLink
               to="http://stackoverflow.com/questions/tagged/reactjs"
@@ -118,7 +107,7 @@ const Footer = () => (
               Twitter
             </FooterLink>
           </FooterNav>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>Resources</MetaTitle>
             <FooterLink to="/community/conferences.html">
               Conferences
@@ -137,7 +126,7 @@ const Footer = () => (
               Complementary Tools
             </FooterLink>
           </FooterNav>
-          <FooterNav>
+          <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>More</MetaTitle>
             <FooterLink to="/blog.html">Blog</FooterLink>
             <FooterLink to="https://github.com/facebook/react" target="_blank">
@@ -161,6 +150,10 @@ const Footer = () => (
             [media.greaterThan('xlarge')]: {
               width: 'calc(100% / 3)',
               order: -1,
+            },
+            [media.greaterThan('large')]: {
+              order: -1,
+              width: layoutHasSidebar ? null : 'calc(100% / 3)',
             },
             [media.lessThan('large')]: {
               textAlign: 'center',
