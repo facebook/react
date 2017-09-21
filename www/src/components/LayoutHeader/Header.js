@@ -51,14 +51,13 @@ const Header = ({location}) => (
         <Link
           css={{
             display: 'flex',
-              marginRight: 10,
+            marginRight: 10,
 
             [media.greaterThan('small')]: {
               width: 'calc(100% / 6)',
             },
             [media.lessThan('small')]: {
               flex: '0 0 auto',
-
             },
           }}
           to="/">

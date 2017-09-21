@@ -50,8 +50,6 @@ class Template extends Component {
       layoutHasSidebar = true;
     }
 
-    console.log("layoutHasSidebar", layoutHasSidebar);
-
     return (
       <div
         css={{
