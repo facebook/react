@@ -20,6 +20,7 @@ module.exports = {
   },
   plugins: [
     'gatsby-transformer-authors-yaml',
+    'gatsby-plugin-netlify',
     'gatsby-plugin-glamor',
     'gatsby-plugin-react-next',
     {
