@@ -127,15 +127,12 @@ const CreateLink = (location, section, item) => {
     return (
       <a css={[linkCss]} href={item.href}>
         {item.title}
-        <span
-          css={{
-            verticalAlign: -2,
-            display: 'inline-block',
-            marginLeft: 5,
-            color: colors.subtle,
-          }}>
-          <ExternalLinkSvg />
-        </span>
+        <ExternalLinkSvg cssProps={{
+          verticalAlign: -2,
+          display: 'inline-block',
+          marginLeft: 5,
+          color: colors.subtle,
+        }} />
       </a>
     );
   } else {

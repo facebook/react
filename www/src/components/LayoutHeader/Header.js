@@ -16,6 +16,7 @@ import HeaderLink from './HeaderLink';
 import Link from 'gatsby-link';
 import React from 'react';
 import {colors, fonts, media} from 'theme';
+import ExternalLinkSvg from 'templates/components/ExternalLinkSvg';
 
 import logoSvg from 'icons/logo.svg';
 
@@ -221,9 +222,17 @@ const Header = ({location}) => (
               marginLeft: 10,
               whiteSpace: 'nowrap',
               ...fonts.small,
+              ':hover': {
+                color: colors.brand,
+              },
             }}
             href="https://github.com/facebook/react/">
             GitHub
+            <ExternalLinkSvg cssProps={{
+              marginLeft: 5,
+              verticalAlign: -2,
+              color: colors.subtle,
+            }} />
           </a>
         </div>
       </div>
