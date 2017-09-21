@@ -34,6 +34,10 @@ const FB_PROD = Bundles.bundleTypes.FB_PROD;
 const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
+const ISOMORPHIC = Bundles.moduleTypes.ISOMORPHIC;
+const RENDERER = Bundles.moduleTypes.RENDERER;
+const RECONCILER = Bundles.moduleTypes.RECONCILER;
+
 const reactVersion = require('../../package.json').version;
 const requestedBundleTypes = (argv.type || '')
   .split(',')
@@ -78,8 +82,7 @@ function getHeaderSanityCheck(bundleType, hasteName) {
   }
 }
 
-function getBanner(bundleType, hasteName, filename) {
-  const isReconciler = /react-reconciler/.test(filename);
+function getBanner(bundleType, hasteName, filename, moduleType) {
   switch (bundleType) {
     // UMDs are not wrapped in conditions.
     case UMD_DEV:
@@ -90,15 +93,18 @@ function getBanner(bundleType, hasteName, filename) {
       let banner = Header.getHeader(filename, reactVersion);
       // Wrap the contents of the if-DEV check with an IIFE.
       // Block-level function definitions can cause problems for strict mode.
-      banner += isReconciler
+      banner += moduleType === RECONCILER
         ? `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\nmodule.exports = function(config) {\n`
         : `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
       return banner;
     case NODE_PROD:
       return (
         Header.getHeader(filename, reactVersion) +
-        (isReconciler ? `\n\n'use strict';\n\n\nmodule.exports = function(config) {\n` : '')
+        (moduleType === RECONCILER
+         ? `\n\n'use strict';\n\n\nmodule.exports = function(config) {\n`
+        : '')
       );
+
     // All FB and RN bundles need Haste headers.
     // DEV bundle is guarded to help weak dead code elimination.
     case FB_DEV:
@@ -111,15 +117,15 @@ function getBanner(bundleType, hasteName, filename) {
       // Block-level function definitions can cause problems for strict mode.
       return (
         Header.getProvidesHeader(hasteFinalName) +
-        isDev ? `\n\n'use strict';\n\n\nif (__DEV__) {\n(function() {\n` : ''
+        (isDev ? `\n\n'use strict';\n\n\nif (__DEV__) {\n(function() {\n` : '')
       );
     default:
       throw new Error('Unknown type.');
   }
 }
 
-function getFooter(bundleType, filename) {
-  if (/react-reconciler/.test(filename)) {
+function getFooter(bundleType, filename, moduleType) {
+  if (moduleType === RECONCILER) {
     return (
       '\nreturn ReactFiberReconciler(config);\n};\n' +
       (bundleType === NODE_DEV ? '}\n' : '')
@@ -178,16 +184,16 @@ function handleRollupWarnings(warning) {
   console.warn(warning.message || warning);
 }
 
-function updateBundleConfig(config, filename, format, bundleType, hasteName) {
+function updateBundleConfig(config, filename, format, bundleType, hasteName, moduleType) {
   return Object.assign({}, config, {
-    banner: getBanner(bundleType, hasteName, filename),
+    banner: getBanner(bundleType, hasteName, filename, moduleType),
     dest: Packaging.getPackageDestination(
       config,
       bundleType,
       filename,
       hasteName
     ),
-    footer: getFooter(bundleType),
+    footer: getFooter(bundleType, filename, moduleType),
     format,
     interop: false,
   });
@@ -321,7 +327,7 @@ function getPlugins(
   filename,
   bundleType,
   hasteName,
-  isRenderer,
+  moduleType,
   manglePropertiesOnProd,
   useFiber,
   modulesToStub
@@ -329,7 +335,7 @@ function getPlugins(
   const plugins = [
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
-      Modules.getAliases(paths, bundleType, isRenderer, argv['extract-errors'])
+      Modules.getAliases(paths, bundleType, moduleType, argv['extract-errors'])
     ),
   ];
 
@@ -465,7 +471,7 @@ function createBundle(bundle, bundleType) {
     external: Modules.getExternalModules(
       bundle.externals,
       bundleType,
-      bundle.isRenderer
+      bundle.moduleType
     ),
     onwarn: handleRollupWarnings,
     plugins: getPlugins(
@@ -475,7 +481,7 @@ function createBundle(bundle, bundleType) {
       filename,
       bundleType,
       bundle.hasteName,
-      bundle.isRenderer,
+      bundle.moduleType,
       bundle.manglePropertiesOnProd,
       bundle.useFiber,
       bundle.modulesToStub
@@ -488,7 +494,8 @@ function createBundle(bundle, bundleType) {
           filename,
           format,
           bundleType,
-          bundle.hasteName
+          bundle.hasteName,
+          bundle.moduleType
         )
       )
     )

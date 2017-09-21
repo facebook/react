@@ -4,6 +4,7 @@ const resolve = require('path').resolve;
 const basename = require('path').basename;
 const sync = require('glob').sync;
 const bundleTypes = require('./bundles').bundleTypes;
+const moduleTypes = require('./bundles').moduleTypes;
 const extractErrorCodes = require('../error-codes/extract-errors');
 
 const exclude = [
@@ -20,6 +21,10 @@ const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
+
+const ISOMORPHIC = moduleTypes.ISOMORPHIC;
+const RENDERER = moduleTypes.RENDERER;
+const RECONCILER = moduleTypes.RECONCILER;
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -87,7 +92,7 @@ function createModuleMap(paths, extractErrors, bundleType) {
   return moduleMap;
 }
 
-function getNodeModules(bundleType, isRenderer) {
+function getNodeModules(bundleType, moduleType) {
   // rather than adding the rollup node resolve plugin,
   // we can instead deal with the only node module that is used
   // for UMD bundles - object-assign
@@ -97,7 +102,7 @@ function getNodeModules(bundleType, isRenderer) {
       return {
         // Bundle object-assign once in the isomorphic React, and then use
         // that from the renderer UMD. Avoids bundling it in both UMDs.
-        'object-assign': isRenderer
+        'object-assign': moduleType === RENDERER
           ? resolve('./scripts/rollup/shims/rollup/assign.js')
           : resolve('./node_modules/object-assign/index.js'),
         // include the ART package modules directly by aliasing them from node_modules
@@ -136,7 +141,7 @@ function ignoreReactNativeModules() {
   ];
 }
 
-function getExternalModules(externals, bundleType, isRenderer) {
+function getExternalModules(externals, bundleType, moduleType) {
   // external modules tell Rollup that we should not attempt
   // to bundle these modules and instead treat them as
   // external dependencies to the bundle. so for CJS bundles
@@ -144,6 +149,7 @@ function getExternalModules(externals, bundleType, isRenderer) {
   // the top of the bundle. for UMD bundles this means having
   // both a require and a global check for them
   let externalModules = externals.slice();
+  const isRenderer = moduleType === RENDERER || moduleType === RECONCILER;
 
   switch (bundleType) {
     case UMD_DEV:
@@ -282,7 +288,7 @@ function replaceBundleStubModules(bundleModulesToStub) {
   return stubbedModules;
 }
 
-function getAliases(paths, bundleType, isRenderer, extractErrors) {
+function getAliases(paths, bundleType, moduleType, extractErrors) {
   return Object.assign(
     createModuleMap(
       paths,
@@ -290,7 +296,7 @@ function getAliases(paths, bundleType, isRenderer, extractErrors) {
       bundleType
     ),
     getInternalModules(),
-    getNodeModules(bundleType, isRenderer),
+    getNodeModules(bundleType, moduleType),
     getFbjsModuleAliases(bundleType)
   );
 }
