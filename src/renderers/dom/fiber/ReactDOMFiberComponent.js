@@ -159,7 +159,7 @@ function ensureListeningTo(rootContainerElement, registrationName) {
 
 function getOwnerDocumentFromRootContainer(
   rootContainerElement: Element | Document,
-) {
+): Document {
   return rootContainerElement.nodeType === DOCUMENT_NODE
     ? (rootContainerElement: any)
     : rootContainerElement.ownerDocument;

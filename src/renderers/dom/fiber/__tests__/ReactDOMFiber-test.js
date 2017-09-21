@@ -1134,7 +1134,6 @@ describe('ReactDOMFiber', () => {
 
       var actualDocument;
       var textNode;
-      iframeContainer.appendChildBackup = iframeContainer.appendChild;
 
       spyOn(iframeContainer, 'appendChild').and.callFake(node => {
         actualDocument = node.ownerDocument;
@@ -1146,6 +1145,7 @@ describe('ReactDOMFiber', () => {
       expect(textNode.textContent).toBe(textContent);
       expect(actualDocument).not.toBe(document);
       expect(actualDocument).toBe(iframeDocument);
+      expect(iframeContainer.appendChild).toHaveBeenCalledTimes(1);
     });
   }
 });
