@@ -7,7 +7,7 @@
 
 ### New JS Environment Requirements
 
- * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), [you may want to include a polyfill](https://gist.github.com/flarnie/7e82e4c4c52c8ed51b471e7abac6ad2d).
+ * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), [you may want to include a polyfill](https://gist.github.com/gaearon/9a4d54653ae9c50af6c54b4e0e56b583).
 
 ### New Features
 * **Improved error handling with introduction of "error boundaries".** [Error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
