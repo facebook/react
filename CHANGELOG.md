@@ -14,6 +14,7 @@
 * `ReactDOM.createPortal()` is official and stable
   ([@gaearon](https://github.com/gaearon) in
   [10675](https://github.com/facebook/react/pull/10675))
+* Streaming mode for server side rendering is enabled with `ReactDOMServer.renderToNodeStream()` and `ReactDOMServer.renderToStaticNodeStream()`. ([@aickin](https://github.com/aickin) in [#10425](https://github.com/facebook/react/pull/10425), [#10044](https://github.com/facebook/react/pull/10044), [#10039](https://github.com/facebook/react/pull/10039), [#10024](https://github.com/facebook/react/pull/10024), [#9264](https://github.com/facebook/react/pull/9264), and others.)
 * Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
 ### Breaking Changes
@@ -35,6 +36,9 @@
   - `react/dist/react.min.js` → `react/umd/react.production.min.js`
   - `react-dom/dist/react-dom.js` → `react-dom/umd/react-dom.development.js`
   - `react-dom/dist/react-dom.min.js` → `react-dom/umd/react-dom.production.min.js`
+* The server renderer has been completely rewritten, with some improvements:
+  * Server rendering does not use markup validation anymore, and instead tries its best to attach to existing DOM, warning about inconsistencies. And there is no data-reactid anymore.
+  * Hydrating a server rendered container now has an explicit API. Use `ReactDOM.hydrate` instead of `ReactDOM.render` if you're reviving server rendered HTML. Keep using `ReactDOM.render` if you're just doing client-side rendering.
 * When "unknown" props are passed to DOM components, in some cases, React will now render them in the DOM. [See this post for more details.](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
 ### Removed deprecations
