@@ -5,9 +5,9 @@
     Click to see more.
   </summary>
 
-### JS Environment Requirements
+### New JS Environment Requirements
 
- * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), consider including a global polyfill in your bundled application, such as [core-js](https://github.com/zloirock/core-js) or [babel-polyfill](https://babeljs.io/docs/usage/polyfill/).
+ * **React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame).** If you support older browsers and devices which may not yet provide these natively (eg <IE11), [you may want to include a polyfill](https://gist.github.com/flarnie/7e82e4c4c52c8ed51b471e7abac6ad2d).
 
 ### Major Changes
 
@@ -22,7 +22,7 @@
   * When replacing `<A />` with `<B />`,  `B.componentWillMount` now always happens before  `A.componentWillUnmount`. Previously, `A.componentWillUnmount` could fire first in some cases.
   * Previously, changing the ref to a component would always detach the ref before that component's render is called. Now, we change the ref later, when applying the changes to the DOM.
   * It is not safe to re-render into a container that was modified by something other than React. This worked previously in some cases but was never supported. We now emit a warning in this case. Instead you should clean up your component trees using `ReactDOM.unmountComponentAtNode`. [See this example.](https://github.com/facebook/react/issues/10294#issuecomment-318820987)
-  * `componentDidUpdate` lifecycle no longer receives `prevContext` param. (See #8631)
+  * `componentDidUpdate` lifecycle no longer receives `prevContext` param. ([@bvaughn](https://github.com/bvaughn) in [#8631](https://github.com/facebook/react/pull/8631))
   * Shallow renderer no longer calls `componentDidUpdate()` because DOM refs are not available. This also makes it consistent with `componentDidMount()` (which does not get called in previous versions either).
   * Shallow renderer does not implement `unstable_batchedUpdates()` anymore.
 - **The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds.** For example:
@@ -33,7 +33,7 @@
 * ReactDOM.createPortal() is official and stable
   ([@gaearon](https://github.com/gaearon) in
   [10675](https://github.com/facebook/react/pull/10675))
-* Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) (@nhunzaker in https://github.com/facebook/react/pull/10385 , https://github.com/facebook/react/pull/10564 , https://github.com/facebook/react/pull/10495 and others)
+* Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
 ### Removed deprecations
 
