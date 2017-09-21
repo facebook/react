@@ -19,13 +19,13 @@ import {createElement} from 'glamor/react';
 const Flex = ({
   basis = 'auto',
   children,
+  className,
   direction = 'row',
   grow = 0,
   halign = 'flex-start',
   shrink = 1,
   type = 'div',
   valign = 'flex-start',
-  className,
   ...rest
 }) =>
   createElement(
