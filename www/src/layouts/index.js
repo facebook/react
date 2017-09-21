@@ -12,7 +12,6 @@
 'use strict';
 
 import React, {Component} from 'react';
-import PropTypes from 'prop-types';
 import Flex from 'components/Flex';
 import Footer from 'components/LayoutFooter';
 import Header from 'components/LayoutHeader';
@@ -25,20 +24,6 @@ import 'css/reset.css';
 import 'css/algolia.css';
 
 class Template extends Component {
-  constructor(props) {
-    super(props);
-    this.handleWindowResize = this._handleWindowResize.bind(this);
-    this.state = {
-      menuIsOpen: true,
-    };
-  }
-
-  getChildContext() {
-    return {
-      menuIsOpen: this.state.menuIsOpen,
-    };
-  }
-
   componentDidMount() {
     // Initialize Algolia search.
     // TODO Is this expensive? Should it be deferred until a user is about to search?
@@ -48,24 +33,6 @@ class Template extends Component {
       indexName: 'react',
       inputSelector: '#algolia-doc-search',
     });
-
-    window.addEventListener('resize', this.handleWindowResize);
-  }
-
-  componentWillUnmount() {
-    window.removeEventListener('resize', this.handleWindowResize);
-  }
-
-  // Close the menu if it's resized to >= 'xsmall'
-  _handleWindowResize() {
-    const greaterThanSmall = window.matchMedia(
-      media.greaterThan('small').replace('@media ', ''),
-    ).matches;
-    if (greaterThanSmall) {
-      this.setState({
-        menuIsOpen: false,
-      });
-    }
   }
 
   render() {
@@ -113,9 +80,5 @@ class Template extends Component {
     );
   }
 }
-
-Template.childContextTypes = {
-  menuIsOpen: PropTypes.bool,
-};
 
 export default Template;
