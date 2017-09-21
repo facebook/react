@@ -34,8 +34,6 @@ const FB_PROD = Bundles.bundleTypes.FB_PROD;
 const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
-const ISOMORPHIC = Bundles.moduleTypes.ISOMORPHIC;
-const RENDERER = Bundles.moduleTypes.RENDERER;
 const RECONCILER = Bundles.moduleTypes.RECONCILER;
 
 const reactVersion = require('../../package.json').version;

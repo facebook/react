@@ -22,7 +22,6 @@ const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
-const ISOMORPHIC = moduleTypes.ISOMORPHIC;
 const RENDERER = moduleTypes.RENDERER;
 const RECONCILER = moduleTypes.RECONCILER;
 
