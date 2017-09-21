@@ -128,7 +128,7 @@ const Footer = ({layoutHasSidebar = false}) => (
           </FooterNav>
           <FooterNav layoutHasSidebar={layoutHasSidebar}>
             <MetaTitle onDark={true}>More</MetaTitle>
-            <FooterLink to="/blog.html">Blog</FooterLink>
+            <FooterLink to="/blog/">Blog</FooterLink>
             <FooterLink to="https://github.com/facebook/react" target="_blank">
               GitHub
             </FooterLink>
