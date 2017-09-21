@@ -129,12 +129,8 @@ const sharedStyles = {
       marginTop: 40,
       marginBottom: 120,
 
-      [media.between('medium', 'large')]: {
+      [media.greaterThan('medium')]: {
         marginTop: 50,
-      },
-
-      [media.greaterThan('xlarge')]: {
-        marginTop: 85,
       },
     },
     sidebar: {
