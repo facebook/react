@@ -14,7 +14,7 @@
 * **Improved error handling with introduction of "error boundaries".** [Error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
 * `ReactDOM.createPortal()` is official and stable
   ([@gaearon](https://github.com/gaearon) in
-  [10675](https://github.com/facebook/react/pull/10675))
+  [#10675](https://github.com/facebook/react/pull/10675))
 * Streaming mode for server side rendering is enabled with `ReactDOMServer.renderToNodeStream()` and `ReactDOMServer.renderToStaticNodeStream()`. ([@aickin](https://github.com/aickin) in [#10425](https://github.com/facebook/react/pull/10425), [#10044](https://github.com/facebook/react/pull/10044), [#10039](https://github.com/facebook/react/pull/10039), [#10024](https://github.com/facebook/react/pull/10024), [#9264](https://github.com/facebook/react/pull/9264), and others.)
 * Allow [passing some "unknown" attributes through to DOM components](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
@@ -24,7 +24,7 @@
     * To work around this, you can either use [the new portal API](https://github.com/facebook/react/issues/10309#issuecomment-318433235) or [refs](https://github.com/facebook/react/issues/10309#issuecomment-318434635).
   * Minor changes to `setState` behavior:
     * Calling `setState` with null no longer triggers an update. This allows you to decide in an updater function if you want to re-render.
-    * Calling `setState` directly in render always causes an update. This was not previously the case. Regardless, you should not be calling setState from render.
+    * Calling `setState` directly in render always causes an update. This was not previously the case. Regardless, you should not be calling `setState` from render.
     * `setState` callback (second argument) now fires immediately after `componentDidMount` / `componentDidUpdate` instead of after all components have rendered.
   * When replacing `<A />` with `<B />`,  `B.componentWillMount` now always happens before  `A.componentWillUnmount`. Previously, `A.componentWillUnmount` could fire first in some cases.
   * Previously, changing the `ref` to a component would always detach the ref before that component's render is called. Now, we change the `ref` later, when applying the changes to the DOM.
