@@ -38,50 +38,51 @@ function Section({closeParentMenu, isActive, location, onClick, section}) {
               color: colors.text,
             },
           },
-        },
-      }}>
-      {section.title}
-      <ChevronSvg
-        cssProps={{
-          marginLeft: 7,
-          transform: isActive ? 'rotateX(180deg)' : 'rotateX(0deg)',
-          transition: 'transform 0.2s ease',
-
-          [media.lessThan('small')]: {
-            display: 'none',
-          },
         }}
-      />
-    </MetaTitle>
-    <ul
-      css={{
-        marginBottom: 10,
+      >
+        {section.title}
+        <ChevronSvg
+          cssProps={{
+            marginLeft: 7,
+            transform: isActive ? 'rotateX(180deg)' : 'rotateX(0deg)',
+            transition: 'transform 0.2s ease',
 
-        [media.greaterThan('small')]: {
-          display: isActive ? 'block' : 'none',
-        },
-      }}>
-      {section.items.map(item => (
-        <li
-          key={item.id}
-          css={{
-            marginTop: 5,
-          }}>
-          {CreateLink(location, section, item)}
+            [media.lessThan('small')]: {
+              display: 'none',
+            },
+          }}
+        />
+      </MetaTitle>
+      <ul
+        css={{
+          marginBottom: 10,
 
-          {item.subitems &&
-            <ul css={{marginLeft: 20}}>
-              {item.subitems.map(subitem => (
-                <li key={subitem.id}>
-                  {CreateLink(location, section, subitem, closeParentMenu)}
-                </li>
-              ))}
-            </ul>}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
+          [media.greaterThan('small')]: {
+            display: isActive ? 'block' : 'none',
+          },
+        }}>
+        {section.items.map(item => (
+          <li
+            key={item.id}
+            css={{
+              marginTop: 5,
+            }}>
+            {CreateLink(location, section, item)}
+
+            {item.subitems &&
+              <ul css={{marginLeft: 20}}>
+                {item.subitems.map(subitem => (
+                  <li key={subitem.id}>
+                    {CreateLink(location, section, subitem, closeParentMenu)}
+                  </li>
+                ))}
+              </ul>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 const activeLinkCss = {
   fontWeight: 'bold',
