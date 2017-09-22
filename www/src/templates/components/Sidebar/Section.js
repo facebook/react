@@ -43,6 +43,8 @@ const Section = ({isActive, location, onClick, section}) => (
         cssProps={{
           marginLeft: 7,
           transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
+          transition: 'transform 0.2s ease',
+
           [media.lessThan('small')]: {
             display: 'none',
           },
