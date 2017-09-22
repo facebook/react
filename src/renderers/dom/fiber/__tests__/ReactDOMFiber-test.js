@@ -1117,5 +1117,35 @@ describe('ReactDOMFiber', () => {
           'to empty a container.',
       );
     });
+
+    it('should render a text component with a text DOM node on the same document as the container', () => {
+      // 1. Create a new document through the use of iframe
+      // 2. Set up the spy to make asserts when a text component
+      //    is rendered inside the iframe container
+      var textContent = 'Hello world';
+      var iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      var iframeDocument = iframe.contentDocument;
+      iframeDocument.write(
+        '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
+      );
+      iframeDocument.close();
+      var iframeContainer = iframeDocument.body.firstChild;
+
+      var actualDocument;
+      var textNode;
+
+      spyOn(iframeContainer, 'appendChild').and.callFake(node => {
+        actualDocument = node.ownerDocument;
+        textNode = node;
+      });
+
+      ReactDOM.render(textContent, iframeContainer);
+
+      expect(textNode.textContent).toBe(textContent);
+      expect(actualDocument).not.toBe(document);
+      expect(actualDocument).toBe(iframeDocument);
+      expect(iframeContainer.appendChild).toHaveBeenCalledTimes(1);
+    });
   }
 });

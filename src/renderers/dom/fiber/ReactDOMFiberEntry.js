@@ -46,6 +46,7 @@ var invariant = require('fbjs/lib/invariant');
 var {getChildNamespace} = DOMNamespaces;
 var {
   createElement,
+  createTextNode,
   setInitialProperties,
   diffProperties,
   updateProperties,
@@ -368,7 +369,7 @@ var DOMRenderer = ReactFiberReconciler({
       const hostContextDev = ((hostContext: any): HostContextDev);
       validateDOMNesting(null, text, null, hostContextDev.ancestorInfo);
     }
-    var textNode: TextInstance = document.createTextNode(text);
+    var textNode: TextInstance = createTextNode(text, rootContainerInstance);
     precacheFiberNode(internalInstanceHandle, textNode);
     return textNode;
   },
