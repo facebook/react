@@ -107,6 +107,19 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
+  it('does not warns for fragments of multiple elements', () => {
+    spyOn(console, 'error');
+
+    void (
+      <React.Fragment>
+        <span>1</span>
+        <span>2</span>
+      </React.Fragment>
+    );
+
+    expectDev(console.error.calls.count()).toBe(0);
+  });
+
   it('does not warns for arrays of elements with keys', () => {
     spyOn(console, 'error');
 

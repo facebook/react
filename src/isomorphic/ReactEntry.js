@@ -39,6 +39,7 @@ var React = {
   Component: ReactBaseClasses.Component,
   PureComponent: ReactBaseClasses.PureComponent,
   unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
+  Fragment: ReactBaseClasses.Fragment,
 
   createElement: createElement,
   cloneElement: cloneElement,
