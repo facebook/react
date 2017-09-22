@@ -49,7 +49,7 @@
     "url": "git+https://github.com/facebook/react.git"
   },
   "scripts": {
-    "dev": "gatsby develop",
+    "dev": "gatsby develop -H 0.0.0.0",
     "lint": "./node_modules/.bin/eslint --ext .js,.jsx --ignore-pattern public .",
     "test": "echo \"Error: no test specified\" && exit 1",
     "develop": "gatsby develop",
