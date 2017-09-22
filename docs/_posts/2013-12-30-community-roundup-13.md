@@ -94,7 +94,7 @@ var MyComponent = React.createClass({
 [David Chang](http://davidandsuzi.com/) working at [HasOffer](http://www.hasoffers.com/) wanted to speed up his Angular app and replaced Angular primitives by React at different layers. When using React naively it is 67% faster, but when combining it with angular's transclusion it is 450% slower.
 
 > Rendering this takes 803ms for 10 iterations, hovering around 35 and 55ms for each data reload (that's 67% faster). You'll notice that the first load takes a little longer than successive loads, and the second load REALLY struggles - here, it's 433ms, which is more than half of the total time!
-> <figure>[![](/react/img/blog/ngreact.png)](http://davidandsuzi.com/ngreact-react-components-in-angular/)</figure>
+> <figure><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/"><img src="../img/blog/ngreact.png"></a></figure>
 >
 > [Read the full article...](http://davidandsuzi.com/ngreact-react-components-in-angular/)
 

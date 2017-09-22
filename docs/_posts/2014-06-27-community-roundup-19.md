@@ -27,7 +27,7 @@ The core concepts React themselves is something very valuable that the community
 
 And don't forget [Pete Hunt](https://github.com/petehunt)'s Wolfenstein 3D rendering engine in React ([source code](https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183)). While it's nearly a year old, it's still a nice demo.
 
-[![](/react/img/blog/wolfenstein_react.png)](http://www.petehunt.net/wolfenstein3D-react/wolf3d.html)
+[![](../img/blog/wolfenstein_react.png)](http://www.petehunt.net/wolfenstein3D-react/wolf3d.html)
 
 Give us a shoutout on IRC or [React Google Groups](https://groups.google.com/forum/#!forum/reactjs) if you've used React in some Interesting places.
 

@@ -24,7 +24,7 @@ When loading React (or other libraries that might throw errors) from a CDN, add 
 
 Also ensure the CDN responds with the `Access-Control-Allow-Origin: *` HTTP header:
 
-![Access-Control-Allow-Origin: *](/react/img/docs/cdn-cors-header.png)
+![Access-Control-Allow-Origin: *](../img/docs/cdn-cors-header.png)
 
 ### Webpack
 

@@ -9,7 +9,7 @@ It's an exciting time for React as there are now more commits from open source c
 
 [Atom, GitHub's code editor, is now using React](http://blog.atom.io/2014/07/02/moving-atom-to-react.html) to build the editing experience. They made the move in order to improve performance. By default, React helped them eliminate unnecessary reflows, enabling them to focus on architecting the rendering pipeline in order to minimize repaints by using hardware acceleration. This is a testament to the fact that React's architecture is perfect for high performant applications.
 
-[<img src="/react/img/blog/gpu-cursor-move.gif" style="width: 100%;" />](http://blog.atom.io/2014/07/02/moving-atom-to-react.html)
+[<img src="../img/blog/gpu-cursor-move.gif" style="width: 100%;" />](http://blog.atom.io/2014/07/02/moving-atom-to-react.html)
 
 
 ## Why Does React Scale?
@@ -72,7 +72,7 @@ In related news, the next [React SF Meetup](http://www.meetup.com/ReactJS-San-Fr
 
 One of the strengths of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write [React component adapters for KendoUI](http://www.ifandelse.com/using-reactjs-and-kendoui-together/).
 
-<figure><a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/"><img src="/react/img/blog/kendoui.png" /></a></figure>
+<figure><a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/"><img src="../img/blog/kendoui.png" /></a></figure>
 
 
 ## Acorn JSX

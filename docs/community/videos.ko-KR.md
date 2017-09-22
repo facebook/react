@@ -17,7 +17,7 @@ next: complementary-tools-ko-KR.html
 ### Thinking in react - tagtree.tv
 
 [tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/react/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
-<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *
 
@@ -40,7 +40,7 @@ next: complementary-tools-ko-KR.html
 
 CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barczewski](http://jeff.barczewski.com/)가 React에 대해서 이야기 합니다.
 
-<figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
+<figure><a href="http://codewinds.com/4"><img src="../img/docs/codewinds-004.png"></a></figure>
 
 <table width="100%"><tr><td>
 02:08 - What is React and why use it?<br />
@@ -74,7 +74,7 @@ CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barcze
 
 JavaScript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다.
 
-<figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="../img/docs/javascript-jabber.png"></a></figure>
 
 <table width="100%"><tr><td>
 01:34 – Pete Hunt Introduction<br />
