@@ -99,10 +99,9 @@ function getBanner(bundleType, hasteName, filename, moduleType) {
       return (
         Header.getHeader(filename, reactVersion) +
         (moduleType === RECONCILER
-         ? `\n\n'use strict';\n\n\nmodule.exports = function(config) {\n`
-        : '')
+          ? `\n\n'use strict';\n\n\nmodule.exports = function(config) {\n`
+          : '')
       );
-
     // All FB and RN bundles need Haste headers.
     // DEV bundle is guarded to help weak dead code elimination.
     case FB_DEV:
@@ -182,7 +181,14 @@ function handleRollupWarnings(warning) {
   console.warn(warning.message || warning);
 }
 
-function updateBundleConfig(config, filename, format, bundleType, hasteName, moduleType) {
+function updateBundleConfig(
+  config,
+  filename,
+  format,
+  bundleType,
+  hasteName,
+  moduleType
+) {
   return Object.assign({}, config, {
     banner: getBanner(bundleType, hasteName, filename, moduleType),
     dest: Packaging.getPackageDestination(

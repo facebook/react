@@ -7,4 +7,3 @@ const B = Reconciler({});
 assert(global.valueStacks.length === 2);
 assert(global.valueStacks[0] !== global.valueStacks[1]);
 console.log('Ok!');
-
