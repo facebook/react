@@ -48,11 +48,16 @@ class StickyResponsiveSidebar extends Component {
     this.state = {
       open: false,
     };
-    this._toggleOpen = this._toggleOpen.bind(this);
+    this._openNavMenu = this._openNavMenu.bind(this);
+    this._closeNavMenu = this._closeNavMenu.bind(this);
   }
 
-  _toggleOpen() {
+  _openNavMenu() {
     this.setState({open: !this.state.open});
+  }
+
+  _closeNavMenu() {
+    this.setState({open: false});
   }
 
   render() {
@@ -156,7 +161,7 @@ class StickyResponsiveSidebar extends Component {
                 tranform: 'none !important',
               },
             }}>
-            <Sidebar closeParentMenu={this._toggleOpen} {...this.props} />
+            <Sidebar closeParentMenu={this._closeNavMenu} {...this.props} />
           </div>
         </div>
         <div
@@ -173,7 +178,7 @@ class StickyResponsiveSidebar extends Component {
             zIndex: 3,
             [media.lessThan('small')]: smallScreenBottomBarStyles,
           }}
-          onClick={this._toggleOpen}>
+          onClick={this._openNavMenu}>
           <Container>
             <div
               css={{

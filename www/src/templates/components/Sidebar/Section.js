@@ -38,8 +38,7 @@ function Section({closeParentMenu, isActive, location, onClick, section}) {
               color: colors.text,
             },
           },
-        }}
-      >
+        }}>
         {section.title}
         <ChevronSvg
           cssProps={{
