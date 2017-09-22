@@ -253,13 +253,18 @@ class CounterButton extends React.PureComponent {
   constructor(props) {
     super(props);
     this.state = {count: 1};
+    this.handleClick = this.handleClick.bind(this);
+  }
+  
+  handleClick() {
+    this.setState(state => ({count: state.count + 1}));
   }
 
   render() {
     return (
       <button
         color={this.props.color}
-        onClick={() => this.setState(state => ({count: state.count + 1}))}>
+        onClick={this.handleClick}>
         Count: {this.state.count}
       </button>
     );
