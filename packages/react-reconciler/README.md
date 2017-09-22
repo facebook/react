@@ -17,14 +17,14 @@ var Renderer = {
   ) {
     let root = container._reactRootContainer;
     if (!root) {
-      const newRoot = Renderer.createContainer(container);
+      const newRoot = Reconciler.createContainer(container);
       root = container._reactRootContainer = newRoot;
       // Initial mount should not be batched.
-      Renderer.unbatchedUpdates(() => {
-        Renderer.updateContainer(element, newRoot, null, callback);
+      Reconciler.unbatchedUpdates(() => {
+        Reconciler.updateContainer(element, newRoot, null, callback);
       });
     } else {
-      Renderer.updateContainer(element, root, null, callback);
+      Reconciler.updateContainer(element, root, null, callback);
     }
   }
 };
