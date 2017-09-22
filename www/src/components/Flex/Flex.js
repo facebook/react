@@ -19,6 +19,7 @@ import {createElement} from 'glamor/react';
 const Flex = ({
   basis = 'auto',
   children,
+  className,
   direction = 'row',
   grow = 0,
   halign = 'flex-start',
@@ -30,6 +31,7 @@ const Flex = ({
   createElement(
     type,
     {
+      className,
       css: {
         display: 'flex',
         flexDirection: direction,
