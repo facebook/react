@@ -42,7 +42,7 @@ const Section = ({isActive, location, onClick, section}) => (
       <ChevronSvg
         cssProps={{
           marginLeft: 7,
-          transform: isActive ? 'rotate(180deg)' : 'rotate(0deg)',
+          transform: isActive ? 'rotateX(180deg)' : 'rotateX(0deg)',
           transition: 'transform 0.2s ease',
 
           [media.lessThan('small')]: {
