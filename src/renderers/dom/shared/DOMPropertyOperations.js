@@ -12,8 +12,6 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInstrumentation = require('ReactInstrumentation');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -203,11 +201,6 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        type: 'update attribute',
-        payload: payload,
-      });
     }
   },
 
@@ -224,11 +217,6 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var payload = {};
       payload[name] = value;
-      ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        type: 'update attribute',
-        payload: payload,
-      });
     }
   },
 
@@ -240,13 +228,6 @@ var DOMPropertyOperations = {
    */
   deleteValueForAttribute: function(node, name) {
     node.removeAttribute(name);
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        type: 'remove attribute',
-        payload: name,
-      });
-    }
   },
 
   /**
@@ -273,14 +254,6 @@ var DOMPropertyOperations = {
       }
     } else {
       node.removeAttribute(name);
-    }
-
-    if (__DEV__) {
-      ReactInstrumentation.debugTool.onHostOperation({
-        instanceID: ReactDOMComponentTree.getInstanceFromNode(node)._debugID,
-        type: 'remove attribute',
-        payload: name,
-      });
     }
   },
 };
