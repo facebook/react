@@ -188,6 +188,12 @@ const sharedStyles = {
       marginRight: -30,
       paddingLeft: 15,
       paddingRight: 15,
+
+      [media.lessThan('small')]: {
+        marginLeft: -20,
+        marginRight: -20,
+        borderRadius: 0,
+      },
     },
 
     '& a:not(.anchor):not(.gatsby-resp-image-link)': linkStyle,
@@ -358,6 +364,7 @@ const sharedStyles = {
 
       [media.lessThan('small')]: {
         marginLeft: -20,
+        marginRight: -20,
       },
 
       '& p': {
