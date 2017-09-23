@@ -120,19 +120,13 @@ class StickyResponsiveSidebar extends Component {
             },
           }}>
           <div
-            style={{
-              transform: `translate(0px, ${menuOffset}px)`,
-              transition: 'transform 0.5s ease',
-              paddingBottom: 100,
-              [media.greaterThan('small')]: {
-                paddingBottom: 40,
-              },
-            }}
             css={{
               marginTop: 60,
 
               [media.size('xsmall')]: {
                 marginTop: 40,
+                transform: `translate(0px, ${menuOffset}px)`,
+                transition: 'transform 0.5s ease',
               },
 
               [media.between('small', 'medium')]: {
@@ -145,6 +139,7 @@ class StickyResponsiveSidebar extends Component {
 
               [media.greaterThan('small')]: {
                 tranform: 'none !important',
+                paddingBottom: 40,
               },
             }}>
             <Sidebar {...this.props} />
@@ -216,7 +211,7 @@ class StickyResponsiveSidebar extends Component {
 
 StickyResponsiveSidebar.propTypes = {
   onRequestToggle: PropTypes.func,
-  open: PropTypes.func,
+  open: PropTypes.bool,
 };
 
 StickyResponsiveSidebar.defaultProps = {

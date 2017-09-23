@@ -12,6 +12,7 @@
 import Container from 'components/Container';
 import Flex from 'components/Flex';
 import MarkdownHeader from 'components/MarkdownHeader';
+import MenuOverlayContainer from 'components/MenuOverlayContainer';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import PropTypes from 'prop-types';
 import React, {Component} from 'react';
@@ -128,67 +129,79 @@ class InstallationPage extends Component {
     const {markdownRemark} = data;
 
     return (
-      <Flex
-        direction="column"
-        grow="1"
-        shrink="0"
-        halign="stretch"
-        css={{
-          width: '100%',
-          flex: '1 0 auto',
-          position: 'relative',
-          zIndex: 0,
-        }}>
-        <TitleAndMetaTags
-          title="Installation - React"
-          ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
-        />
-        <div css={{flex: '1 0 auto'}}>
-          <Container>
-            <div css={sharedStyles.articleLayout.container}>
-              <Flex type="article" direction="column" grow="1" halign="stretch">
-                <MarkdownHeader title={markdownRemark.frontmatter.title} />
+      <MenuOverlayContainer>
+        {({open: isMenuOverlayOpen, toggleMenuOverlay, preventTouches}) => (
+          <Flex
+            direction="column"
+            grow="1"
+            shrink="0"
+            halign="stretch"
+            css={{
+              width: '100%',
+              flex: '1 0 auto',
+              position: 'relative',
+              zIndex: 0,
+            }}
+            onTouchMove={preventTouches}>
+            <TitleAndMetaTags
+              title="Installation - React"
+              ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
+            />
+            <div css={{flex: '1 0 auto'}}>
+              <Container>
+                <div css={sharedStyles.articleLayout.container}>
+                  <Flex
+                    type="article"
+                    direction="column"
+                    grow="1"
+                    halign="stretch">
+                    <MarkdownHeader title={markdownRemark.frontmatter.title} />
 
-                <div css={sharedStyles.articleLayout.content}>
-                  <div
-                    css={[sharedStyles.markdown]}
-                    dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-                  />
-                  {markdownRemark.fields.path &&
-                    <div css={{marginTop: 80}}>
-                      <a
-                        css={sharedStyles.articleLayout.editLink}
-                        href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
-                        Edit this page
-                      </a>
-                    </div>}
+                    <div css={sharedStyles.articleLayout.content}>
+                      <div
+                        css={[sharedStyles.markdown]}
+                        dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+                      />
+                      {markdownRemark.fields.path &&
+                        <div css={{marginTop: 80}}>
+                          <a
+                            css={sharedStyles.articleLayout.editLink}
+                            href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
+                            Edit this page
+                          </a>
+                        </div>}
+                    </div>
+                  </Flex>
+
+                  <div css={sharedStyles.articleLayout.sidebar}>
+                    <StickyResponsiveSidebar
+                      createLink={createLinkDocs}
+                      defaultActiveSection={findSectionForPath(
+                        location.pathname,
+                        sectionListDocs,
+                      )}
+                      location={location}
+                      sectionList={sectionListDocs}
+                      title="Installation"
+                      open={isMenuOverlayOpen}
+                      onRequestToggle={toggleMenuOverlay}
+                    />
+                  </div>
                 </div>
-              </Flex>
-
-              <div css={sharedStyles.articleLayout.sidebar}>
-                <StickyResponsiveSidebar
-                  createLink={createLinkDocs}
-                  defaultActiveSection={findSectionForPath(
-                    location.pathname,
-                    sectionListDocs,
-                  )}
-                  location={location}
-                  sectionList={sectionListDocs}
-                  title="Installation"
-                />
-              </div>
+              </Container>
             </div>
-          </Container>
-        </div>
 
-        {/* TODO Read prev/next from index map, not this way */}
-        {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
-          <NavigationFooter
-            location={location}
-            next={markdownRemark.frontmatter.next}
-            prev={markdownRemark.frontmatter.prev}
-          />}
-      </Flex>
+            {/* TODO Read prev/next from index map, not this way */}
+            {(markdownRemark.frontmatter.next ||
+              markdownRemark.frontmatter.prev) &&
+              <NavigationFooter
+                location={location}
+                next={markdownRemark.frontmatter.next}
+                prev={markdownRemark.frontmatter.prev}
+              />}
+          </Flex>
+        )}
+      </MenuOverlayContainer>
     );
   }
 }

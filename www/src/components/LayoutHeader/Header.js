@@ -32,8 +32,8 @@ const Header = ({location, isVisible = true}) => (
       width: '100%',
       top: 0,
       left: 0,
-      maxHeight: isVisible === false ? '0px' : '100px',
-      transition: 'max-height 0.2s ease',
+      transform: `translate(0, ${isVisible === false ? '-100%' : '0'})`,
+      transition: 'transform 0.6s ease',
       overflow: 'hidden',
     }}>
     <Container>

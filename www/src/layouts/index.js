@@ -86,8 +86,7 @@ class Template extends Component {
               marginTop: 50,
             },
             [media.lessThan('medium')]: {
-              marginTop: this.state.showHeaderAndFooter ? 40 : 0,
-              transition: 'margin-top 0.2s ease',
+              marginTop: 40,
             },
           }}>
           {children()}
