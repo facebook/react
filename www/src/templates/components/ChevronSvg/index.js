@@ -13,15 +13,15 @@
 
 import React from 'react';
 
-const ChevronSvg = ({cssProps = {}}) => (
+const ChevronSvg = ({size = 10, cssProps = {}}) => (
   <svg
     css={cssProps}
     viewBox="0 0 926.23699 573.74994"
     version="1.1"
     x="0px"
     y="0px"
-    width="10px"
-    height="10px">
+    width={size}
+    height={size}>
     <g transform="translate(904.92214,-879.1482)">
       <path
         d={`

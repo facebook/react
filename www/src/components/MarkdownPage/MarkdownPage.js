@@ -101,7 +101,6 @@ const MarkdownPage = ({
                 )}
                 location={location}
                 sectionList={sectionList}
-                title={titlePrefix}
               />
             </div>
           </div>
