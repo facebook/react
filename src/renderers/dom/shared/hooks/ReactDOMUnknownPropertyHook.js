@@ -15,22 +15,12 @@ var isCustomComponent = require('isCustomComponent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {
-    ReactComponentTreeHook,
-    ReactDebugCurrentFrame,
-  } = require('ReactGlobalSharedState');
-  var {getStackAddendumByID} = ReactComponentTreeHook;
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
 }
 
-function getStackAddendum(debugID) {
-  if (debugID != null) {
-    // This can only happen on Stack
-    return getStackAddendumByID(debugID);
-  } else {
-    // This can only happen on Fiber / Server
-    var stack = ReactDebugCurrentFrame.getStackAddendum();
-    return stack != null ? stack : '';
-  }
+function getStackAddendum() {
+  var stack = ReactDebugCurrentFrame.getStackAddendum();
+  return stack != null ? stack : '';
 }
 
 if (__DEV__) {
@@ -43,7 +33,7 @@ if (__DEV__) {
   );
   var possibleStandardNames = require('possibleStandardNames');
 
-  var validateProperty = function(tagName, name, value, debugID) {
+  var validateProperty = function(tagName, name, value) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
@@ -74,7 +64,7 @@ if (__DEV__) {
         'Invalid event handler property `%s`. Did you mean `%s`?%s',
         name,
         registrationName,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -85,7 +75,7 @@ if (__DEV__) {
         false,
         'Unknown event handler property `%s`. It will be ignored.%s',
         name,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -138,7 +128,7 @@ if (__DEV__) {
         'Received a `%s` for string attribute `is`. If this is expected, cast ' +
           'the value to a string.%s',
         typeof value,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -150,7 +140,7 @@ if (__DEV__) {
         'Received NaN for numeric attribute `%s`. If this is expected, cast ' +
           'the value to a string.%s',
         name,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -167,7 +157,7 @@ if (__DEV__) {
           'Invalid DOM property `%s`. Did you mean `%s`?%s',
           name,
           standardName,
-          getStackAddendum(debugID),
+          getStackAddendum(),
         );
         warnedProperties[name] = true;
         return true;
@@ -184,7 +174,7 @@ if (__DEV__) {
           'it from the DOM element.%s',
         name,
         lowerCasedName,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -197,7 +187,7 @@ if (__DEV__) {
           'the value to a string.%s',
         value,
         name,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -219,10 +209,10 @@ if (__DEV__) {
   };
 }
 
-var warnUnknownProperties = function(type, props, debugID) {
+var warnUnknownProperties = function(type, props) {
   var unknownProps = [];
   for (var key in props) {
-    var isValid = validateProperty(type, key, props[key], debugID);
+    var isValid = validateProperty(type, key, props[key]);
     if (!isValid) {
       unknownProps.push(key);
     }
@@ -237,7 +227,7 @@ var warnUnknownProperties = function(type, props, debugID) {
         'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID),
+      getStackAddendum(),
     );
   } else if (unknownProps.length > 1) {
     warning(
@@ -247,32 +237,20 @@ var warnUnknownProperties = function(type, props, debugID) {
         'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID),
+      getStackAddendum(),
     );
   }
 };
 
-function validateProperties(type, props, debugID /* Stack only */) {
+function validateProperties(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
-  warnUnknownProperties(type, props, debugID);
+  warnUnknownProperties(type, props);
 }
 
 var ReactDOMUnknownPropertyHook = {
-  // Fiber
   validateProperties,
-  // Stack
-  onBeforeMountComponent(debugID, element) {
-    if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, debugID);
-    }
-  },
-  onBeforeUpdateComponent(debugID, element) {
-    if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, debugID);
-    }
-  },
 };
 
 module.exports = ReactDOMUnknownPropertyHook;
