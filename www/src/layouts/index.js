@@ -10,6 +10,7 @@
 'use strict';
 
 import React, {Component} from 'react';
+import PropTypes from 'prop-types';
 import Flex from 'components/Flex';
 import Footer from 'components/LayoutFooter';
 import Header from 'components/LayoutHeader';
@@ -22,6 +23,20 @@ import 'css/reset.css';
 import 'css/algolia.css';
 
 class Template extends Component {
+  constructor(props) {
+    super(props);
+    this.handleMenuOverlayToggle = this.handleMenuOverlayToggle.bind(this);
+    this.state = {
+      showHeaderAndFooter: true,
+    };
+  }
+
+  getChildContext() {
+    return {
+      onMenuOverlayToggle: this.handleMenuOverlayToggle,
+    };
+  }
+
   componentDidMount() {
     // Initialize Algolia search.
     // TODO Is this expensive? Should it be deferred until a user is about to search?
@@ -30,6 +45,12 @@ class Template extends Component {
       apiKey: '36221914cce388c46d0420343e0bb32e',
       indexName: 'react',
       inputSelector: '#algolia-doc-search',
+    });
+  }
+
+  handleMenuOverlayToggle(isOpen) {
+    this.setState({
+      showHeaderAndFooter: !isOpen,
     });
   }
 
@@ -49,7 +70,10 @@ class Template extends Component {
           flexDirection: 'column',
           minHeight: 'calc(100vh - 40px)',
         }}>
-        <Header location={location} />
+        <Header
+          location={location}
+          isVisible={this.state.showHeaderAndFooter}
+        />
         <Flex
           direction="column"
           shrink="0"
@@ -62,15 +86,23 @@ class Template extends Component {
               marginTop: 50,
             },
             [media.lessThan('medium')]: {
-              marginTop: 40,
+              marginTop: this.state.showHeaderAndFooter ? 40 : 0,
+              transition: 'margin-top 0.2s ease',
             },
           }}>
           {children()}
         </Flex>
-        <Footer layoutHasSidebar={layoutHasSidebar} />
+        <Footer
+          layoutHasSidebar={layoutHasSidebar}
+          isVisible={this.state.showHeaderAndFooter}
+        />
       </div>
     );
   }
 }
+
+Template.childContextTypes = {
+  onMenuOverlayToggle: PropTypes.func,
+};
 
 export default Template;

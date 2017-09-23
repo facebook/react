@@ -18,13 +18,14 @@ import {colors, media} from 'theme';
 
 import ossLogoPng from 'images/oss_logo.png';
 
-const Footer = ({layoutHasSidebar = false}) => (
+const Footer = ({layoutHasSidebar = false, isVisible = true}) => (
   <footer
     css={{
       backgroundColor: colors.darker,
       color: colors.white,
       paddingTop: 10,
       paddingBottom: 50,
+      display: isVisible === false ? 'none' : null,
 
       [media.size('sidebarFixed')]: {
         paddingTop: 40,

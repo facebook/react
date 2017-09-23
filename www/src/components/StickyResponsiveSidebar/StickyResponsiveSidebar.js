@@ -11,6 +11,7 @@
 
 import Container from 'components/Container';
 import {Component, React} from 'react';
+import PropTypes from 'prop-types';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
 import ChevronSvg from 'templates/components/ChevronSvg';
@@ -18,19 +19,36 @@ import ChevronSvg from 'templates/components/ChevronSvg';
 class StickyResponsiveSidebar extends Component {
   constructor(props, context) {
     super(props, context);
-
-    this.state = {
-      open: false,
-    };
     this.toggleOpen = this._toggleOpen.bind(this);
   }
 
   _toggleOpen() {
-    this.setState({open: !this.state.open});
+    this.props.onRequestToggle(!this.props.open);
+  }
+
+  handleMenuTouchMove(evt) {
+    // Prevent evt.preventDefault in <MarkdownPage />
+    evt.stopPropagation();
+  }
+
+  handleMenuTouchStart(evt) {
+    // Prevent "overscrolling"
+    // http://blog.christoffer.online/2015-06-10-six-things-i-learnt-about-ios-rubberband-overflow-scrolling/
+    const element = evt.currentTarget;
+    const top = element.scrollTop;
+    const totalScroll = element.scrollHeight;
+    const currentScroll = top + element.offsetHeight;
+
+    if (top === 0) {
+      element.scrollTop = 1;
+    } else if (currentScroll === totalScroll) {
+      element.scrollTop = top - 1;
+    }
   }
 
   render() {
-    const {open} = this.state;
+    const {open} = this.props;
+
     const smallScreenSidebarStyles = {
       top: 0,
       left: 0,
@@ -56,6 +74,8 @@ class StickyResponsiveSidebar extends Component {
     return (
       <div>
         <div
+          onTouchMove={this.handleMenuTouchMove}
+          onTouchStart={this.handleMenuTouchStart}
           style={{
             opacity: menuOpacity,
             transition: 'opacity 0.5s ease',
@@ -103,6 +123,10 @@ class StickyResponsiveSidebar extends Component {
             style={{
               transform: `translate(0px, ${menuOffset}px)`,
               transition: 'transform 0.5s ease',
+              paddingBottom: 100,
+              [media.greaterThan('small')]: {
+                paddingBottom: 40,
+              },
             }}
             css={{
               marginTop: 60,
@@ -189,5 +213,15 @@ class StickyResponsiveSidebar extends Component {
     );
   }
 }
+
+StickyResponsiveSidebar.propTypes = {
+  onRequestToggle: PropTypes.func,
+  open: PropTypes.func,
+};
+
+StickyResponsiveSidebar.defaultProps = {
+  onRequestToggle: () => null,
+  open: false,
+};
 
 export default StickyResponsiveSidebar;

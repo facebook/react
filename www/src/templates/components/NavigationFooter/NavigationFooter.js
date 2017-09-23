@@ -16,23 +16,23 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {colors, fonts, media} from 'theme';
 
-const NavigationFooter = ({next, prev, location}) => {
-  return (
-    <div
-      css={{
-        background: colors.dark,
-        color: colors.white,
-        paddingTop: 50,
-        paddingBottom: 50,
-      }}>
-      <Container>
-        <Flex
-          type="ul"
-          halign="space-between"
-          css={{
-            [media.between('small', 'medium')]: {
-              paddingRight: 240,
-            },
+const NavigationFooter = ({next, prev, location, isVisible = true}) => (
+  <div
+    css={{
+      background: colors.dark,
+      color: colors.white,
+      paddingTop: 50,
+      paddingBottom: 50,
+      display: isVisible === false ? 'none' : null,
+    }}>
+    <Container>
+      <Flex
+        type="ul"
+        halign="space-between"
+        css={{
+          [media.between('small', 'medium')]: {
+            paddingRight: 240,
+          },
 
             [media.between('large', 'largerSidebar')]: {
               paddingRight: 280,

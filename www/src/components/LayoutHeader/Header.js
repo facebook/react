@@ -22,7 +22,7 @@ import logoSvg from 'icons/logo.svg';
 // This is how the previous Jekyll site determined version though.
 const {version} = require('../../../../package.json');
 
-const Header = ({location}) => (
+const Header = ({location, isVisible = true}) => (
   <header
     css={{
       backgroundColor: colors.darker,
@@ -32,6 +32,9 @@ const Header = ({location}) => (
       width: '100%',
       top: 0,
       left: 0,
+      maxHeight: isVisible === false ? '0px' : '100px',
+      transition: 'max-height 0.2s ease',
+      overflow: 'hidden',
     }}>
     <Container>
       <div
