@@ -93,7 +93,7 @@ var DOMMarkupOperations = {
       if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
       }
-      var attributeName = propertyInfo.attributeName;
+      var attributeName = DOMProperty.getAttributeName(name);
       if (
         propertyInfo.hasBooleanValue ||
         (propertyInfo.hasOverloadedBooleanValue && value === true)

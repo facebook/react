@@ -85,12 +85,6 @@ var HTMLDOMPropertyConfig = {
     // Set the string boolean flag to allow the behavior
     value: HAS_STRING_BOOLEAN_VALUE,
   },
-  DOMAttributeNames: {
-    acceptCharset: 'accept-charset',
-    className: 'class',
-    htmlFor: 'for',
-    httpEquiv: 'http-equiv',
-  },
   DOMMutationMethods: {
     value: function(node, value) {
       if (value == null) {

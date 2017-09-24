@@ -50,13 +50,6 @@ var DOMPropertyInjection = {
    * DOMPropertyInjection constants or null. If your attribute isn't in here,
    * it won't get written to the DOM.
    *
-   * DOMAttributeNames: object mapping React attribute name to the DOM
-   * attribute name. Attribute names not specified use the **lowercase**
-   * normalized name.
-   *
-   * DOMAttributeNamespaces: object mapping React attribute name to the DOM
-   * attribute namespace URL. (Attribute names not specified use no namespace.)
-   *
    * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
    * Property names not specified use the normalized name.
    *
@@ -68,8 +61,6 @@ var DOMPropertyInjection = {
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Injection = DOMPropertyInjection;
     var Properties = domPropertyConfig.Properties || {};
-    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
     var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
     for (var propName in Properties) {
@@ -82,12 +73,9 @@ var DOMPropertyInjection = {
         propName,
       );
 
-      var lowerCased = propName.toLowerCase();
       var propConfig = Properties[propName];
 
       var propertyInfo = {
-        attributeName: lowerCased,
-        attributeNamespace: null,
         propertyName: propName,
         mutationMethod: null,
 
@@ -117,16 +105,6 @@ var DOMPropertyInjection = {
         propName,
       );
 
-      if (DOMAttributeNames.hasOwnProperty(propName)) {
-        var attributeName = DOMAttributeNames[propName];
-
-        propertyInfo.attributeName = attributeName;
-      }
-
-      if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-        propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-      }
-
       if (DOMMutationMethods.hasOwnProperty(propName)) {
         propertyInfo.mutationMethod = DOMMutationMethods[propName];
       }
@@ -144,6 +122,131 @@ var DOMPropertyInjection = {
 var ATTRIBUTE_NAME_START_CHAR =
   ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
 /* eslint-enable max-len */
+
+var attributeNames = {
+  acceptCharset: 'accept-charset',
+  className: 'class',
+  htmlFor: 'for',
+  httpEquiv: 'http-equiv',
+};
+
+var CAMELIZE = /[\-\:]([a-z])/g;
+var capitalize = token => token[1].toUpperCase();
+
+// TODO: remove this.
+var svgConfig = {
+  Properties: {
+    autoReverse: DOMPropertyInjection.HAS_STRING_BOOLEAN_VALUE,
+    externalResourcesRequired: DOMPropertyInjection.HAS_STRING_BOOLEAN_VALUE,
+    preserveAlpha: DOMPropertyInjection.HAS_STRING_BOOLEAN_VALUE,
+  },
+};
+
+/**
+ * This is a list of all SVG attributes that need special casing,
+ * namespacing, or boolean value assignment.
+ *
+ * When adding attributes to this list, be sure to also add them to
+ * the `possibleStandardNames` module to ensure casing and incorrect
+ * name warnings.
+ *
+ * SVG Attributes List:
+ * https://www.w3.org/TR/SVG/attindex.html
+ * SMIL Spec:
+ * https://www.w3.org/TR/smil
+ */
+[
+  'accent-height',
+  'alignment-baseline',
+  'arabic-form',
+  'baseline-shift',
+  'cap-height',
+  'clip-path',
+  'clip-rule',
+  'color-interpolation',
+  'color-interpolation-filters',
+  'color-profile',
+  'color-rendering',
+  'dominant-baseline',
+  'enable-background',
+  'fill-opacity',
+  'fill-rule',
+  'flood-color',
+  'flood-opacity',
+  'font-family',
+  'font-size',
+  'font-size-adjust',
+  'font-stretch',
+  'font-style',
+  'font-variant',
+  'font-weight',
+  'glyph-name',
+  'glyph-orientation-horizontal',
+  'glyph-orientation-vertical',
+  'horiz-adv-x',
+  'horiz-origin-x',
+  'image-rendering',
+  'letter-spacing',
+  'lighting-color',
+  'marker-end',
+  'marker-mid',
+  'marker-start',
+  'overline-position',
+  'overline-thickness',
+  'paint-order',
+  'panose-1',
+  'pointer-events',
+  'rendering-intent',
+  'shape-rendering',
+  'stop-color',
+  'stop-opacity',
+  'strikethrough-position',
+  'strikethrough-thickness',
+  'stroke-dasharray',
+  'stroke-dashoffset',
+  'stroke-linecap',
+  'stroke-linejoin',
+  'stroke-miterlimit',
+  'stroke-opacity',
+  'stroke-width',
+  'text-anchor',
+  'text-decoration',
+  'text-rendering',
+  'underline-position',
+  'underline-thickness',
+  'unicode-bidi',
+  'unicode-range',
+  'units-per-em',
+  'v-alphabetic',
+  'v-hanging',
+  'v-ideographic',
+  'v-mathematical',
+  'vector-effect',
+  'vert-adv-y',
+  'vert-origin-x',
+  'vert-origin-y',
+  'word-spacing',
+  'writing-mode',
+  'x-height',
+  'xlink:actuate',
+  'xlink:arcrole',
+  'xlink:href',
+  'xlink:role',
+  'xlink:show',
+  'xlink:title',
+  'xlink:type',
+  'xml:base',
+  'xmlns:xlink',
+  'xml:lang',
+  'xml:space',
+].forEach(svgAttributeName => {
+  var reactName = svgAttributeName.replace(CAMELIZE, capitalize);
+  attributeNames[reactName] = svgAttributeName;
+
+  // TODO: remove this very soon.
+  // We only need it until we stop branching on propertyInfo existence.
+  svgConfig.Properties[reactName] = 0;
+});
 
 /**
  * DOMProperty exports lookup objects that can be used like functions:
@@ -170,9 +273,6 @@ var DOMProperty = {
    * Map from property "standard name" to an object with info about how to set
    * the property in the DOM. Each object contains:
    *
-   * attributeName:
-   *   Used when rendering markup or with `*Attribute()`.
-   * attributeNamespace
    * propertyName:
    *   Used on DOM node instances. (This includes properties that mutate due to
    *   external factors.)
@@ -227,6 +327,31 @@ var DOMProperty = {
     }
   },
 
+  getAttributeName(propName) {
+    return attributeNames.hasOwnProperty(propName)
+      ? attributeNames[propName]
+      : propName.toLowerCase();
+  },
+
+  getAttributeNamespace(propName) {
+    switch (propName) {
+      case 'xmlBase':
+      case 'xmlLang':
+      case 'xmlSpace':
+        return 'http://www.w3.org/XML/1998/namespace';
+      case 'xlinkActuate':
+      case 'xlinkArcrole':
+      case 'xlinkHref':
+      case 'xlinkRole':
+      case 'xlinkShow':
+      case 'xlinkTitle':
+      case 'xlinkType':
+        return 'http://www.w3.org/1999/xlink';
+      default:
+        return null;
+    }
+  },
+
   getPropertyInfo(name) {
     return DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
@@ -264,5 +389,9 @@ var DOMProperty = {
 
   injection: DOMPropertyInjection,
 };
+
+// TODO: remove this very soon.
+// We only need it until we stop branching on propertyInfo existence.
+DOMProperty.injection.injectDOMPropertyConfig(svgConfig);
 
 module.exports = DOMProperty;

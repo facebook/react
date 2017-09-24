@@ -974,7 +974,6 @@ var ReactDOMFiberComponent = {
       } else if (__DEV__) {
         // Validate that the properties correspond to their expected values.
         var serverValue;
-        var propertyInfo;
         if (
           propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
           // Controlled attributes are not validated
@@ -1014,9 +1013,12 @@ var ReactDOMFiberComponent = {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
-          if ((propertyInfo = DOMProperty.getPropertyInfo(propKey))) {
+          const attributeName = DOMProperty.getAttributeName(propKey);
+          // TODO: the return value is unused. This is awkward.
+          // Maybe we can now unify these branches now?
+          if (DOMProperty.getPropertyInfo(propKey)) {
             // $FlowFixMe - Should be inferred as not undefined.
-            extraAttributeNames.delete(propertyInfo.attributeName);
+            extraAttributeNames.delete(attributeName);
             serverValue = DOMPropertyOperations.getValueForProperty(
               domElement,
               propKey,

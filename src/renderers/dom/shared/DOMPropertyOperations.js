@@ -85,7 +85,7 @@ var DOMPropertyOperations = {
         if (mutationMethod || propertyInfo.mustUseProperty) {
           return node[propertyInfo.propertyName];
         } else {
-          var attributeName = propertyInfo.attributeName;
+          var attributeName = DOMProperty.getAttributeName(name);
 
           var stringValue = null;
 
@@ -176,8 +176,8 @@ var DOMPropertyOperations = {
         // `toString`ed by IE8/9.
         node[propertyInfo.propertyName] = value;
       } else {
-        var attributeName = propertyInfo.attributeName;
-        var namespace = propertyInfo.attributeNamespace;
+        var attributeName = DOMProperty.getAttributeName(name);
+        var namespace = DOMProperty.getAttributeNamespace(name);
         // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
         if (namespace) {
@@ -211,6 +211,7 @@ var DOMPropertyOperations = {
     }
   },
 
+  // TODO: clarify this is only used for custom attribute path.
   setValueForAttribute: function(node, name, value) {
     if (!isAttributeNameSafe(name)) {
       return;
@@ -269,7 +270,8 @@ var DOMPropertyOperations = {
           node[propName] = '';
         }
       } else {
-        node.removeAttribute(propertyInfo.attributeName);
+        var attributeName = DOMProperty.getAttributeName(name);
+        node.removeAttribute(attributeName);
       }
     } else {
       node.removeAttribute(name);
