@@ -82,7 +82,7 @@ var DOMPropertyOperations = {
       var propertyInfo = DOMProperty.getPropertyInfo(name);
       if (propertyInfo) {
         var mutationMethod = DOMProperty.getMutationMethod(name);
-        if (mutationMethod || propertyInfo.mustUseProperty) {
+        if (mutationMethod || DOMProperty.shouldUseProperty(name)) {
           return node[name];
         } else {
           var attributeName = DOMProperty.getAttributeName(name);
@@ -171,7 +171,7 @@ var DOMPropertyOperations = {
       } else if (shouldIgnoreValue(propertyInfo, value)) {
         DOMPropertyOperations.deleteValueForProperty(node, name);
         return;
-      } else if (propertyInfo.mustUseProperty) {
+      } else if (DOMProperty.shouldUseProperty(name)) {
         // Contrary to `setAttribute`, object properties are properly
         // `toString`ed by IE8/9.
         node[name] = value;
@@ -262,7 +262,7 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod(name);
       if (mutationMethod) {
         mutationMethod(node, undefined);
-      } else if (propertyInfo.mustUseProperty) {
+      } else if (DOMProperty.shouldUseProperty(name)) {
         if (propertyInfo.hasBooleanValue) {
           node[name] = false;
         } else {

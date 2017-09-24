@@ -62,7 +62,6 @@ var DOMPropertyInjection = {
    * Mapping from normalized, camelcased property names to a configuration that
    * specifies how the associated DOM property should be accessed or rendered.
    */
-  MUST_USE_PROPERTY: 0x1,
   HAS_BOOLEAN_VALUE: 0x4,
   HAS_NUMERIC_VALUE: 0x8,
   HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
@@ -99,7 +98,6 @@ var DOMPropertyInjection = {
       var propConfig = Properties[propName];
 
       var propertyInfo = {
-        mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
         hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
         hasPositiveNumericValue: checkMask(
@@ -289,8 +287,6 @@ var DOMProperty = {
    * Map from property "standard name" to an object with info about how to set
    * the property in the DOM. Each object contains:
    *
-   * mustUseProperty:
-   *   Whether the property must be accessed and mutated as an object property.
    * hasBooleanValue:
    *   Whether the property should be removed when set to a falsey value.
    * hasNumericValue:
@@ -376,6 +372,20 @@ var DOMProperty = {
     return DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
       : null;
+  },
+
+  shouldUseProperty(propName) {
+    switch (propName) {
+      case 'checked':
+      case 'multiple':
+      case 'muted':
+      case 'selected':
+        // Caution; `option.selected` is not updated if `select.multiple` is
+        // disabled with `removeAttribute`.
+        return true;
+      default:
+        return false;
+    }
   },
 
   shouldAttributeAcceptBooleanValue(name) {

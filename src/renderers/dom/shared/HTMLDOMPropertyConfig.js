@@ -13,7 +13,6 @@
 
 var DOMProperty = require('DOMProperty');
 
-var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
 var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
 var HAS_POSITIVE_NUMERIC_VALUE =
@@ -37,7 +36,7 @@ var HTMLDOMPropertyConfig = {
     // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
     capture: HAS_BOOLEAN_VALUE,
-    checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    checked: HAS_BOOLEAN_VALUE,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
     contentEditable: HAS_STRING_BOOLEAN_VALUE,
     controls: HAS_BOOLEAN_VALUE,
@@ -49,10 +48,8 @@ var HTMLDOMPropertyConfig = {
     formNoValidate: HAS_BOOLEAN_VALUE,
     hidden: HAS_BOOLEAN_VALUE,
     loop: HAS_BOOLEAN_VALUE,
-    // Caution; `option.selected` is not updated if `select.multiple` is
-    // disabled with `removeAttribute`.
-    multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    muted: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    multiple: HAS_BOOLEAN_VALUE,
+    muted: HAS_BOOLEAN_VALUE,
     noValidate: HAS_BOOLEAN_VALUE,
     open: HAS_BOOLEAN_VALUE,
     playsInline: HAS_BOOLEAN_VALUE,
@@ -63,7 +60,7 @@ var HTMLDOMPropertyConfig = {
     rowSpan: HAS_NUMERIC_VALUE,
     scoped: HAS_BOOLEAN_VALUE,
     seamless: HAS_BOOLEAN_VALUE,
-    selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    selected: HAS_BOOLEAN_VALUE,
     size: HAS_POSITIVE_NUMERIC_VALUE,
     start: HAS_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
