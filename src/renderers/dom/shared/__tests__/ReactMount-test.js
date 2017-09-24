@@ -9,7 +9,6 @@
 
 'use strict';
 
-const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 const {COMMENT_NODE} = require('HTMLNodeType');
 
 const invariant = require('invariant');
@@ -66,24 +65,22 @@ describe('ReactMount', () => {
     });
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    it('warns when given a factory', () => {
-      spyOn(console, 'error');
-      class Component extends React.Component {
-        render() {
-          return <div />;
-        }
+  it('warns when given a factory', () => {
+    spyOn(console, 'error');
+    class Component extends React.Component {
+      render() {
+        return <div />;
       }
+    }
 
-      ReactTestUtils.renderIntoDocument(Component);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Functions are not valid as a React child. ' +
-          'This may happen if you return a Component instead of <Component /> from render. ' +
-          'Or maybe you meant to call this function rather than return it.',
-      );
-    });
-  }
+    ReactTestUtils.renderIntoDocument(Component);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Functions are not valid as a React child. ' +
+        'This may happen if you return a Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.',
+    );
+  });
 
   it('should render different components in same root', () => {
     var container = document.createElement('container');
@@ -144,21 +141,11 @@ describe('ReactMount', () => {
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     spyOn(console, 'error');
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.hydrate(<div />, container);
-    } else {
-      ReactDOM.render(<div />, container);
-    }
+    ReactDOM.hydrate(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
-    if (ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node " " in <container>.',
-      );
-    } else {
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Target node has markup rendered by React, but there are unrelated nodes as well.',
-      );
-    }
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Did not expect server HTML to contain the text node " " in <container>.',
+    );
   });
 
   it('should warn if mounting into right padded rendered markup', () => {
@@ -166,21 +153,11 @@ describe('ReactMount', () => {
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     spyOn(console, 'error');
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.hydrate(<div />, container);
-    } else {
-      ReactDOM.render(<div />, container);
-    }
+    ReactDOM.hydrate(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
-    if (ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node " " in <container>.',
-      );
-    } else {
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Target node has markup rendered by React, but there are unrelated nodes as well.',
-      );
-    }
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Did not expect server HTML to contain the text node " " in <container>.',
+    );
   });
 
   it('should not warn if mounting into non-empty node', () => {
@@ -213,29 +190,15 @@ describe('ReactMount', () => {
     div.innerHTML = markup;
 
     spyOn(console, 'error');
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.hydrate(
-        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-        div,
-      );
-    } else {
-      ReactDOM.render(
-        <div>This markup contains an nbsp entity: &nbsp; client text</div>,
-        div,
-      );
-    }
+    ReactDOM.hydrate(
+      <div>This markup contains an nbsp entity: &nbsp; client text</div>,
+      div,
+    );
     expectDev(console.error.calls.count()).toBe(1);
-    if (ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Server: "This markup contains an nbsp entity:   server text" ' +
-          'Client: "This markup contains an nbsp entity:   client text"',
-      );
-    } else {
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        ' (client) nbsp entity: &nbsp; client text</div>\n' +
-          ' (server) nbsp entity: &nbsp; server text</div>',
-      );
-    }
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Server: "This markup contains an nbsp entity:   server text" ' +
+        'Client: "This markup contains an nbsp entity:   client text"',
+    );
   });
 
   if (WebComponents !== undefined) {
@@ -388,41 +351,39 @@ describe('ReactMount', () => {
     expect(container2.textContent).toEqual('a!');
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    describe('mount point is a comment node', () => {
-      let containerDiv;
-      let mountPoint;
+  describe('mount point is a comment node', () => {
+    let containerDiv;
+    let mountPoint;
 
-      beforeEach(() => {
-        containerDiv = document.createElement('div');
-        containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
-        mountPoint = containerDiv.childNodes[1];
-        invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
-      });
-
-      it('renders at a comment node', () => {
-        function Char(props) {
-          return props.children;
-        }
-        function list(chars) {
-          return chars.split('').map(c => <Char key={c}>{c}</Char>);
-        }
-
-        ReactDOM.render(list('aeiou'), mountPoint);
-        expect(containerDiv.innerHTML).toBe(
-          'Aaeiou<!-- react-mount-point-unstable -->B',
-        );
-
-        ReactDOM.render(list('yea'), mountPoint);
-        expect(containerDiv.innerHTML).toBe(
-          'Ayea<!-- react-mount-point-unstable -->B',
-        );
-
-        ReactDOM.render(list(''), mountPoint);
-        expect(containerDiv.innerHTML).toBe(
-          'A<!-- react-mount-point-unstable -->B',
-        );
-      });
+    beforeEach(() => {
+      containerDiv = document.createElement('div');
+      containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
+      mountPoint = containerDiv.childNodes[1];
+      invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
     });
-  }
+
+    it('renders at a comment node', () => {
+      function Char(props) {
+        return props.children;
+      }
+      function list(chars) {
+        return chars.split('').map(c => <Char key={c}>{c}</Char>);
+      }
+
+      ReactDOM.render(list('aeiou'), mountPoint);
+      expect(containerDiv.innerHTML).toBe(
+        'Aaeiou<!-- react-mount-point-unstable -->B',
+      );
+
+      ReactDOM.render(list('yea'), mountPoint);
+      expect(containerDiv.innerHTML).toBe(
+        'Ayea<!-- react-mount-point-unstable -->B',
+      );
+
+      ReactDOM.render(list(''), mountPoint);
+      expect(containerDiv.innerHTML).toBe(
+        'A<!-- react-mount-point-unstable -->B',
+      );
+    });
+  });
 });

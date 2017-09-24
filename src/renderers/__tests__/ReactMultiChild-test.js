@@ -16,13 +16,11 @@ describe('ReactMultiChild', () => {
 
   var React;
   var ReactDOM;
-  var ReactDOMFeatureFlags;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   describe('reconciliation', () => {
@@ -280,8 +278,7 @@ describe('ReactMultiChild', () => {
       'Warning: Using Maps as children is unsupported and will likely yield ' +
         'unexpected results. Convert it to a sequence/iterable of keyed ' +
         'ReactElements instead.\n' +
-        // Fiber gives a slightly better stack with the nearest host components
-        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in div (at **)\n' +
         '    in Parent (at **)',
     );
   });
@@ -368,23 +365,12 @@ describe('ReactMultiChild', () => {
       'oneA componentDidMount',
       'twoA componentDidMount',
 
-      ...(ReactDOMFeatureFlags.useFiber
-        ? [
-            'oneB componentWillMount',
-            'oneB render',
-            'twoB componentWillMount',
-            'twoB render',
-            'oneA componentWillUnmount',
-            'twoA componentWillUnmount',
-          ]
-        : [
-            'oneB componentWillMount',
-            'oneB render',
-            'oneA componentWillUnmount',
-            'twoB componentWillMount',
-            'twoB render',
-            'twoA componentWillUnmount',
-          ]),
+      'oneB componentWillMount',
+      'oneB render',
+      'twoB componentWillMount',
+      'twoB render',
+      'oneA componentWillUnmount',
+      'twoA componentWillUnmount',
 
       'oneB componentDidMount',
       'twoB componentDidMount',
