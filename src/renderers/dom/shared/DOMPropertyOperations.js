@@ -48,19 +48,6 @@ function isAttributeNameSafe(attributeName) {
   return false;
 }
 
-// shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(name, propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue &&
-      (isNaN(value) ||
-        (DOMProperty.isExpectingPositiveValue(name) && value < 1))) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
-}
-
 /**
  * Operations for dealing with DOM properties.
  */
@@ -96,7 +83,7 @@ var DOMPropertyOperations = {
               if (value === '') {
                 return true;
               }
-              if (shouldIgnoreValue(name, propertyInfo, expected)) {
+              if (DOMProperty.shouldIgnoreValue(name, expected)) {
                 return value;
               }
               if (value === '' + expected) {
@@ -105,7 +92,7 @@ var DOMPropertyOperations = {
               return value;
             }
           } else if (node.hasAttribute(attributeName)) {
-            if (shouldIgnoreValue(name, propertyInfo, expected)) {
+            if (DOMProperty.shouldIgnoreValue(name, expected)) {
               // We had an attribute but shouldn't have had one, so read it
               // for the error message.
               return node.getAttribute(attributeName);
@@ -122,7 +109,7 @@ var DOMPropertyOperations = {
             stringValue = node.getAttribute(attributeName);
           }
 
-          if (shouldIgnoreValue(name, propertyInfo, expected)) {
+          if (DOMProperty.shouldIgnoreValue(name, expected)) {
             return stringValue === null ? expected : stringValue;
           } else if (stringValue === '' + expected) {
             return expected;
@@ -169,7 +156,7 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod(name);
       if (mutationMethod) {
         mutationMethod(node, value);
-      } else if (shouldIgnoreValue(name, propertyInfo, value)) {
+      } else if (DOMProperty.shouldIgnoreValue(name, value)) {
         DOMPropertyOperations.deleteValueForProperty(node, name);
         return;
       } else if (DOMProperty.shouldUseProperty(name)) {

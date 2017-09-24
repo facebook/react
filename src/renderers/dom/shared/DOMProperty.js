@@ -381,6 +381,18 @@ var DOMProperty = {
     }
   },
 
+  shouldIgnoreValue(name, value) {
+    var propertyInfo = DOMProperty.getPropertyInfo(name);
+    return (
+      value == null ||
+      (propertyInfo.hasBooleanValue && !value) ||
+      (propertyInfo.hasNumericValue &&
+        (isNaN(value) ||
+          (DOMProperty.isExpectingPositiveValue(name) && value < 1))) ||
+      (propertyInfo.hasOverloadedBooleanValue && value === false)
+    );
+  },
+
   shouldUseProperty(propName) {
     switch (propName) {
       case 'checked':
