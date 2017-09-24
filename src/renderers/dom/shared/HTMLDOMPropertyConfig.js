@@ -11,65 +11,55 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-
-var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
-var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
-var HAS_OVERLOADED_BOOLEAN_VALUE =
-  DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
-var HAS_STRING_BOOLEAN_VALUE = DOMProperty.injection.HAS_STRING_BOOLEAN_VALUE;
-
 var HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
   // the `possibleStandardNames` module to ensure casing and incorrect
   // name warnings.
   Properties: {
-    allowFullScreen: HAS_BOOLEAN_VALUE,
+    allowFullScreen: 0,
     // IE only true/false iFrame attribute
     // https://msdn.microsoft.com/en-us/library/ms533072(v=vs.85).aspx
-    allowTransparency: HAS_STRING_BOOLEAN_VALUE,
+    allowTransparency: 0,
     // specifies target context for links with `preload` type
-    async: HAS_BOOLEAN_VALUE,
+    async: 0,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
-    // autoFocus: HAS_BOOLEAN_VALUE,
-    autoPlay: HAS_BOOLEAN_VALUE,
-    capture: HAS_BOOLEAN_VALUE,
-    checked: HAS_BOOLEAN_VALUE,
-    cols: HAS_NUMERIC_VALUE,
-    contentEditable: HAS_STRING_BOOLEAN_VALUE,
-    controls: HAS_BOOLEAN_VALUE,
-    default: HAS_BOOLEAN_VALUE,
-    defer: HAS_BOOLEAN_VALUE,
-    disabled: HAS_BOOLEAN_VALUE,
-    download: HAS_OVERLOADED_BOOLEAN_VALUE,
-    draggable: HAS_STRING_BOOLEAN_VALUE,
-    formNoValidate: HAS_BOOLEAN_VALUE,
-    hidden: HAS_BOOLEAN_VALUE,
-    loop: HAS_BOOLEAN_VALUE,
-    multiple: HAS_BOOLEAN_VALUE,
-    muted: HAS_BOOLEAN_VALUE,
-    noValidate: HAS_BOOLEAN_VALUE,
-    open: HAS_BOOLEAN_VALUE,
-    playsInline: HAS_BOOLEAN_VALUE,
-    readOnly: HAS_BOOLEAN_VALUE,
-    required: HAS_BOOLEAN_VALUE,
-    reversed: HAS_BOOLEAN_VALUE,
-    rows: HAS_NUMERIC_VALUE,
-    rowSpan: HAS_NUMERIC_VALUE,
-    scoped: HAS_BOOLEAN_VALUE,
-    seamless: HAS_BOOLEAN_VALUE,
-    selected: HAS_BOOLEAN_VALUE,
-    size: HAS_NUMERIC_VALUE,
-    start: HAS_NUMERIC_VALUE,
+    // autoFocus: 0,
+    autoPlay: 0,
+    capture: 0,
+    checked: 0,
+    cols: 0,
+    contentEditable: 0,
+    controls: 0,
+    default: 0,
+    defer: 0,
+    disabled: 0,
+    download: 0,
+    draggable: 0,
+    formNoValidate: 0,
+    hidden: 0,
+    loop: 0,
+    multiple: 0,
+    muted: 0,
+    noValidate: 0,
+    open: 0,
+    playsInline: 0,
+    readOnly: 0,
+    required: 0,
+    reversed: 0,
+    rows: 0,
+    rowSpan: 0,
+    scoped: 0,
+    seamless: 0,
+    selected: 0,
+    size: 0,
+    start: 0,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
-    span: HAS_NUMERIC_VALUE,
-    spellCheck: HAS_STRING_BOOLEAN_VALUE,
+    span: 0,
+    spellCheck: 0,
     // Style must be explicitly set in the attribute list. React components
     // expect a style object
     style: 0,
-    // itemScope is for for Microdata support.
-    // See http://schema.org/docs/gs.html
-    itemScope: HAS_BOOLEAN_VALUE,
+    itemScope: 0,
     // These attributes must stay in the white-list because they have
     // different attribute names (see DOMAttributeNames below)
     acceptCharset: 0,
@@ -78,7 +68,7 @@ var HTMLDOMPropertyConfig = {
     httpEquiv: 0,
     // Attributes with mutation methods must be specified in the whitelist
     // Set the string boolean flag to allow the behavior
-    value: HAS_STRING_BOOLEAN_VALUE,
+    value: 0,
   },
 };
 

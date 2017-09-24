@@ -68,16 +68,16 @@ var DOMPropertyOperations = {
   getValueForProperty: function(node, name, expected) {
     if (__DEV__) {
       var propertyInfo = DOMProperty.getPropertyInfo(name);
+      var expectedType = DOMProperty.getExpectedValueType(name);
       if (propertyInfo) {
         var mutationMethod = DOMProperty.getMutationMethod(name);
         if (mutationMethod || DOMProperty.shouldUseProperty(name)) {
           return node[name];
         } else {
           var attributeName = DOMProperty.getAttributeName(name);
-
           var stringValue = null;
 
-          if (propertyInfo.hasOverloadedBooleanValue) {
+          if (expectedType === 'overloadedBoolean') {
             if (node.hasAttribute(attributeName)) {
               var value = node.getAttribute(attributeName);
               if (value === '') {
@@ -97,7 +97,7 @@ var DOMPropertyOperations = {
               // for the error message.
               return node.getAttribute(attributeName);
             }
-            if (propertyInfo.hasBooleanValue) {
+            if (expectedType === 'boolean') {
               // If this was a boolean, it doesn't matter what the value is
               // the fact that we have it is the same as the expected.
               return expected;
@@ -166,13 +166,14 @@ var DOMPropertyOperations = {
       } else {
         var attributeName = DOMProperty.getAttributeName(name);
         var namespace = DOMProperty.getAttributeNamespace(name);
+        var expectedType = DOMProperty.getExpectedValueType(name);
         // `setAttribute` with objects becomes only `[object]` in IE8/9,
         // ('' + value) makes it output the correct toString()-value.
         if (namespace) {
           node.setAttributeNS(namespace, attributeName, '' + value);
         } else if (
-          propertyInfo.hasBooleanValue ||
-          (propertyInfo.hasOverloadedBooleanValue && value === true)
+          expectedType === 'boolean' ||
+          (expectedType === 'overloadedBoolean' && value === true)
         ) {
           node.setAttribute(attributeName, '');
         } else {
@@ -251,7 +252,8 @@ var DOMPropertyOperations = {
       if (mutationMethod) {
         mutationMethod(node, undefined);
       } else if (DOMProperty.shouldUseProperty(name)) {
-        if (propertyInfo.hasBooleanValue) {
+        var expectedType = DOMProperty.getExpectedValueType(name);
+        if (expectedType === 'boolean') {
           node[name] = false;
         } else {
           node[name] = '';

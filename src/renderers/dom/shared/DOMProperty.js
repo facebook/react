@@ -11,8 +11,6 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
-
 // These attributes should be all lowercase to allow for
 // case insensitive checks
 var RESERVED_PROPS = {
@@ -25,10 +23,6 @@ var RESERVED_PROPS = {
   suppressContentEditableWarning: true,
   style: true,
 };
-
-function checkMask(value, bitmask) {
-  return (value & bitmask) === bitmask;
-}
 
 function setDOMValueAttribute(node, value) {
   if (value == null) {
@@ -59,16 +53,6 @@ function setDOMValueAttribute(node, value) {
 
 var DOMPropertyInjection = {
   /**
-   * Mapping from normalized, camelcased property names to a configuration that
-   * specifies how the associated DOM property should be accessed or rendered.
-   */
-  HAS_BOOLEAN_VALUE: 0x4,
-  HAS_NUMERIC_VALUE: 0x8,
-  HAS_POSITIVE_NUMERIC_VALUE: 0x10 | 0x8,
-  HAS_OVERLOADED_BOOLEAN_VALUE: 0x20,
-  HAS_STRING_BOOLEAN_VALUE: 0x40,
-
-  /**
    * Inject some specialized knowledge about the DOM. This takes a config object
    * with the following properties:
    *
@@ -82,48 +66,10 @@ var DOMPropertyInjection = {
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
-    var Injection = DOMPropertyInjection;
     var Properties = domPropertyConfig.Properties || {};
 
     for (var propName in Properties) {
-      invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
-        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-          "'%s' which has already been injected. You may be accidentally " +
-          'injecting the same DOM property config twice, or you may be ' +
-          'injecting two configs that have conflicting property names.',
-        propName,
-      );
-
-      var propConfig = Properties[propName];
-
-      var propertyInfo = {
-        hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
-        hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
-        hasOverloadedBooleanValue: checkMask(
-          propConfig,
-          Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
-        ),
-        hasStringBooleanValue: checkMask(
-          propConfig,
-          Injection.HAS_STRING_BOOLEAN_VALUE,
-        ),
-      };
-      invariant(
-        propertyInfo.hasBooleanValue +
-          propertyInfo.hasNumericValue +
-          propertyInfo.hasOverloadedBooleanValue <=
-          1,
-        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-          'numeric value, but not a combination: %s',
-        propName,
-      );
-
-      // Downcase references to whitelist properties to check for membership
-      // without case-sensitivity. This allows the whitelist to pick up
-      // `allowfullscreen`, which should be written using the property configuration
-      // for `allowFullscreen`
-      DOMProperty.properties[propName] = propertyInfo;
+      DOMProperty.properties[propName] = {};
     }
   },
 };
@@ -146,9 +92,9 @@ var capitalize = token => token[1].toUpperCase();
 // TODO: remove this.
 var svgConfig = {
   Properties: {
-    autoReverse: DOMPropertyInjection.HAS_STRING_BOOLEAN_VALUE,
-    externalResourcesRequired: DOMPropertyInjection.HAS_STRING_BOOLEAN_VALUE,
-    preserveAlpha: DOMPropertyInjection.HAS_STRING_BOOLEAN_VALUE,
+    autoReverse: 0,
+    externalResourcesRequired: 0,
+    preserveAlpha: 0,
   },
 };
 
@@ -279,20 +225,6 @@ var DOMProperty = {
   ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR +
     '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040',
 
-  /**
-   * Map from property "standard name" to an object with info about how to set
-   * the property in the DOM. Each object contains:
-   *
-   * hasBooleanValue:
-   *   Whether the property should be removed when set to a falsey value.
-   * hasNumericValue:
-   *   Whether the property must be numeric or parse as a numeric and should be
-   *   removed when set to a falsey value.
-   * hasOverloadedBooleanValue:
-   *   Whether the property can be used as a flag as well as with a value.
-   *   Removed when strictly equal to false; present without a value when
-   *   strictly equal to true; present with a value otherwise.
-   */
   properties: {},
 
   /**
@@ -367,30 +299,86 @@ var DOMProperty = {
       : null;
   },
 
-  // Whether the property must be positive numeric or parse as a positive
-  // numeric and should be removed when set to a falsey value.
-  isExpectingPositiveValue(propName) {
+  getExpectedValueType(propName) {
     switch (propName) {
+      // Numeric properties.
+      // TODO: add an explanation.
+      case 'rowSpan':
+      case 'start':
+        return 'number';
+      // Positive numeric properties.
+      // TODO: add an explanation.
       case 'cols':
       case 'rows':
       case 'size':
       case 'span':
-        return true;
+        return 'positiveNumber';
+      // Booleans.
+      // The property should be removed when set to a falsey value.
+      // case 'autoFocus': (Intentionally handled elsewhere.)
+      case 'allowFullScreen':
+      case 'async': // Specifies target context for links with `preload` type.
+      case 'autoPlay':
+      case 'capture':
+      case 'checked':
+      case 'controls':
+      case 'default':
+      case 'defer':
+      case 'disabled':
+      case 'formNoValidate':
+      case 'hidden':
+      case 'itemScope': // For Microdata. http://schema.org/docs/gs.html
+      case 'loop':
+      case 'multiple':
+      case 'muted':
+      case 'noValidate':
+      case 'open':
+      case 'playsInline':
+      case 'readOnly':
+      case 'required':
+      case 'reversed':
+      case 'scoped':
+      case 'seamless':
+      case 'selected':
+        return 'boolean';
+      // "String" booleans (TODO: explain the difference).
+      case 'allowTransparency':
+      case 'contentEditable':
+      case 'draggable':
+      case 'spellCheck':
+      case 'value':
+      case 'autoReverse':
+      case 'externalResourcesRequired':
+      case 'preserveAlpha':
+        return 'stringBoolean';
+      // Booleans or strings.
+      // The property can be used as a flag as well as with a value.
+      // Removed when strictly equal to false; present without a value when
+      // strictly equal to true; present with a value otherwise.
+      case 'download':
+        return 'overloadedBoolean';
+      // Unknown.
       default:
-        return false;
+        return 'string';
     }
   },
 
   shouldIgnoreValue(name, value) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
-    return (
-      value == null ||
-      (propertyInfo.hasBooleanValue && !value) ||
-      (propertyInfo.hasNumericValue &&
-        (isNaN(value) ||
-          (DOMProperty.isExpectingPositiveValue(name) && value < 1))) ||
-      (propertyInfo.hasOverloadedBooleanValue && value === false)
-    );
+    if (value == null) {
+      return true;
+    }
+    switch (DOMProperty.getExpectedValueType(name)) {
+      case 'number':
+        return isNaN(value);
+      case 'positiveNumber':
+        return isNaN(value) || value < 1;
+      case 'boolean':
+        return !value;
+      case 'overloadedBoolean':
+        return value === false;
+      default:
+        return false;
+    }
   },
 
   shouldUseProperty(propName) {
@@ -411,16 +399,15 @@ var DOMProperty = {
     if (DOMProperty.isReservedProp(name)) {
       return true;
     }
-    let propertyInfo = DOMProperty.getPropertyInfo(name);
-    if (propertyInfo) {
-      return (
-        propertyInfo.hasBooleanValue ||
-        propertyInfo.hasStringBooleanValue ||
-        propertyInfo.hasOverloadedBooleanValue
-      );
+    switch (DOMProperty.getExpectedValueType(name)) {
+      case 'boolean':
+      case 'overloadedBoolean':
+      case 'stringBoolean':
+        return true;
+      default:
+        var prefix = name.toLowerCase().slice(0, 5);
+        return prefix === 'data-' || prefix === 'aria-';
     }
-    var prefix = name.toLowerCase().slice(0, 5);
-    return prefix === 'data-' || prefix === 'aria-';
   },
 
   /**

@@ -82,9 +82,10 @@ var DOMMarkupOperations = {
         return '';
       }
       var attributeName = DOMProperty.getAttributeName(name);
+      var expectedType = DOMProperty.getExpectedValueType(name);
       if (
-        propertyInfo.hasBooleanValue ||
-        (propertyInfo.hasOverloadedBooleanValue && value === true)
+        expectedType === 'boolean' ||
+        (expectedType === 'overloadedBoolean' && value === true)
       ) {
         return attributeName + '=""';
       } else if (
