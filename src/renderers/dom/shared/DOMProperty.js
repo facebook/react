@@ -76,7 +76,6 @@ var DOMPropertyInjection = {
       var propConfig = Properties[propName];
 
       var propertyInfo = {
-        propertyName: propName,
         mutationMethod: null,
 
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
@@ -273,9 +272,6 @@ var DOMProperty = {
    * Map from property "standard name" to an object with info about how to set
    * the property in the DOM. Each object contains:
    *
-   * propertyName:
-   *   Used on DOM node instances. (This includes properties that mutate due to
-   *   external factors.)
    * mutationMethod:
    *   If non-null, used instead of the property or `setAttribute()` after
    *   initial render.
