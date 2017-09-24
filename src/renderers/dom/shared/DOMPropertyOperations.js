@@ -50,12 +50,13 @@ function isAttributeNameSafe(attributeName) {
 
 // shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
+function shouldIgnoreValue(name, propertyInfo, value) {
   return (
     value == null ||
     (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
+    (propertyInfo.hasNumericValue &&
+      (isNaN(value) ||
+        (DOMProperty.isExpectingPositiveValue(name) && value < 1))) ||
     (propertyInfo.hasOverloadedBooleanValue && value === false)
   );
 }
@@ -95,7 +96,7 @@ var DOMPropertyOperations = {
               if (value === '') {
                 return true;
               }
-              if (shouldIgnoreValue(propertyInfo, expected)) {
+              if (shouldIgnoreValue(name, propertyInfo, expected)) {
                 return value;
               }
               if (value === '' + expected) {
@@ -104,7 +105,7 @@ var DOMPropertyOperations = {
               return value;
             }
           } else if (node.hasAttribute(attributeName)) {
-            if (shouldIgnoreValue(propertyInfo, expected)) {
+            if (shouldIgnoreValue(name, propertyInfo, expected)) {
               // We had an attribute but shouldn't have had one, so read it
               // for the error message.
               return node.getAttribute(attributeName);
@@ -121,7 +122,7 @@ var DOMPropertyOperations = {
             stringValue = node.getAttribute(attributeName);
           }
 
-          if (shouldIgnoreValue(propertyInfo, expected)) {
+          if (shouldIgnoreValue(name, propertyInfo, expected)) {
             return stringValue === null ? expected : stringValue;
           } else if (stringValue === '' + expected) {
             return expected;
@@ -168,7 +169,7 @@ var DOMPropertyOperations = {
       var mutationMethod = DOMProperty.getMutationMethod(name);
       if (mutationMethod) {
         mutationMethod(node, value);
-      } else if (shouldIgnoreValue(propertyInfo, value)) {
+      } else if (shouldIgnoreValue(name, propertyInfo, value)) {
         DOMPropertyOperations.deleteValueForProperty(node, name);
         return;
       } else if (DOMProperty.shouldUseProperty(name)) {

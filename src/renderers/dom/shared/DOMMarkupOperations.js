@@ -50,12 +50,13 @@ function isAttributeNameSafe(attributeName) {
 
 // shouldIgnoreValue() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
+function shouldIgnoreValue(name, propertyInfo, value) {
   return (
     value == null ||
     (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
+    (propertyInfo.hasNumericValue &&
+      (isNaN(value) ||
+        (DOMProperty.isExpectingPositiveValue(name) && value < 1))) ||
     (propertyInfo.hasOverloadedBooleanValue && value === false)
   );
 }
@@ -90,7 +91,7 @@ var DOMMarkupOperations = {
   createMarkupForProperty: function(name, value) {
     var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
-      if (shouldIgnoreValue(propertyInfo, value)) {
+      if (shouldIgnoreValue(name, propertyInfo, value)) {
         return '';
       }
       var attributeName = DOMProperty.getAttributeName(name);

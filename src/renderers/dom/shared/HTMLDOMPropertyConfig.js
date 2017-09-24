@@ -15,8 +15,6 @@ var DOMProperty = require('DOMProperty');
 
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
 var HAS_NUMERIC_VALUE = DOMProperty.injection.HAS_NUMERIC_VALUE;
-var HAS_POSITIVE_NUMERIC_VALUE =
-  DOMProperty.injection.HAS_POSITIVE_NUMERIC_VALUE;
 var HAS_OVERLOADED_BOOLEAN_VALUE =
   DOMProperty.injection.HAS_OVERLOADED_BOOLEAN_VALUE;
 var HAS_STRING_BOOLEAN_VALUE = DOMProperty.injection.HAS_STRING_BOOLEAN_VALUE;
@@ -37,7 +35,7 @@ var HTMLDOMPropertyConfig = {
     autoPlay: HAS_BOOLEAN_VALUE,
     capture: HAS_BOOLEAN_VALUE,
     checked: HAS_BOOLEAN_VALUE,
-    cols: HAS_POSITIVE_NUMERIC_VALUE,
+    cols: HAS_NUMERIC_VALUE,
     contentEditable: HAS_STRING_BOOLEAN_VALUE,
     controls: HAS_BOOLEAN_VALUE,
     default: HAS_BOOLEAN_VALUE,
@@ -56,15 +54,15 @@ var HTMLDOMPropertyConfig = {
     readOnly: HAS_BOOLEAN_VALUE,
     required: HAS_BOOLEAN_VALUE,
     reversed: HAS_BOOLEAN_VALUE,
-    rows: HAS_POSITIVE_NUMERIC_VALUE,
+    rows: HAS_NUMERIC_VALUE,
     rowSpan: HAS_NUMERIC_VALUE,
     scoped: HAS_BOOLEAN_VALUE,
     seamless: HAS_BOOLEAN_VALUE,
     selected: HAS_BOOLEAN_VALUE,
-    size: HAS_POSITIVE_NUMERIC_VALUE,
+    size: HAS_NUMERIC_VALUE,
     start: HAS_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
-    span: HAS_POSITIVE_NUMERIC_VALUE,
+    span: HAS_NUMERIC_VALUE,
     spellCheck: HAS_STRING_BOOLEAN_VALUE,
     // Style must be explicitly set in the attribute list. React components
     // expect a style object

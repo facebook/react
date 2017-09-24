@@ -100,10 +100,6 @@ var DOMPropertyInjection = {
       var propertyInfo = {
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
         hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
-        hasPositiveNumericValue: checkMask(
-          propConfig,
-          Injection.HAS_POSITIVE_NUMERIC_VALUE,
-        ),
         hasOverloadedBooleanValue: checkMask(
           propConfig,
           Injection.HAS_OVERLOADED_BOOLEAN_VALUE,
@@ -292,9 +288,6 @@ var DOMProperty = {
    * hasNumericValue:
    *   Whether the property must be numeric or parse as a numeric and should be
    *   removed when set to a falsey value.
-   * hasPositiveNumericValue:
-   *   Whether the property must be positive numeric or parse as a positive
-   *   numeric and should be removed when set to a falsey value.
    * hasOverloadedBooleanValue:
    *   Whether the property can be used as a flag as well as with a value.
    *   Removed when strictly equal to false; present without a value when
@@ -372,6 +365,20 @@ var DOMProperty = {
     return DOMProperty.properties.hasOwnProperty(name)
       ? DOMProperty.properties[name]
       : null;
+  },
+
+  // Whether the property must be positive numeric or parse as a positive
+  // numeric and should be removed when set to a falsey value.
+  isExpectingPositiveValue(propName) {
+    switch (propName) {
+      case 'cols':
+      case 'rows':
+      case 'size':
+      case 'span':
+        return true;
+      default:
+        return false;
+    }
   },
 
   shouldUseProperty(propName) {
