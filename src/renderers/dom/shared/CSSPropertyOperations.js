@@ -11,9 +11,6 @@
 
 'use strict';
 
-var CSSProperty = require('CSSProperty');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-
 var dangerousStyleValue = require('dangerousStyleValue');
 
 if (__DEV__) {
