@@ -15,8 +15,6 @@ var ExecutionEnvironment;
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactMarkupChecksum;
-var ReactReconcileTransaction;
 var ReactTestUtils;
 var PropTypes;
 
@@ -31,8 +29,6 @@ describe('ReactDOMServer', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactReconcileTransaction = require('ReactReconcileTransaction');
     PropTypes = require('prop-types');
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
@@ -49,16 +45,7 @@ describe('ReactDOMServer', () => {
       var response = ReactDOMServer.renderToString(<span>hello world</span>);
       expect(response).toMatch(
         new RegExp(
-          '<span ' +
-            ROOT_ATTRIBUTE_NAME +
-            '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
-            '>hello world</span>',
+          '<span ' + ROOT_ATTRIBUTE_NAME + '=""' + '>hello world</span>',
         ),
       );
     });
@@ -66,18 +53,7 @@ describe('ReactDOMServer', () => {
     it('should generate simple markup for self-closing tags', () => {
       var response = ReactDOMServer.renderToString(<img />);
       expect(response).toMatch(
-        new RegExp(
-          '<img ' +
-            ROOT_ATTRIBUTE_NAME +
-            '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
-            '/>',
-        ),
+        new RegExp('<img ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>'),
       );
     });
 
@@ -85,16 +61,7 @@ describe('ReactDOMServer', () => {
       var response = ReactDOMServer.renderToString(<img data-attr=">" />);
       expect(response).toMatch(
         new RegExp(
-          '<img data-attr="&gt;" ' +
-            ROOT_ATTRIBUTE_NAME +
-            '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
-            '/>',
+          '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
         ),
       );
     });
@@ -135,17 +102,8 @@ describe('ReactDOMServer', () => {
           '<div ' +
             ROOT_ATTRIBUTE_NAME +
             '=""' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
             '>' +
             '<span' +
-            (ReactDOMFeatureFlags.useFiber
-              ? ''
-              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
             '>' +
             (ReactDOMFeatureFlags.useFiber
               ? 'My name is <!-- -->child'
@@ -212,9 +170,6 @@ describe('ReactDOMServer', () => {
               (ReactDOMFeatureFlags.useFiber
                 ? ''
                 : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
-              (ReactDOMFeatureFlags.useFiber
-                ? ''
-                : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
               '>' +
               (ReactDOMFeatureFlags.useFiber
                 ? 'Component name: <!-- -->TestComponent'
@@ -578,11 +533,6 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-
-      ReactReconcileTransaction.prototype.perform = function() {
-        // We shouldn't ever be calling this on the server
-        throw new Error('Browser reconcile transaction should not be used');
-      };
       var markup = ReactDOMServer.renderToString(<Component />);
       expect(markup).toContain('hello, world');
     });
@@ -602,11 +552,6 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-
-      ReactReconcileTransaction.prototype.perform = function() {
-        // We shouldn't ever be calling this on the server
-        throw new Error('Browser reconcile transaction should not be used');
-      };
       var markup = ReactDOMServer.renderToString(<Component />);
       expect(markup).toContain('hello, world');
     });
