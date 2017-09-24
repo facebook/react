@@ -81,7 +81,7 @@ var DOMPropertyOperations = {
     if (__DEV__) {
       var propertyInfo = DOMProperty.getPropertyInfo(name);
       if (propertyInfo) {
-        var mutationMethod = propertyInfo.mutationMethod;
+        var mutationMethod = DOMProperty.getMutationMethod(name);
         if (mutationMethod || propertyInfo.mustUseProperty) {
           return node[name];
         } else {
@@ -165,7 +165,7 @@ var DOMPropertyOperations = {
     var propertyInfo = DOMProperty.getPropertyInfo(name);
 
     if (propertyInfo && DOMProperty.shouldSetAttribute(name, value)) {
-      var mutationMethod = propertyInfo.mutationMethod;
+      var mutationMethod = DOMProperty.getMutationMethod(name);
       if (mutationMethod) {
         mutationMethod(node, value);
       } else if (shouldIgnoreValue(propertyInfo, value)) {
@@ -259,7 +259,7 @@ var DOMPropertyOperations = {
   deleteValueForProperty: function(node, name) {
     var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
+      var mutationMethod = DOMProperty.getMutationMethod(name);
       if (mutationMethod) {
         mutationMethod(node, undefined);
       } else if (propertyInfo.mustUseProperty) {

@@ -30,6 +30,33 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
+function setDOMValueAttribute(node, value) {
+  if (value == null) {
+    return node.removeAttribute('value');
+  }
+
+  // Number inputs get special treatment due to some edge cases in
+  // Chrome. Let everything else assign the value attribute as normal.
+  // https://github.com/facebook/react/issues/7253#issuecomment-236074326
+  if (node.type !== 'number' || node.hasAttribute('value') === false) {
+    node.setAttribute('value', '' + value);
+  } else if (
+    node.validity &&
+    !node.validity.badInput &&
+    node.ownerDocument.activeElement !== node
+  ) {
+    // Don't assign an attribute if validation reports bad
+    // input. Chrome will clear the value. Additionally, don't
+    // operate on inputs that have focus, otherwise Chrome might
+    // strip off trailing decimal places and cause the user's
+    // cursor position to jump to the beginning of the input.
+    //
+    // In ReactDOMInput, we have an onBlur event that will trigger
+    // this function again when focus is lost.
+    node.setAttribute('value', '' + value);
+  }
+}
+
 var DOMPropertyInjection = {
   /**
    * Mapping from normalized, camelcased property names to a configuration that
@@ -53,15 +80,11 @@ var DOMPropertyInjection = {
    * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
    * Property names not specified use the normalized name.
    *
-   * DOMMutationMethods: Properties that require special mutation methods. If
-   * `value` is undefined, the mutation method should unset the property.
-   *
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
     var Injection = DOMPropertyInjection;
     var Properties = domPropertyConfig.Properties || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
     for (var propName in Properties) {
       invariant(
@@ -76,8 +99,6 @@ var DOMPropertyInjection = {
       var propConfig = Properties[propName];
 
       var propertyInfo = {
-        mutationMethod: null,
-
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
         hasNumericValue: checkMask(propConfig, Injection.HAS_NUMERIC_VALUE),
@@ -103,10 +124,6 @@ var DOMPropertyInjection = {
           'numeric value, but not a combination: %s',
         propName,
       );
-
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        propertyInfo.mutationMethod = DOMMutationMethods[propName];
-      }
 
       // Downcase references to whitelist properties to check for membership
       // without case-sensitivity. This allows the whitelist to pick up
@@ -272,9 +289,6 @@ var DOMProperty = {
    * Map from property "standard name" to an object with info about how to set
    * the property in the DOM. Each object contains:
    *
-   * mutationMethod:
-   *   If non-null, used instead of the property or `setAttribute()` after
-   *   initial render.
    * mustUseProperty:
    *   Whether the property must be accessed and mutated as an object property.
    * hasBooleanValue:
@@ -343,6 +357,16 @@ var DOMProperty = {
       case 'xlinkTitle':
       case 'xlinkType':
         return 'http://www.w3.org/1999/xlink';
+      default:
+        return null;
+    }
+  },
+
+  // If non-null, used instead of the property or `setAttribute()`.
+  getMutationMethod(propName) {
+    switch (propName) {
+      case 'value':
+        return setDOMValueAttribute;
       default:
         return null;
     }
