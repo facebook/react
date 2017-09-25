@@ -13,7 +13,7 @@ We're working hard to prepare GraphQL and Relay for public release. In the meant
 
 The diagram below shows the main parts of the Relay architecture on the client and the server:
 
-<img src="/react/img/blog/relay-components/relay-architecture.png" alt="Relay Architecture" width="650" />
+<img src="../img/blog/relay-components/relay-architecture.png" alt="Relay Architecture" width="650" />
 
 The main pieces are as follows:
 
@@ -30,7 +30,7 @@ This post will focus on **Relay components** that describe encapsulated units of
 
 To see how components work and can be composed, let's implement a basic version of the Facebook News Feed in Relay. Our application will have two components: a `<NewsFeed>` that renders a list of `<Story>` items. We'll introduce the plain React version of each component first and then convert it to a Relay component. The goal is something like the following:
 
-<img src="/react/img/blog/relay-components/sample-newsfeed.png" alt="Sample News Feed" width="360" />
+<img src="../img/blog/relay-components/sample-newsfeed.png" alt="Sample News Feed" width="360" />
 
 <br/>
 
@@ -73,7 +73,7 @@ export default Relay.createContainer(Story, {
 
 Before adding the GraphQL fragment, let's look at the component hierarchy this creates:
 
-<img src="/react/img/blog/relay-components/relay-containers.png" width="397" alt="React Container Data Flow" />
+<img src="../img/blog/relay-components/relay-containers.png" width="397" alt="React Container Data Flow" />
 
 Most props will be passed through from the container to the original component. However, Relay will return the query results for a prop whenever a fragment is defined. In this case we'll add a GraphQL fragment for `story`:
 
@@ -122,7 +122,7 @@ Relay guarantees that all data required to render a component will be available 
 
 The diagram below shows how Relay containers make data available to our React components:
 
-<img src="/react/img/blog/relay-components/relay-containers-data-flow.png" width="650" alt="Relay Container Data Flow" />
+<img src="../img/blog/relay-components/relay-containers-data-flow.png" width="650" alt="Relay Container Data Flow" />
 
 <br/>
 

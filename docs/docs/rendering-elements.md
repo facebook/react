@@ -88,7 +88,7 @@ React DOM compares the element and its children to the previous one, and only ap
 
 You can verify by inspecting the [last example](http://codepen.io/gaearon/pen/gwoJZk?editors=0010) with the browser tools:
 
-![DOM inspector showing granular updates](/react/img/docs/granular-dom-updates.gif)
+![DOM inspector showing granular updates](../img/docs/granular-dom-updates.gif)
 
 Even though we create an element describing the whole UI tree on every tick, only the text node whose contents has changed gets updated by React DOM.
 
