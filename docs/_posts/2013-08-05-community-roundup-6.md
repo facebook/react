@@ -18,8 +18,8 @@ This is the first Community Round-up where none of the items are from Facebook/I
 > Browserify v2 transform for `text/jsx`. Basic usage is:
 >
 > ```
-% browserify -t reactify main.jsx
-```
+> % browserify -t reactify main.jsx
+> ```
 >
 > `reactify` transform activates for files with either `.jsx` extension or `/** @jsx React.DOM */` pragma as a first line for any `.js` file.
 >
