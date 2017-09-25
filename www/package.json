@@ -5,6 +5,9 @@
   "bugs": {
     "url": "https://github.com/facebook/react"
   },
+  "resolutions": {
+    "gatsby/graphql": "0.10.5"
+  },
   "dependencies": {
     "gatsby": "^1.9.9",
     "gatsby-link": "^1.6.9",
