@@ -15,6 +15,16 @@ import Link from 'gatsby-link';
 import React from 'react';
 import {colors, media} from 'theme';
 
+// TODO (bvaughn) Remove this component once Gatsby #2227 has been released
+// In the meanwhile it is required in order for the header "Blog" redirect to work
+// https://github.com/gatsbyjs/gatsby/pull/2227
+const HeaderAnchor = ({isActive, title, to}) => (
+  <a css={[style, isActive && activeStyle]} href={to}>
+    {title}
+    {isActive && <span css={activeAfterStyle} />}
+  </a>
+);
+
 const HeaderLink = ({isActive, title, to}) => (
   <Link css={[style, isActive && activeStyle]} to={to}>
     {title}
@@ -74,4 +84,4 @@ const activeAfterStyle = {
   },
 };
 
-export default HeaderLink;
+export {HeaderAnchor, HeaderLink};
