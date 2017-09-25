@@ -23,63 +23,65 @@ import ChevronSvg from '../ChevronSvg';
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
 
-const Section = ({isActive, location, onClick, section}) => (
-  <div>
-    <MetaTitle
-      onClick={onClick}
-      cssProps={{
-        marginTop: 10,
-
-        [media.greaterThan('small')]: {
-          color: isActive ? colors.text : colors.subtle,
-
-          ':hover': {
-            color: colors.text,
-          },
-        },
-      }}>
-      {section.title}
-      <ChevronSvg
+function Section({closeParentMenu, isActive, location, onClick, section}) {
+  return (
+    <div>
+      <MetaTitle
+        onClick={onClick}
         cssProps={{
-          marginLeft: 7,
-          transform: isActive ? 'rotateX(180deg)' : 'rotateX(0deg)',
-          transition: 'transform 0.2s ease',
+          marginTop: 10,
 
-          [media.lessThan('small')]: {
-            display: 'none',
+          [media.greaterThan('small')]: {
+            color: isActive ? colors.text : colors.subtle,
+
+            ':hover': {
+              color: colors.text,
+            },
           },
-        }}
-      />
-    </MetaTitle>
-    <ul
-      css={{
-        marginBottom: 10,
+        }}>
+        {section.title}
+        <ChevronSvg
+          cssProps={{
+            marginLeft: 7,
+            transform: isActive ? 'rotateX(180deg)' : 'rotateX(0deg)',
+            transition: 'transform 0.2s ease',
 
-        [media.greaterThan('small')]: {
-          display: isActive ? 'block' : 'none',
-        },
-      }}>
-      {section.items.map(item => (
-        <li
-          key={item.id}
-          css={{
-            marginTop: 5,
-          }}>
-          {CreateLink(location, section, item)}
+            [media.lessThan('small')]: {
+              display: 'none',
+            },
+          }}
+        />
+      </MetaTitle>
+      <ul
+        css={{
+          marginBottom: 10,
 
-          {item.subitems &&
-            <ul css={{marginLeft: 20}}>
-              {item.subitems.map(subitem => (
-                <li key={subitem.id}>
-                  {CreateLink(location, section, subitem)}
-                </li>
-              ))}
-            </ul>}
-        </li>
-      ))}
-    </ul>
-  </div>
-);
+          [media.greaterThan('small')]: {
+            display: isActive ? 'block' : 'none',
+          },
+        }}>
+        {section.items.map(item => (
+          <li
+            key={item.id}
+            css={{
+              marginTop: 5,
+            }}>
+            {CreateLink(location, section, item)}
+
+            {item.subitems &&
+              <ul css={{marginLeft: 20}}>
+                {item.subitems.map(subitem => (
+                  <li key={subitem.id}>
+                    {CreateLink(location, section, subitem, closeParentMenu)}
+                  </li>
+                ))}
+              </ul>}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
 
 const activeLinkCss = {
   fontWeight: 'bold',
@@ -111,7 +113,7 @@ const linkCss = {
   },
 };
 
-const CreateLink = (location, section, item) => {
+const CreateLink = (location, section, item, closeParentMenu) => {
   const isActive = isItemActive(location, item);
   if (item.id.includes('.html')) {
     return (
@@ -121,8 +123,13 @@ const CreateLink = (location, section, item) => {
       </Link>
     );
   } else if (item.forceInternal) {
+    // We need to give the option for the parent menu to close if this link is
+    // in a pop-out menu.
     return (
-      <Link css={[linkCss, isActive && activeLinkCss]} to={item.href}>
+      <Link
+        onClick={closeParentMenu}
+        css={[linkCss, isActive && activeLinkCss]}
+        to={item.href}>
         {isActive && <span css={activeLinkBefore} />}
         {item.title}
       </Link>

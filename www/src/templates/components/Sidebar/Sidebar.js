@@ -26,7 +26,7 @@ class Sidebar extends Component {
   }
 
   render() {
-    const {location, sectionList} = this.props;
+    const {closeParentMenu, location, sectionList} = this.props;
     const {activeSection} = this.state;
 
     return (
@@ -49,6 +49,7 @@ class Sidebar extends Component {
         }}>
         {sectionList.map((section, index) => (
           <Section
+            closeParentMenu={closeParentMenu}
             isActive={activeSection === section || sectionList.length === 1}
             key={index}
             location={location}
