@@ -147,11 +147,16 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       }
     }
   `);
+  const newestBlogNode = newestBlogEntry.data.allMarkdownRemark.edges[0].node
 
   // Blog landing page should always show the most recent blog entry.
   createRedirect({
     fromPath: '/blog/',
-    toPath: newestBlogEntry.data.allMarkdownRemark.edges[0].node.fields.slug,
+    toPath: newestBlogNode.fields.slug,
+  });
+  createRedirect({
+    fromPath: '/blog',
+    toPath: newestBlogNode.fields.slug,
   });
 };
 
