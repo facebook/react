@@ -12,7 +12,7 @@ In the past, React used to ignore unknown DOM attributes. If you wrote JSX with 
 
 would render an empty div to the DOM with React 15:
 
-````js
+```js
 // React 15 output:
 <div />
 ```
