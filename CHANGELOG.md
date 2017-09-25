@@ -28,6 +28,7 @@
   * Previously, changing the `ref` to a component would always detach the ref before that component's render is called. Now, we change the `ref` later, when applying the changes to the DOM.
   * It is not safe to re-render into a container that was modified by something other than React. This worked previously in some cases but was never supported. We now emit a warning in this case. Instead you should clean up your component trees using `ReactDOM.unmountComponentAtNode`. [See this example.](https://github.com/facebook/react/issues/10294#issuecomment-318820987)
   * `componentDidUpdate` lifecycle no longer receives `prevContext` param. ([@bvaughn](https://github.com/bvaughn) in [#8631](https://github.com/facebook/react/pull/8631))
+  * Non-unique keys may now cause children to be duplicated and/or omitted. Using non-unique keys is not (and has never been) supported, but previously it was a hard error.
   * Shallow renderer no longer calls `componentDidUpdate()` because DOM refs are not available. This also makes it consistent with `componentDidMount()` (which does not get called in previous versions either).
   * Shallow renderer does not implement `unstable_batchedUpdates()` anymore.
 - The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds. For example:
