@@ -16,7 +16,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "factory.js",
     "index.js",
     "react-linked-input.js",
@@ -29,7 +28,7 @@
     "linked",
     "reactlink"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "devDependencies": {
     "babel-preset-es2015": "^6.24.0",
     "jest": "^19.0.2",

@@ -7,7 +7,7 @@
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "peerDependencies": {
     "react-dom": "^15.4.2"
   },
@@ -22,7 +22,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js"
   ]

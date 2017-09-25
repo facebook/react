@@ -157,7 +157,7 @@ React team meets once a week to discuss the development of React, future plans, 
 
 ### License
 
-By contributing to React, you agree that your contributions will be licensed under its BSD license.
+By contributing to React, you agree that your contributions will be licensed under its MIT license.
 
 ### What Next?
 

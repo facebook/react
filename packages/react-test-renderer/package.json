@@ -9,7 +9,7 @@
     "react-native",
     "react-testing"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
@@ -23,7 +23,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "shallow.js",

@@ -7,7 +7,7 @@
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "dependencies": {
     "react-transition-group": "^1.2.0"
   },
@@ -19,7 +19,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js"
   ]

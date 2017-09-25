@@ -1,5 +1,8 @@
 ## 15.6.2 (September 25, 2017)
 
+### All Packages
+* Switch from BSD + Patents to MIT license
+
 ### React DOM
 
 * Fix a bug where modifying document.documentMode would trigger IE detection in other browsers, breaking change events ([@aweary](https://github.com/aweary) in [#10032](https://github.com/facebook/react/pull/10032)

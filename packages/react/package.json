@@ -7,10 +7,9 @@
   ],
   "homepage": "https://facebook.github.io/react/",
   "bugs": "https://github.com/facebook/react/issues",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "files": [
     "LICENSE",
-    "PATENTS",
     "addons.js",
     "react.js",
     "addons/",

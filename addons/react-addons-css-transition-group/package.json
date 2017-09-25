@@ -7,7 +7,7 @@
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "scripts": {
     "prepublish": ":"
   },
@@ -16,7 +16,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js"
   ],

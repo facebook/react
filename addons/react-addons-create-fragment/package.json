@@ -7,7 +7,7 @@
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "dependencies": {
     "fbjs": "^0.8.4",
     "loose-envify": "^1.3.1",
@@ -15,7 +15,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "react-addons-create-fragment.js",

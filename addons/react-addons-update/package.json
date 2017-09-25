@@ -7,7 +7,7 @@
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "dependencies": {
     "fbjs": "^0.8.9",
     "object-assign": "^4.1.0"
@@ -25,7 +25,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "react-addons-update.js",
