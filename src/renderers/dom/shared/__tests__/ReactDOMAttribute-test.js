@@ -112,9 +112,9 @@ describe('ReactDOM unknown attribute', () => {
 
       testUnknownAttributeRemoval(Symbol('foo'));
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid prop `unknown` on <div> tag. Either remove this ' +
-          'prop from the element, or pass a string or number value to keep it ' +
-          'in the DOM. For details, see https://fb.me/react-unknown-prop\n' +
+        'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +
+          'from the element, or pass a string or number value to keep it ' +
+          'in the DOM. For details, see https://fb.me/react-attribute-behavior\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
@@ -125,10 +125,10 @@ describe('ReactDOM unknown attribute', () => {
 
       testUnknownAttributeRemoval(function someFunction() {});
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid prop `unknown` on <div> tag. Either remove this ' +
-          'prop from the element, or pass a string or number value to ' +
+        'Warning: Invalid value for prop `unknown` on <div> tag. Either remove ' +
+          'it from the element, or pass a string or number value to ' +
           'keep it in the DOM. For details, see ' +
-          'https://fb.me/react-unknown-prop\n' +
+          'https://fb.me/react-attribute-behavior\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);

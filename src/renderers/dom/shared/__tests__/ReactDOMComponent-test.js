@@ -148,9 +148,9 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div foo={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid prop `foo` on <div> tag. Either remove this prop ' +
+        'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          'it in the DOM. For details, see https://fb.me/react-attribute-behavior' +
           '\n    in div (at **)',
       );
     });
@@ -161,9 +161,9 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid props `foo`, `baz` on <div> tag. Either remove these ' +
-          'props from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
+        'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
+          'them from the element, or pass a string or number value to keep ' +
+          'them in the DOM. For details, see https://fb.me/react-attribute-behavior' +
           '\n    in div (at **)',
       );
     });
@@ -174,7 +174,7 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div onDblClick={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
+        'Warning: Invalid event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
       );
     });
 
@@ -1732,7 +1732,7 @@ describe('ReactDOMComponent', () => {
         'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property `onclick`. Did you mean ' +
+        'Warning: Invalid event handler property `onclick`. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
     });
@@ -1746,7 +1746,7 @@ describe('ReactDOMComponent', () => {
         'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property `onclick`. Did you mean ' +
+        'Warning: Invalid event handler property `onclick`. Did you mean ' +
           '`onClick`?\n    in input (at **)',
       );
     });
@@ -2115,7 +2115,7 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `whatever` on <div> tag',
+        'Warning: Invalid value for prop `whatever` on <div> tag',
       );
     });
 
@@ -2186,7 +2186,7 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `whatever` on <div> tag.',
+        'Warning: Invalid value for prop `whatever` on <div> tag.',
       );
     });
 
