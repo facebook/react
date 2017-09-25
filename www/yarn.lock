@@ -3348,8 +3348,8 @@ gatsby-1-config-css-modules@^1.0.4:
     babel-runtime "^6.26.0"
 
 gatsby-link@^1.6.9:
-  version "1.6.16"
-  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.6.16.tgz#56d24a49c2cb77084e9d42a88564fe39ce13f9ae"
+  version "1.6.17"
+  resolved "https://registry.yarnpkg.com/gatsby-link/-/gatsby-link-1.6.17.tgz#4182d608798b72fd4ec716f118c4d1f649b214bb"
   dependencies:
     babel-runtime "^6.26.0"
     prop-types "^15.5.8"
@@ -3512,8 +3512,8 @@ gatsby-source-filesystem@^1.4.4:
     slash "^1.0.0"
 
 gatsby-transformer-remark@^1.7.2:
-  version "1.7.11"
-  resolved "https://registry.yarnpkg.com/gatsby-transformer-remark/-/gatsby-transformer-remark-1.7.11.tgz#799c2ac2ad1c0b9c8c9b5fbab91e766b157b0735"
+  version "1.7.12"
+  resolved "https://registry.yarnpkg.com/gatsby-transformer-remark/-/gatsby-transformer-remark-1.7.12.tgz#698117cf29659404092675176cd973aa940415d6"
   dependencies:
     babel-runtime "^6.26.0"
     bluebird "^3.5.0"
