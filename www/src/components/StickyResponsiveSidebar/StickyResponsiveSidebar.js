@@ -32,7 +32,6 @@ class StickyResponsiveSidebar extends Component {
   }
 
   render() {
-    const {title} = this.props;
     const {open} = this.state;
     const smallScreenSidebarStyles = {
       top: 0,
@@ -49,11 +48,10 @@ class StickyResponsiveSidebar extends Component {
     };
 
     const smallScreenBottomBarStyles = {
-      display: 'block',
+      display: 'inline-block',
     };
 
-    const iconOffset = open ? 7 : 0;
-    const labelOffset = open ? -40 : 0;
+    const iconOffset = open ? 8 : -4;
     const menuOpacity = open ? 1 : 0;
     const menuOffset = open ? 0 : 40;
 
@@ -133,15 +131,16 @@ class StickyResponsiveSidebar extends Component {
         <div
           css={{
             backgroundColor: colors.darker,
-            bottom: 0,
+            bottom: 44, // iOS Safari's inert "bottom 44px"
             color: colors.brand,
             display: 'none', // gets overriden at small screen sizes
-            left: 0,
             cursor: 'pointer',
             position: 'fixed',
-            right: 0,
-            width: '100%',
+            right: 20,
             zIndex: 3,
+            borderRadius: '50%',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 0 20px rgba(0, 0, 0, 0.3)',
             [media.lessThan('small')]: smallScreenBottomBarStyles,
           }}
           onClick={this.toggleOpen}>
@@ -156,7 +155,7 @@ class StickyResponsiveSidebar extends Component {
                   height: 50,
                 },
                 [media.lessThan('small')]: {
-                  height: 40,
+                  height: 60,
                   overflow: 'hidden',
                   alignItems: 'flex-start',
                 },
@@ -164,48 +163,26 @@ class StickyResponsiveSidebar extends Component {
               <div
                 css={{
                   width: 20,
-                  marginRight: 10,
+                  height: 20,
                   alignSelf: 'center',
                   display: 'flex',
                   flexDirection: 'column',
+                  color: colors.brand,
                 }}>
                 <ChevronSvg
+                  size={15}
                   cssProps={{
-                    transform: `translate(0, ${iconOffset}px) rotate(180deg)`,
-                    transition: 'transform 0.5s ease',
+                    transform: `translate(2px, ${iconOffset}px) rotate(180deg)`,
+                    transition: 'transform 0.2s ease',
                   }}
                 />
                 <ChevronSvg
+                  size={15}
                   cssProps={{
-                    transform: `translate(0, ${0 - iconOffset}px)`,
-                    transition: 'transform 0.5s ease',
+                    transform: `translate(2px, ${0 - iconOffset}px)`,
+                    transition: 'transform 0.2s ease',
                   }}
                 />
-              </div>
-              <div
-                css={{
-                  flexGrow: 1,
-                }}>
-                <div
-                  style={{
-                    transform: `translate(0, ${labelOffset}px)`,
-                    transition: 'transform 0.5s ease',
-                  }}>
-                  <div
-                    css={{
-                      height: 40,
-                      lineHeight: '40px',
-                    }}>
-                    {title}
-                  </div>
-                  <div
-                    css={{
-                      height: 40,
-                      lineHeight: '40px',
-                    }}>
-                    Close
-                  </div>
-                </div>
               </div>
             </div>
           </Container>
