@@ -16,7 +16,7 @@ next: complementary-tools-ko-KR.html
 
 ### Thinking in react - tagtree.tv
 
-[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
+[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/react/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
 <figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *
