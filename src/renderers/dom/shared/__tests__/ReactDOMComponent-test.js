@@ -148,9 +148,9 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div foo={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid prop `foo` on <div> tag. Either remove this prop ' +
+        'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
           'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://fb.me/react-unknown-prop' +
+          'it in the DOM. For details, see https://fb.me/react-attribute-behavior' +
           '\n    in div (at **)',
       );
     });
@@ -161,9 +161,9 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid props `foo`, `baz` on <div> tag. Either remove these ' +
-          'props from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://fb.me/react-unknown-prop' +
+        'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
+          'them from the element, or pass a string or number value to keep ' +
+          'them in the DOM. For details, see https://fb.me/react-attribute-behavior' +
           '\n    in div (at **)',
       );
     });
@@ -233,7 +233,7 @@ describe('ReactDOMComponent', () => {
       expect(container.firstChild.getAttribute('CHILDREN')).toBe('5');
       expectDev(console.error.calls.count(0)).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
+        'Warning: Unknown DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
       );
     });
 
@@ -1729,7 +1729,7 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        'Warning: Unknown DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property `onclick`. Did you mean ' +
@@ -1743,7 +1743,7 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        'Warning: Unknown DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: Unknown event handler property `onclick`. Did you mean ' +
@@ -1761,7 +1761,7 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        'Warning: Unknown DOM property `class`. Did you mean `className`?\n    in div (at **)',
       );
     });
 
@@ -1939,11 +1939,11 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
+        'Warning: Unknown DOM property `for`. Did you mean `htmlFor`?\n    in label',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
+        'Warning: Unknown DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
     });
 
@@ -1960,11 +1960,11 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(2);
 
       expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
+        'Warning: Unknown DOM property `for`. Did you mean `htmlFor`?\n    in label',
       );
 
       expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
+        'Warning: Unknown DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
       );
     });
   });
@@ -2002,7 +2002,7 @@ describe('ReactDOMComponent', () => {
       expect(el.className).toBe('test');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?',
+        'Warning: Unknown DOM property `class`. Did you mean `className`?',
       );
     });
 
@@ -2014,7 +2014,7 @@ describe('ReactDOMComponent', () => {
       expect(el.className).toBe('test');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `cLASS`. Did you mean `className`?',
+        'Warning: Unknown DOM property `cLASS`. Did you mean `className`?',
       );
     });
 
@@ -2029,7 +2029,7 @@ describe('ReactDOMComponent', () => {
       expect(text.hasAttribute('arabic-form')).toBe(true);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
+        'Warning: Unknown DOM property `arabic-form`. Did you mean `arabicForm`?',
       );
     });
 
@@ -2115,7 +2115,7 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `whatever` on <div> tag',
+        'Warning: Invalid value for prop `whatever` on <div> tag',
       );
     });
 
@@ -2186,7 +2186,7 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid prop `whatever` on <div> tag.',
+        'Warning: Invalid value for prop `whatever` on <div> tag.',
       );
     });
 
@@ -2198,7 +2198,7 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('size')).toBe('30');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `SiZe`. Did you mean `size`?',
+        'Warning: Unknown DOM property `SiZe`. Did you mean `size`?',
       );
     });
   });
@@ -2313,7 +2313,7 @@ describe('ReactDOMComponent', () => {
 
         expectDev(console.error.calls.count()).toBe(1);
         expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
+          'Warning: Unknown DOM property `x-height`. Did you mean `xHeight`',
         );
       });
 

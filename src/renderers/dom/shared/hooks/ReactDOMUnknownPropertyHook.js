@@ -166,7 +166,7 @@ if (__DEV__) {
       if (standardName !== name) {
         warning(
           false,
-          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          'Unknown DOM property `%s`. Did you mean `%s`?%s',
           name,
           standardName,
           getStackAddendum(debugID),
@@ -234,9 +234,9 @@ var warnUnknownProperties = function(type, props, debugID) {
   if (unknownProps.length === 1) {
     warning(
       false,
-      'Invalid prop %s on <%s> tag. Either remove this prop from the element, ' +
+      'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
         'or pass a string or number value to keep it in the DOM. ' +
-        'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
       getStackAddendum(debugID),
@@ -244,9 +244,9 @@ var warnUnknownProperties = function(type, props, debugID) {
   } else if (unknownProps.length > 1) {
     warning(
       false,
-      'Invalid props %s on <%s> tag. Either remove these props from the element, ' +
+      'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
         'or pass a string or number value to keep them in the DOM. ' +
-        'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
       getStackAddendum(debugID),
