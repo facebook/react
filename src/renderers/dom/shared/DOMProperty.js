@@ -232,7 +232,7 @@ var DOMProperty = {
    * @method
    */
   shouldSetAttribute: function(name, value) {
-    if (DOMProperty.isReservedProp(name)) {
+    if (name !== 'style' && DOMProperty.isReservedProp(name)) {
       return false;
     }
     if (

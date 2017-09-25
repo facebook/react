@@ -76,31 +76,23 @@ var DOMMarkupOperations = {
    * @return {?string} Markup string, or null if the property was invalid.
    */
   createMarkupForProperty: function(name, value) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
-    if (propertyInfo) {
-      if (DOMProperty.shouldIgnoreValue(name, value)) {
-        return '';
-      }
-      var attributeName = DOMProperty.getAttributeName(name);
-      var expectedType = DOMProperty.getExpectedValueType(name);
-      if (
-        expectedType === 'boolean' ||
-        (expectedType === 'overloadedBoolean' && value === true)
-      ) {
-        return attributeName + '=""';
-      } else if (
-        typeof value !== 'boolean' ||
-        DOMProperty.shouldAttributeAcceptBooleanValue(name)
-      ) {
-        return attributeName + '=' + quoteAttributeValueForBrowser(value);
-      }
-    } else if (DOMProperty.shouldSetAttribute(name, value)) {
-      if (value == null) {
-        return '';
-      }
-      return name + '=' + quoteAttributeValueForBrowser(value);
+    // TODO: unify these checks?
+    if (
+      !DOMProperty.shouldSetAttribute(name, value) ||
+      DOMProperty.shouldIgnoreValue(name, value)
+    ) {
+      return null;
     }
-    return null;
+    var attributeName = DOMProperty.getAttributeName(name);
+    var expectedType = DOMProperty.getExpectedValueType(name);
+    if (
+      expectedType === 'boolean' ||
+      (expectedType === 'overloadedBoolean' && value === true)
+    ) {
+      return attributeName + '=""';
+    } else {
+      return attributeName + '=' + quoteAttributeValueForBrowser(value);
+    }
   },
 
   /**
