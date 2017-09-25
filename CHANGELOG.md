@@ -1,4 +1,4 @@
-## 15.6.2 (September 6, 2017)
+## 15.6.2 (September 25, 2017)
 
 ### React DOM
 
