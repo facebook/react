@@ -73,7 +73,7 @@ if (__DEV__) {
     if (registrationName != null) {
       warning(
         false,
-        'Unknown event handler property `%s`. Did you mean `%s`?%s',
+        'Invalid event handler property `%s`. Did you mean `%s`?%s',
         name,
         registrationName,
         getStackAddendum(debugID),
@@ -166,7 +166,7 @@ if (__DEV__) {
       if (standardName !== name) {
         warning(
           false,
-          'Unknown DOM property `%s`. Did you mean `%s`?%s',
+          'Invalid DOM property `%s`. Did you mean `%s`?%s',
           name,
           standardName,
           getStackAddendum(debugID),
