@@ -22,7 +22,6 @@ const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
-const RENDERER = moduleTypes.RENDERER;
 const ISOMORPHIC = moduleTypes.ISOMORPHIC;
 
 const errorCodeOpts = {
@@ -101,9 +100,9 @@ function getNodeModules(bundleType, moduleType) {
       return {
         // Bundle object-assign once in the isomorphic React, and then use
         // that from the renderer UMD. Avoids bundling it in both UMDs.
-        'object-assign': moduleType === RENDERER
-          ? resolve('./scripts/rollup/shims/rollup/assign.js')
-          : resolve('./node_modules/object-assign/index.js'),
+        'object-assign': moduleType === ISOMORPHIC
+          ? resolve('./node_modules/object-assign/index.js')
+          : resolve('./scripts/rollup/shims/rollup/assign.js'),
         // include the ART package modules directly by aliasing them from node_modules
         'art/modes/current': resolve('./node_modules/art/modes/current.js'),
         'art/modes/fast-noSideEffects': resolve(
