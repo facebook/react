@@ -147,9 +147,7 @@ var DOMPropertyOperations = {
    * @param {*} value
    */
   setValueForProperty: function(node, name, value) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
-
-    if (propertyInfo && DOMProperty.shouldSetAttribute(name, value)) {
+    if (DOMProperty.shouldSetAttribute(name, value)) {
       var mutationMethod = DOMProperty.getMutationMethod(name);
       if (mutationMethod) {
         mutationMethod(node, value);
@@ -178,11 +176,7 @@ var DOMPropertyOperations = {
         }
       }
     } else {
-      DOMPropertyOperations.setValueForAttribute(
-        node,
-        name,
-        DOMProperty.shouldSetAttribute(name, value) ? value : null,
-      );
+      DOMPropertyOperations.deleteValueForProperty(node, name);
       return;
     }
 
@@ -243,24 +237,19 @@ var DOMPropertyOperations = {
    * @param {string} name
    */
   deleteValueForProperty: function(node, name) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
-    if (propertyInfo) {
-      var mutationMethod = DOMProperty.getMutationMethod(name);
-      if (mutationMethod) {
-        mutationMethod(node, undefined);
-      } else if (DOMProperty.shouldUseProperty(name)) {
-        var expectedType = DOMProperty.getExpectedValueType(name);
-        if (expectedType === 'boolean') {
-          node[name] = false;
-        } else {
-          node[name] = '';
-        }
+    var mutationMethod = DOMProperty.getMutationMethod(name);
+    if (mutationMethod) {
+      mutationMethod(node, undefined);
+    } else if (DOMProperty.shouldUseProperty(name)) {
+      var expectedType = DOMProperty.getExpectedValueType(name);
+      if (expectedType === 'boolean') {
+        node[name] = false;
       } else {
-        var attributeName = DOMProperty.getAttributeName(name);
-        node.removeAttribute(attributeName);
+        node[name] = '';
       }
     } else {
-      node.removeAttribute(name);
+      var attributeName = DOMProperty.getAttributeName(name);
+      node.removeAttribute(attributeName);
     }
 
     if (__DEV__) {
