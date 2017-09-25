@@ -14,7 +14,6 @@
 var ReactServerRendering = require('ReactServerRendering');
 var ReactVersion = require('ReactVersion');
 
-require('ReactDOMInjection');
 require('ReactDOMStackInjection');
 
 var ReactDOMServerStack = {

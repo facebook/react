@@ -83,7 +83,6 @@ if (__DEV__) {
 }
 
 require('ReactDOMClientInjection');
-require('ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );

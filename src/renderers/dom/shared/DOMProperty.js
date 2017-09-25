@@ -51,29 +51,6 @@ function setDOMValueAttribute(node, value) {
   }
 }
 
-var DOMPropertyInjection = {
-  /**
-   * Inject some specialized knowledge about the DOM. This takes a config object
-   * with the following properties:
-   *
-   * Properties: object mapping DOM property name to one of the
-   * DOMPropertyInjection constants or null. If your attribute isn't in here,
-   * it won't get written to the DOM.
-   *
-   * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
-   * Property names not specified use the normalized name.
-   *
-   * @param {object} domPropertyConfig the config as described above.
-   */
-  injectDOMPropertyConfig: function(domPropertyConfig) {
-    var Properties = domPropertyConfig.Properties || {};
-
-    for (var propName in Properties) {
-      DOMProperty.properties[propName] = {};
-    }
-  },
-};
-
 /* eslint-disable max-len */
 var ATTRIBUTE_NAME_START_CHAR =
   ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
@@ -88,15 +65,6 @@ var attributeNames = {
 
 var CAMELIZE = /[\-\:]([a-z])/g;
 var capitalize = token => token[1].toUpperCase();
-
-// TODO: remove this.
-var svgConfig = {
-  Properties: {
-    autoReverse: 0,
-    externalResourcesRequired: 0,
-    preserveAlpha: 0,
-  },
-};
 
 /**
  * This is a list of all SVG attributes that need special casing,
@@ -198,10 +166,6 @@ var svgConfig = {
 ].forEach(svgAttributeName => {
   var reactName = svgAttributeName.replace(CAMELIZE, capitalize);
   attributeNames[reactName] = svgAttributeName;
-
-  // TODO: remove this very soon.
-  // We only need it until we stop branching on propertyInfo existence.
-  svgConfig.Properties[reactName] = 0;
 });
 
 /**
@@ -224,8 +188,6 @@ var DOMProperty = {
   ATTRIBUTE_NAME_START_CHAR: ATTRIBUTE_NAME_START_CHAR,
   ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR +
     '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040',
-
-  properties: {},
 
   /**
    * Checks whether a property name is a writeable attribute.
@@ -291,12 +253,6 @@ var DOMProperty = {
       default:
         return null;
     }
-  },
-
-  getPropertyInfo(name) {
-    return DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
   },
 
   getExpectedValueType(propName) {
@@ -422,12 +378,6 @@ var DOMProperty = {
   isReservedProp(name) {
     return RESERVED_PROPS.hasOwnProperty(name);
   },
-
-  injection: DOMPropertyInjection,
 };
-
-// TODO: remove this very soon.
-// We only need it until we stop branching on propertyInfo existence.
-DOMProperty.injection.injectDOMPropertyConfig(svgConfig);
 
 module.exports = DOMProperty;
