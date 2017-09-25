@@ -473,31 +473,6 @@
 | `allowReorder=(null)`| (initial)| `<null>` |
 | `allowReorder=(undefined)`| (initial)| `<null>` |
 
-## `allowTransparency` (on `<path>` inside `<svg>`)
-| Test Case | Flags | Result |
-| --- | --- | --- |
-| `allowTransparency=(string)`| (changed)| `"a string"` |
-| `allowTransparency=(empty string)`| (changed)| `<empty string>` |
-| `allowTransparency=(array with string)`| (changed)| `"string"` |
-| `allowTransparency=(empty array)`| (changed)| `<empty string>` |
-| `allowTransparency=(object)`| (changed)| `"result of toString()"` |
-| `allowTransparency=(numeric string)`| (changed)| `"42"` |
-| `allowTransparency=(-1)`| (changed)| `"-1"` |
-| `allowTransparency=(0)`| (changed)| `"0"` |
-| `allowTransparency=(integer)`| (changed)| `"1"` |
-| `allowTransparency=(NaN)`| (changed, warning)| `"NaN"` |
-| `allowTransparency=(float)`| (changed)| `"99.99"` |
-| `allowTransparency=(true)`| (changed)| `"true"` |
-| `allowTransparency=(false)`| (changed)| `"false"` |
-| `allowTransparency=(string 'true')`| (changed)| `"true"` |
-| `allowTransparency=(string 'false')`| (changed)| `"false"` |
-| `allowTransparency=(string 'on')`| (changed)| `"on"` |
-| `allowTransparency=(string 'off')`| (changed)| `"off"` |
-| `allowTransparency=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `allowTransparency=(function)`| (initial, warning, ssr mismatch)| `<null>` |
-| `allowTransparency=(null)`| (initial)| `<null>` |
-| `allowTransparency=(undefined)`| (initial)| `<null>` |
-
 ## `alphabetic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
@@ -701,23 +676,23 @@
 ## `as` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `as=(string)`| (initial)| `<empty string>` |
+| `as=(string)`| (changed)| `"a string"` |
 | `as=(empty string)`| (initial)| `<empty string>` |
-| `as=(array with string)`| (initial)| `<empty string>` |
+| `as=(array with string)`| (changed)| `"string"` |
 | `as=(empty array)`| (initial)| `<empty string>` |
-| `as=(object)`| (initial)| `<empty string>` |
-| `as=(numeric string)`| (initial)| `<empty string>` |
-| `as=(-1)`| (initial)| `<empty string>` |
-| `as=(0)`| (initial)| `<empty string>` |
-| `as=(integer)`| (initial)| `<empty string>` |
-| `as=(NaN)`| (initial, warning)| `<empty string>` |
-| `as=(float)`| (initial)| `<empty string>` |
+| `as=(object)`| (changed)| `"result of toString()"` |
+| `as=(numeric string)`| (changed)| `"42"` |
+| `as=(-1)`| (changed)| `"-1"` |
+| `as=(0)`| (changed)| `"0"` |
+| `as=(integer)`| (changed)| `"1"` |
+| `as=(NaN)`| (changed, warning)| `"NaN"` |
+| `as=(float)`| (changed)| `"99.99"` |
 | `as=(true)`| (initial, warning)| `<empty string>` |
 | `as=(false)`| (initial, warning)| `<empty string>` |
-| `as=(string 'true')`| (initial)| `<empty string>` |
-| `as=(string 'false')`| (initial)| `<empty string>` |
-| `as=(string 'on')`| (initial)| `<empty string>` |
-| `as=(string 'off')`| (initial)| `<empty string>` |
+| `as=(string 'true')`| (changed)| `"true"` |
+| `as=(string 'false')`| (changed)| `"false"` |
+| `as=(string 'on')`| (changed)| `"on"` |
+| `as=(string 'off')`| (changed)| `"off"` |
 | `as=(symbol)`| (initial, warning)| `<empty string>` |
 | `as=(function)`| (initial, warning)| `<empty string>` |
 | `as=(null)`| (initial)| `<empty string>` |
