@@ -67,55 +67,52 @@ var DOMPropertyOperations = {
    */
   getValueForProperty: function(node, name, expected) {
     if (__DEV__) {
-      var propertyInfo = DOMProperty.getPropertyInfo(name);
       var expectedType = DOMProperty.getExpectedValueType(name);
-      if (propertyInfo) {
-        var mutationMethod = DOMProperty.getMutationMethod(name);
-        if (mutationMethod || DOMProperty.shouldUseProperty(name)) {
-          return node[name];
-        } else {
-          var attributeName = DOMProperty.getAttributeName(name);
-          var stringValue = null;
+      var mutationMethod = DOMProperty.getMutationMethod(name);
+      if (mutationMethod || DOMProperty.shouldUseProperty(name)) {
+        return node[name];
+      } else {
+        var attributeName = DOMProperty.getAttributeName(name);
+        var stringValue = null;
 
-          if (expectedType === 'overloadedBoolean') {
-            if (node.hasAttribute(attributeName)) {
-              var value = node.getAttribute(attributeName);
-              if (value === '') {
-                return true;
-              }
-              if (DOMProperty.shouldIgnoreValue(name, expected)) {
-                return value;
-              }
-              if (value === '' + expected) {
-                return expected;
-              }
+        if (expectedType === 'overloadedBoolean') {
+          if (node.hasAttribute(attributeName)) {
+            var value = node.getAttribute(attributeName);
+            if (value === '') {
+              return true;
+            }
+            if (DOMProperty.shouldIgnoreValue(name, expected)) {
               return value;
             }
-          } else if (node.hasAttribute(attributeName)) {
-            if (DOMProperty.shouldIgnoreValue(name, expected)) {
-              // We had an attribute but shouldn't have had one, so read it
-              // for the error message.
-              return node.getAttribute(attributeName);
-            }
-            if (expectedType === 'boolean') {
-              // If this was a boolean, it doesn't matter what the value is
-              // the fact that we have it is the same as the expected.
+            if (value === '' + expected) {
               return expected;
             }
-            // Even if this property uses a namespace we use getAttribute
-            // because we assume its namespaced name is the same as our config.
-            // To use getAttributeNS we need the local name which we don't have
-            // in our config atm.
-            stringValue = node.getAttribute(attributeName);
+            return value;
           }
-
+        } else if (node.hasAttribute(attributeName)) {
           if (DOMProperty.shouldIgnoreValue(name, expected)) {
-            return stringValue === null ? expected : stringValue;
-          } else if (stringValue === '' + expected) {
-            return expected;
-          } else {
-            return stringValue;
+            // We had an attribute but shouldn't have had one, so read it
+            // for the error message.
+            return node.getAttribute(attributeName);
           }
+          if (expectedType === 'boolean') {
+            // If this was a boolean, it doesn't matter what the value is
+            // the fact that we have it is the same as the expected.
+            return expected;
+          }
+          // Even if this property uses a namespace we use getAttribute
+          // because we assume its namespaced name is the same as our config.
+          // To use getAttributeNS we need the local name which we don't have
+          // in our config atm.
+          stringValue = node.getAttribute(attributeName);
+        }
+
+        if (DOMProperty.shouldIgnoreValue(name, expected)) {
+          return stringValue === null ? expected : stringValue;
+        } else if (stringValue === '' + expected) {
+          return expected;
+        } else {
+          return stringValue;
         }
       }
     }

@@ -1013,35 +1013,23 @@ var ReactDOMFiberComponent = {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
+          let ownNamespace = parentNamespace;
+          if (ownNamespace === HTML_NAMESPACE) {
+            ownNamespace = getIntrinsicNamespace(tag);
+          }
           const attributeName = DOMProperty.getAttributeName(propKey);
-          // TODO: the return value is unused. This is awkward.
-          // Maybe we can now unify these branches now?
-          if (DOMProperty.getPropertyInfo(propKey)) {
+          if (ownNamespace === HTML_NAMESPACE) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(attributeName.toLowerCase());
+          } else {
             // $FlowFixMe - Should be inferred as not undefined.
             extraAttributeNames.delete(attributeName);
-            serverValue = DOMPropertyOperations.getValueForProperty(
-              domElement,
-              propKey,
-              nextProp,
-            );
-          } else {
-            let ownNamespace = parentNamespace;
-            if (ownNamespace === HTML_NAMESPACE) {
-              ownNamespace = getIntrinsicNamespace(tag);
-            }
-            if (ownNamespace === HTML_NAMESPACE) {
-              // $FlowFixMe - Should be inferred as not undefined.
-              extraAttributeNames.delete(propKey.toLowerCase());
-            } else {
-              // $FlowFixMe - Should be inferred as not undefined.
-              extraAttributeNames.delete(propKey);
-            }
-            serverValue = DOMPropertyOperations.getValueForAttribute(
-              domElement,
-              propKey,
-              nextProp,
-            );
           }
+          serverValue = DOMPropertyOperations.getValueForProperty(
+            domElement,
+            propKey,
+            nextProp,
+          );
 
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);

@@ -261,7 +261,7 @@ var DOMProperty = {
   getAttributeName(propName) {
     return attributeNames.hasOwnProperty(propName)
       ? attributeNames[propName]
-      : propName.toLowerCase();
+      : propName;
   },
 
   getAttributeNamespace(propName) {
