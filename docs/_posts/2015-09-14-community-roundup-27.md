@@ -1,5 +1,5 @@
 ---
-title: "Community Round-up #27 &ndash; Relay Edition"
+title: "Community Round-up #27 – Relay Edition"
 layout: post
 author: [steveluscher]
 ---
