@@ -23,7 +23,7 @@ const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
 const RENDERER = moduleTypes.RENDERER;
-const RECONCILER = moduleTypes.RECONCILER;
+const ISOMORPHIC = moduleTypes.ISOMORPHIC;
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -148,12 +148,10 @@ function getExternalModules(externals, bundleType, moduleType) {
   // the top of the bundle. for UMD bundles this means having
   // both a require and a global check for them
   let externalModules = externals.slice();
-  const isRenderer = moduleType === RENDERER || moduleType === RECONCILER;
-
   switch (bundleType) {
     case UMD_DEV:
     case UMD_PROD:
-      if (isRenderer) {
+      if (moduleType !== ISOMORPHIC) {
         externalModules.push('react');
       }
       break;
@@ -163,7 +161,7 @@ function getExternalModules(externals, bundleType, moduleType) {
     case RN_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
       externalModules.push('object-assign');
-      if (isRenderer) {
+      if (moduleType !== ISOMORPHIC) {
         externalModules.push('react');
       }
       break;
@@ -173,7 +171,7 @@ function getExternalModules(externals, bundleType, moduleType) {
       externalModules.push('object-assign');
       externalModules.push('ReactCurrentOwner');
       externalModules.push('lowPriorityWarning');
-      if (isRenderer) {
+      if (moduleType !== ISOMORPHIC) {
         externalModules.push('React');
         if (externalModules.indexOf('react-dom') > -1) {
           externalModules.push('ReactDOM');
