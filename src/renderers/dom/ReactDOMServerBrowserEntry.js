@@ -15,8 +15,6 @@ var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
 var ReactVersion = require('ReactVersion');
 var invariant = require('fbjs/lib/invariant');
 
-require('ReactDOMInjection');
-
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,
   renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,

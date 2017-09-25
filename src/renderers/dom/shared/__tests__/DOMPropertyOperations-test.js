@@ -115,6 +115,19 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(<div hidden={false} />, container);
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
     });
+
+    it('should warn for invalid attribute names', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(
+        React.createElement('div', {$foo: 'foo'}, 'Hello, world'),
+        container,
+      );
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Invalid attribute name: `$foo`',
+      );
+    });
   });
 
   describe('value mutation method', function() {

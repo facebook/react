@@ -974,7 +974,6 @@ var ReactDOMFiberComponent = {
       } else if (__DEV__) {
         // Validate that the properties correspond to their expected values.
         var serverValue;
-        var propertyInfo;
         if (
           propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
           // Controlled attributes are not validated
@@ -1014,32 +1013,23 @@ var ReactDOMFiberComponent = {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
-          if ((propertyInfo = DOMProperty.getPropertyInfo(propKey))) {
-            // $FlowFixMe - Should be inferred as not undefined.
-            extraAttributeNames.delete(propertyInfo.attributeName);
-            serverValue = DOMPropertyOperations.getValueForProperty(
-              domElement,
-              propKey,
-              nextProp,
-            );
-          } else {
-            let ownNamespace = parentNamespace;
-            if (ownNamespace === HTML_NAMESPACE) {
-              ownNamespace = getIntrinsicNamespace(tag);
-            }
-            if (ownNamespace === HTML_NAMESPACE) {
-              // $FlowFixMe - Should be inferred as not undefined.
-              extraAttributeNames.delete(propKey.toLowerCase());
-            } else {
-              // $FlowFixMe - Should be inferred as not undefined.
-              extraAttributeNames.delete(propKey);
-            }
-            serverValue = DOMPropertyOperations.getValueForAttribute(
-              domElement,
-              propKey,
-              nextProp,
-            );
+          let ownNamespace = parentNamespace;
+          if (ownNamespace === HTML_NAMESPACE) {
+            ownNamespace = getIntrinsicNamespace(tag);
           }
+          const attributeName = DOMProperty.getAttributeName(propKey);
+          if (ownNamespace === HTML_NAMESPACE) {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(attributeName.toLowerCase());
+          } else {
+            // $FlowFixMe - Should be inferred as not undefined.
+            extraAttributeNames.delete(attributeName);
+          }
+          serverValue = DOMPropertyOperations.getValueForProperty(
+            domElement,
+            propKey,
+            nextProp,
+          );
 
           if (nextProp !== serverValue) {
             warnForPropDifference(propKey, serverValue, nextProp);

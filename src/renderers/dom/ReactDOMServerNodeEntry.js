@@ -15,8 +15,6 @@ var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
 var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
 var ReactVersion = require('ReactVersion');
 
-require('ReactDOMInjection');
-
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,
   renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
