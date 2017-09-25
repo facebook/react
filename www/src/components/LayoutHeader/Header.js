@@ -12,7 +12,7 @@
 'use strict';
 
 import Container from 'components/Container';
-import {HeaderAnchor, HeaderLink} from './HeaderLink';
+import HeaderLink from './HeaderLink';
 import Link from 'gatsby-link';
 import React from 'react';
 import {colors, fonts, media} from 'theme';
@@ -128,10 +128,10 @@ const Header = ({location}) => (
             title="Community"
             to="/community/support.html"
           />
-          <HeaderAnchor
+          <HeaderLink
             isActive={location.pathname.includes('/blog')}
             title="Blog"
-            to="/blog"
+            to="/blog/"
           />
         </nav>
 
