@@ -94,9 +94,8 @@ const attributes = [
   },
   {
     name: 'allowTransparency',
-    containerTagName: 'svg',
-    tagName: 'path',
-    read: getSVGAttribute('allowtransparency'),
+    tagName: 'iframe',
+    read: getProperty('allowTransparency'),
   },
   {
     name: 'alphabetic',

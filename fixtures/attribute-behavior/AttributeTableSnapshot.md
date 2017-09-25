@@ -1,4 +1,4 @@
-## `about` (on `<div>`)
+﻿## `about` (on `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
 | `about=(string)`| (changed)| `"a string"` |
@@ -473,30 +473,30 @@
 | `allowReorder=(null)`| (initial)| `<null>` |
 | `allowReorder=(undefined)`| (initial)| `<null>` |
 
-## `allowTransparency` (on `<svg>`)
+## `allowTransparency` (on `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `allowTransparency=(string)`| (changed)| `"a string"` |
-| `allowTransparency=(empty string)`| (changed)| `<empty string>` |
-| `allowTransparency=(array with string)`| (changed)| `"string"` |
-| `allowTransparency=(empty array)`| (changed)| `<empty string>` |
-| `allowTransparency=(object)`| (changed)| `"result of toString()"` |
-| `allowTransparency=(numeric string)`| (changed)| `"42"` |
-| `allowTransparency=(-1)`| (changed)| `"-1"` |
-| `allowTransparency=(0)`| (changed)| `"0"` |
-| `allowTransparency=(integer)`| (changed)| `"1"` |
-| `allowTransparency=(NaN)`| (changed, warning)| `"NaN"` |
-| `allowTransparency=(float)`| (changed)| `"99.99"` |
-| `allowTransparency=(true)`| (changed)| `"true"` |
-| `allowTransparency=(false)`| (changed)| `"false"` |
-| `allowTransparency=(string 'true')`| (changed)| `"true"` |
-| `allowTransparency=(string 'false')`| (changed)| `"false"` |
-| `allowTransparency=(string 'on')`| (changed)| `"on"` |
-| `allowTransparency=(string 'off')`| (changed)| `"off"` |
-| `allowTransparency=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `allowTransparency=(function)`| (initial, warning, ssr mismatch)| `<null>` |
-| `allowTransparency=(null)`| (initial)| `<null>` |
-| `allowTransparency=(undefined)`| (initial)| `<null>` |
+| `allowTransparency=(string)`| (initial)| `<undefined>` |
+| `allowTransparency=(empty string)`| (initial)| `<undefined>` |
+| `allowTransparency=(array with string)`| (initial)| `<undefined>` |
+| `allowTransparency=(empty array)`| (initial)| `<undefined>` |
+| `allowTransparency=(object)`| (initial)| `<undefined>` |
+| `allowTransparency=(numeric string)`| (initial)| `<undefined>` |
+| `allowTransparency=(-1)`| (initial)| `<undefined>` |
+| `allowTransparency=(0)`| (initial)| `<undefined>` |
+| `allowTransparency=(integer)`| (initial)| `<undefined>` |
+| `allowTransparency=(NaN)`| (initial, warning)| `<undefined>` |
+| `allowTransparency=(float)`| (initial)| `<undefined>` |
+| `allowTransparency=(true)`| (initial)| `<undefined>` |
+| `allowTransparency=(false)`| (initial)| `<undefined>` |
+| `allowTransparency=(string 'true')`| (initial)| `<undefined>` |
+| `allowTransparency=(string 'false')`| (initial)| `<undefined>` |
+| `allowTransparency=(string 'on')`| (initial)| `<undefined>` |
+| `allowTransparency=(string 'off')`| (initial)| `<undefined>` |
+| `allowTransparency=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<undefined>` |
+| `allowTransparency=(function)`| (initial, warning)| `<undefined>` |
+| `allowTransparency=(null)`| (initial)| `<undefined>` |
+| `allowTransparency=(undefined)`| (initial)| `<undefined>` |
 
 ## `alphabetic` (on `<svg>`)
 | Test Case | Flags | Result |
