@@ -8,8 +8,8 @@
   "dependencies": {
     "dagre": "^0.7.4",
     "pretty-format": "^4.2.1",
-    "react-draggable": "^2.2.2",
-    "react-motion": "^0.4.5"
+    "react-draggable": "^2.2.6",
+    "react-motion": "^0.5.0"
   },
   "scripts": {
     "start": "react-scripts start",

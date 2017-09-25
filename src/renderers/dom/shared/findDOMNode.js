@@ -10,12 +10,16 @@
  * @flow
  */
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
+var {ELEMENT_NODE} = require('HTMLNodeType');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 let findFiber = function(arg) {
   invariant(false, 'Missing injection for fiber findDOMNode');
@@ -25,7 +29,7 @@ let findStack = function(arg) {
 };
 
 const findDOMNode = function(
-  componentOrElement: Element | ?ReactComponent<any, any, any>,
+  componentOrElement: Element | ?React$Component<any, any>,
 ): null | Element | Text {
   if (__DEV__) {
     var owner = (ReactCurrentOwner.current: any);
@@ -53,7 +57,7 @@ const findDOMNode = function(
   if (componentOrElement == null) {
     return null;
   }
-  if ((componentOrElement: any).nodeType === 1) {
+  if ((componentOrElement: any).nodeType === ELEMENT_NODE) {
     return (componentOrElement: any);
   }
 

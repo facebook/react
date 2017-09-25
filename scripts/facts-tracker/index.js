@@ -29,8 +29,9 @@ var isCI = !!process.env.TRAVIS_REPO_SLUG;
 
 if (isCI) {
   var branch = process.env.TRAVIS_BRANCH || process.env.CIRCLE_BRANCH;
-  var isPullRequest = (!!process.env.TRAVIS_PULL_REQUEST &&
-    process.env.TRAVIS_PULL_REQUEST !== 'false') ||
+  var isPullRequest =
+    (!!process.env.TRAVIS_PULL_REQUEST &&
+      process.env.TRAVIS_PULL_REQUEST !== 'false') ||
     !!process.env.CI_PULL_REQUEST;
 
   if (branch !== 'master') {
@@ -117,7 +118,8 @@ function checkoutFactsFolder() {
   if (!fs.existsSync(factsFolder)) {
     var repoURL;
     if (isCI) {
-      repoURL = 'https://' +
+      repoURL =
+        'https://' +
         process.env.GITHUB_USER +
         '@github.com/' +
         repoSlug +
@@ -165,8 +167,8 @@ for (var i = 2; i < process.argv.length; i += 2) {
   } catch (e) {
     // ignore error
   }
-  var lastValue = lastLine &&
-    lastLine.replace(/^[^\t]+\t[^\t]+\t/, '').slice(0, -1); // commit hash \t timestamp \t // trailing \n
+  var lastValue =
+    lastLine && lastLine.replace(/^[^\t]+\t[^\t]+\t/, '').slice(0, -1); // commit hash \t timestamp \t // trailing \n
 
   if (value !== lastValue) {
     fs.appendFileSync(

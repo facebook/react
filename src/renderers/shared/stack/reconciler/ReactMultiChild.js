@@ -15,12 +15,16 @@ var ReactComponentEnvironment = require('ReactComponentEnvironment');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactReconciler = require('ReactReconciler');
 var ReactChildReconciler = require('ReactChildReconciler');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+if (__DEV__) {
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var ReactDebugCurrentStack = require('ReactDebugCurrentStack');
+}
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var flattenChildren = require('flattenChildren');
+var flattenStackChildren = require('flattenStackChildren');
 var invariant = require('fbjs/lib/invariant');
 
 /**
@@ -179,6 +183,8 @@ var ReactMultiChild = {
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
+          ReactDebugCurrentFrame.getCurrentStack =
+            ReactDebugCurrentStack.getStackAddendum;
           return ReactChildReconciler.instantiateChildren(
             nestedChildren,
             transaction,
@@ -187,6 +193,7 @@ var ReactMultiChild = {
           );
         } finally {
           ReactCurrentOwner.current = null;
+          ReactDebugCurrentFrame.getCurrentStack = null;
         }
       }
     }
@@ -212,12 +219,15 @@ var ReactMultiChild = {
       if (this._currentElement) {
         try {
           ReactCurrentOwner.current = this._currentElement._owner;
-          nextChildren = flattenChildren(
+          ReactDebugCurrentFrame.getCurrentStack =
+            ReactDebugCurrentStack.getStackAddendum;
+          nextChildren = flattenStackChildren(
             nextNestedChildrenElements,
             selfDebugID,
           );
         } finally {
           ReactCurrentOwner.current = null;
+          ReactDebugCurrentFrame.getCurrentStack = null;
         }
         ReactChildReconciler.updateChildren(
           prevChildren,
@@ -233,7 +243,10 @@ var ReactMultiChild = {
         return nextChildren;
       }
     }
-    nextChildren = flattenChildren(nextNestedChildrenElements, selfDebugID);
+    nextChildren = flattenStackChildren(
+      nextNestedChildrenElements,
+      selfDebugID,
+    );
     ReactChildReconciler.updateChildren(
       prevChildren,
       nextChildren,

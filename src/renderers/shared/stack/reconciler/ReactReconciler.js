@@ -14,7 +14,9 @@
 var ReactRef = require('ReactRef');
 var ReactInstrumentation = require('ReactInstrumentation');
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Helper to call ReactRef.attachRefs with this composite component, split out
@@ -30,8 +32,8 @@ var ReactReconciler = {
    *
    * @param {ReactComponent} internalInstance
    * @param {ReactReconcileTransaction|ReactServerRenderingTransaction} transaction
-   * @param {?object} the containing host component instance
-   * @param {?object} info about the host container
+   * @param {?object} hostParent the containing host component instance
+   * @param {?object} hostContainerInfo info about the host container
    * @return {?string} Rendered markup to be inserted into the DOM.
    * @final
    * @internal
@@ -187,16 +189,18 @@ var ReactReconciler = {
     updateBatchNumber,
   ) {
     if (internalInstance._updateBatchNumber !== updateBatchNumber) {
-      // The component's enqueued batch number should always be the current
-      // batch or the following one.
-      warning(
-        internalInstance._updateBatchNumber == null ||
-          internalInstance._updateBatchNumber === updateBatchNumber + 1,
-        'performUpdateIfNecessary: Unexpected batch number (current %s, ' +
-          'pending %s)',
-        updateBatchNumber,
-        internalInstance._updateBatchNumber,
-      );
+      if (__DEV__) {
+        // The component's enqueued batch number should always be the current
+        // batch or the following one.
+        warning(
+          internalInstance._updateBatchNumber == null ||
+            internalInstance._updateBatchNumber === updateBatchNumber + 1,
+          'performUpdateIfNecessary: Unexpected batch number (current %s, ' +
+            'pending %s)',
+          updateBatchNumber,
+          internalInstance._updateBatchNumber,
+        );
+      }
       return;
     }
     if (__DEV__) {

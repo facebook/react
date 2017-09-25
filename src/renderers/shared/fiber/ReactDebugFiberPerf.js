@@ -41,7 +41,8 @@ if (__DEV__) {
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
   const warningEmoji = '\u26D4';
-  const supportsUserTiming = typeof performance !== 'undefined' &&
+  const supportsUserTiming =
+    typeof performance !== 'undefined' &&
     typeof performance.mark === 'function' &&
     typeof performance.clearMarks === 'function' &&
     typeof performance.measure === 'function' &&
@@ -267,6 +268,20 @@ if (__DEV__) {
       }
       fiber._debugIsCurrentlyTiming = false;
       endFiberMark(fiber, null, null);
+    },
+
+    stopFailedWorkTimer(fiber: Fiber): void {
+      if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
+        return;
+      }
+      // If we pause, its parent is the fiber to unwind from.
+      currentFiber = fiber.return;
+      if (!fiber._debugIsCurrentlyTiming) {
+        return;
+      }
+      fiber._debugIsCurrentlyTiming = false;
+      const warning = 'An error was thrown inside this error boundary';
+      endFiberMark(fiber, null, warning);
     },
 
     startPhaseTimer(fiber: Fiber, phase: MeasurementPhase): void {

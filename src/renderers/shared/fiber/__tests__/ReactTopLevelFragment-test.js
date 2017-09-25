@@ -13,7 +13,6 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -21,9 +20,7 @@ describe('ReactTopLevelFragment', function() {
   beforeEach(function() {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
+    ReactNoop = require('react-noop-renderer');
   });
 
   it('should render a simple fragment at the top of a component', function() {
@@ -77,7 +74,7 @@ describe('ReactTopLevelFragment', function() {
     function Fragment({condition}) {
       return condition
         ? <Stateful key="a" />
-        : [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -106,8 +103,8 @@ describe('ReactTopLevelFragment', function() {
 
     function Fragment({condition}) {
       return condition
-        ? [null, <Stateful />]
-        : [<div>Hello</div>, <Stateful />];
+        ? [null, <Stateful key="a" />]
+        : [<div key="b">Hello</div>, <Stateful key="a" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -144,7 +141,7 @@ describe('ReactTopLevelFragment', function() {
     function Fragment({condition}) {
       return condition
         ? [[<div key="b">World</div>, <Stateful key="a" />]]
-        : [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();

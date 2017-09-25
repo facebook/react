@@ -14,7 +14,10 @@
 var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Injected dependencies:
@@ -41,9 +44,11 @@ var injection = {
 };
 
 function isEndish(topLevelType) {
-  return topLevelType === 'topMouseUp' ||
+  return (
+    topLevelType === 'topMouseUp' ||
     topLevelType === 'topTouchEnd' ||
-    topLevelType === 'topTouchCancel';
+    topLevelType === 'topTouchCancel'
+  );
 }
 
 function isMoveish(topLevelType) {

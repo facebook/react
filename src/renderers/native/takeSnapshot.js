@@ -11,10 +11,9 @@
  */
 'use strict';
 
-var ReactNative = require('ReactNative');
-var UIManager = require('UIManager');
+const UIManager = require('UIManager');
 
-import type {Element} from 'React';
+const findNumericNodeHandle = require('findNumericNodeHandle');
 
 /**
  * Capture an image of the screen, window or an individual view. The image
@@ -34,7 +33,7 @@ import type {Element} from 'React';
  * @platform ios
  */
 function takeSnapshot(
-  view?: 'window' | Element<any> | number,
+  view?: 'window' | React$Element<any> | number,
   options?: {
     width?: number,
     height?: number,
@@ -43,7 +42,7 @@ function takeSnapshot(
   },
 ): Promise<any> {
   if (typeof view !== 'number' && view !== 'window') {
-    view = ReactNative.findNodeHandle(view) || 'window';
+    view = findNumericNodeHandle(view) || 'window';
   }
 
   // Call the hidden '__takeSnapshot' method; the main one throws an error to

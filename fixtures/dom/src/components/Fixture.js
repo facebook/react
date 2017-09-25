@@ -1,12 +1,13 @@
+const PropTypes = window.PropTypes;
 const React = window.React;
 
 const propTypes = {
-  children: React.PropTypes.node.isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 class Fixture extends React.Component {
   render() {
-    const { children } = this.props;
+    const {children} = this.props;
 
     return (
       <div className="test-fixture">
@@ -18,4 +19,4 @@ class Fixture extends React.Component {
 
 Fixture.propTypes = propTypes;
 
-export default Fixture
+export default Fixture;

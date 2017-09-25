@@ -4,8 +4,6 @@ title: Keyed Fragments
 permalink: docs/create-fragment.html
 layout: docs
 category: Add-Ons
-prev: animation.html
-next: perf.html
 ---
 
 **Importing**
@@ -13,7 +11,6 @@ next: perf.html
 ```javascript
 import createFragment from 'react-addons-create-fragment'; // ES6
 var createFragment = require('react-addons-create-fragment'); // ES5 with npm
-var createFragment = React.addons.createFragment; // ES5 with react-with-addons.js
 ```
 
 ## Overview

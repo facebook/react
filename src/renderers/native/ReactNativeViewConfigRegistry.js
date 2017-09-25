@@ -14,32 +14,53 @@
 
 const invariant = require('fbjs/lib/invariant');
 
-export type ReactNativeBaseComponentViewConfig = {
-  validAttributes: Object,
-  uiViewClassName: string,
-  propTypes?: Object,
-};
+import type {
+  ReactNativeBaseComponentViewConfig,
+  ViewConfigGetter,
+} from 'ReactNativeTypes';
 
+const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();
 
-const prefix = 'topsecret-';
-
 const ReactNativeViewConfigRegistry = {
-  register(viewConfig: ReactNativeBaseComponentViewConfig) {
-    const name = viewConfig.uiViewClassName;
+  /**
+   * Registers a native view/component by name.
+   * A callback is provided to load the view config from UIManager.
+   * The callback is deferred until the view is actually rendered.
+   * This is done to avoid causing Prepack deopts.
+   */
+  register(name: string, callback: ViewConfigGetter): string {
     invariant(
-      !viewConfigs.has(name),
+      !viewConfigCallbacks.has(name),
       'Tried to register two views with the same name %s',
       name,
     );
-    const secretName = prefix + name;
-    viewConfigs.set(secretName, viewConfig);
-    return secretName;
+    viewConfigCallbacks.set(name, callback);
+    return name;
   },
-  get(secretName: string) {
-    const config = viewConfigs.get(secretName);
-    invariant(config, 'View config not found for name %s', secretName);
-    return config;
+
+  /**
+   * Retrieves a config for the specified view.
+   * If this is the first time the view has been used,
+   * This configuration will be lazy-loaded from UIManager.
+   */
+  get(name: string): ReactNativeBaseComponentViewConfig {
+    let viewConfig;
+    if (!viewConfigs.has(name)) {
+      const callback = viewConfigCallbacks.get(name);
+      invariant(
+        typeof callback === 'function',
+        'View config not found for name %s',
+        name,
+      );
+      viewConfigCallbacks.set(name, null);
+      viewConfig = callback();
+      viewConfigs.set(name, viewConfig);
+    } else {
+      viewConfig = viewConfigs.get(name);
+    }
+    invariant(viewConfig, 'View config not found for name %s', name);
+    return viewConfig;
   },
 };
 

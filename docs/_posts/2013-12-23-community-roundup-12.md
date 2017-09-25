@@ -5,7 +5,7 @@ author: vjeux
 
 React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the [docs](/react/docs/getting-started.html) and do not hesitate to ask questions on the [Google Group](https://groups.google.com/group/reactjs), [IRC](irc://chat.freenode.net/reactjs) or [Stack Overflow](http://stackoverflow.com/questions/tagged/reactjs). We are trying our best to help you out!
 
-## The Future of Javascript MVC
+## The Future of JavaScript MVC
 
 [David Nolen](https://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](/react/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
 

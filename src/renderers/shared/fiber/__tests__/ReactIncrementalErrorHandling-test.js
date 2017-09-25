@@ -11,21 +11,20 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 describe('ReactIncrementalErrorHandling', () => {
   beforeEach(() => {
     jest.resetModules();
+    PropTypes = require('prop-types');
     React = require('react');
-    ReactNoop = require('ReactNoop');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
+    ReactNoop = require('react-noop-renderer');
   });
 
   function div(...children) {
-    children = children.map(c => typeof c === 'string' ? {text: c} : c);
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
     return {type: 'div', children, prop: undefined};
   }
 
@@ -36,7 +35,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('catches render error in a boundary during full deferred mounting', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -66,8 +65,8 @@ describe('ReactIncrementalErrorHandling', () => {
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
-        ops.push('ErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('ErrorBoundary componentDidCatch');
         this.setState({error});
       }
       render() {
@@ -101,50 +100,7 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop.flushDeferredPri(30);
     expect(ops).toEqual([
       'BrokenRender',
-      'ErrorBoundary unstable_handleError',
-      'ErrorBoundary render error',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
-  });
-
-  it('catches render error in a boundary during animation mounting', () => {
-    var ops = [];
-    class ErrorBoundary extends React.Component {
-      state = {error: null};
-      unstable_handleError(error) {
-        ops.push('ErrorBoundary unstable_handleError');
-        this.setState({error});
-      }
-      render() {
-        if (this.state.error) {
-          ops.push('ErrorBoundary render error');
-          return (
-            <span prop={`Caught an error: ${this.state.error.message}.`} />
-          );
-        }
-        ops.push('ErrorBoundary render success');
-        return this.props.children;
-      }
-    }
-
-    function BrokenRender(props) {
-      ops.push('BrokenRender');
-      throw new Error('Hello');
-    }
-
-    ReactNoop.performAnimationWork(() => {
-      ReactNoop.render(
-        <ErrorBoundary>
-          <BrokenRender />
-        </ErrorBoundary>,
-      );
-    });
-
-    ReactNoop.flushAnimationPri();
-    expect(ops).toEqual([
-      'ErrorBoundary render success',
-      'BrokenRender',
-      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
@@ -154,8 +110,8 @@ describe('ReactIncrementalErrorHandling', () => {
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
-        ops.push('ErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('ErrorBoundary componentDidCatch');
         this.setState({error});
       }
       render() {
@@ -175,7 +131,7 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    ReactNoop.syncUpdates(() => {
+    ReactNoop.flushSync(() => {
       ReactNoop.render(
         <ErrorBoundary>
           <BrokenRender />
@@ -186,7 +142,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
@@ -196,8 +152,8 @@ describe('ReactIncrementalErrorHandling', () => {
     var ops = [];
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
-        ops.push('ErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('ErrorBoundary componentDidCatch');
         this.setState({error});
       }
       render() {
@@ -217,25 +173,19 @@ describe('ReactIncrementalErrorHandling', () => {
       throw new Error('Hello');
     }
 
-    ReactNoop.syncUpdates(() => {
-      ReactNoop.batchedUpdates(() => {
-        ReactNoop.render(
-          <ErrorBoundary>
-            Before the storm.
-          </ErrorBoundary>,
-        );
-        ReactNoop.render(
-          <ErrorBoundary>
-            <BrokenRender />
-          </ErrorBoundary>,
-        );
-      });
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<ErrorBoundary>Before the storm.</ErrorBoundary>);
+      ReactNoop.render(
+        <ErrorBoundary>
+          <BrokenRender />
+        </ErrorBoundary>,
+      );
     });
 
     expect(ops).toEqual([
       'ErrorBoundary render success',
       'BrokenRender',
-      'ErrorBoundary unstable_handleError',
+      'ErrorBoundary componentDidCatch',
       'ErrorBoundary render error',
     ]);
     expect(ReactNoop.getChildren()).toEqual([span('Caught an error: Hello.')]);
@@ -244,8 +194,8 @@ describe('ReactIncrementalErrorHandling', () => {
   it('propagates an error from a noop error boundary during full deferred mounting', () => {
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
-      unstable_handleError(error) {
-        ops.push('RethrowErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('RethrowErrorBoundary componentDidCatch');
         throw error;
       }
       render() {
@@ -271,7 +221,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      'RethrowErrorBoundary unstable_handleError',
+      'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
   });
@@ -279,8 +229,8 @@ describe('ReactIncrementalErrorHandling', () => {
   it('propagates an error from a noop error boundary during partial deferred mounting', () => {
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
-      unstable_handleError(error) {
-        ops.push('RethrowErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('RethrowErrorBoundary componentDidCatch');
         throw error;
       }
       render() {
@@ -309,44 +259,7 @@ describe('ReactIncrementalErrorHandling', () => {
     }).toThrow('Hello');
     expect(ops).toEqual([
       'BrokenRender',
-      'RethrowErrorBoundary unstable_handleError',
-    ]);
-    expect(ReactNoop.getChildren()).toEqual([]);
-  });
-
-  it('propagates an error from a noop error boundary during animation mounting', () => {
-    var ops = [];
-    class RethrowErrorBoundary extends React.Component {
-      unstable_handleError(error) {
-        ops.push('RethrowErrorBoundary unstable_handleError');
-        throw error;
-      }
-      render() {
-        ops.push('RethrowErrorBoundary render');
-        return this.props.children;
-      }
-    }
-
-    function BrokenRender() {
-      ops.push('BrokenRender');
-      throw new Error('Hello');
-    }
-
-    ReactNoop.performAnimationWork(() => {
-      ReactNoop.render(
-        <RethrowErrorBoundary>
-          <BrokenRender />
-        </RethrowErrorBoundary>,
-      );
-    });
-
-    expect(() => {
-      ReactNoop.flush();
-    }).toThrow('Hello');
-    expect(ops).toEqual([
-      'RethrowErrorBoundary render',
-      'BrokenRender',
-      'RethrowErrorBoundary unstable_handleError',
+      'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
   });
@@ -354,8 +267,8 @@ describe('ReactIncrementalErrorHandling', () => {
   it('propagates an error from a noop error boundary during synchronous mounting', () => {
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
-      unstable_handleError(error) {
-        ops.push('RethrowErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('RethrowErrorBoundary componentDidCatch');
         throw error;
       }
       render() {
@@ -370,7 +283,7 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     expect(() => {
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         ReactNoop.render(
           <RethrowErrorBoundary>
             <BrokenRender />
@@ -381,7 +294,7 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      'RethrowErrorBoundary unstable_handleError',
+      'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
   });
@@ -389,8 +302,8 @@ describe('ReactIncrementalErrorHandling', () => {
   it('propagates an error from a noop error boundary during batched mounting', () => {
     var ops = [];
     class RethrowErrorBoundary extends React.Component {
-      unstable_handleError(error) {
-        ops.push('RethrowErrorBoundary unstable_handleError');
+      componentDidCatch(error) {
+        ops.push('RethrowErrorBoundary componentDidCatch');
         throw error;
       }
       render() {
@@ -405,25 +318,21 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     expect(() => {
-      ReactNoop.syncUpdates(() => {
-        ReactNoop.batchedUpdates(() => {
-          ReactNoop.render(
-            <RethrowErrorBoundary>
-              Before the storm.
-            </RethrowErrorBoundary>,
-          );
-          ReactNoop.render(
-            <RethrowErrorBoundary>
-              <BrokenRender />
-            </RethrowErrorBoundary>,
-          );
-        });
+      ReactNoop.flushSync(() => {
+        ReactNoop.render(
+          <RethrowErrorBoundary>Before the storm.</RethrowErrorBoundary>,
+        );
+        ReactNoop.render(
+          <RethrowErrorBoundary>
+            <BrokenRender />
+          </RethrowErrorBoundary>,
+        );
       });
     }).toThrow('Hello');
     expect(ops).toEqual([
       'RethrowErrorBoundary render',
       'BrokenRender',
-      'RethrowErrorBoundary unstable_handleError',
+      'RethrowErrorBoundary componentDidCatch',
     ]);
     expect(ReactNoop.getChildren()).toEqual([]);
   });
@@ -461,7 +370,7 @@ describe('ReactIncrementalErrorHandling', () => {
   it('applies sync updates regardless despite errors in scheduling', () => {
     ReactNoop.render(<span prop="a:1" />);
     expect(() => {
-      ReactNoop.syncUpdates(() => {
+      ReactNoop.flushSync(() => {
         ReactNoop.batchedUpdates(() => {
           ReactNoop.render(<span prop="a:2" />);
           ReactNoop.render(<span prop="a:3" />);
@@ -560,10 +469,86 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ops).toEqual(['Foo']);
   });
 
+  it('should not attempt to recover an unmounting error boundary', () => {
+    class Parent extends React.Component {
+      componentWillUnmount() {
+        ReactNoop.yield('Parent componentWillUnmount');
+      }
+      render() {
+        return <Boundary />;
+      }
+    }
+
+    class Boundary extends React.Component {
+      componentDidCatch(e) {
+        ReactNoop.yield(`Caught error: ${e.message}`);
+      }
+      render() {
+        return <ThrowsOnUnmount />;
+      }
+    }
+
+    class ThrowsOnUnmount extends React.Component {
+      componentWillUnmount() {
+        ReactNoop.yield('ThrowsOnUnmount componentWillUnmount');
+        throw new Error('unmount error');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+    ReactNoop.render(null);
+    expect(ReactNoop.flush()).toEqual([
+      // Parent unmounts before the error is thrown.
+      'Parent componentWillUnmount',
+      'ThrowsOnUnmount componentWillUnmount',
+    ]);
+    ReactNoop.render(<Parent />);
+  });
+
+  it('can unmount an error boundary before it is handled', () => {
+    let parent;
+
+    class Parent extends React.Component {
+      state = {step: 0};
+      render() {
+        parent = this;
+        return this.state.step === 0 ? <Boundary /> : null;
+      }
+    }
+
+    class Boundary extends React.Component {
+      componentDidCatch() {}
+      render() {
+        return <Child />;
+      }
+    }
+
+    class Child extends React.Component {
+      componentDidUpdate() {
+        parent.setState({step: 1});
+        throw new Error('update error');
+      }
+      render() {
+        return null;
+      }
+    }
+
+    ReactNoop.render(<Parent />);
+    ReactNoop.flush();
+
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Parent />);
+    });
+  });
+
   it('continues work on other roots despite caught errors', () => {
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -679,8 +664,8 @@ describe('ReactIncrementalErrorHandling', () => {
 
   it('unwinds the context stack correctly on error', () => {
     class Provider extends React.Component {
-      static childContextTypes = {message: React.PropTypes.string};
-      static contextTypes = {message: React.PropTypes.string};
+      static childContextTypes = {message: PropTypes.string};
+      static contextTypes = {message: PropTypes.string};
       getChildContext() {
         return {
           message: (this.context.message || '') + this.props.message,
@@ -696,7 +681,7 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     Connector.contextTypes = {
-      message: React.PropTypes.string,
+      message: PropTypes.string,
     };
 
     function BadRender() {
@@ -705,7 +690,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     class Boundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -740,7 +725,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -777,7 +762,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -957,7 +942,7 @@ describe('ReactIncrementalErrorHandling', () => {
         jest.unmock('ReactFiberErrorLogger');
       }
       React = require('react');
-      ReactNoop = require('ReactNoop');
+      ReactNoop = require('react-noop-renderer');
     }
 
     function normalizeCodeLocInfo(str) {
@@ -978,23 +963,26 @@ describe('ReactIncrementalErrorHandling', () => {
       }
 
       try {
-        ReactNoop.render(<div><span><ErrorThrowingComponent /></span></div>);
+        ReactNoop.render(
+          <div>
+            <span>
+              <ErrorThrowingComponent />
+            </span>
+          </div>,
+        );
         ReactNoop.flushDeferredPri();
       } catch (error) {}
 
       expect(console.error.calls.count()).toBe(1);
       const errorMessage = console.error.calls.argsFor(0)[0];
-      expect(errorMessage).toContain(
-        'React caught an error thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'Consider adding an error boundary to your tree to customize error handling behavior.',
-      );
-      expect(errorMessage).toContain('Error: componentWillMount error');
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error is located at: \n' +
+        'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
+      );
+      expect(errorMessage).toContain(
+        'Consider adding an error boundary to your tree to customize error handling behavior.',
       );
     });
 
@@ -1012,23 +1000,26 @@ describe('ReactIncrementalErrorHandling', () => {
       }
 
       try {
-        ReactNoop.render(<div><span><ErrorThrowingComponent /></span></div>);
+        ReactNoop.render(
+          <div>
+            <span>
+              <ErrorThrowingComponent />
+            </span>
+          </div>,
+        );
         ReactNoop.flushDeferredPri();
       } catch (error) {}
 
       expect(console.error.calls.count()).toBe(1);
       const errorMessage = console.error.calls.argsFor(0)[0];
-      expect(errorMessage).toContain(
-        'React caught an error thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'Consider adding an error boundary to your tree to customize error handling behavior.',
-      );
-      expect(errorMessage).toContain('Error: componentDidMount error');
       expect(normalizeCodeLocInfo(errorMessage)).toContain(
-        'The error is located at: \n' +
+        'The above error occurred in the <ErrorThrowingComponent> component:\n' +
           '    in ErrorThrowingComponent (at **)\n' +
           '    in span (at **)\n' +
           '    in div (at **)',
+      );
+      expect(errorMessage).toContain(
+        'Consider adding an error boundary to your tree to customize error handling behavior.',
       );
     });
 
@@ -1053,7 +1044,13 @@ describe('ReactIncrementalErrorHandling', () => {
       );
 
       try {
-        ReactNoop.render(<div><span><ErrorThrowingComponent /></span></div>);
+        ReactNoop.render(
+          <div>
+            <span>
+              <ErrorThrowingComponent />
+            </span>
+          </div>,
+        );
         ReactNoop.flushDeferredPri();
       } catch (error) {}
 
@@ -1080,7 +1077,7 @@ describe('ReactIncrementalErrorHandling', () => {
       let renderAttempts = 0;
 
       class ErrorBoundaryComponent extends React.Component {
-        unstable_handleError(error) {
+        componentDidCatch(error) {
           handleErrorCalls.push(error);
           this.setState({}); // Render again
         }
@@ -1108,17 +1105,56 @@ describe('ReactIncrementalErrorHandling', () => {
       expect(handleErrorCalls.length).toBe(1);
       expect(console.error.calls.count()).toBe(2);
       expect(console.error.calls.argsFor(0)[0]).toContain(
-        'React caught an error thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'React will try to recreate this component tree from scratch ' +
+        'The above error occurred in the <ErrorThrowingComponent> component:',
+      );
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'React will try to recreate this component tree from scratch ' +
           'using the error boundary you provided, ErrorBoundaryComponent.',
       );
       expect(console.error.calls.argsFor(1)[0]).toContain(
-        'React caught an error thrown by ErrorThrowingComponent. ' +
-          'You should fix this error in your code. ' +
-          'This error was initially handled by the error boundary ErrorBoundaryComponent. ' +
+        'The above error occurred in the <ErrorThrowingComponent> component:',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'This error was initially handled by the error boundary ErrorBoundaryComponent.\n' +
           'Recreating the tree from scratch failed so React will unmount the tree.',
       );
     });
+  });
+
+  it('resets instance variables before unmounting failed node', () => {
+    spyOn(console, 'error');
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        this.setState({error});
+      }
+      render() {
+        return this.state.error ? null : this.props.children;
+      }
+    }
+    class Foo extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentWillUnmount() {
+        ReactNoop.yield('componentWillUnmount: ' + this.state.step);
+      }
+      render() {
+        ReactNoop.yield('render: ' + this.state.step);
+        if (this.state.step > 0) {
+          throw new Error('oops');
+        }
+        return null;
+      }
+    }
+
+    ReactNoop.render(<ErrorBoundary><Foo /></ErrorBoundary>);
+    expect(ReactNoop.flush()).toEqual([
+      'render: 0',
+      'render: 1',
+      'componentWillUnmount: 0',
+    ]);
   });
 });

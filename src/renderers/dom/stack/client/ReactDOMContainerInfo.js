@@ -12,15 +12,14 @@
 'use strict';
 
 var validateDOMNesting = require('validateDOMNesting');
-
-var DOC_NODE_TYPE = 9;
+var {DOCUMENT_NODE} = require('HTMLNodeType');
 
 function ReactDOMContainerInfo(topLevelWrapper, node) {
   var info = {
     _topLevelWrapper: topLevelWrapper,
     _idCounter: 1,
     _ownerDocument: node
-      ? node.nodeType === DOC_NODE_TYPE ? node : node.ownerDocument
+      ? node.nodeType === DOCUMENT_NODE ? node : node.ownerDocument
       : null,
     _node: node,
     _tag: node ? node.nodeName.toLowerCase() : null,

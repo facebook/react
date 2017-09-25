@@ -14,9 +14,9 @@
 describe('ReactDebugFiberPerf', () => {
   let React;
   let ReactCoroutine;
-  let ReactFeatureFlags;
   let ReactNoop;
   let ReactPortal;
+  let PropTypes;
 
   let root;
   let activeMeasure;
@@ -70,12 +70,14 @@ describe('ReactDebugFiberPerf', () => {
           label: null,
           parent: activeMeasure,
           toString() {
-            return [
-              '  '.repeat(this.indent) + this.label,
-              ...this.children.map(c => c.toString()),
-            ].join('\n') +
+            return (
+              [
+                '  '.repeat(this.indent) + this.label,
+                ...this.children.map(c => c.toString()),
+              ].join('\n') +
               // Extra newline after each root reconciliation
-              (this.indent === 0 ? '\n' : '');
+              (this.indent === 0 ? '\n' : '')
+            );
           },
         };
         // Step one level deeper
@@ -113,12 +115,12 @@ describe('ReactDebugFiberPerf', () => {
     global.performance = createUserTimingPolyfill();
 
     // Import after the polyfill is set up:
-    React = require('React');
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    // TODO: can we express this test with only public API?
     ReactCoroutine = require('ReactCoroutine');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactNoop = require('ReactNoop');
     ReactPortal = require('ReactPortal');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
+    PropTypes = require('prop-types');
   });
 
   afterEach(() => {
@@ -168,11 +170,11 @@ describe('ReactDebugFiberPerf', () => {
       <Parent>
         <Parent>
           <Parent>
-            <A ref={inst => a = inst} />
+            <A ref={inst => (a = inst)} />
           </Parent>
         </Parent>
         <Parent>
-          <B ref={inst => b = inst} />
+          <B ref={inst => (b = inst)} />
         </Parent>
       </Parent>,
     );
@@ -245,7 +247,7 @@ describe('ReactDebugFiberPerf', () => {
   it('captures all lifecycles', () => {
     class AllLifecycles extends React.Component {
       static childContextTypes = {
-        foo: React.PropTypes.any,
+        foo: PropTypes.any,
       };
       shouldComponentUpdate() {
         return true;
@@ -276,7 +278,8 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('measures deprioritized work', () => {
-    ReactNoop.performAnimationWork(() => {
+    addComment('Flush the parent');
+    ReactNoop.flushSync(() => {
       ReactNoop.render(
         <Parent>
           <div hidden={true}>
@@ -285,10 +288,8 @@ describe('ReactDebugFiberPerf', () => {
         </Parent>,
       );
     });
-    addComment('Flush the parent');
-    ReactNoop.flushAnimationPri();
     addComment('Flush the child');
-    ReactNoop.flushDeferredPri();
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 
@@ -353,7 +354,7 @@ describe('ReactDebugFiberPerf', () => {
 
     class Boundary extends React.Component {
       state = {error: null};
-      unstable_handleError(error) {
+      componentDidCatch(error) {
         this.setState({error});
       }
       render() {
@@ -447,12 +448,12 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function Indirection() {
-      return [<CoChild bar={true} />, <CoChild bar={false} />];
+      return [<CoChild key="a" bar={true} />, <CoChild key="b" bar={false} />];
     }
 
     function HandleYields(props, yields) {
-      return yields.map(y => (
-        <y.continuation isSame={props.foo === y.props.bar} />
+      return yields.map((y, i) => (
+        <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
@@ -481,6 +482,22 @@ describe('ReactDebugFiberPerf', () => {
       </Parent>,
     );
     ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
+    class Component extends React.Component {
+      state = {step: 1};
+      componentDidMount() {
+        this.setState({step: 2});
+      }
+      render() {
+        return <span prop={this.state.step} />;
+      }
+    }
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Component />);
+    });
     expect(getFlameChart()).toMatchSnapshot();
   });
 });

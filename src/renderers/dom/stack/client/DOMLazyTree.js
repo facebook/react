@@ -11,14 +11,11 @@
 
 'use strict';
 
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
 var setInnerHTML = require('setInnerHTML');
-
+var {DOCUMENT_FRAGMENT_NODE, ELEMENT_NODE} = require('HTMLNodeType');
 var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
 var setTextContent = require('setTextContent');
-
-var ELEMENT_NODE_TYPE = 1;
-var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
 /**
  * In IE (8-11) and Edge, appending nodes with no children is dramatically
@@ -29,10 +26,11 @@ var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
  * In other browsers, doing so is slower or neutral compared to the other order
  * (in Firefox, twice as slow) so we only do this inversion in IE.
  *
- * See https://github.com/spicyj/innerhtml-vs-createelement-vs-clonenode.
+ * See https://github.com/sophiebits/innerhtml-vs-createelement-vs-clonenode.
  */
-var enableLazy = (typeof document !== 'undefined' &&
-  typeof document.documentMode === 'number') ||
+var enableLazy =
+  (typeof document !== 'undefined' &&
+    typeof document.documentMode === 'number') ||
   (typeof navigator !== 'undefined' &&
     typeof navigator.userAgent === 'string' &&
     /\bEdge\/\d/.test(navigator.userAgent));
@@ -54,29 +52,31 @@ function insertTreeChildren(tree) {
   }
 }
 
-var insertTreeBefore = createMicrosoftUnsafeLocalFunction(
-  function(parentNode, tree, referenceNode) {
-    // DocumentFragments aren't actually part of the DOM after insertion so
-    // appending children won't update the DOM. We need to ensure the fragment
-    // is properly populated first, breaking out of our lazy approach for just
-    // this level. Also, some <object> plugins (like Flash Player) will read
-    // <param> nodes immediately upon insertion into the DOM, so <object>
-    // must also be populated prior to insertion into the DOM.
-    if (
-      tree.node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE ||
-      (tree.node.nodeType === ELEMENT_NODE_TYPE &&
-        tree.node.nodeName.toLowerCase() === 'object' &&
-        (tree.node.namespaceURI == null ||
-          tree.node.namespaceURI === DOMNamespaces.html))
-    ) {
-      insertTreeChildren(tree);
-      parentNode.insertBefore(tree.node, referenceNode);
-    } else {
-      parentNode.insertBefore(tree.node, referenceNode);
-      insertTreeChildren(tree);
-    }
-  },
-);
+var insertTreeBefore = createMicrosoftUnsafeLocalFunction(function(
+  parentNode,
+  tree,
+  referenceNode,
+) {
+  // DocumentFragments aren't actually part of the DOM after insertion so
+  // appending children won't update the DOM. We need to ensure the fragment
+  // is properly populated first, breaking out of our lazy approach for just
+  // this level. Also, some <object> plugins (like Flash Player) will read
+  // <param> nodes immediately upon insertion into the DOM, so <object>
+  // must also be populated prior to insertion into the DOM.
+  if (
+    tree.node.nodeType === DOCUMENT_FRAGMENT_NODE ||
+    (tree.node.nodeType === ELEMENT_NODE &&
+      tree.node.nodeName.toLowerCase() === 'object' &&
+      (tree.node.namespaceURI == null ||
+        tree.node.namespaceURI === Namespaces.html))
+  ) {
+    insertTreeChildren(tree);
+    parentNode.insertBefore(tree.node, referenceNode);
+  } else {
+    parentNode.insertBefore(tree.node, referenceNode);
+    insertTreeChildren(tree);
+  }
+});
 
 function replaceChildWithTree(oldNode, newTree) {
   oldNode.parentNode.replaceChild(newTree.node, oldNode);

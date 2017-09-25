@@ -1,14 +1,12 @@
-const React = window.React;
-
 import Fixture from '../../Fixture';
 
-const PasswordTestCase = React.createClass({
-  getInitialState() {
-    return { value: '' };
-  },
-  onChange(event) {
-    this.setState({ value: event.target.value })
-  },
+const React = window.React;
+
+class PasswordTestCase extends React.Component {
+  state = {value: ''};
+  onChange = event => {
+    this.setState({value: event.target.value});
+  };
   render() {
     return (
       <Fixture>
@@ -17,8 +15,14 @@ const PasswordTestCase = React.createClass({
         <div className="control-box">
           <fieldset>
             <legend>Controlled</legend>
-            <input type="password" value={this.state.value} onChange={this.onChange} />
-            <span className="hint"> Value: {JSON.stringify(this.state.value)}</span>
+            <input
+              type="password"
+              value={this.state.value}
+              onChange={this.onChange}
+            />
+            <span className="hint">
+              {' '}Value: {JSON.stringify(this.state.value)}
+            </span>
           </fieldset>
 
           <fieldset>
@@ -28,7 +32,7 @@ const PasswordTestCase = React.createClass({
         </div>
       </Fixture>
     );
-  },
-});
+  }
+}
 
 export default PasswordTestCase;

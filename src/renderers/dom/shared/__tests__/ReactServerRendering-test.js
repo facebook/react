@@ -14,11 +14,13 @@
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
 var ReactMarkupChecksum;
 var ReactReconcileTransaction;
 var ReactTestUtils;
+var PropTypes;
+
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
@@ -28,10 +30,10 @@ describe('ReactDOMServer', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+    ReactTestUtils = require('react-dom/test-utils');
     ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactTestUtils = require('ReactTestUtils');
     ReactReconcileTransaction = require('ReactReconcileTransaction');
+    PropTypes = require('prop-types');
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
@@ -49,11 +51,14 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<span ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+">hello world</span>',
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '>hello world</span>',
         ),
       );
     });
@@ -64,11 +69,14 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<img ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+"/>',
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '/>',
         ),
       );
     });
@@ -79,11 +87,14 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<img data-attr="&gt;" ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+"/>',
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '/>',
         ),
       );
     });
@@ -96,7 +107,11 @@ describe('ReactDOMServer', () => {
       }
 
       var response = ReactDOMServer.renderToString(<NullComponent />);
-      expect(response).toBe('<!-- react-empty: 1 -->');
+      if (ReactDOMFeatureFlags.useFiber) {
+        expect(response).toBe('');
+      } else {
+        expect(response).toBe('<!-- react-empty: 1 -->');
+      }
     });
 
     // TODO: Test that listeners are not registered onto any document/container.
@@ -119,16 +134,23 @@ describe('ReactDOMServer', () => {
         new RegExp(
           '<div ' +
             ROOT_ATTRIBUTE_NAME +
-            '="" ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-            '="[^"]+">' +
-            '<span ' +
-            ID_ATTRIBUTE_NAME +
-            '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
+            '=""' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+            '>' +
+            '<span' +
+            (ReactDOMFeatureFlags.useFiber
+              ? ''
+              : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+            '>' +
+            (ReactDOMFeatureFlags.useFiber
+              ? 'My name is <!-- -->child'
+              : '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
+                  '<!-- react-text: [0-9]+ -->child<!-- /react-text -->') +
             '</span>' +
             '</div>',
         ),
@@ -186,13 +208,18 @@ describe('ReactDOMServer', () => {
           new RegExp(
             '<span ' +
               ROOT_ATTRIBUTE_NAME +
-              '="" ' +
-              ID_ATTRIBUTE_NAME +
-              '="[^"]+" ' +
-              ReactMarkupChecksum.CHECKSUM_ATTR_NAME +
-              '="[^"]+">' +
-              '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-              '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
+              '=""' +
+              (ReactDOMFeatureFlags.useFiber
+                ? ''
+                : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
+              (ReactDOMFeatureFlags.useFiber
+                ? ''
+                : ' ' + ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"') +
+              '>' +
+              (ReactDOMFeatureFlags.useFiber
+                ? 'Component name: <!-- -->TestComponent'
+                : '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
+                    '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->') +
               '</span>',
           ),
         );
@@ -210,7 +237,9 @@ describe('ReactDOMServer', () => {
       runTest();
     });
 
-    it('should have the correct mounting behavior', () => {
+    it('should have the correct mounting behavior (old hydrate API)', () => {
+      spyOn(console, 'warn');
+      spyOn(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -265,14 +294,22 @@ describe('ReactDOMServer', () => {
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
+      if (ReactDOMFeatureFlags.useFiber) {
+        expectDev(console.warn.calls.count()).toBe(1);
+        expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+      } else {
+        expectDev(console.warn.calls.count()).toBe(0);
+      }
+      console.warn.calls.reset();
 
       var expectedMarkup = lastMarkup;
       if (ReactDOMFeatureFlags.useFiber) {
-        var reactMetaData = /\s+data-react[a-z-]+="[^"]*"/g;
         var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-        expectedMarkup = expectedMarkup
-          .replace(reactMetaData, '')
-          .replace(reactComments, '');
+        expectedMarkup = expectedMarkup.replace(reactComments, '');
       }
       expect(element.innerHTML).toBe(expectedMarkup);
 
@@ -287,10 +324,22 @@ describe('ReactDOMServer', () => {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
-      spyOn(console, 'error');
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expectDev(console.error.calls.count()).toBe(1);
+      if (ReactDOMFeatureFlags.useFiber) {
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          'Text content did not match. Server: "x" Client: "y"',
+        );
+      } else {
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          '(client) -- react-text: 3 -->y<!-- /react-text --',
+        );
+        expectDev(console.error.calls.argsFor(0)[0]).toContain(
+          '(server) -- react-text: 3 -->x<!-- /react-text --',
+        );
+      }
+      console.error.calls.reset();
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -298,12 +347,109 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(1);
       ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(2);
+      expectDev(console.warn.calls.count()).toBe(0);
+      expectDev(console.error.calls.count()).toBe(0);
     });
+
+    if (ReactDOMFeatureFlags.useFiber) {
+      it('should have the correct mounting behavior (new hydrate API)', () => {
+        spyOn(console, 'error');
+        // This test is testing client-side behavior.
+        ExecutionEnvironment.canUseDOM = true;
+
+        var mountCount = 0;
+        var numClicks = 0;
+
+        class TestComponent extends React.Component {
+          componentDidMount() {
+            mountCount++;
+          }
+
+          click = () => {
+            numClicks++;
+          };
+
+          render() {
+            return (
+              <span ref="span" onClick={this.click}>
+                Name: {this.props.name}
+              </span>
+            );
+          }
+        }
+
+        var element = document.createElement('div');
+        ReactDOM.render(<TestComponent />, element);
+
+        var lastMarkup = element.innerHTML;
+
+        // Exercise the update path. Markup should not change,
+        // but some lifecycle methods should be run again.
+        ReactDOM.render(<TestComponent name="x" />, element);
+        expect(mountCount).toEqual(1);
+
+        // Unmount and remount. We should get another mount event and
+        // we should get different markup, as the IDs are unique each time.
+        ReactDOM.unmountComponentAtNode(element);
+        expect(element.innerHTML).toEqual('');
+        ReactDOM.render(<TestComponent name="x" />, element);
+        expect(mountCount).toEqual(2);
+        expect(element.innerHTML).not.toEqual(lastMarkup);
+
+        // Now kill the node and render it on top of server-rendered markup, as if
+        // we used server rendering. We should mount again, but the markup should
+        // be unchanged. We will append a sentinel at the end of innerHTML to be
+        // sure that innerHTML was not changed.
+        ReactDOM.unmountComponentAtNode(element);
+        expect(element.innerHTML).toEqual('');
+
+        ExecutionEnvironment.canUseDOM = false;
+        lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
+        ExecutionEnvironment.canUseDOM = true;
+        element.innerHTML = lastMarkup;
+
+        var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
+        expect(mountCount).toEqual(3);
+
+        var expectedMarkup = lastMarkup;
+        if (ReactDOMFeatureFlags.useFiber) {
+          var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
+          expectedMarkup = expectedMarkup.replace(reactComments, '');
+        }
+        expect(element.innerHTML).toBe(expectedMarkup);
+
+        // Ensure the events system works after mount into server markup
+        expect(numClicks).toEqual(0);
+        ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+        expect(numClicks).toEqual(1);
+
+        ReactDOM.unmountComponentAtNode(element);
+        expect(element.innerHTML).toEqual('');
+
+        // Now simulate a situation where the app is not idempotent. React should
+        // warn but do the right thing.
+        element.innerHTML = lastMarkup;
+        instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
+        expect(mountCount).toEqual(4);
+        expectDev(console.error.calls.count()).toBe(1);
+        expect(element.innerHTML.length > 0).toBe(true);
+        expect(element.innerHTML).not.toEqual(lastMarkup);
+
+        // Ensure the events system works after markup mismatch.
+        expect(numClicks).toEqual(1);
+        ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+        expect(numClicks).toEqual(2);
+      });
+    }
 
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToString.bind(ReactDOMServer, 'not a component'),
-      ).toThrowError('renderToString(): You must pass a valid ReactElement.');
+        ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
+      ).toThrowError(
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys {x})'
+          : 'renderToString(): Invalid component element.',
+      );
     });
   });
 
@@ -336,6 +482,18 @@ describe('ReactDOMServer', () => {
       var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span>hello world</span>');
+    });
+
+    it('should not use comments for empty nodes', () => {
+      class TestComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+
+      expect(response).toBe('');
     });
 
     it('should only execute certain lifecycle methods', () => {
@@ -402,12 +560,11 @@ describe('ReactDOMServer', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToStaticMarkup.bind(
-          ReactDOMServer,
-          'not a component',
-        ),
+        ReactDOMServer.renderToStaticMarkup.bind(ReactDOMServer, {x: 123}),
       ).toThrowError(
-        'renderToStaticMarkup(): You must pass a valid ReactElement.',
+        ReactDOMFeatureFlags.useFiber
+          ? 'Objects are not valid as a React child (found: object with keys {x})'
+          : 'renderToStaticMarkup(): Invalid component element.',
       );
     });
 
@@ -427,7 +584,85 @@ describe('ReactDOMServer', () => {
         throw new Error('Browser reconcile transaction should not be used');
       };
       var markup = ReactDOMServer.renderToString(<Component />);
-      expect(markup.indexOf('hello, world') >= 0).toBe(true);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('allows setState in componentWillMount with custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+          this.state = {text: 'default state'};
+        }
+
+        componentWillMount() {
+          this.setState({text: 'hello, world'});
+        }
+
+        render() {
+          return <div>{this.state.text}</div>;
+        }
+      }
+
+      ReactReconcileTransaction.prototype.perform = function() {
+        // We shouldn't ever be calling this on the server
+        throw new Error('Browser reconcile transaction should not be used');
+      };
+      var markup = ReactDOMServer.renderToString(<Component />);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with props when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.props.text}</div>;
+        }
+      }
+
+      var markup = ReactDOMServer.renderToString(
+        <Component text="hello, world" />,
+      );
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with context when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.context.text}</div>;
+        }
+      }
+
+      Component.contextTypes = {
+        text: PropTypes.string.isRequired,
+      };
+
+      class ContextProvider extends React.Component {
+        getChildContext() {
+          return {
+            text: 'hello, world',
+          };
+        }
+
+        render() {
+          return this.props.children;
+        }
+      }
+
+      ContextProvider.childContextTypes = {
+        text: PropTypes.string,
+      };
+
+      var markup = ReactDOMServer.renderToString(
+        <ContextProvider><Component /></ContextProvider>,
+      );
+      expect(markup).toContain('hello, world');
     });
 
     it('renders components with different batching strategies', () => {
@@ -490,32 +725,6 @@ describe('ReactDOMServer', () => {
     expect(markup).toBe('<div>hello</div>');
   });
 
-  it('warns with a no-op when an async replaceState is triggered', () => {
-    var Bar = React.createClass({
-      componentWillMount: function() {
-        this.replaceState({text: 'hello'});
-        setTimeout(() => {
-          this.replaceState({text: 'error'});
-        });
-      },
-      render: function() {
-        return <div onClick={() => {}}>{this.state.text}</div>;
-      },
-    });
-
-    spyOn(console, 'error');
-    ReactDOMServer.renderToString(<Bar />);
-    jest.runOnlyPendingTimers();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.mostRecent().args[0]).toBe(
-      'Warning: replaceState(...): Can only update a mounting component. ' +
-        'This usually means you called replaceState() outside componentWillMount() on the server. ' +
-        'This is a no-op.\n\nPlease check the code for the Bar component.',
-    );
-    var markup = ReactDOMServer.renderToStaticMarkup(<Bar />);
-    expect(markup).toBe('<div>hello</div>');
-  });
-
   it('warns with a no-op when an async forceUpdate is triggered', () => {
     class Baz extends React.Component {
       componentWillMount() {
@@ -558,5 +767,37 @@ describe('ReactDOMServer', () => {
         </Wrapper>,
       );
     }).toThrowError(/Cannot assign to read only property.*/);
+  });
+
+  it('warns about lowercase html but not in svg tags', () => {
+    spyOn(console, 'error');
+    function CompositeG(props) {
+      // Make sure namespace passes through composites
+      return <g>{props.children}</g>;
+    }
+    ReactDOMServer.renderToStaticMarkup(
+      <div>
+        <inPUT />
+        <svg>
+          <CompositeG>
+            <linearGradient />
+            <foreignObject>
+              {/* back to HTML */}
+              <iFrame />
+            </foreignObject>
+          </CompositeG>
+        </svg>
+      </div>,
+    );
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    );
+    // linearGradient doesn't warn
+    expect(console.error.calls.argsFor(1)[0]).toBe(
+      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    );
   });
 });

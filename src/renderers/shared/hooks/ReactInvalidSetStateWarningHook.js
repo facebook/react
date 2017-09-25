@@ -12,11 +12,10 @@
 
 'use strict';
 
-var warning = require('fbjs/lib/warning');
-
 var ReactInvalidSetStateWarningHook = {};
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var processingChildContext = false;
 
   var warnInvalidSetState = function() {

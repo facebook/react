@@ -24,7 +24,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-tweak"></a>Tweaking in real time <a class="hash-link" href="#talk-tweak">#</a></h3>
     <p>
-      <strong>Brenton Simpson</strong> showed us how eBay brings Bret Victorâ€™s feedback loop to your favorite editor using Webpack, react-hot-loader, and <a href="https://github.com/appsforartists/ambidex">Ambidex</a>.
+      <strong>Brenton Simpson</strong> showed us how eBay brings Bret Victorâ€™s feedback loop to your favorite editor using webpack, react-hot-loader, and <a href="https://github.com/appsforartists/ambidex">Ambidex</a>.
     </p>
   </div>
   <div class="skinny-col">
@@ -156,7 +156,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-immutable"></a>Immutability <a class="hash-link" href="#talk-immutable">#</a></h3>
     <p>
-      <strong>Lee Byron</strong> led a master-class on persistent immutable data structures, showing us the world of possibility that they can unlock for your software, and perhaps Javascript in general.
+      <strong>Lee Byron</strong> led a master-class on persistent immutable data structures, showing us the world of possibility that they can unlock for your software, and perhaps JavaScript in general.
     </p>
   </div>
   <div class="skinny-col">
@@ -234,7 +234,7 @@ It was a privilege to welcome the React community to Facebook HQ on January 28â€
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-qa"></a>Core Team Q&amp;A <a class="hash-link" href="#talk-qa">#</a></h3>
     <p>
-      <strong>Tom Occhino</strong>, <strong>Ben Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian MarkbÃ¥ge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
+      <strong>Tom Occhino</strong>, <strong>Sophie Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian MarkbÃ¥ge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
   </div>
   <div class="skinny-col">
     <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/EPpkboSKvPI" frameborder="0" allowfullscreen></iframe>

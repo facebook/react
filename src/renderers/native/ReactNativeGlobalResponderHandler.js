@@ -15,10 +15,7 @@ var UIManager = require('UIManager');
 var ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
     if (to !== null) {
-      // TODO (bvaughn) Clean up once Stack is deprecated
-      var tag = typeof to.tag !== 'number'
-        ? to._rootNodeID
-        : to.stateNode._nativeTag;
+      var tag = to.stateNode._nativeTag;
       UIManager.setJSResponder(tag, blockNativeResponder);
     } else {
       UIManager.clearJSResponder();

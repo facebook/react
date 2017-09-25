@@ -13,13 +13,16 @@
 
 'use strict';
 
-var PooledClass = require('PooledClass');
-
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var warning = require('fbjs/lib/warning');
+var invariant = require('fbjs/lib/invariant');
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';
+var EVENT_POOL_SIZE = 10;
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var shouldBeReleasedProperties = [
   'dispatchConfig',
@@ -210,6 +213,32 @@ Object.assign(SyntheticEvent.prototype, {
 
 SyntheticEvent.Interface = EventInterface;
 
+/**
+ * Helper to reduce boilerplate when creating subclasses.
+ *
+ * @param {function} Class
+ * @param {?object} Interface
+ */
+SyntheticEvent.augmentClass = function(Class, Interface) {
+  var Super = this;
+
+  var E = function() {};
+  E.prototype = Super.prototype;
+  var prototype = new E();
+
+  Object.assign(prototype, Class.prototype);
+  Class.prototype = prototype;
+  Class.prototype.constructor = Class;
+
+  Class.Interface = Object.assign({}, Super.Interface, Interface);
+  Class.augmentClass = Super.augmentClass;
+  addEventPoolingTo(Class);
+};
+
+/** Proxying after everything set on SyntheticEvent
+  * to resolve Proxy issue on some WebKit browsers
+  * in which some Event properties are set to undefined (GH#10010)
+  */
 if (__DEV__) {
   if (isProxySupported) {
     /*eslint-disable no-func-assign */
@@ -243,38 +272,16 @@ if (__DEV__) {
     /*eslint-enable no-func-assign */
   }
 }
-/**
- * Helper to reduce boilerplate when creating subclasses.
- *
- * @param {function} Class
- * @param {?object} Interface
- */
-SyntheticEvent.augmentClass = function(Class, Interface) {
-  var Super = this;
 
-  var E = function() {};
-  E.prototype = Super.prototype;
-  var prototype = new E();
-
-  Object.assign(prototype, Class.prototype);
-  Class.prototype = prototype;
-  Class.prototype.constructor = Class;
-
-  Class.Interface = Object.assign({}, Super.Interface, Interface);
-  Class.augmentClass = Super.augmentClass;
-
-  PooledClass.addPoolingTo(Class, PooledClass.fourArgumentPooler);
-};
-
-PooledClass.addPoolingTo(SyntheticEvent, PooledClass.fourArgumentPooler);
+addEventPoolingTo(SyntheticEvent);
 
 module.exports = SyntheticEvent;
 
 /**
   * Helper to nullify syntheticEvent instance properties when destructing
   *
-  * @param {object} SyntheticEvent
   * @param {String} propName
+  * @param {?object} getVal
   * @return {object} defineProperty object
   */
 function getPooledWarningPropertyDefinition(propName, getVal) {
@@ -313,4 +320,43 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
       result,
     );
   }
+}
+
+function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
+  const EventConstructor = this;
+  if (EventConstructor.eventPool.length) {
+    const instance = EventConstructor.eventPool.pop();
+    EventConstructor.call(
+      instance,
+      dispatchConfig,
+      targetInst,
+      nativeEvent,
+      nativeInst,
+    );
+    return instance;
+  }
+  return new EventConstructor(
+    dispatchConfig,
+    targetInst,
+    nativeEvent,
+    nativeInst,
+  );
+}
+
+function releasePooledEvent(event) {
+  var EventConstructor = this;
+  invariant(
+    event instanceof EventConstructor,
+    'Trying to release an event instance  into a pool of a different type.',
+  );
+  event.destructor();
+  if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
+    EventConstructor.eventPool.push(event);
+  }
+}
+
+function addEventPoolingTo(EventConstructor) {
+  EventConstructor.eventPool = [];
+  EventConstructor.getPooled = getPooledEvent;
+  EventConstructor.release = releasePooledEvent;
 }

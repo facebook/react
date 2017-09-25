@@ -13,10 +13,9 @@
 
 var ReactNoopUpdateQueue = require('ReactNoopUpdateQueue');
 
-var canDefineProperty = require('canDefineProperty');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+var lowPriorityWarning = require('lowPriorityWarning');
 
 /**
  * Base class helpers for the updating state of a component.
@@ -105,19 +104,17 @@ if (__DEV__) {
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
-    if (canDefineProperty) {
-      Object.defineProperty(ReactComponent.prototype, methodName, {
-        get: function() {
-          warning(
-            false,
-            '%s(...) is deprecated in plain JavaScript React classes. %s',
-            info[0],
-            info[1],
-          );
-          return undefined;
-        },
-      });
-    }
+    Object.defineProperty(ReactComponent.prototype, methodName, {
+      get: function() {
+        lowPriorityWarning(
+          false,
+          '%s(...) is deprecated in plain JavaScript React classes. %s',
+          info[0],
+          info[1],
+        );
+        return undefined;
+      },
+    });
   };
   for (var fnName in deprecatedAPIs) {
     if (deprecatedAPIs.hasOwnProperty(fnName)) {
@@ -141,13 +138,33 @@ function ReactPureComponent(props, context, updater) {
 
 function ComponentDummy() {}
 ComponentDummy.prototype = ReactComponent.prototype;
-ReactPureComponent.prototype = new ComponentDummy();
-ReactPureComponent.prototype.constructor = ReactPureComponent;
+var pureComponentPrototype = (ReactPureComponent.prototype = new ComponentDummy());
+pureComponentPrototype.constructor = ReactPureComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(ReactPureComponent.prototype, ReactComponent.prototype);
-ReactPureComponent.prototype.isPureReactComponent = true;
+Object.assign(pureComponentPrototype, ReactComponent.prototype);
+pureComponentPrototype.isPureReactComponent = true;
+
+function ReactAsyncComponent(props, context, updater) {
+  // Duplicated from ReactComponent.
+  this.props = props;
+  this.context = context;
+  this.refs = emptyObject;
+  // We initialize the default updater but the real one gets injected by the
+  // renderer.
+  this.updater = updater || ReactNoopUpdateQueue;
+}
+
+var asyncComponentPrototype = (ReactAsyncComponent.prototype = new ComponentDummy());
+asyncComponentPrototype.constructor = ReactAsyncComponent;
+// Avoid an extra prototype jump for these methods.
+Object.assign(asyncComponentPrototype, ReactComponent.prototype);
+asyncComponentPrototype.unstable_isAsyncReactComponent = true;
+asyncComponentPrototype.render = function() {
+  return this.props.children;
+};
 
 module.exports = {
   Component: ReactComponent,
   PureComponent: ReactPureComponent,
+  AsyncComponent: ReactAsyncComponent,
 };

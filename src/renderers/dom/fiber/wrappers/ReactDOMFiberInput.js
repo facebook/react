@@ -25,8 +25,12 @@ var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
+if (__DEV__) {
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+  var warning = require('fbjs/lib/warning');
+}
+
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
@@ -85,12 +89,12 @@ var ReactDOMInput = {
     return hostProps;
   },
 
-  mountWrapper: function(element: Element, props: Object) {
+  initWrapperState: function(element: Element, props: Object) {
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'input',
         props,
-        getCurrentFiberOwnerName(),
+        getCurrentFiberStackAddendum,
       );
 
       if (
@@ -154,12 +158,12 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing an uncontrolled input of type %s to be controlled. ' +
+          'A component is changing an uncontrolled input of type %s to be controlled. ' +
             'Input elements should not switch from uncontrolled to controlled (or vice versa). ' +
             'Decide between using a controlled or uncontrolled input ' +
-            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          getCurrentFiberOwnerName() || 'A component',
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
           props.type,
+          getCurrentFiberStackAddendum(),
         );
         didWarnUncontrolledToControlled = true;
       }
@@ -170,12 +174,12 @@ var ReactDOMInput = {
       ) {
         warning(
           false,
-          '%s is changing a controlled input of type %s to be uncontrolled. ' +
+          'A component is changing a controlled input of type %s to be uncontrolled. ' +
             'Input elements should not switch from controlled to uncontrolled (or vice versa). ' +
             'Decide between using a controlled or uncontrolled input ' +
-            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components',
-          getCurrentFiberOwnerName() || 'A component',
+            'element for the lifetime of the component. More info: https://fb.me/react-controlled-components%s',
           props.type,
+          getCurrentFiberStackAddendum(),
         );
         didWarnControlledToUncontrolled = true;
       }
@@ -197,16 +201,19 @@ var ReactDOMInput = {
         // Note: IE9 reports a number inputs as 'text', so check props instead.
       } else if (props.type === 'number') {
         // Simulate `input.valueAsNumber`. IE9 does not support it
-        var valueAsNumber = parseFloat(node.value, 10) || 0;
+        var valueAsNumber = parseFloat(node.value) || 0;
 
-        // eslint-disable-next-line
-        if (value != valueAsNumber) {
+        if (
+          // eslint-disable-next-line
+          value != valueAsNumber ||
+          // eslint-disable-next-line
+          (value == valueAsNumber && node.value != value)
+        ) {
           // Cast `value` to a string to ensure the value is set correctly. While
           // browsers typically do this as necessary, jsdom doesn't.
           node.value = '' + value;
         }
-        // eslint-disable-next-line
-      } else if (value != node.value) {
+      } else if (node.value !== '' + value) {
         // Cast `value` to a string to ensure the value is set correctly. While
         // browsers typically do this as necessary, jsdom doesn't.
         node.value = '' + value;

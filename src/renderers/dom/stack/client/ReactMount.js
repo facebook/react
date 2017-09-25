@@ -14,17 +14,15 @@
 var DOMLazyTree = require('DOMLazyTree');
 var DOMProperty = require('DOMProperty');
 var React = require('react');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMContainerInfo = require('ReactDOMContainerInfo');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMarkupChecksum = require('ReactMarkupChecksum');
 var ReactReconciler = require('ReactReconciler');
 var ReactUpdateQueue = require('ReactUpdateQueue');
 var ReactUpdates = require('ReactUpdates');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getContextForSubtree = require('getContextForSubtree');
 var instantiateReactComponent = require('instantiateReactComponent');
@@ -33,13 +31,14 @@ var setInnerHTML = require('setInnerHTML');
 var shouldUpdateReactComponent = require('shouldUpdateReactComponent');
 var warning = require('fbjs/lib/warning');
 var validateCallback = require('validateCallback');
+var {
+  DOCUMENT_NODE,
+  ELEMENT_NODE,
+  DOCUMENT_FRAGMENT_NODE,
+} = require('HTMLNodeType');
 
 var ATTR_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
 var ROOT_ATTR_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
-
-var ELEMENT_NODE_TYPE = 1;
-var DOC_NODE_TYPE = 9;
-var DOCUMENT_FRAGMENT_NODE_TYPE = 11;
 
 var instancesByReactRootID = {};
 
@@ -69,7 +68,7 @@ function getReactRootElementInContainer(container) {
     return null;
   }
 
-  if (container.nodeType === DOC_NODE_TYPE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     return container.documentElement;
   } else {
     return container.firstChild;
@@ -86,7 +85,7 @@ function internalGetID(node) {
 /**
  * Mounts this component and inserts it into the DOM.
  *
- * @param {ReactComponent} componentInstance The instance to mount.
+ * @param {ReactComponent} wrapperInstance The instance to mount.
  * @param {DOMElement} container DOM element to mount into.
  * @param {ReactReconcileTransaction} transaction
  * @param {boolean} shouldReuseMarkup If true, do not insert markup
@@ -98,15 +97,6 @@ function mountComponentIntoNode(
   shouldReuseMarkup,
   context,
 ) {
-  var markerName;
-  if (ReactFeatureFlags.logTopLevelRenders) {
-    var wrappedElement = wrapperInstance._currentElement.props.child;
-    var type = wrappedElement.type;
-    markerName = 'React mount: ' +
-      (typeof type === 'string' ? type : type.displayName || type.name);
-    console.time(markerName);
-  }
-
   var markup = ReactReconciler.mountComponent(
     wrapperInstance,
     transaction,
@@ -115,10 +105,6 @@ function mountComponentIntoNode(
     context,
     0 /* parentDebugID */,
   );
-
-  if (markerName) {
-    console.timeEnd(markerName);
-  }
 
   wrapperInstance._renderedComponent._topLevelWrapper = wrapperInstance;
   ReactMount._mountImageIntoNode(
@@ -145,7 +131,7 @@ function batchedMountComponentIntoNode(
 ) {
   var transaction = ReactUpdates.ReactReconcileTransaction.getPooled(
     /* useCreateElement */
-    !shouldReuseMarkup && ReactDOMFeatureFlags.useCreateElement,
+    !shouldReuseMarkup,
   );
   transaction.perform(
     mountComponentIntoNode,
@@ -181,7 +167,7 @@ function unmountComponentFromNode(instance, container) {
     ReactInstrumentation.debugTool.onEndFlush();
   }
 
-  if (container.nodeType === DOC_NODE_TYPE) {
+  if (container.nodeType === DOCUMENT_NODE) {
     container = container.documentElement;
   }
 
@@ -233,9 +219,9 @@ function nodeIsRenderedByOtherInstance(container) {
  */
 function isValidContainer(node) {
   return !!(node &&
-    (node.nodeType === ELEMENT_NODE_TYPE ||
-      node.nodeType === DOC_NODE_TYPE ||
-      node.nodeType === DOCUMENT_FRAGMENT_NODE_TYPE));
+    (node.nodeType === ELEMENT_NODE ||
+      node.nodeType === DOCUMENT_NODE ||
+      node.nodeType === DOCUMENT_FRAGMENT_NODE));
 }
 
 /**
@@ -246,14 +232,16 @@ function isValidContainer(node) {
  * @internal
  */
 function isReactNode(node) {
-  return isValidContainer(node) &&
-    (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME));
+  return (
+    isValidContainer(node) &&
+    (node.hasAttribute(ROOT_ATTR_NAME) || node.hasAttribute(ATTR_NAME))
+  );
 }
 
 function getHostRootInstanceInContainer(container) {
   var rootEl = getReactRootElementInContainer(container);
-  var prevHostInstance = rootEl &&
-    ReactDOMComponentTree.getInstanceFromNode(rootEl);
+  var prevHostInstance =
+    rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl);
   return prevHostInstance && !prevHostInstance._hostParent
     ? prevHostInstance
     : null;
@@ -474,7 +462,8 @@ var ReactMount = {
             'or <Foo />.',
         );
       } else if (
-        nextElement != null && typeof nextElement.props !== 'undefined'
+        nextElement != null &&
+        typeof nextElement.props !== 'undefined'
       ) {
         // Check if it quacks like an element
         invariant(
@@ -511,7 +500,8 @@ var ReactMount = {
       var prevElement = prevWrappedElement.props.child;
       if (shouldUpdateReactComponent(prevElement, nextElement)) {
         var publicInst = prevComponent._renderedComponent.getPublicInstance();
-        var updatedCallback = callback &&
+        var updatedCallback =
+          callback &&
           function() {
             validateCallback(callback);
             callback.call(publicInst);
@@ -530,8 +520,8 @@ var ReactMount = {
     }
 
     var reactRootElement = getReactRootElementInContainer(container);
-    var containerHasReactMarkup = reactRootElement &&
-      !!internalGetID(reactRootElement);
+    var containerHasReactMarkup =
+      reactRootElement && !!internalGetID(reactRootElement);
     var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
     if (__DEV__) {
@@ -560,7 +550,8 @@ var ReactMount = {
       }
     }
 
-    var shouldReuseMarkup = containerHasReactMarkup &&
+    var shouldReuseMarkup =
+      containerHasReactMarkup &&
       !prevComponent &&
       !containerHasNonRootReactChild;
     var component = ReactMount._renderNewRootComponent(
@@ -638,7 +629,8 @@ var ReactMount = {
       var containerHasNonRootReactChild = hasNonRootReactChild(container);
 
       // Check if the container itself is a React root node.
-      var isContainerReactRoot = container.nodeType === 1 &&
+      var isContainerReactRoot =
+        container.nodeType === ELEMENT_NODE &&
         container.hasAttribute(ROOT_ATTR_NAME);
 
       if (__DEV__) {
@@ -701,7 +693,7 @@ var ReactMount = {
           // insert markup into a <div> or <iframe> depending on the container
           // type to perform the same normalizations before comparing.
           var normalizer;
-          if (container.nodeType === ELEMENT_NODE_TYPE) {
+          if (container.nodeType === ELEMENT_NODE) {
             normalizer = document.createElement('div');
             normalizer.innerHTML = markup;
             normalizedMarkup = normalizer.innerHTML;
@@ -709,19 +701,21 @@ var ReactMount = {
             normalizer = document.createElement('iframe');
             document.body.appendChild(normalizer);
             normalizer.contentDocument.write(markup);
-            normalizedMarkup = normalizer.contentDocument.documentElement.outerHTML;
+            normalizedMarkup =
+              normalizer.contentDocument.documentElement.outerHTML;
             document.body.removeChild(normalizer);
           }
         }
 
         var diffIndex = firstDifferenceIndex(normalizedMarkup, rootMarkup);
-        var difference = ' (client) ' +
+        var difference =
+          ' (client) ' +
           normalizedMarkup.substring(diffIndex - 20, diffIndex + 20) +
           '\n (server) ' +
           rootMarkup.substring(diffIndex - 20, diffIndex + 20);
 
         invariant(
-          container.nodeType !== DOC_NODE_TYPE,
+          container.nodeType !== DOCUMENT_NODE,
           "You're trying to render a component to the document using " +
             'server rendering but the checksum was invalid. This usually ' +
             'means you rendered a different component type or props on ' +
@@ -751,7 +745,7 @@ var ReactMount = {
     }
 
     invariant(
-      container.nodeType !== DOC_NODE_TYPE,
+      container.nodeType !== DOCUMENT_NODE,
       "You're trying to render a component to the document but " +
         "you didn't use server rendering. We can't do this " +
         'without using server rendering due to cross-browser quirks. ' +

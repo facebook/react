@@ -13,14 +13,12 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
 
 describe('ReactDOMSVG', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactDOMServer = require('react-dom/server');
   });
 
@@ -51,38 +49,38 @@ describe('ReactDOMSVG', () => {
       svg4;
     ReactDOM.render(
       <div>
-        <svg ref={el => svg = el}>
-          <g ref={el => g = el} strokeWidth="5">
-            <svg ref={el => svg2 = el}>
-              <foreignObject ref={el => foreignObject = el}>
-                <svg ref={el => svg3 = el}>
-                  <svg ref={el => svg4 = el} />
+        <svg ref={el => (svg = el)}>
+          <g ref={el => (g = el)} strokeWidth="5">
+            <svg ref={el => (svg2 = el)}>
+              <foreignObject ref={el => (foreignObject = el)}>
+                <svg ref={el => (svg3 = el)}>
+                  <svg ref={el => (svg4 = el)} />
                   <image
-                    ref={el => image = el}
+                    ref={el => (image = el)}
                     xlinkHref="http://i.imgur.com/w7GCRPb.png"
                   />
                 </svg>
-                <div ref={el => div = el} />
+                <div ref={el => (div = el)} />
               </foreignObject>
             </svg>
             <image
-              ref={el => image2 = el}
+              ref={el => (image2 = el)}
               xlinkHref="http://i.imgur.com/w7GCRPb.png"
             />
-            <foreignObject ref={el => foreignObject2 = el}>
-              <div ref={el => div2 = el} />
+            <foreignObject ref={el => (foreignObject2 = el)}>
+              <div ref={el => (div2 = el)} />
             </foreignObject>
           </g>
         </svg>
-        <p ref={el => p = el}>
+        <p ref={el => (p = el)}>
           <svg>
             <image
-              ref={el => image3 = el}
+              ref={el => (image3 = el)}
               xlinkHref="http://i.imgur.com/w7GCRPb.png"
             />
           </svg>
         </p>
-        <div ref={el => div3 = el} />
+        <div ref={el => (div3 = el)} />
       </div>,
       node,
     );
@@ -137,25 +135,25 @@ describe('ReactDOMSVG', () => {
           return null;
         }
         return (
-          <g ref={el => g = el} strokeWidth="5">
-            <svg ref={el => svg2 = el}>
-              <foreignObject ref={el => foreignObject = el}>
-                <svg ref={el => svg3 = el}>
-                  <svg ref={el => svg4 = el} />
+          <g ref={el => (g = el)} strokeWidth="5">
+            <svg ref={el => (svg2 = el)}>
+              <foreignObject ref={el => (foreignObject = el)}>
+                <svg ref={el => (svg3 = el)}>
+                  <svg ref={el => (svg4 = el)} />
                   <image
-                    ref={el => image = el}
+                    ref={el => (image = el)}
                     xlinkHref="http://i.imgur.com/w7GCRPb.png"
                   />
                 </svg>
-                <div ref={el => div = el} />
+                <div ref={el => (div = el)} />
               </foreignObject>
             </svg>
             <image
-              ref={el => image2 = el}
+              ref={el => (image2 = el)}
               xlinkHref="http://i.imgur.com/w7GCRPb.png"
             />
-            <foreignObject ref={el => foreignObject2 = el}>
-              <div ref={el => div2 = el} />
+            <foreignObject ref={el => (foreignObject2 = el)}>
+              <div ref={el => (div2 = el)} />
             </foreignObject>
           </g>
         );
@@ -164,7 +162,7 @@ describe('ReactDOMSVG', () => {
 
     var node = document.createElement('div');
     ReactDOM.render(
-      <svg ref={el => svg = el}>
+      <svg ref={el => (svg = el)}>
         <App />
       </svg>,
       node,
@@ -205,21 +203,12 @@ describe('ReactDOMSVG', () => {
     var container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     outerSVGRoot.appendChild(container);
     var image;
-    ReactDOM.render(<image ref={el => image = el} />, container);
+    ReactDOM.render(<image ref={el => (image = el)} />, container);
     expect(image.namespaceURI).toBe('http://www.w3.org/2000/svg');
     expect(image.tagName).toBe('image');
   });
 
   it('can render HTML into a foreignObject in non-React SVG tree', () => {
-    if (!ReactDOMFeatureFlags.useCreateElement) {
-      // jsdom doesn't give HTML namespace to foreignObject.innerHTML children.
-      // This problem doesn't exist in the browsers.
-      // https://github.com/facebook/react/pull/8638#issuecomment-269349642
-      // We will skip this test in non-createElement mode considering
-      // that non-createElement mounting is effectively dead code now anyway.
-      return;
-    }
-
     var outerSVGRoot = document.createElementNS(
       'http://www.w3.org/2000/svg',
       'svg',
@@ -230,7 +219,7 @@ describe('ReactDOMSVG', () => {
     );
     outerSVGRoot.appendChild(container);
     var div;
-    ReactDOM.render(<div ref={el => div = el} />, container);
+    ReactDOM.render(<div ref={el => (div = el)} />, container);
     expect(div.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
     expect(div.tagName).toBe('DIV');
   });

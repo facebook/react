@@ -12,17 +12,25 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
-var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-
-var warning = require('fbjs/lib/warning');
+var isCustomComponent = require('isCustomComponent');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
+var rARIACamel = new RegExp(
+  '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
+);
+
+var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {
-    getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+    ReactComponentTreeHook,
+    ReactDebugCurrentFrame,
+  } = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
+
+  var validAriaProperties = require('./validAriaProperties');
 }
 
 function getStackAddendum(debugID) {
@@ -30,22 +38,53 @@ function getStackAddendum(debugID) {
     // This can only happen on Stack
     return getStackAddendumByID(debugID);
   } else {
-    // This can only happen on Fiber
-    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+    // This can only happen on Fiber / Server
+    var stack = ReactDebugCurrentFrame.getStackAddendum();
+    return stack != null ? stack : '';
   }
 }
 
 function validateProperty(tagName, name, debugID) {
-  if (warnedProperties.hasOwnProperty(name) && warnedProperties[name]) {
+  if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
+  }
+
+  if (rARIACamel.test(name)) {
+    var ariaName = 'aria-' + name.slice(4).toLowerCase();
+    var correctName = validAriaProperties.hasOwnProperty(ariaName)
+      ? ariaName
+      : null;
+
+    // If this is an aria-* attribute, but is not listed in the known DOM
+    // DOM properties, then it is an invalid aria-* attribute.
+    if (correctName == null) {
+      warning(
+        false,
+        'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
+        name,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
+    // aria-* attributes should be lowercase; suggest the lowercase version.
+    if (name !== correctName) {
+      warning(
+        false,
+        'Invalid ARIA attribute `%s`. Did you mean `%s`?%s',
+        name,
+        correctName,
+        getStackAddendum(debugID),
+      );
+      warnedProperties[name] = true;
+      return true;
+    }
   }
 
   if (rARIA.test(name)) {
     var lowerCasedName = name.toLowerCase();
-    var standardName = DOMProperty.getPossibleStandardName.hasOwnProperty(
-      lowerCasedName,
-    )
-      ? DOMProperty.getPossibleStandardName[lowerCasedName]
+    var standardName = validAriaProperties.hasOwnProperty(lowerCasedName)
+      ? lowerCasedName
       : null;
 
     // If this is an aria-* attribute, but is not listed in the known DOM
@@ -58,7 +97,7 @@ function validateProperty(tagName, name, debugID) {
     if (name !== standardName) {
       warning(
         false,
-        'Unknown ARIA attribute %s. Did you mean %s?%s',
+        'Unknown ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         standardName,
         getStackAddendum(debugID),
@@ -107,7 +146,7 @@ function warnInvalidARIAProps(type, props, debugID) {
 }
 
 function validateProperties(type, props, debugID /* Stack only */) {
-  if (type.indexOf('-') >= 0 || props.is) {
+  if (isCustomComponent(type, props)) {
     return;
   }
   warnInvalidARIAProps(type, props, debugID);

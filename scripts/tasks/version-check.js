@@ -11,9 +11,12 @@
 
 const reactVersion = require('../../package.json').version;
 const versions = {
-  'packages/react/package.json': require('../../packages/react/package.json').version,
-  'packages/react-dom/package.json': require('../../packages/react-dom/package.json').version,
-  'packages/react-test-renderer/package.json': require('../../packages/react-test-renderer/package.json').version,
+  'packages/react/package.json': require('../../packages/react/package.json')
+    .version,
+  'packages/react-dom/package.json': require('../../packages/react-dom/package.json')
+    .version,
+  'packages/react-test-renderer/package.json': require('../../packages/react-test-renderer/package.json')
+    .version,
   'src/ReactVersion.js': require('../../src/ReactVersion'),
 };
 

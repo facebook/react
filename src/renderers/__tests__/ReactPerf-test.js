@@ -41,8 +41,8 @@ describeStack('ReactPerf', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactPerf = require('react-dom/lib/ReactPerf');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactPerf = require('ReactPerf');
+    ReactTestUtils = require('react-dom/test-utils');
     emptyFunction = require('fbjs/lib/emptyFunction');
 
     App = class extends React.Component {
@@ -64,16 +64,16 @@ describeStack('ReactPerf', () => {
       }
     };
 
-    LifeCycle = React.createClass({
-      shouldComponentUpdate: emptyFunction.thatReturnsTrue,
-      componentWillMount: emptyFunction,
-      componentDidMount: emptyFunction,
-      componentWillReceiveProps: emptyFunction,
-      componentWillUpdate: emptyFunction,
-      componentDidUpdate: emptyFunction,
-      componentWillUnmount: emptyFunction,
-      render: emptyFunction.thatReturnsNull,
-    });
+    LifeCycle = class extends React.Component {
+      shouldComponentUpdate = emptyFunction.thatReturnsTrue;
+      componentWillMount = emptyFunction;
+      componentDidMount = emptyFunction;
+      componentWillReceiveProps = emptyFunction;
+      componentWillUpdate = emptyFunction;
+      componentDidUpdate = emptyFunction;
+      componentWillUnmount = emptyFunction;
+      render = emptyFunction.thatReturnsNull;
+    };
   });
 
   afterEach(() => {
@@ -406,30 +406,30 @@ describeStack('ReactPerf', () => {
 
   it('warns once when using getMeasurementsSummaryMap', () => {
     var measurements = measure(() => {});
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     ReactPerf.getMeasurementsSummaryMap(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.getMeasurementsSummaryMap(...)` is deprecated. Use ' +
         '`ReactPerf.getWasted(...)` instead.',
     );
 
     ReactPerf.getMeasurementsSummaryMap(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.warn.calls.count()).toBe(1);
   });
 
   it('warns once when using printDOM', () => {
     var measurements = measure(() => {});
-    spyOn(console, 'error');
+    spyOn(console, 'warn');
     ReactPerf.printDOM(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toContain(
       '`ReactPerf.printDOM(...)` is deprecated. Use ' +
         '`ReactPerf.printOperations(...)` instead.',
     );
 
     ReactPerf.printDOM(measurements);
-    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.warn.calls.count()).toBe(1);
   });
 
   it('returns isRunning state', () => {

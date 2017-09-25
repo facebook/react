@@ -14,6 +14,7 @@
 // NOTE: We're explicitly not using JSX in this file. This is intended to test
 // classic JS without JSX.
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -28,14 +29,15 @@ describe('ReactElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
-    ComponentClass = React.createClass({
-      render: function() {
+    ReactTestUtils = require('react-dom/test-utils');
+    ComponentClass = class extends React.Component {
+      render() {
         return React.createElement('div');
-      },
-    });
+      }
+    };
   });
 
   it('warns for keys for arrays of elements in rest args', () => {
@@ -54,21 +56,19 @@ describe('ReactElementValidator', () => {
     spyOn(console, 'error');
     var Component = React.createFactory(ComponentClass);
 
-    var InnerClass = React.createClass({
-      displayName: 'InnerClass',
-      render: function() {
+    class InnerClass extends React.Component {
+      render() {
         return Component(null, this.props.childSet);
-      },
-    });
+      }
+    }
 
     var InnerComponent = React.createFactory(InnerClass);
 
-    var ComponentWrapper = React.createClass({
-      displayName: 'ComponentWrapper',
-      render: function() {
+    class ComponentWrapper extends React.Component {
+      render() {
         return InnerComponent({childSet: [Component(), Component()]});
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(React.createElement(ComponentWrapper));
 
@@ -83,12 +83,10 @@ describe('ReactElementValidator', () => {
   it('warns for keys for arrays with no owner or parent info', () => {
     spyOn(console, 'error');
 
-    var Anonymous = React.createClass({
-      displayName: undefined,
-      render: function() {
-        return <div />;
-      },
-    });
+    function Anonymous() {
+      return <div />;
+    }
+    Object.defineProperty(Anonymous, 'name', {value: undefined});
 
     var divs = [<div />, <div />];
     ReactTestUtils.renderIntoDocument(<Anonymous>{divs}</Anonymous>);
@@ -119,23 +117,17 @@ describe('ReactElementValidator', () => {
   it('warns for keys with component stack info', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      render: function() {
-        return <div>{[<div />, <div />]}</div>;
-      },
-    });
+    function Component() {
+      return <div>{[<div />, <div />]}</div>;
+    }
 
-    var Parent = React.createClass({
-      render: function() {
-        return React.cloneElement(this.props.child);
-      },
-    });
+    function Parent(props) {
+      return React.cloneElement(props.child);
+    }
 
-    var GrandParent = React.createClass({
-      render: function() {
-        return <Parent child={<Component />} />;
-      },
-    });
+    function GrandParent() {
+      return <Parent child={<Component />} />;
+    }
 
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
@@ -154,16 +146,14 @@ describe('ReactElementValidator', () => {
   it('does not warn for keys when passing children down', () => {
     spyOn(console, 'error');
 
-    var Wrapper = React.createClass({
-      render: function() {
-        return (
-          <div>
-            {this.props.children}
-            <footer />
-          </div>
-        );
-      },
-    });
+    function Wrapper(props) {
+      return (
+        <div>
+          {props.children}
+          <footer />
+        </div>
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(
       <Wrapper>
@@ -255,19 +245,15 @@ describe('ReactElementValidator', () => {
     // component, we give a small hint as to which parent instantiated that
     // component as per warnings about key usage in ReactElementValidator.
     spyOn(console, 'error');
-    var MyComp = React.createClass({
-      propTypes: {
-        color: React.PropTypes.string,
-      },
-      render: function() {
-        return React.createElement('div', null, 'My color is ' + this.color);
-      },
-    });
-    var ParentComp = React.createClass({
-      render: function() {
-        return React.createElement(MyComp, {color: 123});
-      },
-    });
+    function MyComp(props) {
+      return React.createElement('div', null, 'My color is ' + props.color);
+    }
+    MyComp.propTypes = {
+      color: PropTypes.string,
+    };
+    function ParentComp() {
+      return React.createElement(MyComp, {color: 123});
+    }
     ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: Failed prop type: ' +
@@ -325,11 +311,9 @@ describe('ReactElementValidator', () => {
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {
     spyOn(console, 'error');
-    var ParentComp = React.createClass({
-      render: function() {
-        return React.createElement(null);
-      },
-    });
+    function ParentComp() {
+      return React.createElement(null);
+    }
     expect(function() {
       ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     }).toThrowError(
@@ -349,15 +333,13 @@ describe('ReactElementValidator', () => {
   it('should check default prop values', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      propTypes: {prop: React.PropTypes.string.isRequired},
-      getDefaultProps: function() {
-        return {prop: null};
-      },
-      render: function() {
+    class Component extends React.Component {
+      static propTypes = {prop: PropTypes.string.isRequired};
+      static defaultProps = {prop: null};
+      render() {
         return React.createElement('span', null, this.props.prop);
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
 
@@ -372,15 +354,13 @@ describe('ReactElementValidator', () => {
   it('should not check the default for explicit null', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      propTypes: {prop: React.PropTypes.string.isRequired},
-      getDefaultProps: function() {
-        return {prop: 'text'};
-      },
-      render: function() {
+    class Component extends React.Component {
+      static propTypes = {prop: PropTypes.string.isRequired};
+      static defaultProps = {prop: 'text'};
+      render() {
         return React.createElement('span', null, this.props.prop);
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(
       React.createElement(Component, {prop: null}),
@@ -397,14 +377,14 @@ describe('ReactElementValidator', () => {
   it('should check declared prop types', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      propTypes: {
-        prop: React.PropTypes.string.isRequired,
-      },
-      render: function() {
+    class Component extends React.Component {
+      static propTypes = {
+        prop: PropTypes.string.isRequired,
+      };
+      render() {
         return React.createElement('span', null, this.props.prop);
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(React.createElement(Component));
     ReactTestUtils.renderIntoDocument(
@@ -437,14 +417,14 @@ describe('ReactElementValidator', () => {
   it('should warn if a PropType creator is used as a PropType', () => {
     spyOn(console, 'error');
 
-    var Component = React.createClass({
-      propTypes: {
-        myProp: React.PropTypes.shape,
-      },
-      render: function() {
+    class Component extends React.Component {
+      static propTypes = {
+        myProp: PropTypes.shape,
+      };
+      render() {
         return React.createElement('span', null, this.props.myProp.value);
-      },
-    });
+      }
+    }
 
     ReactTestUtils.renderIntoDocument(
       React.createElement(Component, {myProp: {value: 'hi'}}),
@@ -461,34 +441,32 @@ describe('ReactElementValidator', () => {
   });
 
   it('should warn when accessing .type on an element factory', () => {
-    spyOn(console, 'error');
-    var TestComponent = React.createClass({
-      render: function() {
-        return <div />;
-      },
-    });
+    spyOn(console, 'warn');
+    function TestComponent() {
+      return <div />;
+    }
     var TestFactory = React.createFactory(TestComponent);
     expect(TestFactory.type).toBe(TestComponent);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(console.warn.calls.count()).toBe(1);
+    expectDev(console.warn.calls.argsFor(0)[0]).toBe(
       'Warning: Factory.type is deprecated. Access the class directly before ' +
         'passing it to createFactory.',
     );
     // Warn once, not again
     expect(TestFactory.type).toBe(TestComponent);
-    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.warn.calls.count()).toBe(1);
   });
 
   it('does not warn when using DOM node as children', () => {
     spyOn(console, 'error');
-    var DOMContainer = React.createClass({
-      render: function() {
+    class DOMContainer extends React.Component {
+      render() {
         return <div />;
-      },
-      componentDidMount: function() {
+      }
+      componentDidMount() {
         ReactDOM.findDOMNode(this).appendChild(this.props.children);
-      },
-    });
+      }
+    }
 
     var node = document.createElement('div');
     // This shouldn't cause a stack overflow or any other problems (#3883)

@@ -11,6 +11,7 @@
 
 'use strict';
 
+var PropTypes;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -28,9 +29,10 @@ describe('ReactStatelessComponent', () => {
 
   beforeEach(() => {
     jest.resetModuleRegistry();
+    PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should render stateless component', () => {
@@ -68,7 +70,7 @@ describe('ReactStatelessComponent', () => {
   it('should pass context thru stateless component', () => {
     class Child extends React.Component {
       static contextTypes = {
-        test: React.PropTypes.string.isRequired,
+        test: PropTypes.string.isRequired,
       };
 
       render() {
@@ -82,7 +84,7 @@ describe('ReactStatelessComponent', () => {
 
     class GrandParent extends React.Component {
       static childContextTypes = {
-        test: React.PropTypes.string.isRequired,
+        test: PropTypes.string.isRequired,
       };
 
       getChildContext() {
@@ -111,7 +113,7 @@ describe('ReactStatelessComponent', () => {
     }
 
     StatelessComponentWithChildContext.childContextTypes = {
-      foo: React.PropTypes.string,
+      foo: PropTypes.string,
     };
 
     var container = document.createElement('div');
@@ -155,15 +157,17 @@ describe('ReactStatelessComponent', () => {
     });
   }
 
-  it('should throw when stateless component returns undefined', () => {
-    function NotAComponent() {}
-    expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
-    }).toThrowError(
-      'NotAComponent(...): A valid React element (or null) must be returned. ' +
-        'You may have returned undefined, an array or some other invalid object.',
-    );
-  });
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('should throw when stateless component returns undefined', () => {
+      function NotAComponent() {}
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+      }).toThrowError(
+        'NotAComponent(...): Nothing was returned from render. ' +
+          'This usually means a return statement is missing. Or, to render nothing, return null.',
+      );
+    });
+  }
 
   it('should throw on string refs in pure functions', () => {
     function Child() {
@@ -249,15 +253,14 @@ describe('ReactStatelessComponent', () => {
   it('deduplicates ref warnings based on element or owner', () => {
     spyOn(console, 'error');
 
-    // Prevent the Babel transform adding a displayName.
-    var createClassWithoutDisplayName = React.createClass;
-
     // When owner uses JSX, we can use exact line location to dedupe warnings
-    var AnonymousParentUsingJSX = createClassWithoutDisplayName({
+    class AnonymousParentUsingJSX extends React.Component {
       render() {
         return <StatelessComponent name="A" ref={() => {}} />;
-      },
-    });
+      }
+    }
+    Object.defineProperty(AnonymousParentUsingJSX, 'name', {value: undefined});
+
     const instance1 = ReactTestUtils.renderIntoDocument(
       <AnonymousParentUsingJSX />,
     );
@@ -273,14 +276,18 @@ describe('ReactStatelessComponent', () => {
     console.error.calls.reset();
 
     // When owner doesn't use JSX, and is anonymous, we warn once per internal instance.
-    var AnonymousParentNotUsingJSX = createClassWithoutDisplayName({
+    class AnonymousParentNotUsingJSX extends React.Component {
       render() {
         return React.createElement(StatelessComponent, {
           name: 'A',
           ref: () => {},
         });
-      },
+      }
+    }
+    Object.defineProperty(AnonymousParentNotUsingJSX, 'name', {
+      value: undefined,
     });
+
     const instance2 = ReactTestUtils.renderIntoDocument(
       <AnonymousParentNotUsingJSX />,
     );
@@ -352,7 +359,7 @@ describe('ReactStatelessComponent', () => {
       return <div>{props.test}</div>;
     }
     Child.defaultProps = {test: 2};
-    Child.propTypes = {test: React.PropTypes.string};
+    Child.propTypes = {test: PropTypes.string};
 
     spyOn(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
@@ -369,7 +376,7 @@ describe('ReactStatelessComponent', () => {
   it('should receive context', () => {
     class Parent extends React.Component {
       static childContextTypes = {
-        lang: React.PropTypes.string,
+        lang: PropTypes.string,
       };
 
       getChildContext() {
@@ -384,7 +391,7 @@ describe('ReactStatelessComponent', () => {
     function Child(props, context) {
       return <div>{context.lang}</div>;
     }
-    Child.contextTypes = {lang: React.PropTypes.string};
+    Child.contextTypes = {lang: PropTypes.string};
 
     var el = document.createElement('div');
     ReactDOM.render(<Parent />, el);

@@ -34,10 +34,12 @@ var MouseEventInterface = {
   button: null,
   buttons: null,
   relatedTarget: function(event) {
-    return event.relatedTarget ||
+    return (
+      event.relatedTarget ||
       (event.fromElement === event.srcElement
         ? event.toElement
-        : event.fromElement);
+        : event.fromElement)
+    );
   },
 };
 

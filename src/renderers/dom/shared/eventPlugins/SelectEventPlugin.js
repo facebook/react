@@ -17,12 +17,14 @@ var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
+var {DOCUMENT_NODE} = require('HTMLNodeType');
 
 var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('isTextInputElement');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 
-var skipSelectionChangeEvent = ExecutionEnvironment.canUseDOM &&
+var skipSelectionChangeEvent =
+  ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
   document.documentMode <= 11;
 
@@ -52,7 +54,8 @@ var mouseDown = false;
 
 // Track whether all listeners exists for this plugin. If none exist, we do
 // not extract events. See #3639.
-var isListeningToAllDependencies = ReactBrowserEventEmitter.isListeningToAllDependencies;
+var isListeningToAllDependencies =
+  ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -95,7 +98,9 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
   if (
-    mouseDown || activeElement == null || activeElement !== getActiveElement()
+    mouseDown ||
+    activeElement == null ||
+    activeElement !== getActiveElement()
   ) {
     return null;
   }
@@ -148,7 +153,7 @@ var SelectEventPlugin = {
   ) {
     var doc = nativeEventTarget.window === nativeEventTarget
       ? nativeEventTarget.document
-      : nativeEventTarget.nodeType === 9
+      : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
@@ -176,7 +181,6 @@ var SelectEventPlugin = {
         activeElementInst = null;
         lastSelection = null;
         break;
-
       // Don't fire the event while the user is dragging. This matches the
       // semantics of the native select event.
       case 'topMouseDown':
@@ -186,7 +190,6 @@ var SelectEventPlugin = {
       case 'topMouseUp':
         mouseDown = false;
         return constructSelectEvent(nativeEvent, nativeEventTarget);
-
       // Chrome and IE fire non-standard event when selection is changed (and
       // sometimes when it hasn't). IE's event fires out of order with respect
       // to key and input events on deletion, so we discard it.

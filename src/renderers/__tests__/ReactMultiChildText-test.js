@@ -14,7 +14,7 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 // Helpers
 var testAllPermutations = function(testCases) {
@@ -191,10 +191,20 @@ describe('ReactMultiChildText', () => {
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.',
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      expectDev(console.error.calls.count()).toBe(2);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+      expectDev(console.error.calls.argsFor(1)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+    } else {
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+    }
   });
 
   it('should throw if rendering both HTML and children', () => {

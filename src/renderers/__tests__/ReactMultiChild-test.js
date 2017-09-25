@@ -35,14 +35,14 @@ describe('ReactMultiChild', () => {
       var mockUpdate = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentDidUpdate: mockUpdate,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentDidUpdate = mockUpdate;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUpdate.mock.calls.length).toBe(0);
@@ -67,13 +67,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -95,13 +95,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       class WrapperComponent extends React.Component {
         render() {
@@ -132,13 +132,13 @@ describe('ReactMultiChild', () => {
       var mockMount = jest.fn();
       var mockUnmount = jest.fn();
 
-      var MockComponent = React.createClass({
-        componentDidMount: mockMount,
-        componentWillUnmount: mockUnmount,
-        render: function() {
+      class MockComponent extends React.Component {
+        componentDidMount = mockMount;
+        componentWillUnmount = mockUnmount;
+        render() {
           return <span />;
-        },
-      });
+        }
+      }
 
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
@@ -189,9 +189,11 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'Child keys must be unique; when two children share a key, ' +
-          'only the first child will be used.\n' +
-          '    in div (at **)\n' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.',
+        '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -254,9 +256,11 @@ describe('ReactMultiChild', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toContain(
         'Encountered two children with the same key, `1`. ' +
-          'Child keys must be unique; when two children share a key, ' +
-          'only the first child will be used.\n' +
-          '    in div (at **)\n' +
+          'Keys should be unique so that components maintain their identity ' +
+          'across updates. Non-unique keys may cause children to be ' +
+          'duplicated and/or omitted — the behavior is unsupported and ' +
+          'could change in a future version.',
+        '    in div (at **)\n' +
           '    in WrapperComponent (at **)\n' +
           '    in div (at **)\n' +
           '    in Parent (at **)',
@@ -274,10 +278,13 @@ describe('ReactMultiChild', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Parent />, container);
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: Using Maps as children is unsupported and will likely yield ' +
         'unexpected results. Convert it to a sequence/iterable of keyed ' +
-        'ReactElements instead.\n\nCheck the render method of `Parent`.',
+        'ReactElements instead.\n' +
+        // Fiber gives a slightly better stack with the nearest host components
+        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in Parent (at **)',
     );
   });
 

@@ -7,7 +7,7 @@ React reconciliation process appears to be very well suited to implement a text 
 
 ## Khan Academy
 
-[Ben Kamens](http://bjk5.com/) explains how [Ben Alpert](http://benalpert.com/) and [Joel Burget](http://joelburget.com/) are promoting React inside of [Khan Academy](https://www.khanacademy.org/). They now have three projects in the works using React.
+[Ben Kamens](http://bjk5.com/) explains how [Sophie Alpert](http://sophiebits.com/) and [Joel Burget](http://joelburget.com/) are promoting React inside of [Khan Academy](https://www.khanacademy.org/). They now have three projects in the works using React.
 
 > Recently two Khan Academy devs dropped into our team chat and said they were gonna use React to write a new feature. They even hinted that we may want to adopt it product-wide.
 >
@@ -53,5 +53,5 @@ Over the past several weeks, members of our team, [Pete Hunt](http://www.petehun
 
 [Tom Occhino](http://tomocchino.com/) implemented Snake in 150 lines with React.
 
-> [Check the source on Github](https://github.com/tomocchino/react-snake/blob/master/src/snake.js)
+> [Check the source on GitHub](https://github.com/tomocchino/react-snake/blob/master/src/snake.js)
 > <figure>[![](/react/img/blog/snake.png)](https://tomocchino.github.io/react-snake/)</figure>

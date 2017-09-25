@@ -1,0 +1,21 @@
+{
+  "name": "react-benchmark",
+  "version": "0.0.1",
+  "main": "runner.js",
+  "scripts": {
+    "start": "node runner.js"
+  },
+  "dependencies": {
+    "chalk": "^2.1.0",
+    "cli-table": "^0.3.1",
+    "http-server": "^0.10.0",
+    "http2": "^3.3.6",
+    "lighthouse": "^2.3.0",
+    "mime": "^1.3.6",
+    "minimist": "^1.2.0",
+    "ncp": "^2.0.0",
+    "nodegit": "^0.18.3",
+    "rimraf": "^2.6.1",
+    "stats-analysis": "^2.0.0"
+  }
+}

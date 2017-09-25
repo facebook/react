@@ -7,6 +7,7 @@ static
 _SpecRunner.html
 __benchmarks__
 build/
+remote-repo/
 coverage/
 .module-cache
 *.gem
@@ -27,3 +28,7 @@ chrome-user-data
 .idea
 *.iml
 .vscode
+*.swp
+*.swo
+*react*min*.js
+!src/node_modules

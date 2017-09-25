@@ -13,7 +13,6 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -21,9 +20,7 @@ describe('ReactTopLevelText', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
+    ReactNoop = require('react-noop-renderer');
   });
 
   it('should render a component returning strings directly from render', () => {

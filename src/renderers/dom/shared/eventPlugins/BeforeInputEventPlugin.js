@@ -17,13 +17,13 @@ var FallbackCompositionState = require('FallbackCompositionState');
 var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
 var SyntheticInputEvent = require('SyntheticInputEvent');
 
-import type {TopLevelTypes} from 'EventConstants';
+import type {TopLevelTypes} from 'BrowserEventConstants';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
 
-var canUseCompositionEvent = ExecutionEnvironment.canUseDOM &&
-  'CompositionEvent' in window;
+var canUseCompositionEvent =
+  ExecutionEnvironment.canUseDOM && 'CompositionEvent' in window;
 
 var documentMode = null;
 if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
@@ -33,7 +33,8 @@ if (ExecutionEnvironment.canUseDOM && 'documentMode' in document) {
 // Webkit offers a very useful `textInput` event that can be used to
 // directly represent `beforeInput`. The IE `textinput` event is not as
 // useful, so we don't use it.
-var canUseTextInputEvent = ExecutionEnvironment.canUseDOM &&
+var canUseTextInputEvent =
+  ExecutionEnvironment.canUseDOM &&
   'TextEvent' in window &&
   !documentMode &&
   !isPresto();
@@ -41,7 +42,8 @@ var canUseTextInputEvent = ExecutionEnvironment.canUseDOM &&
 // In IE9+, we have access to composition events, but the data supplied
 // by the native compositionend event may be incorrect. Japanese ideographic
 // spaces, for instance (\u3000) are not recorded correctly.
-var useFallbackCompositionData = ExecutionEnvironment.canUseDOM &&
+var useFallbackCompositionData =
+  ExecutionEnvironment.canUseDOM &&
   (!canUseCompositionEvent ||
     (documentMode && documentMode > 8 && documentMode <= 11));
 
@@ -51,9 +53,11 @@ var useFallbackCompositionData = ExecutionEnvironment.canUseDOM &&
  */
 function isPresto() {
   var opera = window.opera;
-  return typeof opera === 'object' &&
+  return (
+    typeof opera === 'object' &&
     typeof opera.version === 'function' &&
-    parseInt(opera.version(), 10) <= 12;
+    parseInt(opera.version(), 10) <= 12
+  );
 }
 
 var SPACEBAR_CODE = 32;
@@ -126,9 +130,11 @@ var hasSpaceKeypress = false;
  * (cut, copy, select-all, etc.) even though no character is inserted.
  */
 function isKeypressCommand(nativeEvent) {
-  return (nativeEvent.ctrlKey || nativeEvent.altKey || nativeEvent.metaKey) &&
+  return (
+    (nativeEvent.ctrlKey || nativeEvent.altKey || nativeEvent.metaKey) &&
     // ctrlKey && altKey is equivalent to AltGr, and is not a command.
-    !(nativeEvent.ctrlKey && nativeEvent.altKey);
+    !(nativeEvent.ctrlKey && nativeEvent.altKey)
+  );
 }
 
 /**
@@ -203,8 +209,8 @@ function getDataFromCustomEvent(nativeEvent) {
   return null;
 }
 
-// Track the current IME composition fallback object, if any.
-var currentComposition = null;
+// Track the current IME composition status, if any.
+var isComposing = false;
 
 /**
  * @return {?object} A SyntheticCompositionEvent.
@@ -220,7 +226,7 @@ function extractCompositionEvent(
 
   if (canUseCompositionEvent) {
     eventType = getCompositionEventType(topLevelType);
-  } else if (!currentComposition) {
+  } else if (!isComposing) {
     if (isFallbackCompositionStart(topLevelType, nativeEvent)) {
       eventType = eventTypes.compositionStart;
     }
@@ -235,13 +241,11 @@ function extractCompositionEvent(
   if (useFallbackCompositionData) {
     // The current composition is stored statically and must not be
     // overwritten while composition continues.
-    if (!currentComposition && eventType === eventTypes.compositionStart) {
-      currentComposition = FallbackCompositionState.getPooled(
-        nativeEventTarget,
-      );
+    if (!isComposing && eventType === eventTypes.compositionStart) {
+      isComposing = FallbackCompositionState.initialize(nativeEventTarget);
     } else if (eventType === eventTypes.compositionEnd) {
-      if (currentComposition) {
-        fallbackData = currentComposition.getData();
+      if (isComposing) {
+        fallbackData = FallbackCompositionState.getData();
       }
     }
   }
@@ -269,7 +273,7 @@ function extractCompositionEvent(
 }
 
 /**
- * @param {string} topLevelType Record from `EventConstants`.
+ * @param {TopLevelTypes} topLevelType Record from `BrowserEventConstants`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The string corresponding to this `beforeInput` event.
  */
@@ -323,7 +327,7 @@ function getNativeBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
  * For browsers that do not provide the `textInput` event, extract the
  * appropriate string to use for SyntheticInputEvent.
  *
- * @param {string} topLevelType Record from `EventConstants`.
+ * @param {string} topLevelType Record from `BrowserEventConstants`.
  * @param {object} nativeEvent Native browser event.
  * @return {?string} The fallback string for this `beforeInput` event.
  */
@@ -332,15 +336,15 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
   // try to extract the composed characters from the fallback object.
   // If composition event is available, we extract a string only at
   // compositionevent, otherwise extract it at fallback events.
-  if (currentComposition) {
+  if (isComposing) {
     if (
       topLevelType === 'topCompositionEnd' ||
       (!canUseCompositionEvent &&
         isFallbackCompositionEnd(topLevelType, nativeEvent))
     ) {
-      var chars = currentComposition.getData();
-      FallbackCompositionState.release(currentComposition);
-      currentComposition = null;
+      var chars = FallbackCompositionState.getData();
+      FallbackCompositionState.reset();
+      isComposing = false;
       return chars;
     }
     return null;
@@ -368,8 +372,18 @@ function getFallbackBeforeInputChars(topLevelType: TopLevelTypes, nativeEvent) {
        *   being used. Ex: `Cmd+C`. No character is inserted, and no
        *   `input` event will occur.
        */
-      if (nativeEvent.which && !isKeypressCommand(nativeEvent)) {
-        return String.fromCharCode(nativeEvent.which);
+      if (!isKeypressCommand(nativeEvent)) {
+        // IE fires the `keypress` event when a user types an emoji via
+        // Touch keyboard of Windows.  In such a case, the `char` property
+        // holds an emoji character like `\uD83D\uDE0A`.  Because its length
+        // is 2, the property `which` does not represent an emoji correctly.
+        // In such a case, we directly return the `char` property instead of
+        // using `which`.
+        if (nativeEvent.char && nativeEvent.char.length > 1) {
+          return nativeEvent.char;
+        } else if (nativeEvent.which) {
+          return String.fromCharCode(nativeEvent.which);
+        }
       }
       return null;
     case 'topCompositionEnd':

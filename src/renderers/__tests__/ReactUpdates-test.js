@@ -21,7 +21,7 @@ describe('ReactUpdates', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should batch state when updating state twice', () => {
@@ -391,30 +391,23 @@ describe('ReactUpdates', () => {
       },
     };
 
-    var Box = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class Box extends React.Component {
+      render() {
         return <div ref="boxDiv">{this.props.children}</div>;
-      },
-    });
+      }
+    }
+    Object.assign(Box.prototype, UpdateLoggingMixin);
 
-    var Child = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class Child extends React.Component {
+      render() {
         return <span ref="span">child</span>;
-      },
-    });
+      }
+    }
+    Object.assign(Child.prototype, UpdateLoggingMixin);
 
-    var Switcher = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      getInitialState: function() {
-        return {tabKey: 'hello'};
-      },
-
-      render: function() {
+    class Switcher extends React.Component {
+      state = {tabKey: 'hello'};
+      render() {
         var child = this.props.children;
 
         return (
@@ -428,20 +421,20 @@ describe('ReactUpdates', () => {
             </div>
           </Box>
         );
-      },
-    });
+      }
+    }
+    Object.assign(Switcher.prototype, UpdateLoggingMixin);
 
-    var App = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class App extends React.Component {
+      render() {
         return (
           <Switcher ref="switcher">
             <Child key="hello" ref="child" />
           </Switcher>
         );
-      },
-    });
+      }
+    }
+    Object.assign(App.prototype, UpdateLoggingMixin);
 
     var root = <App />;
     root = ReactTestUtils.renderIntoDocument(root);
@@ -529,10 +522,7 @@ describe('ReactUpdates', () => {
         var portal = null;
         // If we're using Fiber, we use Portals instead to achieve this.
         if (ReactDOMFeatureFlags.useFiber) {
-          portal = ReactDOM.unstable_createPortal(
-            <B ref={n => b = n} />,
-            bContainer,
-          );
+          portal = ReactDOM.createPortal(<B ref={n => (b = n)} />, bContainer);
         }
         return <div>A{this.state.x}{portal}</div>;
       }
@@ -548,7 +538,7 @@ describe('ReactUpdates', () => {
 
     a = ReactTestUtils.renderIntoDocument(<A />);
     if (!ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.render(<B ref={n => b = n} />, bContainer);
+      ReactDOM.render(<B ref={n => (b = n)} />, bContainer);
     }
 
     ReactDOM.unstable_batchedUpdates(function() {
@@ -832,40 +822,6 @@ describe('ReactUpdates', () => {
     expect(renderCount).toBe(1);
   });
 
-  it('marks top-level updates', () => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
-
-    class Foo extends React.Component {
-      render() {
-        return <Bar />;
-      }
-    }
-
-    class Bar extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-
-    var container = document.createElement('div');
-    ReactDOM.render(<Foo />, container);
-
-    try {
-      ReactFeatureFlags.logTopLevelRenders = true;
-      spyOn(console, 'time');
-      spyOn(console, 'timeEnd');
-
-      ReactDOM.render(<Foo />, container);
-
-      expect(console.time.calls.count()).toBe(1);
-      expect(console.time.calls.argsFor(0)[0]).toBe('React update: Foo');
-      expect(console.timeEnd.calls.count()).toBe(1);
-      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React update: Foo');
-    } finally {
-      ReactFeatureFlags.logTopLevelRenders = false;
-    }
-  });
-
   it('throws in setState if the update callback is not a function', () => {
     spyOn(console, 'error');
 
@@ -908,52 +864,6 @@ describe('ReactUpdates', () => {
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
-  });
-
-  it('throws in replaceState if the update callback is not a function', () => {
-    spyOn(console, 'error');
-
-    function Foo() {
-      this.a = 1;
-      this.b = 2;
-    }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    var component = ReactTestUtils.renderIntoDocument(<A />);
-
-    expect(() => component.replaceState({}, 'no')).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: no',
-    );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.replaceState({}, {foo: 'bar'})).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
-    );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.replaceState({}, new Foo())).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: [object Object]',
-    );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
         'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
@@ -1225,4 +1135,80 @@ describe('ReactUpdates', () => {
     ReactDOM.render(<Foo />, container);
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
   });
+
+  it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
+    class Foo extends React.Component {
+      componentDidMount() {
+        const limit = 1200;
+        for (let i = 0; i < limit; i++) {
+          if (i < limit - 1) {
+            ReactDOM.render(<div />, document.createElement('div'));
+          } else {
+            ReactDOM.render(<div />, document.createElement('div'), () => {
+              // The "nested update limit" error isn't thrown until setState
+              this.setState({});
+            });
+          }
+        }
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+  });
+
+  it('does not fall into an infinite update loop', () => {
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentWillUpdate() {
+        this.setState({step: 2});
+      }
+      render() {
+        return <div>Hello {this.props.name}{this.state.step}</div>;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
+
+  if (ReactDOMFeatureFlags.useFiber) {
+    it('does not fall into an infinite error loop', () => {
+      function BadRender() {
+        throw new Error('error');
+      }
+
+      class ErrorBoundary extends React.Component {
+        componentDidCatch() {
+          this.props.parent.remount();
+        }
+        render() {
+          return <BadRender />;
+        }
+      }
+
+      class NonTerminating extends React.Component {
+        state = {step: 0};
+        remount() {
+          this.setState(state => ({step: state.step + 1}));
+        }
+        render() {
+          return <ErrorBoundary key={this.state.step} parent={this} />;
+        }
+      }
+
+      const container = document.createElement('div');
+      expect(() => {
+        ReactDOM.render(<NonTerminating />, container);
+      }).toThrow('Maximum');
+    });
+  }
 });

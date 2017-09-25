@@ -9,14 +9,13 @@
  * @providesModule ReactDOMComponent
  */
 
-/* global hasOwnProperty:true */
-
 'use strict';
 
 var AutoFocusUtils = require('AutoFocusUtils');
 var CSSPropertyOperations = require('CSSPropertyOperations');
 var DOMLazyTree = require('DOMLazyTree');
-var DOMNamespaces = require('DOMNamespaces');
+var Namespaces = require('DOMNamespaces').Namespaces;
+var DOMMarkupOperations = require('DOMMarkupOperations');
 var DOMProperty = require('DOMProperty');
 var DOMPropertyOperations = require('DOMPropertyOperations');
 var EventPluginRegistry = require('EventPluginRegistry');
@@ -30,13 +29,25 @@ var ReactDOMTextarea = require('ReactDOMTextarea');
 var ReactInstrumentation = require('ReactInstrumentation');
 var ReactMultiChild = require('ReactMultiChild');
 var ReactServerRenderingTransaction = require('ReactServerRenderingTransaction');
+var {DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
 
+var dangerousStyleValue = require('dangerousStyleValue');
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var invariant = require('fbjs/lib/invariant');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
 var inputValueTracking = require('inputValueTracking');
+var invariant = require('fbjs/lib/invariant');
+var isCustomComponent = require('isCustomComponent');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+var omittedCloseTags = require('omittedCloseTags');
 var validateDOMNesting = require('validateDOMNesting');
-var warning = require('fbjs/lib/warning');
+var voidElementTags = require('voidElementTags');
+var warnValidStyle = require('warnValidStyle');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
+
 var didWarnShadyDOM = false;
 
 var Flags = ReactDOMComponentFlags;
@@ -49,14 +60,6 @@ var CONTENT_TYPES = {string: true, number: true};
 
 var STYLE = 'style';
 var HTML = '__html';
-var RESERVED_PROPS = {
-  children: null,
-  dangerouslySetInnerHTML: null,
-  suppressContentEditableWarning: null,
-};
-
-// Node type for document fragments (Node.DOCUMENT_FRAGMENT_NODE).
-var DOC_FRAGMENT_TYPE = 11;
 
 function getDeclarationErrorAddendum(internalInstance) {
   if (internalInstance) {
@@ -104,11 +107,6 @@ function assertValidProps(component, props) {
   }
   if (__DEV__) {
     warning(
-      props.innerHTML == null,
-      'Directly setting property `innerHTML` is not permitted. ' +
-        'For more information, lookup documentation on `dangerouslySetInnerHTML`.',
-    );
-    warning(
       props.suppressContentEditableWarning ||
         !props.contentEditable ||
         props.children == null,
@@ -116,12 +114,6 @@ function assertValidProps(component, props) {
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
         'probably not intentional.',
-    );
-    warning(
-      props.onFocusIn == null && props.onFocusOut == null,
-      'React uses onFocus and onBlur instead of onFocusIn and onFocusOut. ' +
-        'All React events are normalized to bubble, so onFocusIn and onFocusOut ' +
-        'are not needed/supported by React.',
     );
   }
   invariant(
@@ -138,8 +130,9 @@ function ensureListeningTo(inst, registrationName, transaction) {
     return;
   }
   var containerInfo = inst._hostContainerInfo;
-  var isDocumentFragment = containerInfo._node &&
-    containerInfo._node.nodeType === DOC_FRAGMENT_TYPE;
+  var isDocumentFragment =
+    containerInfo._node &&
+    containerInfo._node.nodeType === DOCUMENT_FRAGMENT_NODE;
   var doc = isDocumentFragment
     ? containerInfo._node
     : containerInfo._ownerDocument;
@@ -159,6 +152,38 @@ function textareaPostMount() {
 function optionPostMount() {
   var inst = this;
   ReactDOMOption.postMountWrapper(inst);
+}
+
+var processStyleName = memoizeStringOnly(function(styleName) {
+  return hyphenateStyleName(styleName);
+});
+
+function createMarkupForStyles(styles, component) {
+  var serialized = '';
+  var delimiter = '';
+  for (var styleName in styles) {
+    if (!styles.hasOwnProperty(styleName)) {
+      continue;
+    }
+    var isCustomProperty = styleName.indexOf('--') === 0;
+    var styleValue = styles[styleName];
+    if (__DEV__) {
+      if (!isCustomProperty) {
+        warnValidStyle(styleName, styleValue, component);
+      }
+    }
+    if (styleValue != null) {
+      serialized += delimiter + processStyleName(styleName) + ':';
+      serialized += dangerousStyleValue(
+        styleName,
+        styleValue,
+        isCustomProperty,
+      );
+
+      delimiter = ';';
+    }
+  }
+  return serialized || null;
 }
 
 var setAndValidateContentChildDev = emptyFunction;
@@ -226,7 +251,7 @@ var mediaEvents = {
 };
 
 function trackInputValue() {
-  inputValueTracking.track(this);
+  inputValueTracking.track(getNode(this));
 }
 
 function trapClickOnNonInteractiveElement() {
@@ -315,43 +340,11 @@ function postUpdateSelectWrapper() {
   ReactDOMSelect.postUpdateWrapper(this);
 }
 
-// For HTML, certain tags should omit their close tag. We keep a whitelist for
-// those special-case tags.
-
-var omittedCloseTags = {
-  area: true,
-  base: true,
-  br: true,
-  col: true,
-  embed: true,
-  hr: true,
-  img: true,
-  input: true,
-  keygen: true,
-  link: true,
-  meta: true,
-  param: true,
-  source: true,
-  track: true,
-  wbr: true,
-  // NOTE: menuitem's close tag should be omitted, but that causes problems.
-};
-
 var newlineEatingTags = {
   listing: true,
   pre: true,
   textarea: true,
 };
-
-// For HTML, certain tags cannot have children. This has the same purpose as
-// `omittedCloseTags` except that `menuitem` should still have its closing tag.
-
-var voidElementTags = Object.assign(
-  {
-    menuitem: true,
-  },
-  omittedCloseTags,
-);
 
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
@@ -359,20 +352,22 @@ var voidElementTags = Object.assign(
 
 var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
 var validatedTagCache = {};
-var hasOwnProperty = {}.hasOwnProperty;
 
 function validateDangerousTag(tag) {
-  if (!hasOwnProperty.call(validatedTagCache, tag)) {
+  if (!validatedTagCache.hasOwnProperty(tag)) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
     validatedTagCache[tag] = true;
   }
 }
 
-function isCustomComponent(tagName, props) {
-  return tagName.indexOf('-') >= 0 || props.is != null;
-}
-
 var globalIdCounter = 1;
+var warnedUnknownTags = {
+  // Chrome is the only major browser not shipping <time>. But as of July
+  // 2017 it intends to ship it due to widespread usage. We intentionally
+  // *don't* warn for <time> even if it's unrecognized by Chrome because
+  // it soon will be, and many apps have been using it anyway.
+  time: true,
+};
 
 /**
  * Creates a new React class that is idempotent and capable of containing other
@@ -498,24 +493,26 @@ ReactDOMComponent.Mixin = {
     }
     if (
       namespaceURI == null ||
-      (namespaceURI === DOMNamespaces.svg && parentTag === 'foreignobject')
+      (namespaceURI === Namespaces.svg && parentTag === 'foreignobject')
     ) {
-      namespaceURI = DOMNamespaces.html;
+      namespaceURI = Namespaces.html;
     }
-    if (namespaceURI === DOMNamespaces.html) {
+    if (__DEV__) {
+      var isCustomComponentTag = isCustomComponent(this._tag, props);
+    }
+    if (namespaceURI === Namespaces.html) {
       if (__DEV__) {
         warning(
-          isCustomComponent(this._tag, props) ||
-            this._tag === this._currentElement.type,
+          isCustomComponentTag || this._tag === this._currentElement.type,
           '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
             'in React.',
           this._currentElement.type,
         );
       }
       if (this._tag === 'svg') {
-        namespaceURI = DOMNamespaces.svg;
+        namespaceURI = Namespaces.svg;
       } else if (this._tag === 'math') {
-        namespaceURI = DOMNamespaces.mathml;
+        namespaceURI = Namespaces.mathml;
       }
     }
     this._namespaceURI = namespaceURI;
@@ -544,15 +541,15 @@ ReactDOMComponent.Mixin = {
     if (transaction.useCreateElement) {
       var ownerDocument = hostContainerInfo._ownerDocument;
       var el;
-      if (namespaceURI === DOMNamespaces.html) {
+      if (namespaceURI === Namespaces.html) {
         if (this._tag === 'script') {
           // Create the script via .innerHTML so its "parser-inserted" flag is
           // set to true and it does not execute
           var div = ownerDocument.createElement('div');
           div.innerHTML = `<${type}></${type}>`;
           el = div.removeChild(div.firstChild);
-        } else if (props.is) {
-          el = ownerDocument.createElement(type, props.is);
+        } else if (typeof props.is === 'string') {
+          el = ownerDocument.createElement(type, {is: props.is});
         } else {
           // Separate else branch instead of using `props.is || undefined` above because of a Firefox bug.
           // See discussion in https://github.com/facebook/react/pull/6896
@@ -562,17 +559,35 @@ ReactDOMComponent.Mixin = {
       } else {
         el = ownerDocument.createElementNS(namespaceURI, type);
       }
-      var isCustomComponentTag = isCustomComponent(this._tag, props);
-      if (__DEV__ && isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
-        var owner = this._currentElement._owner;
-        var name = (owner && owner.getName()) || 'A component';
-        warning(
-          false,
-          '%s is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-          name,
-        );
-        didWarnShadyDOM = true;
+      if (__DEV__) {
+        if (isCustomComponentTag && !didWarnShadyDOM && el.shadyRoot) {
+          var owner = this._currentElement._owner;
+          var name = (owner && owner.getName()) || 'A component';
+          warning(
+            false,
+            '%s is using shady DOM. Using shady DOM with React can ' +
+              'cause things to break subtly.',
+            name,
+          );
+          didWarnShadyDOM = true;
+        }
+        if (this._namespaceURI === Namespaces.html) {
+          if (
+            !isCustomComponentTag &&
+            Object.prototype.toString.call(el) ===
+              '[object HTMLUnknownElement]' &&
+            !Object.prototype.hasOwnProperty.call(warnedUnknownTags, this._tag)
+          ) {
+            warnedUnknownTags[this._tag] = true;
+            warning(
+              false,
+              'The tag <%s> is unrecognized in this browser. ' +
+                'If you meant to render a React component, start its name with ' +
+                'an uppercase letter.',
+              this._tag,
+            );
+          }
+        }
       }
       ReactDOMComponentTree.precacheNode(this, el);
       this._flags |= Flags.hasCachedChildNodes;
@@ -678,21 +693,18 @@ ReactDOMComponent.Mixin = {
               Object.freeze(propValue);
             }
           }
-          propValue = CSSPropertyOperations.createMarkupForStyles(
-            propValue,
-            this,
-          );
+          propValue = createMarkupForStyles(propValue, this);
         }
         var markup = null;
         if (this._tag != null && isCustomComponent(this._tag, props)) {
-          if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-            markup = DOMPropertyOperations.createMarkupForCustomAttribute(
+          if (!DOMProperty.isReservedProp(propKey)) {
+            markup = DOMMarkupOperations.createMarkupForCustomAttribute(
               propKey,
               propValue,
             );
           }
         } else {
-          markup = DOMPropertyOperations.createMarkupForProperty(
+          markup = DOMMarkupOperations.createMarkupForProperty(
             propKey,
             propValue,
           );
@@ -710,9 +722,9 @@ ReactDOMComponent.Mixin = {
     }
 
     if (!this._hostParent) {
-      ret += ' ' + DOMPropertyOperations.createMarkupForRoot();
+      ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
     }
-    ret += ' ' + DOMPropertyOperations.createMarkupForID(this._domID);
+    ret += ' ' + DOMMarkupOperations.createMarkupForID(this._domID);
     return ret;
   },
 
@@ -882,6 +894,9 @@ ReactDOMComponent.Mixin = {
         // happen after `_updateDOMProperties`. Otherwise HTML5 input validations
         // raise warnings and prevent the new value from being assigned.
         ReactDOMInput.updateWrapper(this);
+        // We also check that we haven't missed a value update, such as a
+        // Radio group shifting the checked value to another named radio input.
+        inputValueTracking.updateValueIfChanged(getNode(this));
         break;
       case 'textarea':
         ReactDOMTextarea.updateWrapper(this);
@@ -937,15 +952,12 @@ ReactDOMComponent.Mixin = {
         }
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // Do nothing for event names.
-      } else if (isCustomComponent(this._tag, lastProps)) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
+        if (isCustomComponent(this._tag, lastProps)) {
           DOMPropertyOperations.deleteValueForAttribute(getNode(this), propKey);
+        } else {
+          DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
-        DOMPropertyOperations.deleteValueForProperty(getNode(this), propKey);
       }
     }
     for (propKey in nextProps) {
@@ -994,17 +1006,14 @@ ReactDOMComponent.Mixin = {
           ensureListeningTo(this, propKey, transaction);
         }
       } else if (isCustomComponentTag) {
-        if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
+        if (!DOMProperty.isReservedProp(propKey)) {
           DOMPropertyOperations.setValueForAttribute(
             getNode(this),
             propKey,
             nextProp,
           );
         }
-      } else if (
-        DOMProperty.properties[propKey] ||
-        DOMProperty.isCustomAttribute(propKey)
-      ) {
+      } else if (!DOMProperty.isReservedProp(propKey)) {
         var node = getNode(this);
         // If we're updating to null or undefined, we should remove the property
         // from the DOM node instead of inadvertently setting to a string. This
@@ -1049,9 +1058,11 @@ ReactDOMComponent.Mixin = {
       ? nextProps.children
       : null;
 
-    var lastHtml = lastProps.dangerouslySetInnerHTML &&
+    var lastHtml =
+      lastProps.dangerouslySetInnerHTML &&
       lastProps.dangerouslySetInnerHTML.__html;
-    var nextHtml = nextProps.dangerouslySetInnerHTML &&
+    var nextHtml =
+      nextProps.dangerouslySetInnerHTML &&
       nextProps.dangerouslySetInnerHTML.__html;
 
     // Note the use of `!=` which checks for null or undefined.
@@ -1124,7 +1135,7 @@ ReactDOMComponent.Mixin = {
         break;
       case 'input':
       case 'textarea':
-        inputValueTracking.stopTracking(this);
+        inputValueTracking.stopTracking(getNode(this));
         break;
       case 'html':
       case 'head':

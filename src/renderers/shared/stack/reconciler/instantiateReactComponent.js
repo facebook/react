@@ -15,9 +15,13 @@ var ReactCompositeComponent = require('ReactCompositeComponent');
 var ReactEmptyComponent = require('ReactEmptyComponent');
 var ReactHostComponent = require('ReactHostComponent');
 
-var getNextDebugID = require('getNextDebugID');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
+
+var nextDebugID = 1;
 
 // To avoid a cyclic dependency, we create the final class in this module
 var ReactCompositeComponentWrapper = function(element) {
@@ -42,10 +46,12 @@ function getDeclarationErrorAddendum(owner) {
  * @return {boolean} Returns true if this is a valid internal type.
  */
 function isInternalComponentType(type) {
-  return typeof type === 'function' &&
+  return (
+    typeof type === 'function' &&
     typeof type.prototype !== 'undefined' &&
     typeof type.prototype.mountComponent === 'function' &&
-    typeof type.prototype.receiveComponent === 'function';
+    typeof type.prototype.receiveComponent === 'function'
+  );
 }
 
 /**
@@ -73,7 +79,8 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
             type !== null &&
             Object.keys(type).length === 0)
         ) {
-          info += ' You likely forgot to export your component from the file ' +
+          info +=
+            ' You likely forgot to export your component from the file ' +
             "it's defined in.";
         }
       }
@@ -126,7 +133,7 @@ function instantiateReactComponent(node, shouldHaveDebugID) {
   instance._mountImage = null;
 
   if (__DEV__) {
-    instance._debugID = shouldHaveDebugID ? getNextDebugID() : 0;
+    instance._debugID = shouldHaveDebugID ? nextDebugID++ : 0;
   }
 
   // Internal instances should fully constructed at this point, so they should

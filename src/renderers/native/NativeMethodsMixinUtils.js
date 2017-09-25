@@ -11,57 +11,29 @@
  */
 'use strict';
 
-export type MeasureOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  pageX: number,
-  pageY: number,
-) => void;
-
-export type MeasureInWindowOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => void;
-
-export type MeasureLayoutOnSuccessCallback = (
-  left: number,
-  top: number,
-  width: number,
-  height: number,
-) => void;
-
-/**
- * Shared between ReactNativeFiberHostComponent and NativeMethodsMixin to keep
- * API in sync.
- */
-export interface NativeMethodsInterface {
-  blur(): void,
-  focus(): void,
-  measure(callback: MeasureOnSuccessCallback): void,
-  measureInWindow(callback: MeasureInWindowOnSuccessCallback): void,
-  measureLayout(
-    relativeToNativeNode: number,
-    onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void,
-  ): void,
-  setNativeProps(nativeProps: Object): void,
-}
-
 /**
  * In the future, we should cleanup callbacks by cancelling them instead of
  * using this.
  */
 function mountSafeCallback(context: any, callback: ?Function): any {
   return function() {
-    if (
-      !callback ||
-      (typeof context.isMounted === 'function' && !context.isMounted())
-    ) {
+    if (!callback) {
       return undefined;
+    }
+    if (typeof context.__isMounted === 'boolean') {
+      // TODO(gaearon): this is gross and should be removed.
+      // It is currently necessary because View uses createClass,
+      // and so any measure() calls on View (which are done by React
+      // DevTools) trigger the isMounted() deprecation warning.
+      if (!context.__isMounted) {
+        return undefined;
+      }
+      // The else branch is important so that we don't
+      // trigger the deprecation warning by calling isMounted.
+    } else if (typeof context.isMounted === 'function') {
+      if (!context.isMounted()) {
+        return undefined;
+      }
     }
     return callback.apply(context, arguments);
   };
@@ -71,12 +43,14 @@ function throwOnStylesProp(component: any, props: any) {
   if (props.styles !== undefined) {
     var owner = component._owner || null;
     var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' +
+    var msg =
+      '`styles` is not a supported property of `' +
       name +
       '`, did ' +
       'you mean `style` (singular)?';
     if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' +
+      msg +=
+        '\n\nCheck the `' +
         owner.constructor.displayName +
         '` parent ' +
         ' component.';

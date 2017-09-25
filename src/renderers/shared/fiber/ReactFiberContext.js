@@ -18,28 +18,15 @@ import type {StackCursor} from 'ReactFiberStack';
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
-var {
-  isFiberMounted,
-} = require('ReactFiberTreeReflection');
-var {
-  ClassComponent,
-  HostRoot,
-} = require('ReactTypeOfWork');
-const {
-  createCursor,
-  pop,
-  push,
-} = require('ReactFiberStack');
+var {isFiberMounted} = require('ReactFiberTreeReflection');
+var {ClassComponent, HostRoot} = require('ReactTypeOfWork');
+const {createCursor, pop, push} = require('ReactFiberStack');
 
 if (__DEV__) {
-  var checkReactTypeSpec = require('checkReactTypeSpec');
-  var ReactDebugCurrentFrame = require('react/lib/ReactDebugCurrentFrame');
+  var warning = require('fbjs/lib/warning');
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {
-    startPhaseTimer,
-    stopPhaseTimer,
-  } = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warnedAboutMissingGetChildContext = {};
 }
 
@@ -104,9 +91,15 @@ exports.getMaskedContext = function(
 
   if (__DEV__) {
     const name = getComponentName(workInProgress) || 'Unknown';
-    ReactDebugCurrentFrame.current = workInProgress;
-    checkReactTypeSpec(contextTypes, context, 'context', name);
-    ReactDebugCurrentFrame.current = null;
+    ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+    checkPropTypes(
+      contextTypes,
+      context,
+      'context',
+      name,
+      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+    );
+    ReactDebugCurrentFiber.resetCurrentFiber();
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -142,6 +135,11 @@ function popContextProvider(fiber: Fiber): void {
 }
 exports.popContextProvider = popContextProvider;
 
+exports.popTopLevelContextObject = function(fiber: Fiber) {
+  pop(didPerformWorkStackCursor, fiber);
+  pop(contextStackCursor, fiber);
+};
+
 exports.pushTopLevelContextObject = function(
   fiber: Fiber,
   context: Object,
@@ -149,7 +147,8 @@ exports.pushTopLevelContextObject = function(
 ): void {
   invariant(
     contextStackCursor.cursor == null,
-    'Unexpected context found on stack',
+    'Unexpected context found on stack. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
   );
 
   push(contextStackCursor, context, fiber);
@@ -187,11 +186,11 @@ function processChildContext(
 
   let childContext;
   if (__DEV__) {
-    ReactDebugCurrentFiber.phase = 'getChildContext';
+    ReactDebugCurrentFiber.setCurrentFiber(fiber, 'getChildContext');
     startPhaseTimer(fiber, 'getChildContext');
     childContext = instance.getChildContext();
     stopPhaseTimer();
-    ReactDebugCurrentFiber.phase = null;
+    ReactDebugCurrentFiber.resetCurrentFiber();
   } else {
     childContext = instance.getChildContext();
   }
@@ -211,9 +210,15 @@ function processChildContext(
     // assume anything about the given fiber. We won't pass it down if we aren't sure.
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
-    ReactDebugCurrentFrame.current = workInProgress;
-    checkReactTypeSpec(childContextTypes, childContext, 'child context', name);
-    ReactDebugCurrentFrame.current = null;
+    ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+    checkPropTypes(
+      childContextTypes,
+      childContext,
+      'child context',
+      name,
+      ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
+    );
+    ReactDebugCurrentFiber.resetCurrentFiber();
   }
 
   return {...parentContext, ...childContext};
@@ -229,37 +234,56 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
   // We push the context as early as possible to ensure stack integrity.
   // If the instance does not exist yet, we will push null at first,
   // and replace it on the stack later when invalidating the context.
-  const memoizedMergedChildContext = (instance &&
-    instance.__reactInternalMemoizedMergedChildContext) ||
+  const memoizedMergedChildContext =
+    (instance && instance.__reactInternalMemoizedMergedChildContext) ||
     emptyObject;
 
   // Remember the parent context so we can merge with it later.
+  // Inherit the parent's did-perform-work value to avoid inadvertantly blocking updates.
   previousContext = contextStackCursor.current;
   push(contextStackCursor, memoizedMergedChildContext, workInProgress);
-  push(didPerformWorkStackCursor, false, workInProgress);
+  push(
+    didPerformWorkStackCursor,
+    didPerformWorkStackCursor.current,
+    workInProgress,
+  );
 
   return true;
 };
 
-exports.invalidateContextProvider = function(workInProgress: Fiber): void {
+exports.invalidateContextProvider = function(
+  workInProgress: Fiber,
+  didChange: boolean,
+): void {
   const instance = workInProgress.stateNode;
-  invariant(instance, 'Expected to have an instance by this point.');
-
-  // Merge parent and own context.
-  const mergedContext = processChildContext(
-    workInProgress,
-    previousContext,
-    true,
+  invariant(
+    instance,
+    'Expected to have an instance by this point. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
   );
-  instance.__reactInternalMemoizedMergedChildContext = mergedContext;
 
-  // Replace the old (or empty) context with the new one.
-  // It is important to unwind the context in the reverse order.
-  pop(didPerformWorkStackCursor, workInProgress);
-  pop(contextStackCursor, workInProgress);
-  // Now push the new context and mark that it has changed.
-  push(contextStackCursor, mergedContext, workInProgress);
-  push(didPerformWorkStackCursor, true, workInProgress);
+  if (didChange) {
+    // Merge parent and own context.
+    // Skip this if we're not updating due to sCU.
+    // This avoids unnecessarily recomputing memoized values.
+    const mergedContext = processChildContext(
+      workInProgress,
+      previousContext,
+      true,
+    );
+    instance.__reactInternalMemoizedMergedChildContext = mergedContext;
+
+    // Replace the old (or empty) context with the new one.
+    // It is important to unwind the context in the reverse order.
+    pop(didPerformWorkStackCursor, workInProgress);
+    pop(contextStackCursor, workInProgress);
+    // Now push the new context and mark that it has changed.
+    push(contextStackCursor, mergedContext, workInProgress);
+    push(didPerformWorkStackCursor, didChange, workInProgress);
+  } else {
+    pop(didPerformWorkStackCursor, workInProgress);
+    push(didPerformWorkStackCursor, didChange, workInProgress);
+  }
 };
 
 exports.resetContext = function(): void {
@@ -273,7 +297,8 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
   // makes sense elsewhere
   invariant(
     isFiberMounted(fiber) && fiber.tag === ClassComponent,
-    'Expected subtree parent to be a mounted class component',
+    'Expected subtree parent to be a mounted class component. ' +
+      'This error is likely caused by a bug in React. Please file an issue.',
   );
 
   let node: Fiber = fiber;
@@ -282,7 +307,11 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
       return node.stateNode.__reactInternalMemoizedMergedChildContext;
     }
     const parent = node.return;
-    invariant(parent, 'Found unexpected detached subtree parent');
+    invariant(
+      parent,
+      'Found unexpected detached subtree parent. ' +
+        'This error is likely caused by a bug in React. Please file an issue.',
+    );
     node = parent;
   }
   return node.stateNode.context;

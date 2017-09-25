@@ -11,13 +11,13 @@
 
 'use strict';
 
-var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-var warning = require('fbjs/lib/warning');
-
 if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
   var {
-    getStackAddendumByID,
-  } = require('react/lib/ReactComponentTreeHook');
+    ReactComponentTreeHook,
+    ReactDebugCurrentFrame,
+  } = require('ReactGlobalSharedState');
+  var {getStackAddendumByID} = ReactComponentTreeHook;
 }
 
 var didWarnValueNull = false;
@@ -27,8 +27,9 @@ function getStackAddendum(debugID) {
     // This can only happen on Stack
     return getStackAddendumByID(debugID);
   } else {
-    // This can only happen on Fiber
-    return ReactDebugCurrentFiber.getCurrentFiberStackAddendum();
+    // This can only happen on Fiber / Server
+    var stack = ReactDebugCurrentFrame.getStackAddendum();
+    return stack != null ? stack : '';
   }
 }
 

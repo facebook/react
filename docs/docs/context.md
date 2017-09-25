@@ -4,10 +4,17 @@ title: Context
 permalink: docs/context.html
 ---
 
+> Note:
+>
+> `React.PropTypes` has moved into a different package since React v15.5. Please use [the `prop-types` library instead](https://www.npmjs.com/package/prop-types) to define `contextTypes`.
+>
+>We provide [a codemod script](/react/blog/2017/04/07/react-v15.5.0.html#migrating-from-react.proptypes) to automate the conversion.
+
 With React, it's easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.
 
 In some cases, you want to pass data through the component tree without having to pass the props down manually at every level.
 You can do this directly in React with the powerful "context" API.
+
 
 ## Why Not To Use Context
 
@@ -59,7 +66,9 @@ class MessageList extends React.Component {
 
 In this example, we manually thread through a `color` prop in order to style the `Button` and `Message` components appropriately. Using context, we can pass this through the tree automatically:
 
-```javascript{4,11-13,19,26-28,38-40}
+```javascript{6,13-15,21,28-30,40-42}
+const PropTypes = require('prop-types');
+
 class Button extends React.Component {
   render() {
     return (
@@ -71,7 +80,7 @@ class Button extends React.Component {
 }
 
 Button.contextTypes = {
-  color: React.PropTypes.string
+  color: PropTypes.string
 };
 
 class Message extends React.Component {
@@ -98,7 +107,7 @@ class MessageList extends React.Component {
 }
 
 MessageList.childContextTypes = {
-  color: React.PropTypes.string
+  color: PropTypes.string
 };
 ```
 
@@ -151,12 +160,14 @@ If `contextTypes` is defined within a component, the following [lifecycle method
 Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows a `Button` component written as a stateless functional component.
 
 ```javascript
+const PropTypes = require('prop-types');
+
 const Button = ({children}, context) =>
   <button style={{'{{'}}background: context.color}}>
     {children}
   </button>;
 
-Button.contextTypes = {color: React.PropTypes.string};
+Button.contextTypes = {color: PropTypes.string};
 ```
 
 ## Updating Context
@@ -168,6 +179,8 @@ React has an API to update context, but it is fundamentally broken and you shoul
 The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
 
 ```javascript
+const PropTypes = require('prop-types');
+
 class MediaQuery extends React.Component {
   constructor(props) {
     super(props);
@@ -196,7 +209,7 @@ class MediaQuery extends React.Component {
 }
 
 MediaQuery.childContextTypes = {
-  type: React.PropTypes.string
+  type: PropTypes.string
 };
 ```
 

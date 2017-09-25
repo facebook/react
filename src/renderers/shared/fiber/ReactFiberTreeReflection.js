@@ -15,7 +15,7 @@
 import type {Fiber} from 'ReactFiber';
 
 var ReactInstanceMap = require('ReactInstanceMap');
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 
 var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
@@ -25,16 +25,14 @@ if (__DEV__) {
 }
 
 var {
-  HostRoot,
-  HostComponent,
-  HostText,
   ClassComponent,
+  HostComponent,
+  HostRoot,
+  HostPortal,
+  HostText,
 } = require('ReactTypeOfWork');
 
-var {
-  NoEffect,
-  Placement,
-} = require('ReactTypeOfSideEffect');
+var {NoEffect, Placement} = require('ReactTypeOfSideEffect');
 
 var MOUNTING = 1;
 var MOUNTED = 2;
@@ -72,9 +70,7 @@ exports.isFiberMounted = function(fiber: Fiber): boolean {
   return isFiberMountedImpl(fiber) === MOUNTED;
 };
 
-exports.isMounted = function(
-  component: ReactComponent<any, any, any>,
-): boolean {
+exports.isMounted = function(component: React$Component<any, any>): boolean {
   if (__DEV__) {
     const owner = (ReactCurrentOwner.current: any);
     if (owner !== null && owner.tag === ClassComponent) {
@@ -165,7 +161,7 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
       a = parentA;
       b = parentB;
     } else {
-      // The return pointers pointer to the same fiber. We'll have to use the
+      // The return pointers point to the same fiber. We'll have to use the
       // default, slow path: scan the child sets of each parent alternate to see
       // which child belongs to which set.
       //
@@ -208,14 +204,15 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
         invariant(
           didFindChild,
           'Child was not found in either parent set. This indicates a bug ' +
-            'related to the return pointer.',
+            'in React related to the return pointer. Please file an issue.',
         );
       }
     }
 
     invariant(
       a.alternate === b,
-      "Return fibers should always be each others' alternates.",
+      "Return fibers should always be each others' alternates. " +
+        'This error is likely caused by a bug in React. Please file an issue.',
     );
   }
   // If the root is not a host container, we're in a disconnected tree. I.e.
@@ -245,7 +242,41 @@ exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
     } else if (node.child) {
-      // TODO: If we hit a Portal, we're supposed to skip it.
+      node.child.return = node;
+      node = node.child;
+      continue;
+    }
+    if (node === currentParent) {
+      return null;
+    }
+    while (!node.sibling) {
+      if (!node.return || node.return === currentParent) {
+        return null;
+      }
+      node = node.return;
+    }
+    node.sibling.return = node.return;
+    node = node.sibling;
+  }
+  // Flow needs the return null here, but ESLint complains about it.
+  // eslint-disable-next-line no-unreachable
+  return null;
+};
+
+exports.findCurrentHostFiberWithNoPortals = function(
+  parent: Fiber,
+): Fiber | null {
+  const currentParent = findCurrentFiberUsingSlowPath(parent);
+  if (!currentParent) {
+    return null;
+  }
+
+  // Next we'll drill down this component to find the first HostComponent/Text.
+  let node: Fiber = currentParent;
+  while (true) {
+    if (node.tag === HostComponent || node.tag === HostText) {
+      return node;
+    } else if (node.child && node.tag !== HostPortal) {
       node.child.return = node;
       node = node.child;
       continue;

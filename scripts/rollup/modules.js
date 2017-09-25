@@ -46,10 +46,17 @@ const fbjsModules = [
 ];
 
 const devOnlyFilesToStubOut = [
+  "'ReactDebugCurrentFrame'",
   "'ReactComponentTreeHook'",
-  "'react/lib/ReactComponentTreeHook'",
-  "'react-dom/lib/ReactPerf'",
-  "'react-dom/lib/ReactTestUtils'",
+  "'ReactPerf'",
+  "'ReactTestUtils'",
+];
+
+const legacyModules = [
+  'create-react-class',
+  'create-react-class/factory',
+  'prop-types',
+  'prop-types/checkPropTypes',
 ];
 
 // this function builds up a very niave Haste-like moduleMap
@@ -71,15 +78,16 @@ function createModuleMap(paths, extractErrors, bundleType) {
       moduleMap[moduleName] = resolve(file);
     });
   });
-  // if this is FB, we want to remove ReactCurrentOwner, so we can
-  // handle it with a different case
+  // if this is FB, we want to remove ReactCurrentOwner and lowPriorityWarning,
+  // so we can handle it with a different case
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
     delete moduleMap.ReactCurrentOwner;
+    delete moduleMap.lowPriorityWarning;
   }
   return moduleMap;
 }
 
-function getNodeModules(bundleType) {
+function getNodeModules(bundleType, isRenderer) {
   // rather than adding the rollup node resolve plugin,
   // we can instead deal with the only node module that is used
   // for UMD bundles - object-assign
@@ -87,7 +95,11 @@ function getNodeModules(bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       return {
-        'object-assign': resolve('./node_modules/object-assign/index.js'),
+        // Bundle object-assign once in the isomorphic React, and then use
+        // that from the renderer UMD. Avoids bundling it in both UMDs.
+        'object-assign': isRenderer
+          ? resolve('./scripts/rollup/shims/rollup/assign.js')
+          : resolve('./node_modules/object-assign/index.js'),
         // include the ART package modules directly by aliasing them from node_modules
         'art/modes/current': resolve('./node_modules/art/modes/current.js'),
         'art/modes/fast-noSideEffects': resolve(
@@ -112,15 +124,14 @@ function ignoreFBModules() {
     'ReactDOMFeatureFlags',
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
-    'react/lib/ReactCurrentOwner',
     'ReactCurrentOwner',
+    'lowPriorityWarning',
   ];
 }
 
 function ignoreReactNativeModules() {
   return [
-    // This imports NativeMethodsMixin, causing
-    // a circular dependency.
+    // This imports NativeMethodsMixin, causing a circular dependency.
     'View',
   ];
 }
@@ -132,7 +143,7 @@ function getExternalModules(externals, bundleType, isRenderer) {
   // this means having a require("name-of-external-module") at
   // the top of the bundle. for UMD bundles this means having
   // both a require and a global check for them
-  let externalModules = externals;
+  let externalModules = externals.slice();
 
   switch (bundleType) {
     case UMD_DEV:
@@ -147,7 +158,6 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case RN_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
       externalModules.push('object-assign');
-
       if (isRenderer) {
         externalModules.push('react');
       }
@@ -155,9 +165,14 @@ function getExternalModules(externals, bundleType, isRenderer) {
     case FB_DEV:
     case FB_PROD:
       fbjsModules.forEach(module => externalModules.push(module));
-      externalModules.push('react/lib/ReactCurrentOwner', 'ReactCurrentOwner');
+      externalModules.push('object-assign');
+      externalModules.push('ReactCurrentOwner');
+      externalModules.push('lowPriorityWarning');
       if (isRenderer) {
         externalModules.push('React');
+        if (externalModules.indexOf('react-dom') > -1) {
+          externalModules.push('ReactDOM');
+        }
       }
       break;
   }
@@ -169,19 +184,6 @@ function getInternalModules() {
   // it doesn't pick them up and assumes they're external
   return {
     reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
-    'react/lib/ReactDebugCurrentFrame': resolve(
-      './src/isomorphic/classic/element/ReactDebugCurrentFrame.js'
-    ),
-  };
-}
-
-function replaceInternalModules() {
-  // we inline these modules in the bundles rather than leave them as external
-  return {
-    "'react-dom/lib/ReactPerf'": `'${resolve('./src/renderers/shared/ReactPerf.js')}'`,
-    "'react-dom/lib/ReactTestUtils'": `'${resolve('./src/test/ReactTestUtils.js')}'`,
-    "'react-dom/lib/ReactInstanceMap'": `'${resolve('./src/renderers/shared/shared/ReactInstanceMap.js')}'`,
-    "'react-dom'": `'${resolve('./src/renderers/dom/ReactDOM.js')}'`,
   };
 }
 
@@ -210,92 +212,17 @@ function getFbjsModuleAliases(bundleType) {
 
 function replaceFbjsModuleAliases(bundleType) {
   switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case NODE_DEV:
-    case NODE_PROD:
-    case RN_DEV:
-    case RN_PROD:
-      return {};
     case FB_DEV:
     case FB_PROD:
-      // additionally we add mappings for "react"
-      // so they work correctly on FB, this will change soon
+      // Haste at FB doesn't currently allow case sensitive names,
+      // and product code already uses "React". In the future,
+      // we will either allow both variants or migrate to lowercase.
       return {
         "'react'": "'React'",
+        "'react-dom'": "'ReactDOM'",
       };
-  }
-}
-
-// for renderers, we want them to require the __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.ReactCurrentOwner
-// on the React bundle itself rather than require module directly.
-// For the React bundle, ReactCurrentOwner should be bundled as part of the bundle
-// itself and exposed on __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED
-const shimReactCurrentOwner = resolve(
-  './scripts/rollup/shims/rollup/ReactCurrentOwnerRollupShim.js'
-);
-const realReactCurrentOwner = resolve(
-  './src/isomorphic/classic/element/ReactCurrentOwner.js'
-);
-
-function getReactCurrentOwnerModuleAlias(bundleType, isRenderer) {
-  if (bundleType === FB_DEV || bundleType === FB_DEV) {
-    return {};
-  }
-  if (isRenderer) {
-    return {
-      ReactCurrentOwner: shimReactCurrentOwner,
-      'react/lib/ReactCurrentOwner': shimReactCurrentOwner,
-    };
-  } else {
-    return {
-      ReactCurrentOwner: realReactCurrentOwner,
-      'react/lib/ReactCurrentOwner': realReactCurrentOwner,
-    };
-  }
-}
-
-// this works almost identically to the ReactCurrentOwner shim above
-const shimReactCheckPropTypes = resolve(
-  './scripts/rollup/shims/rollup/ReactCheckPropTypesRollupShim.js'
-);
-const realCheckPropTypes = resolve(
-  './src/isomorphic/classic/types/checkPropTypes.js'
-);
-
-function getReactCheckPropTypesModuleAlias(bundleType, isRenderer) {
-  if (isRenderer) {
-    return {
-      checkPropTypes: shimReactCheckPropTypes,
-      'react/lib/checkPropTypes': shimReactCheckPropTypes,
-    };
-  } else {
-    return {
-      checkPropTypes: realCheckPropTypes,
-      'react/lib/checkPropTypes': realCheckPropTypes,
-    };
-  }
-}
-
-// this works almost identically to the ReactCurrentOwner shim above
-const shimReactComponentTreeHook = resolve(
-  './scripts/rollup/shims/rollup/ReactComponentTreeHookRollupShim.js'
-);
-const realReactComponentTreeHook = resolve(
-  './src/isomorphic/hooks/ReactComponentTreeHook.js'
-);
-
-function getReactComponentTreeHookModuleAlias(bundleType, isRenderer) {
-  if (isRenderer) {
-    return {
-      ReactComponentTreeHook: shimReactComponentTreeHook,
-      'react/lib/ReactComponentTreeHook': shimReactComponentTreeHook,
-    };
-  } else {
-    return {
-      ReactComponentTreeHook: realReactComponentTreeHook,
-      'react/lib/ReactComponentTreeHook': realReactComponentTreeHook,
-    };
+    default:
+      return {};
   }
 }
 
@@ -320,28 +247,61 @@ function replaceDevOnlyStubbedModules(bundleType) {
   }
 }
 
+function replaceLegacyModuleAliases(bundleType) {
+  switch (bundleType) {
+    case UMD_DEV:
+    case UMD_PROD:
+      const modulesAlias = {};
+      legacyModules.forEach(legacyModule => {
+        const modulePath = legacyModule.includes('/')
+          ? legacyModule
+          : `${legacyModule}/index`;
+        const resolvedPath = resolve(`./node_modules/${modulePath}`);
+        modulesAlias[`'${legacyModule}'`] = `'${resolvedPath}'`;
+      });
+      return modulesAlias;
+    case NODE_DEV:
+    case NODE_PROD:
+    case FB_DEV:
+    case FB_PROD:
+    case RN_DEV:
+    case RN_PROD:
+      return {};
+  }
+}
+
+function replaceBundleStubModules(bundleModulesToStub) {
+  const stubbedModules = {};
+
+  if (Array.isArray(bundleModulesToStub)) {
+    bundleModulesToStub.forEach(module => {
+      stubbedModules[`'${module}'`] = devOnlyModuleStub;
+    });
+  }
+
+  return stubbedModules;
+}
+
 function getAliases(paths, bundleType, isRenderer, extractErrors) {
   return Object.assign(
-    getReactCurrentOwnerModuleAlias(bundleType, isRenderer),
-    getReactCheckPropTypesModuleAlias(bundleType, isRenderer),
-    getReactComponentTreeHookModuleAlias(bundleType, isRenderer),
     createModuleMap(
       paths,
       extractErrors && extractErrorCodes(errorCodeOpts),
       bundleType
     ),
     getInternalModules(),
-    getNodeModules(bundleType),
+    getNodeModules(bundleType, isRenderer),
     getFbjsModuleAliases(bundleType)
   );
 }
 
-function getDefaultReplaceModules(bundleType) {
+function getDefaultReplaceModules(bundleType, bundleModulesToStub) {
   return Object.assign(
     {},
-    replaceInternalModules(),
     replaceFbjsModuleAliases(bundleType),
-    replaceDevOnlyStubbedModules(bundleType)
+    replaceDevOnlyStubbedModules(bundleType),
+    replaceLegacyModuleAliases(bundleType),
+    replaceBundleStubModules(bundleModulesToStub)
   );
 }
 
@@ -353,17 +313,7 @@ module.exports = {
   getExcludedHasteGlobs,
   getDefaultReplaceModules,
   getAliases,
-  createModuleMap,
-  getNodeModules,
-  replaceInternalModules,
-  getInternalModules,
-  getFbjsModuleAliases,
-  replaceFbjsModuleAliases,
   ignoreFBModules,
   ignoreReactNativeModules,
   getExternalModules,
-  getReactCurrentOwnerModuleAlias,
-  getReactCheckPropTypesModuleAlias,
-  getReactComponentTreeHookModuleAlias,
-  replaceDevOnlyStubbedModules,
 };

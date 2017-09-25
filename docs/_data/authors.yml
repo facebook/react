@@ -1,6 +1,9 @@
 # Map of short name to more information. `name` will be used but if you don't
 # want to use your real name, just use whatever. If url is included, your name
 # will be a link to the provided url.
+acdlite:
+  name: Andrew Clark
+  url: https://twitter.com/acdlite
 benigeri:
   name: Paul Benigeri
   url: https://github.com/benigeri
@@ -13,6 +16,9 @@ Daniel15:
 fisherwebdev:
   name: Bill Fisher
   url: https://twitter.com/fisherwebdev
+flarnie:
+  name: Flarnie Marchan
+  url: https://twitter.com/ProbablyFlarnie
 gaearon:
   name: Dan Abramov
   url: https://twitter.com/dan_abramov
@@ -52,9 +58,9 @@ schrockn:
 sebmarkbage:
   name: Sebastian Markbåge
   url: https://twitter.com/sebmarkbage
-spicyj:
-  name: Ben Alpert
-  url: http://benalpert.com
+sophiebits:
+  name: Sophie Alpert
+  url: https://sophiealpert.com
 steveluscher:
   name: Steven Luscher
   url: https://twitter.com/steveluscher

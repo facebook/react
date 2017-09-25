@@ -4,6 +4,8 @@
 <PROJECT_ROOT>/build/.*
 <PROJECT_ROOT>/scripts/.*
 <PROJECT_ROOT>/.*/node_modules/y18n/.*
+<PROJECT_ROOT>/node_modules/chrome-devtools-frontend/.*
+<PROJECT_ROOT>/node_modules/devtools-timeline-model/.*
 <PROJECT_ROOT>/.*/__mocks__/.*
 <PROJECT_ROOT>/.*/__tests__/.*
 
@@ -22,6 +24,7 @@ module.system=haste
 
 esproposal.class_static_fields=enable
 esproposal.class_instance_fields=enable
+unsafe.enable_getters_and_setters=true
 
 munge_underscores=false
 
@@ -36,4 +39,4 @@ suppress_comment=\\(.\\|\n\\)*\\$FlowFixedInNextDeploy
 suppress_comment=\\(.\\|\n\\)*\\$FlowExpectedError
 
 [version]
-^0.41.0
+^0.53.1
