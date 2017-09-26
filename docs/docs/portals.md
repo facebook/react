@@ -33,7 +33,7 @@ However, sometimes it's useful to insert a child into a different location in th
 render() {
   // React does *not* create a new div. It renders the children into `domNode`.
   // `domNode` is any valid DOM node, regardless of its location in the DOM.
-  return React.createPortal(
+  return ReactDOM.createPortal(
     this.props.children,
     domNode,
   );
@@ -73,12 +73,17 @@ class Parent extends React.Component {
   constructor(props) {
     super(props);
     this.state = {clicks: 0};
+    this.handleClick = this.handleClick.bind(this);
   }
-  onClick = () => {
+
+  handleClick() {
     // This will fire when the button in Child is clicked, updating Parent's state,
     // even though Child is not a direct descendant in the DOM. 
-    this.setState(prevState => ({clicks: prevState.clicks + 1}));
-  };
+    this.setState(prevState => ({
+      clicks: prevState.clicks + 1
+    }));
+  }
+
   render() {
     return (
       <div onClick={this.onClick}>
@@ -94,7 +99,7 @@ function Child() {
   // The click event on this button will bubble up to parent,
   // because there is no 'onClick' attribute defined
   return (
-    <div class="modal">
+    <div className="modal">
       <button>Click</button>
     </div>
   );
@@ -104,6 +109,6 @@ function Child() {
 ReactDOM.render(<Parent />, appRoot);
 ```
 
-[Try this example on CodePen](https://codepen.io/savepointsam/pen/gGmpKa).
+[Try this example on CodePen](https://codepen.io/gaearon/pen/jGBWpE).
 
 Catching an event bubbling up from a portal in a parent component allows the development of more flexible abstractions that are not inherently reliant on portals. For example, if you render a `<Modal />` component, the parent can capture its events regardless of whether it's implemented using portals.
