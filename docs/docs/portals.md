@@ -46,7 +46,7 @@ A typical use case for portals is when a parent component has an `overflow: hidd
 >
 > It is important to remember, when working with portals, you'll need to make sure to follow the proper accessibility guidelines.
 
-[Try out an example on CodePen.](https://codepen.io/acdlite/pen/JrKgmz)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/yzMaBd)
 
 ## Portals and event bubbling
 
@@ -63,11 +63,34 @@ This includes event bubbling. An event fired from inside a portal will propagate
 </html>
 ```
 
-A Parent component in `#app-root` would be able to catch an uncaught, bubbling event from the sibling node #modal-root.
+A `Parent` component in `#app-root` would be able to catch an uncaught, bubbling event from the sibling node `#modal-root`.
 
-```js
+```js{20-23,34-41,45,53-55,62-63,66}
+// These two containers are siblings in the DOM
 const appRoot = document.getElementById('app-root');
 const modalRoot = document.getElementById('modal-root');
+
+class Modal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.el = document.createElement('div');
+  }
+
+  componentDidMount() {
+    modalRoot.appendChild(this.el);
+  }
+
+  componentWillUnmount() {
+    modalRoot.removeChild(this.el);
+  }
+
+  render() {
+    return ReactDOM.createPortal(
+      this.props.children,
+      this.el,
+    );
+  }
+}
 
 class Parent extends React.Component {
   constructor(props) {
@@ -77,8 +100,9 @@ class Parent extends React.Component {
   }
 
   handleClick() {
-    // This will fire when the button in Child is clicked, updating Parent's state,
-    // even though Child is not a direct descendant in the DOM. 
+    // This will fire when the button in Child is clicked,
+    // updating Parent's state, even though button
+    // is not direct descendant in the DOM.
     this.setState(prevState => ({
       clicks: prevState.clicks + 1
     }));
@@ -86,10 +110,17 @@ class Parent extends React.Component {
 
   render() {
     return (
-      <div onClick={this.onClick}>
+      <div onClick={this.handleClick}>
         <p>Number of clicks: {this.state.clicks}</p>
-        <p>Open up the browser DevTools to observe that the button is not a child the div with onClick handler.</p>
-        {ReactDOM.createPortal(<Child />, modalRoot)}
+        <p>
+          Open up the browser DevTools
+          to observe that the button
+          is not a child the div
+          with onClick handler.
+        </p>
+        <Modal>
+          <Child />
+        </Modal>
       </div>
     );
   }
@@ -105,10 +136,9 @@ function Child() {
   );
 }
 
-
 ReactDOM.render(<Parent />, appRoot);
 ```
 
-[Try this example on CodePen](https://codepen.io/gaearon/pen/jGBWpE).
+[Try it on CodePen.](https://codepen.io/gaearon/pen/jGBWpE).
 
 Catching an event bubbling up from a portal in a parent component allows the development of more flexible abstractions that are not inherently reliant on portals. For example, if you render a `<Modal />` component, the parent can capture its events regardless of whether it's implemented using portals.

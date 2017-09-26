@@ -15,22 +15,6 @@ import ReactDOMServer from 'react-dom/server';
 var ReactDOMServer = require('react-dom/server');
 ```
 
-We also provide a separate entry-point for use in the browser:
-
-```js
-// ES modules
-import ReactDOMServer from 'react-dom/server.browser';
-// CommonJS
-var ReactDOMServer = require('react-dom/server.browser');
-```
-
-Or, using UMD:
-
-```html
-<script crossorigin src="https://unpkg.com/react-dom/umd/react-dom-server.browser.production.min.js" />
-<!-- Accessible as window.ReactDOMServer -->
-```
-
 ## Overview
 
 The following methods can be used in both the server and browser environments:
