@@ -131,7 +131,7 @@ const Header = ({location}) => (
           <HeaderLink
             isActive={location.pathname.includes('/blog')}
             title="Blog"
-            to="/blog"
+            to="/blog/"
           />
         </nav>
 

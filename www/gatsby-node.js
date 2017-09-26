@@ -117,15 +117,19 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       createArticlePage(slug);
 
       // Register redirects as well if the markdown specifies them.
-      // TODO Once Gatsby has a built-in solution for redirects, switch to it.
-      // https://github.com/gatsbyjs/gatsby/pull/1068
       if (edge.node.fields.redirect) {
-        const redirect = JSON.parse(edge.node.fields.redirect);
-        if (Array.isArray(redirect)) {
-          redirect.forEach(createArticlePage);
-        } else {
-          createArticlePage(redirect);
+        let redirect = JSON.parse(edge.node.fields.redirect);
+        if (!Array.isArray(redirect)) {
+          redirect = [redirect];
         }
+
+        redirect.forEach(fromPath =>
+          createRedirect({
+            fromPath: `/${fromPath}`,
+            redirectInBrowser: true,
+            toPath: `/${slug}`,
+          })
+        );
       }
     }
   });
@@ -152,10 +156,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   // Blog landing page should always show the most recent blog entry.
   createRedirect({
     fromPath: '/blog/',
-    toPath: newestBlogNode.fields.slug,
-  });
-  createRedirect({
-    fromPath: '/blog',
+    redirectInBrowser: true,
     toPath: newestBlogNode.fields.slug,
   });
 };
