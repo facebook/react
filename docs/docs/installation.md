@@ -215,21 +215,21 @@ Learn [how to tell if your website is serving the right version of React](/react
 
 ### Using a CDN
 
-If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide single-file distributions in `dist` folders, which are hosted on a CDN:
+If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide single-file distributions in `umd` folders, which are hosted on a CDN:
 
 ```html
-<script crossorigin src="https://unpkg.com/react@15/dist/react.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+<script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
 ```
 
 The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:
 
 ```html
-<script crossorigin src="https://unpkg.com/react@15/dist/react.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
 ```
 
-To load a specific version of `react` and `react-dom`, replace `15` with the version number.
+To load a specific version of `react` and `react-dom`, replace `16` with the version number.
 
 If you use Bower, React is available via the `react` package.
 
