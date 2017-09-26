@@ -63,7 +63,7 @@ This includes event bubbling. An event fired from inside a portal will propagate
 </html>
 ```
 
-A Parent component in #app-root would be able to catch an uncaught, bubbling event from the sibling node #modal-root.
+A Parent component in `#app-root` would be able to catch an uncaught, bubbling event from the sibling node #modal-root.
 
 ```js
 const appRoot = document.getElementById('app-root');
