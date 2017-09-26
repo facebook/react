@@ -1136,9 +1136,54 @@ describe('ReactDOMFiber', () => {
 
     ReactDOM.render(textContent, iframeContainer);
 
-    expect(textNode.textContent).toBe(textContent);
-    expect(actualDocument).not.toBe(document);
-    expect(actualDocument).toBe(iframeDocument);
-    expect(iframeContainer.appendChild).toHaveBeenCalledTimes(1);
-  });
+    it('should warn when doing an update to a container manually cleared outside of React', () => {
+      spyOn(console, 'error');
+      // when not messing with the DOM outside of React
+      ReactDOM.render(<div>foo</div>, container);
+      ReactDOM.render(<div>bar</div>, container);
+      expect(container.innerHTML).toBe('<div>bar</div>');
+      // then we mess with the DOM before an update
+      container.innerHTML = '';
+      ReactDOM.render(<div>baz</div>, container);
+      // silently fails to update
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    });
+
+    it('should render a text component with a text DOM node on the same document as the container', () => {
+      // 1. Create a new document through the use of iframe
+      // 2. Set up the spy to make asserts when a text component
+      //    is rendered inside the iframe container
+      var textContent = 'Hello world';
+      var iframe = document.createElement('iframe');
+      document.body.appendChild(iframe);
+      var iframeDocument = iframe.contentDocument;
+      iframeDocument.write(
+        '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
+      );
+      iframeDocument.close();
+      var iframeContainer = iframeDocument.body.firstChild;
+
+      var actualDocument;
+      var textNode;
+
+      spyOn(iframeContainer, 'appendChild').and.callFake(node => {
+        actualDocument = node.ownerDocument;
+        textNode = node;
+      });
+
+      ReactDOM.render(textContent, iframeContainer);
+
+      expect(textNode.textContent).toBe(textContent);
+      expect(actualDocument).not.toBe(document);
+      expect(actualDocument).toBe(iframeDocument);
+      expect(iframeContainer.appendChild).toHaveBeenCalledTimes(1);
+    });
+  }
 });
