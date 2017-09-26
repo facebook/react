@@ -153,7 +153,8 @@ If `contextTypes` is defined within a component, the following [lifecycle method
 - [`componentWillReceiveProps(nextProps, nextContext)`](/react/docs/react-component.html#componentwillreceiveprops)
 - [`shouldComponentUpdate(nextProps, nextState, nextContext)`](/react/docs/react-component.html#shouldcomponentupdate)
 - [`componentWillUpdate(nextProps, nextState, nextContext)`](/react/docs/react-component.html#componentwillupdate)
-- [`componentDidUpdate(prevProps, prevState, prevContext)`](/react/docs/react-component.html#componentdidupdate)
+
+> Note: In React 16, `componentDidUpdate` no longer is passed `prevContext`.
 
 ## Referencing Context in Stateless Functional Components
 
