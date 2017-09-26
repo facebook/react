@@ -110,6 +110,7 @@ const MarkdownPage = ({
       {/* TODO Read prev/next from index map, not this way */}
       {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
         <NavigationFooter
+          location={location}
           next={markdownRemark.frontmatter.next}
           prev={markdownRemark.frontmatter.prev}
         />}
