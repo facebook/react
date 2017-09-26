@@ -48,7 +48,7 @@ A typical use case for portals is when a parent component has an `overflow: hidd
 
 [Try it on CodePen.](https://codepen.io/gaearon/pen/yzMaBd)
 
-## Portals and event bubbling
+## Event Bubbling Through Portals
 
 Even though a portal can be anywhere in the DOM tree, it behaves like a normal React child in every other way. Features like context work exactly the same regardless of whether the child is a portal, as the portal still exists in the *React tree* regardless of position in the *DOM tree*.
 
@@ -139,6 +139,6 @@ function Child() {
 ReactDOM.render(<Parent />, appRoot);
 ```
 
-[Try it on CodePen.](https://codepen.io/gaearon/pen/jGBWpE).
+[Try it on CodePen.](https://codepen.io/gaearon/pen/jGBWpE)
 
 Catching an event bubbling up from a portal in a parent component allows the development of more flexible abstractions that are not inherently reliant on portals. For example, if you render a `<Modal />` component, the parent can capture its events regardless of whether it's implemented using portals.
