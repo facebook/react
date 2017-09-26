@@ -24,7 +24,7 @@ class Sidebar extends Component {
   }
 
   render() {
-    const {createLink, location, sectionList} = this.props;
+    const {closeParentMenu, createLink, location, sectionList} = this.props;
     const {activeSection} = this.state;
 
     return (
@@ -51,7 +51,8 @@ class Sidebar extends Component {
             isActive={activeSection === section || sectionList.length === 1}
             key={index}
             location={location}
-            onClick={() => this._toggleSection(section)}
+            onLinkClick={closeParentMenu}
+            onSectionTitleClick={() => this._toggleSection(section)}
             section={section}
           />
         ))}

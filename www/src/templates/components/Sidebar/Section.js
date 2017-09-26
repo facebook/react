@@ -17,10 +17,17 @@ import ChevronSvg from '../ChevronSvg';
 // TODO Update isActive link as document scrolls past anchor tags
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
 
-const Section = ({createLink, isActive, location, onClick, section}) => (
+const Section = ({
+  createLink,
+  isActive,
+  location,
+  onLinkClick,
+  onSectionTitleClick,
+  section,
+}) => (
   <div>
     <MetaTitle
-      onClick={onClick}
+      onClick={onSectionTitleClick}
       cssProps={{
         marginTop: 10,
 
@@ -59,13 +66,23 @@ const Section = ({createLink, isActive, location, onClick, section}) => (
           css={{
             marginTop: 5,
           }}>
-          {createLink(location, section, item)}
+          {createLink({
+            item,
+            location,
+            onLinkClick,
+            section,
+          })}
 
           {item.subitems &&
             <ul css={{marginLeft: 20}}>
               {item.subitems.map(subitem => (
                 <li key={subitem.id}>
-                  {createLink(location, section, subitem)}
+                  {createLink({
+                    item: subitem,
+                    location,
+                    onLinkClick,
+                    section,
+                  })}
                 </li>
               ))}
             </ul>}
