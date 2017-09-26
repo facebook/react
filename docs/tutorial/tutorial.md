@@ -202,7 +202,7 @@ class Square extends React.Component {
   constructor() {
     super();
     this.state = {
-      value: null,
+      value: null
     };
   }
 
@@ -284,7 +284,7 @@ class Board extends React.Component {
   constructor() {
     super();
     this.state = {
-      squares: Array(9).fill(null),
+      squares: Array(9).fill(null)
     };
   }
 
@@ -325,7 +325,7 @@ We'll fill it in later so that a board looks something like
 [
   'O', null, 'X',
   'X', 'X', 'O',
-  'O', null, null,
+  'O', null, null
 ]
 ```
 
@@ -401,7 +401,7 @@ class Board extends React.Component {
   constructor() {
     super();
     this.state = {
-      squares: Array(9).fill(null),
+      squares: Array(9).fill(null)
     };
   }
 
@@ -531,7 +531,7 @@ class Board extends React.Component {
     super();
     this.state = {
       squares: Array(9).fill(null),
-      xIsNext: true,
+      xIsNext: true
     };
   }
 ```
@@ -567,7 +567,7 @@ class Board extends React.Component {
     super();
     this.state = {
       squares: Array(9).fill(null),
-      xIsNext: true,
+      xIsNext: true
     };
   }
 
@@ -576,7 +576,7 @@ class Board extends React.Component {
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !this.state.xIsNext
     });
   }
 
@@ -632,7 +632,7 @@ function calculateWinner(squares) {
     [1, 4, 7],
     [2, 5, 8],
     [0, 4, 8],
-    [2, 4, 6],
+    [2, 4, 6]
   ];
   for (let i = 0; i < lines.length; i++) {
     const [a, b, c] = lines[i];
@@ -673,7 +673,7 @@ You can now change `handleClick` in Board to return early and ignore the click i
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !this.state.xIsNext
     });
   }
 ```
@@ -694,14 +694,14 @@ history = [
     squares: [
       null, null, null,
       null, null, null,
-      null, null, null,
+      null, null, null
     ]
   },
   {
     squares: [
       null, null, null,
       null, 'X', null,
-      null, null, null,
+      null, null, null
     ]
   },
   // ...
@@ -718,9 +718,9 @@ class Game extends React.Component {
     super();
     this.state = {
       history: [{
-        squares: Array(9).fill(null),
+        squares: Array(9).fill(null)
       }],
-      xIsNext: true,
+      xIsNext: true
     };
   }
 
@@ -758,7 +758,7 @@ class Board extends React.Component {
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       squares: squares,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !this.state.xIsNext
     });
   }
 
@@ -877,9 +877,9 @@ We also need to change it a little, since Game state is structured differently. 
     squares[i] = this.state.xIsNext ? 'X' : 'O';
     this.setState({
       history: history.concat([{
-        squares: squares,
+        squares: squares
       }]),
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !this.state.xIsNext
     });
   }
 ```
@@ -1009,10 +1009,10 @@ class Game extends React.Component {
     super();
     this.state = {
       history: [{
-        squares: Array(9).fill(null),
+        squares: Array(9).fill(null)
       }],
       stepNumber: 0,
-      xIsNext: true,
+      xIsNext: true
     };
   }
 ```
@@ -1029,7 +1029,7 @@ Add a method called `jumpTo` to the Game class:
   jumpTo(step) {
     this.setState({
       stepNumber: step,
-      xIsNext: (step % 2) === 0,
+      xIsNext: (step % 2) === 0
     });
   }
 
@@ -1054,7 +1054,7 @@ Then update `stepNumber` when a new move is made by adding `stepNumber: history.
         squares: squares
       }]),
       stepNumber: history.length,
-      xIsNext: !this.state.xIsNext,
+      xIsNext: !this.state.xIsNext
     });
   }
 ```
