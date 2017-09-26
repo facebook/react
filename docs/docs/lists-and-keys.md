@@ -200,7 +200,7 @@ ReactDOM.render(
 );
 ```
 
-[Try it on CodePen.](https://codepen.io/rthor/pen/QKzJKG?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/ZXeOGM?editors=0010)
 
 A good rule of thumb is that elements inside the `map()` call need keys.
 
