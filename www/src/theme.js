@@ -337,6 +337,10 @@ const sharedStyles = {
       '& li.button-newapp': {
         marginTop: 0,
       },
+
+      '& ol, & ul': {
+        marginLeft: 20,
+      },
     },
 
     '& img': {
