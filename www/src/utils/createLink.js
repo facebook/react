@@ -18,7 +18,7 @@ import isItemActive from 'utils/isItemActive';
 import slugify from 'utils/slugify';
 import {colors, media} from 'theme';
 
-const createLinkBlog = (location, section, item) => {
+const createLinkBlog = ({item, location, section}) => {
   const isActive = isItemActive(location, item);
 
   return (
@@ -29,7 +29,7 @@ const createLinkBlog = (location, section, item) => {
   );
 };
 
-const createLinkCommunity = (location, section, item) => {
+const createLinkCommunity = ({item, location, section}) => {
   if (item.href) {
     return (
       <a css={[linkCss]} href={item.href}>
@@ -45,11 +45,15 @@ const createLinkCommunity = (location, section, item) => {
       </a>
     );
   } else {
-    return createLinkDocs(location, section, item);
+    return createLinkDocs({
+      item,
+      location,
+      section,
+    });
   }
 };
 
-const createLinkDocs = (location, section, item) => {
+const createLinkDocs = ({item, location, section}) => {
   const isActive = isItemActive(location, item);
 
   return (
@@ -62,13 +66,13 @@ const createLinkDocs = (location, section, item) => {
   );
 };
 
-const createLinkTutorial = (location, section, item, closeParentMenu) => {
+const createLinkTutorial = ({item, location, onLinkClick, section}) => {
   const isActive = isItemActive(location, item);
 
   return (
     <Link
       css={[linkCss, isActive && activeLinkCss]}
-      onClick={closeParentMenu}
+      onClick={onLinkClick}
       to={item.href}>
       {isActive && <span css={activeLinkBefore} />}
       {item.title}

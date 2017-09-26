@@ -66,13 +66,23 @@ const Section = ({
           css={{
             marginTop: 5,
           }}>
-          {createLink(location, section, item, onLinkClick)}
+          {createLink({
+            item,
+            location,
+            onLinkClick,
+            section,
+          })}
 
           {item.subitems &&
             <ul css={{marginLeft: 20}}>
               {item.subitems.map(subitem => (
                 <li key={subitem.id}>
-                  {createLink(location, section, subitem, onLinkClick)}
+                  {createLink({
+                    item: subitem,
+                    location,
+                    onLinkClick,
+                    section,
+                  })}
                 </li>
               ))}
             </ul>}
