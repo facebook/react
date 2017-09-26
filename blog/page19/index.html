@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,131 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/12/23/community-roundup-12.html">Community Round-up #12</a>
+
+</h1>
+
+<p class="meta">
+  December 23, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the <a href="/react/docs/getting-started.html">docs</a> and do not hesitate to ask questions on the <a href="https://groups.google.com/group/reactjs">Google Group</a>, <a href="irc://chat.freenode.net/reactjs">IRC</a> or <a href="http://stackoverflow.com/questions/tagged/reactjs">Stack Overflow</a>. We are trying our best to help you out!</p>
+
+<h2>The Future of JavaScript MVC</h2>
+
+<p><a href="https://swannodette.github.io/">David Nolen</a> announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient <a href="/react/docs/component-specs.html#updating-shouldcomponentupdate">shouldComponentUpdate</a> and get huge performance improvements on some tasks.</p>
+
+<blockquote>
+<p>We&#39;ve known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it&#39;s no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.</p>
+
+<p>Wait, wait, wait. What does the performance of persistent data structures have to do with the future of JavaScript MVCs?</p>
+
+<p>A whole lot.
+<figure><a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/"><img src="/react/img/blog/om-backbone.png" alt=""></a></figure></p>
+
+<p><a href="https://swannodette.github.io/2013/12/17/the-future-of-javascript-mvcs/">Read the full article...</a></p>
+</blockquote>
+
+<h2>Scroll Position with React</h2>
+
+<p>Managing the scroll position when new content is inserted is usually very tricky to get right. <a href="http://blog.vjeux.com/">Vjeux</a> discovered that <a href="/react/docs/component-specs.html#updating-componentwillupdate">componentWillUpdate</a> and <a href="/react/docs/component-specs.html#updating-componentdidupdate">componentDidUpdate</a> were triggered exactly at the right time to manage the scroll position.</p>
+
+<blockquote>
+<p>We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">componentWillUpdate: function() {
+  var node = this.getDOMNode();
+  this.shouldScrollBottom =
+    (node.scrollTop + node.offsetHeight) === node.scrollHeight;
+},
+componentDidUpdate: function() {
+  if (this.shouldScrollBottom) {
+    var node = this.getDOMNode();
+    node.scrollTop = node.scrollHeight
+  }
+},
+</code></pre></div>
+<p><a href="http://blog.vjeux.com/2013/javascript/scroll-position-with-react.html">Check out the blog article...</a></p>
+</blockquote>
+
+<h2>Lights Out</h2>
+
+<p>React declarative approach is well suited to write games. <a href="https://github.com/chenglou">Cheng Lou</a> wrote the famous Lights Out game in React. It&#39;s a good example of use of <a href="/react/docs/animation.html">TransitionGroup</a> to implement animations.
+<figure><a href="https://chenglou.github.io/react-lights-out/"><img src="/react/img/blog/lights-out.png" alt=""></a></figure></p>
+
+<p><a href="https://chenglou.github.io/react-lights-out/">Try it out!</a></p>
+
+<h2>Reactive Table Bookmarklet</h2>
+
+<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> wrote a bookmarklet to process tables on the internet. It adds a little &quot;pop&quot; button that expands to a full-screen view with sorting, editing and export to csv and json.
+<figure><a href="http://www.phpied.com/reactivetable-bookmarklet/"><img src="/react/img/blog/reactive-bookmarklet.png" alt=""></a></figure></p>
+
+<p><a href="http://www.phpied.com/reactivetable-bookmarklet/">Check out the blog post...</a></p>
+
+<h2>MontageJS Tutorial in React</h2>
+
+<p><a href="https://twitter.com/ssorallen">Ross Allen</a> implemented <a href="http://montagejs.org/">MontageJS</a>&#39;s <a href="http://montagejs.org/docs/tutorial-reddit-client-with-montagejs.html">Reddit tutorial</a> in React. This is a good opportunity to compare the philosophies of the two libraries.</p>
+
+<p><a href="https://jsfiddle.net/ssorallen/fEsYt/">View the source on JSFiddle...</a></p>
+
+<h2>Writing Good React Components</h2>
+
+<p><a href="http://blog.whn.se/">William Högman Rudenmalm</a> wrote an article on how to write good React components. This is full of good advice.</p>
+
+<blockquote>
+<p>The idea of dividing software into smaller parts or components is hardly new - It is the essance of good software. The same principles that apply to software in general apply to building React components. That doesn’t mean that writing good React components is just about applying general rules.</p>
+
+<p>The web offers a unique set of challenges, which React offers interesting solutions to. First and foremost among these solutions is the what is called the Mock DOM. Rather than having user code interface with the DOM in a direct fashion, as is the case with most DOM manipulation libraries.</p>
+
+<p>You build a model of how you want the DOM end up like. React then inserts this model into the DOM. This is very useful for updates because React simply compares the model or mock DOM against the actual DOM, and then only updates based on the difference between the two states.</p>
+
+<p><a href="http://blog.whn.se/post/69621609605/writing-good-react-components">Read the full article ...</a></p>
+</blockquote>
+
+<h2>Hoodie React TodoMVC</h2>
+
+<p><a href="http://svenlito.com/">Sven Lito</a> integrated the React TodoMVC example within an <a href="http://hood.ie/">Hoodie</a> web app environment. This should let you get started using Hoodie and React.</p>
+<div class="highlight"><pre><code class="language-text" data-lang="text">hoodie new todomvc -t &quot;hoodiehq/hoodie-react-todomvc&quot;
+</code></pre></div>
+<p><a href="https://github.com/hoodiehq/hoodie-react-todomvc">Check out on GitHub...</a></p>
+
+<h2>JSX Compiler</h2>
+
+<p>Ever wanted to have a quick way to see what a JSX tag would be converted to? <a href="http://www.yungsters.com/">Tim Yung</a> made a page for it.
+<figure><a href="/react/jsx-compiler.html"><img src="/react/img/blog/jsx-compiler.png" alt=""></a></figure></p>
+
+<p><a href="/react/jsx-compiler.html">Try it out!</a></p>
+
+<h2>Random Tweet</h2>
+
+<p><center><blockquote class="twitter-tweet" lang="en"><p>.<a href="https://twitter.com/jordwalke">@jordwalke</a> lays down some truth <a href="http://t.co/AXAn0UlUe3">http://t.co/AXAn0UlUe3</a>, optimizing your JS application shouldn&#39;t force you to rewrite so much code <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; David Nolen (@swannodette) <a href="https://twitter.com/swannodette/statuses/413780079249215488">December 19, 2013</a></blockquote></center></p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -489,54 +608,6 @@ Is this some sort of template language? Specifically no. This might have been th
 <p>I&#39;m going to start adding a tweet at the end of each round-up. We&#39;ll start with this one:</p>
 
 <blockquote class="twitter-tweet"><p>This weekend <a href="https://twitter.com/search?q=%23angular&amp;src=hash">#angular</a> died for me. Meet new king <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; Eldar Djafarov &#x30C3; (@edjafarov) <a href="https://twitter.com/edjafarov/statuses/397033796710961152">November 3, 2013</a></blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/10/29/react-v0-5-1.html">React v0.5.1</a>
-
-</h1>
-
-<p class="meta">
-  October 29, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This release focuses on fixing some small bugs that have been uncovered over the past two weeks. I would like to thank everybody involved, specifically members of the community who fixed half of the issues found. Thanks to <a href="https://github.com/spicyj">Ben Alpert</a>, <a href="https://github.com/andreypopp">Andrey Popp</a>, and <a href="https://github.com/lrowe">Laurence Rowe</a> for their contributions!</p>
-
-<h2>Changelog</h2>
-
-<h3>React</h3>
-
-<ul>
-<li>Fixed bug with <code>&lt;input type=&quot;range&quot;&gt;</code> and selection events.</li>
-<li>Fixed bug with selection and focus.</li>
-<li>Made it possible to unmount components from the document root.</li>
-<li>Fixed bug for <code>disabled</code> attribute handling on non-<code>&lt;input&gt;</code> elements.</li>
-</ul>
-
-<h3>React with Addons</h3>
-
-<ul>
-<li>Fixed bug with transition and animation event detection.</li>
-</ul>
 
 </div>
 

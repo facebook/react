@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,73 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2016/03/16/react-v15-rc2.html">React v15.0 Release Candidate 2</a>
+
+</h1>
+
+<p class="meta">
+  March 16, 2016
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re releasing a second release candidate for version 15. Primarily this is to address 2 issues, but we also picked up a few small changes from new contributors, including some improvements to some of our new warnings.</p>
+
+<p>The most pressing change that was made is to fix a bug in our new code that removes <code>&lt;span&gt;</code>s, as discussed in the original RC1 post. Specifically we have some code that takes a different path in IE11 and Edge due to the speed of some DOM operations. There was a bug in this code which didn&#39;t break out of the optimization for <code>DocumentFragment</code>s, resulting in text not appearing at all. Thanks to the several people who <a href="https://github.com/facebook/react/issues/6246">reported this</a>.</p>
+
+<p>The other change is to our SVG code. In RC1 we had made the decision to pass through all attributes directly. This led to <a href="https://github.com/facebook/react/issues/6211">some confusion with <code>class</code> vs <code>className</code></a> and ultimately led us to reconsider our position on the approach. Passing through all attributes meant that we would have two different patterns for using React where things like hyphenated attributes would work for SVG but not HTML. In the future, we <em>might</em> change our approach to the problem for HTML as well but in the meantime, maintaining consistency is important. So we reverted the changes that allowed the attributes to be passed through and instead expanded the SVG property list to include all attributes that are in the spec. We believe we have everything now but definitely <a href="https://github.com/facebook/react/issues/1657#issuecomment-197031403">let us know</a> if we missed anything. It was and still is our intent to support the full range of SVG tags and attributes in this release.</p>
+
+<p>Thanks again to everybody who has tried the RC1 and reported issues. It has been extremely important and we wouldn&#39;t be able to do this without your help!</p>
+
+<h2>Installation</h2>
+
+<p>We recommend using React from <code>npm</code> and using a tool like browserify or webpack to build your code into a single bundle. To install the two packages:</p>
+
+<ul>
+<li><code>npm install --save react@15.0.0-rc.2 react-dom@15.0.0-rc.2</code></li>
+</ul>
+
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, set the <code>NODE_ENV</code> environment variable to <code>production</code> to use the production build of React which does not include the development warnings and runs significantly faster.</p>
+
+<p>If you can’t use <code>npm</code> yet, we provide pre-built browser builds for your convenience, which are also available in the <code>react</code> package on bower.</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-15.0.0-rc.2.js">https://fb.me/react-15.0.0-rc.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-15.0.0-rc.2.min.js">https://fb.me/react-15.0.0-rc.2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-15.0.0-rc.2.js">https://fb.me/react-with-addons-15.0.0-rc.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-15.0.0-rc.2.min.js">https://fb.me/react-with-addons-15.0.0-rc.2.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-15.0.0-rc.2.js">https://fb.me/react-dom-15.0.0-rc.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.2.min.js">https://fb.me/react-dom-15.0.0-rc.2.min.js</a><br></li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -423,79 +484,6 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0-rc.1.min.
 <p>Given the language constraints, it is sometimes impossible for us to achieve meaningful equality semantics. In such cases, React will call <code>componentWillReceiveProps</code> (even though the props might not have changed) so the component has an opportunity to examine the new props and act accordingly.</p>
 
 <p>As a result, your implementation of <code>componentWillReceiveProps</code> MUST NOT assume that your props have changed. If you want an operation (such as a network request) to occur only when props have changed, your <code>componentWillReceiveProps</code> code needs to check to see if the props actually changed.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/12/29/react-v0.14.4.html">React v0.14.4</a>
-
-</h1>
-
-<p class="meta">
-  December 29, 2015
-  by
-  
-    
-      <a href="http://benalpert.com">Ben Alpert</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Happy December! We have a minor point release today. It has just a few small bug fixes.</p>
-
-<p>The release is now available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.14.4.js">https://fb.me/react-0.14.4.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.14.4.min.js">https://fb.me/react-0.14.4.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.4.js">https://fb.me/react-with-addons-0.14.4.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.14.4.min.js">https://fb.me/react-with-addons-0.14.4.min.js</a><br></li>
-<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-0.14.4.js">https://fb.me/react-dom-0.14.4.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-0.14.4.min.js">https://fb.me/react-dom-0.14.4.min.js</a><br></li>
-<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br>
-Dev build with warnings: <a href="https://fb.me/react-dom-server-0.14.4.js">https://fb.me/react-dom-server-0.14.4.js</a><br>
-Minified build for production: <a href="https://fb.me/react-dom-server-0.14.4.min.js">https://fb.me/react-dom-server-0.14.4.min.js</a><br></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.14.4</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>Changelog</h2>
-
-<h3>React</h3>
-
-<ul>
-<li>Minor internal changes for better compatibility with React Native</li>
-</ul>
-
-<h3>React DOM</h3>
-
-<ul>
-<li>The <code>autoCapitalize</code> and <code>autoCorrect</code> props are now set as attributes in the DOM instead of properties to improve cross-browser compatibility</li>
-<li>Fixed bug with controlled <code>&lt;select&gt;</code> elements not handling updates properly</li>
-</ul>
-
-<h3>React Perf Add-on</h3>
-
-<ul>
-<li>Some DOM operation names have been updated for clarity in the output of <code>.printDOM()</code></li>
-</ul>
 
 </div>
 

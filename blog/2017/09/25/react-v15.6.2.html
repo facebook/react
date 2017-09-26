@@ -6,13 +6,13 @@
 <head>
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-  <title>Community Round-up #26 - React Blog</title>
+  <title>React v15.6.2 - React Blog</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta property="og:title" content="Community Round-up #26 - React Blog">
+  <meta property="og:title" content="React v15.6.2 - React Blog">
   <meta property="og:type" content="article">
-  <meta property="og:url" content="https://facebook.github.io/react/blog/2015/03/30/community-roundup-26.html">
+  <meta property="og:url" content="https://facebook.github.io/react/blog/2017/09/25/react-v15.6.2.html">
   <meta property="og:image" content="https://facebook.github.io/react/img/logo_og.png">
-  <meta property="og:description" content="We open sourced React Native last week and the community reception blew away all our expectations! So many of you tried it, made cool stuff with it, raised many issues and even submitted pull requests to fix them! The entire team wants to say thank you!
+  <meta property="og:description" content="Today we&#39;re sending out React 15.6.2. In 15.6.1, we shipped a few fixes for change events and inputs that had some unintended consequences. Those regressions have been ironed out, and we&#39;ve also included a few more fixes to improve the stability of React across all browsers.
 ">
   <meta property="fb:app_id" content="623268441017527">
 
@@ -78,16 +78,16 @@
 
 <h1>
 
-  Community Round-up #26
+  React v15.6.2
 
 </h1>
 
 <p class="meta">
-  March 30, 2015
+  September 25, 2017
   by
   
     
-      <a href="https://twitter.com/vjeux">Vjeux</a>
+      
     
     
   
@@ -96,83 +96,59 @@
 <hr>
 
 <div class="post">
-  <p>We open sourced React Native last week and the community reception blew away all our expectations! So many of you tried it, made cool stuff with it, raised many issues and even submitted pull requests to fix them! The entire team wants to say thank you!</p>
+  <p>Today we&#39;re sending out React 15.6.2. In 15.6.1, we shipped a few fixes for change events and inputs that had some unintended consequences. Those regressions have been ironed out, and we&#39;ve also included a few more fixes to improve the stability of React across all browsers.</p>
 
-<blockquote class="twitter-tweet" lang="en"><p><a href="https://twitter.com/hashtag/reactnative?src=hash">#reactnative</a> is like when you get a new expansion pack, and everybody is running around clueless about which NPC to talk to for the quests</p>&mdash; Ryan Florence (@ryanflorence) <a href="https://twitter.com/ryanflorence/status/581810423554543616">March 28, 2015</a></blockquote>
+<p>Additionally, 15.6.2 adds support for the <a href="https://developers.google.com/web/updates/2017/03/chrome-58-media-updates#controlslist"><code>controlList</code></a> attribute, and CSS columns are no longer appended with a <code>px</code> suffix.</p>
 
-<h2>When is React Native Android coming?</h2>
+<h2>Installation</h2>
 
-<p><strong>Give us 6 months</strong>. At Facebook, we strive to only open-source projects that we are using in production. While the Android backend for React Native is starting to work (see video below at 37min), it hasn&#39;t been shipped to any users yet. There&#39;s a lot of work that goes into open-sourcing a project, and we want to do it right so that you have a great experience when using it.</p>
+<p>We recommend using <a href="https://yarnpkg.com/">Yarn</a> or <a href="https://www.npmjs.com/">npm</a> for managing front-end dependencies. If you&#39;re new to package managers, the <a href="https://yarnpkg.com/en/docs/getting-started">Yarn documentation</a> is a good place to get started.</p>
 
-<iframe width="100%" height="315" src="https://www.youtube-nocookie.com/embed/X6YbAKiLCLU?start=2220" frameborder="0" allowfullscreen></iframe>
+<p>To install React with Yarn, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react@^15.6.2 react-dom@^15.6.2
+</code></pre></div>
+<p>To install React with npm, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react@^15.6.2 react-dom@^15.6.2
+</code></pre></div>
+<p>We recommend using a bundler like <a href="https://webpack.js.org/">webpack</a> or <a href="http://browserify.org/">Browserify</a> so you can write modular code and bundle it together into small packages to optimize load time.</p>
 
-<h2>Ray Wenderlich - Property Finder</h2>
+<p>Remember that by default, React runs extra checks and provides helpful warnings in development mode. When deploying your app, make sure to <a href="/react/docs/optimizing-performance.html#use-the-production-build">use the production build</a>.</p>
 
-<p>If you are getting started with React Native, you should absolutely <a href="http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript">use this tutorial</a> from Colin Eberhardt. It goes through all the steps to make a reasonably complete app.</p>
+<p>In case you don&#39;t use a bundler, we also provide pre-built bundles in the npm packages which you can <a href="/react/docs/installation.html#using-a-cdn">include as script tags</a> on your page:</p>
 
-<p><center>
-<a href="http://www.raywenderlich.com/99473/introducing-react-native-building-apps-javascript"><img src="/react/img/blog/property-finder.png" alt=""></a>
-</center></p>
+<ul>
+<li><strong>React</strong><br/>
+Dev build with warnings: <a href="https://unpkg.com/react@15.6.2/dist/react.js">react/dist/react.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react@15.6.2/dist/react.min.js">react/dist/react.min.js</a><br/></li>
+<li><strong>React with Add-Ons</strong><br/>
+Dev build with warnings: <a href="https://unpkg.com/react@15.6.2/dist/react-with-addons.js">react/dist/react-with-addons.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react@15.5.0/dist/react-with-addons.min.js">react/dist/react-with-addons.min.js</a><br/></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br/>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.6.2/dist/react-dom.js">react-dom/dist/react-dom.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.6.2/dist/react-dom.min.js">react-dom/dist/react-dom.min.js</a><br/></li>
+<li><strong>React DOM Server</strong> (include React in the page before React DOM Server)<br/>
+Dev build with warnings: <a href="https://unpkg.com/react-dom@15.6.2/dist/react-dom-server.js">react-dom/dist/react-dom-server.js</a><br/>
+Minified build for production: <a href="https://unpkg.com/react-dom@15.6.2/dist/react-dom-server.min.js">react-dom/dist/react-dom-server.min.js</a><br/></li>
+</ul>
 
-<p>Colin also <a href="http://blog.scottlogic.com/2015/03/26/react-native-retrospective.html">blogged about his experience using React Native</a> for a few weeks and gives his thoughts on why you would or wouldn&#39;t use it.</p>
+<p>We&#39;ve also published version <code>15.6.2</code> of <code>react</code> and <code>react-dom</code> on npm, and the <code>react</code> package on bower.</p>
 
-<h2>The Changelog</h2>
+<hr>
 
-<p>Spencer Ahrens and I had the great pleasure to talk about React Native on <a href="https://thechangelog.com/149/">The Changelog</a> podcast. It was really fun to chat for an hour, I hope that you&#39;ll enjoy listening to it. :)</p>
+<h2>Changelog</h2>
 
-<audio src="http://fdlyr.co/d/changelog/cdn.5by5.tv/audio/broadcasts/changelog/2015/changelog-149.mp3" controls="controls" style="width: 100%"></audio>
+<h2>15.6.2 (September 25th, 2017)</h2>
 
-<h2>Hacker News</h2>
+<h3>React DOM</h3>
 
-<p>Less than 24 hours after React Native was open sourced, Simarpreet Singh built an <a href="https://github.com/iSimar/HackerNews-React-Native">Hacker News reader app from scratch</a>. It&#39;s unbelievable how fast he was able to pull it off!</p>
-
-<p><center>
-<a href="https://github.com/iSimar/HackerNews-React-Native"><img src="/react/img/blog/hacker-news-react-native.png" alt=""></a>
-</center></p>
-
-<h2>Parse + React</h2>
-
-<p>There&#39;s a huge ecosystem of JavaScript modules on npm and React Native was designed to work well with the ones that don&#39;t have DOM dependencies. Parse is a great example; you can <code>npm install parse</code> on your React Native project and it&#39;ll work as is. :) We still have <a href="https://github.com/facebook/react-native/issues/406">a</a> <a href="https://github.com/facebook/react-native/issues/370">few</a> <a href="https://github.com/facebook/react-native/issues/316">issues</a> to solve; please create an issue if your favorite library doesn&#39;t work out of the box.</p>
-
-<p><center>
-<a href="http://blog.parse.com/2015/03/25/parse-and-react-shared-chemistry/"><img src="/react/img/blog/parse-react.jpg" alt=""></a>
-</center></p>
-
-<h2>tcomb-form-native</h2>
-
-<p>Giulio Canti is the author of the <a href="https://github.com/gcanti/tcomb-form">tcomb-form library</a> for React. He already <a href="https://github.com/gcanti/tcomb-form-native">ported it to React Native</a> and it looks great!</p>
-
-<p><center>
-<a href="https://github.com/gcanti/tcomb-form-native"><img src="/react/img/blog/tcomb-react-native.png" alt=""></a>
-</center></p>
-
-<h2>Facebook Login with React Native</h2>
-
-<p>One of the reason we built React Native is to be able to use all the libraries in the native ecosystem. Brent Vatne leads the way and explains <a href="http://brentvatne.ca/facebook-login-with-react-native/">how to use Facebook Login with React Native</a>.</p>
-
-<h2>Modus Create</h2>
-
-<p>Jay Garcia spent a lot of time during the beta working on a NES music player with React Native. He wrote a blog post to share his experience and explains some code snippets.</p>
-
-<p><center>
-<a href="http://moduscreate.com/react-native-has-landed/"><img src="/react/img/blog/modus-create.gif" alt=""></a>
-</center></p>
-
-<h2>React Native with Babel and webpack</h2>
-
-<p>React Native ships with a custom packager and custom ES6 transforms instead of using what the open source community settled on such as webpack and Babel. The main reason for this is performance – we couldn&#39;t get those tools to have sub-second reload time on a large codebase.</p>
-
-<p>Roman Liutikov found a way to <a href="https://github.com/roman01la/react-native-babel">use webpack and Babel to run on React Native</a>! In the future, we want to work with those projects to provide cleaner extension mechanisms.</p>
-
-<h2>A Dynamic, Crazy, Native Mobile Future—Powered by JavaScript</h2>
-
-<p>Clay Allsopp wrote a post about <a href="https://medium.com/@clayallsopp/a-dynamic-crazy-native-mobile-future-powered-by-javascript-70f2d56b1987">all the crazy things you could do with a JavaScript engine that renders native views</a>. What about native embeds, seamless native browser, native search engine or even app generation...</p>
-
-<h2>Random Tweet</h2>
-
-<p>We&#39;ve spent a lot of efforts getting the onboarding as easy as possible and we&#39;re really happy that people noticed. We still have a lot of work to do on documentation, stay tuned!</p>
-
-<blockquote class="twitter-tweet" lang="en"><p>Wow. Getting started with React Native might have been the smoothest experience I’ve ever had with a new developer product.</p>&mdash; Andreas Eldh (@eldh) <a href="https://twitter.com/eldh/status/581186172094980096">March 26, 2015</a></blockquote>
+<ul>
+<li>Fix a bug where modifying document.documentMode would trigger IE detection in other browsers, breaking change events (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/10032">#10032</a></li>
+<li>CSS Columns are treated as unitless numbers (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/10115">#10115</a></li>
+<li>Fix bug in QtWebKit when wrapping synthetic events in proxies (<a href="https://github.com/walrusfruitcake">@walrusfruitcake</a> in <a href="https://github.com/facebook/react/pull/10011">#10115</a></li>
+<li>Prevent event handlers from receiving extra argument (dev only) (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/8363">#10115</a></li>
+<li>Fix cases where onChange would not fire with defaultChecked on radio inputs (<a href="https://github.com/jquense">@jquense</a> in <a href="https://github.com/facebook/react/pull/10156">#10156</a>)</li>
+<li>Add support for controlList attribute to DOM property whitelist (<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/9940">#9940</a>)</li>
+</ul>
 
 </div>
 
@@ -186,7 +162,7 @@
     <h3>Recent posts</h3>
     <ul>
       
-        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html" class="active">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       

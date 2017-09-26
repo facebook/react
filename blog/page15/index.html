@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,140 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/07/28/community-roundup-20.html">Community Round-up #20</a>
+
+</h1>
+
+<p class="meta">
+  July 28, 2014
+  by
+  
+    
+      <a href="https://twitter.com/loukan42">Lou Husson</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>It&#39;s an exciting time for React as there are now more commits from open source contributors than from Facebook engineers! Keep up the good work :)</p>
+
+<h2>Atom moves to React</h2>
+
+<p><a href="http://blog.atom.io/2014/07/02/moving-atom-to-react.html">Atom, GitHub&#39;s code editor, is now using React</a> to build the editing experience. They made the move in order to improve performance. By default, React helped them eliminate unnecessary reflows, enabling them to focus on architecting the rendering pipeline in order to minimize repaints by using hardware acceleration. This is a testament to the fact that React&#39;s architecture is perfect for high performant applications.</p>
+
+<p><a href="http://blog.atom.io/2014/07/02/moving-atom-to-react.html"><img src="/react/img/blog/gpu-cursor-move.gif" style="width: 100%;" /></a></p>
+
+<h2>Why Does React Scale?</h2>
+
+<p>At the last <a href="http://2014.jsconf.us/">JSConf.us</a>, Vjeux talked about the design decisions made in the API that allows it to scale to a large number of developers. If you don&#39;t have 20 minutes, take a look at the <a href="https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014">annotated slides</a>.</p>
+
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
+
+<h2>Live Editing</h2>
+
+<p>One of the best features of React is that it provides the foundations to implement concepts that were otherwise extremely difficult, like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... <a href="https://twitter.com/dan_abramov">Dan Abramov</a> got hot code reloading working with webpack in order to <a href="https://gaearon.github.io/react-hot-loader/">live edit a React project</a>!</p>
+
+<iframe src="//player.vimeo.com/video/100010922" width="100%" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
+
+<h2>ReactIntl Mixin by Yahoo</h2>
+
+<p>There are a couple of React-related projects that recently appeared on Yahoo&#39;s GitHub, the first one being an  <a href="https://github.com/yahoo/react-intl">internationalization mixin</a>. It&#39;s great to see them getting excited about React and contributing back to the community.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactIntlMixin</span><span class="p">],</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
+        <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">intlDate</span><span class="p">(</span><span class="mi">1390518044403</span><span class="p">,</span> <span class="p">{</span> <span class="nx">hour</span><span class="o">:</span> <span class="s1">&#39;numeric&#39;</span><span class="p">,</span> <span class="nx">minute</span><span class="o">:</span> <span class="s1">&#39;numeric&#39;</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+        <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">intlNumber</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="p">{</span> <span class="nx">style</span><span class="o">:</span> <span class="s1">&#39;percent&#39;</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">locales</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;fr-FR&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<h2>Thinking and Learning React</h2>
+
+<p>Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about routing, event dispatch, touchable components, and basic animations.</p>
+
+<h2>London React Meetup</h2>
+
+<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available, with lots of great content.</p>
+
+<ul>
+<li>What&#39;s new in React 0.11 and how to improve performance by guaranteeing immutability</li>
+<li>State handling in React with Morearty.JS</li>
+<li>React on Rails - How to use React with Ruby on Rails to build isomorphic apps</li>
+<li>Building an isomorphic, real-time to-do list with moped and node.js</li>
+</ul>
+
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
+
+<p>In related news, the next <a href="http://www.meetup.com/ReactJS-San-Francisco/events/195518392/">React SF Meetup</a> will be from Prezi: <a href="https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135">“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”</a>. While not in React, their tech is really awesome and shares a lot of React&#39;s design principles and perf optimizations.</p>
+
+<h2>Using React and KendoUI Together</h2>
+
+<p>One of the strengths of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write <a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/">React component adapters for KendoUI</a>.</p>
+
+<figure><a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/"><img src="/react/img/blog/kendoui.png" /></a></figure>
+
+<h2>Acorn JSX</h2>
+
+<p>Ingvar Stepanyan extended the Acorn JavaScript parser to support JSX. The result is a <a href="https://github.com/RReverser/acorn-jsx">JSX parser</a> that&#39;s 1.5–2.0x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things, but it&#39;s always a good thing to get competition on performance!</p>
+
+<h2>ReactScriptLoader</h2>
+
+<p>Yariv Sadan created <a href="https://github.com/yariv/ReactScriptLoader">ReactScriptLoader</a> to make it easier to write components that require an external script.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactScriptLoaderMixin</span><span class="p">],</span>
+  <span class="nx">getScriptURL</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="s1">&#39;http://d3js.org/d3.v3.min.js&#39;</span><span class="p">;</span>
+  <span class="p">},</span>
+  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">{</span> <span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">false</span> <span class="p">};</span>
+  <span class="p">},</span>
+  <span class="nx">onScriptLoaded</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">onScriptError</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
+  <span class="p">},</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoading</span> <span class="o">?</span> <span class="s1">&#39;Loading script...&#39;</span> <span class="o">:</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoadError</span> <span class="o">?</span> <span class="s1">&#39;Loading failed&#39;</span> <span class="o">:</span>
+      <span class="s1">&#39;Loading succeeded&#39;</span><span class="p">;</span>
+    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/span&gt;;</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<h2>Random Tweet</h2>
+
+<blockquote class="twitter-tweet" data-conversation="none" lang="en"><p>“<a href="https://twitter.com/apphacker">@apphacker</a>: I take back the mean things I said about <a href="https://twitter.com/reactjs">@reactjs</a> I actually like it.” Summarizing the life of ReactJS in a single tweet.</p>&mdash; Jordan (@jordwalke) <a href="https://twitter.com/jordwalke/statuses/490747339607265280">July 20, 2014</a></blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -644,45 +772,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.11.0-r
 <h2>Random Tweets</h2>
 
 <blockquote class="twitter-tweet" lang="en"><p>Spent 12 hours so far with <a href="https://twitter.com/hashtag/reactjs?src=hash">#reactjs</a>. Spent another 2 wondering why we&#39;ve been doing JS frameworks wrong until now. React makes me happy.</p>&mdash; Paul Irwin (@paulirwin) <a href="https://twitter.com/paulirwin/statuses/481263947589242882">June 24, 2014</a></blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/05/29/one-year-of-open-source-react.html">One Year of Open-Source React</a>
-
-</h1>
-
-<p class="meta">
-  May 29, 2014
-  by
-  
-    
-      <a href="https://twitter.com/_chenglou">Cheng Lou</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Today marks the one-year open-source anniversary of React.</p>
-
-<p>It’s been a crazy ride. 2.3k commits and 1.5k issues and pull requests later, we’re approaching version 1.0 and nearing 7k GitHub stars, with big names such as Khan Academy, New York Times, and Airbnb (and naturally, Facebook and Instagram) using React in production, and many more developers blogging their success stories with it. The <a href="/react/blog/2014/03/28/the-road-to-1.0.html">roadmap</a> gives a glimpse into the future of the library; exciting stuff lies ahead!</p>
-
-<p>Every success has its story. React was born out of our frustration at existing solutions for building UIs. When it was first suggested at Facebook, few people thought that functionally re-rendering everything and diffing the results could ever perform well. However, support grew after we built the first implementation and people wrote their first components. When we open-sourced React, the initial reception was <a href="https://www.reddit.com/r/programming/comments/1fak87/react_facebooks_latest_javascript_client_library/">similarly skeptical</a>. It challenges many pre-established conventions and received mostly disapproving first-impressions, intermingled with positive ones that often were votes of confidence in Facebook’s engineering capabilities. On an open, competitive platform such as the web, it&#39;s been hard to convince people to try React. <a href="/react/docs/jsx-in-depth.html">JSX</a>, in particular, filtered out a huge chunk of potential early adopters.</p>
-
-<p>Fast forward one year, React has strongly <a href="https://news.ycombinator.com/item?id=7489959">grown in popularity</a>. Special acknowledgments go to Khan Academy, the ClojureScript community, and established frameworks such as Ember and Angular for contributing to and debating on our work. We&#39;d also like to thank all the <a href="https://github.com/facebook/react/graphs/contributors">individual contributors</a> who have taken the time to help out over the past year. React, as a library and as a new paradigm on the web, wouldn&#39;t have gained as much traction without them. In the future, we will continue to try to set an example of what&#39;s possible to achieve when we rethink about current “best practices”.</p>
-
-<p>Here’s to another year!</p>
 
 </div>
 

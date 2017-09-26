@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,121 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/03/19/react-v0.10-rc1.html">React v0.10 RC</a>
+
+</h1>
+
+<p class="meta">
+  March 19, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p><a href="/react/blog/2014/02/20/react-v0.9.html">v0.9 has only been out for a month</a>, but we’re getting ready to push out v0.10 already. Unlike v0.9 which took a long time, we don&#39;t have a long list of changes to talk about.</p>
+
+<p>The release candidate is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.10.0-rc1.js">https://fb.me/react-0.10.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.10.0-rc1.min.js">https://fb.me/react-0.10.0-rc1.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.10.0-rc1.js">https://fb.me/react-with-addons-0.10.0-rc1.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0-rc1.min.js">https://fb.me/react-with-addons-0.10.0-rc1.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.10.0-rc1.js">https://fb.me/JSXTransformer-0.10.0-rc1.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.10.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+
+<h2>Clone On Mount</h2>
+
+<p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
+
+<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="https://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
+
+<p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
+<span class="c1">// &quot;descriptor&quot;, not necessarily the mounted instance.</span>
+<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">;</span>
+<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">);</span>
+<span class="c1">// ...</span>
+<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
+
+<span class="c1">// The change here is very simple. The return value of renderComponent will be</span>
+<span class="c1">// the mounted instance.</span>
+<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">)</span>
+<span class="c1">// ...</span>
+<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
+</code></pre></div>
+<p>These warnings and method forwarding are only enabled in the development build. The production builds continue to work as they did in v0.9. We strongly encourage you to use the development builds to catch these warnings and fix the call sites.</p>
+
+<p>The plan for v0.11 is that we will go fully to &quot;descriptors&quot;. Method calls on the return value of <code>MyComponent()</code> will fail hard.</p>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
+<ul>
+<li>Added warnings to help migrate towards descriptors</li>
+<li>Made it possible to server render without React-related markup (<code>data-reactid</code>, <code>data-react-checksum</code>). This DOM will not be mountable by React. <a href="/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup">Read the docs for <code>React.renderComponentToStaticMarkup</code></a></li>
+<li>Added support for more attributes:
+
+<ul>
+<li><code>srcSet</code> for <code>&lt;img&gt;</code> to specify images at different pixel ratios</li>
+<li><code>textAnchor</code> for SVG</li>
+</ul></li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Ensure all void elements don’t insert a closing tag into the markup.</li>
+<li>Ensure <code>className={false}</code> behaves consistently</li>
+<li>Ensure <code>this.refs</code> is defined, even if no refs are specified.</li>
+</ul>
+
+<h3>Addons</h3>
+
+<ul>
+<li><code>update</code> function to deal with immutable data. <a href="/react/docs/update.html">Read the docs</a></li>
+</ul>
+
+<h3>react-tools</h3>
+
+<ul>
+<li>Added an option argument to <code>transform</code> function. The only option supported is <code>harmony</code>, which behaves the same as <code>jsx --harmony</code> on the command line. This uses the ES6 transforms from <a href="https://github.com/facebook/jstransform">jstransform</a>.</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -683,114 +792,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.9.0-rc
 <li><code>JSXTransformer</code> now uses source maps automatically in modern browsers</li>
 <li><code>JSXTransformer</code> error messages now include the filename and problematic line contents when a file fails to parse</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/02/15/community-roundup-16.html">Community Round-up #16</a>
-
-</h1>
-
-<p class="meta">
-  February 15, 2014
-  by
-  
-    
-      <a href="https://twitter.com/jonasgebhardt">Jonas Gebhardt</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>There have been many posts recently covering the <i>why</i> and <i>how</i> of React. This week&#39;s community round-up includes a collection of recent articles to help you get started with React, along with a few posts that explain some of the inner workings.</p>
-
-<h2>React in a nutshell</h2>
-
-<p>Got five minutes to pitch React to your coworkers? John Lynch (<a href="https://twitter.com/johnrlynch">@johnrlynch</a>) put together <a href="http://slid.es/johnlynch/reactjs">this excellent and refreshing slideshow</a>:</p>
-
-<iframe src="//slid.es/johnlynch/reactjs/embed" width="100%" height="420" scrolling="no" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-
-<h2>React&#39;s diff algorithm</h2>
-
-<p>React core team member Christopher Chedeau (<a href="https://twitter.com/vjeux">@vjeux</a>) explores the innards of React&#39;s tree diffing algorithm in this <a href="http://calendar.perfplanet.com/2013/diff/">extensive and well-illustrated post</a>. <figure><a href="http://calendar.perfplanet.com/2013/diff/"><img src="/react/img/blog/react-diff-tree.png" alt=""></a></figure></p>
-
-<p>While we&#39;re talking about tree diffing: Matt Esch (<a href="https://twitter.com/MatthewEsch">@MatthewEsch</a>) created <a href="https://github.com/Matt-Esch/virtual-dom">this project</a>, which aims to implement the virtual DOM and a corresponding diff algorithm as separate modules.</p>
-
-<h2>Many, many new introductions to React!</h2>
-
-<p>James Padosley wrote a short post on the basics (and merits) of React: <a href="http://james.padolsey.com/javascript/what-is-react/">What is React?</a></p>
-
-<blockquote>
-<p>What I like most about React is that it doesn&#39;t impose heady design patterns and data-modelling abstractions on me. [...] Its opinions are so minimal and its abstractions so focused on the problem of the DOM, that you can merrily slap your design choices atop.</p>
-
-<p><a href="http://james.padolsey.com/javascript/what-is-react/">Read the full post...</a></p>
-</blockquote>
-
-<p>Taylor Lapeyre (<a href="https://twitter.com/taylorlapeyre">@taylorlapeyre</a>) wrote another nice <a href="http://words.taylorlapeyre.me/an-introduction-to-react">introduction to React</a>.</p>
-
-<blockquote>
-<p>React expects you to do the work of getting and pushing data from the server. This makes it very easy to implement React as a front end solution, since it simply expects you to hand it data. React does all the other work.</p>
-
-<p><a href="http://words.taylorlapeyre.me/an-introduction-to-react">Read the full post...</a></p>
-</blockquote>
-
-<p><a href="http://www.webdesignporto.com/react-js-in-pure-javascript-facebook-library/?utm_source=echojs&amp;utm_medium=post&amp;utm_campaign=echojs">This &quot;Deep explanation for newbies&quot;</a> by <a href="https://twitter.com/ProJavaScript">@ProJavaScript</a> explains how to get started building a React game without using the optional JSX syntax.</p>
-
-<h3>React around the world</h3>
-
-<p>It&#39;s great to see the React community expand internationally. <a href="http://habrahabr.ru/post/189230/">This site</a> features a React introduction in Russian.</p>
-
-<h3>React tutorial series</h3>
-
-<p><a href="https://medium.com/@followchrisp">Christopher Pitt</a> explains <a href="https://medium.com/react-tutorials/828c397e3dc8">React Components</a> and <a href="https://medium.com/react-tutorials/ef11cd55caa0">React Properties</a>. The former includes a nice introduction to using JSX, while the latter focuses on adding interactivity and linking multiple components together. Also check out the <a href="https://medium.com/react-tutorials">other posts in his React Tutorial series</a>, e.g. on using <a href="https://medium.com/react-tutorials/8aaec65a546c">React + Backbone Model</a> and <a href="https://medium.com/react-tutorials/c00be0cf1592">React + Backbone Router</a>.</p>
-
-<h3>Beginner tutorial: Implementing the board game Go</h3>
-
-<p><a href="http://cjlarose.com/">Chris LaRose</a> walks through the steps of creating a Go app in React, showing how to separate application logic from the rendered components. Check out his <a href="http://cjlarose.com/2014/01/09/react-board-game-tutorial.html">tutorial</a> or go straight to the <a href="https://github.com/cjlarose/react-go">code</a>.</p>
-
-<h3>Egghead.io video tutorials</h3>
-
-<p>Joe Maddalone (<a href="https://twitter.com/joemaddalone">@joemaddalone</a>) of <a href="https://egghead.io/">egghead.io</a> created a series of React video tutorials, such as <a href="http://www.youtube-nocookie.com/v/rFvZydtmsxM">this</a> introduction to React Components. [<a href="http://www.youtube-nocookie.com/v/rFvZydtmsxM">part 1</a>], [<a href="http://www.youtube-nocookie.com/v/5yvFLrt7N8M">part 2</a>]</p>
-
-<h3>&quot;React: Finally, a great server/client web stack&quot;</h3>
-
-<p>Eric Florenzano (<a href="https://twitter.com/ericflo">@ericflo</a>) sheds some light on what makes React perfect for server rendering:</p>
-
-<blockquote>
-<p>[...] the ideal solution would fully render the markup on the server, deliver it to the client so that it can be shown to the user instantly. Then it would asynchronously load some JavaScript that would attach to the rendered markup, and invisibly promote the page into a full app that can render its own markup. [...]</p>
-
-<p>What I&#39;ve discovered is that enough of the pieces have come together, that this futuristic-sounding web environment is actually surprisingly easy to do now with React.js.</p>
-
-<p><a href="http://eflorenzano.com/blog/2014/01/23/react-finally-server-client/">Read the full post...</a></p>
-</blockquote>
-
-<h2>Building a complex React component</h2>
-
-<p><a href="http://matt-harrison.com/">Matt Harrison</a> walks through the process of <a href="http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/">creating an SVG-based Resistance Calculator</a> using React. <figure><a href="http://matt-harrison.com/building-a-complex-web-component-with-facebooks-react-library/"><img src="/react/img/blog/resistance-calculator.png" alt=""></a></figure></p>
-
-<h2>Random Tweets</h2>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>[#reactjs](https://twitter.com/search?q=%23reactjs&src=hash) has very simple API, but it's amazing how much work has been done under the hood to make it blazing fast.</p>&mdash; Anton Astashov (@anton_astashov) <a href="https://twitter.com/anton_astashov/status/417556491646693378">December 30, 2013</a></blockquote></div>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>[#reactjs]((https://twitter.com/search?q=%23reactjs&src=hash) makes refactoring your HTML as easy & natural as refactoring your javascript [@react_js](https://twitter.com/react_js)</p>&mdash; Jared Forsyth (@jaredforsyth) <a href="https://twitter.com/jaredforsyth/status/420304083010854912">January 6, 2014</a></blockquote></div>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>Played with react.js for an hour, so many things suddenly became stupidly simple.</p>&mdash; andrewingram (@andrewingram) <a href="https://twitter.com/andrewingram/status/422810480701620225">January 13, 2014</a></blockquote></div>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>[@okonetchnikov](https://twitter.com/okonetchnikov) HOLY CRAP react is nice</p>&mdash; julik (@julikt) <a href="https://twitter.com/julikt/status/422843478792765440">January 13, 2014</a></blockquote></div>
-
-<div><blockquote class="twitter-tweet" lang="en"><p>brb rewriting everything with react
-</p>&mdash; Ben Smithett (@bensmithett) <a href="https://twitter.com/bensmithett/status/430671242186592256">February 4, 2014</a></blockquote></div>
 
 </div>
 

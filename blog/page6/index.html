@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,73 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/11/02/react-v0.14.2.html">React v0.14.2</a>
+
+</h1>
+
+<p class="meta">
+  November  2, 2015
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We have a quick update following the release of 0.14.1 last week. It turns out we broke a couple things in the development build of React when using Internet Explorer. Luckily it was only the development build, so your production applications were unaffected. This release is mostly to address those issues. There is one notable change if consuming React from npm. For the <code>react-dom</code> package, we moved <code>react</code> from a regular dependency to a peer dependency. This will impact very few people as these two are typically installed together at the top level, but it will fix some issues with dependencies of installed components also using <code>react</code> as a peer dependency.</p>
+
+<p>The release is now available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.14.2.js">https://fb.me/react-0.14.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.14.2.min.js">https://fb.me/react-0.14.2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.14.2.js">https://fb.me/react-with-addons-0.14.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.14.2.min.js">https://fb.me/react-with-addons-0.14.2.min.js</a><br></li>
+<li><strong>React DOM</strong> (include React in the page before React DOM)<br>
+Dev build with warnings: <a href="https://fb.me/react-dom-0.14.2.js">https://fb.me/react-dom-0.14.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-dom-0.14.2.min.js">https://fb.me/react-dom-0.14.2.min.js</a><br></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.14.2</code> of the <code>react</code>, <code>react-dom</code>, and addons packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h3>React DOM</h3>
+
+<ul>
+<li>Fixed bug with development build preventing events from firing in some versions of Internet Explorer &amp; Edge</li>
+<li>Fixed bug with development build when using es5-sham in older versions of Internet Explorer</li>
+<li>Added support for <code>integrity</code> attribute</li>
+<li>Fixed bug resulting in <code>children</code> prop being coerced to a string for custom elements, which was not the desired behavior.</li>
+<li>Moved <code>react</code> from <code>dependencies</code> to <code>peerDependencies</code> to match expectations and align with <code>react-addons-*</code> packages</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -666,114 +727,6 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0.min.js">h
 <span class="p">}</span>
 </code></pre></div>
 <p>This example shows how to provide an imperative API on top of a declarative one. Similarly, the reverse can be done, and a declarative wrapper can be used when exposing a Web Component as a React component.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/09/14/community-roundup-27.html">Community Round-up #27 &ndash; Relay Edition</a>
-
-</h1>
-
-<p class="meta">
-  September 14, 2015
-  by
-  
-    
-      <a href="https://twitter.com/steveluscher">Steven Luscher</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>In the weeks following the <a href="/react/blog/2015/08/11/relay-technical-preview.html">open-source release</a> of the Relay technical preview, the community has been abuzz with activity. We are honored to have been able to enjoy a steady stream of ideas and contributions from such a talented group of individuals. Let&#39;s take a look at some of the things we&#39;ve achieved, together!</p>
-
-<h2>Teaching servers to speak GraphQL</h2>
-
-<p>Every great Relay app starts by finding a GraphQL server to talk to. The community has spent the past few weeks teaching GraphQL to a few backend systems.</p>
-
-<p>Bryan Goldstein (<a href="https://github.com/brysgo">brysgo</a>) has built a tool to help you define a GraphQL schema that wraps a set of <a href="http://bookshelfjs.org/">Bookshelf.JS</a> models. Check out <a href="https://github.com/brysgo/graphql-bookshelf">graphql-bookshelf</a>.</p>
-
-<p>RisingStack (<a href="https://github.com/risingstack">risingstack</a>) created a GraphQL ORM called <a href="https://github.com/RisingStack/graffiti">graffiti</a> that you can plug into <a href="http://mongoosejs.com/">mongoose</a> and serve using Express, Hapi, or Koa.</p>
-
-<p>David Mongeau-Petitpas (<a href="https://github.com/dmongeau">dmongeau</a>) is working on a way to vend your Laravel models through a GraphQL endpoint, <a href="https://github.com/Folkloreatelier/laravel-graphql">laravel-graphql</a>.</p>
-
-<p>Gerald Monaco (<a href="https://github.com/devknoll">devknoll</a>) created <a href="https://github.com/devknoll/graphql-schema">graphql-schema</a> to allow the creation of JavaScript GraphQL schemas using a fluent/chainable interface.</p>
-
-<p>Jason Dusek (<a href="https://github.com/solidsnack">solidsnack</a>) dove deep into PostgreSQL to teach it how to respond to GraphQL query strings as though they were SQL queries. Check out <a href="https://github.com/solidsnack/GraphpostgresQL">GraphpostgresQL</a>.</p>
-
-<p>Espen Hovlandsdal (<a href="https://github.com/rexxars">rexxars</a>) built a <a href="https://github.com/vaffel/sql-to-graphql">sql-to-graphql</a> tool that can perform introspection on the tables of a MySQL or PostgreSQL database, and produce a queryable HTTP GraphQL endpoint out of it.</p>
-
-<p>Mick Hansen (<a href="https://github.com/mickhansen">mickhansen</a>) offers a set of <a href="https://github.com/mickhansen/graphql-sequelize">schema-building helpers</a> for use with the <a href="http://docs.sequelizejs.com/en/latest/">Sequelize ORM</a> for MySQL, PostgreSQL, SQLite, and MSSQL.</p>
-
-<h2>GraphQL beyond JavaScript</h2>
-
-<p>Robert Mosolgo (<a href="https://github.com/rmosolgo">rmosolgo</a>) brought the full set of schema-building and query execution tools to Ruby, in the form of <a href="https://github.com/rmosolgo/graphql-ruby">graphql-ruby</a> and <a href="https://github.com/rmosolgo/graphql-relay-ruby">graphql-relay-ruby</a>. Check out his <a href="https://github.com/rmosolgo/graphql-ruby-demo">Rails-based demo</a>.</p>
-
-<p>Andreas Marek (<a href="https://github.com/andimarek">andimarek</a>) has brewed up a Java implementation of GraphQL, <a href="https://github.com/andimarek/graphql-java">graphql-java</a>.</p>
-
-<p><a href="https://github.com/vladar">vladar</a> is hard at work on a PHP port of the GraphQL reference implementation, <a href="https://github.com/webonyx/graphql-php">graphql-php</a>.</p>
-
-<p>Taeho Kim (<a href="https://github.com/dittos">dittos</a>) is bringing GraphQL to Python, with <a href="https://github.com/dittos/graphql-py">graphql-py</a>.</p>
-
-<p>Oleg Ilyenko (<a href="https://github.com/OlegIlyenko">OlegIlyenko</a>) made a beautiful and <a href="http://sangria-graphql.org/">delicious-looking website</a> for a Scala implementation of GraphQL, <a href="https://github.com/sangria-graphql/sangria">sangria</a>.</p>
-
-<p>Joe McBride (<a href="https://github.com/joemcbride">joemcbride</a>) has an up-and-running example of GraphQL for .NET, <a href="https://github.com/joemcbride/graphql-dotnet">graphql-dotnet</a>.</p>
-
-<h2>Show me, don&#39;t tell me</h2>
-
-<p>Interact with this <a href="http://sgwilym.github.io/relay-visual-learners/">visual tour of Relay&#39;s architecture</a> by Sam Gwilym (<a href="https://github.com/sgwilym">sgwilym</a>).</p>
-
-<p><a href="http://sgwilym.github.io/relay-visual-learners/">
-  <img src="/react/img/blog/relay-visual-architecture-tour.png" alt="Relay for visual learners" style="max-width:100%">
-</a></p>
-
-<p>Sam has already launched a product that leverages Relay&#39;s data-fetching, optimistic responses, pagination, and mutations &ndash; all atop a Ruby GraphQL server: <a href="http://new.comique.co/">new.comique.co</a></p>
-
-<h2>Prototyping in the browser</h2>
-
-<p>I (<a href="https://github.com/steveluscher">steveluscher</a>) whipped up <a href="https://facebook.github.io/relay/prototyping/playground.html">a prototyping tool</a> that you can use to hack on a schema and a React/Relay app, from the comfort of your browser. Thanks to Jimmy Jia (<a href="https://github.com/taion">taion</a>) for supplying the local-only network layer, <a href="https://github.com/relay-tools/relay-local-schema">relay-local-schema</a>.</p>
-
-<h2>Skeletons in the closet</h2>
-
-<p>Joseph Rollins (<a href="https://github.com/fortruce">fortruce</a>) created a hot-reloading, auto schema-regenerating, <a href="https://github.com/fortruce/relay-skeleton">Relay skeleton</a> that you can use to get up and running quickly.</p>
-
-<p>Michael Hart (<a href="https://mhart">mhart</a>) built a <a href="https://github.com/mhart/simple-relay-starter">simple-relay-starter</a> kit using Browserify.</p>
-
-<h2>Routing around</h2>
-
-<p>Jimmy Jia (<a href="https://github.com/taion">taion</a>) and Gerald Monaco (<a href="https://github.com/devknoll">devknoll</a>) have been helping lost URLs find their way to Relay apps through their work on <a href="https://github.com/relay-tools/react-router-relay">react-router-relay</a>. Check out Christoph Pojer&#39;s (<a href="https://github.com/cpojer">cpojer</a>) <a href="https://medium.com/@cpojer/relay-and-routing-36b5439bad9">blog post</a> on the topic. Jimmy completed the Relay TodoMVC example with routing, which you can check out at <a href="https://github.com/taion/relay-todomvc">taion/relay-todomvc</a>.</p>
-
-<p>Chen Hung-Tu (<a href="https://github.com/transedward">transedward</a>) built a chat app atop the above mentioned router, with threaded conversations and pagination. Check it out at <a href="https://github.com/transedward/relay-chat">transedward/relay-chat</a>.</p>
-
-<h2>In your words</h2>
-
-<div class="skinny-row">
-  <div class="skinny-col">
-    <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr">Relay making good on its promise to be the &quot;React.js of data fetching&quot;. Rebuilding small app with it. Spectacular how fast/easy building is.</p>&mdash; Kyle Mathews (@kylemathews) <a href="https://twitter.com/kylemathews/status/640289107122368513">September 5, 2015</a></blockquote>
-
-    <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr"><a href="https://twitter.com/hashtag/RainySundayHackathon?src=hash">#RainySundayHackathon</a> exploring <a href="https://twitter.com/hashtag/GraphQL?src=hash">#GraphQL</a> <a href="https://twitter.com/hashtag/RelayJS?src=hash">#RelayJS</a> <a href="http://t.co/Mm3HlqMejJ">pic.twitter.com/Mm3HlqMejJ</a></p>&mdash; Bastian Kistner (@passionkind) <a href="https://twitter.com/passionkind/status/632846601447411712">August 16, 2015</a></blockquote>
-
-    <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr">Friday. Time to GraphQL a MySQL database. <a href="https://twitter.com/hashtag/graphql?src=hash">#graphql</a> <a href="https://twitter.com/hashtag/relayjs?src=hash">#relayjs</a> <a href="https://twitter.com/hashtag/reactjs?src=hash">#reactjs</a> <a href="https://twitter.com/hashtag/webapp?src=hash">#webapp</a></p>&mdash; xador (@xadorfr) <a href="https://twitter.com/xadorfr/status/632108552765751296">August 14, 2015</a></blockquote>
-  </div>
-  <div class="skinny-col">
-    <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr">Started a new <a href="https://twitter.com/hashtag/RelayJS?src=hash">#RelayJS</a> and <a href="https://twitter.com/hashtag/GraphQL?src=hash">#GraphQL</a> meet up group! <a href="http://t.co/Vt6Cv4nNH4">http://t.co/Vt6Cv4nNH4</a> If you&#39;re in the Bay Area, I&#39;d love to have you join! <a href="https://twitter.com/hashtag/ReactJS?src=hash">#ReactJS</a></p>&mdash; Gerald Monaco (@devknoll) <a href="https://twitter.com/devknoll/status/636723716123000832">August 27, 2015</a></blockquote>
-
-    <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr">.<a href="https://twitter.com/reactjs">@reactjs</a> <a href="https://twitter.com/laneykuenzel">@laneykuenzel</a> <a href="https://twitter.com/BhuwanKhattar">@BhuwanKhattar</a> these <a href="https://twitter.com/hashtag/relayjs?src=hash">#relayjs</a> mutations. they&#39;re mind-blowingly awesome. they make so much damn sense. thank you!</p>&mdash; Jimmy Jia (@jimmy_jia) <a href="https://twitter.com/jimmy_jia/status/634204563709526016">August 20, 2015</a></blockquote>
-
-    <blockquote class="twitter-tweet" lang="en"><p lang="en" dir="ltr">REST is dead, long live REST! <a href="https://twitter.com/hashtag/graphql?src=hash">#graphql</a> <a href="https://twitter.com/hashtag/relayjs?src=hash">#relayjs</a></p>&mdash; Syrus Akbary (@syrusakbary) <a href="https://twitter.com/syrusakbary/status/631531666113060864">August 12, 2015</a></blockquote>
-  </div>
-</div>
 
 </div>
 

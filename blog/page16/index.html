@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,51 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/05/29/one-year-of-open-source-react.html">One Year of Open-Source React</a>
+
+</h1>
+
+<p class="meta">
+  May 29, 2014
+  by
+  
+    
+      <a href="https://twitter.com/_chenglou">Cheng Lou</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today marks the one-year open-source anniversary of React.</p>
+
+<p>It’s been a crazy ride. 2.3k commits and 1.5k issues and pull requests later, we’re approaching version 1.0 and nearing 7k GitHub stars, with big names such as Khan Academy, New York Times, and Airbnb (and naturally, Facebook and Instagram) using React in production, and many more developers blogging their success stories with it. The <a href="/react/blog/2014/03/28/the-road-to-1.0.html">roadmap</a> gives a glimpse into the future of the library; exciting stuff lies ahead!</p>
+
+<p>Every success has its story. React was born out of our frustration at existing solutions for building UIs. When it was first suggested at Facebook, few people thought that functionally re-rendering everything and diffing the results could ever perform well. However, support grew after we built the first implementation and people wrote their first components. When we open-sourced React, the initial reception was <a href="https://www.reddit.com/r/programming/comments/1fak87/react_facebooks_latest_javascript_client_library/">similarly skeptical</a>. It challenges many pre-established conventions and received mostly disapproving first-impressions, intermingled with positive ones that often were votes of confidence in Facebook’s engineering capabilities. On an open, competitive platform such as the web, it&#39;s been hard to convince people to try React. <a href="/react/docs/jsx-in-depth.html">JSX</a>, in particular, filtered out a huge chunk of potential early adopters.</p>
+
+<p>Fast forward one year, React has strongly <a href="https://news.ycombinator.com/item?id=7489959">grown in popularity</a>. Special acknowledgments go to Khan Academy, the ClojureScript community, and established frameworks such as Ember and Angular for contributing to and debating on our work. We&#39;d also like to thank all the <a href="https://github.com/facebook/react/graphs/contributors">individual contributors</a> who have taken the time to help out over the past year. React, as a library and as a new paradigm on the web, wouldn&#39;t have gained as much traction without them. In the future, we will continue to try to set an example of what&#39;s possible to achieve when we rethink about current “best practices”.</p>
+
+<p>Here’s to another year!</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -326,115 +365,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.m
 </ul>
 
 <p>We&#39;ve also published version <code>0.10.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-
-<h2>Clone On Mount</h2>
-
-<p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
-
-<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="https://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
-
-<p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
-<span class="c1">// &quot;descriptor&quot;, not necessarily the mounted instance.</span>
-<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">;</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">);</span>
-<span class="c1">// ...</span>
-<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
-
-<span class="c1">// The change here is very simple. The return value of renderComponent will be</span>
-<span class="c1">// the mounted instance.</span>
-<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">)</span>
-<span class="c1">// ...</span>
-<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
-</code></pre></div>
-<p>These warnings and method forwarding are only enabled in the development build. The production builds continue to work as they did in v0.9. We strongly encourage you to use the development builds to catch these warnings and fix the call sites.</p>
-
-<p>The plan for v0.11 is that we will go fully to &quot;descriptors&quot;. Method calls on the return value of <code>MyComponent()</code> will fail hard.</p>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>New Features</h4>
-
-<ul>
-<li>Added warnings to help migrate towards descriptors</li>
-<li>Made it possible to server render without React-related markup (<code>data-reactid</code>, <code>data-react-checksum</code>). This DOM will not be mountable by React. <a href="/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup">Read the docs for <code>React.renderComponentToStaticMarkup</code></a></li>
-<li>Added support for more attributes:
-
-<ul>
-<li><code>srcSet</code> for <code>&lt;img&gt;</code> to specify images at different pixel ratios</li>
-<li><code>textAnchor</code> for SVG</li>
-</ul></li>
-</ul>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>Ensure all void elements don’t insert a closing tag into the markup.</li>
-<li>Ensure <code>className={false}</code> behaves consistently</li>
-<li>Ensure <code>this.refs</code> is defined, even if no refs are specified.</li>
-</ul>
-
-<h3>Addons</h3>
-
-<ul>
-<li><code>update</code> function to deal with immutable data. <a href="/react/docs/update.html">Read the docs</a></li>
-</ul>
-
-<h3>react-tools</h3>
-
-<ul>
-<li>Added an option argument to <code>transform</code> function. The only option supported is <code>harmony</code>, which behaves the same as <code>jsx --harmony</code> on the command line. This uses the ES6 transforms from <a href="https://github.com/facebook/jstransform">jstransform</a>.</li>
-</ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/03/19/react-v0.10-rc1.html">React v0.10 RC</a>
-
-</h1>
-
-<p class="meta">
-  March 19, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p><a href="/react/blog/2014/02/20/react-v0.9.html">v0.9 has only been out for a month</a>, but we’re getting ready to push out v0.10 already. Unlike v0.9 which took a long time, we don&#39;t have a long list of changes to talk about.</p>
-
-<p>The release candidate is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.10.0-rc1.js">https://fb.me/react-0.10.0-rc1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.10.0-rc1.min.js">https://fb.me/react-0.10.0-rc1.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.10.0-rc1.js">https://fb.me/react-with-addons-0.10.0-rc1.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0-rc1.min.js">https://fb.me/react-with-addons-0.10.0-rc1.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.10.0-rc1.js">https://fb.me/JSXTransformer-0.10.0-rc1.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.10.0-rc1</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
 
 <p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
 

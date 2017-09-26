@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,97 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/09/16/react-v0.11.2.html">React v0.11.2</a>
+
+</h1>
+
+<p class="meta">
+  September 16, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re releasing React v0.11.2 to add a few small features.</p>
+
+<p>We&#39;re adding support for two more DOM elements, <code>&lt;dialog&gt;</code> and <code>&lt;picture&gt;</code>, as well as the associated attributes needed to use these elements: <code>open</code>, <code>media</code>, and <code>sizes</code>. While not all browsers support these natively, some of our cutting edge users want to make use of them, so we&#39;re making them available to everybody.</p>
+
+<p>We&#39;re also doing some work to prepare for v0.12 and improve compatibility between the versions. To do this we are replacing <code>React.createDescriptor</code> with <code>React.createElement</code>. <code>createDescriptor</code> will continue to work with a warning and will be gone in v0.12. Chances are that this won&#39;t affect anybody.</p>
+
+<p>And lastly, on the heels of announcing Flow at <a href="http://atscaleconference.com/">@Scale</a> yesterday, we&#39;re adding the ability to strip TypeScript-like type annotations as part of the <code>jsx</code> transform. To use, simply use the <code>--strip-types</code> flag on the command line, or set <code>stripTypes</code> in the <code>options</code> object when calling the API. We&#39;ll be talking about Flow more in the coming months. But for now, it&#39;s helpful to know that it is a flow-sensitive JavaScript type checker we will be open sourcing soon.</p>
+
+<p>The release is available for download from the CDN:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.11.2.js">https://fb.me/react-0.11.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.11.2.min.js">https://fb.me/react-0.11.2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.11.2.js">https://fb.me/react-with-addons-0.11.2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.11.2.min.js">https://fb.me/react-with-addons-0.11.2.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.11.2.js">https://fb.me/JSXTransformer-0.11.2.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.11.2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
+<ul>
+<li>Added support for <code>&lt;dialog&gt;</code> element and associated <code>open</code> attribute</li>
+<li>Added support for <code>&lt;picture&gt;</code> element and associated <code>media</code> and <code>sizes</code> attributes</li>
+<li>Added <code>React.createElement</code> API in preparation for React v0.12
+
+<ul>
+<li><code>React.createDescriptor</code> has been deprecated as a result</li>
+</ul></li>
+</ul>
+
+<h3>JSX</h3>
+
+<ul>
+<li><code>&lt;picture&gt;</code> is now parsed into <code>React.DOM.picture</code></li>
+</ul>
+
+<h3>React Tools</h3>
+
+<ul>
+<li>Update <code>esprima</code> and <code>jstransform</code> for correctness fixes</li>
+<li>The <code>jsx</code> executable now exposes a <code>--strip-types</code> flag which can be used to remove TypeScript-like type annotations
+
+<ul>
+<li>This option is also exposed to <code>require(&#39;react-tools&#39;).transform</code> as <code>stripTypes</code></li>
+</ul></li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -452,134 +537,6 @@ This is not the intended way to use React but can be useful as last resort if yo
 <p>Along with the same dispatcher that Facebook uses in its production applications, we&#39;ve also published a new example <a href="https://github.com/facebook/flux/tree/master/examples/flux-chat">chat app</a>, slightly more complicated than the simplistic TodoMVC, so that engineers can better understand how Flux solves problems like dependencies between stores and calls to a web API.</p>
 
 <p>We&#39;re hopeful that the new Flux repository will grow with time to include additional tools, boilerplate code and further examples. And we hope that Flux will prove as useful to you as it has to us. Enjoy!</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/07/28/community-roundup-20.html">Community Round-up #20</a>
-
-</h1>
-
-<p class="meta">
-  July 28, 2014
-  by
-  
-    
-      <a href="https://twitter.com/loukan42">Lou Husson</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>It&#39;s an exciting time for React as there are now more commits from open source contributors than from Facebook engineers! Keep up the good work :)</p>
-
-<h2>Atom moves to React</h2>
-
-<p><a href="http://blog.atom.io/2014/07/02/moving-atom-to-react.html">Atom, GitHub&#39;s code editor, is now using React</a> to build the editing experience. They made the move in order to improve performance. By default, React helped them eliminate unnecessary reflows, enabling them to focus on architecting the rendering pipeline in order to minimize repaints by using hardware acceleration. This is a testament to the fact that React&#39;s architecture is perfect for high performant applications.</p>
-
-<p><a href="http://blog.atom.io/2014/07/02/moving-atom-to-react.html"><img src="/react/img/blog/gpu-cursor-move.gif" style="width: 100%;" /></a></p>
-
-<h2>Why Does React Scale?</h2>
-
-<p>At the last <a href="http://2014.jsconf.us/">JSConf.us</a>, Vjeux talked about the design decisions made in the API that allows it to scale to a large number of developers. If you don&#39;t have 20 minutes, take a look at the <a href="https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014">annotated slides</a>.</p>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
-
-<h2>Live Editing</h2>
-
-<p>One of the best features of React is that it provides the foundations to implement concepts that were otherwise extremely difficult, like server-side rendering, undo-redo, rendering to non-DOM environments like canvas... <a href="https://twitter.com/dan_abramov">Dan Abramov</a> got hot code reloading working with webpack in order to <a href="https://gaearon.github.io/react-hot-loader/">live edit a React project</a>!</p>
-
-<iframe src="//player.vimeo.com/video/100010922" width="100%" height="315" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe>
-
-<h2>ReactIntl Mixin by Yahoo</h2>
-
-<p>There are a couple of React-related projects that recently appeared on Yahoo&#39;s GitHub, the first one being an  <a href="https://github.com/yahoo/react-intl">internationalization mixin</a>. It&#39;s great to see them getting excited about React and contributing back to the community.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactIntlMixin</span><span class="p">],</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span>
-        <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">intlDate</span><span class="p">(</span><span class="mi">1390518044403</span><span class="p">,</span> <span class="p">{</span> <span class="nx">hour</span><span class="o">:</span> <span class="s1">&#39;numeric&#39;</span><span class="p">,</span> <span class="nx">minute</span><span class="o">:</span> <span class="s1">&#39;numeric&#39;</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
-        <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">intlNumber</span><span class="p">(</span><span class="mi">400</span><span class="p">,</span> <span class="p">{</span> <span class="nx">style</span><span class="o">:</span> <span class="s1">&#39;percent&#39;</span> <span class="p">})}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">MyComponent</span> <span class="nx">locales</span><span class="o">=</span><span class="p">{[</span><span class="s1">&#39;fr-FR&#39;</span><span class="p">]}</span> <span class="o">/&gt;</span><span class="p">,</span>
-  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">)</span>
-<span class="p">);</span>
-</code></pre></div>
-<h2>Thinking and Learning React</h2>
-
-<p>Josephine Hall, working at Icelab, used React to write a mobile-focused application. She wrote a blog post <a href="http://icelab.com.au/articles/thinking-and-learning-reactjs/">“Thinking and Learning React.js”</a> to share her experience with elements they had to use. You&#39;ll learn about routing, event dispatch, touchable components, and basic animations.</p>
-
-<h2>London React Meetup</h2>
-
-<p>If you missed the last <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">London React Meetup</a>, the video is available, with lots of great content.</p>
-
-<ul>
-<li>What&#39;s new in React 0.11 and how to improve performance by guaranteeing immutability</li>
-<li>State handling in React with Morearty.JS</li>
-<li>React on Rails - How to use React with Ruby on Rails to build isomorphic apps</li>
-<li>Building an isomorphic, real-time to-do list with moped and node.js</li>
-</ul>
-
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
-
-<p>In related news, the next <a href="http://www.meetup.com/ReactJS-San-Francisco/events/195518392/">React SF Meetup</a> will be from Prezi: <a href="https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135">“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”</a>. While not in React, their tech is really awesome and shares a lot of React&#39;s design principles and perf optimizations.</p>
-
-<h2>Using React and KendoUI Together</h2>
-
-<p>One of the strengths of React is that it plays nicely with other libraries. Jim Cowart proved it by writing a tutorial that explains how to write <a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/">React component adapters for KendoUI</a>.</p>
-
-<figure><a href="http://www.ifandelse.com/using-reactjs-and-kendoui-together/"><img src="/react/img/blog/kendoui.png" /></a></figure>
-
-<h2>Acorn JSX</h2>
-
-<p>Ingvar Stepanyan extended the Acorn JavaScript parser to support JSX. The result is a <a href="https://github.com/RReverser/acorn-jsx">JSX parser</a> that&#39;s 1.5–2.0x faster than the official JSX implementation. It is an experiment and is not meant to be used for serious things, but it&#39;s always a good thing to get competition on performance!</p>
-
-<h2>ReactScriptLoader</h2>
-
-<p>Yariv Sadan created <a href="https://github.com/yariv/ReactScriptLoader">ReactScriptLoader</a> to make it easier to write components that require an external script.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">Foo</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-  <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">ReactScriptLoaderMixin</span><span class="p">],</span>
-  <span class="nx">getScriptURL</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="s1">&#39;http://d3js.org/d3.v3.min.js&#39;</span><span class="p">;</span>
-  <span class="p">},</span>
-  <span class="nx">getInitialState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">{</span> <span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">true</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">false</span> <span class="p">};</span>
-  <span class="p">},</span>
-  <span class="nx">onScriptLoaded</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">onScriptError</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">scriptLoading</span><span class="o">:</span> <span class="kc">false</span><span class="p">,</span> <span class="nx">scriptLoadError</span><span class="o">:</span> <span class="kc">true</span><span class="p">});</span>
-  <span class="p">},</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">message</span> <span class="o">=</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoading</span> <span class="o">?</span> <span class="s1">&#39;Loading script...&#39;</span> <span class="o">:</span>
-      <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">scriptLoadError</span> <span class="o">?</span> <span class="s1">&#39;Loading failed&#39;</span> <span class="o">:</span>
-      <span class="s1">&#39;Loading succeeded&#39;</span><span class="p">;</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">message</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/span&gt;;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<h2>Random Tweet</h2>
-
-<blockquote class="twitter-tweet" data-conversation="none" lang="en"><p>“<a href="https://twitter.com/apphacker">@apphacker</a>: I take back the mean things I said about <a href="https://twitter.com/reactjs">@reactjs</a> I actually like it.” Summarizing the life of ReactJS in a single tweet.</p>&mdash; Jordan (@jordwalke) <a href="https://twitter.com/jordwalke/statuses/490747339607265280">July 20, 2014</a></blockquote>
 
 </div>
 

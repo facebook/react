@@ -1,10 +1,8 @@
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 /* global React ReactDOM errorMap:true */
 'use strict';
@@ -36,7 +34,7 @@ function urlify(str) {
         'a',
         { key: i, target: '_blank', href: segments[i], __source: {
             fileName: _jsxFileName,
-            lineNumber: 27
+            lineNumber: 25
           }
         },
         segments[i]
@@ -80,7 +78,7 @@ function ErrorResult(props) {
       {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 63
+          lineNumber: 61
         }
       },
       'When you encounter an error, you\'ll receive a link to this page for that specific error and we\'ll show you the full error text.'
@@ -92,7 +90,7 @@ function ErrorResult(props) {
     {
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 68
+        lineNumber: 66
       }
     },
     React.createElement(
@@ -100,7 +98,7 @@ function ErrorResult(props) {
       {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 69
+          lineNumber: 67
         }
       },
       'The full text of the error you just encountered is:'
@@ -110,7 +108,7 @@ function ErrorResult(props) {
       {
         __source: {
           fileName: _jsxFileName,
-          lineNumber: 70
+          lineNumber: 68
         }
       },
       urlify(errorMsg)
@@ -158,7 +156,7 @@ var ErrorDecoder = function (_React$Component) {
       msg: this.state.errorMsg,
       __source: {
         fileName: _jsxFileName,
-        lineNumber: 100
+        lineNumber: 98
       }
     });
   };
@@ -169,6 +167,6 @@ var ErrorDecoder = function (_React$Component) {
 ReactDOM.render(React.createElement(ErrorDecoder, {
   __source: {
     fileName: _jsxFileName,
-    lineNumber: 109
+    lineNumber: 107
   }
 }), document.querySelector('.error-decoder-container'));

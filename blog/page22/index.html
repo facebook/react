@@ -63,7 +63,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.1</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +75,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
       
@@ -94,14 +96,80 @@
       
         <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
-        <li><a href="/react/blog/2016/07/13/mixins-considered-harmful.html">Mixins Considered Harmful</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/07/17/react-v0-4-0.html">React v0.4.0</a>
+
+</h1>
+
+<p class="meta">
+  July 17, 2013
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Over the past 2 months we&#39;ve been taking feedback and working hard to make React even better. We fixed some bugs, made some under-the-hood improvements, and added several features that we think will improve the experience developing with React. Today we&#39;re proud to announce the availability of React v0.4!</p>
+
+<p>This release could not have happened without the support of our growing community. Since launch day, the community has contributed blog posts, questions to the <a href="https://groups.google.com/group/reactjs">Google Group</a>, and issues and pull requests on GitHub. We&#39;ve had contributions ranging from documentation improvements to major changes to React&#39;s rendering. We&#39;ve seen people integrate React into the tools they&#39;re using and the products they&#39;re building, and we&#39;re all very excited to see what our budding community builds next!</p>
+
+<p>React v0.4 has some big changes. We&#39;ve also restructured the documentation to better communicate how to use React. We&#39;ve summarized the changes below and linked to documentation where we think it will be especially useful.</p>
+
+<p>When you&#39;re ready, <a href="/react/downloads.html">go download it</a>!</p>
+
+<h3>React</h3>
+
+<ul>
+<li>Switch from using <code>id</code> attribute to <code>data-reactid</code> to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.</li>
+<li>Support for more DOM elements and attributes (e.g., <code>&lt;canvas&gt;</code>)</li>
+<li>Improved server-side rendering APIs. <code>React.renderComponentToString(&lt;component&gt;, callback)</code> allows you to use React on the server and generate markup which can be sent down to the browser.</li>
+<li><code>prop</code> improvements: validation and default values. <a href="/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html">Read our blog post for details...</a></li>
+<li>Support for the <code>key</code> prop, which allows for finer control over reconciliation. <a href="/react/docs/multiple-components.html">Read the docs for details...</a></li>
+<li>Removed <code>React.autoBind</code>. <a href="/react/blog/2013/07/02/react-v0-4-autobind-by-default.html">Read our blog post for details...</a></li>
+<li>Improvements to forms. We&#39;ve written wrappers around <code>&lt;input&gt;</code>, <code>&lt;textarea&gt;</code>, <code>&lt;option&gt;</code>, and <code>&lt;select&gt;</code> in order to standardize many inconsistencies in browser implementations. This includes support for <code>defaultValue</code>, and improved implementation of the <code>onChange</code> event, and circuit completion. <a href="/react/docs/forms.html">Read the docs for details...</a></li>
+<li>We&#39;ve implemented an improved synthetic event system that conforms to the W3C spec.</li>
+<li>Updates to your component are batched now, which may result in a significantly faster re-render of components. <code>this.setState</code> now takes an optional callback as its second parameter. If you were using <code>onClick={this.setState.bind(this, state)}</code> previously, you&#39;ll want to make sure you add a third parameter so that the event is not treated as the callback.</li>
+</ul>
+
+<h3>JSX</h3>
+
+<ul>
+<li>Support for comment nodes <code>&lt;div&gt;{/* this is a comment and won&#39;t be rendered */}&lt;/div&gt;</code></li>
+<li>Children are now transformed directly into arguments instead of being wrapped in an array
+E.g. <code>&lt;div&gt;&lt;Component1/&gt;&lt;Component2/&gt;&lt;/div&gt;</code> is transformed into <code>React.DOM.div(null, Component1(null), Component2(null))</code>.
+Previously this would be transformed into <code>React.DOM.div(null, [Component1(null), Component2(null)])</code>.
+If you were using React without JSX previously, your code should still work.</li>
+</ul>
+
+<h3>react-tools</h3>
+
+<ul>
+<li>Fixed a number of bugs when transforming directories</li>
+<li>No longer re-write <code>require()</code>s to be relative unless specified</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -451,57 +519,6 @@
 
 <p><a href="http://ricardo.cc/2013/06/07/react-tutorial-rewritten-in-plain-javascript.html">Read the full post...</a></p>
 </blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/06/21/react-v0-3-3.html">React v0.3.3</a>
-
-</h1>
-
-<p class="meta">
-  June 21, 2013
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We have a ton of great stuff coming in v0.4, but in the meantime we&#39;re releasing v0.3.3. This release addresses some small issues people were having and simplifies our tools to make them easier to use.</p>
-
-<h2>react-tools</h2>
-
-<ul>
-<li>Upgrade Commoner so <code>require</code> statements are no longer relativized when passing through the transformer. This was a feature needed when building React, but doesn&#39;t translate well for other consumers of <code>bin/jsx</code>.</li>
-<li>Upgraded our dependencies on Commoner and Recast so they use a different directory for their cache.</li>
-<li>Freeze our esprima dependency.</li>
-</ul>
-
-<h2>React</h2>
-
-<ul>
-<li>Allow reusing the same DOM node to render different components. e.g. <code>React.renderComponent(&lt;div/&gt;, domNode); React.renderComponent(&lt;span/&gt;, domNode);</code> will work now.</li>
-</ul>
-
-<h2>JSXTransformer</h2>
-
-<ul>
-<li>Improved the in-browser transformer so that transformed scripts will execute in the expected scope. The allows components to be defined and used from separate files.</li>
-</ul>
 
 </div>
 
