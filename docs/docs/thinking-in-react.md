@@ -72,11 +72,11 @@ You can build top-down or bottom-up. That is, you can either start with building
 
 At the end of this step, you'll have a library of reusable components that render your data model. The components will only have `render()` methods since this is a static version of your app. The component at the top of the hierarchy (`FilterableProductTable`) will take your data model as a prop. If you make a change to your underlying data model and call `ReactDOM.render()` again, the UI will be updated. It's easy to see how your UI is updated and where to make changes since there's nothing complicated going on. React's **one-way data flow** (also called *one-way binding*) keeps everything modular and fast.
 
-Simply refer to the [React docs](/react/docs/) if you need help executing this step.
+Simply refer to the [React docs](/docs/) if you need help executing this step.
 
 ### A Brief Interlude: Props vs State
 
-There are two types of "model" data in React: props and state. It's important to understand the distinction between the two; skim [the official React docs](/react/docs/interactivity-and-dynamic-uis.html) if you aren't sure what the difference is.
+There are two types of "model" data in React: props and state. It's important to understand the distinction between the two; skim [the official React docs](/docs/interactivity-and-dynamic-uis.html) if you aren't sure what the difference is.
 
 ## Step 3: Identify The Minimal (but complete) Representation Of UI State
 

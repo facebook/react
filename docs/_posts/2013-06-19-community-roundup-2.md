@@ -64,7 +64,7 @@ Mozilla and Google are actively working on Web Components. [Vjeux](http://blog.v
 
 Many of you pointed out differences between JSX and HTML. In order to clear up some confusion, we have added some documentation that covers the four main differences:
 
-  - [Whitespace removal](/react/docs/jsx-is-not-html.html)
-  - [HTML Entities](/react/docs/jsx-is-not-html.html)
-  - [Comments](/react/docs/jsx-is-not-html.html)
-  - [Custom HTML Attributes](/react/docs/jsx-is-not-html.html)
+  - [Whitespace removal](/docs/jsx-is-not-html.html)
+  - [HTML Entities](/docs/jsx-is-not-html.html)
+  - [Comments](/docs/jsx-is-not-html.html)
+  - [Custom HTML Attributes](/docs/jsx-is-not-html.html)

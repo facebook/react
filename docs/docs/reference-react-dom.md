@@ -40,7 +40,7 @@ ReactDOM.render(
 )
 ```
 
-Render a React element into the DOM in the supplied `container` and return a [reference](/react/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/react/docs/components-and-props.html#functional-and-class-components)).
+Render a React element into the DOM in the supplied `container` and return a [reference](/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/docs/components-and-props.html#functional-and-class-components)).
 
 If the React element was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React element.
 
@@ -54,7 +54,7 @@ If the optional callback is provided, it will be executed after the component is
 >
 > `ReactDOM.render()` currently returns a reference to the root `ReactComponent` instance. However, using this return value is legacy
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
-> [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
+> [callback ref](/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
 >
 > Using `ReactDOM.render()` to hydrate a server-rendered container is deprecated and will be removed in React 17. Use [`hydrate()`](#hydrate) instead.
 
@@ -70,7 +70,7 @@ ReactDOM.hydrate(
 )
 ```
 
-Same as [`render()`](#render), but is used to hydrate a container whose HTML contents were rendered by [`ReactDOMServer`](/react/docs/react-dom-server.html). React will attach event listeners while preserving as much of the existing DOM as possible. For best results, you should try to render the same content on the server as on the client, with as few differences as possible.
+Same as [`render()`](#render), but is used to hydrate a container whose HTML contents were rendered by [`ReactDOMServer`](/docs/react-dom-server.html). React will attach event listeners while preserving as much of the existing DOM as possible. For best results, you should try to render the same content on the server as on the client, with as few differences as possible.
 
 * * *
 
@@ -107,4 +107,4 @@ If this component has been mounted into the DOM, this returns the corresponding 
 ReactDOM.createPortal(child, container)
 ```
 
-Creates a portal. Portals provide a way to [render children into a DOM node that exists outside the hierarchy of the DOM component](/react/docs/portals.html).
+Creates a portal. Portals provide a way to [render children into a DOM node that exists outside the hierarchy of the DOM component](/docs/portals.html).

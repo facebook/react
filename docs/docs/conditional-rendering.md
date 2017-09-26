@@ -69,7 +69,7 @@ function LogoutButton(props) {
 }
 ```
 
-In the example below, we will create a [stateful component](/react/docs/state-and-lifecycle.html#adding-local-state-to-a-class) called `LoginControl`.
+In the example below, we will create a [stateful component](/docs/state-and-lifecycle.html#adding-local-state-to-a-class) called `LoginControl`.
 
 It will render either `<LoginButton />` or `<LogoutButton />` depending on its current state. It will also render a `<Greeting />` from the previous example:
 
@@ -121,7 +121,7 @@ While declaring a variable and using an `if` statement is a fine way to conditio
 
 ### Inline If with Logical && Operator
 
-You may [embed any expressions in JSX](/react/docs/introducing-jsx.html#embedding-expressions-in-jsx) by wrapping them in curly braces. This includes the JavaScript logical `&&` operator. It can be handy for conditionally including an element:
+You may [embed any expressions in JSX](/docs/introducing-jsx.html#embedding-expressions-in-jsx) by wrapping them in curly braces. This includes the JavaScript logical `&&` operator. It can be handy for conditionally including an element:
 
 ```js{6-10}
 function Mailbox(props) {
@@ -185,7 +185,7 @@ render() {
 }
 ```
 
-Just like in JavaScript, it is up to you to choose an appropriate style based on what you and your team consider more readable. Also remember that whenever conditions become too complex, it might be a good time to [extract a component](/react/docs/components-and-props.html#extracting-components).
+Just like in JavaScript, it is up to you to choose an appropriate style based on what you and your team consider more readable. Also remember that whenever conditions become too complex, it might be a good time to [extract a component](/docs/components-and-props.html#extracting-components).
 
 ### Preventing Component from Rendering
 

@@ -8,7 +8,7 @@ category: Reference
 
 > Note:
 >
-> `shallowCompare` is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
+> `shallowCompare` is a legacy add-on. Use [`React.PureComponent`](/docs/react-api.html#react.purecomponent) instead.
 
 **Importing**
 
@@ -19,7 +19,7 @@ var shallowCompare = require('react-addons-shallow-compare'); // ES5 with npm
 
 ## Overview
 
-Before [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) was introduced, `shallowCompare` was commonly used to achieve the same functionality as [`PureRenderMixin`](pure-render-mixin.html) while using ES6 classes with React.
+Before [`React.PureComponent`](/docs/react-api.html#react.purecomponent) was introduced, `shallowCompare` was commonly used to achieve the same functionality as [`PureRenderMixin`](pure-render-mixin.html) while using ES6 classes with React.
 
 If your React component's render function is "pure" (in other words, it renders the same result given the same props and state), you can use this helper function for a performance boost in some cases.
 

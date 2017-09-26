@@ -38,7 +38,7 @@ It looks like [Sophie Alpert](http://sophiebits.com/) is the first person outsid
 
 ## Origins of React
 
-[Pete Hunt](http://www.petehunt.net/blog/) explained what differentiates React from other JavaScript libraries in [a previous blog post](/react/blog/2013/06/05/why-react.html). [Lee Byron](http://leebyron.com/) gives another perspective on Quora:
+[Pete Hunt](http://www.petehunt.net/blog/) explained what differentiates React from other JavaScript libraries in [a previous blog post](/blog/2013/06/05/why-react.html). [Lee Byron](http://leebyron.com/) gives another perspective on Quora:
 
 > React isn't quite like any other popular JavaScript libraries, and it solves a very specific problem: complex UI rendering. It's also intended to be used along side many other popular libraries. For example, React works well with Backbone.js, amongst many others.
 >
