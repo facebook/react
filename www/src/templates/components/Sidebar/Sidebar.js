@@ -47,12 +47,12 @@ class Sidebar extends Component {
         }}>
         {sectionList.map((section, index) => (
           <Section
-            closeParentMenu={closeParentMenu}
             createLink={createLink}
             isActive={activeSection === section || sectionList.length === 1}
             key={index}
             location={location}
-            onClick={() => this._toggleSection(section)}
+            onLinkClick={closeParentMenu}
+            onSectionTitleClick={() => this._toggleSection(section)}
             section={section}
           />
         ))}

@@ -18,16 +18,16 @@ import ChevronSvg from '../ChevronSvg';
 // Maybe used 'hashchange' along with 'scroll' to set/update active links
 
 const Section = ({
-  closeParentMenu,
   createLink,
   isActive,
   location,
-  onClick,
+  onLinkClick,
+  onSectionTitleClick,
   section,
 }) => (
   <div>
     <MetaTitle
-      onClick={onClick}
+      onClick={onSectionTitleClick}
       cssProps={{
         marginTop: 10,
 
@@ -66,13 +66,13 @@ const Section = ({
           css={{
             marginTop: 5,
           }}>
-          {createLink(location, section, item, closeParentMenu)}
+          {createLink(location, section, item, onLinkClick)}
 
           {item.subitems &&
             <ul css={{marginLeft: 20}}>
               {item.subitems.map(subitem => (
                 <li key={subitem.id}>
-                  {createLink(location, section, subitem, closeParentMenu)}
+                  {createLink(location, section, subitem, onLinkClick)}
                 </li>
               ))}
             </ul>}
