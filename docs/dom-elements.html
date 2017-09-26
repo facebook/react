@@ -155,7 +155,16 @@
 
 <h2>All Supported HTML Attributes</h2>
 
-<p>React supports all <code>data-*</code> and <code>aria-*</code> attributes as well as these attributes:</p>
+<p>As of React 16, any standard <a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">or custom</a> DOM attributes are fully supported.</p>
+
+<p>React has always provided a JavaScript-centric API to the DOM. Since React components often take both custom and DOM-related props, React uses the <code>camelCase</code> convention just like the DOM APIs:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">div</span> <span class="nx">tabIndex</span><span class="o">=</span><span class="s2">&quot;-1&quot;</span> <span class="o">/&gt;</span>      <span class="c1">// Just like node.tabIndex DOM API</span>
+<span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;Button&quot;</span> <span class="o">/&gt;</span> <span class="c1">// Just like node.className DOM API</span>
+<span class="o">&lt;</span><span class="nx">input</span> <span class="nx">readOnly</span><span class="o">=</span><span class="p">{</span><span class="kc">true</span><span class="p">}</span> <span class="o">/&gt;</span>  <span class="c1">// Just like node.readOnly DOM API</span>
+</code></pre></div>
+<p>These props work similarly to the corresponding HTML attributes, with the exception of the special cases documented above.</p>
+
+<p>Some of the DOM attributes supported by React include:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accept acceptCharset accessKey action allowFullScreen allowTransparency alt
 async autoComplete autoFocus autoPlay capture cellPadding cellSpacing challenge
 charSet checked cite classID className colSpan cols content contentEditable
@@ -170,23 +179,7 @@ required reversed role rowSpan rows sandbox scope scoped scrolling seamless
 selected shape size sizes span spellCheck src srcDoc srcLang srcSet start step
 style summary tabIndex target title type useMap value width wmode wrap
 </code></pre></div>
-<p>These RDFa attributes are supported (several RDFa attributes overlap with standard HTML attributes and thus are excluded from this list):</p>
-<div class="highlight"><pre><code class="language-text" data-lang="text">about datatype inlist prefix property resource typeof vocab
-</code></pre></div>
-<p>In addition, the following non-standard attributes are supported:</p>
-
-<ul>
-<li><code>autoCapitalize autoCorrect</code> for Mobile Safari.</li>
-<li><code>color</code> for <code>&lt;link rel=&quot;mask-icon&quot; /&gt;</code> in Safari.</li>
-<li><code>itemProp itemScope itemType itemRef itemID</code> for <a href="http://schema.org/docs/gs.html">HTML5 microdata</a>.</li>
-<li><code>security</code> for older versions of Internet Explorer.</li>
-<li><code>unselectable</code> for Internet Explorer.</li>
-<li><code>results autoSave</code> for WebKit/Blink input fields of type <code>search</code>.</li>
-</ul>
-
-<h2>All Supported SVG Attributes</h2>
-
-<p>React supports these SVG attributes:</p>
+<p>Similarly, all SVG attributes are fully supported:</p>
 <div class="highlight"><pre><code class="language-text" data-lang="text">accentHeight accumulate additive alignmentBaseline allowReorder alphabetic
 amplitude arabicForm ascent attributeName attributeType autoReverse azimuth
 baseFrequency baseProfile baselineShift bbox begin bias by calcMode capHeight
@@ -222,6 +215,8 @@ writingMode x x1 x2 xChannelSelector xHeight xlinkActuate xlinkArcrole
 xlinkHref xlinkRole xlinkShow xlinkTitle xlinkType xmlns xmlnsXlink xmlBase
 xmlLang xmlSpace y y1 y2 yChannelSelector z zoomAndPan
 </code></pre></div>
+<p>You may also use custom attributes as long as they&#39;re fully lowercase.</p>
+
 
     <div class="docs-prevnext">
       
