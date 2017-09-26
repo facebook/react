@@ -44,7 +44,7 @@ A team from New Zealand called [Atomic](https://atomic.io/) is [building web and
 
 [Polarr](https://github.com/Polarrco) have rebuilt [their browser-based photo editor](http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here) with React.
 
-<center><a href="http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here"><img src="/react/img/blog/polarr.jpg"></a></center>
+<center><a href="http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here"><img src="../img/blog/polarr.jpg"></a></center>
 
 ## It's F8!
 

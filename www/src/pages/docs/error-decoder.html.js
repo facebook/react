@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -19,9 +17,9 @@ import MarkdownHeader from 'components/MarkdownHeader';
 import React from 'react';
 import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import {colors, sharedStyles} from 'theme';
+import {createLinkDocs} from 'utils/createLink';
 import findSectionForPath from 'utils/findSectionForPath';
-
-import sectionList from '../../../../docs/_data/nav_docs.yml';
+import {sectionListDocs} from 'utils/sectionList';
 
 const ErrorPage = ({data, location}) => (
   <Flex
@@ -78,12 +76,13 @@ const ErrorPage = ({data, location}) => (
 
         <div css={sharedStyles.articleLayout.sidebar}>
           <StickyResponsiveSidebar
+            createLink={createLinkDocs}
             defaultActiveSection={findSectionForPath(
               location.pathname,
-              sectionList,
+              sectionListDocs,
             )}
             location={location}
-            sectionList={sectionList}
+            sectionList={sectionListDocs}
             title={data.markdownRemark.frontmatter.title}
           />
         </div>

@@ -1,5 +1,5 @@
 ---
-title: "Community Round-up #27 &ndash; Relay Edition"
+title: "Community Round-up #27 – Relay Edition"
 layout: post
 author: [steveluscher]
 ---
@@ -43,7 +43,7 @@ Joe McBride ([joemcbride](https://github.com/joemcbride)) has an up-and-running 
 Interact with this [visual tour of Relay's architecture](http://sgwilym.github.io/relay-visual-learners/) by Sam Gwilym ([sgwilym](https://github.com/sgwilym)).
 
 <a href="http://sgwilym.github.io/relay-visual-learners/">
-  <img src="/react/img/blog/relay-visual-architecture-tour.png" alt="Relay for visual learners" style="max-width:100%">
+  <img src="../img/blog/relay-visual-architecture-tour.png" alt="Relay for visual learners" style="max-width:100%">
 </a>
 
 Sam has already launched a product that leverages Relay's data-fetching, optimistic responses, pagination, and mutations &ndash; all atop a Ruby GraphQL server: [new.comique.co](http://new.comique.co/)

@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -116,15 +114,19 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       createArticlePage(slug);
 
       // Register redirects as well if the markdown specifies them.
-      // TODO Once Gatsby has a built-in solution for redirects, switch to it.
-      // https://github.com/gatsbyjs/gatsby/pull/1068
       if (edge.node.fields.redirect) {
-        const redirect = JSON.parse(edge.node.fields.redirect);
-        if (Array.isArray(redirect)) {
-          redirect.forEach(createArticlePage);
-        } else {
-          createArticlePage(redirect);
+        let redirect = JSON.parse(edge.node.fields.redirect);
+        if (!Array.isArray(redirect)) {
+          redirect = [redirect];
         }
+
+        redirect.forEach(fromPath =>
+          createRedirect({
+            fromPath: `/${fromPath}`,
+            redirectInBrowser: true,
+            toPath: `/${slug}`,
+          })
+        );
       }
     }
   });
@@ -146,11 +148,13 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       }
     }
   `);
+  const newestBlogNode = newestBlogEntry.data.allMarkdownRemark.edges[0].node;
 
   // Blog landing page should always show the most recent blog entry.
   createRedirect({
     fromPath: '/blog/',
-    toPath: newestBlogEntry.data.allMarkdownRemark.edges[0].node.fields.slug,
+    redirectInBrowser: true,
+    toPath: newestBlogNode.fields.slug,
   });
 };
 

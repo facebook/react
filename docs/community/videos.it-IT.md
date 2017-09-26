@@ -17,7 +17,7 @@ next: complementary-tools-it-IT.html
 ### Pensare in react - tagtree.tv
 
 Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare in React](/react/docs/thinking-in-react.html) mentre costruisci una semplice applicazione
-<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *
 
@@ -32,14 +32,14 @@ Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare i
 ### Pensare in grande con React
 
 "Sulla carta, tutti questi framework JS sembrano promettenti: implementazioni pulite, design veloce del codice, esecuzione perfetta. Ma che succede quando metti JavaScript sotto stress? Che succede se gli dài in pasto 6 megabyte di codice? In questo talk investigheremo come si comporta React in situazioni di stress elevato, e come ha aiutato il nostro team a costruire codice sicuro ad una scala enorme."
-<figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
+<figure><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react#video"><img src="https://i.vimeocdn.com/video/481670116_650.jpg"></a></figure>
 
 * * *
 
 ### CodeWinds
 
 [Pete Hunt](http://www.petehunt.net/) ha parlato con [Jeff Barczewski](http://jeff.barczewski.com/) a proposito di React nell'Episodio 4 di CodeWinds.
-<figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
+<figure><a href="http://codewinds.com/4"><img src="../img/docs/codewinds-004.png"></a></figure>
 
 <table width="100%"><tr><td>
 02:08 - Cos'è React e perché usarlo?<br />
@@ -72,7 +72,7 @@ Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare i
 ### JavaScript Jabber
 
 [Pete Hunt](http://www.petehunt.net/) e [Jordan Walke](https://github.com/jordwalke) hanno parlato di React in JavaScript Jabber 73.
-<figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="../img/docs/javascript-jabber.png"></a></figure>
 
 <table width="100%"><tr><td>
 01:34 – Introduzione di Pete Hunt<br />

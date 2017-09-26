@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  * @flow
@@ -188,6 +186,12 @@ const sharedStyles = {
       marginRight: -30,
       paddingLeft: 15,
       paddingRight: 15,
+
+      [media.lessThan('small')]: {
+        marginLeft: -20,
+        marginRight: -20,
+        borderRadius: 0,
+      },
     },
 
     '& a:not(.anchor):not(.gatsby-resp-image-link)': linkStyle,
@@ -331,6 +335,10 @@ const sharedStyles = {
       '& li.button-newapp': {
         marginTop: 0,
       },
+
+      '& ol, & ul': {
+        marginLeft: 20,
+      },
     },
 
     '& img': {
@@ -358,6 +366,7 @@ const sharedStyles = {
 
       [media.lessThan('small')]: {
         marginLeft: -20,
+        marginRight: -20,
       },
 
       '& p': {

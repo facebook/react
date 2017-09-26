@@ -47,7 +47,7 @@ The best part is that no drastic changes have been required to support all those
 > [**Read part 2 ...**](http://www.phpied.com/server-side-react-with-php-part-2/)
 >
 > Rendered markup on the server:
-> <figure>[![](/react/img/blog/react-php.png)](http://www.phpied.com/server-side-react-with-php-part-2/)</figure>
+> <figure><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><img src="../img/blog/react-php.png"></a></figure>
 
 
 ## TodoMVC Benchmarks
@@ -92,7 +92,7 @@ The fact that you can control when components are rendered is a very important c
 ## Guess the filter
 
 [Connor McSheffrey](http://conr.me) implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
-<figure>[![](/react/img/blog/guess_filter.jpg)](http://guessthefilter.com/)</figure>
+<figure><a href="http://guessthefilter.com/"><img src="../img/blog/guess_filter.jpg"></a></figure>
 
 
 ## React vs FruitMachine

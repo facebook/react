@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -13,33 +11,9 @@
 
 import Container from 'components/Container';
 import {Component, React} from 'react';
-import isItemActive from 'utils/isItemActive';
 import Sidebar from 'templates/components/Sidebar';
 import {colors, media} from 'theme';
 import ChevronSvg from 'templates/components/ChevronSvg';
-
-function findActiveItemTitle(location, defaultActiveSection) {
-  const {items} = defaultActiveSection;
-
-  for (let i = 0, len = items.length; i < len; i++) {
-    const item = items[i];
-    if (isItemActive(location, item)) {
-      return item.title;
-    } else if (item.subitems && item.subitems.length) {
-      const {subitems} = item;
-      for (let j = 0, len2 = subitems.length; j < len2; j++) {
-        const subitem = subitems[j];
-        if (isItemActive(location, subitem)) {
-          return subitem.title;
-        }
-      }
-    }
-  }
-
-  // If nothing else is found, warn and default to section title
-  console.warn('No active item title found in <StickyResponsiveSidebar>');
-  return defaultActiveSection.title;
-}
 
 class StickyResponsiveSidebar extends Component {
   constructor(props, context) {
@@ -61,7 +35,6 @@ class StickyResponsiveSidebar extends Component {
   }
 
   render() {
-    const {defaultActiveSection, location, title} = this.props;
     const {open} = this.state;
     const smallScreenSidebarStyles = {
       top: 0,
@@ -78,17 +51,12 @@ class StickyResponsiveSidebar extends Component {
     };
 
     const smallScreenBottomBarStyles = {
-      display: 'block',
+      display: 'inline-block',
     };
 
-    const iconOffset = open ? 7 : 0;
-    const labelOffset = open ? -40 : 0;
+    const iconOffset = open ? 8 : -4;
     const menuOpacity = open ? 1 : 0;
     const menuOffset = open ? 0 : 40;
-
-    const navbarLabel = defaultActiveSection != null
-      ? findActiveItemTitle(location, defaultActiveSection)
-      : title;
 
     // TODO: role and aria props for 'close' button?
     return (
@@ -167,15 +135,16 @@ class StickyResponsiveSidebar extends Component {
         <div
           css={{
             backgroundColor: colors.darker,
-            bottom: 0,
+            bottom: 44, // iOS Safari's inert "bottom 44px"
             color: colors.brand,
             display: 'none', // gets overriden at small screen sizes
-            left: 0,
             cursor: 'pointer',
             position: 'fixed',
-            right: 0,
-            width: '100%',
+            right: 20,
             zIndex: 3,
+            borderRadius: '50%',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            boxShadow: '0 0 20px rgba(0, 0, 0, 0.3)',
             [media.lessThan('small')]: smallScreenBottomBarStyles,
           }}
           onClick={this._openNavMenu}>
@@ -190,7 +159,7 @@ class StickyResponsiveSidebar extends Component {
                   height: 50,
                 },
                 [media.lessThan('small')]: {
-                  height: 40,
+                  height: 60,
                   overflow: 'hidden',
                   alignItems: 'flex-start',
                 },
@@ -198,48 +167,26 @@ class StickyResponsiveSidebar extends Component {
               <div
                 css={{
                   width: 20,
-                  marginRight: 10,
+                  height: 20,
                   alignSelf: 'center',
                   display: 'flex',
                   flexDirection: 'column',
+                  color: colors.brand,
                 }}>
                 <ChevronSvg
+                  size={15}
                   cssProps={{
-                    transform: `translate(0, ${iconOffset}px) rotate(180deg)`,
-                    transition: 'transform 0.5s ease',
+                    transform: `translate(2px, ${iconOffset}px) rotate(180deg)`,
+                    transition: 'transform 0.2s ease',
                   }}
                 />
                 <ChevronSvg
+                  size={15}
                   cssProps={{
-                    transform: `translate(0, ${0 - iconOffset}px)`,
-                    transition: 'transform 0.5s ease',
+                    transform: `translate(2px, ${0 - iconOffset}px)`,
+                    transition: 'transform 0.2s ease',
                   }}
                 />
-              </div>
-              <div
-                css={{
-                  flexGrow: 1,
-                }}>
-                <div
-                  style={{
-                    transform: `translate(0, ${labelOffset}px)`,
-                    transition: 'transform 0.5s ease',
-                  }}>
-                  <div
-                    css={{
-                      height: 40,
-                      lineHeight: '40px',
-                    }}>
-                    {navbarLabel}
-                  </div>
-                  <div
-                    css={{
-                      height: 40,
-                      lineHeight: '40px',
-                    }}>
-                    Close
-                  </div>
-                </div>
               </div>
             </div>
           </Container>

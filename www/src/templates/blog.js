@@ -1,21 +1,19 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
 
 'use strict';
 
-import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
+import MarkdownPage from 'components/MarkdownPage';
+import {createLinkBlog} from 'utils/createLink';
 
-// TODO This is hacky
 const toSectionList = allMarkdownRemark => [
   {
     title: 'Recent Posts',
@@ -34,6 +32,7 @@ const toSectionList = allMarkdownRemark => [
 const Blog = ({data, location}) => (
   <MarkdownPage
     authors={data.markdownRemark.frontmatter.author}
+    createLink={createLinkBlog}
     date={data.markdownRemark.fields.date}
     location={location}
     ogDescription={data.markdownRemark.excerpt}

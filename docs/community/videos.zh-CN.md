@@ -17,7 +17,7 @@ next: complementary-tools-zh-CN.html
 ### Thinking in react - tagtree.tv
 
 一个 [tagtree.tv](http://tagtree.tv/) 传达 [Thinking in React](/react/docs/thinking-in-react.html) 原则的视频  在构建一个简单app时。
-<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *
 
@@ -32,14 +32,14 @@ next: complementary-tools-zh-CN.html
 ### Going big with React
 
 "理论上，所有的JS框架都大有可为：干净的实现,快速的代码设计,完美的执行。但是当你压力测试时Javascript会怎样？当你丢进6MB的代码时会怎样？在这次演讲中，我们会探究React在高压环境下如何表现，以及它如何帮助我们的团队在大规模时构建安全代码。 "
-<figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
+<figure><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react#video"><img src="https://i.vimeocdn.com/video/481670116_650.jpg"></a></figure>
 
 * * *
 
 ### CodeWinds
 
 [Pete Hunt](http://www.petehunt.net/) 与 [Jeff Barczewski](http://jeff.barczewski.com/) 在 CodeWinds Episode 4 上关于 React 的谈话.
-<figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
+<figure><a href="http://codewinds.com/4"><img src="../img/docs/codewinds-004.png"></a></figure>
 
 <table width="100%"><tr><td>
 02:08 - 什么是React，为什么我们用它?<br />
@@ -72,7 +72,7 @@ next: complementary-tools-zh-CN.html
 ### JavaScript Jabber
 
 [Pete Hunt](http://www.petehunt.net/) 和 [Jordan Walke](https://github.com/jordwalke) 在 JavaScript Jabber 73 上关于React的谈话.
-<figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="../img/docs/javascript-jabber.png"></a></figure>
 
 <table width="100%"><tr><td>
 01:34 – Pete Hunt 介绍<br />

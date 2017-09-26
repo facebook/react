@@ -165,11 +165,11 @@ class Square extends React.Component {
 
 Before:
 
-![React Devtools](/react/img/tutorial/tictac-empty.png)
+![React Devtools](../img/tutorial/tictac-empty.png)
 
 After: You should see a number in each square in the rendered output.
 
-![React Devtools](/react/img/tutorial/tictac-numbers.png)
+![React Devtools](../img/tutorial/tictac-numbers.png)
 
 [View the current code.](https://codepen.io/gaearon/pen/aWWQOG?editors=0010)
 
@@ -254,7 +254,7 @@ If you click on any square, an X should show up in it.
 
 The React Devtools extension for [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/) lets you inspect a React component tree in your browser devtools.
 
-<img src="/react/img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%">
+<img src="../img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%">
 
 It lets you inspect the props and state of any of the components in your tree.
 

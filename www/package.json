@@ -5,6 +5,9 @@
   "bugs": {
     "url": "https://github.com/facebook/react"
   },
+  "resolutions": {
+    "gatsby/graphql": "0.10.5"
+  },
   "dependencies": {
     "gatsby": "^1.9.9",
     "gatsby-link": "^1.6.9",
@@ -12,7 +15,6 @@
     "gatsby-plugin-google-analytics": "^1.0.4",
     "gatsby-plugin-manifest": "^1.0.4",
     "gatsby-plugin-netlify": "^1.0.4",
-    "gatsby-plugin-offline": "^1.0.4",
     "gatsby-plugin-react-helmet": "^1.0.3",
     "gatsby-plugin-react-next": "^1.0.3",
     "gatsby-plugin-sharp": "^1.6.2",
@@ -49,10 +51,9 @@
     "url": "git+https://github.com/facebook/react.git"
   },
   "scripts": {
-    "dev": "gatsby develop",
+    "dev": "gatsby develop -H 0.0.0.0",
     "lint": "./node_modules/.bin/eslint --ext .js,.jsx --ignore-pattern public .",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "develop": "gatsby develop",
     "build": "gatsby build",
     "deploy": "gatsby build --prefix-links && gh-pages -d public",
     "reset": "rimraf ./.cache"

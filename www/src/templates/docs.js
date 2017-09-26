@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -14,27 +12,15 @@
 import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
-
-import sectionListA from '../../../docs/_data/nav_docs.yml';
-import sectionListB from '../../../docs/_data/nav_contributing.yml';
-
-const sectionList = sectionListA
-  .map(item => {
-    item.directory = 'docs';
-    return item;
-  })
-  .concat(
-    sectionListB.map(item => {
-      item.directory = 'contributing';
-      return item;
-    }),
-  );
+import {createLinkDocs} from 'utils/createLink';
+import {sectionListDocs} from 'utils/sectionList';
 
 const Docs = ({data, location}) => (
   <MarkdownPage
+    createLink={createLinkDocs}
     location={location}
     markdownRemark={data.markdownRemark}
-    sectionList={sectionList}
+    sectionList={sectionListDocs}
     titlePostfix=" - React"
   />
 );

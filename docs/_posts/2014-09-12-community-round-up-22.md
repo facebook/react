@@ -48,7 +48,7 @@ var translated = (
 
 [Trường](http://truongtx.me/) wrote a little guide to help your [getting started using React, Browserify and Gulp](http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/).
 
-<figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="/react/img/blog/react-browserify-gulp.jpg" /></a></figure>
+<figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="../img/blog/react-browserify-gulp.jpg" /></a></figure>
 
 
 ## React Style
@@ -111,4 +111,4 @@ When [Kent William Innholt](http://http://kentwilliam.com/) who works at [M>Path
 To finish this round-up, Andrew Gleave made a page that displays the [Weather](https://github.com/andrewgleave/react-weather). It's great to see that React is also used for small prototypes.
 
 
-<figure><a href="https://github.com/andrewgleave/react-weather"><img src="/react/img/blog/weather.png" /></a></figure>
+<figure><a href="https://github.com/andrewgleave/react-weather"><img src="../img/blog/weather.png" /></a></figure>

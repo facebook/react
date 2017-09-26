@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -19,24 +17,11 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
+import {createLinkDocs} from 'utils/createLink';
 import findSectionForPath from 'utils/findSectionForPath';
+import {sectionListDocs} from 'utils/sectionList';
 import {sharedStyles} from 'theme';
 import {urlRoot} from 'constants';
-
-import sectionListA from '../../../docs/_data/nav_docs.yml';
-import sectionListB from '../../../docs/_data/nav_contributing.yml';
-
-const sectionList = sectionListA
-  .map(item => {
-    item.directory = 'docs';
-    return item;
-  })
-  .concat(
-    sectionListB.map(item => {
-      item.directory = 'contributing';
-      return item;
-    }),
-  );
 
 // HACK: copied from 'installation.md'
 // TODO: clean this up.
@@ -182,12 +167,13 @@ class InstallationPage extends Component {
 
               <div css={sharedStyles.articleLayout.sidebar}>
                 <StickyResponsiveSidebar
+                  createLink={createLinkDocs}
                   defaultActiveSection={findSectionForPath(
                     location.pathname,
-                    sectionList,
+                    sectionListDocs,
                   )}
                   location={location}
-                  sectionList={sectionList}
+                  sectionList={sectionListDocs}
                   title="Installation"
                 />
               </div>
@@ -198,6 +184,7 @@ class InstallationPage extends Component {
         {/* TODO Read prev/next from index map, not this way */}
         {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
           <NavigationFooter
+            location={location}
             next={markdownRemark.frontmatter.next}
             prev={markdownRemark.frontmatter.prev}
           />}

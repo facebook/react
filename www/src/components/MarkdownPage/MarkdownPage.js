@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
 */
@@ -26,6 +24,7 @@ import {urlRoot} from 'constants';
 
 const MarkdownPage = ({
   authors,
+  createLink,
   date,
   ogDescription,
   location,
@@ -95,13 +94,13 @@ const MarkdownPage = ({
 
             <div css={sharedStyles.articleLayout.sidebar}>
               <StickyResponsiveSidebar
+                createLink={createLink}
                 defaultActiveSection={findSectionForPath(
                   location.pathname,
                   sectionList,
                 )}
                 location={location}
                 sectionList={sectionList}
-                title={titlePrefix}
               />
             </div>
           </div>
@@ -111,6 +110,7 @@ const MarkdownPage = ({
       {/* TODO Read prev/next from index map, not this way */}
       {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
         <NavigationFooter
+          location={location}
           next={markdownRemark.frontmatter.next}
           prev={markdownRemark.frontmatter.prev}
         />}
@@ -125,6 +125,7 @@ MarkdownPage.defaultProps = {
 // TODO Better types
 MarkdownPage.propTypes = {
   authors: PropTypes.array.isRequired,
+  createLink: PropTypes.func.isRequired,
   date: PropTypes.string,
   location: PropTypes.object.isRequired,
   markdownRemark: PropTypes.object.isRequired,

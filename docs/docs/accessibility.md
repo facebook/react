@@ -76,7 +76,7 @@ Ensure that your web application can be fully operated with the keyboard only:
 
 Keyboard focus refers to the current element in the DOM that is selected to accept input from the keyboard. We see it everywhere as a focus outline similar to that shown in the following image:
 
-<img src="/react/img/docs/keyboard-focus.png" alt="Blue keyboard focus outline around a selected link." />
+<img src="../img/docs/keyboard-focus.png" alt="Blue keyboard focus outline around a selected link." />
 
 Only ever use CSS that removes this outline, for example by setting `outline: 0`, if you are replacing it with another focus outline implementation.
 
