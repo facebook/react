@@ -9,11 +9,11 @@
 
 'use strict';
 
-import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
+import MarkdownPage from 'components/MarkdownPage';
+import {createLinkBlog} from 'utils/createLink';
 
-// TODO This is hacky
 const toSectionList = allMarkdownRemark => [
   {
     title: 'Recent Posts',
@@ -32,6 +32,7 @@ const toSectionList = allMarkdownRemark => [
 const Blog = ({data, location}) => (
   <MarkdownPage
     authors={data.markdownRemark.frontmatter.author}
+    createLink={createLinkBlog}
     date={data.markdownRemark.fields.date}
     location={location}
     ogDescription={data.markdownRemark.excerpt}
