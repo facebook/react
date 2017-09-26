@@ -33,7 +33,7 @@ However, sometimes it's useful to insert a child into a different location in th
 render() {
   // React does *not* create a new div. It renders the children into `domNode`.
   // `domNode` is any valid DOM node, regardless of its location in the DOM.
-  return React.createPortal(
+  return ReactDOM.createPortal(
     this.props.children,
     domNode,
   );
