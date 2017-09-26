@@ -37,8 +37,9 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
   <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
-  <script src="https://unpkg.com/react/dist/react.min.js"></script>
-  <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
+  <script src="https://unpkg.com/react/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/create-react-class/create-react-class.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   <script src="/react/js/live_editor.js"></script>
 </head>
@@ -192,7 +193,7 @@ Then, you can run several commands:</p>
 
 <p>The easiest way to try your changes is to run <code>npm run build</code> and then open <code>fixtures/packaging/babel-standalone/dev.html</code>. This file already uses <code>react.js</code> from the <code>build</code> folder so it will pick up your changes.</p>
 
-<p>If you want to try your changes in your existing React project, you may copy <code>build/dist/react.development.js</code>, <code>build/dist/react-dom.development.js</code>, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete <code>react</code> and <code>react-dom</code> in its dependencies and use <code>npm link</code> to point them to your local <code>build</code> folder:</p>
+<p>If you want to try your changes in your existing React project, you may copy <code>build/umd/react.development.js</code>, <code>build/umd/react-dom.development.js</code>, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete <code>react</code> and <code>react-dom</code> in its dependencies and use <code>npm link</code> to point them to your local <code>build</code> folder:</p>
 <div class="highlight"><pre><code class="language-sh" data-lang="sh"><span class="nb">cd </span>your_project
 npm link ~/path_to_your_react_clone/build/packages/react
 npm link ~/path_to_your_react_clone/build/packages/react-dom
