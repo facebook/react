@@ -132,6 +132,7 @@ h1, h2, h3, h4, h5, h6 {
   background: $darkestColor;
   color: $lightTextColor;
   position: fixed;
+  transform: translateZ(0);
   top: 0;
   height: $navHeight;
   box-shadow: 0 0 5px rgba(0, 0, 0, .5);
