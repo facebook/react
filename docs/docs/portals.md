@@ -10,7 +10,7 @@ Portals provide a first-class way to render children into a DOM node that exists
 ReactDOM.createPortal(child, container)
 ```
 
-The first argument (`child`) is any [renderable React child](/docs/react-component.html#render), such as an element, string, or fragment. The second argument (`container`) is a DOM element.
+The first argument (`child`) is any [renderable React child](/react/docs/react-component.html#render), such as an element, string, or fragment. The second argument (`container`) is a DOM element.
 
 ## Usage
 
