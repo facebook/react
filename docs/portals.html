@@ -101,7 +101,7 @@
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
   <span class="c1">// React does *not* create a new div. It renders the children into `domNode`.</span>
   <span class="c1">// `domNode` is any valid DOM node, regardless of its location in the DOM.</span>
-  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createPortal</span><span class="p">(</span>
+  <span class="k">return</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">createPortal</span><span class="p">(</span>
     <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span>
 <span class="hll">    <span class="nx">domNode</span><span class="p">,</span>
 </span>  <span class="p">);</span>
