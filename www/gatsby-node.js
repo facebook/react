@@ -28,6 +28,7 @@ exports.modifyWebpackConfig = ({ config, stage }) => {
 exports.createPages = async ({graphql, boundActionCreators}) => {
   const {createPage, createRedirect} = boundActionCreators;
 
+  const acknowledgementsTemplate = resolve('./src/templates/acknowledgements.js');
   const blogTemplate = resolve('./src/templates/blog.js');
   const communityTemplate = resolve('./src/templates/community.js');
   const docsTemplate = resolve('./src/templates/docs.js');
@@ -79,6 +80,14 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
     } else if (slug === 'docs/error-decoder.html') {
       // No-op so far as markdown templates go.
       // Error codes are managed by a page (which gets created automatically).
+    } else if (slug === 'acknowledgements.html') {
+      createPage({
+        path: slug,
+        component: acknowledgementsTemplate,
+        context: {
+          slug,
+        },
+      });
 
     } else if (
       slug.includes('blog/') ||
