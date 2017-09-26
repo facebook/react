@@ -12,14 +12,15 @@
 import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
-
-import sectionList from '../../../docs/_data/nav_tutorial.yml';
+import {createLinkTutorial} from 'utils/createLink';
+import {sectionListTutorial} from 'utils/sectionList';
 
 const Tutorial = ({data, location}) => (
   <MarkdownPage
+    createLink={createLinkTutorial}
     location={location}
     markdownRemark={data.markdownRemark}
-    sectionList={sectionList}
+    sectionList={sectionListTutorial}
     titlePostfix=" - React"
   />
 );

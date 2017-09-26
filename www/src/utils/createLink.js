@@ -18,7 +18,7 @@ import isItemActive from 'utils/isItemActive';
 import slugify from 'utils/slugify';
 import {colors, media} from 'theme';
 
-const createLinkBlog = ({item, location, section}) => {
+const createLinkBlog = (location, section, item) => {
   const isActive = isItemActive(location, item);
 
   return (
@@ -29,7 +29,7 @@ const createLinkBlog = ({item, location, section}) => {
   );
 };
 
-const createLinkCommunity = ({item, location, section}) => {
+const createLinkCommunity = (location, section, item) => {
   if (item.href) {
     return (
       <a css={[linkCss]} href={item.href}>
@@ -45,15 +45,11 @@ const createLinkCommunity = ({item, location, section}) => {
       </a>
     );
   } else {
-    return createLinkDocs({
-      item,
-      location,
-      section,
-    });
+    return createLinkDocs(location, section, item);
   }
 };
 
-const createLinkDocs = ({item, location, section}) => {
+const createLinkDocs = (location, section, item) => {
   const isActive = isItemActive(location, item);
 
   return (
@@ -66,14 +62,11 @@ const createLinkDocs = ({item, location, section}) => {
   );
 };
 
-const createLinkTutorial = ({item, location, onLinkClick, section}) => {
+const createLinkTutorial = (location, section, item) => {
   const isActive = isItemActive(location, item);
 
   return (
-    <Link
-      css={[linkCss, isActive && activeLinkCss]}
-      onClick={onLinkClick}
-      to={item.href}>
+    <Link css={[linkCss, isActive && activeLinkCss]} to={item.href}>
       {isActive && <span css={activeLinkBefore} />}
       {item.title}
     </Link>
@@ -81,7 +74,7 @@ const createLinkTutorial = ({item, location, onLinkClick, section}) => {
 };
 
 const activeLinkCss = {
-  fontWeight: 700,
+  fontWeight: 'bold',
 };
 
 const activeLinkBefore = {

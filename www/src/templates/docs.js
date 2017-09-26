@@ -12,27 +12,15 @@
 import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
-
-import sectionListA from '../../../docs/_data/nav_docs.yml';
-import sectionListB from '../../../docs/_data/nav_contributing.yml';
-
-const sectionList = sectionListA
-  .map(item => {
-    item.directory = 'docs';
-    return item;
-  })
-  .concat(
-    sectionListB.map(item => {
-      item.directory = 'contributing';
-      return item;
-    }),
-  );
+import {createLinkDocs} from 'utils/createLink';
+import {sectionListDocs} from 'utils/sectionList';
 
 const Docs = ({data, location}) => (
   <MarkdownPage
+    createLink={createLinkDocs}
     location={location}
     markdownRemark={data.markdownRemark}
-    sectionList={sectionList}
+    sectionList={sectionListDocs}
     titlePostfix=" - React"
   />
 );
