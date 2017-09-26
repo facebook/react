@@ -137,17 +137,24 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.6.2/dist/
 
 <h2>Changelog</h2>
 
-<h2>15.6.2 (September 25th, 2017)</h2>
+<h2>15.6.2 (September 25, 2017)</h2>
+
+<h3>All Packages</h3>
+
+<ul>
+<li>Switch from BSD + Patents to MIT license</li>
+</ul>
 
 <h3>React DOM</h3>
 
 <ul>
-<li>Fix a bug where modifying document.documentMode would trigger IE detection in other browsers, breaking change events (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/10032">#10032</a></li>
-<li>CSS Columns are treated as unitless numbers (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/10115">#10115</a></li>
-<li>Fix bug in QtWebKit when wrapping synthetic events in proxies (<a href="https://github.com/walrusfruitcake">@walrusfruitcake</a> in <a href="https://github.com/facebook/react/pull/10011">#10115</a></li>
-<li>Prevent event handlers from receiving extra argument (dev only) (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/8363">#10115</a></li>
-<li>Fix cases where onChange would not fire with defaultChecked on radio inputs (<a href="https://github.com/jquense">@jquense</a> in <a href="https://github.com/facebook/react/pull/10156">#10156</a>)</li>
-<li>Add support for controlList attribute to DOM property whitelist (<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/9940">#9940</a>)</li>
+<li>Fix a bug where modifying <code>document.documentMode</code> would trigger IE detection in other browsers, breaking change events. (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/10032">#10032</a>)</li>
+<li>CSS Columns are treated as unitless numbers. (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/10115">#10115</a>)</li>
+<li>Fix bug in QtWebKit when wrapping synthetic events in proxies. (<a href="https://github.com/walrusfruitcake">@walrusfruitcake</a> in <a href="https://github.com/facebook/react/pull/10011">#10115</a>)</li>
+<li>Prevent event handlers from receiving extra argument in development. (<a href="https://github.com/aweary">@aweary</a> in <a href="https://github.com/facebook/react/pull/8363">#10115</a>)</li>
+<li>Fix cases where <code>onChange</code> would not fire with <code>defaultChecked</code> on radio inputs. (<a href="https://github.com/jquense">@jquense</a> in <a href="https://github.com/facebook/react/pull/10156">#10156</a>)</li>
+<li>Add support for <code>controlList</code> attribute to DOM property whitelist (<a href="https://github.com/nhunzaker">@nhunzaker</a> in <a href="https://github.com/facebook/react/pull/9940">#9940</a>)</li>
+<li>Fix a bug where creating an element with a ref in a constructor did not throw an error in development. (<a href="https://github.com/iansu">@iansu</a> in <a href="https://github.com/facebook/react/pull/10025">#10025</a>)</li>
 </ul>
 
 </div>

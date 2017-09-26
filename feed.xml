@@ -49,17 +49,24 @@ Minified build for production: &lt;a href=&quot;https://unpkg.com/react-dom@15.6
 
 &lt;h2&gt;Changelog&lt;/h2&gt;
 
-&lt;h2&gt;15.6.2 (September 25th, 2017)&lt;/h2&gt;
+&lt;h2&gt;15.6.2 (September 25, 2017)&lt;/h2&gt;
+
+&lt;h3&gt;All Packages&lt;/h3&gt;
+
+&lt;ul&gt;
+&lt;li&gt;Switch from BSD + Patents to MIT license&lt;/li&gt;
+&lt;/ul&gt;
 
 &lt;h3&gt;React DOM&lt;/h3&gt;
 
 &lt;ul&gt;
-&lt;li&gt;Fix a bug where modifying document.documentMode would trigger IE detection in other browsers, breaking change events (&lt;a href=&quot;https://github.com/aweary&quot;&gt;@aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10032&quot;&gt;#10032&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;CSS Columns are treated as unitless numbers (&lt;a href=&quot;https://github.com/aweary&quot;&gt;@aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10115&quot;&gt;#10115&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Fix bug in QtWebKit when wrapping synthetic events in proxies (&lt;a href=&quot;https://github.com/walrusfruitcake&quot;&gt;@walrusfruitcake&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10011&quot;&gt;#10115&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Prevent event handlers from receiving extra argument (dev only) (&lt;a href=&quot;https://github.com/aweary&quot;&gt;@aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8363&quot;&gt;#10115&lt;/a&gt;&lt;/li&gt;
-&lt;li&gt;Fix cases where onChange would not fire with defaultChecked on radio inputs (&lt;a href=&quot;https://github.com/jquense&quot;&gt;@jquense&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10156&quot;&gt;#10156&lt;/a&gt;)&lt;/li&gt;
-&lt;li&gt;Add support for controlList attribute to DOM property whitelist (&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9940&quot;&gt;#9940&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fix a bug where modifying &lt;code&gt;document.documentMode&lt;/code&gt; would trigger IE detection in other browsers, breaking change events. (&lt;a href=&quot;https://github.com/aweary&quot;&gt;@aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10032&quot;&gt;#10032&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;CSS Columns are treated as unitless numbers. (&lt;a href=&quot;https://github.com/aweary&quot;&gt;@aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10115&quot;&gt;#10115&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fix bug in QtWebKit when wrapping synthetic events in proxies. (&lt;a href=&quot;https://github.com/walrusfruitcake&quot;&gt;@walrusfruitcake&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10011&quot;&gt;#10115&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Prevent event handlers from receiving extra argument in development. (&lt;a href=&quot;https://github.com/aweary&quot;&gt;@aweary&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/8363&quot;&gt;#10115&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fix cases where &lt;code&gt;onChange&lt;/code&gt; would not fire with &lt;code&gt;defaultChecked&lt;/code&gt; on radio inputs. (&lt;a href=&quot;https://github.com/jquense&quot;&gt;@jquense&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10156&quot;&gt;#10156&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Add support for &lt;code&gt;controlList&lt;/code&gt; attribute to DOM property whitelist (&lt;a href=&quot;https://github.com/nhunzaker&quot;&gt;@nhunzaker&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/9940&quot;&gt;#9940&lt;/a&gt;)&lt;/li&gt;
+&lt;li&gt;Fix a bug where creating an element with a ref in a constructor did not throw an error in development. (&lt;a href=&quot;https://github.com/iansu&quot;&gt;@iansu&lt;/a&gt; in &lt;a href=&quot;https://github.com/facebook/react/pull/10025&quot;&gt;#10025&lt;/a&gt;)&lt;/li&gt;
 &lt;/ul&gt;
 </description>
 				<pubDate>2017-09-25T00:00:00-07:00</pubDate>
