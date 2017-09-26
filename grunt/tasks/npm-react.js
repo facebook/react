@@ -29,7 +29,7 @@ function buildRelease() {
   var mappings = [].concat(
     grunt.file.expandMapping('**/*', dest, {cwd: src}),
     grunt.file.expandMapping('**/*', lib, {cwd: modSrc}),
-    grunt.file.expandMapping('{LICENSE,PATENTS}', dest)
+    grunt.file.expandMapping('LICENSE', dest)
   );
   mappings.forEach(function(mapping) {
     var mappingSrc = mapping.src[0];

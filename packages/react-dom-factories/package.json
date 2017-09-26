@@ -1,20 +1,19 @@
 {
   "name": "react-dom-factories",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "React package for DOM factory methods.",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "lib/"

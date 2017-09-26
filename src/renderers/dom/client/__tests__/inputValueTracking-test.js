@@ -1,16 +1,15 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
 'use strict';
 
 var React = require('React');
+var ReactDOM = require('ReactDOM');
 var ReactTestUtils = require('ReactTestUtils');
 var inputValueTracking = require('inputValueTracking');
 
@@ -143,16 +142,38 @@ describe('inputValueTracking', function() {
   it('should stop tracking', function() {
     inputValueTracking.track(mockComponent);
 
-    expect(mockComponent._wrapperState.hasOwnProperty('valueTracker')).toBe(
-      true,
-    );
+    expect(mockComponent._wrapperState.valueTracker).not.toEqual(null);
 
     inputValueTracking.stopTracking(mockComponent);
 
-    expect(mockComponent._wrapperState.hasOwnProperty('valueTracker')).toBe(
-      false,
-    );
+    expect(mockComponent._wrapperState.valueTracker).toEqual(null);
 
     expect(input.hasOwnProperty('value')).toBe(false);
+  });
+
+  it('does not crash for nodes with custom value property', () => {
+    // https://github.com/facebook/react/issues/10196
+    try {
+      var originalCreateElement = document.createElement;
+      document.createElement = function() {
+        var node = originalCreateElement.apply(this, arguments);
+        Object.defineProperty(node, 'value', {
+          get() {},
+          set() {},
+        });
+        return node;
+      };
+      var div = document.createElement('div');
+      // Mount
+      var node = ReactDOM.render(<input type="text" />, div);
+      // Update
+      ReactDOM.render(<input type="text" />, div);
+      // Change
+      ReactTestUtils.SimulateNative.change(node);
+      // Unmount
+      ReactDOM.unmountComponentAtNode(div);
+    } finally {
+      document.createElement = originalCreateElement;
+    }
   });
 });

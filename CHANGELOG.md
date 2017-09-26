@@ -1,3 +1,18 @@
+## 15.6.2 (September 25, 2017)
+
+### All Packages
+* Switch from BSD + Patents to MIT license
+
+### React DOM
+
+* Fix a bug where modifying document.documentMode would trigger IE detection in other browsers, breaking change events ([@aweary](https://github.com/aweary) in [#10032](https://github.com/facebook/react/pull/10032)
+* CSS Columns are treated as unitless numbers ([@aweary](https://github.com/aweary) in [#10115](https://github.com/facebook/react/pull/10115)
+* Fix bug in QtWebKit when wrapping synthetic events in proxies ([@walrusfruitcake](https://github.com/walrusfruitcake) in [#10115](https://github.com/facebook/react/pull/10011)
+* Prevent event handlers from receiving extra argument (dev only) ([@aweary](https://github.com/aweary) in [#10115](https://github.com/facebook/react/pull/8363)
+* Fix cases where onChange would not fire with defaultChecked on radio inputs ([@jquense](https://github.com/jquense) in [#10156](https://github.com/facebook/react/pull/10156))
+* Add support for controlList attribute to DOM property whitelist ([@nhunzaker](https://github.com/nhunzaker) in [#9940](https://github.com/facebook/react/pull/9940))
+* Fix a bug where creating an element with a ref in a constructor did not throw an error in dev mode ([@iansu](https://github.com/iansu) in [#10025](https://github.com/facebook/react/pull/10025))
+
 ## 15.6.1 (June 14, 2017)
 
 ### React DOM

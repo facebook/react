@@ -1,13 +1,13 @@
 {
   "name": "react-addons-test-utils",
-  "version": "15.6.0",
+  "version": "15.6.2",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "peerDependencies": {
     "react-dom": "^15.4.2"
   },
@@ -22,7 +22,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js"
   ]

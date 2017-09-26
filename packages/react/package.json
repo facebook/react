@@ -1,16 +1,15 @@
 {
   "name": "react",
   "description": "React is a JavaScript library for building user interfaces.",
-  "version": "15.6.1",
+  "version": "15.6.2",
   "keywords": [
     "react"
   ],
   "homepage": "https://facebook.github.io/react/",
   "bugs": "https://github.com/facebook/react/issues",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "files": [
     "LICENSE",
-    "PATENTS",
     "addons.js",
     "react.js",
     "addons/",

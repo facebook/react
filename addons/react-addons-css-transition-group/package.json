@@ -1,13 +1,13 @@
 {
   "name": "react-addons-css-transition-group",
-  "version": "15.6.0",
+  "version": "15.6.2",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "scripts": {
     "prepublish": ":"
   },
@@ -16,7 +16,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js"
   ],

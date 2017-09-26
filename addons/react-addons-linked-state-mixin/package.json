@@ -1,13 +1,13 @@
 {
   "name": "react-addons-linked-state-mixin",
-  "version": "15.6.0",
+  "version": "15.6.2",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react",
     "react-addon"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "dependencies": {
     "fbjs": "^0.8.4",
     "object-assign": "^4.1.0"
@@ -21,7 +21,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "react-addons-linked-state-mixin.js",

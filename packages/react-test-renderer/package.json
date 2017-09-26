@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "15.6.1",
+  "version": "15.6.2",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
@@ -9,7 +9,7 @@
     "react-native",
     "react-testing"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
@@ -19,11 +19,10 @@
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
-    "react": "^15.6.1"
+    "react": "^15.6.2"
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "shallow.js",

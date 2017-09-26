@@ -1,6 +1,6 @@
 {
   "name": "react-linked-input",
-  "version": "15.6.0",
+  "version": "15.6.2",
   "description": "LinkedInput supports the ReactLink semantics",
   "main": "index.js",
   "scripts": {
@@ -16,7 +16,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "factory.js",
     "index.js",
     "react-linked-input.js",
@@ -29,7 +28,7 @@
     "linked",
     "reactlink"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "devDependencies": {
     "babel-preset-es2015": "^6.24.0",
     "jest": "^19.0.2",

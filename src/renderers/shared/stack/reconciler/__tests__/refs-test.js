@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -13,6 +11,7 @@
 
 var React = require('React');
 var ReactTestUtils = require('ReactTestUtils');
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var reactComponentExpect = require('reactComponentExpect');
 
@@ -281,5 +280,89 @@ describe('ref swapping', () => {
     __DEV__ = true;
     testRefCall();
     __DEV__ = originalDev;
+  });
+});
+
+describe('creating element with ref in constructor', () => {
+  class RefTest extends React.Component {
+    constructor(props) {
+      super(props);
+      this.p = <p ref="p">Hello!</p>;
+    }
+
+    render() {
+      return <div>{this.p}</div>;
+    }
+  }
+
+  var devErrorMessage =
+    'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
+    "be adding a ref to a component that was not created inside a component's " +
+    '`render` method, or you have multiple copies of React loaded ' +
+    '(details: https://fb.me/react-refs-must-have-owner).';
+
+  var prodErrorMessage =
+    'Minified React error #119; visit ' +
+    'http://facebook.github.io/react/docs/error-decoder.html?invariant=119 for the full message ' +
+    'or use the non-minified dev environment for full errors and additional helpful warnings.';
+
+  var fiberDevErrorMessage =
+    'Element ref was specified as a string (p) but no owner was ' +
+    'set. You may have multiple copies of React loaded. ' +
+    '(details: https://fb.me/react-refs-must-have-owner).';
+
+  var fiberProdErrorMessage =
+    'Minified React error #149; visit ' +
+    'http://facebook.github.io/react/docs/error-decoder.html?invariant=149&args[]=p ' +
+    'for the full message or use the non-minified dev environment for full errors and additional ' +
+    'helpful warnings.';
+
+  describe('when in development', () => {
+    it('throws an error', () => {
+      ReactTestUtils = require('ReactTestUtils');
+
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toThrowError(
+        ReactDOMFeatureFlags.useFiber ? fiberDevErrorMessage : devErrorMessage,
+      );
+    });
+  });
+
+  describe('when in production', () => {
+    var oldProcess;
+
+    beforeEach(() => {
+      __DEV__ = false;
+
+      // Mutating process.env.NODE_ENV would cause our babel plugins to do the
+      // wrong thing. If you change this, make sure to test with jest --no-cache.
+      oldProcess = process;
+      global.process = {
+        ...process,
+        env: {...process.env, NODE_ENV: 'production'},
+      };
+
+      jest.resetModules();
+      React = require('React');
+      ReactTestUtils = require('ReactTestUtils');
+      ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+      reactComponentExpect = require('reactComponentExpect');
+    });
+
+    afterEach(() => {
+      __DEV__ = true;
+      global.process = oldProcess;
+    });
+
+    it('throws an error', () => {
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toThrowError(
+        ReactDOMFeatureFlags.useFiber
+          ? fiberProdErrorMessage
+          : prodErrorMessage,
+      );
+    });
   });
 });

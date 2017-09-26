@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactErrorUtils
  * @flow
@@ -75,7 +73,9 @@ if (__DEV__) {
       func: (a: A) => void,
       a: A,
     ): void {
-      var boundFunc = func.bind(null, a);
+      var boundFunc = function() {
+        func(a);
+      };
       var evtType = `react-${name}`;
       fakeNode.addEventListener(evtType, boundFunc, false);
       var evt = document.createEvent('Event');

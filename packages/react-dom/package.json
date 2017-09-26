@@ -1,13 +1,13 @@
 {
   "name": "react-dom",
-  "version": "15.6.1",
+  "version": "15.6.2",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
@@ -19,11 +19,10 @@
     "prop-types": "^15.5.10"
   },
   "peerDependencies": {
-    "react": "^15.6.1"
+    "react": "^15.6.2"
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "dist/",
     "lib/",
