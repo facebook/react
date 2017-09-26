@@ -46,6 +46,8 @@
       title: Reconciliation
     - id: context
       title: Context
+    - id: portals
+      title: Portals
     - id: web-components
       title: Web Components
     - id: higher-order-components
@@ -65,8 +67,6 @@
       title: ReactDOM
     - id: react-dom-server
       title: ReactDOMServer
-    - id: react-dom-node-stream
-      title: ReactDOMNodeStream
     - id: dom-elements
       title: DOM Elements
     - id: events
@@ -77,3 +77,5 @@
       title: Shallow Renderer
     - id: test-renderer
       title: Test Renderer
+    - id: javascript-environment-requirements
+      title: JS Environment Requirements

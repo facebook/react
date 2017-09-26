@@ -116,7 +116,7 @@ First, run `npm run build`. This will produce pre-built bundles in `build` folde
 
 The easiest way to try your changes is to run `npm run build` and then open `fixtures/packaging/babel-standalone/dev.html`. This file already uses `react.js` from the `build` folder so it will pick up your changes.
 
-If you want to try your changes in your existing React project, you may copy `build/dist/react.development.js`, `build/dist/react-dom.development.js`, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete `react` and `react-dom` in its dependencies and use `npm link` to point them to your local `build` folder:
+If you want to try your changes in your existing React project, you may copy `build/umd/react.development.js`, `build/umd/react-dom.development.js`, or any other build products into your app and use them instead of the stable version. If your project uses React from npm, you may delete `react` and `react-dom` in its dependencies and use `npm link` to point them to your local `build` folder:
 
 ```sh
 cd your_project
