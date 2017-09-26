@@ -7,10 +7,9 @@
   ],
   "homepage": "https://facebook.github.io/react/",
   "bugs": "https://github.com/facebook/react/issues",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "cjs/",
@@ -22,10 +21,10 @@
     "node": ">=0.10.0"
   },
   "dependencies": {
-    "fbjs": "^0.8.9",
+    "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
     "object-assign": "^4.1.0",
-    "prop-types": "^15.5.6"
+    "prop-types": "^15.6.0"
   },
   "browserify": {
     "transform": [
