@@ -19,24 +19,11 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
+import {createLinkDocs} from 'utils/createLink';
 import findSectionForPath from 'utils/findSectionForPath';
+import {sectionListDocs} from 'utils/sectionList';
 import {sharedStyles} from 'theme';
 import {urlRoot} from 'constants';
-
-import sectionListA from '../../../docs/_data/nav_docs.yml';
-import sectionListB from '../../../docs/_data/nav_contributing.yml';
-
-const sectionList = sectionListA
-  .map(item => {
-    item.directory = 'docs';
-    return item;
-  })
-  .concat(
-    sectionListB.map(item => {
-      item.directory = 'contributing';
-      return item;
-    }),
-  );
 
 // HACK: copied from 'installation.md'
 // TODO: clean this up.
@@ -182,12 +169,13 @@ class InstallationPage extends Component {
 
               <div css={sharedStyles.articleLayout.sidebar}>
                 <StickyResponsiveSidebar
+                  createLink={createLinkDocs}
                   defaultActiveSection={findSectionForPath(
                     location.pathname,
-                    sectionList,
+                    sectionListDocs,
                   )}
                   location={location}
-                  sectionList={sectionList}
+                  sectionList={sectionListDocs}
                   title="Installation"
                 />
               </div>

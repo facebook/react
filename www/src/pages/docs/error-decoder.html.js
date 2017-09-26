@@ -19,9 +19,9 @@ import MarkdownHeader from 'components/MarkdownHeader';
 import React from 'react';
 import StickyResponsiveSidebar from 'components/StickyResponsiveSidebar';
 import {colors, sharedStyles} from 'theme';
+import {createLinkDocs} from 'utils/createLink';
 import findSectionForPath from 'utils/findSectionForPath';
-
-import sectionList from '../../../../docs/_data/nav_docs.yml';
+import {sectionListDocs} from 'utils/sectionList';
 
 const ErrorPage = ({data, location}) => (
   <Flex
@@ -78,12 +78,13 @@ const ErrorPage = ({data, location}) => (
 
         <div css={sharedStyles.articleLayout.sidebar}>
           <StickyResponsiveSidebar
+            createLink={createLinkDocs}
             defaultActiveSection={findSectionForPath(
               location.pathname,
-              sectionList,
+              sectionListDocs,
             )}
             location={location}
-            sectionList={sectionList}
+            sectionList={sectionListDocs}
             title={data.markdownRemark.frontmatter.title}
           />
         </div>

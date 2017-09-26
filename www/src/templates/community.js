@@ -14,18 +14,15 @@
 import MarkdownPage from 'components/MarkdownPage';
 import PropTypes from 'prop-types';
 import React from 'react';
-
-import sectionList from '../../../docs/_data/nav_community.yml';
-
-sectionList.forEach(item => {
-  item.directory = 'community';
-});
+import {createLinkCommunity} from 'utils/createLink';
+import {sectionListCommunity} from 'utils/sectionList';
 
 const Community = ({data, location}) => (
   <MarkdownPage
+    createLink={createLinkCommunity}
     location={location}
     markdownRemark={data.markdownRemark}
-    sectionList={sectionList}
+    sectionList={sectionListCommunity}
     titlePostfix=" - React"
   />
 );

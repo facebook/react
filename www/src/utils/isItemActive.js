@@ -19,6 +19,7 @@ const toAnchor = (href = '') => {
 };
 
 // TODO Account for redirect_from URLs somehow; they currently won't match.
+// This comment should not be true anymore since we're using 300 redirects
 
 const isItemActive = (location, item) => {
   if (location.hash) {

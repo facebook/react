@@ -26,6 +26,7 @@ import {urlRoot} from 'constants';
 
 const MarkdownPage = ({
   authors,
+  createLink,
   date,
   ogDescription,
   location,
@@ -95,6 +96,7 @@ const MarkdownPage = ({
 
             <div css={sharedStyles.articleLayout.sidebar}>
               <StickyResponsiveSidebar
+                createLink={createLink}
                 defaultActiveSection={findSectionForPath(
                   location.pathname,
                   sectionList,
@@ -124,6 +126,7 @@ MarkdownPage.defaultProps = {
 // TODO Better types
 MarkdownPage.propTypes = {
   authors: PropTypes.array.isRequired,
+  createLink: PropTypes.func.isRequired,
   date: PropTypes.string,
   location: PropTypes.object.isRequired,
   markdownRemark: PropTypes.object.isRequired,

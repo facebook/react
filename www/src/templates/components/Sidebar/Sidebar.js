@@ -7,7 +7,7 @@
  * of patent rights can be found in the PATENTS file in the same directory.
  *
  * @emails react-core
-*/
+ */
 
 'use strict';
 
@@ -26,7 +26,7 @@ class Sidebar extends Component {
   }
 
   render() {
-    const {location, sectionList} = this.props;
+    const {createLink, location, sectionList} = this.props;
     const {activeSection} = this.state;
 
     return (
@@ -49,6 +49,7 @@ class Sidebar extends Component {
         }}>
         {sectionList.map((section, index) => (
           <Section
+            createLink={createLink}
             isActive={activeSection === section || sectionList.length === 1}
             key={index}
             location={location}
