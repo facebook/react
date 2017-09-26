@@ -42,11 +42,11 @@ Remember that this is only necessary before deploying to production. For normal 
 We offer production-ready versions of React and React DOM as single files:
 
 ```html
-<script src="https://unpkg.com/react@15/dist/react.min.js"></script>
-<script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+<script src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+<script src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
 ```
 
-Remember that only React files ending with `.min.js` are suitable for production.
+Remember that only React files ending with `.production.min.js` are suitable for production.
 
 ### Brunch
 
