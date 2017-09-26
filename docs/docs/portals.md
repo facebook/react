@@ -76,7 +76,7 @@ class Parent extends React.Component {
   }
   onClick = () => {
     // This will fire when the button in Child is clicked, updating Parent's state,
-    // even though button is not direct descendant in the DOM. 
+    // even though Child is not a direct descendant in the DOM. 
     this.setState(prevState => ({clicks: prevState.clicks + 1}));
   };
   render() {
