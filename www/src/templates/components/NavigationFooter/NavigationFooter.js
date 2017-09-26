@@ -16,71 +16,70 @@ import PropTypes from 'prop-types';
 import React from 'react';
 import {colors, fonts, media} from 'theme';
 
-const NavigationFooter = ({next, prev, location}) => {
-  return (
-    <div
-      css={{
-        background: colors.dark,
-        color: colors.white,
-        paddingTop: 50,
-        paddingBottom: 50,
-      }}>
-      <Container>
-        <Flex
-          type="ul"
-          halign="space-between"
-          css={{
-            [media.between('small', 'medium')]: {
-              paddingRight: 240,
-            },
+const NavigationFooter = ({next, prev, location, isVisible = true}) => (
+  <div
+    css={{
+      background: colors.dark,
+      color: colors.white,
+      paddingTop: 50,
+      paddingBottom: 50,
+      display: isVisible === false ? 'none' : null,
+    }}>
+    <Container>
+      <Flex
+        type="ul"
+        halign="space-between"
+        css={{
+          [media.between('small', 'medium')]: {
+            paddingRight: 240,
+          },
 
-            [media.between('large', 'largerSidebar')]: {
-              paddingRight: 280,
-            },
+          [media.between('large', 'largerSidebar')]: {
+            paddingRight: 280,
+          },
 
-            [media.between('largerSidebar', 'sidebarFixed', true)]: {
-              paddingRight: 380,
-            },
-          }}>
-          <Flex basis="50%" type="li">
-            {prev &&
-              <div>
-                <SecondaryLabel>Previous article</SecondaryLabel>
-                <div
-                  css={{
-                    paddingTop: 10,
-                  }}>
-                  <PrimaryLink location={location} to={prev}>
-                    {linkToTitle(prev)}
-                  </PrimaryLink>
-                </div>
-              </div>}
-          </Flex>
-          {next &&
-            <Flex
-              halign="flex-end"
-              basis="50%"
-              type="li"
-              css={{
-                textAlign: 'right',
-              }}>
-              <div>
-                <SecondaryLabel>Next article</SecondaryLabel>
-                <div
-                  css={{
-                    paddingTop: 10,
-                  }}>
-                  <PrimaryLink location={location} to={next}>
-                    {linkToTitle(next)}
-                  </PrimaryLink>
-                </div>
+          [media.between('largerSidebar', 'sidebarFixed', true)]: {
+            paddingRight: 380,
+          },
+        }}>
+        <Flex basis="50%" type="li">
+          {prev &&
+            <div>
+              <SecondaryLabel>Previous article</SecondaryLabel>
+              <div
+                css={{
+                  paddingTop: 10,
+                }}>
+                <PrimaryLink location={location} to={prev}>
+                  {linkToTitle(prev)}
+                </PrimaryLink>
               </div>
-            </Flex>}
+            </div>}
         </Flex>
-      </Container>
-    </div>
-  );
-};
+        {next &&
+          <Flex
+            halign="flex-end"
+            basis="50%"
+            type="li"
+            css={{
+              textAlign: 'right',
+            }}>
+            <div>
+              <SecondaryLabel>Next article</SecondaryLabel>
+              <div
+                css={{
+                  paddingTop: 10,
+                }}>
+                <PrimaryLink location={location} to={next}>
+                  {linkToTitle(next)}
+                </PrimaryLink>
+              </div>
+            </div>
+          </Flex>}
+      </Flex>
+    </Container>
+  </div>
+);
 
 NavigationFooter.propTypes = {
   next: PropTypes.string,

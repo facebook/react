@@ -12,6 +12,7 @@
 import Container from 'components/Container';
 import Flex from 'components/Flex';
 import MarkdownHeader from 'components/MarkdownHeader';
+import MenuOverlayContainer from 'components/MenuOverlayContainer';
 import NavigationFooter from 'templates/components/NavigationFooter';
 import PropTypes from 'prop-types';
 import React from 'react';
@@ -36,85 +37,98 @@ const MarkdownPage = ({
   const titlePrefix = markdownRemark.frontmatter.title || '';
 
   return (
-    <Flex
-      direction="column"
-      grow="1"
-      shrink="0"
-      halign="stretch"
-      css={{
-        width: '100%',
-        flex: '1 0 auto',
-        position: 'relative',
-        zIndex: 0,
-        overflow: 'auto', // This is required for the mobile footer layout
-      }}>
-      <TitleAndMetaTags
-        title={`${titlePrefix}${titlePostfix}`}
-        ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
-        ogDescription={ogDescription}
-      />
-      <div css={{flex: '1 0 auto'}}>
-        <Container>
-          <div css={sharedStyles.articleLayout.container}>
-            <Flex type="article" direction="column" grow="1" halign="stretch">
-              <MarkdownHeader title={titlePrefix} />
+    <MenuOverlayContainer>
+      {({toggleMenuOverlay, open: isMenuOverlayOpen, preventTouches}) => (
+        <Flex
+          direction="column"
+          grow="1"
+          shrink="0"
+          halign="stretch"
+          css={{
+            width: '100%',
+            flex: '1 0 auto',
+            position: 'relative',
+            zIndex: 0,
+            overflow: 'auto', // This is required for the mobile footer layout
+          }}
+          onTouchMove={preventTouches}>
+          <TitleAndMetaTags
+            title={`${titlePrefix}${titlePostfix}`}
+            ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
+            ogDescription={ogDescription}
+          />
+          <div css={{flex: '1 0 auto'}}>
+            <Container>
+              <div css={sharedStyles.articleLayout.container}>
+                <Flex
+                  type="article"
+                  direction="column"
+                  grow="1"
+                  halign="stretch">
+                  <MarkdownHeader title={titlePrefix} />
 
-              {(date || hasAuthors) &&
-                <div css={{marginTop: 15}}>
-                  {date}{' '}
-                  {hasAuthors &&
-                    <span>
-                      by {toCommaSeparatedList(authors, author => (
+                  {(date || hasAuthors) &&
+                    <div css={{marginTop: 15}}>
+                      {date}{' '}
+                      {hasAuthors &&
+                        <span>
+                          by{' '}
+                          {toCommaSeparatedList(authors, author => (
+                            <a
+                              css={sharedStyles.link}
+                              href={author.frontmatter.url}
+                              key={author.frontmatter.name}>
+                              {author.frontmatter.name}
+                            </a>
+                          ))}
+                        </span>}
+                    </div>}
+
+                  <div css={sharedStyles.articleLayout.content}>
+                    <div
+                      css={[sharedStyles.markdown]}
+                      dangerouslySetInnerHTML={{__html: markdownRemark.html}}
+                    />
+
+                    {markdownRemark.fields.path &&
+                      <div css={{marginTop: 80}}>
                         <a
-                          css={sharedStyles.link}
-                          href={author.frontmatter.url}
-                          key={author.frontmatter.name}>
-                          {author.frontmatter.name}
+                          css={sharedStyles.articleLayout.editLink}
+                          href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
+                          Edit this page
                         </a>
-                      ))}
-                    </span>}
-                </div>}
+                      </div>}
+                  </div>
+                </Flex>
 
-              <div css={sharedStyles.articleLayout.content}>
-                <div
-                  css={[sharedStyles.markdown]}
-                  dangerouslySetInnerHTML={{__html: markdownRemark.html}}
-                />
-
-                {markdownRemark.fields.path &&
-                  <div css={{marginTop: 80}}>
-                    <a
-                      css={sharedStyles.articleLayout.editLink}
-                      href={`https://github.com/facebook/react/tree/master/docs/${markdownRemark.fields.path}`}>
-                      Edit this page
-                    </a>
-                  </div>}
+                <div css={sharedStyles.articleLayout.sidebar}>
+                  <StickyResponsiveSidebar
+                    createLink={createLink}
+                    defaultActiveSection={findSectionForPath(
+                      location.pathname,
+                      sectionList,
+                    )}
+                    location={location}
+                    onRequestToggle={toggleMenuOverlay}
+                    open={isMenuOverlayOpen}
+                    sectionList={sectionList}
+                  />
+                </div>
               </div>
-            </Flex>
-
-            <div css={sharedStyles.articleLayout.sidebar}>
-              <StickyResponsiveSidebar
-                createLink={createLink}
-                defaultActiveSection={findSectionForPath(
-                  location.pathname,
-                  sectionList,
-                )}
-                location={location}
-                sectionList={sectionList}
-              />
-            </div>
+            </Container>
           </div>
-        </Container>
-      </div>
 
-      {/* TODO Read prev/next from index map, not this way */}
-      {(markdownRemark.frontmatter.next || markdownRemark.frontmatter.prev) &&
-        <NavigationFooter
-          location={location}
-          next={markdownRemark.frontmatter.next}
-          prev={markdownRemark.frontmatter.prev}
-        />}
-    </Flex>
+          {/* TODO Read prev/next from index map, not this way */}
+          {(markdownRemark.frontmatter.next ||
+            markdownRemark.frontmatter.prev) &&
+            <NavigationFooter
+              location={location}
+              next={markdownRemark.frontmatter.next}
+              prev={markdownRemark.frontmatter.prev}
+            />}
+        </Flex>
+      )}
+    </MenuOverlayContainer>
   );
 };
 
