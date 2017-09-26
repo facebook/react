@@ -112,48 +112,69 @@
 <blockquote>
 <p>Note:</p>
 
-<p>For most uses portals, you&#39;ll need to make sure to follow the proper accessibility guidelines.</p>
+<p>It is important to remember, when working with portals, you&#39;ll need to make sure to follow the proper accessibility guidelines.</p>
 </blockquote>
 
 <p><a href="https://codepen.io/acdlite/pen/JrKgmz">Try out an example on CodePen.</a></p>
 
 <h2>Portals and event bubbling</h2>
 
-<p>A nice feature of portals is that, even though the DOM node can be anywhere in the DOM tree, it behaves like a normal React child in every other way. Features like context work exactly the same regardless of whether the child is a portal. </p>
+<p>Even though a portal can be anywhere in the DOM tree, it behaves like a normal React child in every other way. Features like context work exactly the same regardless of whether the child is a portal, as the portal still exists in the <em>React tree</em> regardless of position in the <em>DOM tree</em>.</p>
 
-<p>This includes event bubbling: an event fired from inside a portal will propagate to ancestors in the containing <em>React tree</em>, even if those elements are not ancestors in the <em>DOM tree</em>:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// These two containers are siblings in the DOM</span>
-<span class="kr">const</span> <span class="nx">appContainer</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;app-container&#39;</span><span class="p">);</span>
-<span class="kr">const</span> <span class="nx">modalContainer</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;modal-container&#39;</span><span class="p">);</span>
+<p>This includes event bubbling. An event fired from inside a portal will propagate to ancestors in the containing <em>React tree</em>, even if those elements are not ancestors in the <em>DOM tree</em>. Assuming the following HTML structure:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;html&gt;</span>
+  <span class="nt">&lt;body&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;app-root&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+    <span class="nt">&lt;div</span> <span class="na">id=</span><span class="s">&quot;modal-root&quot;</span><span class="nt">&gt;&lt;/div&gt;</span>
+  <span class="nt">&lt;/body&gt;</span>
+<span class="nt">&lt;/html&gt;</span>
+</code></pre></div>
+<p>A Parent component in <code>#app-root</code> would be able to catch an uncaught, bubbling event from the sibling node #modal-root.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">const</span> <span class="nx">appRoot</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;app-root&#39;</span><span class="p">);</span>
+<span class="kr">const</span> <span class="nx">modalRoot</span> <span class="o">=</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;modal-root&#39;</span><span class="p">);</span>
 
 <span class="kr">class</span> <span class="nx">Parent</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">clicks</span><span class="o">:</span> <span class="mi">0</span><span class="p">};</span>
-  <span class="nx">onClick</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="c1">// This will fire when the button in Child is clicked, even though</span>
-    <span class="c1">// button is not direct descendant in the DOM.</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">state</span> <span class="o">=&gt;</span> <span class="p">({</span><span class="nx">clicks</span><span class="o">:</span> <span class="nx">state</span><span class="p">.</span><span class="nx">clicks</span> <span class="o">+</span> <span class="mi">1</span><span class="p">}));</span>
-  <span class="p">};</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
+    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">clicks</span><span class="o">:</span> <span class="mi">0</span><span class="p">};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">handleClick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">handleClick</span><span class="p">()</span> <span class="p">{</span>
+    <span class="c1">// This will fire when the button in Child is clicked, updating Parent&#39;s state,</span>
+    <span class="c1">// even though Child is not a direct descendant in the DOM. </span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">prevState</span> <span class="o">=&gt;</span> <span class="p">({</span>
+      <span class="nx">clicks</span><span class="o">:</span> <span class="nx">prevState</span><span class="p">.</span><span class="nx">clicks</span> <span class="o">+</span> <span class="mi">1</span>
+    <span class="p">}));</span>
+  <span class="p">}</span>
+
   <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
     <span class="k">return</span> <span class="p">(</span>
       <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">onClick</span><span class="p">}</span><span class="o">&gt;</span>
         <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nb">Number</span> <span class="nx">of</span> <span class="nx">clicks</span><span class="o">:</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">clicks</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
         <span class="o">&lt;</span><span class="nx">p</span><span class="o">&gt;</span><span class="nx">Open</span> <span class="nx">up</span> <span class="nx">the</span> <span class="nx">browser</span> <span class="nx">DevTools</span> <span class="nx">to</span> <span class="nx">observe</span> <span class="nx">that</span> <span class="nx">the</span> <span class="nx">button</span> <span class="nx">is</span> <span class="nx">not</span> <span class="nx">a</span> <span class="nx">child</span> <span class="nx">the</span> <span class="nx">div</span> <span class="kd">with</span> <span class="nx">onClick</span> <span class="nx">handler</span><span class="p">.</span><span class="o">&lt;</span><span class="err">/p&gt;</span>
-        <span class="p">{</span><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">createPortal</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Child</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">modalContainer</span><span class="p">)}</span>
+        <span class="p">{</span><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">createPortal</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Child</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">modalRoot</span><span class="p">)}</span>
       <span class="o">&lt;</span><span class="err">/div&gt;</span>
     <span class="p">);</span>
   <span class="p">}</span>
 <span class="p">}</span>
 
 <span class="kd">function</span> <span class="nx">Child</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="o">&lt;</span><span class="nx">button</span><span class="o">&gt;</span><span class="nx">Click</span><span class="o">&lt;</span><span class="err">/button&gt;;</span>
+  <span class="c1">// The click event on this button will bubble up to parent,</span>
+  <span class="c1">// because there is no &#39;onClick&#39; attribute defined</span>
+  <span class="k">return</span> <span class="p">(</span>
+    <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">className</span><span class="o">=</span><span class="s2">&quot;modal&quot;</span><span class="o">&gt;</span>
+      <span class="o">&lt;</span><span class="nx">button</span><span class="o">&gt;</span><span class="nx">Click</span><span class="o">&lt;</span><span class="err">/button&gt;</span>
+    <span class="o">&lt;</span><span class="err">/div&gt;</span>
+  <span class="p">);</span>
 <span class="p">}</span>
 
 
-<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Parent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">appContainer</span><span class="p">);</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Parent</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">appRoot</span><span class="p">);</span>
 </code></pre></div>
-<p><a href="https://codepen.io/acdlite/pen/MEJEVV">Try this example on CodePen</a>.</p>
+<p><a href="https://codepen.io/gaearon/pen/jGBWpE">Try this example on CodePen</a>.</p>
 
-<p>The advantage of treating portal event bubbling this way is that it makes it easier to build abstractions. For example, if you render a <code>&lt;Modal /&gt;</code> component, the parent can capture its events regardless of whether it&#39;s implemented using portals.</p>
+<p>Catching an event bubbling up from a portal in a parent component allows the development of more flexible abstractions that are not inherently reliant on portals. For example, if you render a <code>&lt;Modal /&gt;</code> component, the parent can capture its events regardless of whether it&#39;s implemented using portals.</p>
 
 
     <div class="docs-prevnext">
