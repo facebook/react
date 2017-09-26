@@ -179,11 +179,14 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
           // Their slugs follow a pattern: /blog/<year>/<month>/<day>/<slug>.html
           // The date portion comes from the file name: <date>-<title>.md
           const match = BLOG_POST_FILENAME_REGEX.exec(relativePath);
-          if (match) {
-            slug = `/blog/${match[1]}/${match[2]}/${match[3]}/${match[4]}.html`;
-          }
+          const year = match[1];
+          const month = match[2];
+          const day = match[3];
+          const filename = match[4];
 
-          const date = new Date(match[1], match[2], match[3]);
+          slug = `/blog/${year}/${month}/${day}/${filename}.html`;
+
+          const date = new Date(year, month - 1, day);
 
           // Blog posts are sorted by date and display the date in their header.
           createNodeField({
