@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactDOMUnknownPropertyHook
  */
@@ -73,7 +71,7 @@ if (__DEV__) {
     if (registrationName != null) {
       warning(
         false,
-        'Unknown event handler property `%s`. Did you mean `%s`?%s',
+        'Invalid event handler property `%s`. Did you mean `%s`?%s',
         name,
         registrationName,
         getStackAddendum(debugID),
@@ -234,9 +232,9 @@ var warnUnknownProperties = function(type, props, debugID) {
   if (unknownProps.length === 1) {
     warning(
       false,
-      'Invalid prop %s on <%s> tag. Either remove this prop from the element, ' +
+      'Invalid value for prop %s on <%s> tag. Either remove it from the element, ' +
         'or pass a string or number value to keep it in the DOM. ' +
-        'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
       getStackAddendum(debugID),
@@ -244,9 +242,9 @@ var warnUnknownProperties = function(type, props, debugID) {
   } else if (unknownProps.length > 1) {
     warning(
       false,
-      'Invalid props %s on <%s> tag. Either remove these props from the element, ' +
+      'Invalid values for props %s on <%s> tag. Either remove them from the element, ' +
         'or pass a string or number value to keep them in the DOM. ' +
-        'For details, see https://fb.me/react-unknown-prop%s',
+        'For details, see https://fb.me/react-attribute-behavior%s',
       unknownPropString,
       type,
       getStackAddendum(debugID),

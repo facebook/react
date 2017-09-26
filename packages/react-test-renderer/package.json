@@ -9,13 +9,13 @@
     "react-native",
     "react-testing"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
-    "fbjs": "^0.8.9",
+    "fbjs": "^0.8.16",
     "object-assign": "^4.1.0"
   },
   "peerDependencies": {
@@ -23,7 +23,6 @@
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "shallow.js",

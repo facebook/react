@@ -105,7 +105,7 @@ We've made a few other changes to make the behavior more predictable and help en
 Below is a detailed list of them.
 
 * **Unknown attributes with string, number, and object values:**  
-  
+
     ```js
     <div mycustomattribute="value" />
     <div mycustomattribute={42} />
@@ -118,7 +118,7 @@ Below is a detailed list of them.
     *Note: attributes starting with `on` are not passed through as an exception because this could become a potential security hole.*
 
 * **Known attributes with a different canonical React name:**  
-  
+
     ```js
     <div tabindex="-1" />
     <div class="hi" />
