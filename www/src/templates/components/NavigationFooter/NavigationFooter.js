@@ -97,8 +97,7 @@ const PrimaryLink = ({children, to, location}) => {
   // quick fix
   // TODO: replace this with better method of getting correct full url
   const updatedUrl =
-    (location && location.pathname.replace(/\/[^/]+\.html/, '/' +  to))
-    || to;
+    (location && location.pathname.replace(/\/[^/]+\.html/, '/' + to)) || to;
   return (
     <Link
       css={{
