@@ -9,4 +9,4 @@
 
 'use strict';
 
-module.exports = '16.0.0-rc.3';
+module.exports = '16.0.0';

@@ -1,6 +1,6 @@
 {
   "name": "react-test-renderer",
-  "version": "16.0.0-rc.3",
+  "version": "16.0.0",
   "description": "React package for snapshot testing.",
   "main": "index.js",
   "repository": "facebook/react",
