@@ -222,8 +222,11 @@ You can do this directly in React with the powerful &quot;context&quot; API.</p>
 <li><a href="/react/docs/react-component.html#componentwillreceiveprops"><code>componentWillReceiveProps(nextProps, nextContext)</code></a></li>
 <li><a href="/react/docs/react-component.html#shouldcomponentupdate"><code>shouldComponentUpdate(nextProps, nextState, nextContext)</code></a></li>
 <li><a href="/react/docs/react-component.html#componentwillupdate"><code>componentWillUpdate(nextProps, nextState, nextContext)</code></a></li>
-<li><a href="/react/docs/react-component.html#componentdidupdate"><code>componentDidUpdate(prevProps, prevState, prevContext)</code></a></li>
 </ul>
+
+<blockquote>
+<p>Note: As of React 16, <code>componentDidUpdate</code> no longer receives <code>prevContext</code>.</p>
+</blockquote>
 
 <h2>Referencing Context in Stateless Functional Components</h2>
 
