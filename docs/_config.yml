@@ -60,7 +60,7 @@ sass:
 gems:
 - jekyll-redirect-from
 - jekyll-paginate
-react_version: 15.4.0
+react_version: 16.0.0
 react_hashes:
   dev: buVLzxzBI8Ps3svVMSUurNdb5dozNidH5Ow4H0YgZeia3t6Oeui2VLpvtAq1fwtK
   prod: nCjsa0kjNQPQdxWm12/ReVJzfBJaVubEwwDswyQDGMKYJmeWv3qShMuETfU5fisu
