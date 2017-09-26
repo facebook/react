@@ -42,7 +42,7 @@ class Sidebar extends Component {
           },
 
           [media.lessThan('small')]: {
-            paddingBottom: 50,
+            paddingBottom: 100,
           },
         }}>
         {sectionList.map((section, index) => (
