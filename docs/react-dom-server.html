@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -78,15 +79,36 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p>If you load React from a <code>&lt;script&gt;</code> tag, these top-level APIs are available on the <code>ReactDOMServer</code> global. If you use ES6 with npm, you can write <code>import ReactDOMServer from &#39;react-dom/server&#39;</code>. If you use ES5 with npm, you can write <code>var ReactDOMServer = require(&#39;react-dom/server&#39;)</code>.</p>
-
+    <p>The <code>ReactDOMServer</code> object enables you to render components to static markup. Typically, it&#39;s used on a Node server:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// ES modules</span>
+<span class="kr">import</span> <span class="nx">ReactDOMServer</span> <span class="nx">from</span> <span class="s1">&#39;react-dom/server&#39;</span><span class="p">;</span>
+<span class="c1">// CommonJS</span>
+<span class="kd">var</span> <span class="nx">ReactDOMServer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom/server&#39;</span><span class="p">);</span>
+</code></pre></div>
+<p>We also provide a separate entry-point for use in the browser:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// ES modules</span>
+<span class="kr">import</span> <span class="nx">ReactDOMServer</span> <span class="nx">from</span> <span class="s1">&#39;react-dom/server.browser&#39;</span><span class="p">;</span>
+<span class="c1">// CommonJS</span>
+<span class="kd">var</span> <span class="nx">ReactDOMServer</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-dom/server.browser&#39;</span><span class="p">);</span>
+</code></pre></div>
+<p>Or, using UMD:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom/umd/react-dom-server.browser.production.min.js&quot;</span> <span class="nt">/&gt;</span>
+<span class="c">&lt;!-- Accessible as window.ReactDOMServer --&gt;</span>
+</code></pre></div>
 <h2>Overview</h2>
 
-<p>The <code>ReactDOMServer</code> object allows you to render your components on the server.</p>
+<p>The following methods can be used in both the server and browser environments:</p>
 
 <ul>
 <li><a href="#rendertostring"><code>renderToString()</code></a></li>
 <li><a href="#rendertostaticmarkup"><code>renderToStaticMarkup()</code></a></li>
+</ul>
+
+<p>These additional methods depend on a package (<code>stream</code>) that is <strong>only available on the server</strong>, and won&#39;t work in the browser.</p>
+
+<ul>
+<li><a href="#rendertonodestream"><code>renderToNodeStream()</code></a></li>
+<li><a href="#rendertostaticnodestream"><code>renderToStaticNodeStream()</code></a></li>
 </ul>
 
 <hr>
@@ -96,9 +118,9 @@
 <h3><code>renderToString()</code></h3>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToString</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
-<p>Render a React element to its initial HTML. This should only be used on the server. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
+<p>Render a React element to its initial HTML. React will return an HTML string. You can use this method to generate HTML on the server and send the markup down on the initial request for faster page loads and to allow search engines to crawl your pages for SEO purposes.</p>
 
-<p>If you call <a href="/react/docs/react-dom.html#render"><code>ReactDOM.render()</code></a> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
+<p>If you call <a href="/react/docs/react-dom.html#hydrate"><code>ReactDOM.hydrate()</code></a> on a node that already has this server-rendered markup, React will preserve it and only attach event handlers, allowing you to have a very performant first-load experience.</p>
 
 <hr>
 
@@ -106,6 +128,36 @@
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMServer</span><span class="p">.</span><span class="nx">renderToStaticMarkup</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
 </code></pre></div>
 <p>Similar to <a href="#rendertostring"><code>renderToString</code></a>, except this doesn&#39;t create extra DOM attributes such as <code>data-reactid</code>, that React uses internally. This is useful if you want to use React as a simple static page generator, as stripping away the extra attributes can save lots of bytes.</p>
+
+<hr>
+
+<h3><code>renderToNodeStream()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMNodeStream</span><span class="p">.</span><span class="nx">renderToNodeStream</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+</code></pre></div>
+<p>Render a React element to its initial HTML. Returns a <a href="https://nodejs.org/api/stream.html#stream_readable_streams">Readable stream</a> that outputs an HTML string. The HTML output by this stream is exactly equal to what <a href="#rendertostring"><code>ReactDOMServer.renderToString</code></a> would return.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Server-only. This API is not available in the browser.</p>
+
+<p>The stream returned from this method will return a byte stream encoded in utf-8. If you need a stream in another encoding, take a look a project like <a href="https://www.npmjs.com/package/iconv-lite">iconv-lite</a>, which provides transform streams for transcoding text.</p>
+</blockquote>
+
+<hr>
+
+<h3><code>renderToStaticNodeStream()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOMNodeStream</span><span class="p">.</span><span class="nx">renderToStaticNodeStream</span><span class="p">(</span><span class="nx">element</span><span class="p">)</span>
+</code></pre></div>
+<p>Similar to <a href="#rendertonodestream"><code>renderToNodeStream</code></a>, except this doesn&#39;t create extra DOM attributes such as <code>data-reactid</code>, that React uses internally. The HTML output by this stream is exactly equal to what <a href="#rendertostaticmarkup"><code>ReactDOMServer.renderToStaticMarkup</code></a> would return.</p>
+
+<blockquote>
+<p>Note:</p>
+
+<p>Server-only. This API is not available in the browser.</p>
+
+<p>The stream returned from this method will return a byte stream encoded in utf-8. If you need a stream in another encoding, take a look a project like <a href="https://www.npmjs.com/package/iconv-lite">iconv-lite</a>, which provides transform streams for transcoding text.</p>
+</blockquote>
 
 
     <div class="docs-prevnext">
@@ -239,6 +291,11 @@
           </li>
         
           <li>
+            <a href="/react/docs/portals.html">Portals</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/web-components.html">Web Components</a>
             
           </li>
@@ -305,6 +362,16 @@
         
           <li>
             <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-renderer.html">Test Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/javascript-environment-requirements.html">JS Environment Requirements</a>
             
           </li>
         

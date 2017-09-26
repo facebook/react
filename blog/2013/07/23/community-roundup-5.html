@@ -37,6 +37,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -64,7 +65,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -100,14 +101,14 @@
 
 <h2>Cross-browser onChange</h2>
 
-<p><a href="http://benalpert.com/">Ben Alpert</a> from <a href="https://www.khanacademy.org/">Khan Academy</a> worked on a cross-browser implementation of <code>onChange</code> event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.</p>
+<p><a href="http://sophiebits.com/">Sophie Alpert</a> from <a href="https://www.khanacademy.org/">Khan Academy</a> worked on a cross-browser implementation of <code>onChange</code> event that landed in v0.4. She wrote a blog post explaining the various browser quirks she had to deal with.</p>
 
 <blockquote>
 <p>First off, what is the input event? If you have an <code>&lt;input&gt;</code> element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn&#39;t catch input that doesn&#39;t involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.</p>
 
 <p>Both keydown and keypress do fire repeatedly when a key is held down, but both fire immediately before the value changes, so to read the new value you have to defer the handler to the next event loop using <code>setTimeout(fn, 0)</code> or similar, which slows down your app. Of course, like keyup, neither keydown nor keypress fires for non-keyboard input events, and all three can fire in cases where the value doesn&#39;t change at all (such as when pressing the arrow keys).</p>
 
-<p><a href="http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html">Read the full post...</a></p>
+<p><a href="http://sophiebits.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html">Read the full post...</a></p>
 </blockquote>
 
 <h2>React Samples</h2>
@@ -210,6 +211,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
+      
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
@@ -227,8 +230,6 @@
         <li><a href="/react/blog/2016/09/28/our-first-50000-stars.html">Our First 50,000 Stars</a></li>
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
-      
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>

@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,92 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/03/03/react-v0.13-rc2.html">React v0.13 RC2</a>
+
+</h1>
+
+<p class="meta">
+  March  3, 2015
+  by
+  
+    
+      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Thanks to everybody who has already been testing the release candidate. We&#39;ve received some good feedback and as a result we&#39;re going to do a second release candidate. The changes are minimal. We haven&#39;t changed the behavior of any APIs we exposed in the previous release candidate. Here&#39;s a summary of the changes:</p>
+
+<ul>
+<li>Introduced a new API (<code>React.cloneElement</code>, see below for details).</li>
+<li>Fixed a bug related to validating <code>propTypes</code> when using the new <code>React.addons.createFragment</code> API.</li>
+<li>Improved a couple warning messages.</li>
+<li>Upgraded jstransform and esprima.</li>
+</ul>
+
+<p>The release candidate is available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.13.0-rc2.js">https://fb.me/react-0.13.0-rc2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.13.0-rc2.min.js">https://fb.me/react-0.13.0-rc2.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.0-rc2.js">https://fb.me/react-with-addons-0.13.0-rc2.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-rc2.min.js">https://fb.me/react-with-addons-0.13.0-rc2.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.13.0-rc2.js">https://fb.me/JSXTransformer-0.13.0-rc2.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.13.0-rc2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>React.cloneElement</h2>
+
+<p>In React v0.13 RC2 we will introduce a new API, similar to <code>React.addons.cloneWithProps</code>, with this signature:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">cloneElement</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">props</span><span class="p">,</span> <span class="p">...</span><span class="nx">children</span><span class="p">);</span>
+</code></pre></div>
+<p>Unlike <code>cloneWithProps</code>, this new function does not have any magic built-in behavior for merging <code>style</code> and <code>className</code> for the same reason we don&#39;t have that feature from <code>transferPropsTo</code>. Nobody is sure what exactly the complete list of magic things are, which makes it difficult to reason about the code and difficult to reuse when <code>style</code> has a different signature (e.g. in the upcoming React Native).</p>
+
+<p><code>React.cloneElement</code> is <em>almost</em> equivalent to:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">element</span><span class="p">.</span><span class="nx">type</span> <span class="p">{...</span><span class="nx">element</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/element.type&gt;</span>
+</code></pre></div>
+<p>However, unlike JSX and <code>cloneWithProps</code>, it also preserves <code>ref</code>s. This means that if you get a child with a <code>ref</code> on it, you won&#39;t accidentally steal it from your ancestor. You will get the same <code>ref</code> attached to your new element.</p>
+
+<p>One common pattern is to map over your children and add a new prop. There were many issues reported about <code>cloneWithProps</code> losing the ref, making it harder to reason about your code. Now following the same pattern with <code>cloneElement</code> will work as expected. For example:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newChildren</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">child</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">cloneElement</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="kc">true</span> <span class="p">})</span>
+<span class="p">});</span>
+</code></pre></div>
+<blockquote>
+<p>Note: <code>React.cloneElement(child, { ref: &#39;newRef&#39; })</code> <em>DOES</em> override the <code>ref</code> so it is still not possible for two parents to have a ref to the same child, unless you use callback-refs.</p>
+</blockquote>
+
+<p>This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the <code>ref</code>. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at Facebook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.</p>
+
+<p>We plan to eventually deprecate <code>React.addons.cloneWithProps</code>. We&#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using <code>React.cloneElement</code> instead. We&#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -780,7 +861,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
   <div class="skinny-col">
     <h3 style="margin-top:0"><a class="anchor" name="talk-qa"></a>Core Team Q&amp;A <a class="hash-link" href="#talk-qa">#</a></h3>
     <p>
-      <strong>Tom Occhino</strong>, <strong>Ben Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian Markbåge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
+      <strong>Tom Occhino</strong>, <strong>Sophie Alpert</strong>, <strong>Lee Byron</strong>, <strong>Christopher Chedeau</strong>, <strong>Sebastian Markbåge</strong>, <strong>Jing Chen</strong>, and <strong>Dan Schafer</strong> closed the conference with a Q&amp;A session.
   </div>
   <div class="skinny-col">
     <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/EPpkboSKvPI" frameborder="0" allowfullscreen></iframe>
@@ -815,175 +896,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-r
 
 <iframe width="100%" height="171" src="https://www.youtube-nocookie.com/embed/FC5FbmsH4fw" frameborder="0" allowfullscreen></iframe>
 
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/01/27/react-v0.13.0-beta-1.html">React v0.13.0 Beta 1</a>
-
-</h1>
-
-<p class="meta">
-  January 27, 2015
-  by
-  
-    
-      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>React 0.13 has a lot of nice features but there is one particular feature that I&#39;m really excited about. I couldn&#39;t wait for React.js Conf to start tomorrow morning.</p>
-
-<p>Maybe you&#39;re like me and staying up late excited about the conference, or maybe you weren&#39;t one of the lucky ones to get a ticket. Either way I figured I&#39;d give you all something to play with until then.</p>
-
-<p>We just published a beta version of React v0.13.0 to <a href="https://www.npmjs.com/package/react">npm</a>! You can install it with <code>npm install react@0.13.0-beta.1</code>. Since this is a pre-release, we don&#39;t have proper release notes ready.</p>
-
-<p>So what is that one feature I&#39;m so excited about that I just couldn&#39;t wait to share?</p>
-
-<h2>Plain JavaScript Classes!!</h2>
-
-<p>JavaScript originally didn&#39;t have a built-in class system. Every popular framework built their own, and so did we. This means that you have a learn slightly different semantics for each framework.</p>
-
-<p>We figured that we&#39;re not in the business of designing a class system. We just want to use whatever is the idiomatic JavaScript way of creating classes.</p>
-
-<p>In React 0.13.0 you no longer need to use <code>React.createClass</code> to create React components. If you have a transpiler you can use ES6 classes today. You can use the transpiler we ship with <code>react-tools</code> by making use of the harmony option: <code>jsx --harmony</code>.</p>
-
-<h3>ES6 Classes</h3>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">HelloMessage</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="nx">Hello</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">name</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-
-<span class="nx">React</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">HelloMessage</span> <span class="nx">name</span><span class="o">=</span><span class="s2">&quot;Sebastian&quot;</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">mountNode</span><span class="p">);</span>
-</code></pre></div>
-<p>The API is mostly what you would expect, with the exception of <code>getInitialState</code>. We figured that the idiomatic way to specify class state is to just use a simple instance property. Likewise <code>getDefaultProps</code> and <code>propTypes</code> are really just properties on the constructor.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">export</span> <span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">(</span><span class="nx">props</span><span class="p">)</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">(</span><span class="nx">props</span><span class="p">);</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">state</span> <span class="o">=</span> <span class="p">{</span><span class="nx">count</span><span class="o">:</span> <span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span><span class="p">};</span>
-  <span class="p">}</span>
-  <span class="nx">tick</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span><span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span><span class="p">});</span>
-  <span class="p">}</span>
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
-        <span class="nx">Clicks</span><span class="o">:</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-<span class="nx">Counter</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
-<span class="nx">Counter</span><span class="p">.</span><span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
-</code></pre></div>
-<h3>ES7+ Property Initializers</h3>
-
-<p>Wait, assigning to properties seems like a very imperative way of defining classes! You&#39;re right, however, we designed it this way because it&#39;s idiomatic. We fully expect a more declarative syntax for property initialization to arrive in future version of JavaScript. It might look something like this:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="c1">// Future Version</span>
-<span class="kr">export</span> <span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="kr">static</span> <span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span> <span class="p">};</span>
-  <span class="kr">static</span> <span class="nx">defaultProps</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">initialCount</span><span class="o">:</span> <span class="mi">0</span> <span class="p">};</span>
-  <span class="nx">state</span> <span class="o">=</span> <span class="p">{</span> <span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span> <span class="p">};</span>
-  <span class="nx">tick</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">({</span> <span class="nx">count</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span> <span class="p">});</span>
-  <span class="p">}</span>
-  <span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">)}</span><span class="o">&gt;</span>
-        <span class="nx">Clicks</span><span class="o">:</span> <span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">count</span><span class="p">}</span>
-      <span class="o">&lt;</span><span class="err">/div&gt;</span>
-    <span class="p">);</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>This was inspired by TypeScript&#39;s property initializers.</p>
-
-<h3>Autobinding</h3>
-
-<p><code>React.createClass</code> has a built-in magic feature that bound all methods to <code>this</code> automatically for you. This can be a little confusing for JavaScript developers that are not used to this feature in other classes, or it can be confusing when they move from React to other classes.</p>
-
-<p>Therefore we decided not to have this built-in into React&#39;s class model. You can still explicitly prebind methods in your constructor if you want.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">constructor</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kr">super</span><span class="p">();</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">tick</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">tick</span><span class="p">.</span><span class="nx">bind</span><span class="p">(</span><span class="k">this</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="nx">tick</span><span class="p">()</span> <span class="p">{</span>
-    <span class="p">...</span>
-  <span class="p">}</span>
-  <span class="p">...</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>However, when we have the future property initializers, there is a neat trick that you can use to accomplish this syntactically:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">class</span> <span class="nx">Counter</span> <span class="kr">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span> <span class="p">{</span>
-  <span class="nx">tick</span> <span class="o">=</span> <span class="p">()</span> <span class="o">=&gt;</span> <span class="p">{</span>
-    <span class="p">...</span>
-  <span class="p">}</span>
-  <span class="p">...</span>
-<span class="p">}</span>
-</code></pre></div>
-<h3>Mixins</h3>
-
-<p>Unfortunately, we will not launch any mixin support for ES6 classes in React. That would defeat the purpose of only using idiomatic JavaScript concepts.</p>
-
-<p>There is no standard and universal way to define mixins in JavaScript. In fact, several features to support mixins were dropped from ES6 today. There are a lot of libraries with different semantics. We think that there should be one way of defining mixins that you can use for any JavaScript class. React just making another doesn&#39;t help that effort.</p>
-
-<p>Therefore, we will keep working with the larger JS community to create a standard for mixins. We will also start designing a new compositional API that will help make common tasks easier to do without mixins. E.g. first-class subscriptions to any kind of Flux store.</p>
-
-<p>Luckily, if you want to keep using mixins, you can just keep using <code>React.createClass</code>.</p>
-
-<blockquote>
-<p><strong>Note:</strong></p>
-
-<p>The classic <code>React.createClass</code> style of creating classes will continue to work just fine.</p>
-</blockquote>
-
-<h2>Other Languages!</h2>
-
-<p>Since these classes are just plain old JavaScript classes, you can use other languages that compile to JavaScript classes, such as TypeScript.</p>
-
-<p>You can also use CoffeeScript classes:</p>
-<div class="highlight"><pre><code class="language-coffeescript" data-lang="coffeescript"><span class="nv">div = </span><span class="nx">React</span><span class="p">.</span><span class="nx">createFactory</span> <span class="s">&#39;div&#39;</span>
-
-<span class="k">class</span> <span class="nx">Counter</span> <span class="k">extends</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Component</span>
-  <span class="vi">@propTypes = </span><span class="nv">initialCount: </span><span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span>
-  <span class="vi">@defaultProps = </span><span class="nv">initialCount: </span><span class="mi">0</span>
-
-  <span class="nv">constructor: </span><span class="nf">(props) -&gt;</span>
-    <span class="k">super</span> <span class="nx">props</span>
-    <span class="vi">@state = </span><span class="nv">count: </span><span class="nx">props</span><span class="p">.</span><span class="nx">initialCount</span>
-
-  <span class="nv">tick: </span><span class="nf">=&gt;</span>
-    <span class="nx">@setState</span> <span class="nv">count: </span><span class="nx">@state</span><span class="p">.</span><span class="nx">count</span> <span class="o">+</span> <span class="mi">1</span>
-
-  <span class="nv">render: </span><span class="nf">-&gt;</span>
-    <span class="nx">div</span> <span class="nv">onClick: </span><span class="nx">@tick</span><span class="p">,</span>
-      <span class="s">&#39;Clicks: &#39;</span>
-      <span class="nx">@state</span><span class="p">.</span><span class="nx">count</span>
-</code></pre></div>
-<p>You can even use the old ES3 module pattern if you want:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">MyComponent</span><span class="p">(</span><span class="nx">initialProps</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span>
-    <span class="nx">state</span><span class="o">:</span> <span class="p">{</span> <span class="nx">value</span><span class="o">:</span> <span class="nx">initialProps</span><span class="p">.</span><span class="nx">initialValue</span> <span class="p">},</span>
-    <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="o">&lt;</span><span class="nx">span</span> <span class="nx">className</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">value</span><span class="p">}</span> <span class="o">/&gt;</span>
-    <span class="p">}</span>
-  <span class="p">};</span>
-<span class="p">}</span>
-</code></pre></div>
 </div>
 
 

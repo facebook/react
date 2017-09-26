@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,87 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/05/08/react-v0.13.3.html">React v0.13.3</a>
+
+</h1>
+
+<p class="meta">
+  May  8, 2015
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Today we&#39;re sharing another patch release in the v0.13 branch. There are only a few small changes, with a couple to address some issues that arose around that undocumented feature so many of you are already using: <code>context</code>. We also improved developer ergonomics just a little bit, making some warnings better.</p>
+
+<p>The release is now available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.13.3.js">https://fb.me/react-0.13.3.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.13.3.min.js">https://fb.me/react-0.13.3.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.3.js">https://fb.me/react-with-addons-0.13.3.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.13.3.min.js">https://fb.me/react-with-addons-0.13.3.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.13.3.js">https://fb.me/JSXTransformer-0.13.3.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.13.3</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>New Features</h4>
+
+<ul>
+<li>Added <code>clipPath</code> element and attribute for SVG</li>
+<li>Improved warnings for deprecated methods in plain JS classes</li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Loosened <code>dangerouslySetInnerHTML</code> restrictions so <code>{__html: undefined}</code> will no longer throw</li>
+<li>Fixed extraneous context warning with non-pure <code>getChildContext</code></li>
+<li>Ensure <code>replaceState(obj)</code> retains prototype of <code>obj</code></li>
+</ul>
+
+<h3>React with Add-ons</h3>
+
+<h3>Bug Fixes</h3>
+
+<ul>
+<li>Test Utils: Ensure that shallow rendering works when components define <code>contextTypes</code></li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -468,49 +544,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.2.m
 <p>We&#39;ve spent a lot of efforts getting the onboarding as easy as possible and we&#39;re really happy that people noticed. We still have a lot of work to do on documentation, stay tuned!</p>
 
 <blockquote class="twitter-tweet" lang="en"><p>Wow. Getting started with React Native might have been the smoothest experience I’ve ever had with a new developer product.</p>&mdash; Andreas Eldh (@eldh) <a href="https://twitter.com/eldh/status/581186172094980096">March 26, 2015</a></blockquote>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/03/26/introducing-react-native.html">Introducing React Native</a>
-
-</h1>
-
-<p class="meta">
-  March 26, 2015
-  by
-  
-    
-      <a href="http://benalpert.com">Ben Alpert</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>In January at React.js Conf, we announced React Native, a new framework for building native apps using React. We&#39;re happy to announce that we&#39;re open-sourcing React Native and you can start building your apps with it today.</p>
-
-<p>For more details, see <a href="https://code.facebook.com/posts/1014532261909640/react-native-bringing-modern-web-techniques-to-mobile/">Tom Occhino&#39;s post on the Facebook Engineering blog</a>:</p>
-
-<blockquote>
-<p><em>What we really want is the user experience of the native mobile platforms, combined with the developer experience we have when building with React on the web.</em></p>
-
-<p><em>With a bit of work, we can make it so the exact same React that&#39;s on GitHub can power truly native mobile applications. The only difference in the mobile environment is that instead of running React in the browser and rendering to divs and spans, we run it an embedded instance of JavaScriptCore inside our apps and render to higher-level platform-specific components.</em></p>
-
-<p><em>It&#39;s worth noting that we&#39;re not chasing “write once, run anywhere.” Different platforms have different looks, feels, and capabilities, and as such, we should still be developing discrete apps for each platform, but the same set of engineers should be able to build applications for whatever platform they choose, without needing to learn a fundamentally different set of technologies for each. We call this approach “learn once, write anywhere.”</em></p>
-</blockquote>
-
-<p>To learn more, visit the <a href="https://facebook.github.io/react-native/">React Native website</a>.</p>
 
 </div>
 

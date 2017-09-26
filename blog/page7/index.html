@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,158 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/10/01/react-render-and-top-level-api.html">ReactDOM.render and the Top Level React API</a>
+
+</h1>
+
+<p class="meta">
+  October  1, 2015
+  by
+  
+    
+      <a href="http://www.jimsproch.com">Jim Sproch</a>
+    
+     and 
+  
+    
+      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>When you&#39;re in React&#39;s world you are just building components that fit into other components. Everything is a component. Unfortunately not everything around you is built using React. At the root of your tree you still have to write some plumbing code to connect the outer world into React.</p>
+
+<p>The primary API for rendering into the DOM looks like this:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">reactElement</span><span class="p">,</span> <span class="nx">domContainerNode</span><span class="p">)</span>
+</code></pre></div>
+<p>To update the properties of an existing component, you call render again with a new element.</p>
+
+<p>If you are rendering React components within a single-page app, you may need to plug into the app&#39;s view lifecycle to ensure your app will invoke unmountComponentAtNode at the appropriate time. React will not automatically clean up a tree. You need to manually call:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="nx">domContainerNode</span><span class="p">)</span>
+</code></pre></div>
+<p>This is important and often forgotten. Forgetting to call <code>unmountComponentAtNode</code> will cause your app to leak memory. There is no way for us to automatically detect when it is appropriate to do this work. Every system is different.</p>
+
+<p>It is not unique to the DOM. If you want to insert a React Native view in the middle of an existing iOS app you will hit similar issues.</p>
+
+<h2>Helpers</h2>
+
+<p>If you have multiple React roots, or a single root that gets deleted over time, we recommend that you always create your own wrapper API. These will all look slightly different depending on what your outer system looks like. For example, at Facebook we have a system that automatically ties into our page transition router to automatically call <code>unmountComponentAtNode</code>.</p>
+
+<p>Rather than calling <code>ReactDOM.render()</code> directly everywhere, consider writing/using a library that will manage mounting and unmounting within your application.</p>
+
+<p>In your environment you may want to always configure internationalization, routers, user data etc. If you have many different React roots it can be a pain to set up configuration nodes all over the place. By creating your own wrapper you can unify that configuration into one place.</p>
+
+<h2>Object Oriented Updates</h2>
+
+<p>If you call <code>ReactDOM.render</code> a second time to update properties, all your props are completely replaced.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="nx">locale</span><span class="o">=</span><span class="s2">&quot;en-US&quot;</span> <span class="nx">userID</span><span class="o">=</span><span class="p">{</span><span class="mi">1</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">container</span><span class="p">);</span>
+<span class="c1">// props.userID == 1</span>
+<span class="c1">// props.locale == &quot;en-US&quot;</span>
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">App</span> <span class="nx">userID</span><span class="o">=</span><span class="p">{</span><span class="mi">2</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span> <span class="nx">container</span><span class="p">);</span>
+<span class="c1">// props.userID == 2</span>
+<span class="c1">// props.locale == undefined ??!?</span>
+</code></pre></div>
+<p>In object-oriented programming, all state lives on each object instance and you apply changes incrementally by mutating that state, one piece at a time. If you are using React within an app that expects an object oriented API (for instance, if you are building a custom web component using React), it might be surprising/confusing to a user that setting a single property would wipe out all the other properties on your component.</p>
+
+<p>We used to have a helper function called <code>setProps</code> which allowed you to update only a few properties at a time. Unfortunately this API lived on a component instance, required React to keep this state internally and wasn&#39;t very natural anyway. Therefore, we&#39;re deprecating it and suggest that you build it into your own wrapper instead.</p>
+
+<p>Here&#39;s some boilerplate to get you started. It is a 0.14 migration path for codebases using <code>setProps</code> and <code>replaceProps</code>.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactComponentRenderer</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">klass</span><span class="p">,</span> <span class="nx">container</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">klass</span> <span class="o">=</span> <span class="nx">klass</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">container</span> <span class="o">=</span> <span class="nx">container</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">component</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">replaceProps</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span> <span class="o">=</span> <span class="p">{};</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">setProps</span><span class="p">(</span><span class="nx">partialProps</span><span class="p">,</span> <span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">if</span> <span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">klass</span> <span class="o">==</span> <span class="kc">null</span><span class="p">)</span> <span class="p">{</span>
+      <span class="nx">console</span><span class="p">.</span><span class="nx">warn</span><span class="p">(</span>
+        <span class="s1">&#39;setProps(...): Can only update a mounted or &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;mounting component. This usually means you called setProps() on &#39;</span> <span class="o">+</span>
+        <span class="s1">&#39;an unmounted component. This is a no-op.&#39;</span>
+      <span class="p">);</span>
+      <span class="k">return</span><span class="p">;</span>
+    <span class="p">}</span>
+    <span class="nb">Object</span><span class="p">.</span><span class="nx">assign</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">,</span> <span class="nx">partialProps</span><span class="p">);</span>
+    <span class="kd">var</span> <span class="nx">element</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createElement</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">klass</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">component</span> <span class="o">=</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">,</span> <span class="nx">callback</span><span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">unmount</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">container</span><span class="p">);</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">klass</span> <span class="o">=</span> <span class="kc">null</span><span class="p">;</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Object-oriented APIs don&#39;t look like that though. They use setters and methods. I think we can do better. If you know more about the component API that you&#39;re rendering, you can create a more natural object-oriented API around your React component.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">class</span> <span class="nx">ReactVideoPlayer</span> <span class="p">{</span>
+  <span class="nx">constructor</span><span class="p">(</span><span class="nx">url</span><span class="p">,</span> <span class="nx">container</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_container</span> <span class="o">=</span> <span class="nx">container</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_url</span> <span class="o">=</span> <span class="nx">url</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="nx">_render</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">VideoPlayer</span> <span class="nx">url</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">_url</span><span class="p">}</span> <span class="nx">playing</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">,</span>
+      <span class="k">this</span><span class="p">.</span><span class="nx">_container</span>
+    <span class="p">);</span>
+  <span class="p">}</span>
+
+  <span class="nx">get</span> <span class="nx">url</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="k">this</span><span class="p">.</span><span class="nx">_url</span><span class="p">;</span>
+  <span class="p">}</span>
+
+  <span class="nx">set</span> <span class="nx">url</span><span class="p">(</span><span class="nx">value</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_url</span> <span class="o">=</span> <span class="nx">value</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="nx">play</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="nx">pause</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_isPlaying</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">_render</span><span class="p">();</span>
+  <span class="p">}</span>
+
+  <span class="nx">destroy</span><span class="p">()</span> <span class="p">{</span>
+    <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">unmountComponentAtNode</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_container</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>This example shows how to provide an imperative API on top of a declarative one. Similarly, the reverse can be done, and a declarative wrapper can be used when exposing a Web Component as a React component.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -225,7 +372,7 @@
   by
   
     
-      <a href="http://benalpert.com">Ben Alpert</a>
+      <a href="https://sophiealpert.com">Sophie Alpert</a>
     
     
   
@@ -432,7 +579,7 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
   by
   
     
-      <a href="http://benalpert.com">Ben Alpert</a>
+      <a href="https://sophiealpert.com">Sophie Alpert</a>
     
     
   
@@ -552,68 +699,6 @@ Minified build for production: <a href="https://fb.me/react-dom-0.14.0-rc1.min.j
 <p>There was also a <a href="https://www.youtube.com/playlist?list=PLCC436JpVnK3xnOZ727t0vd3nbb5ZqCyo">great series of Lightning talks</a> from <a href="https://github.com/jsierles">Joshua Sierles</a>, <a href="https://github.com/skidding">Ovidiu Cherecheș</a>, <a href="https://github.com/grabbou">Mike Grabowski</a>, <a href="https://github.com/bruderstein">Dave Brotherstone</a>, <a href="https://github.com/threepointone">Sunil Pai</a>, <a href="https://github.com/AnSavvides">Andreas Savvides</a>, and <a href="https://github.com/petrbela">Petr Bela</a>.</p>
 
 <p>You can view the full list of talks on <a href="https://www.youtube.com/channel/UCorlLn2oZfgOJ-FUcF2eZ1A">the ReactEurope YouTube channel</a>.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/08/11/relay-technical-preview.html">Relay Technical Preview</a>
-
-</h1>
-
-<p class="meta">
-  August 11, 2015
-  by
-  
-    
-      <a href="https://twitter.com/en_JS">Joseph Savona</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <h1>Relay</h1>
-
-<p>Today we&#39;re excited to share an update on Relay - the technical preview is now open-source and <a href="http://github.com/facebook/relay">available on GitHub</a>.</p>
-
-<h2>Why Relay</h2>
-
-<p>While React simplified the process of developing complex user-interfaces, it left open the question of how to interact with data on the server. It turns out that this was a significant source of friction for our developers; fragile coupling between client and server caused data-related bugs and made iteration harder. Furthermore, developers were forced to constantly re-implement complex async logic instead of focusing on their apps. Relay addresses these concerns by borrowing important lessons from React: it provides <em>declarative, component-oriented data fetching for React applications</em>.</p>
-
-<p>Declarative data-fetching means that Relay applications specify <em>what</em> data they need, not <em>how</em> to fetch that data. Just as React uses a description of the desired UI to manage view updates, Relay uses a data description in the form of GraphQL queries. Given these descriptions, Relay coalesces queries into batches for efficiency, manages error-prone asynchronous logic, caches data for performance, and automatically updates views as data changes.</p>
-
-<p>Relay is also component-oriented, extending the notion of a React component to include a description of what data is necessary to render it. This colocation allows developers to reason locally about their application and eliminates bugs such as under- or over-fetching data.</p>
-
-<p>Relay is in use at Facebook in production apps, and we&#39;re using it more and more because <em>Relay lets developers focus on their products and move fast</em>. It&#39;s working for us and we&#39;d like to share it with the community.</p>
-
-<h2>What&#39;s Included</h2>
-
-<p>We&#39;re open-sourcing a technical preview of Relay - the core framework that we use internally, with some modifications for use outside Facebook. As this is the first release, it&#39;s good to keep in mind that there may be some incomplete or missing features. We&#39;ll continue to develop Relay and are working closely with the GraphQL community to ensure that Relay tracks updates during GraphQL&#39;s RFC period. But we couldn&#39;t wait any longer to get this in your hands, and we&#39;re looking forward to your feedback and contributions.</p>
-
-<p>Relay is available on <a href="http://github.com/facebook/relay">GitHub</a> and <a href="https://www.npmjs.com/package/react-relay">npm</a>.</p>
-
-<h2>What&#39;s Next</h2>
-
-<p>The team is super excited to be releasing Relay - and just as excited about what&#39;s next. Here are some of the things we&#39;ll be focusing on:</p>
-
-<ul>
-<li>Offline support. This will allow applications to fulfill queries and enqueue updates without connectivity.</li>
-<li>Real-time updates. In collaboration with the GraphQL community, we&#39;re working to define a specification for subscriptions and provide support for them in Relay.</li>
-<li>A generic Relay. Just as the power of React was never about the virtual DOM, Relay is much more than a GraphQL client. We&#39;re working to extend Relay to provide a unified interface for interacting not only with server data, but also in-memory and native device data (and, even better, a mix of all three).</li>
-<li>Finally, it&#39;s all too easy as developers to focus on those people with the newest devices and fastest internet connections. We&#39;re working to make it easier to build applications that are robust in the face of slow or intermittent connectivity.</li>
-</ul>
-
-<p>Thanks!</p>
 
 </div>
 

@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -276,15 +277,15 @@ npm install --save react react-dom
 
 <h3>Using a CDN</h3>
 
-<p>If you don&#39;t want to use npm to manage client packages, the <code>react</code> and <code>react-dom</code> npm packages also provide single-file distributions in <code>dist</code> folders, which are hosted on a CDN:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<p>If you don&#39;t want to use npm to manage client packages, the <code>react</code> and <code>react-dom</code> npm packages also provide single-file distributions in <code>umd</code> folders, which are hosted on a CDN:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@16/umd/react.development.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@16/umd/react-dom.development.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
 <p>The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:</p>
-<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@15/dist/react.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
-<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@15/dist/react-dom.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@16/umd/react.production.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@16/umd/react-dom.production.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
 </code></pre></div>
-<p>To load a specific version of <code>react</code> and <code>react-dom</code>, replace <code>15</code> with the version number.</p>
+<p>To load a specific version of <code>react</code> and <code>react-dom</code>, replace <code>16</code> with the version number.</p>
 
 <p>If you use Bower, React is available via the <code>react</code> package.</p>
 
@@ -526,6 +527,11 @@ function selectTabForHashLink() {
           </li>
         
           <li>
+            <a href="/react/docs/portals.html">Portals</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/web-components.html">Web Components</a>
             
           </li>
@@ -592,6 +598,16 @@ function selectTabForHashLink() {
         
           <li>
             <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-renderer.html">Test Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/javascript-environment-requirements.html">JS Environment Requirements</a>
             
           </li>
         

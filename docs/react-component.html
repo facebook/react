@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -160,9 +161,17 @@
 </code></pre></div>
 <p>The <code>render()</code> method is required.</p>
 
-<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return a single React element. This element can be either a representation of a native DOM component, such as <code>&lt;div /&gt;</code>, or another composite component that you&#39;ve defined yourself.</p>
+<p>When called, it should examine <code>this.props</code> and <code>this.state</code> and return one of the following types:</p>
 
-<p>You can also return <code>null</code> or <code>false</code> to indicate that you don&#39;t want anything rendered. When returning <code>null</code> or <code>false</code>, <code>ReactDOM.findDOMNode(this)</code> will return <code>null</code>.</p>
+<ul>
+<li><strong>React elements.</strong> Typically created via JSX. A element can either be a representation of a native DOM component (<code>&lt;div /&gt;</code>), or a user-defined composite component (<code>&lt;MyComponent /&gt;</code>).</li>
+<li><strong>String and numbers.</strong> These are rendered as text nodes in the DOM.</li>
+<li><strong>Portals</strong>. Created with <a href="/react/docs/portals.html"><code>ReactDOM.createPortal</code></a>.</li>
+<li><code>null</code>. Renders nothing.</li>
+<li><strong>Booleans</strong>. Render nothing. (Mostly exists to support <code>return test &amp;&amp; &lt;Child /&gt;</code> pattern, where <code>test</code> is boolean.)</li>
+</ul>
+
+<p>When returning <code>null</code> or <code>false</code>, <code>ReactDOM.findDOMNode(this)</code> will return <code>null</code>.</p>
 
 <p>The <code>render()</code> function should be pure, meaning that it does not modify component state, it returns the same result each time it&#39;s invoked, and it does not directly interact with the browser. If you need to interact with the browser, perform your work in <code>componentDidMount()</code> or the other lifecycle methods instead. Keeping <code>render()</code> pure makes components easier to think about.</p>
 
@@ -170,6 +179,23 @@
 <p>Note</p>
 
 <p><code>render()</code> will not be invoked if <a href="#shouldcomponentupdate"><code>shouldComponentUpdate()</code></a> returns false.</p>
+</blockquote>
+
+<h4>Fragments</h4>
+
+<p>You can also return multiple items from <code>render()</code> using an array:</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="p">[</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">/&gt;</span><span class="nx">First</span> <span class="nx">item</span><span class="o">&lt;</span><span class="err">/li&gt;,</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">/&gt;</span><span class="nx">Second</span> <span class="nx">item</span><span class="o">&lt;</span><span class="err">/li&gt;,</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">/&gt;</span><span class="nx">Third</span> <span class="nx">item</span><span class="o">&lt;</span><span class="err">/li&gt;,</span>
+  <span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div>
+<blockquote>
+<p>Note:</p>
+
+<p>Don&#39;t forget to <a href="https://facebook.github.io/react/docs/lists-and-keys.html#keys">add keys</a> to elements in a fragment to avoid the key warning.</p>
 </blockquote>
 
 <hr>
@@ -358,7 +384,7 @@
 
 <h3><code>displayName</code></h3>
 
-<p>The <code>displayName</code> string is used in debugging messages. JSX sets this value automatically; see <a href="/react/docs/jsx-in-depth.html">JSX in Depth</a>.</p>
+<p>The <code>displayName</code> string is used in debugging messages. Usually, you don&#39;t need to set it explicitly because it&#39;s inferred from the name of the function or class that defines the component. You might want to set it explicitly if you want to display a different name for debugging purposes or when you create a higher-order component, see <a href="/react/docs/higher-order-components.html#convention-wrap-the-display-name-for-easy-debugging">Wrap the Display Name for Easy Debugging</a> for details.</p>
 
 <hr>
 
@@ -512,6 +538,11 @@
           </li>
         
           <li>
+            <a href="/react/docs/portals.html">Portals</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/web-components.html">Web Components</a>
             
           </li>
@@ -578,6 +609,16 @@
         
           <li>
             <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-renderer.html">Test Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/javascript-environment-requirements.html">JS Environment Requirements</a>
             
           </li>
         

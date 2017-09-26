@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,55 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2015/03/26/introducing-react-native.html">Introducing React Native</a>
+
+</h1>
+
+<p class="meta">
+  March 26, 2015
+  by
+  
+    
+      <a href="https://sophiealpert.com">Sophie Alpert</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>In January at React.js Conf, we announced React Native, a new framework for building native apps using React. We&#39;re happy to announce that we&#39;re open-sourcing React Native and you can start building your apps with it today.</p>
+
+<p>For more details, see <a href="https://code.facebook.com/posts/1014532261909640/react-native-bringing-modern-web-techniques-to-mobile/">Tom Occhino&#39;s post on the Facebook Engineering blog</a>:</p>
+
+<blockquote>
+<p><em>What we really want is the user experience of the native mobile platforms, combined with the developer experience we have when building with React on the web.</em></p>
+
+<p><em>With a bit of work, we can make it so the exact same React that&#39;s on GitHub can power truly native mobile applications. The only difference in the mobile environment is that instead of running React in the browser and rendering to divs and spans, we run it an embedded instance of JavaScriptCore inside our apps and render to higher-level platform-specific components.</em></p>
+
+<p><em>It&#39;s worth noting that we&#39;re not chasing “write once, run anywhere.” Different platforms have different looks, feels, and capabilities, and as such, we should still be developing discrete apps for each platform, but the same set of engineers should be able to build applications for whatever platform they choose, without needing to learn a fundamentally different set of technologies for each. We call this approach “learn once, write anywhere.”</em></p>
+</blockquote>
+
+<p>To learn more, visit the <a href="https://facebook.github.io/react-native/">React Native website</a>.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -424,7 +468,7 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.1.m
   by
   
     
-      <a href="http://benalpert.com">Ben Alpert</a>
+      <a href="https://sophiealpert.com">Sophie Alpert</a>
     
     
   
@@ -624,86 +668,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0.m
 </td><td width="50%" valign="top">
 <blockquote class="twitter-tweet" lang="en"><p>Watching the <a href="https://twitter.com/FrontendMasters">@FrontendMasters</a> ReactJS workshop! <a href="http://t.co/YraYIK97Lu">pic.twitter.com/YraYIK97Lu</a></p>&mdash; ReactJS News (@ReactJSNews) <a href="https://twitter.com/ReactJSNews/status/566269552112041985">February 13, 2015</a></blockquote>
 </td></tr></table>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2015/03/03/react-v0.13-rc2.html">React v0.13 RC2</a>
-
-</h1>
-
-<p class="meta">
-  March  3, 2015
-  by
-  
-    
-      <a href="https://twitter.com/sebmarkbage">Sebastian Markbåge</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Thanks to everybody who has already been testing the release candidate. We&#39;ve received some good feedback and as a result we&#39;re going to do a second release candidate. The changes are minimal. We haven&#39;t changed the behavior of any APIs we exposed in the previous release candidate. Here&#39;s a summary of the changes:</p>
-
-<ul>
-<li>Introduced a new API (<code>React.cloneElement</code>, see below for details).</li>
-<li>Fixed a bug related to validating <code>propTypes</code> when using the new <code>React.addons.createFragment</code> API.</li>
-<li>Improved a couple warning messages.</li>
-<li>Upgraded jstransform and esprima.</li>
-</ul>
-
-<p>The release candidate is available for download:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.13.0-rc2.js">https://fb.me/react-0.13.0-rc2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.13.0-rc2.min.js">https://fb.me/react-0.13.0-rc2.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.13.0-rc2.js">https://fb.me/react-with-addons-0.13.0-rc2.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.13.0-rc2.min.js">https://fb.me/react-with-addons-0.13.0-rc2.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.13.0-rc2.js">https://fb.me/JSXTransformer-0.13.0-rc2.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.13.0-rc2</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<hr>
-
-<h2>React.cloneElement</h2>
-
-<p>In React v0.13 RC2 we will introduce a new API, similar to <code>React.addons.cloneWithProps</code>, with this signature:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">React</span><span class="p">.</span><span class="nx">cloneElement</span><span class="p">(</span><span class="nx">element</span><span class="p">,</span> <span class="nx">props</span><span class="p">,</span> <span class="p">...</span><span class="nx">children</span><span class="p">);</span>
-</code></pre></div>
-<p>Unlike <code>cloneWithProps</code>, this new function does not have any magic built-in behavior for merging <code>style</code> and <code>className</code> for the same reason we don&#39;t have that feature from <code>transferPropsTo</code>. Nobody is sure what exactly the complete list of magic things are, which makes it difficult to reason about the code and difficult to reuse when <code>style</code> has a different signature (e.g. in the upcoming React Native).</p>
-
-<p><code>React.cloneElement</code> is <em>almost</em> equivalent to:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="o">&lt;</span><span class="nx">element</span><span class="p">.</span><span class="nx">type</span> <span class="p">{...</span><span class="nx">element</span><span class="p">.</span><span class="nx">props</span><span class="p">}</span> <span class="p">{...</span><span class="nx">props</span><span class="p">}</span><span class="o">&gt;</span><span class="p">{</span><span class="nx">children</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/element.type&gt;</span>
-</code></pre></div>
-<p>However, unlike JSX and <code>cloneWithProps</code>, it also preserves <code>ref</code>s. This means that if you get a child with a <code>ref</code> on it, you won&#39;t accidentally steal it from your ancestor. You will get the same <code>ref</code> attached to your new element.</p>
-
-<p>One common pattern is to map over your children and add a new prop. There were many issues reported about <code>cloneWithProps</code> losing the ref, making it harder to reason about your code. Now following the same pattern with <code>cloneElement</code> will work as expected. For example:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kd">var</span> <span class="nx">newChildren</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">Children</span><span class="p">.</span><span class="nx">map</span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span> <span class="kd">function</span><span class="p">(</span><span class="nx">child</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="nx">React</span><span class="p">.</span><span class="nx">cloneElement</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="kc">true</span> <span class="p">})</span>
-<span class="p">});</span>
-</code></pre></div>
-<blockquote>
-<p>Note: <code>React.cloneElement(child, { ref: &#39;newRef&#39; })</code> <em>DOES</em> override the <code>ref</code> so it is still not possible for two parents to have a ref to the same child, unless you use callback-refs.</p>
-</blockquote>
-
-<p>This was a critical feature to get into React 0.13 since props are now immutable. The upgrade path is often to clone the element, but by doing so you might lose the <code>ref</code>. Therefore, we needed a nicer upgrade path here. As we were upgrading callsites at Facebook we realized that we needed this method. We got the same feedback from the community. Therefore we decided to make another RC before the final release to make sure we get this in.</p>
-
-<p>We plan to eventually deprecate <code>React.addons.cloneWithProps</code>. We&#39;re not doing it yet, but this is a good opportunity to start thinking about your own uses and consider using <code>React.cloneElement</code> instead. We&#39;ll be sure to ship a release with deprecation notices before we actually remove it so no immediate action is necessary.</p>
 
 </div>
 

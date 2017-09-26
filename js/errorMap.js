@@ -204,10 +204,10 @@ var errorMap = {
   "202": "ReactDOM.render(): Invalid component element. Instead of passing a class like Foo, pass React.createElement(Foo) or <Foo />.",
   "203": "ReactDOM.render(): Invalid component element. This may be caused by unintentionally loading two independent copies of React.",
   "204": "ReactDOM.render(): Invalid component element.",
-  "205": "renderToStream(): Invalid component element.",
-  "206": "renderToStaticStream(): Invalid component element.",
-  "207": "ReactDOMServer.renderToStream(): The streaming API is not available in the browser. Use ReactDOMServer.renderToString() instead.",
-  "208": "ReactDOMServer.renderToStaticStream(): The streaming API is not available in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.",
+  "205": "renderToNodeStream(): Invalid component element.",
+  "206": "renderToStaticNodeStream(): Invalid component element.",
+  "207": "ReactDOMServer.renderToNodeStream(): The streaming API is not available in the browser. Use ReactDOMServer.renderToString() instead.",
+  "208": "ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.",
   "209": "renderToString(): Invalid component element.",
   "210": "renderToStaticMarkup(): Invalid component element.",
   "211": "Missing injection for fiber findDOMNode",
@@ -232,5 +232,6 @@ var errorMap = {
   "230": "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.unstable_createPortal).",
   "231": "Expected `%s` listener to be a function, instead got a value of `%s` type.",
   "232": "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.createPortal).",
-  "233": "Unsupported top level event type \"%s\" dispatched"
+  "233": "Unsupported top level event type \"%s\" dispatched",
+  "234": "Event cannot be both direct and bubbling: %s"
 };

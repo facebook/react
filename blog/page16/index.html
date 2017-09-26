@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,101 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/06/27/community-roundup-19.html">Community Round-up #19</a>
+
+</h1>
+
+<p class="meta">
+  June 27, 2014
+  by
+  
+    
+      <a href="https://twitter.com/_chenglou">Cheng Lou</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <h2>React Meetups!</h2>
+
+<p>Ever wanted to find developers who also share the same interest in React than you? Recently, there has been a React Meetup in <a href="http://www.meetup.com/ReactJS-San-Francisco/">San Francisco</a> (courtesy of <a href="http://www.telmate.com">Telmate</a>), and one in <a href="http://www.meetup.com/London-React-User-Group/">London</a> (courtesy of <a href="http://www.meetup.com/London-React-User-Group/members/105837542/">Stuart Harris</a>, <a href="http://www.meetup.com/London-React-User-Group/members/15509971/">Cain Ullah</a> and <a href="http://www.meetup.com/London-React-User-Group/members/137058242/">Zoe Merchant</a>). These two events have been big successes; a second one in London is <a href="http://www.meetup.com/London-React-User-Group/events/191406572/">already planned</a>.</p>
+
+<p>If you don&#39;t live near San Francisco or London, why not start one in your community?</p>
+
+<h2>Complementary Tools</h2>
+
+<p>In case you haven&#39;t seen it, we&#39;ve consolidated the tooling solution around React on <a href="https://github.com/facebook/react/wiki/Complementary-Tools">this wiki page</a>. Some of the notable recent entries include:</p>
+
+<ul>
+<li><p><a href="https://github.com/rpflorence">Ryan Florence</a> and <a href="https://github.com/mjackson">Michael Jackson</a>&#39;s <a href="https://github.com/rpflorence/react-nested-router">react-nested-router</a>, which is a translation of the Ember router API to React.</p></li>
+<li><p><a href="https://github.com/stevoland">Stephen J. Collings</a>&#39;s <a href="https://github.com/react-bootstrap/react-bootstrap">react-bootstrap</a>, which wraps the popular framework with a bit of React goodness. The <a href="https://react-bootstrap.github.io/components.html">website</a> features live-editable demos.</p></li>
+<li><p><a href="https://github.com/andreypopp">Andrey Popp</a>&#39;s <a href="https://github.com/andreypopp/react-quickstart">react-quickstart</a>, which gives you a quick template for server-side rendering and routing, among other features.</p></li>
+</ul>
+
+<p>These are some of the links that often pop up on the #reactjs IRC channel. If you made something that you think deserves to be shown on the wiki, feel free to add it!</p>
+
+<h2>React in Interesting Places</h2>
+
+<p>The core concepts React themselves is something very valuable that the community is exploring and pushing further. A year ago, we wouldn&#39;t have imagined something like <a href="http://rigsomelight.com">Bruce Hauman</a>&#39;s <a href="http://rigsomelight.com/2014/05/01/interactive-programming-flappy-bird-clojurescript.html">Flappy Bird ClojureScript port</a>, whose interactive programming has been made possible through React:</p>
+
+<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
+
+<p>And don&#39;t forget <a href="https://github.com/petehunt">Pete Hunt</a>&#39;s Wolfenstein 3D rendering engine in React (<a href="https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183">source code</a>). While it&#39;s nearly a year old, it&#39;s still a nice demo.</p>
+
+<p><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="/react/img/blog/wolfenstein_react.png" alt=""></a></p>
+
+<p>Give us a shoutout on IRC or <a href="https://groups.google.com/forum/#!forum/reactjs">React Google Groups</a> if you&#39;ve used React in some Interesting places.</p>
+
+<h2>Even More People Using React</h2>
+
+<h3>Prismatic</h3>
+
+<p><a href="http://getprismatic.com/home">Prismatic</a> recently shrank their codebase fivefold with the help of React and its popular ClojureScript wrapper, <a href="https://github.com/swannodette/om">Om</a>. They detailed their very positive experience <a href="http://blog.getprismatic.com/om-sweet-om-high-functional-frontend-engineering-with-clojurescript-and-react/">here</a>.</p>
+
+<blockquote>
+<p>Finally, the state is normalized: each piece of information is represented in a single place. Since React ensures consistency between the DOM and the application data, the programmer can focus on ensuring that the state properly stays up to date in response to user input. If the application state is normalized, then this consistency is guaranteed by definition, completely avoiding the possibility of an entire class of common bugs.</p>
+</blockquote>
+
+<h3>Adobe Brackets</h3>
+
+<p><a href="http://www.kevindangoor.com">Kevin Dangoor</a> works on <a href="http://brackets.io/?lang=en">Brackets</a>, the open-source code editor. After writing <a href="http://www.kevindangoor.com/2014/05/simplifying-code-with-react/">his first impression on React</a>, he followed up with another insightful <a href="http://www.kevindangoor.com/2014/05/react-in-brackets/">article</a> on how to gradually make the code transition, how to preserve the editor&#39;s good parts, and how to tune Brackets&#39; tooling around JSX.</p>
+
+<blockquote>
+<p>We don’t need to switch to React everywhere, all at once. It’s not a framework that imposes anything on the application structure. [...] Easy, iterative adoption is definitely something in React’s favor for us.</p>
+</blockquote>
+
+<h3>Storehouse</h3>
+
+<p><a href="https://www.storehouse.co">Storehouse</a> (Apple Design Award 2014)&#39;s web presence is build with React. Here&#39;s <a href="https://www.storehouse.co/stories/y2ad-mexico-city-clouds">an example story</a>. Congratulations on the award!</p>
+
+<h3>Vim Awesome</h3>
+
+<p><a href="http://vimawesome.com">Vim Awesome</a>, an open-source Vim plugins directory built on React, was just launched. Be sure to <a href="https://github.com/divad12/vim-awesome">check out the source code</a> if you&#39;re curious to see an example of how to build a small single-page React app.</p>
+
+<h2>Random Tweets</h2>
+
+<blockquote class="twitter-tweet" lang="en"><p>Spent 12 hours so far with <a href="https://twitter.com/hashtag/reactjs?src=hash">#reactjs</a>. Spent another 2 wondering why we&#39;ve been doing JS frameworks wrong until now. React makes me happy.</p>&mdash; Paul Irwin (@paulirwin) <a href="https://twitter.com/paulirwin/statuses/481263947589242882">June 24, 2014</a></blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -319,115 +409,6 @@ report bugs <a href="https://github.com/reactjs/React.NET">on GitHub</a>.</p>
 <h2>Miscellaneous</h2>
 
 <p>There are several other things I listed on <a href="https://github.com/facebook/react/wiki/Projects">our projects page</a> that we&#39;re tracking. Some of them are internals and have no obvious outward effect (improve tests, repo separation, updated test runner). I encourage you to take a look.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/03/21/react-v0.10.html">React v0.10</a>
-
-</h1>
-
-<p class="meta">
-  March 21, 2014
-  by
-  
-    
-      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Hot on the heels of the <a href="/react/blog/2014/03/19/react-v0.10-rc1.html">release candidate earlier this week</a>, we&#39;re ready to call v0.10 done. The only major issue we discovered had to do with the <code>react-tools</code> package, which has been updated. We&#39;ve copied over the changelog from the RC with some small clarifying changes.</p>
-
-<p>The release is available for download from the CDN:</p>
-
-<ul>
-<li><strong>React</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-0.10.0.js">https://fb.me/react-0.10.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-0.10.0.min.js">https://fb.me/react-0.10.0.min.js</a><br></li>
-<li><strong>React with Add-Ons</strong><br>
-Dev build with warnings: <a href="https://fb.me/react-with-addons-0.10.0.js">https://fb.me/react-with-addons-0.10.0.js</a><br>
-Minified build for production: <a href="https://fb.me/react-with-addons-0.10.0.min.js">https://fb.me/react-with-addons-0.10.0.min.js</a><br></li>
-<li><strong>In-Browser JSX transformer</strong><br>
-<a href="https://fb.me/JSXTransformer-0.10.0.js">https://fb.me/JSXTransformer-0.10.0.js</a></li>
-</ul>
-
-<p>We&#39;ve also published version <code>0.10.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
-
-<p>Please try these builds out and <a href="https://github.com/facebook/react/issues/new">file an issue on GitHub</a> if you see anything awry.</p>
-
-<h2>Clone On Mount</h2>
-
-<p>The main purpose of this release is to provide a smooth upgrade path as we evolve some of the implementation of core. In v0.9 we started warning in cases where you called methods on unmounted components. This is part of an effort to enforce the idea that the return value of a component (<code>React.DOM.div()</code>, <code>MyComponent()</code>) is in fact not a reference to the component instance React uses in the virtual DOM. The return value is instead a light-weight object that React knows how to use. Since the return value currently is a reference to the same object React uses internally, we need to make this transition in stages as many people have come to depend on this implementation detail.</p>
-
-<p>In 0.10, we’re adding more warnings to catch a similar set of patterns. When a component is mounted we clone it and use that object for our internal representation. This allows us to capture calls you think you’re making to a mounted component. We’ll forward them on to the right object, but also warn you that this is breaking. See “Access to the Mounted Instance” on <a href="https://fb.me/react-warning-descriptors">this page</a>. Most of the time you can solve your pattern by using refs.</p>
-
-<p>Storing a reference to your top level component is a pattern touched upon on that page, but another examples that demonstrates what we see a lot of:</p>
-<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// This is a common pattern. However instance here really refers to a</span>
-<span class="c1">// &quot;descriptor&quot;, not necessarily the mounted instance.</span>
-<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">;</span>
-<span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="nx">instance</span><span class="p">);</span>
-<span class="c1">// ...</span>
-<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
-
-<span class="c1">// The change here is very simple. The return value of renderComponent will be</span>
-<span class="c1">// the mounted instance.</span>
-<span class="kd">var</span> <span class="nx">instance</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">MyComponent</span><span class="o">/&gt;</span><span class="p">)</span>
-<span class="c1">// ...</span>
-<span class="nx">instance</span><span class="p">.</span><span class="nx">setProps</span><span class="p">(...);</span>
-</code></pre></div>
-<p>These warnings and method forwarding are only enabled in the development build. The production builds continue to work as they did in v0.9. We strongly encourage you to use the development builds to catch these warnings and fix the call sites.</p>
-
-<p>The plan for v0.11 is that we will go fully to &quot;descriptors&quot;. Method calls on the return value of <code>MyComponent()</code> will fail hard.</p>
-
-<h2>Changelog</h2>
-
-<h3>React Core</h3>
-
-<h4>New Features</h4>
-
-<ul>
-<li>Added warnings to help migrate towards descriptors</li>
-<li>Made it possible to server render without React-related markup (<code>data-reactid</code>, <code>data-react-checksum</code>). This DOM will not be mountable by React. <a href="/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup">Read the docs for <code>React.renderComponentToStaticMarkup</code></a></li>
-<li>Added support for more attributes:
-
-<ul>
-<li><code>srcSet</code> for <code>&lt;img&gt;</code> to specify images at different pixel ratios</li>
-<li><code>textAnchor</code> for SVG</li>
-</ul></li>
-</ul>
-
-<h4>Bug Fixes</h4>
-
-<ul>
-<li>Ensure all void elements don’t insert a closing tag into the markup.</li>
-<li>Ensure <code>className={false}</code> behaves consistently</li>
-<li>Ensure <code>this.refs</code> is defined, even if no refs are specified.</li>
-</ul>
-
-<h3>Addons</h3>
-
-<ul>
-<li><code>update</code> function to deal with immutable data. <a href="/react/docs/update.html">Read the docs</a></li>
-</ul>
-
-<h3>react-tools</h3>
-
-<ul>
-<li>Added an option argument to <code>transform</code> function. The only option supported is <code>harmony</code>, which behaves the same as <code>jsx --harmony</code> on the command line. This uses the ES6 transforms from <a href="https://github.com/facebook/jstransform">jstransform</a>.</li>
-</ul>
 
 </div>
 

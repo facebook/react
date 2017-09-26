@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,121 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/08/26/community-roundup-7.html">Community Round-up #7</a>
+
+</h1>
+
+<p class="meta">
+  August 26, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>It&#39;s been three months since we open sourced React and it is going well. Some stats so far:</p>
+
+<ul>
+<li>114 285 unique visitors on this website</li>
+<li><a href="https://github.com/facebook/react/stargazers">1933 stars</a> and <a href="https://github.com/facebook/react/network/members">210 forks</a></li>
+<li><a href="https://groups.google.com/forum/#!forum/reactjs">226 posts on Google Group</a></li>
+<li><a href="https://gist.github.com/vjeux/6335762">76 GitHub projects using React</a></li>
+<li><a href="https://github.com/facebook/react/graphs/contributors">30 contributors</a></li>
+<li><a href="/react/blog/">15 blog posts</a></li>
+<li>2 early adopters: <a href="http://sophiebits.com/2013/06/09/using-react-to-speed-up-khan-academy.html">Khan Academy</a> and <a href="http://usepropeller.com/blog/posts/from-backbone-to-react/">Propeller</a></li>
+</ul>
+
+<h2>Wolfenstein Rendering Engine Ported to React</h2>
+
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> ported the render code of the web version of Wolfenstein 3D to React. Check out <a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html">the demo</a> and <a href="https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183">render.js</a> file for the implementation.
+<figure><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="/react/img/blog/wolfenstein_react.png" alt=""></a></figure></p>
+
+<h2>React &amp; Meteor</h2>
+
+<p><a href="https://twitter.com/benjamn">Ben Newman</a> made a <a href="https://github.com/benjamn/meteor-react/blob/master/lib/mixin.js">13-lines wrapper</a> to use React and Meteor together. <a href="http://www.meteor.com/">Meteor</a> handles the real-time data synchronization between client and server. React provides the declarative way to write the interface and only updates the parts of the UI that changed.</p>
+
+<blockquote>
+<p>This repository defines a Meteor package that automatically integrates the React rendering framework on both the client and the server, to complement or replace the default Handlebars templating system.</p>
+
+<p>The React core is officially agnostic about how you fetch and update your data, so it is far from obvious which approach is the best. This package provides one answer to that question (use Meteor!), and I hope you will find it a compelling combination.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+ <span class="nx">mixins</span><span class="o">:</span> <span class="p">[</span><span class="nx">MeteorMixin</span><span class="p">],</span>
+
+ <span class="nx">getMeteorState</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">return</span> <span class="p">{</span> <span class="nx">foo</span><span class="o">:</span> <span class="nx">Session</span><span class="p">.</span><span class="nx">get</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">)</span> <span class="p">};</span>
+ <span class="p">},</span>
+
+ <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+   <span class="k">return</span> <span class="o">&lt;</span><span class="nx">div</span><span class="o">&gt;</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">foo</span><span class="p">}</span><span class="o">&lt;</span><span class="err">/div&gt;;</span>
+ <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p>Dependencies will be registered for any data accesses performed by getMeteorState so that the component can be automatically re-rendered whenever the data changes.</p>
+
+<p><a href="https://github.com/benjamn/meteor-react">Read more ...</a></p>
+</blockquote>
+
+<h2>React Page</h2>
+
+<p><a href="https://github.com/jordwalke">Jordan Walke</a> implemented a complete React project creator called <a href="https://github.com/facebook/react-page/">react-page</a>. It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.</p>
+
+<blockquote>
+<p>Easy Application Development with React JavaScript
+<figure><a href="https://github.com/facebook/react-page/"><img src="/react/img/blog/react-page.png" alt=""></a></figure></p>
+
+<p><strong>Why Server Rendering?</strong></p>
+
+<ul>
+<li>Faster initial page speed:
+
+<ul>
+<li>Markup displayed before downloading large JavaScript.</li>
+<li>Markup can be generated more quickly on a fast server than low power client devices.</li>
+</ul></li>
+<li>Faster Development and Prototyping:
+
+<ul>
+<li>Instantly refresh your app without waiting for any watch scripts or bundlers.</li>
+</ul></li>
+<li>Easy deployment of static content pages/blogs: just archive using recursive wget.</li>
+<li>SEO benefits of indexability and perf.</li>
+</ul>
+
+<p><strong>How Does Server Rendering Work?</strong></p>
+
+<ul>
+<li><code>react-page</code> computes page markup on the server, sends it to the client so the user can see it quickly.</li>
+<li>The corresponding JavaScript is then packaged and sent.</li>
+<li>The browser runs that JavaScript, so that all of the event handlers, interactions and update code will run seamlessly on top of the server generated markup.</li>
+<li>From the developer&#39;s (and the user&#39;s) perspective, it&#39;s just as if the rendering occurred on the client, only faster.</li>
+</ul>
+
+<p><a href="https://github.com/facebook/react-page/">Try it out ...</a></p>
+</blockquote>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -384,137 +494,6 @@
 </ul>
 
 <p><a href="/react/downloads.html">Download it now!</a></p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/07/23/community-roundup-5.html">Community Round-up #5</a>
-
-</h1>
-
-<p class="meta">
-  July 23, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>We launched the <a href="https://www.facebook.com/react">React Facebook Page</a> along with the React v0.4 launch. 700 people already liked it to get updated on the project :)</p>
-
-<h2>Cross-browser onChange</h2>
-
-<p><a href="http://benalpert.com/">Ben Alpert</a> from <a href="https://www.khanacademy.org/">Khan Academy</a> worked on a cross-browser implementation of <code>onChange</code> event that landed in v0.4. He wrote a blog post explaining the various browser quirks he had to deal with.</p>
-
-<blockquote>
-<p>First off, what is the input event? If you have an <code>&lt;input&gt;</code> element and want to receive events whenever the value changes, the most obvious thing to do is to listen to the change event. Unfortunately, change fires only after the text field is defocused, rather than on each keystroke. The next obvious choice is the keyup event, which is triggered whenever a key is released. Unfortunately, keyup doesn&#39;t catch input that doesn&#39;t involve the keyboard (e.g., pasting from the clipboard using the mouse) and only fires once if a key is held down, rather than once per inserted character.</p>
-
-<p>Both keydown and keypress do fire repeatedly when a key is held down, but both fire immediately before the value changes, so to read the new value you have to defer the handler to the next event loop using <code>setTimeout(fn, 0)</code> or similar, which slows down your app. Of course, like keyup, neither keydown nor keypress fires for non-keyboard input events, and all three can fire in cases where the value doesn&#39;t change at all (such as when pressing the arrow keys).</p>
-
-<p><a href="http://benalpert.com/2013/06/18/a-near-perfect-oninput-shim-for-ie-8-and-9.html">Read the full post...</a></p>
-</blockquote>
-
-<h2>React Samples</h2>
-
-<p>Learning a new library is always easier when you have working examples you can play with. <a href="https://github.com/jhw">jwh</a> put many of them on his <a href="https://github.com/jhw/react-samples">react-samples GitHub repo</a>.</p>
-
-<blockquote>
-<p>Some simple examples with Facebook&#39;s React framework</p>
-
-<ul>
-<li>Bootstrap action bar, modal and table <a href="https://rawgithub.com/jhw/react-samples/master/html/actionbar.html">#1</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_actionbar.html">#2</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_modal.html">#3</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/bootstrap_striped_table.html">#4</a></li>
-<li>Comments <a href="https://rawgithub.com/jhw/react-samples/master/html/comments1.html">#1</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/comments2.html">#2</a></li>
-<li>Data Table <a href="https://rawgithub.com/jhw/react-samples/master/html/datatable.html">#1</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable2.html">#2</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable3.html">#3</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable4.html">#4</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/datatable5.html">#5</a></li>
-<li>Filter Bar <a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar.html">#1</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar2.html">#2</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar3.html">#3</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar4.html">#4</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/filterbar5.html">#5</a></li>
-<li>Fundoo Rating <a href="https://rawgithub.com/jhw/react-samples/master/html/fundoo.html">#1</a></li>
-<li>Line Char: <a href="https://rawgithub.com/jhw/react-samples/master/html/linechart.html">#1</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/linechart2.html">#2</a></li>
-<li>Multi tabs <a href="https://rawgithub.com/jhw/react-samples/master/html/multitabs.html">#1</a></li>
-<li>Select <a href="https://rawgithub.com/jhw/react-samples/master/html/select.html">#1</a></li>
-<li>Simple Tabs <a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs.html">#1</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs2.html">#2</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs3.html">#3</a>,
-<a href="https://rawgithub.com/jhw/react-samples/master/html/simpletabs4.html">#4</a></li>
-<li>Toggle <a href="https://rawgithub.com/jhw/react-samples/master/html/toggle.html">#1</a></li>
-</ul>
-</blockquote>
-
-<h2>React Chosen Wrapper</h2>
-
-<p><a href="https://github.com/chenglou">Cheng Lou</a> wrote a wrapper for the <a href="https://harvesthq.github.io/chosen/">Chosen</a> input library called <a href="https://github.com/chenglou/react-chosen">react-chosen</a>. It took just 25 lines to be able to use jQuery component as a React one.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">React</span><span class="p">.</span><span class="nx">renderComponent</span><span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">Chosen</span> <span class="nx">noResultsText</span><span class="o">=</span><span class="s2">&quot;No result&quot;</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span> <span class="nx">onChange</span><span class="o">=</span><span class="p">{</span><span class="nx">doSomething</span><span class="p">}</span><span class="o">&gt;</span>
-    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Facebook&quot;</span><span class="o">&gt;</span><span class="nx">Facebook</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-    <span class="o">&lt;</span><span class="nx">option</span> <span class="nx">value</span><span class="o">=</span><span class="s2">&quot;Harvest&quot;</span><span class="o">&gt;</span><span class="nx">Harvest</span><span class="o">&lt;</span><span class="err">/option&gt;</span>
-  <span class="o">&lt;</span><span class="err">/Chosen&gt;</span>
-<span class="p">,</span> <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;example&#39;</span><span class="p">));</span>
-</code></pre></div>
-<h2>JSX and ES6 Template Strings</h2>
-
-<p><a href="http://domenicdenicola.com/">Domenic Denicola</a> wrote a slide deck about the great applications of ES6 features and one slide shows how we could use Template Strings to compile JSX at run-time without the need for a pre-processing phase.</p>
-
-<figure><iframe src="https://www.slideshare.net/slideshow/embed_code/24187146?rel=0&startSlide=36" width="100%" height="356" frameborder="0" marginwidth="0" marginheight="0" scrolling="no" style="border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen webkitallowfullscreen mozallowfullscreen> </iframe></figure>
-
-<h2>React Presentation</h2>
-
-<p><a href="http://tomocchino.com/">Tom Occhino</a> and <a href="https://github.com/jordwalke">Jordan Walke</a>, React developers, did a presentation of React at Facebook Seattle&#39;s office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&amp;A. I highly recommend you watching this video.</p>
-
-<figure><iframe width="100%" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
-
-<h2>Docs</h2>
-
-<p><a href="http://www.petehunt.net/">Pete Hunt</a> rewrote the entirety of the docs for v0.4. The goal was to add more explanation about why we built React and what the best practices are.</p>
-
-<blockquote>
-<p>Guides</p>
-
-<ul>
-<li><a href="/react/docs/why-react.html">Why React?</a></li>
-<li><a href="/react/docs/displaying-data.html">Displaying Data</a>
-
-<ul>
-<li><a href="/react/docs/jsx-in-depth.html">JSX in Depth</a></li>
-<li><a href="/react/docs/jsx-gotchas.html">JSX Gotchas</a></li>
-</ul></li>
-<li><a href="/react/docs/interactivity-and-dynamic-uis.html">Interactivity and Dynamic UIs</a></li>
-<li><a href="/react/docs/multiple-components.html">Multiple Components</a></li>
-<li><a href="/react/docs/reusable-components.html">Reusable Components</a></li>
-<li><a href="/react/docs/forms.html">Forms</a></li>
-<li><a href="/react/docs/working-with-the-browser.html">Working With the Browser</a>
-
-<ul>
-<li><a href="/react/docs/more-about-refs.html">More About Refs</a></li>
-</ul></li>
-<li><a href="/react/docs/tooling-integration.html">Tooling integration</a></li>
-<li><a href="/react/docs/top-level-api.html">Reference</a></li>
-</ul>
-</blockquote>
 
 </div>
 

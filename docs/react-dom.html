@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -86,8 +87,10 @@
 
 <ul>
 <li><a href="#render"><code>render()</code></a></li>
+<li><a href="#hydrate"><code>hydrate()</code></a></li>
 <li><a href="#unmountcomponentatnode"><code>unmountComponentAtNode()</code></a></li>
 <li><a href="#finddomnode"><code>findDOMNode()</code></a></li>
+<li><a href="#createPortal"><code>createPortal()</code></a></li>
 </ul>
 
 <h3>Browser Support</h3>
@@ -127,7 +130,20 @@
 <p><code>ReactDOM.render()</code> currently returns a reference to the root <code>ReactComponent</code> instance. However, using this return value is legacy
 and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root <code>ReactComponent</code> instance, the preferred solution is to attach a
 <a href="/react/docs/more-about-refs.html#the-ref-callback-attribute">callback ref</a> to the root element.</p>
+
+<p>Using <code>ReactDOM.render()</code> to hydrate a server-rendered container is deprecated and will be removed in React 17. Use <a href="#hydrate"><code>hydrate()</code></a> instead.</p>
 </blockquote>
+
+<hr>
+
+<h3><code>hydrate()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">hydrate</span><span class="p">(</span>
+  <span class="nx">element</span><span class="p">,</span>
+  <span class="nx">container</span><span class="p">,</span>
+  <span class="p">[</span><span class="nx">callback</span><span class="p">]</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Same as <a href="#render"><code>render()</code></a>, but is used to hydrate a container whose HTML contents were rendered by <a href="/react/docs/react-dom-server.html"><code>ReactDOMServer</code></a>. React will attach event listeners while preserving as much of the existing DOM as possible. For best results, you should try to render the same content on the server as on the client, with as few differences as possible.</p>
 
 <hr>
 
@@ -152,6 +168,13 @@ and should be avoided because future versions of React may render components asy
 
 <p><code>findDOMNode</code> cannot be used on functional components.</p>
 </blockquote>
+
+<hr>
+
+<h3><code>createPortal()</code></h3>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">createPortal</span><span class="p">(</span><span class="nx">child</span><span class="p">,</span> <span class="nx">container</span><span class="p">)</span>
+</code></pre></div>
+<p>Creates a portal. Portals provide a way to <a href="/react/docs/portals.html">render children into a DOM node that exists outside the hierarchy of the DOM component</a>.</p>
 
 
     <div class="docs-prevnext">
@@ -285,6 +308,11 @@ and should be avoided because future versions of React may render components asy
           </li>
         
           <li>
+            <a href="/react/docs/portals.html">Portals</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/web-components.html">Web Components</a>
             
           </li>
@@ -351,6 +379,16 @@ and should be avoided because future versions of React may render components asy
         
           <li>
             <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-renderer.html">Test Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/javascript-environment-requirements.html">JS Environment Requirements</a>
             
           </li>
         

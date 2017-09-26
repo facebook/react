@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -307,7 +308,7 @@
 </code></pre></div>
 <p>The most common signature for HOCs looks like this:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// React Redux&#39;s `connect`</span>
-<span class="kr">const</span> <span class="nx">ConnectedComment</span> <span class="o">=</span> <span class="nx">connect</span><span class="p">(</span><span class="nx">commentSelector</span><span class="p">,</span> <span class="nx">commentActions</span><span class="p">)(</span><span class="nx">Comment</span><span class="p">);</span>
+<span class="kr">const</span> <span class="nx">ConnectedComment</span> <span class="o">=</span> <span class="nx">connect</span><span class="p">(</span><span class="nx">commentSelector</span><span class="p">,</span> <span class="nx">commentActions</span><span class="p">)(</span><span class="nx">CommentList</span><span class="p">);</span>
 </code></pre></div>
 <p><em>What?!</em> If you break it apart, it&#39;s easier to see what&#39;s going on.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// connect is a function that returns another function</span>
@@ -320,14 +321,14 @@
 
 <p>This form may seem confusing or unnecessary, but it has a useful property. Single-argument HOCs like the one returned by the <code>connect</code> function have the signature <code>Component =&gt; Component</code>. Functions whose output type is the same as its input type are really easy to compose together.</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="c1">// Instead of doing this...</span>
-<span class="kr">const</span> <span class="nx">EnhancedComponent</span> <span class="o">=</span> <span class="nx">connect</span><span class="p">(</span><span class="nx">commentSelector</span><span class="p">)(</span><span class="nx">withRouter</span><span class="p">(</span><span class="nx">WrappedComponent</span><span class="p">))</span>
+<span class="kr">const</span> <span class="nx">EnhancedComponent</span> <span class="o">=</span> <span class="nx">withRouter</span><span class="p">(</span><span class="nx">connect</span><span class="p">(</span><span class="nx">commentSelector</span><span class="p">)(</span><span class="nx">WrappedComponent</span><span class="p">))</span>
 
 <span class="c1">// ... you can use a function composition utility</span>
 <span class="c1">// compose(f, g, h) is the same as (...args) =&gt; f(g(h(...args)))</span>
 <span class="kr">const</span> <span class="nx">enhance</span> <span class="o">=</span> <span class="nx">compose</span><span class="p">(</span>
   <span class="c1">// These are both single-argument HOCs</span>
-  <span class="nx">connect</span><span class="p">(</span><span class="nx">commentSelector</span><span class="p">),</span>
-  <span class="nx">withRouter</span>
+  <span class="nx">withRouter</span><span class="p">,</span>
+  <span class="nx">connect</span><span class="p">(</span><span class="nx">commentSelector</span><span class="p">)</span>
 <span class="p">)</span>
 <span class="kr">const</span> <span class="nx">EnhancedComponent</span> <span class="o">=</span> <span class="nx">enhance</span><span class="p">(</span><span class="nx">WrappedComponent</span><span class="p">)</span>
 </code></pre></div>
@@ -572,6 +573,11 @@
           </li>
         
           <li>
+            <a href="/react/docs/portals.html">Portals</a>
+            
+          </li>
+        
+          <li>
             <a href="/react/docs/web-components.html">Web Components</a>
             
           </li>
@@ -638,6 +644,16 @@
         
           <li>
             <a href="/react/docs/shallow-renderer.html">Shallow Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/test-renderer.html">Test Renderer</a>
+            
+          </li>
+        
+          <li>
+            <a href="/react/docs/javascript-environment-requirements.html">JS Environment Requirements</a>
             
           </li>
         

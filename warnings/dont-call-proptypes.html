@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -88,7 +89,7 @@
 
 <p>The normal usage of PropTypes is still supported:</p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">Button</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">highlighted</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
+  <span class="nx">highlighted</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span>
 <span class="p">};</span>
 </code></pre></div>
 <p>Nothing changes here.</p>
@@ -96,9 +97,9 @@
 <h3>Don’t call PropTypes directly</h3>
 
 <p>Using PropTypes in any other way than annotating React components with them is no longer supported:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">apiShape</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">({</span>
-  <span class="nx">body</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">,</span>
-  <span class="nx">statusCode</span><span class="o">:</span> <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">.</span><span class="nx">isRequired</span>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">apiShape</span> <span class="o">=</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">shape</span><span class="p">({</span>
+  <span class="nx">body</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">object</span><span class="p">,</span>
+  <span class="nx">statusCode</span><span class="o">:</span> <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">number</span><span class="p">.</span><span class="nx">isRequired</span>
 <span class="p">}).</span><span class="nx">isRequired</span><span class="p">;</span>
 
 <span class="c1">// Not supported!</span>
@@ -113,12 +114,12 @@
 <p>Inspect the stack trace produced by the warning. You will find the component definition responsible for the PropTypes direct call. Most likely, the issue is due to third-party PropTypes that wrap React’s PropTypes, for example:</p>
 <div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">Button</span><span class="p">.</span><span class="nx">propTypes</span> <span class="o">=</span> <span class="p">{</span>
   <span class="nx">highlighted</span><span class="o">:</span> <span class="nx">ThirdPartyPropTypes</span><span class="p">.</span><span class="nx">deprecated</span><span class="p">(</span>
-    <span class="nx">React</span><span class="p">.</span><span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span><span class="p">,</span>
+    <span class="nx">PropTypes</span><span class="p">.</span><span class="nx">bool</span><span class="p">,</span>
     <span class="s1">&#39;Use `active` prop instead&#39;</span>
   <span class="p">)</span>
 <span class="p">}</span>
 </code></pre></div>
-<p>In this case, <code>ThirdPartyPropTypes.deprecated</code> is a wrapper calling <code>React.PropTypes.bool</code>. This pattern by itself is fine, but triggers a false positive because React thinks you are calling PropTypes directly. The next section explains how to fix this problem for a library implementing something like <code>ThirdPartyPropTypes</code>. If it&#39;s not a library you wrote, you can file an issue against it.</p>
+<p>In this case, <code>ThirdPartyPropTypes.deprecated</code> is a wrapper calling <code>PropTypes.bool</code>. This pattern by itself is fine, but triggers a false positive because React thinks you are calling PropTypes directly. The next section explains how to fix this problem for a library implementing something like <code>ThirdPartyPropTypes</code>. If it&#39;s not a library you wrote, you can file an issue against it.</p>
 
 <h3>Fixing the false positive in third party PropTypes</h3>
 

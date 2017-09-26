@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,234 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a>
+
+</h1>
+
+<p class="meta">
+  September 26, 2017
+  by
+  
+    
+      <a href="https://twitter.com/acdlite">Andrew Clark</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We&#39;re excited to announce the release of React v16.0! Among the changes are some long-standing feature requests, including <a href="#new-render-return-types-fragments-and-strings"><strong>fragments</strong></a>, <a href="#better-error-handling"><strong>error boundaries</strong></a>, <a href="#portals"><strong>portals</strong></a>, support for <a href="#support-for-custom-dom-attributes"><strong>custom DOM attributes</strong></a>, improved <a href="#better-server-side-rendering"><strong>server-side rendering</strong></a>, and <a href="#reduced-file-size"><strong>reduced file size</strong></a>.</p>
+
+<h3>New render return types: fragments and strings</h3>
+
+<p>You can now return an array of elements from a component&#39;s <code>render</code> method. Like with other arrays, you&#39;ll need to add a key to each element to avoid the key warning:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// No need to wrap list items in an extra element!</span>
+  <span class="k">return</span> <span class="p">[</span>
+    <span class="c1">// Don&#39;t forget the keys :)</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="s2">&quot;A&quot;</span><span class="o">&gt;</span><span class="nx">First</span> <span class="nx">item</span><span class="o">&lt;</span><span class="err">/li&gt;,</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="s2">&quot;B&quot;</span><span class="o">&gt;</span><span class="nx">Second</span> <span class="nx">item</span><span class="o">&lt;</span><span class="err">/li&gt;,</span>
+    <span class="o">&lt;</span><span class="nx">li</span> <span class="nx">key</span><span class="o">=</span><span class="s2">&quot;C&quot;</span><span class="o">&gt;</span><span class="nx">Third</span> <span class="nx">item</span><span class="o">&lt;</span><span class="err">/li&gt;,</span>
+  <span class="p">];</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>In the future, we&#39;ll likely add a special fragment syntax to JSX that doesn&#39;t require keys.</p>
+
+<p>We&#39;ve added support for returning strings, too:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="k">return</span> <span class="s1">&#39;Look ma, no spans!&#39;</span><span class="p">;</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="/react/docs/react-component.html#render">See the full list of supported return types</a>.</p>
+
+<h3>Better error handling</h3>
+
+<p>Previously, runtime errors during rendering could put React in a broken state, producing cryptic error messages and requiring a page refresh to recover. To address this problem, React 16 uses a more resilient error-handling strategy. By default, if an error is thrown inside a component&#39;s render or lifecycle methods, the whole component tree is unmounted from the root. This prevents the display of corrupted data. However, it&#39;s probably not the ideal user experience.</p>
+
+<p>Instead of unmounting the whole app every time there&#39;s an error, you can use error boundaries. Error boundaries are special components that capture errors inside their subtree and display a fallback UI in its place. Think of error boundaries like try-catch statements, but for React components.</p>
+
+<p>For more details, check out our <a href="/react/blog/2017/07/26/error-handling-in-react-16.html">previous post on error handling in React 16</a>.</p>
+
+<h3>Portals</h3>
+
+<p>Portals provide a first-class way to render children into a DOM node that exists outside the DOM hierarchy of the parent component.</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">render</span><span class="p">()</span> <span class="p">{</span>
+  <span class="c1">// React does *not* create a new div. It renders the children into `domNode`.</span>
+  <span class="c1">// `domNode` is any valid DOM node, regardless of its location in the DOM.</span>
+  <span class="k">return</span> <span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">createPortal</span><span class="p">(</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">children</span><span class="p">,</span>
+    <span class="nx">domNode</span><span class="p">,</span>
+  <span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>See a full example in the <a href="/react/docs/portals.html">documentation for portals</a>.</p>
+
+<h3>Better server-side rendering</h3>
+
+<p>React 16 includes a completely rewritten server renderer. It&#39;s really fast. It supports <strong>streaming</strong>, so you can start sending bytes to the client faster. And thanks to a <a href="#reduced-file-size">new packaging strategy</a> that compiles away <code>process.env</code> checks (Believe it or not, reading <code>process.env</code> in Node is really slow!), you no longer need to bundle React to get good server-rendering performance.</p>
+
+<p>Core team member Sasha Aickin wrote a <a href="https://medium.com/@aickin/whats-new-with-server-side-rendering-in-react-16-9b0d78585d67">great article describing React 16&#39;s SSR improvements</a>. According to Sasha&#39;s synthetic benchmarks, server rendering in React 16 is roughly <strong>three times faster</strong> than React 15. &quot;When comparing against React 15 with <code>process.env</code> compiled out, there’s about a 2.4x improvement in Node 4, about a 3x performance improvement in Node 6, and a full 3.8x improvement in the new Node 8.4 release. And if you compare against React 15 without compilation, React 16 has a full order of magnitude gain in SSR in the latest version of Node!&quot; (As Sasha points out, please be aware that these numbers are based on synthetic benchmarks and may not reflect real-world performance.)</p>
+
+<p>In addition, React 16 is better at hydrating server-rendered HTML once it reaches the client. It no longer requires the initial render to exactly match the result from the server. Instead, it will attempt to reuse as much of the existing DOM as possible. No more checksums! In general, we don&#39;t recommend that you render different content on the client versus the server, but it can be useful in some cases (e.g. timestamps).</p>
+
+<p>See the <a href="/react/docs/react-dom-server.html">documentation for <code>ReactDOMServer</code></a> for more details.</p>
+
+<h3>Support for custom DOM attributes</h3>
+
+<p>Instead of ignoring unrecognized HTML and SVG attributes, React will now <a href="https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html">pass them through to the DOM</a>. This has the added benefit of allowing us to get rid of most of React&#39;s attribute whitelist, resulting in reduced file sizes.</p>
+
+<h3>Reduced file size</h3>
+
+<p>Despite all these additions, React 16 is actually <strong>smaller</strong> compared to 15.6.1!</p>
+
+<ul>
+<li><code>react</code> is 5.3 kb (2.2 kb gzipped), down from 20.7 kb (6.9 kb gzipped).</li>
+<li><code>react-dom</code> is 103.7 kb (32.6 kb gzipped), down from 141 kb (42.9 kb gzipped).</li>
+<li><code>react</code> + <code>react-dom</code> is 109 kb (34.8 kb gzipped), down from 161.7 kb (49.8 kb gzipped).</li>
+</ul>
+
+<p>That amounts to a combined <strong>32% size decrease compared to the previous version (30% post-gzip)</strong>.</p>
+
+<p>The size difference is partly attributable to a change in packaging. React now uses <a href="https://rollupjs.org/">Rollup</a> to create flat bundles for each of its different target formats, resulting in both size and runtime performance wins. The flat bundle format also means that React&#39;s impact on bundle size is roughly consistent regardless of how your ship your app, whether it&#39;s with Webpack, Browserify, the pre-built UMD bundles, or any other system.</p>
+
+<h3>MIT licensed</h3>
+
+<p><a href="https://code.facebook.com/posts/300798627056246/relicensing-react-jest-flow-and-immutable-js/">In case you missed it</a>, React 16 is available under the MIT license. We&#39;ve also published React 15.6.2 under MIT, for those who are unable to upgrade immediately.</p>
+
+<h3>New core architecture</h3>
+
+<p>React 16 is the first version of React built on top of a new core architecture, codenamed &quot;Fiber.&quot; You can read all about this project over on <a href="https://code.facebook.com/posts/1716776591680069/react-16-a-look-inside-an-api-compatible-rewrite-of-our-frontend-ui-library/">Facebook&#39;s engineering blog</a>. (Spoiler: we rewrote React!)</p>
+
+<p>Fiber is responsible for most of the new features in React 16, like error boundaries and fragments. Over the next few releases, you can expect more new features as we begin to unlock the full potential of React.</p>
+
+<p>Perhaps the most exciting area we&#39;re working on is <strong>async rendering</strong>—a strategy for cooperatively scheduling rendering work by periodically yielding execution to the browser. The upshot is that, with async rendering, apps are more responsive because React avoids blocking the main thread.</p>
+
+<p>This demo provides an early peek at the types of problems async rendering can solve:</p>
+
+<blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Ever wonder what &quot;async rendering&quot; means? Here&#39;s a demo of how to coordinate an async React tree with non-React work <a href="https://t.co/3snoahB3uV">https://t.co/3snoahB3uV</a> <a href="https://t.co/egQ988gBjR">pic.twitter.com/egQ988gBjR</a></p>&mdash; Andrew Clark (@acdlite) <a href="https://twitter.com/acdlite/status/909926793536094209">September 18, 2017</a></blockquote>
+
+<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
+
+<p><em>Tip: Pay attention to the spinning black square.</em></p>
+
+<p>We think async rendering is a big deal, and represents the future of React. To make migration to v16.0 as smooth as possible, we&#39;re not enabling any async features yet, but we&#39;re excited to start rolling them out in the coming months. Stay tuned!</p>
+
+<h2>Installation</h2>
+
+<p>React v16.0.0 is available on the npm registry.</p>
+
+<p>To install React 16 with Yarn, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">yarn add react@^16.0.0 react-dom@^16.0.0
+</code></pre></div>
+<p>To install React 16 with npm, run:</p>
+<div class="highlight"><pre><code class="language-bash" data-lang="bash">npm install --save react@^16.0.0 react-dom@^16.0.0
+</code></pre></div>
+<p>We also provide UMD builds of React via a CDN:</p>
+<div class="highlight"><pre><code class="language-html" data-lang="html"><span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react@16/umd/react.production.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+<span class="nt">&lt;script </span><span class="na">crossorigin</span> <span class="na">src=</span><span class="s">&quot;https://unpkg.com/react-dom@16/umd/react-dom.production.min.js&quot;</span><span class="nt">&gt;&lt;/script&gt;</span>
+</code></pre></div>
+<p>Refer to the documentation for <a href="/react/docs/installation.html">detailed installation instructions</a>.</p>
+
+<h2>Upgrading</h2>
+
+<p>Although React 16 includes significant internal changes, in terms of upgrading, you can think of this like any other major React release. We&#39;ve been serving React 16 to Facebook and Messenger.com users since earlier this year, and we released several beta and release candidate versions to flush out additional issues. With minor exceptions, <strong>if your app runs in 15.6 without any warnings, it should work in 16.</strong></p>
+
+<h3>New deprecations</h3>
+
+<p>Hydrating a server-rendered container now has an explicit API. If you&#39;re reviving server-rendered HTML, use <a href="/react/docs/react-dom.html#hydrate"><code>ReactDOM.hydrate</code></a> instead of <code>ReactDOM.render</code>. Keep using <code>ReactDOM.render</code> if you&#39;re just doing client-side rendering.</p>
+
+<h3>React Addons</h3>
+
+<p>As previously announced, we&#39;ve <a href="/react/blog/2017/04/07/react-v15.5.0.html#discontinuing-support-for-react-addons">discontinued support for React Addons</a>. We expect the latest version of each addon (except <code>react-addons-perf</code>; see below) to work for the foreseeable future, but we won&#39;t publish additional updates.</p>
+
+<p>Refer to the previous announcement for <a href="/react/blog/2017/04/07/react-v15.5.0.html#discontinuing-support-for-react-addons">suggestions on how to migrate</a>.</p>
+
+<p><code>react-addons-perf</code> no longer works at all in React 16. It&#39;s likely that we&#39;ll release a new version of this tool in the future. In the meantime, you can <a href="/react/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab">use your browser&#39;s performance tools to profile React components</a>.</p>
+
+<h3>Breaking changes</h3>
+
+<p>React 16 includes a number of small breaking changes. These only affect uncommon use cases and we don&#39;t expect them to break most apps.</p>
+
+<ul>
+<li>React 15 had limited, undocumented support for error boundaries using <code>unstable_handleError</code>. This method has been renamed to <code>componentDidCatch</code>. You can use a codemod to <a href="https://github.com/reactjs/react-codemod#error-boundaries">automatically migrate to the new API</a>.</li>
+<li><code>ReactDOM.render</code> and <code>ReactDOM.unstable_renderIntoContainer</code> now return null if called from inside a lifecycle method. To work around this, you can use <a href="https://github.com/facebook/react/issues/10309#issuecomment-318433235">portals</a> or <a href="https://github.com/facebook/react/issues/10309#issuecomment-318434635">refs</a>.</li>
+<li><code>setState</code>:
+
+<ul>
+<li>Calling <code>setState</code> with null no longer triggers an update. This allows you to decide in an updater function if you want to re-render.</li>
+<li>Calling <code>setState</code> directly in render always causes an update. This was not previously the case. Regardless, you should not be calling setState from render.</li>
+<li><code>setState</code> callbacks (second argument) now fire immediately after <code>componentDidMount</code> / <code>componentDidUpdate</code> instead of after all components have rendered.</li>
+</ul></li>
+<li>When replacing <code>&lt;A /&gt;</code> with <code>&lt;B /&gt;</code>,  <code>B.componentWillMount</code> now always happens before  <code>A.componentWillUnmount</code>. Previously, <code>A.componentWillUnmount</code> could fire first in some cases.</li>
+<li>Previously, changing the ref to a component would always detach the ref before that component&#39;s render is called. Now, we change the ref later, when applying the changes to the DOM.</li>
+<li>It is not safe to re-render into a container that was modified by something other than React. This worked previously in some cases but was never supported. We now emit a warning in this case. Instead you should clean up your component trees using <code>ReactDOM.unmountComponentAtNode</code>. <a href="https://github.com/facebook/react/issues/10294#issuecomment-318820987">See this example.</a></li>
+<li><code>componentDidUpdate</code> lifecycle no longer receives <code>prevContext</code> param. (See <a href="https://github.com/facebook/react/issues/8631">#8631</a>)</li>
+<li>Shallow renderer no longer calls <code>componentDidUpdate</code> because DOM refs are not available. This also makes it consistent with <code>componentDidMount</code> (which does not get called in previous versions either).</li>
+<li>Shallow renderer does not implement <code>unstable_batchedUpdates</code> anymore.</li>
+</ul>
+
+<h3>Packaging</h3>
+
+<ul>
+<li>There is no <code>react/lib/*</code> and <code>react-dom/lib/*</code> anymore. Even in CommonJS environments, React and ReactDOM are precompiled to single files (“flat bundles”). If you previously relied on undocumented React internals, and they don’t work anymore, let us know about your specific case in a new issue, and we’ll try to figure out a migration strategy for you.</li>
+<li>There is no <code>react-with-addons.js</code> build anymore. All compatible addons are published separately on npm, and have single-file browser versions if you need them.</li>
+<li>The deprecations introduced in 15.x have been removed from the core package. <code>React.createClass</code> is now available as <code>create-react-class</code>, <code>React.PropTypes</code> as <code>prop-types</code>, <code>React.DOM</code> as <code>react-dom-factories</code>, <code>react-addons-test-utils</code> as <code>react-dom/test-utils</code>, and shallow renderer as <code>react-test-renderer/shallow</code>. See <a href="https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html">15.5.0</a> and <a href="https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html">15.6.0</a> blog posts for instructions on migrating code and automated codemods.</li>
+<li>The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds. For example:
+
+<ul>
+<li><code>react/dist/react.js</code> → <code>react/umd/react.development.js</code></li>
+<li><code>react/dist/react.min.js</code> → <code>react/umd/react.production.min.js</code></li>
+<li><code>react-dom/dist/react-dom.js</code> → <code>react-dom/umd/react-dom.development.js</code></li>
+<li><code>react-dom/dist/react-dom.min</code>.js → <code>react-dom/umd/react-dom.production.min.js</code></li>
+</ul></li>
+</ul>
+
+<h2>JavaScript Environment Requirements</h2>
+
+<p>React 16 depends on the collection types <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map">Map</a> and <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set">Set</a>. If you support older browsers and devices which may not yet provide these natively (e.g. IE &lt; 11), consider including a global polyfill in your bundled application, such as <a href="https://github.com/zloirock/core-js">core-js</a> or <a href="https://babeljs.io/docs/usage/polyfill/">babel-polyfill</a>.</p>
+
+<p>A polyfilled environment for React 16 using core-js to support older browsers might look like:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="kr">import</span> <span class="s1">&#39;core-js/es6/map&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="s1">&#39;core-js/es6/set&#39;</span><span class="p">;</span>
+
+<span class="kr">import</span> <span class="nx">React</span> <span class="nx">from</span> <span class="s1">&#39;react&#39;</span><span class="p">;</span>
+<span class="kr">import</span> <span class="nx">ReactDOM</span> <span class="nx">from</span> <span class="s1">&#39;react-dom&#39;</span><span class="p">;</span>
+
+<span class="nx">ReactDOM</span><span class="p">.</span><span class="nx">render</span><span class="p">(</span>
+  <span class="o">&lt;</span><span class="nx">h1</span><span class="o">&gt;</span><span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!&lt;</span><span class="err">/h1&gt;,</span>
+  <span class="nb">document</span><span class="p">.</span><span class="nx">getElementById</span><span class="p">(</span><span class="s1">&#39;root&#39;</span><span class="p">)</span>
+<span class="p">);</span>
+</code></pre></div>
+<p>React also depends on <code>requestAnimationFrame</code> (even in test environments). A simple shim for test environments would be:</p>
+<div class="highlight"><pre><code class="language-js" data-lang="js"><span class="nx">global</span><span class="p">.</span><span class="nx">requestAnimationFrame</span> <span class="o">=</span> <span class="kd">function</span><span class="p">(</span><span class="nx">callback</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">setTimeout</span><span class="p">(</span><span class="nx">callback</span><span class="p">,</span> <span class="mi">0</span><span class="p">);</span>
+<span class="p">};</span>
+</code></pre></div>
+<h2>Acknowledgments</h2>
+
+<p>As always, this release would not have been possible without our open source contributors. Thanks to everyone who filed bugs, opened PRs, responded to issues, wrote documentation, and more!</p>
+
+<p>Special thanks to our core contributors, especially for their heroic efforts over the past few weeks during the prerelease cycle: <a href="https://twitter.com/aweary">Brandon Dail</a>, <a href="https://twitter.com/monasticpanic">Jason Quense</a>, <a href="https://twitter.com/natehunzaker">Nathan Hunzaker</a>, and <a href="https://twitter.com/xander76">Sasha Aickin</a>.</p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -605,147 +828,6 @@ Minified build for production: <a href="https://unpkg.com/react-dom@15.6.0/dist/
 <li>Remove unnecessary dependency from <code>react-linked-input</code>. (<a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/9766">#9766</a>)</li>
 <li>Point <code>react-addons-(css-)transition-group</code> to the new package. (<a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebook/react/pull/9937">#9937</a>)</li>
 </ul>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2017/05/18/whats-new-in-create-react-app.html">What's New in Create React App</a>
-
-</h1>
-
-<p class="meta">
-  May 18, 2017
-  by
-  
-    
-      <a href="https://twitter.com/dan_abramov">Dan Abramov</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>Less than a year ago, we introduced <a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create React App</a> as an officially supported way to create apps with zero configuration. The project has since enjoyed tremendous growth, with over 950 commits by more than 250 contributors.</p>
-
-<p>Today, we are excited to announce that many features that have been in the pipeline for the last few months are finally released.</p>
-
-<p>As usual with Create React App, <strong>you can enjoy these improvements in your existing non-ejected apps by updating a single dependency</strong> and following our <a href="https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0">migration instructions</a>.</p>
-
-<p>Newly created apps will get these improvements automatically.</p>
-
-<h3>webpack 2</h3>
-
-<blockquote>
-<p><em>This change was contributed by <a href="https://github.com/Timer">@Timer</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/1291">#1291</a>.</em></p>
-</blockquote>
-
-<p>We have upgraded to webpack 2 which has been <a href="https://medium.com/webpack/webpack-2-and-beyond-40520af9067f">officially released</a> a few months ago. It is a big upgrade with many bugfixes and general improvements. We have been testing it for a while, and now consider it stable enough to recommend it to everyone.</p>
-
-<p>While the Webpack configuration format has changed, Create React App users who didn&#39;t eject don&#39;t need to worry about it as we have updated the configuration on our side.</p>
-
-<p>If you had to eject your app for one reason or another, Webpack provides a <a href="https://webpack.js.org/guides/migrating/">configuration migration guide</a> that you can follow to update your apps. Note that with each release of Create React App, we are working to support more use cases out of the box so that you don&#39;t have to eject in the future.</p>
-
-<p>The biggest notable webpack 2 feature is the ability to write and import <a href="http://2ality.com/2014/09/es6-modules-final.html">ES6 modules</a> directly without compiling them to CommonJS. This shouldn’t affect how you write code since you likely already use <code>import</code> and <code>export</code> statements, but it will help catch more mistakes like missing named exports at compile time:</p>
-
-<p><img src='/react/img/blog/cra-update-exports.gif' alt='Export validation' style="max-width:100%"> </p>
-
-<p>In the future, as the ecosystem around ES6 modules matures, you can expect more improvements to your app&#39;s bundle size thanks to <a href="https://webpack.js.org/guides/tree-shaking/">tree shaking</a>.</p>
-
-<h3> Runtime Error Overlay</h3>
-
-<blockquote>
-<p><em>This change was contributed by <a href="https://github.com/Timer">@Timer</a> and <a href="https://github.com/nicinabox">@nicinabox</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/1101">#1101</a>, <a href="https://github.com/bvaughn">@bvaughn</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/2201">#2201</a>.</em></p>
-</blockquote>
-
-<p>Have you ever made a mistake in code and only realized it after the console is flooded with cryptic errors? Or worse, have you ever shipped an app with crashes in production because you accidentally missed an error in development?</p>
-
-<p>To address these issues, we are introducing an overlay that pops up whenever there is an uncaught error in your application. It only appears in development, and you can dismiss it by pressing Escape. </p>
-
-<p>A GIF is worth a thousand words:</p>
-
-<p><img src='/react/img/blog/cra-runtime-error.gif' alt='Runtime error overlay' style="max-width:100%"> </p>
-
-<p>(Yes, it integrates with your editor!)</p>
-
-<p>In the future, we plan to teach the runtime error overlay to understand more about your React app. For example, after React 16 we plan to show React component stacks in addition to the JavaScript stacks when an error is thrown.</p>
-
-<h3>Progressive Web Apps by Default</h3>
-
-<blockquote>
-<p><em>This change was contributed by <a href="https://github.com/jeffposnick">@jeffposnick</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/1728">#1728</a>.</em></p>
-</blockquote>
-
-<p>Newly created projects are built as <a href="https://developers.google.com/web/progressive-web-apps/">Progressive Web Apps</a> by default. This means that they employ <a href="https://developers.google.com/web/fundamentals/getting-started/primers/service-workers">service workers</a> with an <a href="https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook/#cache-falling-back-to-network">offline-first caching strategy</a> to minimize the time it takes to serve the app to the users who visit it again. You can opt out of this behavior, but we recommend it both for new and existing apps, especially if you target mobile devices.</p>
-
-<p><img src='/react/img/blog/cra-pwa.png' alt='Loading assets from service worker' style="max-width:100%"> </p>
-
-<p>New apps automatically have these features, but you can easily convert an existing project to a Progressive Web App  by following <a href="https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0">our migration guide</a>.</p>
-
-<p>We will be adding <a href="https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#making-a-progressive-web-app">more documentation</a> on this topic in the coming weeks. Please feel free to <a href="https://github.com/facebookincubator/create-react-app/issues/new">ask any questions</a> on the issue tracker!</p>
-
-<h3>Jest 20</h3>
-
-<blockquote>
-<p><em>This change was contributed by <a href="https://github.com/rogeliog">@rogeliog</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/1614">#1614</a> and <a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/2171">#2171</a>.</em></p>
-</blockquote>
-
-<p>We are now using the latest version of Jest that includes numerous bugfixes and improvements. You can read more about the changes in <a href="https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html">Jest 19</a> and <a href="http://facebook.github.io/jest/blog/2017/05/06/jest-20-delightful-testing-multi-project-runner.html">Jest 20</a> blog posts.</p>
-
-<p>Highlights include a new <a href="https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#immersive-watch-mode">immersive watch mode</a>, <a href="https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#snapshot-updates">a better snapshot format</a>, <a href="https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#improved-printing-of-skipped-tests">improvements to printing skipped tests</a>, and <a href="https://facebook.github.io/jest/blog/2017/05/06/jest-20-delightful-testing-multi-project-runner.html#new-improved-testing-apis">new testing APIs</a>.</p>
-
-<p><img src='/react/img/blog/cra-jest-search.gif' alt='Immersive test watcher' style="max-width:100%"> </p>
-
-<p>Additionally, Create React App now support configuring a few Jest options related to coverage reporting.</p>
-
-<h3>Code Splitting with Dynamic import()</h3>
-
-<blockquote>
-<p><em>This change was contributed by <a href="https://github.com/Timer">@Timer</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/1538">#1538</a> and <a href="https://github.com/tharakawj">@tharakawj</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/1801">#1801</a>.</em></p>
-</blockquote>
-
-<p>It is important to keep the initial JavaScript payload of web apps down to the minimum, and <a href="https://medium.com/@addyosmani/progressive-web-apps-with-react-js-part-2-page-load-performance-33b932d97cf2">load the rest of the code on demand</a>. Although Create React App supported <a href="https://webpack.js.org/guides/code-splitting-async/">code splitting</a> using <code>require.ensure()</code> since the first release, it used a webpack-specific syntax that did not work in Jest or other environments.</p>
-
-<p>In this release, we are adding support for the <a href="http://2ality.com/2017/01/import-operator.html#loading-code-on-demand">dynamic <code>import()</code> proposal</a> which aligns with the future web standards. Unlike <code>require.ensure()</code>, it doesn&#39;t break Jest tests, and should eventually become a part of JavaScript. We encourage you to use <code>import()</code> to delay loading the code for non-critical component subtrees until you need to render them.</p>
-
-<p><img src='/react/img/blog/cra-dynamic-import.gif' alt='Creating chunks with dynamic import' style="max-width:100%"></p>
-
-<h3>Better Console Output</h3>
-
-<blockquote>
-<p><em>This change was contributed by <a href="https://github.com/gaearon">@gaearon</a> in <a href="https://github.com/facebookincubator/create-react-app/pull/2120">#2120</a>, <a href="https://github.com/facebookincubator/create-react-app/pull/2125">#2125</a>, and <a href="https://github.com/facebookincubator/create-react-app/pull/2161">#2161</a>.</em></p>
-</blockquote>
-
-<p>We have improved the console output across the board.</p>
-
-<p>For example, when you start the development server, we now display the LAN address in additional to the localhost address so that you can quickly access the app from a mobile device on the same network:</p>
-
-<p><img src='/react/img/blog/cra-better-output.png' alt='Better console output' style="max-width:100%"> </p>
-
-<p>When lint errors are reported, we no longer show the warnings so that you can concentrate on more critical issues. Errors and warnings in the production build output are better formatted, and the build error overlay font size now matches the browser font size more closely.</p>
-
-<h3>But Wait... There&#39;s More!</h3>
-
-<p>You can only fit so much in a blog post, but there are other long-requested features in this release, such as <a href="https://github.com/facebookincubator/create-react-app/pull/1344">environment-specific and local <code>.env</code> files</a>, <a href="https://github.com/facebookincubator/create-react-app/pull/2130">a lint rule against confusingly named globals</a>, <a href="https://github.com/facebookincubator/create-react-app/pull/1790">support for multiple proxies in development</a>, <a href="https://github.com/facebookincubator/create-react-app/pull/1590">a customizable browser launch script</a>, and many bugfixes.</p>
-
-<p>You can read the full changelog and the migration guide in the <a href="https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0">v1.0.0 release notes</a>.</p>
-
-<h3>Acknowledgements</h3>
-
-<p>This release is a result of months of work from many people in the React community. It is focused on improving both developer and end user experience, as we believe they are complementary and go hand in hand.</p>
-
-<p>We are grateful to <a href="https://github.com/facebookincubator/create-react-app/graphs/contributors">everyone who has offered their contributions</a>, whether in code, documentation, or by helping other people. We would like to specifically thank <a href="https://github.com/timer">Joe Haddad</a> for his invaluable help maintaining the project.</p>
-
-<p>We are excited to bring these improvements to everybody using Create React App, and we are looking forward to more of your feedback and contributions.</p>
 
 </div>
 

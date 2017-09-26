@@ -37,6 +37,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -64,7 +65,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -104,7 +105,7 @@
 <p>Minified exception occurred; use the non-minified dev environment for the full error message and additional helpful warnings.</p>
 </blockquote>
 
-<p>In order to make debugging in production easier, we&#39;re introducing an Error Code System in <a href="https://github.com/facebook/react/releases/tag/v15.2.0">15.2.0</a>. We developed a <a href="https://github.com/facebook/react/blob/master/scripts/error-codes/gulp-extract-errors.js">gulp script</a> that collects all of our <code>invariant</code> error messages and folds them to a <a href="https://github.com/facebook/react/blob/master/scripts/error-codes/codes.json">JSON file</a>, and at build-time Babel uses the JSON to <a href="https://github.com/facebook/react/blob/master/scripts/error-codes/dev-expression-with-codes.js">rewrite</a> our <code>invariant</code> calls in production to reference the corresponding error IDs. Now when things go wrong in production, the error that React throws will contain a URL with an error ID and relevant information. The URL will point you to a page in our documentation where the original error message gets reassembled.</p>
+<p>In order to make debugging in production easier, we&#39;re introducing an Error Code System in <a href="https://github.com/facebook/react/releases/tag/v15.2.0">15.2.0</a>. We developed a <a href="https://github.com/facebook/react/blob/master/scripts/error-codes/gulp-extract-errors.js">gulp script</a> that collects all of our <code>invariant</code> error messages and folds them to a <a href="https://github.com/facebook/react/blob/master/scripts/error-codes/codes.json">JSON file</a>, and at build-time Babel uses the JSON to <a href="https://github.com/facebook/react/blob/master/scripts/error-codes/replace-invariant-error-codes.js">rewrite</a> our <code>invariant</code> calls in production to reference the corresponding error IDs. Now when things go wrong in production, the error that React throws will contain a URL with an error ID and relevant information. The URL will point you to a page in our documentation where the original error message gets reassembled.</p>
 
 <p>While we hope you don&#39;t see errors often, you can see how it works <a href="/react/docs/error-decoder.html?invariant=109&amp;args%5B%5D=Foo">here</a>. This is what the same error from above will look like:</p>
 
@@ -126,6 +127,8 @@
     <h3>Recent posts</h3>
     <ul>
       
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
+      
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
         <li><a href="/react/blog/2017/09/08/dom-attributes-in-react-16.html">DOM Attributes in React 16</a></li>
@@ -143,8 +146,6 @@
         <li><a href="/react/blog/2016/09/28/our-first-50000-stars.html">Our First 50,000 Stars</a></li>
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
-      
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>

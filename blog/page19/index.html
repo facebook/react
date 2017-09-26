@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,146 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2013/12/30/community-roundup-13.html">Community Round-up #13</a>
+
+</h1>
+
+<p class="meta">
+  December 30, 2013
+  by
+  
+    
+      <a href="https://twitter.com/vjeux">Vjeux</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>Happy holidays! This blog post is a little-late Christmas present for all the React users. Hopefully it will inspire you to write awesome web apps in 2014!</p>
+
+<h2>React Touch</h2>
+
+<p><a href="http://www.petehunt.net/">Pete Hunt</a> wrote three demos showing that React can be used to run 60fps native-like experiences on mobile web. A frosted glass effect, an image gallery with 3d animations and an infinite scroll view.</p>
+
+<figure><iframe src="//player.vimeo.com/video/79659941" width="100%" height="400" frameborder="0" webkitallowfullscreen mozallowfullscreen allowfullscreen></iframe></figure>
+
+<p><a href="https://petehunt.github.io/react-touch/">Try out the demos!</a></p>
+
+<h2>Introduction to React</h2>
+
+<p><a href="http://www.phpied.com/">Stoyan Stefanov</a> talked at Joe Dev On Tech about React. He goes over all the features of the library and ends with a concrete example.</p>
+
+<figure><iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe></figure>
+
+<h2>JSX: E4X The Good Parts</h2>
+
+<p>JSX is often compared to the now defunct E4X, <a href="http://blog.vjeux.com/">Vjeux</a> went over all the E4X features and explained how JSX is different and hopefully doesn&#39;t repeat the same mistakes.</p>
+
+<blockquote>
+<p>E4X (ECMAScript for XML) is a JavaScript syntax extension and a runtime to manipulate XML. It was promoted by Mozilla but failed to become mainstream and is now deprecated. JSX was inspired by E4X. In this article, I&#39;m going to go over all the features of E4X and explain the design decisions behind JSX.</p>
+
+<p><strong>Historical Context</strong></p>
+
+<p>E4X has been created in 2002 by John Schneider. This was the golden age of XML where it was being used for everything: data, configuration files, code, interfaces (DOM) ... E4X was first implemented inside of Rhino, a JavaScript implementation from Mozilla written in Java.</p>
+
+<p><a href="http://blog.vjeux.com/2013/javascript/jsx-e4x-the-good-parts.html">Continue reading ...</a></p>
+</blockquote>
+
+<h2>React + Socket.io</h2>
+
+<p><a href="http://enome.be/nl">Geert Pasteels</a> made a small experiment with Socket.io. He wrote a very small mixin that synchronizes React state with the server. Just include this mixin to your React component and it is now live!</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">changeHandler</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">data</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_</span><span class="p">.</span><span class="nx">isEqual</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">)</span> <span class="o">&amp;&amp;</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">===</span> <span class="nx">data</span><span class="p">.</span><span class="nx">path</span><span class="p">)</span> <span class="p">{</span>
+    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">data</span><span class="p">.</span><span class="nx">state</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">},</span>
+<span class="nx">componentDidMount</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">root</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">this</span><span class="p">.</span><span class="nx">path</span> <span class="o">=</span> <span class="nx">utils</span><span class="p">.</span><span class="nx">nodePath</span><span class="p">(</span><span class="nx">root</span><span class="p">);</span>
+  <span class="nx">socket</span><span class="p">.</span><span class="nx">on</span><span class="p">(</span><span class="s1">&#39;component-change&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">changeHandler</span><span class="p">);</span>
+<span class="p">},</span>
+<span class="nx">componentWillUpdate</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">props</span><span class="p">,</span> <span class="nx">state</span><span class="p">)</span> <span class="p">{</span>
+  <span class="nx">socket</span><span class="p">.</span><span class="nx">emit</span><span class="p">(</span><span class="s1">&#39;component-change&#39;</span><span class="p">,</span> <span class="p">{</span> <span class="nx">path</span><span class="o">:</span> <span class="k">this</span><span class="p">.</span><span class="nx">path</span><span class="p">,</span> <span class="nx">state</span><span class="o">:</span> <span class="nx">state</span> <span class="p">});</span>
+<span class="p">},</span>
+<span class="nx">componentWillUnmount</span><span class="o">:</span> <span class="kd">function</span> <span class="p">()</span> <span class="p">{</span>
+  <span class="nx">socket</span><span class="p">.</span><span class="nx">removeListener</span><span class="p">(</span><span class="s1">&#39;component-change&#39;</span><span class="p">,</span> <span class="k">this</span><span class="p">.</span><span class="nx">change</span><span class="p">);</span>
+<span class="p">}</span>
+</code></pre></div>
+<p><a href="https://github.com/Enome/react.io">Check it out on GitHub...</a></p>
+
+<h2>cssobjectify</h2>
+
+<p><a href="http://andreypopp.com/">Andrey Popp</a> implemented a source transform that takes a CSS file and converts it to JSON. This integrates pretty nicely with React.</p>
+<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/* style.css */</span>
+<span class="nx">MyComponent</span> <span class="p">{</span>
+  <span class="nx">font</span><span class="o">-</span><span class="nx">size</span><span class="o">:</span> <span class="mi">12</span><span class="nx">px</span><span class="p">;</span>
+  <span class="nx">background</span><span class="o">-</span><span class="nx">color</span><span class="o">:</span> <span class="nx">red</span><span class="p">;</span>
+<span class="p">}</span>
+
+<span class="cm">/* myapp.js */</span>
+<span class="kd">var</span> <span class="nx">React</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-tools/build/modules/React&#39;</span><span class="p">);</span>
+<span class="kd">var</span> <span class="nx">Styles</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;./styles.css&#39;</span><span class="p">);</span>
+
+<span class="kd">var</span> <span class="nx">MyComponent</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
+  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
+    <span class="k">return</span> <span class="p">(</span>
+      <span class="o">&lt;</span><span class="nx">div</span> <span class="nx">style</span><span class="o">=</span><span class="p">{</span><span class="nx">Styles</span><span class="p">.</span><span class="nx">MyComponent</span><span class="p">}</span><span class="o">&gt;</span>
+        <span class="nx">Hello</span><span class="p">,</span> <span class="nx">world</span><span class="o">!</span>
+      <span class="o">&lt;</span><span class="err">/div&gt;</span>
+    <span class="p">)</span>
+  <span class="p">}</span>
+<span class="p">});</span>
+</code></pre></div>
+<p><a href="https://github.com/andreypopp/cssobjectify">Check it out on GitHub...</a></p>
+
+<h2>ngReact</h2>
+
+<p><a href="http://davidandsuzi.com/">David Chang</a> working at <a href="http://www.hasoffers.com/">HasOffer</a> wanted to speed up his Angular app and replaced Angular primitives by React at different layers. When using React naively it is 67% faster, but when combining it with angular&#39;s transclusion it is 450% slower.</p>
+
+<blockquote>
+<p>Rendering this takes 803ms for 10 iterations, hovering around 35 and 55ms for each data reload (that&#39;s 67% faster). You&#39;ll notice that the first load takes a little longer than successive loads, and the second load REALLY struggles - here, it&#39;s 433ms, which is more than half of the total time!
+<figure><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/"><img src="/react/img/blog/ngreact.png" alt=""></a></figure></p>
+
+<p><a href="http://davidandsuzi.com/ngreact-react-components-in-angular/">Read the full article...</a></p>
+</blockquote>
+
+<h2>vim-jsx</h2>
+
+<p><a href="https://github.com/mxw">Max Wang</a> made a vim syntax highlighting and indentation plugin for vim.</p>
+
+<blockquote>
+<p>Syntax highlighting and indenting for JSX. JSX is a JavaScript syntax transformer which translates inline XML document fragments into JavaScript objects. It was developed by Facebook alongside React.</p>
+
+<p>This bundle requires pangloss&#39;s <a href="https://github.com/pangloss/vim-javascript">vim-javascript</a> syntax highlighting.</p>
+
+<p>Vim support for inline XML in JS is remarkably similar to the same for PHP.</p>
+
+<p><a href="https://github.com/mxw/vim-jsx">View on GitHub...</a></p>
+</blockquote>
+
+<h2>Random Tweet</h2>
+
+<p><center><blockquote class="twitter-tweet" lang="en"><p>I may be starting to get annoying with this, but ReactJS is really exciting. I truly feel the virtual DOM is a game changer.</p>&mdash; Eric Florenzano (@ericflo) <a href="https://twitter.com/ericflo/statuses/413842834974732288">December 20, 2013</a></blockquote></center></p>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -454,160 +589,6 @@ Is this some sort of template language? Specifically no. This might have been th
 
 <p><img src="/react/img/blog/steve_reverse.gif" style="float: right;" />
 <div style="width: 320px;"><blockquote class="twitter-tweet"><p>I think this reversed gif of Steve Urkel best describes my changing emotions towards the React Lib <a href="http://t.co/JoX0XqSXX3">http://t.co/JoX0XqSXX3</a></p>&mdash; Ryan Seddon (@ryanseddon) <a href="https://twitter.com/ryanseddon/statuses/398572848802852864">November 7, 2013</a></blockquote></div></p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2013/11/06/community-roundup-10.html">Community Round-up #10</a>
-
-</h1>
-
-<p class="meta">
-  November  6, 2013
-  by
-  
-    
-      <a href="https://twitter.com/vjeux">Vjeux</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p>This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.</p>
-
-<p>The best part is that no drastic changes have been required to support all those use cases. Most of the efforts were targeted at polishing edge cases, performance improvements, and documentation.</p>
-
-<h2>Khan Academy - Officially moving to React</h2>
-
-<p><a href="http://joelburget.com/">Joel Burget</a> announced at Hack Reactor that new front-end code at Khan Academy should be written in React!</p>
-
-<blockquote>
-<p>How did we get the rest of the team to adopt React? Using interns as an attack vector! Most full-time devs had already been working on their existing projects for a while and weren&#39;t looking to try something new at the time, but our class of summer interns was just arriving. For whatever reason, a lot of them decided to try React for their projects. Then mentors became exposed through code reviews or otherwise touching the new code. In this way React knowledge diffused to almost the whole team over the summer.</p>
-
-<p>Since the first React checkin on June 5, we&#39;ve somehow managed to accumulate 23500 lines of jsx (React-flavored js) code. Which is terrifying in a way - that&#39;s a lot of code - but also really exciting that it was picked up so quickly.</p>
-
-<p>We held three meetings about how we should proceed with React. At the first two we decided to continue experimenting with React and deferred a final decision on whether to adopt it. At the third we adopted the policy that new code should be written in React.</p>
-
-<p>I&#39;m excited that we were able to start nudging code quality forward. However, we still have a lot of work to do! One of the selling points of this transition is adopting a uniform frontend style. We&#39;re trying to upgrade all the code from (really old) pure jQuery and (regular old) Backbone views / Handlebars to shiny React. At the moment all we&#39;ve done is introduce more fragmentation. We won&#39;t be gratuitously updating working code (if it ain&#39;t broke, don&#39;t fix it), but are seeking out parts of the codebase where we can shoot two birds with one stone by rewriting in React while fixing bugs or adding functionality.</p>
-
-<p><a href="http://joelburget.com/backbone-to-react/">Read the full article</a></p>
-</blockquote>
-
-<h2>React: Rethinking best practices</h2>
-
-<p><a href="http://www.petehunt.net/">Pete Hunt</a>&#39;s talk at JSConf EU 2013 is now available in video.</p>
-
-<figure><iframe width="100%" height="370" src="//www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe></figure>
-
-<h2>Server-side React with PHP</h2>
-
-<p><a href="http://www.phpied.com/">Stoyan Stefanov</a>&#39;s series of articles on React has two new entries on how to execute React on the server to generate the initial page load.</p>
-
-<blockquote>
-<p>This post is an initial hack to have React components render server-side in PHP.</p>
-
-<ul>
-<li>Problem: Build web UIs</li>
-<li>Solution: React</li>
-<li>Problem: UI built in JS is anti-SEO (assuming search engines are still noscript) and bad for perceived performance (blank page till JS arrives)</li>
-<li>Solution: <a href="https://github.com/facebook/react-page">React page</a> to render the first view</li>
-<li>Problem: Can&#39;t host node.js apps / I have tons of PHP code</li>
-<li>Solution: Use PHP then!</li>
-</ul>
-
-<p><a href="http://www.phpied.com/server-side-react-with-php/"><strong>Read part 1 ...</strong></a></p>
-
-<p><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><strong>Read part 2 ...</strong></a></p>
-
-<p>Rendered markup on the server:
-<figure><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><img src="/react/img/blog/react-php.png" alt=""></a></figure></p>
-</blockquote>
-
-<h2>TodoMVC Benchmarks</h2>
-
-<p>Webkit has a <a href="https://github.com/WebKit/webkit/tree/master/PerformanceTests/DoYouEvenBench">TodoMVC Benchmark</a> that compares different frameworks. They recently included React and here are the results (average of 10 runs in Chrome 30):</p>
-
-<ul>
-<li><strong>AngularJS:</strong> 4043ms</li>
-<li><strong>AngularJSPerf:</strong> 3227ms</li>
-<li><strong>BackboneJS:</strong> 1874ms</li>
-<li><strong>EmberJS:</strong> 6822ms</li>
-<li><strong>jQuery:</strong> 14628ms</li>
-<li><strong>React:</strong> 2864ms</li>
-<li><strong>VanillaJS:</strong> 5567ms</li>
-</ul>
-
-<p><a href="http://www.petehunt.net/react/tastejs/benchmark.html">Try it yourself!</a></p>
-
-<p>Please don&#39;t take those numbers too seriously, they only reflect one very specific use case and are testing code that wasn&#39;t written with performance in mind.</p>
-
-<p>Even though React scores as one of the fastest frameworks in the benchmark, the React code is simple and idiomatic. The only performance tweak used is the following function:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="cm">/**</span>
-<span class="cm"> * This is a completely optional performance enhancement that you can implement</span>
-<span class="cm"> * on any React component. If you were to delete this method the app would still</span>
-<span class="cm"> * work correctly (and still be very performant!), we just use it as an example</span>
-<span class="cm"> * of how little code it takes to get an order of magnitude performance improvement.</span>
-<span class="cm"> */</span>
-<span class="nx">shouldComponentUpdate</span><span class="o">:</span> <span class="kd">function</span> <span class="p">(</span><span class="nx">nextProps</span><span class="p">,</span> <span class="nx">nextState</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">todo</span><span class="p">.</span><span class="nx">id</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">todo</span><span class="p">.</span><span class="nx">id</span> <span class="o">||</span>
-    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">todo</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">todo</span> <span class="o">||</span>
-    <span class="nx">nextProps</span><span class="p">.</span><span class="nx">editing</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">editing</span> <span class="o">||</span>
-    <span class="nx">nextState</span><span class="p">.</span><span class="nx">editText</span> <span class="o">!==</span> <span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">editText</span>
-  <span class="p">);</span>
-<span class="p">},</span>
-</code></pre></div>
-<p>By default, React &quot;re-renders&quot; all the components when anything changes. This is usually fast enough that you don&#39;t need to care. However, you can provide a function that can tell whether there will be any change based on the previous and next states and props. If it is faster than re-rendering the component, then you get a performance improvement.</p>
-
-<p>The fact that you can control when components are rendered is a very important characteristic of React as it gives you control over its performance. We are going to talk more about performance in the future, stay tuned.</p>
-
-<h2>Guess the filter</h2>
-
-<p><a href="http://conr.me">Connor McSheffrey</a> implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
-<figure><a href="http://guessthefilter.com/"><img src="/react/img/blog/guess_filter.jpg" alt=""></a></figure></p>
-
-<h2>React vs FruitMachine</h2>
-
-<p><a href="http://trib.tv/">Andrew Betts</a>, director of the <a href="http://labs.ft.com/">Financial Times Labs</a>, posted an article comparing <a href="https://github.com/ftlabs/fruitmachine">FruitMachine</a> and React.</p>
-
-<blockquote>
-<p>Eerily similar, no? Maybe Facebook was inspired by Fruit Machine (after all, we got there first), but more likely, it just shows that this is a pretty decent way to solve the problem, and great minds think alike. We&#39;re graduating to a third phase in the evolution of web best practice - from intermingling of markup, style and behaviour, through a phase in which those concerns became ever more separated and encapsulated, and finally to a model where we can do that separation at a component level. Developments like Web Components show the direction the web community is moving, and frameworks like React and Fruit Machine are in fact not a lot more than polyfills for that promised behaviour to come.</p>
-
-<p><a href="http://labs.ft.com/2013/10/client-side-layout-engines-react-vs-fruitmachine/">Read the full article...</a></p>
-</blockquote>
-
-<p>Even though we weren&#39;t inspired by FruitMachine (React has been used in production since before FruitMachine was open sourced), it&#39;s great to see similar technologies emerging and becoming popular.</p>
-
-<h2>React Brunch</h2>
-
-<p><a href="http://elucidata.net/">Matthew McCray</a> implemented <a href="https://npmjs.org/package/react-brunch">react-brunch</a>, a JSX compilation step for <a href="http://brunch.io/">Brunch</a>.</p>
-
-<blockquote>
-<p>Adds React support to brunch by automatically compiling <code>*.jsx</code> files.</p>
-
-<p>You can configure react-brunch to automatically insert a react header (<code>/** @jsx React.DOM */</code>) into all <code>*.jsx</code> files. Disabled by default.</p>
-
-<p>Install the plugin via npm with <code>npm install --save react-brunch</code>.</p>
-
-<p><a href="https://npmjs.org/package/react-brunch">Read more...</a></p>
-</blockquote>
-
-<h2>Random Tweet</h2>
-
-<p>I&#39;m going to start adding a tweet at the end of each round-up. We&#39;ll start with this one:</p>
-
-<blockquote class="twitter-tweet"><p>This weekend <a href="https://twitter.com/search?q=%23angular&amp;src=hash">#angular</a> died for me. Meet new king <a href="https://twitter.com/search?q=%23reactjs&amp;src=hash">#reactjs</a></p>&mdash; Eldar Djafarov &#x30C3; (@edjafarov) <a href="https://twitter.com/edjafarov/statuses/397033796710961152">November 3, 2013</a></blockquote>
 
 </div>
 

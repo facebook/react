@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -74,7 +75,17 @@
   <div class="inner-content">
     <h1>Refs Must Have Owner Warning</h1>
     <div class="subHeader"></div>
-    <p>You are probably here because you got the following error messages:</p>
+    <p>You are probably here because you got one of the following error messages:</p>
+
+<p><em>React 16.0.0+</em></p>
+
+<blockquote>
+<p>Warning:</p>
+
+<p>Element ref was specified as a string (myRefName) but no owner was set. You may have multiple copies of React loaded. (details: https://fb.me/react-refs-must-have-owner).</p>
+</blockquote>
+
+<p><em>earlier versions of React</em></p>
 
 <blockquote>
 <p>Warning:</p>

@@ -36,6 +36,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -63,7 +64,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -75,6 +76,8 @@
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -94,14 +97,190 @@
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
       
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
-      
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
   </div>
 </div>
 
   <div class="inner-content">
+    
+      <div class="post-list-item">
+        
+
+<h1>
+
+  <a href="/react/blog/2014/10/28/react-v0.12.html">React v0.12</a>
+
+</h1>
+
+<p class="meta">
+  October 28, 2014
+  by
+  
+    
+      <a href="https://twitter.com/zpao">Paul O’Shannessy</a>
+    
+    
+  
+</p>
+
+<hr>
+
+<div class="post">
+  <p>We&#39;re happy to announce the availability of React v0.12! After over a week of baking as the release candidate, we uncovered and fixed a few small issues. Thanks to all of you who upgraded and gave us feedback!</p>
+
+<p>We have talked a lot about some of the bigger changes in this release. <a href="/react/blog/2014/10/14/introducing-react-elements.html">We introduced new terminology</a> and changed APIs to clean up and simplify some of the concepts of React. <a href="/react/blog/2014/10/16/react-v0.12-rc1.html">We also made several changes to JSX</a> and deprecated a few functions. We won&#39;t go into depth about these changes again but we encourage you to read up on these changes in the linked posts. We&#39;ll summarize these changes and discuss some of the other changes and how they may impact you below. As always, a full changelog is also included below.</p>
+
+<p>The release is available for download:</p>
+
+<ul>
+<li><strong>React</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-0.12.0.js">https://fb.me/react-0.12.0.js</a><br>
+Minified build for production: <a href="https://fb.me/react-0.12.0.min.js">https://fb.me/react-0.12.0.min.js</a><br></li>
+<li><strong>React with Add-Ons</strong><br>
+Dev build with warnings: <a href="https://fb.me/react-with-addons-0.12.0.js">https://fb.me/react-with-addons-0.12.0.js</a><br>
+Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0.min.js">https://fb.me/react-with-addons-0.12.0.min.js</a><br></li>
+<li><strong>In-Browser JSX transformer</strong><br>
+<a href="https://fb.me/JSXTransformer-0.12.0.js">https://fb.me/JSXTransformer-0.12.0.js</a></li>
+</ul>
+
+<p>We&#39;ve also published version <code>0.12.0</code> of the <code>react</code> and <code>react-tools</code> packages on npm and the <code>react</code> package on bower.</p>
+
+<h2>New Terminology &amp; Updated APIs</h2>
+
+<p>v0.12 is bringing about some new terminology. <a href="/react/blog/2014/10/14/introducing-react-elements.html">We introduced</a> this 2 weeks ago and we&#39;ve also documented it in <a href="/react/docs/glossary.html">a new section of the documentation</a>. As a part of this, we also corrected many of our top-level APIs to align with the terminology. <code>Component</code> has been removed from all of our <code>React.render*</code> methods. While at one point the argument you passed to these functions was called a Component, it no longer is. You are passing ReactElements. To align with <code>render</code> methods in your component classes, we decided to keep the top-level functions short and sweet. <code>React.renderComponent</code> is now <code>React.render</code>.</p>
+
+<p>We also corrected some other misnomers. <code>React.isValidComponent</code> actually determines if the argument is a ReactElement, so it has been renamed to <code>React.isValidElement</code>. In the same vein, <code>React.PropTypes.component</code> is now <code>React.PropTypes.element</code> and <code>React.PropTypes.renderable</code> is now <code>React.PropTypes.node</code>.</p>
+
+<p>The old methods will still work but will warn upon first use. They will be removed in v0.13.</p>
+
+<h2>JSX Changes</h2>
+
+<p><a href="/react/blog/2014/10/16/react-v0.12-rc1.html#jsx-changes">We talked more in depth about these before</a>, so here are the highlights.</p>
+
+<ul>
+<li>No more <code>/** @jsx React.DOM */</code>!</li>
+<li>We no longer transform to a straight function call. <code>&lt;Component/&gt;</code> now becomes <code>React.createElement(Component)</code></li>
+<li>DOM components don&#39;t make use of <code>React.DOM</code>, instead we pass the tag name directly. <code>&lt;div/&gt;</code> becomes <code>React.createElement(&#39;div&#39;)</code></li>
+<li>We introduced spread attributes as a quick way to transfer props.</li>
+</ul>
+
+<h2>DevTools Improvements, No More <code>__internals</code></h2>
+
+<p>For months we&#39;ve gotten complaints about the React DevTools message. It shouldn&#39;t have logged the up-sell message when you were already using the DevTools. Unfortunately this was because the way we implemented these tools resulted in the DevTools knowing about React, but not the reverse. We finally gave this some attention and enabled React to know if the DevTools are installed. We released an update to the devtools several weeks ago making this possible. Extensions in Chrome should auto-update so you probably already have the update installed!</p>
+
+<p>As a result of this update, we no longer need to expose several internal modules to the world. If you were taking advantage of this implementation detail, your code will break. <code>React.__internals</code> is no more.</p>
+
+<h2>License Change - BSD</h2>
+
+<p>We updated the license on React to the BSD 3-Clause license with an explicit patent grant. Previously we used the Apache 2 license. These licenses are very similar and our extra patent grant is equivalent to the grant provided in the Apache license. You can still use React with the confidence that we have granted the use of any patents covering it. This brings us in line with the same licensing we use across the majority of our open source projects at Facebook.</p>
+
+<p>You can read the full text of the <a href="https://github.com/facebook/react/blob/master/LICENSE">LICENSE</a> and <a href="https://github.com/facebook/react/blob/master/PATENTS"><code>PATENTS</code></a> files on GitHub.</p>
+
+<hr>
+
+<h2>Changelog</h2>
+
+<h3>React Core</h3>
+
+<h4>Breaking Changes</h4>
+
+<ul>
+<li><code>key</code> and <code>ref</code> moved off props object, now accessible on the element directly</li>
+<li>React is now BSD licensed with accompanying Patents grant</li>
+<li>Default prop resolution has moved to Element creation time instead of mount time, making them effectively static</li>
+<li><code>React.__internals</code> is removed - it was exposed for DevTools which no longer needs access</li>
+<li>Composite Component functions can no longer be called directly - they must be wrapped with <code>React.createFactory</code> first. This is handled for you when using JSX.</li>
+</ul>
+
+<h4>New Features</h4>
+
+<ul>
+<li>Spread operator (<code>{...}</code>) introduced to deprecate <code>this.transferPropsTo</code></li>
+<li>Added support for more HTML attributes: <code>acceptCharset</code>, <code>classID</code>, <code>manifest</code></li>
+</ul>
+
+<h4>Deprecations</h4>
+
+<ul>
+<li><code>React.renderComponent</code> --&gt; <code>React.render</code></li>
+<li><code>React.renderComponentToString</code> --&gt; <code>React.renderToString</code></li>
+<li><code>React.renderComponentToStaticMarkup</code> --&gt; <code>React.renderToStaticMarkup</code></li>
+<li><code>React.isValidComponent</code> --&gt; <code>React.isValidElement</code></li>
+<li><code>React.PropTypes.component</code> --&gt; <code>React.PropTypes.element</code></li>
+<li><code>React.PropTypes.renderable</code> --&gt; <code>React.PropTypes.node</code></li>
+<li><strong>DEPRECATED</strong> <code>React.isValidClass</code></li>
+<li><strong>DEPRECATED</strong> <code>instance.transferPropsTo</code></li>
+<li><strong>DEPRECATED</strong> Returning <code>false</code> from event handlers to preventDefault</li>
+<li><strong>DEPRECATED</strong> Convenience Constructor usage as function, instead wrap with <code>React.createFactory</code></li>
+<li><strong>DEPRECATED</strong> use of <code>key={null}</code> to assign implicit keys</li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Better handling of events and updates in nested results, fixing value restoration in &quot;layered&quot; controlled components</li>
+<li>Correctly treat <code>event.getModifierState</code> as case sensitive</li>
+<li>Improved normalization of <code>event.charCode</code></li>
+<li>Better error stacks when involving autobound methods</li>
+<li>Removed DevTools message when the DevTools are installed</li>
+<li>Correctly detect required language features across browsers</li>
+<li>Fixed support for some HTML attributes:
+
+<ul>
+<li><code>list</code> updates correctly now</li>
+<li><code>scrollLeft</code>, <code>scrollTop</code> removed, these should not be specified as props</li>
+</ul></li>
+<li>Improved error messages</li>
+</ul>
+
+<h3>React With Addons</h3>
+
+<h4>New Features</h4>
+
+<ul>
+<li><code>React.addons.batchedUpdates</code> added to API for hooking into update cycle</li>
+</ul>
+
+<h4>Breaking Changes</h4>
+
+<ul>
+<li><code>React.addons.update</code> uses <code>assign</code> instead of <code>copyProperties</code> which does <code>hasOwnProperty</code> checks. Properties on prototypes will no longer be updated correctly.</li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>Fixed some issues with CSS Transitions</li>
+</ul>
+
+<h3>JSX</h3>
+
+<h4>Breaking Changes</h4>
+
+<ul>
+<li>Enforced convention: lower case tag names are always treated as HTML tags, upper case tag names are always treated as composite components</li>
+<li>JSX no longer transforms to simple function calls</li>
+</ul>
+
+<h4>New Features</h4>
+
+<ul>
+<li><code>@jsx React.DOM</code> no longer required</li>
+<li>spread (<code>{...}</code>) operator introduced to allow easier use of props</li>
+</ul>
+
+<h4>Bug Fixes</h4>
+
+<ul>
+<li>JSXTransformer: Make sourcemaps an option when using APIs directly (eg, for react-rails)</li>
+</ul>
+
+</div>
+
+
+
+      </div>
     
       <div class="post-list-item">
         
@@ -651,313 +830,6 @@ Minified build for production: <a href="https://fb.me/react-with-addons-0.12.0-r
 <span class="p">};</span>
 </code></pre></div>
 <p>This upcoming release is a stepping stone to make it as easy as this. Thanks for your support.</p>
-
-</div>
-
-
-
-      </div>
-    
-      <div class="post-list-item">
-        
-
-<h1>
-
-  <a href="/react/blog/2014/09/24/testing-flux-applications.html">Testing Flux Applications</a>
-
-</h1>
-
-<p class="meta">
-  September 24, 2014
-  by
-  
-    
-      <a href="https://twitter.com/fisherwebdev">Bill Fisher</a>
-    
-    
-  
-</p>
-
-<hr>
-
-<div class="post">
-  <p><strong>A more up-to-date version of this post is available as part of the <a href="https://facebook.github.io/flux/docs/testing-flux-applications.html">Flux documentation</a>.</strong></p>
-
-<p><a href="https://facebook.github.io/flux/">Flux</a> is the application architecture that Facebook uses to build web applications with <a href="/react/">React</a>. It&#39;s based on a unidirectional data flow. In previous blog posts and documentation articles, we&#39;ve shown the <a href="https://facebook.github.io/flux/docs/overview.html">basic structure and data flow</a>, more closely examined the <a href="/react/blog/2014/07/30/flux-actions-and-the-dispatcher.html">dispatcher and action creators</a>, and shown how to put it all together with a <a href="https://facebook.github.io/flux/docs/todo-list.html">tutorial</a>. Now let&#39;s look at how to do formal unit testing of Flux applications with <a href="https://facebook.github.io/jest/">Jest</a>, Facebook&#39;s auto-mocking testing framework.</p>
-
-<h2>Testing with Jest</h2>
-
-<p>For a unit test to operate on a truly isolated <em>unit</em> of the application, we need to mock every module except the one we are testing. Jest makes the mocking of other parts of a Flux application trivial. To illustrate testing with Jest, we&#39;ll return to our <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc">example TodoMVC application</a>.</p>
-
-<p>The first steps toward working with Jest are as follows:</p>
-
-<ol>
-<li>Get the module dependencies for the application installed by running <code>npm install</code>.</li>
-<li>Create a directory <code>__tests__/</code> with a test file, in this case TodoStore-test.js</li>
-<li>Run <code>npm install jest-cli —save-dev</code></li>
-<li>Add the following to your package.json</li>
-</ol>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="p">{</span>
-  <span class="p">...</span>
-  <span class="s2">&quot;scripts&quot;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="s2">&quot;test&quot;</span><span class="o">:</span> <span class="s2">&quot;jest&quot;</span>
-  <span class="p">}</span>
-  <span class="p">...</span>
-<span class="p">}</span>
-</code></pre></div>
-<p>Now you&#39;re ready to run your tests from the command line with <code>npm test</code>.</p>
-
-<p>By default, all modules are mocked, so the only boilerplate we need in TodoStore-test.js is a declarative call to Jest&#39;s <code>dontMock()</code> method.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;TodoStore&#39;</span><span class="p">);</span>
-</code></pre></div>
-<p>This tells Jest to let TodoStore be a real object with real, live methods. Jest will mock all other objects involved with the test.</p>
-
-<h2>Testing Stores</h2>
-
-<p>At Facebook, Flux stores often receive a great deal of formal unit test coverage, as this is where the application state and logic lives. Stores are arguably the most important place in a Flux application to provide coverage, but at first glance, it&#39;s not entirely obvious how to test them.</p>
-
-<p>By design, stores can&#39;t be modified from the outside. They have no setters. The only way new data can enter a store is through the callback it registers with the dispatcher.</p>
-
-<p>We therefore need to simulate the Flux data flow with this <em>one weird trick</em>.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">mockRegister</span> <span class="o">=</span> <span class="nx">MyDispatcher</span><span class="p">.</span><span class="nx">register</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">mockRegisterInfo</span> <span class="o">=</span> <span class="nx">mockRegister</span><span class="p">.</span><span class="nx">mock</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">callsToRegister</span> <span class="o">=</span> <span class="nx">mockRegisterInfo</span><span class="p">.</span><span class="nx">calls</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">firstCall</span> <span class="o">=</span> <span class="nx">callsToRegister</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="kd">var</span> <span class="nx">firstArgument</span> <span class="o">=</span> <span class="nx">firstCall</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-<span class="kd">var</span> <span class="nx">callback</span> <span class="o">=</span> <span class="nx">firstArgument</span><span class="p">;</span>
-</code></pre></div>
-<p>We now have the store&#39;s registered callback, the sole mechanism by which data can enter the store.</p>
-
-<p>For folks new to Jest, or mocks in general, it might not be entirely obvious what is happening in that code block, so let&#39;s look at each part of it a bit more closely. We start out by looking at the <code>register()</code> method of our application&#39;s dispatcher — the method that the store uses to register its callback with the dispatcher. The dispatcher has been thoroughly mocked automatically by Jest, so we can get a reference to the mocked version of the <code>register()</code> method just as we would normally refer to that method in our production code. But we can get additional information about that method with the <code>mock</code> <em>property</em> of that method. We don&#39;t often think of methods having properties, but in Jest, this idea is vital. Every method of a mocked object has this property, and it allows us to examine how the method is being called during the test. A chronologically ordered list of calls to <code>register()</code> is available with the <code>calls</code> property of <code>mock</code>, and each of these calls has a list of the arguments that were used in each method call.</p>
-
-<p>So in this code, we are really saying, &quot;Give me a reference to the first argument of the first call to MyDispatcher&#39;s <code>register()</code> method.&quot; That first argument is the store&#39;s callback, so now we have all we need to start testing.  But first, we can save ourselves some semicolons and roll all of this into a single line:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">callback</span> <span class="o">=</span> <span class="nx">MyDispatcher</span><span class="p">.</span><span class="nx">register</span><span class="p">.</span><span class="nx">mock</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span>
-</code></pre></div>
-<p>We can invoke that callback whenever we like, independent of our application&#39;s dispatcher or action creators. We will, in fact, fake the behavior of the dispatcher and action creators by invoking the callback with an action that we&#39;ll create directly in our test.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">payload</span> <span class="o">=</span> <span class="p">{</span>
-  <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;VIEW_ACTION&#39;</span><span class="p">,</span>
-  <span class="nx">action</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">actionType</span><span class="o">:</span> <span class="nx">TodoConstants</span><span class="p">.</span><span class="nx">TODO_CREATE</span><span class="p">,</span>
-    <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;foo&#39;</span>
-  <span class="p">}</span>
-<span class="p">};</span>
-<span class="nx">callback</span><span class="p">(</span><span class="nx">payload</span><span class="p">);</span>
-<span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-<span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">all</span><span class="p">);</span>
-<span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">[</span><span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]].</span><span class="nx">text</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
-</code></pre></div>
-<h2>Putting it All Together</h2>
-
-<p>The example Flux TodoMVC application has been updated with an example test for the TodoStore, but let&#39;s look at an abbreviated version of the entire test. The most important things to notice in this test are how we keep a reference to the store&#39;s registered callback in the closure of the test, and how we recreate the store before every test so that we clear the state of the store entirely.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;../TodoStore&#39;</span><span class="p">);</span>
-<span class="nx">jest</span><span class="p">.</span><span class="nx">dontMock</span><span class="p">(</span><span class="s1">&#39;react/lib/merge&#39;</span><span class="p">);</span>
-
-<span class="nx">describe</span><span class="p">(</span><span class="s1">&#39;TodoStore&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-
-  <span class="kd">var</span> <span class="nx">TodoConstants</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../constants/TodoConstants&#39;</span><span class="p">);</span>
-
-  <span class="c1">// mock actions inside dispatch payloads</span>
-  <span class="kd">var</span> <span class="nx">actionTodoCreate</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;VIEW_ACTION&#39;</span><span class="p">,</span>
-    <span class="nx">action</span><span class="o">:</span> <span class="p">{</span>
-      <span class="nx">actionType</span><span class="o">:</span> <span class="nx">TodoConstants</span><span class="p">.</span><span class="nx">TODO_CREATE</span><span class="p">,</span>
-      <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;foo&#39;</span>
-    <span class="p">}</span>
-  <span class="p">};</span>
-  <span class="kd">var</span> <span class="nx">actionTodoDestroy</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;VIEW_ACTION&#39;</span><span class="p">,</span>
-    <span class="nx">action</span><span class="o">:</span> <span class="p">{</span>
-      <span class="nx">actionType</span><span class="o">:</span> <span class="nx">TodoConstants</span><span class="p">.</span><span class="nx">TODO_DESTROY</span><span class="p">,</span>
-      <span class="nx">id</span><span class="o">:</span> <span class="s1">&#39;replace me in test&#39;</span>
-    <span class="p">}</span>
-  <span class="p">};</span>
-
-  <span class="kd">var</span> <span class="nx">AppDispatcher</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">TodoStore</span><span class="p">;</span>
-  <span class="kd">var</span> <span class="nx">callback</span><span class="p">;</span>
-
-  <span class="nx">beforeEach</span><span class="p">(</span><span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">AppDispatcher</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../../dispatcher/AppDispatcher&#39;</span><span class="p">);</span>
-    <span class="nx">TodoStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../TodoStore&#39;</span><span class="p">);</span>
-    <span class="nx">callback</span> <span class="o">=</span> <span class="nx">AppDispatcher</span><span class="p">.</span><span class="nx">register</span><span class="p">.</span><span class="nx">mock</span><span class="p">.</span><span class="nx">calls</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">];</span>
-  <span class="p">});</span>
-
-  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;registers a callback with the dispatcher&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">AppDispatcher</span><span class="p">.</span><span class="nx">register</span><span class="p">.</span><span class="nx">mock</span><span class="p">.</span><span class="nx">calls</span><span class="p">.</span><span class="nx">length</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-  <span class="p">});</span>
-
-  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;initializes with no to-do items&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">({});</span>
-  <span class="p">});</span>
-
-  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;creates a to-do item&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">callback</span><span class="p">(</span><span class="nx">actionTodoCreate</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-    <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">all</span><span class="p">);</span>
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">[</span><span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]].</span><span class="nx">text</span><span class="p">).</span><span class="nx">toEqual</span><span class="p">(</span><span class="s1">&#39;foo&#39;</span><span class="p">);</span>
-  <span class="p">});</span>
-
-  <span class="nx">it</span><span class="p">(</span><span class="s1">&#39;destroys a to-do item&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="nx">callback</span><span class="p">(</span><span class="nx">actionTodoCreate</span><span class="p">);</span>
-    <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-    <span class="kd">var</span> <span class="nx">keys</span> <span class="o">=</span> <span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">all</span><span class="p">);</span>
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">keys</span><span class="p">.</span><span class="nx">length</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mi">1</span><span class="p">);</span>
-    <span class="nx">actionTodoDestroy</span><span class="p">.</span><span class="nx">action</span><span class="p">.</span><span class="nx">id</span> <span class="o">=</span> <span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
-    <span class="nx">callback</span><span class="p">(</span><span class="nx">actionTodoDestroy</span><span class="p">);</span>
-    <span class="nx">expect</span><span class="p">(</span><span class="nx">all</span><span class="p">[</span><span class="nx">keys</span><span class="p">[</span><span class="mi">0</span><span class="p">]]).</span><span class="nx">toBeUndefined</span><span class="p">();</span>
-  <span class="p">});</span>
-
-<span class="p">});</span>
-</code></pre></div>
-<p>You can take a look at all this code in the <a href="https://github.com/facebook/flux/tree/master/examples/flux-todomvc/js/stores/__tests__/TodoStore-test.js">TodoStore&#39;s tests on GitHub</a> as well. </p>
-
-<h2>Mocking Data Derived from Other Stores</h2>
-
-<p>Sometimes our stores rely on data from other stores. Because all of our modules are mocked, we&#39;ll need to simulate the data that comes from the other store.  We can do this by retrieving the mock function and adding a custom return value to it.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">MyOtherStore</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;../MyOtherStore&#39;</span><span class="p">);</span>
-<span class="nx">MyOtherStore</span><span class="p">.</span><span class="nx">getState</span><span class="p">.</span><span class="nx">mockReturnValue</span><span class="p">({</span>
-  <span class="s1">&#39;123&#39;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">id</span><span class="o">:</span> <span class="s1">&#39;123&#39;</span><span class="p">,</span>
-    <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;foo&#39;</span>
-  <span class="p">},</span>
-  <span class="s1">&#39;456&#39;</span><span class="o">:</span> <span class="p">{</span>
-    <span class="nx">id</span><span class="o">:</span> <span class="s1">&#39;456&#39;</span><span class="p">,</span>
-    <span class="nx">text</span><span class="o">:</span> <span class="s1">&#39;bar&#39;</span>
-  <span class="p">}</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>Now we have a collection of objects that will come back from MyOtherStore whenever we call MyOtherStore.getState() in our tests.  Any application state can be simulated with a combination of these custom return values and the previously shown technique of working with the store&#39;s registered callback.</p>
-
-<p>A brief example of this technique is up on GitHub within the Flux Chat example&#39;s <a href="https://github.com/facebook/flux/tree/master/examples/flux-chat/js/stores/__tests__/UnreadThreadStore-test.js">UnreadThreadStore-test.js</a>.</p>
-
-<p>For more information about the <code>mock</code> property of mocked methods or Jest&#39;s ability to provide custom mock values, see Jest&#39;s documentation on <a href="https://facebook.github.io/jest/docs/mock-functions.html">mock functions</a>.</p>
-
-<h2>Moving Logic from React to Stores</h2>
-
-<p>What often starts as a little piece of seemingly benign logic in our React components often presents a problem while creating unit tests. We want to be able to write tests that read like a specification for our application&#39;s behavior, and when application logic slips into our view layer, this becomes more difficult.</p>
-
-<p>For example, when a user has marked each of their to-do items as complete, the TodoMVC specification dictates that we should also change the status of the &quot;Mark all as complete&quot; checkbox automatically. To create that logic, we might be tempted to write code like this in our MainSection&#39;s <code>render()</code> method:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">var</span> <span class="nx">allTodos</span> <span class="o">=</span> <span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">allTodos</span><span class="p">;</span>
-<span class="kd">var</span> <span class="nx">allChecked</span> <span class="o">=</span> <span class="kc">true</span><span class="p">;</span>
-<span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">id</span> <span class="k">in</span> <span class="nx">allTodos</span><span class="p">)</span> <span class="p">{</span>
-  <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">allTodos</span><span class="p">[</span><span class="nx">id</span><span class="p">].</span><span class="nx">complete</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">allChecked</span> <span class="o">=</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="k">break</span><span class="p">;</span>
-  <span class="p">}</span>
-<span class="p">}</span>
-<span class="p">...</span>
-
-<span class="k">return</span> <span class="p">(</span>
-  <span class="o">&lt;</span><span class="nx">section</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="o">&gt;</span>
-  <span class="o">&lt;</span><span class="nx">input</span>
-    <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;toggle-all&quot;</span>
-    <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
-    <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="nx">allChecked</span> <span class="o">?</span> <span class="s1">&#39;checked&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
-  <span class="o">/&gt;</span>
-  <span class="p">...</span>
-  <span class="o">&lt;</span><span class="err">/section&gt;</span>
-<span class="p">);</span>
-</code></pre></div>
-<p>While this seems like an easy, normal thing to do, this is an example of application logic slipping into the views, and it can&#39;t be described in our spec-style TodoStore test. Let&#39;s take that logic and move it to the store. First, we&#39;ll create a public method on the store that will encapsulate that logic:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">areAllComplete</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">for</span> <span class="p">(</span><span class="kd">var</span> <span class="nx">id</span> <span class="k">in</span> <span class="nx">_todos</span><span class="p">)</span> <span class="p">{</span>
-    <span class="k">if</span> <span class="p">(</span><span class="o">!</span><span class="nx">_todos</span><span class="p">[</span><span class="nx">id</span><span class="p">].</span><span class="nx">complete</span><span class="p">)</span> <span class="p">{</span>
-      <span class="k">return</span> <span class="kc">false</span><span class="p">;</span>
-    <span class="p">}</span>
-  <span class="p">}</span>
-  <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-<span class="p">},</span>
-</code></pre></div>
-<p>Now we have the application logic where it belongs, and we can write the following test:</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">it</span><span class="p">(</span><span class="s1">&#39;determines whether all to-do items are complete&#39;</span><span class="p">,</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="kd">var</span> <span class="nx">i</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
-  <span class="k">for</span> <span class="p">(;</span> <span class="nx">i</span> <span class="o">&lt;</span> <span class="mi">3</span><span class="p">;</span> <span class="nx">i</span><span class="o">++</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">callback</span><span class="p">(</span><span class="nx">mockTodoCreate</span><span class="p">);</span>
-  <span class="p">}</span>
-  <span class="nx">expect</span><span class="p">(</span><span class="nx">TodoStore</span><span class="p">.</span><span class="nx">areAllComplete</span><span class="p">()).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
-
-  <span class="kd">var</span> <span class="nx">all</span> <span class="o">=</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">();</span>
-  <span class="k">for</span> <span class="p">(</span><span class="nx">key</span> <span class="k">in</span> <span class="nx">all</span><span class="p">)</span> <span class="p">{</span>
-    <span class="nx">callback</span><span class="p">({</span>
-      <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;VIEW_ACTION&#39;</span><span class="p">,</span>
-      <span class="nx">action</span><span class="o">:</span> <span class="p">{</span>
-        <span class="nx">actionType</span><span class="o">:</span> <span class="nx">TodoConstants</span><span class="p">.</span><span class="nx">TODO_COMPLETE</span><span class="p">,</span>
-        <span class="nx">id</span><span class="o">:</span> <span class="nx">key</span>
-      <span class="p">}</span>
-    <span class="p">});</span>
-  <span class="p">}</span>
-  <span class="nx">expect</span><span class="p">(</span><span class="nx">TodoStore</span><span class="p">.</span><span class="nx">areAllComplete</span><span class="p">()).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">true</span><span class="p">);</span>
-
-  <span class="nx">callback</span><span class="p">({</span>
-    <span class="nx">source</span><span class="o">:</span> <span class="s1">&#39;VIEW_ACTION&#39;</span><span class="p">,</span>
-    <span class="nx">action</span><span class="o">:</span> <span class="p">{</span>
-      <span class="nx">actionType</span><span class="o">:</span> <span class="nx">TodoConstants</span><span class="p">.</span><span class="nx">TODO_UNDO_COMPLETE</span><span class="p">,</span>
-      <span class="nx">id</span><span class="o">:</span> <span class="nx">key</span>
-    <span class="p">}</span>
-  <span class="p">});</span>
-  <span class="nx">expect</span><span class="p">(</span><span class="nx">TodoStore</span><span class="p">.</span><span class="nx">areAllComplete</span><span class="p">()).</span><span class="nx">toBe</span><span class="p">(</span><span class="kc">false</span><span class="p">);</span>
-<span class="p">});</span>
-</code></pre></div>
-<p>Finally, we revise our view layer. We&#39;ll call for that data in the controller-view, TodoApp.js, and pass it down to the MainSection component.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kd">function</span> <span class="nx">getTodoState</span><span class="p">()</span> <span class="p">{</span>
-  <span class="k">return</span> <span class="p">{</span>
-    <span class="nx">allTodos</span><span class="o">:</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">getAll</span><span class="p">(),</span>
-    <span class="nx">areAllComplete</span><span class="o">:</span> <span class="nx">TodoStore</span><span class="p">.</span><span class="nx">areAllComplete</span><span class="p">()</span>
-  <span class="p">};</span>
-<span class="p">}</span>
-
-<span class="kd">var</span> <span class="nx">TodoApp</span> <span class="o">=</span> <span class="nx">React</span><span class="p">.</span><span class="nx">createClass</span><span class="p">({</span>
-<span class="p">...</span>
-
-  <span class="cm">/**</span>
-<span class="cm">   * @return {object}</span>
-<span class="cm">   */</span>
-  <span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">return</span> <span class="p">(</span>
-      <span class="p">...</span>
-      <span class="o">&lt;</span><span class="nx">MainSection</span>
-        <span class="nx">allTodos</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">allTodos</span><span class="p">}</span>
-        <span class="nx">areAllComplete</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">state</span><span class="p">.</span><span class="nx">areAllComplete</span><span class="p">}</span>
-      <span class="o">/&gt;</span>
-      <span class="p">...</span>
-    <span class="p">);</span>
-  <span class="p">},</span>
-
-  <span class="cm">/**</span>
-<span class="cm">   * Event handler for &#39;change&#39; events coming from the TodoStore</span>
-<span class="cm">   */</span>
-  <span class="nx">_onChange</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-    <span class="k">this</span><span class="p">.</span><span class="nx">setState</span><span class="p">(</span><span class="nx">getTodoState</span><span class="p">());</span>
-  <span class="p">}</span>
-
-<span class="p">});</span>
-</code></pre></div>
-<p>And then we&#39;ll utilize that property for the rendering of the checkbox.</p>
-<div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="nx">render</span><span class="o">:</span> <span class="kd">function</span><span class="p">()</span> <span class="p">{</span>
-  <span class="p">...</span>
-
-  <span class="k">return</span> <span class="p">(</span>
-    <span class="o">&lt;</span><span class="nx">section</span> <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;main&quot;</span><span class="o">&gt;</span>
-    <span class="o">&lt;</span><span class="nx">input</span>
-      <span class="nx">id</span><span class="o">=</span><span class="s2">&quot;toggle-all&quot;</span>
-      <span class="nx">type</span><span class="o">=</span><span class="s2">&quot;checkbox&quot;</span>
-      <span class="nx">checked</span><span class="o">=</span><span class="p">{</span><span class="k">this</span><span class="p">.</span><span class="nx">props</span><span class="p">.</span><span class="nx">areAllComplete</span> <span class="o">?</span> <span class="s1">&#39;checked&#39;</span> <span class="o">:</span> <span class="s1">&#39;&#39;</span><span class="p">}</span>
-    <span class="o">/&gt;</span>
-    <span class="p">...</span>
-    <span class="o">&lt;</span><span class="err">/section&gt;</span>
-  <span class="p">);</span>
-<span class="p">},</span>
-</code></pre></div>
-<p>To learn how to test React components themselves, check out the <a href="https://facebook.github.io/jest/docs/tutorial-react.html">Jest tutorial for React</a> and the <a href="/react/docs/test-utils.html">ReactTestUtils documentation</a>.</p>
-
-<h2>Further Reading</h2>
-
-<ul>
-<li><a href="http://martinfowler.com/articles/mocksArentStubs.html">Mocks Aren&#39;t Stubs</a> by Martin Fowler</li>
-<li><a href="https://facebook.github.io/jest/docs/api.html">Jest API Reference</a></li>
-</ul>
 
 </div>
 

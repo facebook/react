@@ -37,6 +37,7 @@
   <script src="https://unpkg.com/codemirror@5.15.2/mode/javascript/javascript.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/xml/xml.js"></script>
   <script src="https://unpkg.com/codemirror@5.15.2/mode/jsx/jsx.js"></script>
+  <script src="https://unpkg.com/prop-types/prop-types.min.js"></script>
   <script src="https://unpkg.com/react/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom/dist/react-dom.min.js"></script>
   <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
@@ -64,7 +65,7 @@
       </ul>
       <ul class="nav-site nav-site-external">
         <li><a href="https://github.com/facebook/react">GitHub</a></li>
-        <li><a href="https://github.com/facebook/react/releases">v15.6.2</a></li>
+        <li><a href="https://github.com/facebook/react/releases">v16.0.0</a></li>
       </ul>
     </div>
   </div>
@@ -155,7 +156,7 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
 
 <p><strong>Note:</strong> <code>data-reactid</code> is still present for server-rendered content, however it is much smaller than before and is simply an auto-incrementing counter.  </p>
 
-<p><small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5205">#5205</a></small></p></li>
+<p><small><a href="https://github.com/sophiebits">@sophiebits</a> in <a href="https://github.com/facebook/react/pull/5205">#5205</a></small></p></li>
 <li><h4>No more extra <code>&lt;span&gt;</code>s</h4>
 
 <p>Another big change with our DOM interaction is how we render text blocks. Previously you may have noticed that React rendered a lot of extra <code>&lt;span&gt;</code>s. For example, in our most basic example on the home page we render <code>&lt;div&gt;Hello {this.props.name}&lt;/div&gt;</code>, resulting in markup that contained 2 <code>&lt;span&gt;</code>s. Now we’ll render plain text nodes interspersed with comment nodes that are used for demarcation. This gives us the same ability to update individual pieces of text, without creating extra nested nodes. Very few people have depended on the actual markup generated here so it’s likely you are not impacted. However if you were targeting these <code>&lt;span&gt;</code>s in your CSS, you will need to adjust accordingly. You can always render them explicitly in your components.  </p>
@@ -165,7 +166,7 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
 
 <p>We’ve also made use of these comment nodes to change what <code>null</code> renders to. Rendering to <code>null</code> was a feature we added in React 0.11 and was implemented by rendering <code>&lt;noscript&gt;</code> elements. By rendering to comment nodes now, there’s a chance some of your CSS will be targeting the wrong thing, specifically if you are making use of <code>:nth-child</code> selectors. React’s use of the <code>&lt;noscript&gt;</code> tag has always been considered an implementation detail of how React targets the DOM. We believe they are safe changes to make without going through a release with warnings detailing the subtle differences as they are details that should not be depended upon. Additionally, we have seen that these changes have improved React performance for many typical applications.  </p>
 
-<p><small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5451">#5451</a></small></p></li>
+<p><small><a href="https://github.com/sophiebits">@sophiebits</a> in <a href="https://github.com/facebook/react/pull/5451">#5451</a></small></p></li>
 <li><h4>Functional components can now return <code>null</code> too</h4>
 
 <p>We added support for <a href="/react/blog/2015/09/10/react-v0.14-rc1.html#stateless-function-components">defining stateless components as functions</a> in React 0.14. However, React 0.14 still allowed you to define a class component without extending <code>React.Component</code> or using <code>React.createClass()</code>, so <a href="https://github.com/facebook/react/issues/5355">we couldn’t reliably tell if your component is a function or a class</a>, and did not allow returning <code>null</code> from it. This issue is solved in React 15, and you can now return <code>null</code> from any component, whether it is a class or a function.  </p>
@@ -233,7 +234,7 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
 
 <ul>
 <li><p>If you use a minified copy of the <em>development</em> build, React DOM kindly encourages you to use the faster production build instead.<br>
-<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5083">#5083</a></small></p></li>
+<small><a href="https://github.com/sophiebits">@sophiebits</a> in <a href="https://github.com/facebook/react/pull/5083">#5083</a></small></p></li>
 <li><p>React DOM: When specifying a unit-less CSS value as a string, a future version will not add <code>px</code> automatically. This version now warns in this case (ex: writing <code>style={{width: &#39;300&#39;}}</code>. Unitless <em>number</em> values like <code>width: 300</code> are unchanged.<br>
 <small><a href="https://github.com/pluma">@pluma</a> in <a href="https://github.com/facebook/react/pull/5140">#5140</a></small></p></li>
 <li><p>Synthetic Events will now warn when setting and accessing properties (which will not get cleared appropriately), as well as warn on access after an event has been returned to the pool.<br>
@@ -266,7 +267,7 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
 
 <ul>
 <li><p>Fixed multiple small memory leaks.<br>
-<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/4983">#4983</a> and <a href="https://github.com/victor-homyakov">@victor-homyakov</a> in <a href="https://github.com/facebook/react/pull/6309">#6309</a></small></p></li>
+<small><a href="https://github.com/sophiebits">@sophiebits</a> in <a href="https://github.com/facebook/react/pull/4983">#4983</a> and <a href="https://github.com/victor-homyakov">@victor-homyakov</a> in <a href="https://github.com/facebook/react/pull/6309">#6309</a></small></p></li>
 <li><p>Input events are handled more reliably in IE 10 and IE 11; spurious events no longer fire when using a placeholder.<br>
 <small><a href="https://github.com/jquense">@jquense</a> in <a href="https://github.com/facebook/react/pull/4051">#4051</a></small></p></li>
 <li><p>The <code>componentWillReceiveProps()</code> lifecycle method is now consistently called when <code>context</code> changes.<br>
@@ -317,7 +318,7 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
 <li><p>React DOM adds a new <code>suppressContentEditableWarning</code> prop for components like <a href="https://facebook.github.io/draft-js/">Draft.js</a> that intentionally manage <code>contentEditable</code> children with React.<br>
 <small><a href="https://github.com/mxstbr">@mxstbr</a> in <a href="https://github.com/facebook/react/pull/6112">#6112</a></small></p></li>
 <li><p>React improves the performance for <code>createClass()</code> on complex specs.<br>
-<small><a href="https://github.com/spicyj">@spicyj</a> in <a href="https://github.com/facebook/react/pull/5550">#5550</a></small></p></li>
+<small><a href="https://github.com/sophiebits">@sophiebits</a> in <a href="https://github.com/facebook/react/pull/5550">#5550</a></small></p></li>
 </ul>
 
 </div>
@@ -331,6 +332,8 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
   <div class="nav-docs-section">
     <h3>Recent posts</h3>
     <ul>
+      
+        <li><a href="/react/blog/2017/09/26/react-v16.0.html">React v16.0</a></li>
       
         <li><a href="/react/blog/2017/09/25/react-v15.6.2.html">React v15.6.2</a></li>
       
@@ -349,8 +352,6 @@ Minified build for production: <a href="https://fb.me/react-dom-15.0.0.min.js">h
         <li><a href="/react/blog/2016/09/28/our-first-50000-stars.html">Our First 50,000 Stars</a></li>
       
         <li><a href="/react/blog/2016/08/05/relay-state-of-the-state.html">Relay: State of the State</a></li>
-      
-        <li><a href="/react/blog/2016/07/22/create-apps-with-no-configuration.html">Create Apps with No Configuration</a></li>
       
       <li><a href="/react/blog/all.html">All posts ...</a></li>
     </ul>
