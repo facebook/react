@@ -19,6 +19,10 @@ For longer-form conversations about React, we've set up a [discussion forum at *
 
 In the forum there's also a category for job posts and a category for discussion of our weekly meeting notes.
 
+## React community on Hashnode
+
+[Hashnode's React node](https://hashnode.com/n/reactjs) is a great place to stay up-to-date with React discussion, news and stories. Start a discussion related to React and exchange ideas with more than 10K React followers. 
+
 ## Reactiflux Chat
 
 If you need an answer right away, check out the [Reactiflux Discord](https://discord.gg/0ZcbPKXt5bZjGY5n) community. There are usually a number of React experts there who can help out or point you to somewhere you might want to look.
