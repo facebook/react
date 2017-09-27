@@ -94,24 +94,19 @@ css.global(
 
 css.global(`.token.boolean`, {
   color: prismColors.boolean,
-})
+});
 
-css.global(
-  `.token.tag`,
-  {
-    color: prismColors.tag,
-  },
-);
+css.global(`.token.tag`, {
+  color: prismColors.tag,
+});
 
-css.global(`.token.string`,
-  {
-    color: prismColors.string,
-  },
-);
+css.global(`.token.string`, {
+  color: prismColors.string,
+});
 
 css.global(`.token.punctuation`, {
   color: prismColors.punctuation,
-})
+});
 
 css.global(
   `

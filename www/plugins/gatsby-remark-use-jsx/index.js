@@ -18,5 +18,5 @@ module.exports = ({markdownAST}) => {
     if (node.lang.indexOf('javascript') === 0) {
       node.lang = 'jsx' + node.lang.substring('javascript'.length);
     }
- })
+  });
 };
