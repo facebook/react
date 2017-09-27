@@ -9,25 +9,11 @@
 
 'use strict';
 
-var CSSProperty = require('CSSProperty');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-
 var dangerousStyleValue = require('dangerousStyleValue');
 
 if (__DEV__) {
   var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
   var warnValidStyle = require('warnValidStyle');
-}
-
-var hasShorthandPropertyBug = false;
-if (ExecutionEnvironment.canUseDOM) {
-  var tempStyle = document.createElement('div').style;
-  try {
-    // IE8 throws "Invalid argument." if resetting shorthand style properties.
-    tempStyle.font = '';
-  } catch (e) {
-    hasShorthandPropertyBug = true;
-  }
 }
 
 /**
@@ -98,18 +84,7 @@ var CSSPropertyOperations = {
       } else if (styleValue) {
         style[styleName] = styleValue;
       } else {
-        var expansion =
-          hasShorthandPropertyBug &&
-          CSSProperty.shorthandPropertyExpansions[styleName];
-        if (expansion) {
-          // Shorthand property that IE8 won't like unsetting, so unset each
-          // component to placate it
-          for (var individualStyleName in expansion) {
-            style[individualStyleName] = '';
-          }
-        } else {
-          style[styleName] = '';
-        }
+        style[styleName] = '';
       }
     }
   },
