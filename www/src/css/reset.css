@@ -33,3 +33,7 @@ img {
   display: inline-block;
   vertical-align: top;
 }
+
+pre {
+  font-family: source-code-pro, Menlo, Consolas, "Courier New", monospace;
+}
