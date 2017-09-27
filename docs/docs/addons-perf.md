@@ -6,6 +6,10 @@ layout: docs
 category: Add-Ons
 ---
 
+> Note:
+>
+> `react-addons-perf` is no longer supported in v16. Please use Chrome Performance Tab instead: [Learn more about it](https://facebook.github.io/react/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab).
+
 **Importing**
 
 ```javascript
