@@ -24,10 +24,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
 var getEventCharCode = require('getEventCharCode');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+var warning = require('fbjs/lib/warning');
 
 import type {TopLevelTypes} from 'BrowserEventConstants';
 import type {
