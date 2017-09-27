@@ -523,7 +523,7 @@ rimraf('build', () => {
   }
   // rather than run concurently, opt to run them serially
   // this helps improve console/warning/error output
-  // and fixes a bunch of IO failures that sometimes occured
+  // and fixes a bunch of IO failures that sometimes occurred
   return runWaterfall(tasks)
     .then(() => {
       // output the results

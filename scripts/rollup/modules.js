@@ -139,7 +139,7 @@ function ignoreReactNativeModules() {
 function getExternalModules(externals, bundleType, isRenderer) {
   // external modules tell Rollup that we should not attempt
   // to bundle these modules and instead treat them as
-  // external depedencies to the bundle. so for CJS bundles
+  // external dependencies to the bundle. so for CJS bundles
   // this means having a require("name-of-external-module") at
   // the top of the bundle. for UMD bundles this means having
   // both a require and a global check for them

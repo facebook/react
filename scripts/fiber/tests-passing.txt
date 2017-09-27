@@ -97,8 +97,8 @@ src/isomorphic/classic/__tests__/createReactClassIntegration-test.js
 * should warn on invalid prop types
 * should warn on invalid context types
 * should throw on invalid child context types
-* should warn when mispelling shouldComponentUpdate
-* should warn when mispelling componentWillReceiveProps
+* should warn when misspelling shouldComponentUpdate
+* should warn when misspelling componentWillReceiveProps
 * should throw if a reserved property is in statics
 * should support statics
 * should work with object getInitialState() return values
