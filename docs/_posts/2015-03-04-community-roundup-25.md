@@ -12,7 +12,7 @@ Interest in React has been exploding recently, so it's a good time to explore so
 
 [Formidable Labs](https://github.com/FormidableLabs) and [Seattle JS](http://www.meetup.com/seattlejs/) recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:
 
-<iframe width="100%" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
 
 [AEFlash](https://github.com/aearly) writes up [some best practices and tips](http://aeflash.com/2015-02/react-tips-and-best-practices.html) to help you avoid potential pitfalls when developing with React.
 

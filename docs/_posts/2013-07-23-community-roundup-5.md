@@ -75,7 +75,7 @@ React.renderComponent(
 
 [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/jordwalke), React developers, did a presentation of React at Facebook Seattle's office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&A. I highly recommend you watching this video.
 
-<figure><iframe width="100%" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="650" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## Docs
