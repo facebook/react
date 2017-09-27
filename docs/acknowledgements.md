@@ -22,3 +22,4 @@ In addition, we're grateful to
  - [Christopher Aue](http://christopheraue.net/) for letting us use the [reactjs.com](http://reactjs.com/) domain name and the [@reactjs](https://twitter.com/reactjs) username on Twitter.
  - [ProjectMoon](https://github.com/ProjectMoon) for letting us use the [flux](https://www.npmjs.com/package/flux) package name on npm.
  - Shane Anderson for allowing us to use the [react](https://github.com/react) org on GitHub.
+ - [Dmitri Voronianski](https://github.com/voronianski) for letting us use the [Oceanic Next](https://labs.voronianski.com/oceanic-next-color-scheme/) color scheme on this website.
