@@ -137,10 +137,12 @@ class CodeEditor extends Component {
             {error &&
               <div
                 css={{
-                  flex: '0 0 70%',
+                  flex: '0 0 30%',
                   overflow: 'hidden',
                   border: `1px solid ${colors.error}`,
                   borderRadius: '0 10px 10px 0',
+                  fontSize: 12,
+                  lineHeight: 1.5,
 
                   [media.lessThan('small')]: {
                     borderRadius: '0 0 10px 10px',
@@ -152,7 +154,9 @@ class CodeEditor extends Component {
                     background: colors.error,
                     color: colors.white,
                   }}>
-                  <MetaTitle>Error</MetaTitle>
+                  <MetaTitle cssProps={{
+                    color: colors.white,
+                  }}>Error</MetaTitle>
                 </div>
                 <pre
                   css={{
