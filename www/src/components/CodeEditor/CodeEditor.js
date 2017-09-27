@@ -12,7 +12,9 @@
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import Remarkable from 'remarkable';
-import {LiveProvider, LiveEditor} from 'react-live';
+// TODO: switch back to the upstream version of react-live
+// once https://github.com/FormidableLabs/react-live/issues/37 is fixed.
+import {LiveProvider, LiveEditor} from '@gaearon/react-live';
 import {colors, media} from 'theme';
 import MetaTitle from 'templates/components/MetaTitle';
 
