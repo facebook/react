@@ -281,7 +281,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // bottom->up. Top->down is faster in IE11.
           let wasHydrated = popHydrationState(workInProgress);
           if (wasHydrated) {
-            // TOOD: Move this and createInstance step into the beginPhase
+            // TODO: Move this and createInstance step into the beginPhase
             // to consolidate.
             if (
               prepareToHydrateHostInstance(

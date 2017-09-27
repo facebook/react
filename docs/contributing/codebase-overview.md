@@ -9,7 +9,7 @@ next: implementation-notes.html
 
 This section will give you an overview of the React codebase organization, its conventions, and the implementation.
 
-If you want to [contribute to React](/react/contributing/how-to-contribute.html) we hope that this guide will help you feel more comfortable making changes.
+If you want to [contribute to React](/contributing/how-to-contribute.html) we hope that this guide will help you feel more comfortable making changes.
 
 We don't necessarily recommend any of these conventions in React apps. Many of them exist for historical reasons and might change with time.
 
@@ -68,7 +68,7 @@ After cloning the [React repository](https://github.com/facebook/react), you wil
 * [`docs`](https://github.com/facebook/react/tree/master/docs) is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.
 * [`fixtures`](https://github.com/facebook/react/tree/master/fixtures) contains a few small React test applications for contributors.
 * [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless, their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
-* `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/react/contributing/how-to-contribute.html#development-workflow) for the first time.
+* `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/contributing/how-to-contribute.html#development-workflow) for the first time.
 
 There are a few other top-level folders but they are mostly used for the tooling and you likely won't ever encounter them when contributing.
 
@@ -373,7 +373,7 @@ It is important to understand that the stack reconciler always processes the com
 
 #### Learn More
 
-**The [next section](/react/contributing/implementation-notes.html) describes the current implementation in more details.**
+**The [next section](/contributing/implementation-notes.html) describes the current implementation in more details.**
 
 ### Fiber Reconciler
 
@@ -401,4 +401,4 @@ There is a [video with a deep code dive into it](https://www.youtube.com/watch?v
 
 ### What Next?
 
-Read the [next section](/react/contributing/implementation-notes.html) to learn about the current implementation of reconciler in more detail.
+Read the [next section](/contributing/implementation-notes.html) to learn about the current implementation of reconciler in more detail.

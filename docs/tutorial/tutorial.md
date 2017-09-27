@@ -56,7 +56,8 @@ If you want to do it, here are the steps to follow:
 2. Follow the [installation instructions](/docs/installation.html#creating-a-new-application) to create a new project.
 3. Delete all files in the `src/` folder of the new project.
 4. Add a file named `index.css` in the `src/` folder with [this CSS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0100).
-5. Add a file named `index.js` in the `src/` folder with [this JS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010), and then add three lines to the top of it:
+5. Add a file named `index.js` in the `src/` folder with [this JS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010).
+6. Add these three lines to the top of `index.js` in the `src/` folder:
 
     ```js
     import React from 'react';
@@ -70,7 +71,7 @@ We recommend following [these instructions](http://babeljs.io/docs/editors) to c
 
 ### Help, I'm Stuck!
 
-If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/react/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
+If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
 
 With this out of the way, let's get started!
 
@@ -449,7 +450,7 @@ class Board extends React.Component {
 
 [View the current code.](https://codepen.io/gaearon/pen/ybbQJX?editors=0010)
 
-We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
+We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 

@@ -115,8 +115,8 @@ class Parent extends React.Component {
         <p>
           Open up the browser DevTools
           to observe that the button
-          is not a child the div
-          with onClick handler.
+          is not a child of the div
+          with the onClick handler.
         </p>
         <Modal>
           <Child />

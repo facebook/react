@@ -9,8 +9,6 @@
 
 'use strict';
 
-const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
 describe('ReactChildren', () => {
   var React;
   var ReactTestUtils;
@@ -878,52 +876,50 @@ describe('ReactChildren', () => {
     );
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    describe('with fragments enabled', () => {
-      it('warns for keys for arrays of elements in a fragment', () => {
-        spyOn(console, 'error');
-        class ComponentReturningArray extends React.Component {
-          render() {
-            return [<div />, <div />];
-          }
+  describe('with fragments enabled', () => {
+    it('warns for keys for arrays of elements in a fragment', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return [<div />, <div />];
         }
+      }
 
-        ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: ' +
-            'Each child in an array or iterator should have a unique "key" prop.' +
-            ' See https://fb.me/react-warning-keys for more information.' +
-            '\n    in ComponentReturningArray (at **)',
-        );
-      });
-
-      it('does not warn when there are keys on  elements in a fragment', () => {
-        spyOn(console, 'error');
-        class ComponentReturningArray extends React.Component {
-          render() {
-            return [<div key="foo" />, <div key="bar" />];
-          }
-        }
-
-        ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
-
-        expectDev(console.error.calls.count()).toBe(0);
-      });
-
-      it('warns for keys for arrays at the top level', () => {
-        spyOn(console, 'error');
-
-        ReactTestUtils.renderIntoDocument([<div />, <div />]);
-
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: ' +
-            'Each child in an array or iterator should have a unique "key" prop.' +
-            ' See https://fb.me/react-warning-keys for more information.',
-        );
-      });
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.' +
+          '\n    in ComponentReturningArray (at **)',
+      );
     });
-  }
+
+    it('does not warn when there are keys on  elements in a fragment', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return [<div key="foo" />, <div key="bar" />];
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+
+      expectDev(console.error.calls.count()).toBe(0);
+    });
+
+    it('warns for keys for arrays at the top level', () => {
+      spyOn(console, 'error');
+
+      ReactTestUtils.renderIntoDocument([<div />, <div />]);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.',
+      );
+    });
+  });
 });

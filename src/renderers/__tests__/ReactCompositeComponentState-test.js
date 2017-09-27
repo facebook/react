@@ -11,7 +11,6 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 var TestComponent;
 
@@ -179,17 +178,9 @@ describe('ReactCompositeComponent-state', () => {
       // setState({color:'green'}) only enqueues a pending state.
       ['componentWillReceiveProps-end', 'yellow'],
       // pending state queue is processed
-    ];
-
-    if (ReactDOMFeatureFlags.useFiber) {
-      // In Stack, this is never called because replaceState drops all updates
-      // from the queue. In Fiber, we keep updates in the queue to support
+      // We keep updates in the queue to support
       // replaceState(prevState => newState).
-      // TODO: Fix Stack to match Fiber.
-      expected.push(['before-setState-receiveProps', 'yellow']);
-    }
-
-    expected.push(
+      ['before-setState-receiveProps', 'yellow'],
       ['before-setState-again-receiveProps', undefined],
       ['after-setState-receiveProps', 'green'],
       ['shouldComponentUpdate-currentState', 'yellow'],
@@ -220,7 +211,7 @@ describe('ReactCompositeComponent-state', () => {
       // unmountComponent()
       // state is available within `componentWillUnmount()`
       ['componentWillUnmount', 'blue'],
-    );
+    ];
 
     expect(stateListener.mock.calls.join('\n')).toEqual(expected.join('\n'));
   });
@@ -289,20 +280,7 @@ describe('ReactCompositeComponent-state', () => {
       child.setState({bar: false});
     });
     // We expect the same thing to happen if we bail out in the middle.
-    expect(ops).toEqual(
-      ReactDOMFeatureFlags.useFiber
-        ? [
-            // Fiber works as expected
-            'child did update',
-            'parent did update',
-          ]
-        : [
-            // Stack treats these as two separate updates and therefore the order
-            // is inverse.
-            'parent did update',
-            'child did update',
-          ],
-    );
+    expect(ops).toEqual(['child did update', 'parent did update']);
   });
 
   it('should batch unmounts', () => {
@@ -445,45 +423,43 @@ describe('ReactCompositeComponent-state', () => {
     );
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
-      spyOn(console, 'error');
+  it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
+    spyOn(console, 'error');
 
-      let ops = [];
-      class Test extends React.Component {
-        state = {step: 1, extra: true};
-        componentWillMount() {
-          this.setState({step: 2}, () => {
-            // Tests that earlier setState callbacks are not dropped
-            ops.push(
-              `callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
-            );
-          });
-          // Treat like replaceState
-          this.state = {step: 3};
-        }
-        render() {
+    let ops = [];
+    class Test extends React.Component {
+      state = {step: 1, extra: true};
+      componentWillMount() {
+        this.setState({step: 2}, () => {
+          // Tests that earlier setState callbacks are not dropped
           ops.push(
-            `render -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
+            `callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
           );
-          return null;
-        }
+        });
+        // Treat like replaceState
+        this.state = {step: 3};
       }
+      render() {
+        ops.push(
+          `render -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
+        );
+        return null;
+      }
+    }
 
-      // Mount
-      const container = document.createElement('div');
-      ReactDOM.render(<Test />, container);
+    // Mount
+    const container = document.createElement('div');
+    ReactDOM.render(<Test />, container);
 
-      expect(ops).toEqual([
-        'render -- step: 3, extra: false',
-        'callback -- step: 3, extra: false',
-      ]);
-      expect(console.error.calls.count()).toEqual(1);
-      expect(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Test.componentWillMount(): Assigning directly to ' +
-          "this.state is deprecated (except inside a component's constructor). " +
-          'Use setState instead.',
-      );
-    });
-  }
+    expect(ops).toEqual([
+      'render -- step: 3, extra: false',
+      'callback -- step: 3, extra: false',
+    ]);
+    expect(console.error.calls.count()).toEqual(1);
+    expect(console.error.calls.argsFor(0)[0]).toEqual(
+      'Warning: Test.componentWillMount(): Assigning directly to ' +
+        "this.state is deprecated (except inside a component's constructor). " +
+        'Use setState instead.',
+    );
+  });
 });

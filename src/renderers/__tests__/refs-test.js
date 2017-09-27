@@ -10,7 +10,6 @@
 'use strict';
 
 var React = require('react');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactTestUtils = require('react-dom/test-utils');
 
 /**
@@ -306,91 +305,6 @@ describe('ref swapping', () => {
   });
 });
 
-describe('string refs between fiber and stack', () => {
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
-  });
-
-  it('attaches, detaches from fiber component with stack layer', () => {
-    const ReactCurrentOwner = require('ReactCurrentOwner');
-
-    const ReactDOMStack = require('ReactDOMStackEntry');
-    const ReactDOMFiber = require('ReactDOMFiberEntry');
-    const ReactInstanceMap = require('ReactInstanceMap');
-    let layerMounted = false;
-    class A extends React.Component {
-      render() {
-        return <div />;
-      }
-      componentDidMount() {
-        // ReactLayeredComponentMixin sets ReactCurrentOwner manually
-        ReactCurrentOwner.current = ReactInstanceMap.get(this);
-        const span = <span ref="span" />;
-        ReactCurrentOwner.current = null;
-
-        ReactDOMStack.unstable_renderSubtreeIntoContainer(
-          this,
-          span,
-          (this._container = document.createElement('div')),
-          () => {
-            expect(this.refs.span.nodeName).toBe('SPAN');
-            layerMounted = true;
-          },
-        );
-      }
-      componentWillUnmount() {
-        ReactDOMStack.unmountComponentAtNode(this._container);
-      }
-    }
-    const container = document.createElement('div');
-    const a = ReactDOMFiber.render(<A />, container);
-    expect(a.refs.span).toBeTruthy();
-    ReactDOMFiber.unmountComponentAtNode(container);
-    expect(a.refs.span).toBe(undefined);
-    expect(layerMounted).toBe(true);
-  });
-
-  it('attaches, detaches from stack component with fiber layer', () => {
-    const ReactCurrentOwner = require('ReactCurrentOwner');
-    const ReactDOM = require('ReactDOMStackEntry');
-    const ReactDOMFiber = require('ReactDOMFiberEntry');
-    const ReactInstanceMap = require('ReactInstanceMap');
-    let layerMounted = false;
-    class A extends React.Component {
-      render() {
-        return <div />;
-      }
-      componentDidMount() {
-        // ReactLayeredComponentMixin sets ReactCurrentOwner manually
-        ReactCurrentOwner.current = ReactInstanceMap.get(this);
-        const span = <span ref="span" />;
-        ReactCurrentOwner.current = null;
-
-        ReactDOMFiber.unstable_renderSubtreeIntoContainer(
-          this,
-          span,
-          (this._container = document.createElement('div')),
-          () => {
-            expect(this.refs.span.nodeName).toBe('SPAN');
-            layerMounted = true;
-          },
-        );
-      }
-      componentWillUnmount() {
-        ReactDOMFiber.unmountComponentAtNode(this._container);
-      }
-    }
-    const container = document.createElement('div');
-    const a = ReactDOM.render(<A />, container);
-    expect(a.refs.span).toBeTruthy();
-    ReactDOM.unmountComponentAtNode(container);
-    expect(a.refs.span).toBe(undefined);
-    expect(layerMounted).toBe(true);
-  });
-});
-
 describe('root level refs', () => {
   it('attaches and detaches root refs', () => {
     var ReactDOM = require('react-dom');
@@ -433,40 +347,38 @@ describe('root level refs', () => {
     expect(ref).toHaveBeenCalledTimes(2);
     expect(ref.mock.calls[1][0]).toBe(null);
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      // fragment
-      inst = null;
-      ref = jest.fn(value => (inst = value));
-      var divInst = null;
-      var ref2 = jest.fn(value => (divInst = value));
-      result = ReactDOM.render(
-        [<Comp ref={ref} key="a" />, 5, <div ref={ref2} key="b">Hello</div>],
-        container,
-      );
+    // fragment
+    inst = null;
+    ref = jest.fn(value => (inst = value));
+    var divInst = null;
+    var ref2 = jest.fn(value => (divInst = value));
+    result = ReactDOM.render(
+      [<Comp ref={ref} key="a" />, 5, <div ref={ref2} key="b">Hello</div>],
+      container,
+    );
 
-      // first call should be `Comp`
-      expect(ref).toHaveBeenCalledTimes(1);
-      expect(ref.mock.calls[0][0]).toBeInstanceOf(Comp);
-      expect(result).toBe(ref.mock.calls[0][0]);
+    // first call should be `Comp`
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref.mock.calls[0][0]).toBeInstanceOf(Comp);
+    expect(result).toBe(ref.mock.calls[0][0]);
 
-      expect(ref2).toHaveBeenCalledTimes(1);
-      expect(divInst).toBeInstanceOf(HTMLDivElement);
-      expect(result).not.toBe(divInst);
+    expect(ref2).toHaveBeenCalledTimes(1);
+    expect(divInst).toBeInstanceOf(HTMLDivElement);
+    expect(result).not.toBe(divInst);
 
-      ReactDOM.unmountComponentAtNode(container);
-      expect(ref).toHaveBeenCalledTimes(2);
-      expect(ref.mock.calls[1][0]).toBe(null);
-      expect(ref2).toHaveBeenCalledTimes(2);
-      expect(ref2.mock.calls[1][0]).toBe(null);
+    ReactDOM.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+    expect(ref2).toHaveBeenCalledTimes(2);
+    expect(ref2.mock.calls[1][0]).toBe(null);
 
-      // null
-      result = ReactDOM.render(null, container);
-      expect(result).toBe(null);
+    // null
+    result = ReactDOM.render(null, container);
+    expect(result).toBe(null);
 
-      // primitives
-      result = ReactDOM.render(5, container);
-      expect(result).toBeInstanceOf(Text);
-    }
+    // primitives
+    result = ReactDOM.render(5, container);
+    expect(result).toBeInstanceOf(Text);
   });
 });
 
@@ -482,28 +394,6 @@ describe('creating element with ref in constructor', () => {
     }
   }
 
-  var devErrorMessage =
-    'addComponentAsRefTo(...): Only a ReactOwner can have refs. You might ' +
-    "be adding a ref to a component that was not created inside a component's " +
-    '`render` method, or you have multiple copies of React loaded ' +
-    '(details: https://fb.me/react-refs-must-have-owner).';
-
-  var prodErrorMessage =
-    'Minified React error #119; visit ' +
-    'http://facebook.github.io/react/docs/error-decoder.html?invariant=119 for the full message ' +
-    'or use the non-minified dev environment for full errors and additional helpful warnings.';
-
-  var fiberDevErrorMessage =
-    'Element ref was specified as a string (p) but no owner was ' +
-    'set. You may have multiple copies of React loaded. ' +
-    '(details: https://fb.me/react-refs-must-have-owner).';
-
-  var fiberProdErrorMessage =
-    'Minified React error #149; visit ' +
-    'http://facebook.github.io/react/docs/error-decoder.html?invariant=149&args[]=p ' +
-    'for the full message or use the non-minified dev environment for full errors and additional ' +
-    'helpful warnings.';
-
   it('throws an error when __DEV__ = true', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
@@ -514,7 +404,9 @@ describe('creating element with ref in constructor', () => {
       expect(function() {
         ReactTestUtils.renderIntoDocument(<RefTest />);
       }).toThrowError(
-        ReactDOMFeatureFlags.useFiber ? fiberDevErrorMessage : devErrorMessage,
+        'Element ref was specified as a string (p) but no owner was ' +
+          'set. You may have multiple copies of React loaded. ' +
+          '(details: https://fb.me/react-refs-must-have-owner).',
       );
     } finally {
       __DEV__ = originalDev;
@@ -531,9 +423,10 @@ describe('creating element with ref in constructor', () => {
       expect(function() {
         ReactTestUtils.renderIntoDocument(<RefTest />);
       }).toThrowError(
-        ReactDOMFeatureFlags.useFiber
-          ? fiberProdErrorMessage
-          : prodErrorMessage,
+        'Minified React error #149; visit ' +
+          'http://facebook.github.io/react/docs/error-decoder.html?invariant=149&args[]=p ' +
+          'for the full message or use the non-minified dev environment for full errors and additional ' +
+          'helpful warnings.',
       );
     } finally {
       __DEV__ = originalDev;

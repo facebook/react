@@ -14,20 +14,20 @@ This round-up is the proof that React has taken off from its Facebook's root: it
 
 ## React Tips
 
-[Connor McSheffrey](http://connormcsheffrey.com/) and [Cheng Lou](https://github.com/chenglou) added a new section to the documentation. It's a list of small tips that you will probably find useful while working on React. Since each article is very small and focused, we [encourage you to contribute](/react/tips/introduction.html)!
+[Connor McSheffrey](http://connormcsheffrey.com/) and [Cheng Lou](https://github.com/chenglou) added a new section to the documentation. It's a list of small tips that you will probably find useful while working on React. Since each article is very small and focused, we [encourage you to contribute](/tips/introduction.html)!
 
-- [Inline Styles](/react/tips/inline-styles.html)
-- [If-Else in JSX](/react/tips/if-else-in-JSX.html)
-- [Self-Closing Tag](/react/tips/self-closing-tag.html)
-- [Maximum Number of JSX Root Nodes](/react/tips/maximum-number-of-jsx-root-nodes.html)
-- [Shorthand for Specifying Pixel Values in style props](/react/tips/style-props-value-px.html)
-- [Type of the Children props](/react/tips/children-props-type.html)
-- [Value of null for Controlled Input](/react/tips/controlled-input-null-value.html)
-- [`componentWillReceiveProps` Not Triggered After Mounting](/react/tips/componentWillReceiveProps-not-triggered-after-mounting.html)
-- [Props in getInitialState Is an Anti-Pattern](/react/tips/props-in-getInitialState-as-anti-pattern.html)
-- [DOM Event Listeners in a Component](/react/tips/dom-event-listeners.html)
-- [Load Initial Data via AJAX](/react/tips/initial-ajax.html)
-- [False in JSX](/react/tips/false-in-jsx.html)
+- [Inline Styles](/tips/inline-styles.html)
+- [If-Else in JSX](/tips/if-else-in-JSX.html)
+- [Self-Closing Tag](/tips/self-closing-tag.html)
+- [Maximum Number of JSX Root Nodes](/tips/maximum-number-of-jsx-root-nodes.html)
+- [Shorthand for Specifying Pixel Values in style props](/tips/style-props-value-px.html)
+- [Type of the Children props](/tips/children-props-type.html)
+- [Value of null for Controlled Input](/tips/controlled-input-null-value.html)
+- [`componentWillReceiveProps` Not Triggered After Mounting](/tips/componentWillReceiveProps-not-triggered-after-mounting.html)
+- [Props in getInitialState Is an Anti-Pattern](/tips/props-in-getInitialState-as-anti-pattern.html)
+- [DOM Event Listeners in a Component](/tips/dom-event-listeners.html)
+- [Load Initial Data via AJAX](/tips/initial-ajax.html)
+- [False in JSX](/tips/false-in-jsx.html)
 
 
 ## Intro to the React Framework

@@ -84,7 +84,7 @@ This has not changed.
 
 ## Migration Path
 
-We have included [a warning about unknown attributes](/react/warnings/unknown-prop.html) since [React 15.2.0](https://github.com/facebook/react/releases/tag/v15.2.0) which came out more than a year ago. The vast majority of third-party libraries have already updated their code. If your app doesn't produce warnings with React 15.2.0 or higher, this change should not require modifications in your application code.
+We have included [a warning about unknown attributes](/warnings/unknown-prop.html) since [React 15.2.0](https://github.com/facebook/react/releases/tag/v15.2.0) which came out more than a year ago. The vast majority of third-party libraries have already updated their code. If your app doesn't produce warnings with React 15.2.0 or higher, this change should not require modifications in your application code.
 
 If you still accidentally forward non-DOM props to DOM components, with React 16 you will start seeing those attributes in the DOM, for example:
 

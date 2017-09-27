@@ -12,13 +12,11 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -519,9 +517,7 @@ describe('ReactUpdates', () => {
       render() {
         var portal = null;
         // If we're using Fiber, we use Portals instead to achieve this.
-        if (ReactDOMFeatureFlags.useFiber) {
-          portal = ReactDOM.createPortal(<B ref={n => (b = n)} />, bContainer);
-        }
+        portal = ReactDOM.createPortal(<B ref={n => (b = n)} />, bContainer);
         return <div>A{this.state.x}{portal}</div>;
       }
     }
@@ -535,10 +531,6 @@ describe('ReactUpdates', () => {
     }
 
     a = ReactTestUtils.renderIntoDocument(<A />);
-    if (!ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.render(<B ref={n => (b = n)} />, bContainer);
-    }
-
     ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});
       b.setState({x: 1});
@@ -1178,35 +1170,33 @@ describe('ReactUpdates', () => {
     }).toThrow('Maximum');
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    it('does not fall into an infinite error loop', () => {
-      function BadRender() {
-        throw new Error('error');
-      }
+  it('does not fall into an infinite error loop', () => {
+    function BadRender() {
+      throw new Error('error');
+    }
 
-      class ErrorBoundary extends React.Component {
-        componentDidCatch() {
-          this.props.parent.remount();
-        }
-        render() {
-          return <BadRender />;
-        }
+    class ErrorBoundary extends React.Component {
+      componentDidCatch() {
+        this.props.parent.remount();
       }
-
-      class NonTerminating extends React.Component {
-        state = {step: 0};
-        remount() {
-          this.setState(state => ({step: state.step + 1}));
-        }
-        render() {
-          return <ErrorBoundary key={this.state.step} parent={this} />;
-        }
+      render() {
+        return <BadRender />;
       }
+    }
 
-      const container = document.createElement('div');
-      expect(() => {
-        ReactDOM.render(<NonTerminating />, container);
-      }).toThrow('Maximum');
-    });
-  }
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      remount() {
+        this.setState(state => ({step: state.step + 1}));
+      }
+      render() {
+        return <ErrorBoundary key={this.state.step} parent={this} />;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
 });

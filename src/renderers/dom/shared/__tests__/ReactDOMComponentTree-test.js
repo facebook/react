@@ -9,8 +9,6 @@
 
 'use strict';
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
 describe('ReactDOMComponentTree', () => {
   var React;
   var ReactDOM;
@@ -21,11 +19,7 @@ describe('ReactDOMComponentTree', () => {
     var container = document.createElement('div');
     // Force server-rendering path:
     container.innerHTML = ReactDOMServer.renderToString(elt);
-    if (ReactDOMFeatureFlags.useFiber) {
-      return ReactDOM.hydrate(elt, container);
-    } else {
-      return ReactDOM.render(elt, container);
-    }
+    return ReactDOM.hydrate(elt, container);
   }
 
   function getTypeOf(instance) {

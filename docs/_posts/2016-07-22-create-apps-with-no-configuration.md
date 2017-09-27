@@ -140,7 +140,7 @@ Still, we knew it was frustrating to spend days setting up a project when all yo
 
 We found ourselves in an unusual dilemma.
 
-So far, [our strategy](/react/contributing/design-principles.html#dogfooding) has been to only release the code that we are using at Facebook. This helped us ensure that every project is battle-tested and has clearly defined scope and priorities.
+So far, [our strategy](/contributing/design-principles.html#dogfooding) has been to only release the code that we are using at Facebook. This helped us ensure that every project is battle-tested and has clearly defined scope and priorities.
 
 However, tooling at Facebook is different than at many smaller companies. Linting, transpilation, and packaging are all handled by powerful remote development servers, and product engineers don’t need to configure them. While we wish we could give a dedicated server to every user of React, even Facebook cannot scale that well!
 
