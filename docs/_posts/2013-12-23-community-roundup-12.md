@@ -45,7 +45,7 @@ Managing the scroll position when new content is inserted is usually very tricky
 
 ## Lights Out
 
-React declarative approach is well suited to write games. [Cheng Lou](https://github.com/chenglou) wrote the famous Lights Out game in React. It's a good example of use of [TransitionGroup](/react/docs/animation.html) to implement animations.
+React declarative approach is well suited to write games. [Cheng Lou](https://github.com/chenglou) wrote the famous Lights Out game in React. It's a good example of use of [TransitionGroup](/docs/animation.html) to implement animations.
 <figure><a href="https://chenglou.github.io/react-lights-out/"><img src="../img/blog/lights-out.png"></a></figure>
 
 [Try it out!](https://chenglou.github.io/react-lights-out/)

@@ -16,7 +16,7 @@ next: complementary-tools-zh-CN.html
 
 ### Thinking in react - tagtree.tv
 
-一个 [tagtree.tv](http://tagtree.tv/) 传达 [Thinking in React](/react/docs/thinking-in-react.html) 原则的视频  在构建一个简单app时。
+一个 [tagtree.tv](http://tagtree.tv/) 传达 [Thinking in React](/docs/thinking-in-react.html) 原则的视频  在构建一个简单app时。
 <figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *

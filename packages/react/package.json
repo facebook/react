@@ -5,7 +5,7 @@
     "react"
   ],
   "version": "16.0.0",
-  "homepage": "https://reactjs.org/",
+  "homepage": "https://facebook.github.io/react/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
   "files": [
@@ -23,7 +23,7 @@
   "dependencies": {
     "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.0",
+    "object-assign": "^4.1.1",
     "prop-types": "^15.6.0"
   },
   "browserify": {
