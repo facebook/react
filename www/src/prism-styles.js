@@ -13,13 +13,20 @@ import {css} from 'glamor';
 import {colors} from 'theme';
 
 const prismColors = {
-  char: '#61dafb',
+  char: '#D8DEE9',
   comment: '#999999',
-  keyword: '#c4f1fe',
+  keyword: '#c5a5c5',
   lineHighlight: '#393d45',
-  primative: '#c997c0',
-  string: '#99c27c',
-  variable: '#99c27c',
+  primitive: '#5a9bcf',
+  string: '#8dc891',
+  variable: '#d7deea',
+  boolean: '#ff8b50',
+  punctuation: '#5FB3B3',
+  tag: '#fc929e',
+  function: '#79b6f2',
+  className: '#FAC863',
+  method: '#6699CC',
+  operator: '#fc929e',
 };
 
 css.global('.gatsby-highlight', {
@@ -57,7 +64,7 @@ css.global('.gatsby-highlight-code-line', {
 });
 
 css.global('.token.attr-name', {
-  color: colors.white,
+  color: prismColors.keyword,
 });
 
 css.global(
@@ -75,38 +82,46 @@ css.global(
 css.global(
   `
 .token.property,
-.token.boolean,
 .token.number,
 .token.function-name,
 .token.constant,
 .token.symbol,
 .token.deleted`,
   {
-    color: prismColors.primative,
+    color: prismColors.primitive,
   },
 );
 
-css.global(
-  `
-.token.punctuation,
-.token.tag,
-.token.string`,
-  {
-    color: prismColors.string,
-  },
-);
+css.global(`.token.boolean`, {
+  color: prismColors.boolean,
+});
+
+css.global(`.token.tag`, {
+  color: prismColors.tag,
+});
+
+css.global(`.token.string`, {
+  color: prismColors.string,
+});
+
+css.global(`.token.punctuation`, {
+  color: prismColors.punctuation,
+});
 
 css.global(
   `
 .token.selector,
 .token.char,
-.token.function,
 .token.builtin,
 .token.inserted`,
   {
     color: prismColors.char,
   },
 );
+
+css.global(`.token.function`, {
+  color: prismColors.function,
+});
 
 css.global(
   `
@@ -120,7 +135,7 @@ css.global(
 );
 
 css.global('.token.attr-value', {
-  color: prismColors.comment,
+  color: prismColors.string,
 });
 
 css.global('.token.keyword', {
@@ -132,7 +147,7 @@ css.global(
 .token.atrule,
 .token.class-name`,
   {
-    color: prismColors.char,
+    color: prismColors.className,
   },
 );
 

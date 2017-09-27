@@ -81,6 +81,17 @@ const Acknowlegements = ({data, location}) => (
               {' '}
               org on GitHub.
             </li>
+            <li>
+              <a href="https://github.com/voronianski">Dmitri Voronianski</a>
+              {' '}
+              for letting us use the
+              {' '}
+              <a href="https://labs.voronianski.com/oceanic-next-color-scheme/">
+                Oceanic Next
+              </a>
+              {' '}
+              color scheme on this website.
+            </li>
           </ul>
         </div>
       </div>
