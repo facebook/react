@@ -9,6 +9,11 @@
 
 'use strict';
 
+// Polyfills for IE
+import 'array-from';
+import 'string.prototype.includes';
+import 'string.prototype.repeat';
+
 import React, {Component} from 'react';
 import Flex from 'components/Flex';
 import Footer from 'components/LayoutFooter';
