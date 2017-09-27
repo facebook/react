@@ -317,26 +317,34 @@ const markdownStyles = {
 
 // TODO Move these hard-coded examples into example files and out of the template?
 // Alternately, move them into the markdown and transform them during build?
+const name = Math.random() > .5 ? 'John' : 'Jane';
 const HELLO_COMPONENT = `
 class HelloMessage extends React.Component {
   render() {
-    return <div>Hello {this.props.name}</div>;
+    return (
+      <div>
+        Hello {this.props.name}
+      </div>
+    );
   }
 }
 
-ReactDOM.render(<HelloMessage name="Devin" />, mountNode);
+ReactDOM.render(
+  <HelloMessage name="${name}" />,
+  mountNode
+);
 `.trim();
 
 const TIMER_COMPONENT = `
 class Timer extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {secondsElapsed: 0};
+    this.state = { seconds: 0 };
   }
 
   tick() {
     this.setState((prevState) => ({
-      secondsElapsed: prevState.secondsElapsed + 1
+      seconds: prevState.seconds + 1
     }));
   }
 
@@ -350,7 +358,9 @@ class Timer extends React.Component {
 
   render() {
     return (
-      <div>Seconds Elapsed: {this.state.secondsElapsed}</div>
+      <div>
+        Seconds: {this.state.seconds}
+      </div>
     );
   }
 }
@@ -362,9 +372,9 @@ var TODO_COMPONENT = `
 class TodoApp extends React.Component {
   constructor(props) {
     super(props);
+    this.state = { items: [], text: '' };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
-    this.state = {items: [], text: ''};
   }
 
   render() {
@@ -373,20 +383,25 @@ class TodoApp extends React.Component {
         <h3>TODO</h3>
         <TodoList items={this.state.items} />
         <form onSubmit={this.handleSubmit}>
-          <input onChange={this.handleChange} value={this.state.text} />
-          <button>{'Add #' + (this.state.items.length + 1)}</button>
+          <input
+            onChange={this.handleChange}
+            value={this.state.text}
+          />
+          <button>
+            Add #{this.state.items.length + 1}
+          </button>
         </form>
       </div>
     );
   }
 
   handleChange(e) {
-    this.setState({text: e.target.value});
+    this.setState({ text: e.target.value });
   }
 
   handleSubmit(e) {
     e.preventDefault();
-    var newItem = {
+    const newItem = {
       text: this.state.text,
       id: Date.now()
     };
@@ -417,15 +432,15 @@ class MarkdownEditor extends React.Component {
   constructor(props) {
     super(props);
     this.handleChange = this.handleChange.bind(this);
-    this.state = {value: 'Type some *markdown* here!'};
+    this.state = { value: 'Type some *markdown* here!' };
   }
 
   handleChange(e) {
-    this.setState({value: e.target.value});
+    this.setState({ value: e.target.value });
   }
 
   getRawMarkup() {
-    var md = new Remarkable();
+    const md = new Remarkable();
     return { __html: md.render(this.state.value) };
   }
 
