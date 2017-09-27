@@ -56,7 +56,8 @@ If you want to do it, here are the steps to follow:
 2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
 3. Delete all files in the `src/` folder of the new project.
 4. Add a file named `index.css` in the `src/` folder with [this CSS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0100).
-5. Add a file named `index.js` in the `src/` folder with [this JS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010), and then add three lines to the top of it:
+5. Add a file named `index.js` in the `src/` folder with [this JS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010).
+6. Add these three lines to the top of `index.js` in the `src/` folder:
 
     ```js
     import React from 'react';
