@@ -8,7 +8,7 @@ category: Add-Ons
 
 > Note:
 >
-> `react-addons-perf` is no longer supported in v16. Please use Chrome Performance Tab instead: [Learn more about it](https://facebook.github.io/react/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab).
+> As of React 16, `react-addons-perf` is not supported. Please use [your browser's profiling tools](/react/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab) to get insight into which components re-render.
 
 **Importing**
 
