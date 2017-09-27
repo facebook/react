@@ -154,9 +154,12 @@ class CodeEditor extends Component {
                     background: colors.error,
                     color: colors.white,
                   }}>
-                  <MetaTitle cssProps={{
-                    color: colors.white,
-                  }}>Error</MetaTitle>
+                  <MetaTitle
+                    cssProps={{
+                      color: colors.white,
+                    }}>
+                    Error
+                  </MetaTitle>
                 </div>
                 <pre
                   css={{
