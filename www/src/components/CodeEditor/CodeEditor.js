@@ -98,7 +98,7 @@ class CodeEditor extends Component {
             }}>
             <div
               css={{
-                flex: '0 0 50%',
+                flex: '0 0 70%',
                 overflow: 'hidden',
                 borderRadius: '10px 0 0 10px',
 
@@ -137,7 +137,7 @@ class CodeEditor extends Component {
             {error &&
               <div
                 css={{
-                  flex: '0 0 50%',
+                  flex: '0 0 70%',
                   overflow: 'hidden',
                   border: `1px solid ${colors.error}`,
                   borderRadius: '0 10px 10px 0',
@@ -167,7 +167,7 @@ class CodeEditor extends Component {
             {!error &&
               <div
                 css={{
-                  flex: '0 0 50%',
+                  flex: '0 0 30%',
                   overflow: 'hidden',
                   border: `1px solid ${colors.divider}`,
                   borderRadius: '0 10px 10px 0',
