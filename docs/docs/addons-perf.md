@@ -6,6 +6,10 @@ layout: docs
 category: Add-Ons
 ---
 
+> Note:
+>
+> As of React 16, `react-addons-perf` is not supported. Please use [your browser's profiling tools](/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab) to get insight into which components re-render.
+
 **Importing**
 
 ```javascript
@@ -28,7 +32,7 @@ See these articles for an introduction to React performance tooling:
 
 ### Development vs. Production Builds
 
-If you're benchmarking or seeing performance problems in your React apps, make sure you're testing with the [minified production build](/react/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
+If you're benchmarking or seeing performance problems in your React apps, make sure you're testing with the [minified production build](/downloads.html). The development build includes extra warnings that are helpful when building your apps, but it is slower due to the extra bookkeeping it does.
 
 However, the perf tools described on this page only work when using the development build of React. Therefore, the profiler only serves to indicate the _relatively_ expensive parts of your app.
 

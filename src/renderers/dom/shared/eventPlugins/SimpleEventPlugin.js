@@ -24,7 +24,7 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
 var getEventCharCode = require('getEventCharCode');
-var invariant = require('fbjs/lib/invariant');
+var warning = require('fbjs/lib/warning');
 
 import type {TopLevelTypes} from 'BrowserEventConstants';
 import type {
@@ -136,6 +136,41 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   topLevelEventsToDispatchConfig[topEvent] = type;
 });
 
+// Only used in DEV for exhaustiveness validation.
+var knownHTMLTopLevelTypes = [
+  'topAbort',
+  'topCancel',
+  'topCanPlay',
+  'topCanPlayThrough',
+  'topClose',
+  'topDurationChange',
+  'topEmptied',
+  'topEncrypted',
+  'topEnded',
+  'topError',
+  'topInput',
+  'topInvalid',
+  'topLoad',
+  'topLoadedData',
+  'topLoadedMetadata',
+  'topLoadStart',
+  'topPause',
+  'topPlay',
+  'topPlaying',
+  'topProgress',
+  'topRateChange',
+  'topReset',
+  'topSeeked',
+  'topSeeking',
+  'topStalled',
+  'topSubmit',
+  'topSuspend',
+  'topTimeUpdate',
+  'topToggle',
+  'topVolumeChange',
+  'topWaiting',
+];
+
 var SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
 
@@ -151,41 +186,6 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     }
     var EventConstructor;
     switch (topLevelType) {
-      case 'topAbort':
-      case 'topCancel':
-      case 'topCanPlay':
-      case 'topCanPlayThrough':
-      case 'topClose':
-      case 'topDurationChange':
-      case 'topEmptied':
-      case 'topEncrypted':
-      case 'topEnded':
-      case 'topError':
-      case 'topInput':
-      case 'topInvalid':
-      case 'topLoad':
-      case 'topLoadedData':
-      case 'topLoadedMetadata':
-      case 'topLoadStart':
-      case 'topPause':
-      case 'topPlay':
-      case 'topPlaying':
-      case 'topProgress':
-      case 'topRateChange':
-      case 'topReset':
-      case 'topSeeked':
-      case 'topSeeking':
-      case 'topStalled':
-      case 'topSubmit':
-      case 'topSuspend':
-      case 'topTimeUpdate':
-      case 'topToggle':
-      case 'topVolumeChange':
-      case 'topWaiting':
-        // HTML Events
-        // @see http://www.w3.org/TR/html5/index.html#events-0
-        EventConstructor = SyntheticEvent;
-        break;
       case 'topKeyPress':
         // Firefox creates a keypress event for function keys too. This removes
         // the unwanted keypress events. Enter is however both printable and
@@ -255,12 +255,22 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topPaste':
         EventConstructor = SyntheticClipboardEvent;
         break;
+      default:
+        if (__DEV__) {
+          if (knownHTMLTopLevelTypes.indexOf(topLevelType) === -1) {
+            warning(
+              false,
+              'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
+                'is likely caused by a bug in React. Please file an issue.',
+              topLevelType,
+            );
+          }
+        }
+        // HTML Events
+        // @see http://www.w3.org/TR/html5/index.html#events-0
+        EventConstructor = SyntheticEvent;
+        break;
     }
-    invariant(
-      EventConstructor,
-      'SimpleEventPlugin: Unhandled event type, `%s`.',
-      topLevelType,
-    );
     var event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,

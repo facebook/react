@@ -93,7 +93,7 @@ hoodie new todomvc -t "hoodiehq/hoodie-react-todomvc"
 Ever wanted to have a quick way to see what a JSX tag would be converted to? [Tim Yung](http://www.yungsters.com/) made a page for it.
 <figure><a href="/react/jsx-compiler.html"><img src="../img/blog/jsx-compiler.png"></a></figure>
 
-[Try it out!](/react/jsx-compiler.html)
+[Try it out!](/jsx-compiler.html)
 
 
 

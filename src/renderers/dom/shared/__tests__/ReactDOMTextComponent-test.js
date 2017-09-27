@@ -12,7 +12,6 @@
 var React;
 var ReactDOM;
 var ReactDOMServer;
-var ReactDOMFeatureFlags;
 
 // In standard React, TextComponent keeps track of different Text templates
 // using comments. However, in React Fiber, those comments are not outputted due
@@ -28,7 +27,6 @@ describe('ReactDOMTextComponent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
   });
 
   it('updates a mounted text component in place', () => {
@@ -117,11 +115,7 @@ describe('ReactDOMTextComponent', () => {
     var reactEl = <div>{'foo'}{'bar'}{'baz'}</div>;
     el.innerHTML = ReactDOMServer.renderToString(reactEl);
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.hydrate(reactEl, el);
-    } else {
-      ReactDOM.render(reactEl, el);
-    }
+    ReactDOM.hydrate(reactEl, el);
     expect(el.textContent).toBe('foobarbaz');
 
     ReactDOM.unmountComponentAtNode(el);
@@ -129,11 +123,7 @@ describe('ReactDOMTextComponent', () => {
     reactEl = <div>{''}{''}{''}</div>;
     el.innerHTML = ReactDOMServer.renderToString(reactEl);
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.hydrate(reactEl, el);
-    } else {
-      ReactDOM.render(reactEl, el);
-    }
+    ReactDOM.hydrate(reactEl, el);
     expect(el.textContent).toBe('');
   });
 

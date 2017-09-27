@@ -13,11 +13,15 @@ redirect_from: "support.html"
 
 Many members of the community use Stack Overflow to ask questions. Read through the [existing questions](http://stackoverflow.com/questions/tagged/reactjs) tagged with **reactjs** or [ask your own](http://stackoverflow.com/questions/ask?tags=reactjs)!
 
-## Discussion forum
+## Discussion Forum
 
 For longer-form conversations about React, we've set up a [discussion forum at **discuss.reactjs.org**](https://discuss.reactjs.org/). This forum is a great place for discussion about best practices and application architecture as well as the future of React. If you have an answerable code-level question, please post it to Stack Overflow instead.
 
 In the forum there's also a category for job posts and a category for discussion of our weekly meeting notes.
+
+## React Community on Hashnode
+
+[Hashnode's React node](https://hashnode.com/n/reactjs) is a great place to stay up-to-date with React discussion, news and stories.
 
 ## Reactiflux Chat
 

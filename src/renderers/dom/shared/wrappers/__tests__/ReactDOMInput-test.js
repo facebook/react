@@ -15,7 +15,6 @@ describe('ReactDOMInput', () => {
   var React;
   var ReactDOM;
   var ReactDOMServer;
-  var ReactDOMFeatureFlags;
   var ReactTestUtils;
   var inputValueTracking;
 
@@ -35,7 +34,6 @@ describe('ReactDOMInput', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
     // TODO: can we express this test with only public API?
     inputValueTracking = require('inputValueTracking');
@@ -1187,7 +1185,6 @@ describe('ReactDOMInput', () => {
       <input value="0" type="range" min="0" max="100" step="1" />,
     );
     expect(log).toEqual([
-      ...(ReactDOMFeatureFlags.useFiber ? [] : ['set data-reactroot']),
       'set type',
       'set step',
       'set min',
@@ -1251,9 +1248,6 @@ describe('ReactDOMInput', () => {
       <input type="date" defaultValue="1980-01-01" />,
     );
     expect(log).toEqual([
-      ...(ReactDOMFeatureFlags.useFiber
-        ? []
-        : ['node.setAttribute("data-reactroot", "")']),
       'node.setAttribute("type", "date")',
       'node.setAttribute("value", "1980-01-01")',
       'node.value = ""',

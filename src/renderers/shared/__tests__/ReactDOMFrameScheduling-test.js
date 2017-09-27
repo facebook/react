@@ -9,10 +9,7 @@
 
 'use strict';
 
-const ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-const describeFiber = ReactDOMFeatureFlags.useFiber ? describe : xdescribe;
-
-describeFiber('ReactDOMFrameScheduling', () => {
+describe('ReactDOMFrameScheduling', () => {
   it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
     const previousRAF = global.requestAnimationFrame;
     try {

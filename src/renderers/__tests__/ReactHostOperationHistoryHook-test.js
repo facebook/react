@@ -9,12 +9,9 @@
 
 'use strict';
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var describeStack = ReactDOMFeatureFlags.useFiber ? describe.skip : describe;
-
 // This is only used by ReactPerf which is currently not supported on Fiber.
 // Use browser timeline integration instead.
-describeStack('ReactHostOperationHistoryHook', () => {
+describe.skip('ReactHostOperationHistoryHook', () => {
   var React;
   var ReactPerf;
   var ReactDOM;

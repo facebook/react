@@ -114,16 +114,16 @@ You can also return multiple items from `render()` using an array:
 ```javascript
 render() {
   return [
-    <li key="A"/>First item</li>,
-    <li key="B"/>Second item</li>,
-    <li key="C"/>Third item</li>,
+    <li key="A">First item</li>,
+    <li key="B">Second item</li>,
+    <li key="C">Third item</li>,
   ];
 }
 ```
 
 > Note:
 >
-> Don't forget to [add keys](/docs/lists-and-keys.html#keys) to elements in a fragment to avoid the key warning.
+> Don't forget to [add keys](https://facebook.github.io/react/docs/lists-and-keys.html#keys) to elements in a fragment to avoid the key warning.
 
 * * *
 
