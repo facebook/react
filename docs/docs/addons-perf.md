@@ -95,7 +95,7 @@ Get the opaque data structure describing measurements from the last start-stop s
 Perf.printInclusive(measurements)
 ```
 
-Prints the overall time taken. If no argument's passed, defaults to all the measurements from the last recording. This prints a nicely formatted table in the console, like so:
+Prints the overall time taken. When no arguments are passed, `printInclusive` defaults to all the measurements from the last recording. This prints a nicely formatted table in the console, like so:
 
 ![](/react/img/docs/perf-inclusive.png)
 
