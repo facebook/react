@@ -3,7 +3,6 @@
   "private": true,
   "version": "16.0.0",
   "devDependencies": {
-    "array-from": "^2.1.1",
     "art": "^0.10.1",
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
@@ -85,8 +84,6 @@
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-uglify": "^1.0.1",
     "run-sequence": "^1.1.4",
-    "string.prototype.includes": "^1.0.0",
-    "string.prototype.repeat": "^0.2.0",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
