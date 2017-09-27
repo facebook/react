@@ -1112,6 +1112,15 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should warn if dangerouslySetInnerHTML is not a string', () => {
+      spyOn(console, 'error');
+      mountComponent({dangerouslySetInnerHTML: {__html: {foo: 'bar'} } });
+      expect(console.error.calls.count(0)).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        '`props.dangerouslySetInnerHTML` should be a string.'
+      );
+    });
+
     it('should allow {__html: null}', () => {
       expect(function() {
         mountComponent({dangerouslySetInnerHTML: {__html: null}});

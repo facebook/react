@@ -102,6 +102,12 @@ function assertValidProps(component, props) {
         'Please visit https://fb.me/react-invariant-dangerously-set-inner-html ' +
         'for more information.',
     );
+    if (props.dangerouslySetInnerHTML[HTML]) {
+      warning(
+        props.dangerouslySetInnerHTML[HTML].toString !== Object.prototype.toString,
+        '`props.dangerouslySetInnerHTML` should be a string.'
+      );
+    }
   }
   if (__DEV__) {
     warning(
