@@ -80,7 +80,7 @@
 
 &lt;p&gt;That amounts to a combined &lt;strong&gt;32% size decrease compared to the previous version (30% post-gzip)&lt;/strong&gt;.&lt;/p&gt;
 
-&lt;p&gt;The size difference is partly attributable to a change in packaging. React now uses &lt;a href=&quot;https://rollupjs.org/&quot;&gt;Rollup&lt;/a&gt; to create flat bundles for each of its different target formats, resulting in both size and runtime performance wins. The flat bundle format also means that React&amp;#39;s impact on bundle size is roughly consistent regardless of how your ship your app, whether it&amp;#39;s with Webpack, Browserify, the pre-built UMD bundles, or any other system.&lt;/p&gt;
+&lt;p&gt;The size difference is partly attributable to a change in packaging. React now uses &lt;a href=&quot;https://rollupjs.org/&quot;&gt;Rollup&lt;/a&gt; to create flat bundles for each of its different target formats, resulting in both size and runtime performance wins. The flat bundle format also means that React&amp;#39;s impact on bundle size is roughly consistent regardless of how you ship your app, whether it&amp;#39;s with Webpack, Browserify, the pre-built UMD bundles, or any other system.&lt;/p&gt;
 
 &lt;h3&gt;MIT licensed&lt;/h3&gt;
 
