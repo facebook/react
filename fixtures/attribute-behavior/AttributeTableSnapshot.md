@@ -676,23 +676,23 @@
 ## `as` (on `<link>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `as=(string)`| (changed)| `"a string"` |
+| `as=(string)`| (initial)| `<empty string>` |
 | `as=(empty string)`| (initial)| `<empty string>` |
-| `as=(array with string)`| (changed)| `"string"` |
+| `as=(array with string)`| (initial)| `<empty string>` |
 | `as=(empty array)`| (initial)| `<empty string>` |
-| `as=(object)`| (changed)| `"result of toString()"` |
-| `as=(numeric string)`| (changed)| `"42"` |
-| `as=(-1)`| (changed)| `"-1"` |
-| `as=(0)`| (changed)| `"0"` |
-| `as=(integer)`| (changed)| `"1"` |
-| `as=(NaN)`| (changed, warning)| `"NaN"` |
-| `as=(float)`| (changed)| `"99.99"` |
+| `as=(object)`| (initial)| `<empty string>` |
+| `as=(numeric string)`| (initial)| `<empty string>` |
+| `as=(-1)`| (initial)| `<empty string>` |
+| `as=(0)`| (initial)| `<empty string>` |
+| `as=(integer)`| (initial)| `<empty string>` |
+| `as=(NaN)`| (initial, warning)| `<empty string>` |
+| `as=(float)`| (initial)| `<empty string>` |
 | `as=(true)`| (initial, warning)| `<empty string>` |
 | `as=(false)`| (initial, warning)| `<empty string>` |
-| `as=(string 'true')`| (changed)| `"true"` |
-| `as=(string 'false')`| (changed)| `"false"` |
-| `as=(string 'on')`| (changed)| `"on"` |
-| `as=(string 'off')`| (changed)| `"off"` |
+| `as=(string 'true')`| (initial)| `<empty string>` |
+| `as=(string 'false')`| (initial)| `<empty string>` |
+| `as=(string 'on')`| (initial)| `<empty string>` |
+| `as=(string 'off')`| (initial)| `<empty string>` |
 | `as=(symbol)`| (initial, warning)| `<empty string>` |
 | `as=(function)`| (initial, warning)| `<empty string>` |
 | `as=(null)`| (initial)| `<empty string>` |
