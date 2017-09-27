@@ -61,7 +61,7 @@ const style = {
 const primaryStyle = {
   backgroundColor: colors.brand,
   color: colors.black,
-  fontWeight: 100,
+  fontWeight: 300,
   padding: '10px 25px',
   whiteSpace: 'nowrap',
   transition: 'background-color 0.2s ease-out',

@@ -51,7 +51,7 @@ const AllBlogPosts = ({data}) => (
                   fontSize: 24,
                   color: colors.dark,
                   lineHeight: 1.3,
-                  fontWeight: 600,
+                  fontWeight: 700,
                 }}>
                 <Link
                   css={{
