@@ -34,7 +34,8 @@
     "remarkable": "^1.7.1",
     "slugify": "^1.2.1",
     "string.prototype.includes": "^1.0.0",
-    "string.prototype.repeat": "^0.2.0"
+    "string.prototype.repeat": "^0.2.0",
+    "unist-util-visit": "^1.1.3"
   },
   "devDependencies": {
     "gh-pages": "^1.0.0",
