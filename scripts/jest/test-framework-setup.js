@@ -6,6 +6,46 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   require('./setupSpecEquivalenceReporter.js');
 } else {
   var env = jasmine.getEnv();
+  var existingErrorMap = require('../error-codes/codes.json');
+
+  function wrapUserCode(fn) {
+    return function() {
+      try {
+        return fn.apply(this, arguments);
+      } catch (err) {
+        if (!global.__DEV__) {
+          if (err && typeof err.message === 'string') {
+            const re = /error-decoder.html\?invariant=(\d+)([^\s]*)/;
+            const matches = err.message.match(re);
+            if (matches && matches.length === 3) {
+              const code = parseInt(matches[1], 10);
+              const args = matches[2]
+                .split('&')
+                .filter(s => s.startsWith('args[]='))
+                .map(s => s.substr('args[]='.length))
+                .map(decodeURIComponent);
+              const format = existingErrorMap[code];
+              let argIndex = 0;
+              err.message = format.replace(/%s/g, () => args[argIndex++]);
+            }
+          }
+        }
+        throw err;
+      }
+    }
+  }
+
+  env.beforeEach(() => {
+    const matchers = global[Symbol.for('$$jest-matchers-object')].matchers;
+    const toThrow = matchers.toThrow;
+    matchers.toThrow = (actual, expected) => {
+      return toThrow(wrapUserCode(actual), expected);
+    };
+    const toThrowError = matchers.toThrowError;
+    matchers.toThrowError = (actual, expected) => {
+      return toThrowError(wrapUserCode(actual), expected);
+    };
+  });
 
   // TODO: Stop using spyOn in all the test since that seem deprecated.
   // This is a legacy upgrade path strategy from:

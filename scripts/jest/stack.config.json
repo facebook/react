@@ -1,4 +1,5 @@
 {
+  "name": "react-stack",
   "modulePathIgnorePatterns": [
     "/.module-cache/",
     "<rootDir>/build/",

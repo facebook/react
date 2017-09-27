@@ -1,5 +1,5 @@
 {
-  "name": "react-fiber",
+  "name": "react-fiber-prod",
   "modulePathIgnorePatterns": [
     "/.module-cache/",
     "<rootDir>/build/",
@@ -11,8 +11,8 @@
     ".*": "./scripts/jest/preprocessor.js"
   },
   "setupFiles": [
-    "./scripts/jest/fiber.setup.js",
-    "./scripts/jest/environment.js"
+    "./scripts/jest/fiber.prod.setup.js",
+    "./scripts/jest/environment.prod.js"
   ],
   "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
   "testRegex": "/__tests__/.*(\\.js|coffee|ts)$",

@@ -452,13 +452,12 @@ babel-helpers@^6.24.1:
     babel-runtime "^6.22.0"
     babel-template "^6.24.1"
 
-babel-jest@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-20.1.0-delta.1.tgz#ad82547f552ebf5ec1bf84df9b0d093ac0ea4c62"
+babel-jest@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/babel-jest/-/babel-jest-20.1.0-echo.1.tgz#3bb1ad29864d6ad5d348570fc4dff3a513e7513f"
   dependencies:
-    babel-core "^6.0.0"
     babel-plugin-istanbul "^4.0.0"
-    babel-preset-jest "20.1.0-delta.1"
+    babel-preset-jest "20.1.0-echo.1"
 
 babel-messages@^6.23.0:
   version "6.23.0"
@@ -502,9 +501,9 @@ babel-plugin-istanbul@^4.0.0:
     istanbul-lib-instrument "^1.6.2"
     test-exclude "^4.0.3"
 
-babel-plugin-jest-hoist@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-jest-hoist/-/babel-plugin-jest-hoist-20.1.0-delta.1.tgz#f0e6ac6cc7fb894b2584be74674435a4eefa1ed8"
+babel-plugin-jest-hoist@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/babel-plugin-jest-hoist/-/babel-plugin-jest-hoist-20.1.0-echo.1.tgz#507eceaeadd1ba025d816efdb5023b3adfaac866"
 
 babel-plugin-jscript@^1.0.4:
   version "1.0.4"
@@ -777,11 +776,11 @@ babel-preset-flow@^6.23.0:
   dependencies:
     babel-plugin-transform-flow-strip-types "^6.22.0"
 
-babel-preset-jest@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/babel-preset-jest/-/babel-preset-jest-20.1.0-delta.1.tgz#312d2ec79097f9bc940f008c5d650ca47ba6c7f1"
+babel-preset-jest@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/babel-preset-jest/-/babel-preset-jest-20.1.0-echo.1.tgz#8864c9f5e5808c56918963076ff7033bf89e9a48"
   dependencies:
-    babel-plugin-jest-hoist "20.1.0-delta.1"
+    babel-plugin-jest-hoist "20.1.0-echo.1"
 
 babel-preset-react@^6.5.0:
   version "6.24.1"
@@ -2614,15 +2613,15 @@ istanbul-reports@^1.1.1:
   dependencies:
     handlebars "^4.0.3"
 
-jest-changed-files@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-20.1.0-delta.1.tgz#912f8eff09c79b28fc7b66513f0ad505f1b378d5"
+jest-changed-files@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-20.1.0-echo.1.tgz#6432db6d4576df56660e5773b5b9c09642a36070"
   dependencies:
     throat "^4.0.0"
 
-jest-cli@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-cli/-/jest-cli-20.1.0-delta.1.tgz#57cd3ce04cc5e208601cef571b40f122f456c02c"
+jest-cli@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-cli/-/jest-cli-20.1.0-echo.1.tgz#4805175ac4f96c22fde3df49011e79e9acabcc9b"
   dependencies:
     ansi-escapes "^2.0.0"
     callsites "^2.0.0"
@@ -2633,18 +2632,18 @@ jest-cli@20.1.0-delta.1:
     istanbul-lib-coverage "^1.0.1"
     istanbul-lib-instrument "^1.4.2"
     istanbul-lib-source-maps "^1.1.0"
-    jest-changed-files "20.1.0-delta.1"
-    jest-config "20.1.0-delta.1"
-    jest-docblock "20.1.0-delta.1"
-    jest-environment-jsdom "20.1.0-delta.1"
-    jest-haste-map "20.1.0-delta.1"
-    jest-jasmine2 "20.1.0-delta.1"
-    jest-message-util "20.1.0-delta.1"
-    jest-regex-util "20.1.0-delta.1"
-    jest-resolve-dependencies "20.1.0-delta.1"
-    jest-runtime "20.1.0-delta.1"
-    jest-snapshot "20.1.0-delta.1"
-    jest-util "20.1.0-delta.1"
+    jest-changed-files "20.1.0-echo.1"
+    jest-config "20.1.0-echo.1"
+    jest-docblock "20.1.0-echo.1"
+    jest-environment-jsdom "20.1.0-echo.1"
+    jest-haste-map "20.1.0-echo.1"
+    jest-jasmine2 "20.1.0-echo.1"
+    jest-message-util "20.1.0-echo.1"
+    jest-regex-util "20.1.0-echo.1"
+    jest-resolve-dependencies "20.1.0-echo.1"
+    jest-runtime "20.1.0-echo.1"
+    jest-snapshot "20.1.0-echo.1"
+    jest-util "20.1.0-echo.1"
     micromatch "^2.3.11"
     node-notifier "^5.0.2"
     pify "^2.3.0"
@@ -2656,85 +2655,86 @@ jest-cli@20.1.0-delta.1:
     worker-farm "^1.3.1"
     yargs "^7.0.2"
 
-jest-config@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-config/-/jest-config-20.1.0-delta.1.tgz#8383f624997326b00fb4ddee442a068195294065"
+jest-config@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-config/-/jest-config-20.1.0-echo.1.tgz#3e9cec93961dac4f58733198fcfb945e9a01d2ca"
   dependencies:
     chalk "^2.0.1"
     glob "^7.1.1"
-    jest-environment-jsdom "20.1.0-delta.1"
-    jest-environment-node "20.1.0-delta.1"
-    jest-get-type "20.1.0-delta.1"
-    jest-jasmine2 "20.1.0-delta.1"
-    jest-matcher-utils "20.1.0-delta.1"
-    jest-regex-util "20.1.0-delta.1"
-    jest-resolve "20.1.0-delta.1"
-    jest-validate "20.1.0-delta.1"
-    pretty-format "20.1.0-delta.1"
+    jest-environment-jsdom "20.1.0-echo.1"
+    jest-environment-node "20.1.0-echo.1"
+    jest-get-type "20.1.0-echo.1"
+    jest-jasmine2 "20.1.0-echo.1"
+    jest-matcher-utils "20.1.0-echo.1"
+    jest-regex-util "20.1.0-echo.1"
+    jest-resolve "20.1.0-echo.1"
+    jest-util "20.1.0-echo.1"
+    jest-validate "20.1.0-echo.1"
+    pretty-format "20.1.0-echo.1"
 
-jest-diff@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-20.1.0-delta.1.tgz#d64d9fcfff4bdfca87dd53f66e3db91ea8faa280"
+jest-diff@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-diff/-/jest-diff-20.1.0-echo.1.tgz#7306889a65d58a86e5b6e3027f985c446d46c511"
   dependencies:
     chalk "^2.0.1"
     diff "^3.2.0"
-    jest-get-type "20.1.0-delta.1"
-    jest-matcher-utils "20.1.0-delta.1"
-    pretty-format "20.1.0-delta.1"
+    jest-get-type "20.1.0-echo.1"
+    jest-matcher-utils "20.1.0-echo.1"
+    pretty-format "20.1.0-echo.1"
 
-jest-docblock@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-docblock/-/jest-docblock-20.1.0-delta.1.tgz#6789873ddf3f7e90480dbcaab18386a5f17bde6c"
+jest-docblock@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-docblock/-/jest-docblock-20.1.0-echo.1.tgz#be02f43ee019f97e6b83267c746ac7b40d290fe8"
 
-jest-environment-jsdom@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-environment-jsdom/-/jest-environment-jsdom-20.1.0-delta.1.tgz#c42acf1f7f0d3c69d0e9fd0cb1414d2e7f24c382"
+jest-environment-jsdom@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-environment-jsdom/-/jest-environment-jsdom-20.1.0-echo.1.tgz#1d1819f03e7abca42d5834711c397912d8028fe3"
   dependencies:
-    jest-mock "20.1.0-delta.1"
-    jest-util "20.1.0-delta.1"
+    jest-mock "20.1.0-echo.1"
+    jest-util "20.1.0-echo.1"
     jsdom "^9.12.0"
 
-jest-environment-node@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-environment-node/-/jest-environment-node-20.1.0-delta.1.tgz#e2553b9e07a560ae55cfe1c9594072b00808a664"
+jest-environment-node@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-environment-node/-/jest-environment-node-20.1.0-echo.1.tgz#a4c9f5a9d4bb28f68862e2eefa7f94f985601034"
   dependencies:
-    jest-mock "20.1.0-delta.1"
-    jest-util "20.1.0-delta.1"
+    jest-mock "20.1.0-echo.1"
+    jest-util "20.1.0-echo.1"
 
-jest-get-type@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-20.1.0-delta.1.tgz#f441f9e9b5305657dccf5e1c035b3c91bb166aec"
+jest-get-type@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-get-type/-/jest-get-type-20.1.0-echo.1.tgz#00e3a07d5feffc76236488aa4445bd18e66e71ac"
 
-jest-haste-map@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-haste-map/-/jest-haste-map-20.1.0-delta.1.tgz#fd9ee6801f32a75a0363b5fff6e014492ee4138c"
+jest-haste-map@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-haste-map/-/jest-haste-map-20.1.0-echo.1.tgz#6dfd0c97bb51a68a35dd98326e04f994157dce81"
   dependencies:
     fb-watchman "^2.0.0"
     graceful-fs "^4.1.11"
-    jest-docblock "20.1.0-delta.1"
+    jest-docblock "20.1.0-echo.1"
     micromatch "^2.3.11"
     sane "^2.0.0"
     worker-farm "^1.3.1"
 
-jest-jasmine2@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-jasmine2/-/jest-jasmine2-20.1.0-delta.1.tgz#58aa27c5b460a933887e1343cb77626b159445a1"
+jest-jasmine2@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-jasmine2/-/jest-jasmine2-20.1.0-echo.1.tgz#fab2292a48f2f6ed845d58113a9d3cf605214f70"
   dependencies:
     chalk "^2.0.1"
     graceful-fs "^4.1.11"
-    jest-diff "20.1.0-delta.1"
-    jest-matcher-utils "20.1.0-delta.1"
-    jest-matchers "20.1.0-delta.1"
-    jest-message-util "20.1.0-delta.1"
-    jest-snapshot "20.1.0-delta.1"
+    jest-diff "20.1.0-echo.1"
+    jest-matcher-utils "20.1.0-echo.1"
+    jest-matchers "20.1.0-echo.1"
+    jest-message-util "20.1.0-echo.1"
+    jest-snapshot "20.1.0-echo.1"
 
-jest-matcher-utils@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-20.1.0-delta.1.tgz#e8c1153d5009d3df851641723b85bbfcec8fed37"
+jest-matcher-utils@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-matcher-utils/-/jest-matcher-utils-20.1.0-echo.1.tgz#2bbb22b2e6269a87e73c152003dc91abb8ef0c85"
   dependencies:
     chalk "^2.0.1"
-    jest-get-type "20.1.0-delta.1"
-    pretty-format "20.1.0-delta.1"
+    jest-get-type "20.1.0-echo.1"
+    pretty-format "20.1.0-echo.1"
 
 jest-matcher-utils@^19.0.0:
   version "19.0.0"
@@ -2743,87 +2743,89 @@ jest-matcher-utils@^19.0.0:
     chalk "^1.1.3"
     pretty-format "^19.0.0"
 
-jest-matchers@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-matchers/-/jest-matchers-20.1.0-delta.1.tgz#ef4d9fdd0ecd520000eae1a6e7c7df892d9d3653"
+jest-matchers@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-matchers/-/jest-matchers-20.1.0-echo.1.tgz#22bab51170445ac780a956d2482662a8c177932b"
   dependencies:
-    jest-diff "20.1.0-delta.1"
-    jest-get-type "20.1.0-delta.1"
-    jest-matcher-utils "20.1.0-delta.1"
-    jest-message-util "20.1.0-delta.1"
-    jest-regex-util "20.1.0-delta.1"
+    jest-diff "20.1.0-echo.1"
+    jest-get-type "20.1.0-echo.1"
+    jest-matcher-utils "20.1.0-echo.1"
+    jest-message-util "20.1.0-echo.1"
+    jest-regex-util "20.1.0-echo.1"
 
-jest-message-util@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-message-util/-/jest-message-util-20.1.0-delta.1.tgz#078ae8df88daf1f26cce34c718e7f37234e7e8b3"
+jest-message-util@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-message-util/-/jest-message-util-20.1.0-echo.1.tgz#31b6cced3e8cec6e1a74e7bcc989b987ea2b0ed5"
   dependencies:
     chalk "^2.0.1"
     micromatch "^2.3.11"
     slash "^1.0.0"
 
-jest-mock@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-mock/-/jest-mock-20.1.0-delta.1.tgz#15dab3e9d8429ad91aff27a8bea237ea4fe7f24e"
+jest-mock@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-mock/-/jest-mock-20.1.0-echo.1.tgz#c37e47c954aa5090e887d50ba96f3b1d51d3bf90"
 
-jest-regex-util@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-regex-util/-/jest-regex-util-20.1.0-delta.1.tgz#0aaea967cdfc6cfe8fa828a11235679cf0eb2312"
+jest-regex-util@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-regex-util/-/jest-regex-util-20.1.0-echo.1.tgz#a5cf0e74eb59578ae90a21a2db72870996bb7db5"
 
-jest-resolve-dependencies@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-resolve-dependencies/-/jest-resolve-dependencies-20.1.0-delta.1.tgz#b53117306afa64da477697b2a9a845004efb3fef"
+jest-resolve-dependencies@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-resolve-dependencies/-/jest-resolve-dependencies-20.1.0-echo.1.tgz#82dc2122664e826c2d8bf6522924bbfdd0655770"
   dependencies:
-    jest-regex-util "20.1.0-delta.1"
+    jest-regex-util "20.1.0-echo.1"
 
-jest-resolve@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-resolve/-/jest-resolve-20.1.0-delta.1.tgz#e7c7220d567213886c19514b18b368852933ad42"
+jest-resolve@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-resolve/-/jest-resolve-20.1.0-echo.1.tgz#9e85b94bbc0d53af4a6d1f5c227d367710592046"
   dependencies:
     browser-resolve "^1.11.2"
     chalk "^2.0.1"
     is-builtin-module "^1.0.0"
     resolve "^1.3.2"
 
-jest-runtime@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-runtime/-/jest-runtime-20.1.0-delta.1.tgz#53db81fb1a347fe8b71e2285749e320003f90048"
+jest-runtime@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-runtime/-/jest-runtime-20.1.0-echo.1.tgz#f6f6592faa59b6d18ab4efe79fef73a3a74747b8"
   dependencies:
     babel-core "^6.0.0"
-    babel-jest "20.1.0-delta.1"
+    babel-jest "20.1.0-echo.1"
     babel-plugin-istanbul "^4.0.0"
     chalk "^2.0.1"
     convert-source-map "^1.4.0"
     graceful-fs "^4.1.11"
-    jest-config "20.1.0-delta.1"
-    jest-haste-map "20.1.0-delta.1"
-    jest-regex-util "20.1.0-delta.1"
-    jest-resolve "20.1.0-delta.1"
-    jest-util "20.1.0-delta.1"
+    jest-config "20.1.0-echo.1"
+    jest-haste-map "20.1.0-echo.1"
+    jest-regex-util "20.1.0-echo.1"
+    jest-resolve "20.1.0-echo.1"
+    jest-util "20.1.0-echo.1"
     json-stable-stringify "^1.0.1"
     micromatch "^2.3.11"
+    slash "^1.0.0"
     strip-bom "3.0.0"
+    write-file-atomic "^2.1.0"
     yargs "^7.0.2"
 
-jest-snapshot@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-snapshot/-/jest-snapshot-20.1.0-delta.1.tgz#91cee74af1e2f892a22978a63803823ebcca433f"
+jest-snapshot@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-snapshot/-/jest-snapshot-20.1.0-echo.1.tgz#580c8064b6516a5a29ef6dfa14432c5071562155"
   dependencies:
     chalk "^2.0.1"
-    jest-diff "20.1.0-delta.1"
-    jest-matcher-utils "20.1.0-delta.1"
-    jest-util "20.1.0-delta.1"
+    jest-diff "20.1.0-echo.1"
+    jest-matcher-utils "20.1.0-echo.1"
+    jest-util "20.1.0-echo.1"
     natural-compare "^1.4.0"
-    pretty-format "20.1.0-delta.1"
+    pretty-format "20.1.0-echo.1"
 
-jest-util@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-20.1.0-delta.1.tgz#029fd38e66a6d408ec286a53bc319e18894bcccc"
+jest-util@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-util/-/jest-util-20.1.0-echo.1.tgz#adec8947191e31e2be5e243bffd28742e94f9401"
   dependencies:
     chalk "^2.0.1"
     graceful-fs "^4.1.11"
-    jest-message-util "20.1.0-delta.1"
-    jest-mock "20.1.0-delta.1"
-    jest-validate "20.1.0-delta.1"
+    jest-message-util "20.1.0-echo.1"
+    jest-mock "20.1.0-echo.1"
+    jest-validate "20.1.0-echo.1"
     leven "^2.1.0"
     mkdirp "^0.5.1"
 
@@ -2836,20 +2838,20 @@ jest-validate@19.0.0:
     leven "^2.0.0"
     pretty-format "^19.0.0"
 
-jest-validate@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest-validate/-/jest-validate-20.1.0-delta.1.tgz#7204fd181c14380454249fec9e02e5d474360af8"
+jest-validate@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest-validate/-/jest-validate-20.1.0-echo.1.tgz#eb1d795a9a67a3e2e1e838b16d7b8e298d597d51"
   dependencies:
     chalk "^2.0.1"
-    jest-get-type "20.1.0-delta.1"
+    jest-get-type "20.1.0-echo.1"
     leven "^2.1.0"
-    pretty-format "20.1.0-delta.1"
+    pretty-format "20.1.0-echo.1"
 
-jest@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/jest/-/jest-20.1.0-delta.1.tgz#1a99fafeee15bf6c9973217779fe15eb6ea8b6c6"
+jest@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/jest/-/jest-20.1.0-echo.1.tgz#f23e315b79e0881b10c7a92dc38770b5beb471dc"
   dependencies:
-    jest-cli "20.1.0-delta.1"
+    jest-cli "20.1.0-echo.1"
 
 jodid25519@^1.0.0:
   version "1.0.2"
@@ -3556,9 +3558,9 @@ prettier@1.2.2:
     jest-validate "19.0.0"
     minimist "1.2.0"
 
-pretty-format@20.1.0-delta.1:
-  version "20.1.0-delta.1"
-  resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-20.1.0-delta.1.tgz#f1d31d80b5bd8724b33f3065acb1457710213d0d"
+pretty-format@20.1.0-echo.1:
+  version "20.1.0-echo.1"
+  resolved "https://registry.yarnpkg.com/pretty-format/-/pretty-format-20.1.0-echo.1.tgz#3b97907461d90a06b2e7531185cb1b529eb186f3"
   dependencies:
     ansi-regex "^3.0.0"
     ansi-styles "^3.0.0"
@@ -4624,6 +4626,22 @@ wrap-ansi@^2.0.0:
 wrappy@1:
   version "1.0.2"
   resolved "https://registry.yarnpkg.com/wrappy/-/wrappy-1.0.2.tgz#b5243d8f3ec1aa35f1364605bc0d1036e30ab69f"
+
+write-file-atomic@^1.1.2:
+  version "1.3.4"
+  resolved "https://registry.yarnpkg.com/write-file-atomic/-/write-file-atomic-1.3.4.tgz#f807a4f0b1d9e913ae7a48112e6cc3af1991b45f"
+  dependencies:
+    graceful-fs "^4.1.11"
+    imurmurhash "^0.1.4"
+    slide "^1.1.5"
+
+write-file-atomic@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/write-file-atomic/-/write-file-atomic-2.1.0.tgz#1769f4b551eedce419f0505deae2e26763542d37"
+  dependencies:
+    graceful-fs "^4.1.11"
+    imurmurhash "^0.1.4"
+    slide "^1.1.5"
 
 write@^0.2.1:
   version "0.2.1"
