@@ -1,18 +1,17 @@
 {
   "name": "react-noop-renderer",
-  "version": "16.0.0-rc.3",
+  "version": "16.0.0",
   "private": true,
   "description": "React package for testing the Fiber reconciler.",
   "main": "index.js",
   "repository": "facebook/react",
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "dependencies": {
-    "fbjs": "^0.8.9",
-    "object-assign": "^4.1.0"
+    "fbjs": "^0.8.16",
+    "object-assign": "^4.1.1"
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "cjs/"

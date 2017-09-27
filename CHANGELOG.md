@@ -5,6 +5,12 @@
     Click to see more.
   </summary>
 
+No unreleased changes yet.
+
+</details>
+
+## 16.0.0 (September 26, 2017)
+
 ### New JS Environment Requirements
 
  * React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame). If you support older browsers and devices which may not yet provide these natively (e.g. <IE11), [you may want to include a polyfill](https://gist.github.com/gaearon/9a4d54653ae9c50af6c54b4e0e56b583).
@@ -28,6 +34,7 @@
   * Previously, changing the `ref` to a component would always detach the ref before that component's render is called. Now, we change the `ref` later, when applying the changes to the DOM.
   * It is not safe to re-render into a container that was modified by something other than React. This worked previously in some cases but was never supported. We now emit a warning in this case. Instead you should clean up your component trees using `ReactDOM.unmountComponentAtNode`. [See this example.](https://github.com/facebook/react/issues/10294#issuecomment-318820987)
   * `componentDidUpdate` lifecycle no longer receives `prevContext` param. ([@bvaughn](https://github.com/bvaughn) in [#8631](https://github.com/facebook/react/pull/8631))
+  * Non-unique keys may now cause children to be duplicated and/or omitted. Using non-unique keys is not (and has never been) supported, but previously it was a hard error.
   * Shallow renderer no longer calls `componentDidUpdate()` because DOM refs are not available. This also makes it consistent with `componentDidMount()` (which does not get called in previous versions either).
   * Shallow renderer does not implement `unstable_batchedUpdates()` anymore.
 - The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds. For example:
@@ -46,7 +53,20 @@
 - There is no `react-with-addons.js` build anymore. All compatible addons are published separately on npm, and have single-file browser versions if you need them.
 - The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
 
-</details>
+## 15.6.2 (September 25, 2017)
+
+### All Packages
+* Switch from BSD + Patents to MIT license
+
+### React DOM
+
+* Fix a bug where modifying `document.documentMode` would trigger IE detection in other browsers, breaking change events. ([@aweary](https://github.com/aweary) in [#10032](https://github.com/facebook/react/pull/10032))
+* CSS Columns are treated as unitless numbers. ([@aweary](https://github.com/aweary) in [#10115](https://github.com/facebook/react/pull/10115))
+* Fix bug in QtWebKit when wrapping synthetic events in proxies. ([@walrusfruitcake](https://github.com/walrusfruitcake) in [#10115](https://github.com/facebook/react/pull/10011))
+* Prevent event handlers from receiving extra argument in development. ([@aweary](https://github.com/aweary) in [#10115](https://github.com/facebook/react/pull/8363))
+* Fix cases where `onChange` would not fire with `defaultChecked` on radio inputs. ([@jquense](https://github.com/jquense) in [#10156](https://github.com/facebook/react/pull/10156))
+* Add support for `controlList` attribute to DOM property whitelist ([@nhunzaker](https://github.com/nhunzaker) in [#9940](https://github.com/facebook/react/pull/9940))
+* Fix a bug where creating an element with a ref in a constructor did not throw an error in development. ([@iansu](https://github.com/iansu) in [#10025](https://github.com/facebook/react/pull/10025))
 
 ## 15.6.1 (June 14, 2017)
 

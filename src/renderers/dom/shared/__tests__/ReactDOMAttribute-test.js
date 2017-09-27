@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -112,9 +110,9 @@ describe('ReactDOM unknown attribute', () => {
 
       testUnknownAttributeRemoval(Symbol('foo'));
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid prop `unknown` on <div> tag. Either remove this ' +
-          'prop from the element, or pass a string or number value to keep it ' +
-          'in the DOM. For details, see https://fb.me/react-unknown-prop\n' +
+        'Warning: Invalid value for prop `unknown` on <div> tag. Either remove it ' +
+          'from the element, or pass a string or number value to keep it ' +
+          'in the DOM. For details, see https://fb.me/react-attribute-behavior\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
@@ -125,10 +123,10 @@ describe('ReactDOM unknown attribute', () => {
 
       testUnknownAttributeRemoval(function someFunction() {});
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid prop `unknown` on <div> tag. Either remove this ' +
-          'prop from the element, or pass a string or number value to ' +
+        'Warning: Invalid value for prop `unknown` on <div> tag. Either remove ' +
+          'it from the element, or pass a string or number value to ' +
           'keep it in the DOM. For details, see ' +
-          'https://fb.me/react-unknown-prop\n' +
+          'https://fb.me/react-attribute-behavior\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);

@@ -20,5 +20,5 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "author": "Paul O'Shannessy <paul@oshannessy.com>",
-  "license": "BSD-3-Clause"
+  "license": "MIT"
 }

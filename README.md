@@ -59,7 +59,7 @@ To help you get your feet wet and get you familiar with our contribution process
 
 ### License
 
-React is [BSD licensed](./LICENSE). We also provide an additional [patent grant](./PATENTS).
+React is [MIT licensed](./LICENSE).
 
 React documentation is [Creative Commons licensed](./LICENSE-docs).
 

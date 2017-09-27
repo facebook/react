@@ -10,7 +10,7 @@ class TextInputFixtures extends React.Component {
     return (
       <FixtureSet
         title="Inputs"
-        description="Common behavior across controled and uncontrolled inputs">
+        description="Common behavior across controlled and uncontrolled inputs">
         <TestCase title="Numbers in a controlled text field with no handler">
           <TestCase.Steps>
             <li>Move the cursor to after "2" in the text field</li>

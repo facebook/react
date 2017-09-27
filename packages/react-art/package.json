@@ -1,7 +1,7 @@
 {
   "name": "react-art",
-  "version": "16.0.0-rc.3",
   "description": "React ART is a JavaScript library for drawing vector graphics using React. It provides declarative and reactive bindings to the ART library. Using the same declarative API you can render the output to either Canvas, SVG or VML (IE8).",
+  "version": "16.0.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -12,24 +12,23 @@
     "canvas",
     "jsx"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
   "homepage": "https://facebook.github.io/react/",
   "dependencies": {
-    "create-react-class": "^15.6.0",
-    "fbjs": "^0.8.9",
+    "create-react-class": "^15.6.2",
+    "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.0",
-    "prop-types": "^15.5.6"
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.0"
   },
   "peerDependencies": {
     "react": "^16.0.0-beta.5"
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
     "index.js",
     "cjs/",
