@@ -6,7 +6,9 @@
     "url": "https://github.com/facebook/react"
   },
   "resolutions": {
-    "gatsby/graphql": "0.10.5"
+    "gatsby/graphql": "0.10.5",
+    "gatsby/react": "16.0.0",
+    "gatsby/react-dom": "16.0.0"
   },
   "dependencies": {
     "array-from": "^2.1.1",
