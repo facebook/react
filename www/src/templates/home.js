@@ -289,7 +289,7 @@ const markdownStyles = {
 
       [media.greaterThan('xlarge')]: {
         fontSize: 24,
-        fontWeight: 500,
+        fontWeight: 400,
       },
     },
 

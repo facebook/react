@@ -137,11 +137,11 @@ css.global(
 );
 
 css.global('.token.important', {
-  fontWeight: 'normal',
+  fontWeight: 400,
 });
 
 css.global('.token.bold', {
-  fontWeight: 'bold',
+  fontWeight: 700,
 });
 css.global('.token.italic', {
   fontStyle: 'italic',
