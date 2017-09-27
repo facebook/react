@@ -80,7 +80,13 @@
     </h1>
     <div class="subHeader"></div>
 
-    <p><strong>Importing</strong></p>
+    <blockquote>
+<p>Note:</p>
+
+<p>As of React 16, <code>react-addons-perf</code> is not supported. Please use <a href="/react/docs/optimizing-performance.html#profiling-components-with-the-chrome-performance-tab">your browser&#39;s profiling tools</a> to get insight into which components re-render.</p>
+</blockquote>
+
+<p><strong>Importing</strong></p>
 <div class="highlight"><pre><code class="language-javascript" data-lang="javascript"><span class="kr">import</span> <span class="nx">Perf</span> <span class="nx">from</span> <span class="s1">&#39;react-addons-perf&#39;</span><span class="p">;</span> <span class="c1">// ES6</span>
 <span class="kd">var</span> <span class="nx">Perf</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="s1">&#39;react-addons-perf&#39;</span><span class="p">);</span> <span class="c1">// ES5 with npm</span>
 </code></pre></div>
