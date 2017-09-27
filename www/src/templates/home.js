@@ -317,7 +317,7 @@ const markdownStyles = {
 
 // TODO Move these hard-coded examples into example files and out of the template?
 // Alternately, move them into the markdown and transform them during build?
-const name = Math.random() > .5 ? 'John' : 'Jane';
+const name = Math.random() > 0.5 ? 'John' : 'Jane';
 const HELLO_COMPONENT = `
 class HelloMessage extends React.Component {
   render() {
