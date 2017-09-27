@@ -10,7 +10,7 @@ This round-up is a special edition on [Flux](https://facebook.github.io/flux/). 
 
 Facebook engineers [Jing Chen](https://github.com/jingc) and [Bill Fisher](https://github.com/fisherwebdev) gave a talk about Flux and React at [ForwardJS](http://forwardjs.com/), and how using an application architecture with a unidirectional data flow helped solve recurring bugs.
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 # Yahoo
 
@@ -144,7 +144,7 @@ undo: function() {
 
 Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
 
 
 ## Random Tweet

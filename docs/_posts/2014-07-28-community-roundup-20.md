@@ -16,7 +16,7 @@ It's an exciting time for React as there are now more commits from open source c
 
 At the last [JSConf.us](http://2014.jsconf.us/), Vjeux talked about the design decisions made in the API that allows it to scale to a large number of developers. If you don't have 20 minutes, take a look at the [annotated slides](https://speakerdeck.com/vjeux/why-does-react-scale-jsconf-2014).
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/D-ioDiacTm8" frameborder="0" allowfullscreen></iframe>
 
 
 ## Live Editing
@@ -63,7 +63,7 @@ If you missed the last [London React Meetup](http://www.meetup.com/London-React-
 - React on Rails - How to use React with Ruby on Rails to build isomorphic apps
 - Building an isomorphic, real-time to-do list with moped and node.js
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/CP3lvm5Ppqo" frameborder="0" allowfullscreen></iframe>
 
 In related news, the next [React SF Meetup](http://www.meetup.com/ReactJS-San-Francisco/events/195518392/) will be from Prezi: [“Immediate Mode on the Web: How We Implemented the Prezi Viewer in JavaScript”](https://medium.com/prezi-engineering/how-and-why-prezi-turned-to-javascript-56e0ca57d135). While not in React, their tech is really awesome and shares a lot of React's design principles and perf optimizations.
 
