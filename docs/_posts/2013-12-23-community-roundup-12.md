@@ -3,11 +3,11 @@ title: "Community Round-up #12"
 author: [vjeux]
 ---
 
-React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the [docs](/react/docs/getting-started.html) and do not hesitate to ask questions on the [Google Group](https://groups.google.com/group/reactjs), [IRC](irc://chat.freenode.net/reactjs) or [Stack Overflow](http://stackoverflow.com/questions/tagged/reactjs). We are trying our best to help you out!
+React got featured on the front-page of Hacker News thanks to the Om library. If you try it out for the first time, take a look at the [docs](/docs/getting-started.html) and do not hesitate to ask questions on the [Google Group](https://groups.google.com/group/reactjs), [IRC](irc://chat.freenode.net/reactjs) or [Stack Overflow](http://stackoverflow.com/questions/tagged/reactjs). We are trying our best to help you out!
 
 ## The Future of JavaScript MVC
 
-[David Nolen](https://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](/react/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
+[David Nolen](https://swannodette.github.io/) announced Om, a thin wrapper on-top of React in ClojureScript. It stands out by only using immutable data structures. This unlocks the ability to write a very efficient [shouldComponentUpdate](/docs/component-specs.html#updating-shouldcomponentupdate) and get huge performance improvements on some tasks.
 
 > We've known this for some time over here in the ClojureScript corner of the world - all of our collections are immutable and modeled directly on the original Clojure versions written in Java. Modern JavaScript engines have now been tuned to the point that it's no longer uncommon to see collection performance within 2.5X of the Java Virtual Machine.
 >
@@ -22,7 +22,7 @@ React got featured on the front-page of Hacker News thanks to the Om library. If
 
 ## Scroll Position with React
 
-Managing the scroll position when new content is inserted is usually very tricky to get right. [Vjeux](http://blog.vjeux.com/) discovered that [componentWillUpdate](/react/docs/component-specs.html#updating-componentwillupdate) and [componentDidUpdate](/react/docs/component-specs.html#updating-componentdidupdate) were triggered exactly at the right time to manage the scroll position.
+Managing the scroll position when new content is inserted is usually very tricky to get right. [Vjeux](http://blog.vjeux.com/) discovered that [componentWillUpdate](/docs/component-specs.html#updating-componentwillupdate) and [componentDidUpdate](/docs/component-specs.html#updating-componentdidupdate) were triggered exactly at the right time to manage the scroll position.
 
 > We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate
 >
@@ -45,7 +45,7 @@ Managing the scroll position when new content is inserted is usually very tricky
 
 ## Lights Out
 
-React declarative approach is well suited to write games. [Cheng Lou](https://github.com/chenglou) wrote the famous Lights Out game in React. It's a good example of use of [TransitionGroup](/react/docs/animation.html) to implement animations.
+React declarative approach is well suited to write games. [Cheng Lou](https://github.com/chenglou) wrote the famous Lights Out game in React. It's a good example of use of [TransitionGroup](/docs/animation.html) to implement animations.
 <figure><a href="https://chenglou.github.io/react-lights-out/"><img src="../img/blog/lights-out.png"></a></figure>
 
 [Try it out!](https://chenglou.github.io/react-lights-out/)

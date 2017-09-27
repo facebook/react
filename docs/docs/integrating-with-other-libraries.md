@@ -18,7 +18,7 @@ The easiest way to avoid conflicts is to prevent the React component from updati
 
 To demonstrate this, let's sketch out a wrapper for a generic jQuery plugin.
 
-We will attach a [ref](/react/docs/refs-and-the-dom.html) to the root DOM element. Inside `componentDidMount`, we will get a reference to it so we can pass it to the jQuery plugin.
+We will attach a [ref](/docs/refs-and-the-dom.html) to the root DOM element. Inside `componentDidMount`, we will get a reference to it so we can pass it to the jQuery plugin.
 
 To prevent React from touching the DOM after mounting, we will return an empty `<div />` from the `render()` method. The `<div />` element has no properties or children, so React has no reason to update it, leaving the jQuery plugin free to manage that part of the DOM:
 
@@ -39,7 +39,7 @@ class SomePlugin extends React.Component {
 }
 ```
 
-Note that we defined both `componentDidMount` and `componentWillUnmount` [lifecycle hooks](/react/docs/react-component.html#the-component-lifecycle). Many jQuery plugins attach event listeners to the DOM so it's important to detach them in `componentWillUnmount`. If the plugin does not provide a method for cleanup, you will probably have to provide your own, remembering to remove any event listeners the plugin registered to prevent memory leaks.
+Note that we defined both `componentDidMount` and `componentWillUnmount` [lifecycle hooks](/docs/react-component.html#the-component-lifecycle). Many jQuery plugins attach event listeners to the DOM so it's important to detach them in `componentWillUnmount`. If the plugin does not provide a method for cleanup, you will probably have to provide your own, remembering to remove any event listeners the plugin registered to prevent memory leaks.
 
 ### Integrating with jQuery Chosen Plugin
 
@@ -67,7 +67,7 @@ function Example() {
 }
 ```
 
-We will implement it as an [uncontrolled component](/react/docs/uncontrolled-components.html) for simplicity.
+We will implement it as an [uncontrolled component](/docs/uncontrolled-components.html) for simplicity.
 
 First, we will create an empty component with a `render()` method where we return `<select>` wrapped in a `<div>`:
 
@@ -190,7 +190,7 @@ class Chosen extends React.Component {
 
 ## Integrating with Other View Libraries
 
-React can be embedded into other applications thanks to the flexibility of [`ReactDOM.render()`](/react/docs/react-dom.html#render).
+React can be embedded into other applications thanks to the flexibility of [`ReactDOM.render()`](/docs/react-dom.html#render).
 
 Although React is commonly used at startup to load a single root React component into the DOM, `ReactDOM.render()` can also be called multiple times for independent parts of the UI which can be as small as a button, or as large as an app.
 
@@ -227,7 +227,7 @@ ReactDOM.render(
 );
 ```
 
-From here you could start moving more logic into the component and begin adopting more common React practices. For example, in components it is best not to rely on IDs because the same component can be rendered multiple times. Instead, we will use the [React event system](/react/docs/handling-events.html) and register the click handler directly on the React `<button>` element:
+From here you could start moving more logic into the component and begin adopting more common React practices. For example, in components it is best not to rely on IDs because the same component can be rendered multiple times. Instead, we will use the [React event system](/docs/handling-events.html) and register the click handler directly on the React `<button>` element:
 
 ```js{2,6,9}
 function Button(props) {
@@ -255,7 +255,7 @@ You can have as many such isolated components as you like, and use `ReactDOM.ren
 
 [Backbone](http://backbonejs.org/) views typically use HTML strings, or string-producing template functions, to create the content for their DOM elements. This process, too, can be replaced with rendering a React component.
 
-Below, we will create a Backbone view called `ParagraphView`. It will override Backbone's `render()` function to render a React `<Paragraph>` component into the DOM element provided by Backbone (`this.el`). Here, too, we are using [`ReactDOM.render()`](/react/docs/react-dom.html#render):
+Below, we will create a Backbone view called `ParagraphView`. It will override Backbone's `render()` function to render a React `<Paragraph>` component into the DOM element provided by Backbone (`this.el`). Here, too, we are using [`ReactDOM.render()`](/docs/react-dom.html#render):
 
 ```js{1,5,8,12}
 function Paragraph(props) {
@@ -283,13 +283,13 @@ When a component is removed *from within* a React tree, the cleanup is performed
 
 ## Integrating with Model Layers
 
-While it is generally recommended to use unidirectional data flow such as [React state](/react/docs/lifting-state-up.html), [Flux](http://facebook.github.io/flux/), or [Redux](http://redux.js.org/), React components can use a model layer from other frameworks and libraries.
+While it is generally recommended to use unidirectional data flow such as [React state](/docs/lifting-state-up.html), [Flux](http://facebook.github.io/flux/), or [Redux](http://redux.js.org/), React components can use a model layer from other frameworks and libraries.
 
 ### Using Backbone Models in React Components
 
 The simplest way to consume [Backbone](http://backbonejs.org/) models and collections from a React component is to listen to the various change events and manually force an update.
 
-Components responsible for rendering models would listen to `'change'` events, while components responsible for rendering collections would listen for `'add'` and `'remove'` events. In both cases, call [`this.forceUpdate()`](/react/docs/react-component.html#forceupdate) to rerender the component with the new data.
+Components responsible for rendering models would listen to `'change'` events, while components responsible for rendering collections would listen for `'add'` and `'remove'` events. In both cases, call [`this.forceUpdate()`](/docs/react-component.html#forceupdate) to rerender the component with the new data.
 
 In the example below, the `List` component renders a Backbone collection, using the `Item` component to render individual items.
 
@@ -353,7 +353,7 @@ class List extends React.Component {
 
 The approach above requires your React components to be aware of the Backbone models and collections. If you later plan to migrate to another data management solution, you might want to concentrate the knowledge about Backbone in as few parts of the code as possible.
 
-One solution to this is to extract the model's attributes as plain data whenever it changes, and keep this logic in a single place. The following is [a higher-order component](/react/docs/higher-order-components.html) that extracts all attributes of a Backbone model into state, passing the data to the wrapped component.
+One solution to this is to extract the model's attributes as plain data whenever it changes, and keep this logic in a single place. The following is [a higher-order component](/docs/higher-order-components.html) that extracts all attributes of a Backbone model into state, passing the data to the wrapped component.
 
 This way, only the higher-order component needs to know about Backbone model internals, and most components in the app can stay agnostic of Backbone.
 

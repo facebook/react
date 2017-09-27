@@ -16,7 +16,7 @@ function render() {
 
 ## JSX
 
-React components can no longer be called directly like this. Instead [you can use JSX](/react/docs/jsx-in-depth.html).
+React components can no longer be called directly like this. Instead [you can use JSX](/docs/jsx-in-depth.html).
 
 ```javascript
 var React = require('react');

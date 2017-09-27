@@ -4,9 +4,9 @@ title: Uncontrolled Components
 permalink: docs/uncontrolled-components.html
 ---
 
-In most cases, we recommend using [controlled components](/react/docs/forms.html) to implement forms. In a controlled component, form data is handled by a React component. The alternative is uncontrolled components, where form data is handled by the DOM itself.
+In most cases, we recommend using [controlled components](/docs/forms.html) to implement forms. In a controlled component, form data is handled by a React component. The alternative is uncontrolled components, where form data is handled by the DOM itself.
 
-To write an uncontrolled component, instead of writing an event handler for every state update, you can [use a ref](/react/docs/refs-and-the-dom.html) to get form values from the DOM.
+To write an uncontrolled component, instead of writing an event handler for every state update, you can [use a ref](/docs/refs-and-the-dom.html) to get form values from the DOM.
 
 For example, this code accepts a single name in an uncontrolled component:
 

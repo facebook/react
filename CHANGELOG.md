@@ -5,6 +5,12 @@
     Click to see more.
   </summary>
 
+No unreleased changes yet.
+
+</details>
+
+## 16.0.0 (September 26, 2017)
+
 ### New JS Environment Requirements
 
  * React 16 depends on the collection types [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) and [Set](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Set), as well as [requestAnimationFrame](https://developer.mozilla.org/en-US/docs/Web/API/window/requestAnimationFrame). If you support older browsers and devices which may not yet provide these natively (e.g. <IE11), [you may want to include a polyfill](https://gist.github.com/gaearon/9a4d54653ae9c50af6c54b4e0e56b583).
@@ -46,8 +52,6 @@
 
 - There is no `react-with-addons.js` build anymore. All compatible addons are published separately on npm, and have single-file browser versions if you need them.
 - The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
-
-</details>
 
 ## 15.6.2 (September 25, 2017)
 

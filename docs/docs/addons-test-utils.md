@@ -46,7 +46,7 @@ When writing unit tests for React, shallow rendering can be helpful. Shallow ren
 > Note:
 >
 > The shallow renderer has moved to `react-test-renderer/shallow`.<br>
-> [Learn more about shallow rendering on its reference page.](/react/docs/shallow-renderer.html)
+> [Learn more about shallow rendering on its reference page.](/docs/shallow-renderer.html)
 
 ## Other Utilities
 
@@ -61,7 +61,7 @@ Simulate.{eventName}(
 
 Simulate an event dispatch on a DOM node with optional `eventData` event data.
 
-`Simulate` has a method for [every event that React understands](/react/docs/events.html#supported-events).
+`Simulate` has a method for [every event that React understands](/docs/events.html#supported-events).
 
 **Clicking an element**
 

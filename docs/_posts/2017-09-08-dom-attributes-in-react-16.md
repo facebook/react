@@ -80,7 +80,7 @@ Just like before, React lets you pass `data-` and `aria-` attributes freely:
 
 This has not changed.
 
-[Accessibility](/react/docs/accessibility.html) is very important, so even though React 16 passes any attributes through, it still validates that `aria-` props have correct names in development mode, just like React 15 did.
+[Accessibility](/docs/accessibility.html) is very important, so even though React 16 passes any attributes through, it still validates that `aria-` props have correct names in development mode, just like React 15 did.
 
 ## Migration Path
 

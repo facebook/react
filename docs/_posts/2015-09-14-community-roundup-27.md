@@ -4,7 +4,7 @@ layout: post
 author: [steveluscher]
 ---
 
-In the weeks following the [open-source release](/react/blog/2015/08/11/relay-technical-preview.html) of the Relay technical preview, the community has been abuzz with activity. We are honored to have been able to enjoy a steady stream of ideas and contributions from such a talented group of individuals. Let's take a look at some of the things we've achieved, together!
+In the weeks following the [open-source release](/blog/2015/08/11/relay-technical-preview.html) of the Relay technical preview, the community has been abuzz with activity. We are honored to have been able to enjoy a steady stream of ideas and contributions from such a talented group of individuals. Let's take a look at some of the things we've achieved, together!
 
 ## Teaching servers to speak GraphQL
 

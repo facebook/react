@@ -59,7 +59,7 @@ Shallow testing currently has some limitations, namely not supporting refs.
 
 You can think of the shallowRenderer as a "place" to render the component you're testing, and from which you can extract the component's output.
 
-`shallowRenderer.render()` is similar to [`ReactDOM.render()`](/react/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. This means you can test components isolated from how their children are implemented.
+`shallowRenderer.render()` is similar to [`ReactDOM.render()`](/docs/react-dom.html#render) but it doesn't require DOM and only renders a single level deep. This means you can test components isolated from how their children are implemented.
 
 ### `shallowRenderer.getRenderOutput()`
 

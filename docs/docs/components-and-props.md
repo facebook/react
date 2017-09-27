@@ -44,7 +44,7 @@ class Welcome extends React.Component {
 
 The above two components are equivalent from React's point of view.
 
-Classes have some additional features that we will discuss in the [next sections](/react/docs/state-and-lifecycle.html). Until then, we will use functional components for their conciseness.
+Classes have some additional features that we will discuss in the [next sections](/docs/state-and-lifecycle.html). Until then, we will use functional components for their conciseness.
 
 ## Rendering a Component
 
@@ -263,4 +263,4 @@ React is pretty flexible but it has a single strict rule:
 
 **All React components must act like pure functions with respect to their props.**
 
-Of course, application UIs are dynamic and change over time. In the [next section](/react/docs/state-and-lifecycle.html), we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.
+Of course, application UIs are dynamic and change over time. In the [next section](/docs/state-and-lifecycle.html), we will introduce a new concept of "state". State allows React components to change their output over time in response to user actions, network responses, and anything else, without violating this rule.

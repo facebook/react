@@ -6,7 +6,7 @@ layout: docs
 category: Reference
 ---
 
-This reference guide documents the `SyntheticEvent` wrapper that forms part of React's Event System. See the [Handling Events](/react/docs/handling-events.html) guide to learn more.
+This reference guide documents the `SyntheticEvent` wrapper that forms part of React's Event System. See the [Handling Events](/docs/handling-events.html) guide to learn more.
 
 ## Overview
 
@@ -176,7 +176,7 @@ Event names:
 onChange onInput onInvalid onSubmit
 ```
 
-For more information about the onChange event, see [Forms](/react/docs/forms.html).
+For more information about the onChange event, see [Forms](/docs/forms.html).
 
 * * *
 

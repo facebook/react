@@ -56,7 +56,7 @@ class Calculator extends React.Component {
 }
 ```
 
-[Try it on CodePen.](http://codepen.io/valscion/pen/VpZJRZ?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/ZXeOBm?editors=0010)
 
 ## Adding a Second Input
 
@@ -110,7 +110,7 @@ class Calculator extends React.Component {
 }
 ```
 
-[Try it on CodePen.](http://codepen.io/valscion/pen/GWKbao?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/jGBryx?editors=0010)
 
 We have two inputs now, but when you enter the temperature in one of them, the other doesn't update. This contradicts our requirement: we want to keep them in sync.
 
@@ -184,7 +184,7 @@ First, we will replace `this.state.temperature` with `this.props.temperature` in
     const temperature = this.props.temperature;
 ```
 
-We know that [props are read-only](/react/docs/components-and-props.html#props-are-read-only). When the `temperature` was in the local state, the `TemperatureInput` could just call `this.setState()` to change it. However, now that the `temperature` is coming from the parent as a prop, the `TemperatureInput` has no control over it.
+We know that [props are read-only](/docs/components-and-props.html#props-are-read-only). When the `temperature` was in the local state, the `TemperatureInput` could just call `this.setState()` to change it. However, now that the `temperature` is coming from the parent as a prop, the `TemperatureInput` has no control over it.
 
 In React, this is usually solved by making a component "controlled". Just like the DOM `<input>` accepts both a `value` and an `onChange` prop, so can the custom `TemperatureInput` accept both `temperature` and `onTemperatureChange` props from its parent `Calculator`.
 
@@ -296,7 +296,7 @@ class Calculator extends React.Component {
 }
 ```
 
-[Try it on CodePen.](http://codepen.io/valscion/pen/jBNjja?editors=0010)
+[Try it on CodePen.](https://codepen.io/gaearon/pen/WZpxpz?editors=0010)
 
 Now, no matter which input you edit, `this.state.temperature` and `this.state.scale` in the `Calculator` get updated. One of the inputs gets the value as is, so any user input is preserved, and the other input value is always recalculated based on it.
 
@@ -314,7 +314,7 @@ Every update goes through the same steps so the inputs stay in sync.
 
 ## Lessons Learned
 
-There should be a single "source of truth" for any data that changes in a React application. Usually, the state is first added to the component that needs it for rendering. Then, if other components also need it, you can lift it up to their closest common ancestor. Instead of trying to sync the state between different components, you should rely on the [top-down data flow](/react/docs/state-and-lifecycle.html#the-data-flows-down).
+There should be a single "source of truth" for any data that changes in a React application. Usually, the state is first added to the component that needs it for rendering. Then, if other components also need it, you can lift it up to their closest common ancestor. Instead of trying to sync the state between different components, you should rely on the [top-down data flow](/docs/state-and-lifecycle.html#the-data-flows-down).
 
 Lifting state involves writing more "boilerplate" code than two-way binding approaches, but as a benefit, it takes less work to find and isolate bugs. Since any state "lives" in some component and that component alone can change it, the surface area for bugs is greatly reduced. Additionally, you can implement any custom logic to reject or transform user input.
 

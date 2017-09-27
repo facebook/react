@@ -3,7 +3,7 @@ title: "What's New in Create React App"
 author: [gaearon]
 ---
 
-Less than a year ago, we introduced [Create React App](/react/blog/2016/07/22/create-apps-with-no-configuration.html) as an officially supported way to create apps with zero configuration. The project has since enjoyed tremendous growth, with over 950 commits by more than 250 contributors.
+Less than a year ago, we introduced [Create React App](/blog/2016/07/22/create-apps-with-no-configuration.html) as an officially supported way to create apps with zero configuration. The project has since enjoyed tremendous growth, with over 950 commits by more than 250 contributors.
 
 Today, we are excited to announce that many features that have been in the pipeline for the last few months are finally released.
 

@@ -173,13 +173,13 @@ If you'd rather play it safe, you have a few options:
 >
 >ES6 launched without any mixin support. Therefore, there is no support for mixins when you use React with ES6 classes.
 >
->**We also found numerous issues in codebases using mixins, [and don't recommend using them in the new code](/react/blog/2016/07/13/mixins-considered-harmful.html).**
+>**We also found numerous issues in codebases using mixins, [and don't recommend using them in the new code](/blog/2016/07/13/mixins-considered-harmful.html).**
 >
 >This section exists only for the reference.
 
-Sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). [`createReactClass`](/react/docs/top-level-api.html#react.createclass) lets you use a legacy `mixins` system for that.
+Sometimes very different components may share some common functionality. These are sometimes called [cross-cutting concerns](https://en.wikipedia.org/wiki/Cross-cutting_concern). [`createReactClass`](/docs/top-level-api.html#react.createclass) lets you use a legacy `mixins` system for that.
 
-One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/react/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
+One common use case is a component wanting to update itself on a time interval. It's easy to use `setInterval()`, but it's important to cancel your interval when you don't need it anymore to save memory. React provides [lifecycle methods](/docs/working-with-the-browser.html#component-lifecycle) that let you know when a component is about to be created or destroyed. Let's create a simple mixin that uses these methods to provide an easy `setInterval()` function that will automatically get cleaned up when your component is destroyed.
 
 ```javascript
 var SetIntervalMixin = {

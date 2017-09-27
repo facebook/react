@@ -13,8 +13,10 @@ If you load React from a `<script>` tag, these top-level APIs are available on t
 The `react-dom` package provides DOM-specific methods that can be used at the top level of your app and as an escape hatch to get outside of the React model if you need to. Most of your components should not need to use this module.
 
 - [`render()`](#render)
+- [`hydrate()`](#hydrate)
 - [`unmountComponentAtNode()`](#unmountcomponentatnode)
 - [`findDOMNode()`](#finddomnode)
+- [`createPortal()`](#createPortal)
 
 ### Browser Support
 
@@ -38,7 +40,7 @@ ReactDOM.render(
 )
 ```
 
-Render a React element into the DOM in the supplied `container` and return a [reference](/react/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/react/docs/components-and-props.html#functional-and-class-components)).
+Render a React element into the DOM in the supplied `container` and return a [reference](/docs/more-about-refs.html) to the component (or returns `null` for [stateless components](/docs/components-and-props.html#functional-and-class-components)).
 
 If the React element was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React element.
 
@@ -52,7 +54,23 @@ If the optional callback is provided, it will be executed after the component is
 >
 > `ReactDOM.render()` currently returns a reference to the root `ReactComponent` instance. However, using this return value is legacy
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
-> [callback ref](/react/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
+> [callback ref](/docs/more-about-refs.html#the-ref-callback-attribute) to the root element.
+>
+> Using `ReactDOM.render()` to hydrate a server-rendered container is deprecated and will be removed in React 17. Use [`hydrate()`](#hydrate) instead.
+
+* * *
+
+### `hydrate()`
+
+```javascript
+ReactDOM.hydrate(
+  element,
+  container,
+  [callback]
+)
+```
+
+Same as [`render()`](#render), but is used to hydrate a container whose HTML contents were rendered by [`ReactDOMServer`](/docs/react-dom-server.html). React will attach event listeners while preserving as much of the existing DOM as possible. For best results, you should try to render the same content on the server as on the client, with as few differences as possible.
 
 * * *
 
@@ -80,3 +98,13 @@ If this component has been mounted into the DOM, this returns the corresponding 
 > `findDOMNode` only works on mounted components (that is, components that have been placed in the DOM). If you try to call this on a component that has not been mounted yet (like calling `findDOMNode()` in `render()` on a component that has yet to be created) an exception will be thrown.
 >
 > `findDOMNode` cannot be used on functional components.
+
+* * *
+
+### `createPortal()`
+
+```javascript
+ReactDOM.createPortal(child, container)
+```
+
+Creates a portal. Portals provide a way to [render children into a DOM node that exists outside the hierarchy of the DOM component](/docs/portals.html).

@@ -8,7 +8,7 @@ category: Add-Ons
 
 > Note:
 >
-> `PureRenderMixin` is a legacy add-on. Use [`React.PureComponent`](/react/docs/react-api.html#react.purecomponent) instead.
+> `PureRenderMixin` is a legacy add-on. Use [`React.PureComponent`](/docs/react-api.html#react.purecomponent) instead.
 
 **Importing**
 
@@ -35,7 +35,7 @@ createReactClass({
 });
 ```
 
-Under the hood, the mixin implements [shouldComponentUpdate](/react/docs/component-specs.html#updating-shouldcomponentupdate), in which it compares the current props and state with the next ones and returns `false` if the equalities pass.
+Under the hood, the mixin implements [shouldComponentUpdate](/docs/component-specs.html#updating-shouldcomponentupdate), in which it compares the current props and state with the next ones and returns `false` if the equalities pass.
 
 > Note:
 >

@@ -143,7 +143,7 @@ You don't need to rewrite your app to start using React.
 
 We recommend adding React to a small part of your application, such as an individual widget, so you can see if it works well for your use case.
 
-While React [can be used](/react/docs/react-without-es6.html) without a build pipeline, we recommend setting it up so you can be more productive. A modern build pipeline typically consists of:
+While React [can be used](/docs/react-without-es6.html) without a build pipeline, we recommend setting it up so you can be more productive. A modern build pipeline typically consists of:
 
 * A **package manager**, such as [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/). It lets you take advantage of a vast ecosystem of third-party packages, and easily install or update them.
 * A **bundler**, such as [webpack](https://webpack.js.org/) or [Browserify](http://browserify.org/). It lets you write modular code and bundle it together into small packages to optimize load time.
@@ -153,7 +153,7 @@ While React [can be used](/react/docs/react-without-es6.html) without a build pi
 
 >**Note:**
 >
->Once installed, we strongly recommend setting up a [production build process](/react/docs/optimizing-performance.html#use-the-production-build) to ensure you're using the fast version of React in production.
+>Once installed, we strongly recommend setting up a [production build process](/docs/optimizing-performance.html#use-the-production-build) to ensure you're using the fast version of React in production.
 
 We recommend using [Yarn](https://yarnpkg.com/) or [npm](https://www.npmjs.com/) for managing front-end dependencies. If you're new to package managers, the [Yarn documentation](https://yarnpkg.com/en/docs/getting-started) is a good place to get started.
 
@@ -199,7 +199,7 @@ This code renders into a DOM element with the id of `root` so you need `<div id=
 
 Similarly, you can render a React component inside a DOM element somewhere inside your existing app written with any other JavaScript UI library.
 
-[Learn more about integrating React with existing code.](/react/docs/integrating-with-other-libraries.html#integrating-with-other-view-libraries)
+[Learn more about integrating React with existing code.](/docs/integrating-with-other-libraries.html#integrating-with-other-view-libraries)
 
 ### Development and Production Versions
 
@@ -207,32 +207,32 @@ By default, React includes many helpful warnings. These warnings are very useful
 
 **However, they make the development version of React larger and slower so you should use the production version when you deploy the app.**
 
-Learn [how to tell if your website is serving the right version of React](/react/docs/optimizing-performance.html#use-the-production-build), and how to configure the production build process most efficiently:
+Learn [how to tell if your website is serving the right version of React](/docs/optimizing-performance.html#use-the-production-build), and how to configure the production build process most efficiently:
 
-* [Creating a Production Build with Create React App](/react/docs/optimizing-performance.html#create-react-app)
-* [Creating a Production Build with Single-File Builds](/react/docs/optimizing-performance.html#single-file-builds)
-* [Creating a Production Build with Brunch](/react/docs/optimizing-performance.html#brunch)
-* [Creating a Production Build with Browserify](/react/docs/optimizing-performance.html#browserify)
-* [Creating a Production Build with Rollup](/react/docs/optimizing-performance.html#rollup)
-* [Creating a Production Build with webpack](/react/docs/optimizing-performance.html#webpack)
+* [Creating a Production Build with Create React App](/docs/optimizing-performance.html#create-react-app)
+* [Creating a Production Build with Single-File Builds](/docs/optimizing-performance.html#single-file-builds)
+* [Creating a Production Build with Brunch](/docs/optimizing-performance.html#brunch)
+* [Creating a Production Build with Browserify](/docs/optimizing-performance.html#browserify)
+* [Creating a Production Build with Rollup](/docs/optimizing-performance.html#rollup)
+* [Creating a Production Build with webpack](/docs/optimizing-performance.html#webpack)
 
 ### Using a CDN
 
-If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide single-file distributions in `dist` folders, which are hosted on a CDN:
+If you don't want to use npm to manage client packages, the `react` and `react-dom` npm packages also provide single-file distributions in `umd` folders, which are hosted on a CDN:
 
 ```html
-<script crossorigin src="https://unpkg.com/react@15/dist/react.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+<script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
 ```
 
 The versions above are only meant for development, and are not suitable for production. Minified and optimized production versions of React are available at:
 
 ```html
-<script crossorigin src="https://unpkg.com/react@15/dist/react.min.js"></script>
-<script crossorigin src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+<script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
 ```
 
-To load a specific version of `react` and `react-dom`, replace `15` with the version number.
+To load a specific version of `react` and `react-dom`, replace `16` with the version number.
 
 If you use Bower, React is available via the `react` package.
 
@@ -248,6 +248,6 @@ We also recommend to verify that the CDN you are using sets the `Access-Control-
 
 ![Access-Control-Allow-Origin: *](../img/docs/cdn-cors-header.png)
 
-This enables a better [error handling experience](/react/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
+This enables a better [error handling experience](/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
 </section>
 </div>
