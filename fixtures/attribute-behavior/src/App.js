@@ -753,9 +753,9 @@ class App extends React.Component {
 
   async componentDidMount() {
     const sources = {
-      ReactStable: 'https://unpkg.com/react@latest/dist/react.js',
-      ReactDOMStable: 'https://unpkg.com/react-dom@latest/dist/react-dom.js',
-      ReactDOMServerStable: 'https://unpkg.com/react-dom@latest/dist/react-dom-server.js',
+      ReactStable: 'https://unpkg.com/react@latest/umd/react.development.js',
+      ReactDOMStable: 'https://unpkg.com/react-dom@latest/umd/react-dom.development.js',
+      ReactDOMServerStable: 'https://unpkg.com/react-dom@latest/umd/react-dom-server.browser.development.js',
       ReactNext: '/react.development.js',
       ReactDOMNext: '/react-dom.development.js',
       ReactDOMServerNext: '/react-dom-server.browser.development.js',
