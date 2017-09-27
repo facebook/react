@@ -34,6 +34,6 @@ img {
   vertical-align: top;
 }
 
-pre {
+pre, code {
   font-family: source-code-pro, Menlo, Consolas, "Courier New", monospace;
 }
