@@ -123,7 +123,7 @@ render() {
 
 > Note:
 >
-> Don't forget to [add keys](https://facebook.github.io/react/docs/lists-and-keys.html#keys) to elements in a fragment to avoid the key warning.
+> Don't forget to [add keys](/docs/lists-and-keys.html#keys) to elements in a fragment to avoid the key warning.
 
 * * *
 
