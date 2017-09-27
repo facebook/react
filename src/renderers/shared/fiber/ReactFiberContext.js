@@ -237,7 +237,7 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
     emptyObject;
 
   // Remember the parent context so we can merge with it later.
-  // Inherit the parent's did-perform-work value to avoid inadvertantly blocking updates.
+  // Inherit the parent's did-perform-work value to avoid inadvertently blocking updates.
   previousContext = contextStackCursor.current;
   push(contextStackCursor, memoizedMergedChildContext, workInProgress);
   push(
