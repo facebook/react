@@ -14,8 +14,6 @@ var ReactDOM;
 var ReactTestUtils;
 var TogglingComponent;
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
 var log;
 
 describe('ReactEmptyComponent', () => {
@@ -69,20 +67,18 @@ describe('ReactEmptyComponent', () => {
     expect(container2.children.length).toBe(0);
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    it('should still throw when rendering to undefined', () => {
-      class Component extends React.Component {
-        render() {}
-      }
+  it('should still throw when rendering to undefined', () => {
+    class Component extends React.Component {
+      render() {}
+    }
 
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(<Component />);
-      }).toThrowError(
-        'Component(...): Nothing was returned from render. This usually means a return statement is missing. ' +
-          'Or, to render nothing, return null.',
-      );
-    });
-  }
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<Component />);
+    }).toThrowError(
+      'Component(...): Nothing was returned from render. This usually means a return statement is missing. ' +
+        'Or, to render nothing, return null.',
+    );
+  });
 
   it('should be able to switch between rendering null and a normal tag', () => {
     var instance1 = (
@@ -233,15 +229,8 @@ describe('ReactEmptyComponent', () => {
 
   it('can render null at the top level', () => {
     var div = document.createElement('div');
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.render(null, div);
-      expect(div.innerHTML).toBe('');
-    } else {
-      // Stack does not implement this.
-      expect(function() {
-        ReactDOM.render(null, div);
-      }).toThrowError('ReactDOM.render(): Invalid component element.');
-    }
+    ReactDOM.render(null, div);
+    expect(div.innerHTML).toBe('');
   });
 
   it('does not break when updating during mount', () => {
@@ -293,21 +282,11 @@ describe('ReactEmptyComponent', () => {
 
     ReactDOM.render(<Empty />, container);
     var noscript1 = container.firstChild;
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(noscript1).toBe(null);
-    } else {
-      expect(noscript1.nodeName).toBe('#comment');
-    }
+    expect(noscript1).toBe(null);
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
     var noscript2 = container.firstChild;
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(noscript1).toBe(null);
-    } else {
-      expect(noscript2.nodeName).toBe('#comment');
-    }
-
-    expect(noscript1).toBe(noscript2);
+    expect(noscript2).toBe(null);
   });
 });

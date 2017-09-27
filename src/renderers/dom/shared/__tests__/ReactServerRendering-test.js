@@ -16,9 +16,6 @@ var ReactDOMServer;
 var ReactTestUtils;
 var PropTypes;
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
-var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactDOMServer', () => {
@@ -34,7 +31,6 @@ describe('ReactDOMServer', () => {
     ReactDOMServer = require('react-dom/server');
 
     var DOMProperty = require('DOMProperty');
-    ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
@@ -72,11 +68,7 @@ describe('ReactDOMServer', () => {
       }
 
       var response = ReactDOMServer.renderToString(<NullComponent />);
-      if (ReactDOMFeatureFlags.useFiber) {
-        expect(response).toBe('');
-      } else {
-        expect(response).toBe('<!-- react-empty: 1 -->');
-      }
+      expect(response).toBe('');
     });
 
     // TODO: Test that listeners are not registered onto any document/container.
@@ -103,10 +95,7 @@ describe('ReactDOMServer', () => {
             '>' +
             '<span' +
             '>' +
-            (ReactDOMFeatureFlags.useFiber
-              ? 'My name is <!-- -->child'
-              : '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
-                  '<!-- react-text: [0-9]+ -->child<!-- /react-text -->') +
+            'My name is <!-- -->child' +
             '</span>' +
             '</div>',
         ),
@@ -165,14 +154,8 @@ describe('ReactDOMServer', () => {
             '<span ' +
               ROOT_ATTRIBUTE_NAME +
               '=""' +
-              (ReactDOMFeatureFlags.useFiber
-                ? ''
-                : ' ' + ID_ATTRIBUTE_NAME + '="[^"]*"') +
               '>' +
-              (ReactDOMFeatureFlags.useFiber
-                ? 'Component name: <!-- -->TestComponent'
-                : '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-                    '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->') +
+              'Component name: <!-- -->TestComponent' +
               '</span>',
           ),
         );
@@ -247,24 +230,14 @@ describe('ReactDOMServer', () => {
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
-      if (ReactDOMFeatureFlags.useFiber) {
-        expectDev(console.warn.calls.count()).toBe(1);
-        expectDev(console.warn.calls.argsFor(0)[0]).toContain(
-          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-            'will stop working in React v17. Replace the ReactDOM.render() call ' +
-            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-        );
-      } else {
-        expectDev(console.warn.calls.count()).toBe(0);
-      }
+      expectDev(console.warn.calls.count()).toBe(1);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+      );
       console.warn.calls.reset();
-
-      var expectedMarkup = lastMarkup;
-      if (ReactDOMFeatureFlags.useFiber) {
-        var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-        expectedMarkup = expectedMarkup.replace(reactComments, '');
-      }
-      expect(element.innerHTML).toBe(expectedMarkup);
+      expect(element.innerHTML).toBe(lastMarkup);
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
@@ -280,18 +253,9 @@ describe('ReactDOMServer', () => {
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expectDev(console.error.calls.count()).toBe(1);
-      if (ReactDOMFeatureFlags.useFiber) {
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'Text content did not match. Server: "x" Client: "y"',
-        );
-      } else {
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          '(client) -- react-text: 3 -->y<!-- /react-text --',
-        );
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          '(server) -- react-text: 3 -->x<!-- /react-text --',
-        );
-      }
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Text content did not match. Server: "x" Client: "y"',
+      );
       console.error.calls.reset();
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
@@ -304,104 +268,94 @@ describe('ReactDOMServer', () => {
       expectDev(console.error.calls.count()).toBe(0);
     });
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      it('should have the correct mounting behavior (new hydrate API)', () => {
-        spyOn(console, 'error');
-        // This test is testing client-side behavior.
-        ExecutionEnvironment.canUseDOM = true;
+    it('should have the correct mounting behavior (new hydrate API)', () => {
+      spyOn(console, 'error');
+      // This test is testing client-side behavior.
+      ExecutionEnvironment.canUseDOM = true;
 
-        var mountCount = 0;
-        var numClicks = 0;
+      var mountCount = 0;
+      var numClicks = 0;
 
-        class TestComponent extends React.Component {
-          componentDidMount() {
-            mountCount++;
-          }
-
-          click = () => {
-            numClicks++;
-          };
-
-          render() {
-            return (
-              <span ref="span" onClick={this.click}>
-                Name: {this.props.name}
-              </span>
-            );
-          }
+      class TestComponent extends React.Component {
+        componentDidMount() {
+          mountCount++;
         }
 
-        var element = document.createElement('div');
-        ReactDOM.render(<TestComponent />, element);
+        click = () => {
+          numClicks++;
+        };
 
-        var lastMarkup = element.innerHTML;
-
-        // Exercise the update path. Markup should not change,
-        // but some lifecycle methods should be run again.
-        ReactDOM.render(<TestComponent name="x" />, element);
-        expect(mountCount).toEqual(1);
-
-        // Unmount and remount. We should get another mount event and
-        // we should get different markup, as the IDs are unique each time.
-        ReactDOM.unmountComponentAtNode(element);
-        expect(element.innerHTML).toEqual('');
-        ReactDOM.render(<TestComponent name="x" />, element);
-        expect(mountCount).toEqual(2);
-        expect(element.innerHTML).not.toEqual(lastMarkup);
-
-        // Now kill the node and render it on top of server-rendered markup, as if
-        // we used server rendering. We should mount again, but the markup should
-        // be unchanged. We will append a sentinel at the end of innerHTML to be
-        // sure that innerHTML was not changed.
-        ReactDOM.unmountComponentAtNode(element);
-        expect(element.innerHTML).toEqual('');
-
-        ExecutionEnvironment.canUseDOM = false;
-        lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
-        ExecutionEnvironment.canUseDOM = true;
-        element.innerHTML = lastMarkup;
-
-        var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
-        expect(mountCount).toEqual(3);
-
-        var expectedMarkup = lastMarkup;
-        if (ReactDOMFeatureFlags.useFiber) {
-          var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-          expectedMarkup = expectedMarkup.replace(reactComments, '');
+        render() {
+          return (
+            <span ref="span" onClick={this.click}>
+              Name: {this.props.name}
+            </span>
+          );
         }
-        expect(element.innerHTML).toBe(expectedMarkup);
+      }
 
-        // Ensure the events system works after mount into server markup
-        expect(numClicks).toEqual(0);
-        ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
-        expect(numClicks).toEqual(1);
+      var element = document.createElement('div');
+      ReactDOM.render(<TestComponent />, element);
 
-        ReactDOM.unmountComponentAtNode(element);
-        expect(element.innerHTML).toEqual('');
+      var lastMarkup = element.innerHTML;
 
-        // Now simulate a situation where the app is not idempotent. React should
-        // warn but do the right thing.
-        element.innerHTML = lastMarkup;
-        instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
-        expect(mountCount).toEqual(4);
-        expectDev(console.error.calls.count()).toBe(1);
-        expect(element.innerHTML.length > 0).toBe(true);
-        expect(element.innerHTML).not.toEqual(lastMarkup);
+      // Exercise the update path. Markup should not change,
+      // but some lifecycle methods should be run again.
+      ReactDOM.render(<TestComponent name="x" />, element);
+      expect(mountCount).toEqual(1);
 
-        // Ensure the events system works after markup mismatch.
-        expect(numClicks).toEqual(1);
-        ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
-        expect(numClicks).toEqual(2);
-      });
-    }
+      // Unmount and remount. We should get another mount event and
+      // we should get different markup, as the IDs are unique each time.
+      ReactDOM.unmountComponentAtNode(element);
+      expect(element.innerHTML).toEqual('');
+      ReactDOM.render(<TestComponent name="x" />, element);
+      expect(mountCount).toEqual(2);
+      expect(element.innerHTML).not.toEqual(lastMarkup);
+
+      // Now kill the node and render it on top of server-rendered markup, as if
+      // we used server rendering. We should mount again, but the markup should
+      // be unchanged. We will append a sentinel at the end of innerHTML to be
+      // sure that innerHTML was not changed.
+      ReactDOM.unmountComponentAtNode(element);
+      expect(element.innerHTML).toEqual('');
+
+      ExecutionEnvironment.canUseDOM = false;
+      lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
+      ExecutionEnvironment.canUseDOM = true;
+      element.innerHTML = lastMarkup;
+
+      var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
+      expect(mountCount).toEqual(3);
+      expect(element.innerHTML).toBe(lastMarkup);
+
+      // Ensure the events system works after mount into server markup
+      expect(numClicks).toEqual(0);
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+      expect(numClicks).toEqual(1);
+
+      ReactDOM.unmountComponentAtNode(element);
+      expect(element.innerHTML).toEqual('');
+
+      // Now simulate a situation where the app is not idempotent. React should
+      // warn but do the right thing.
+      element.innerHTML = lastMarkup;
+      instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
+      expect(mountCount).toEqual(4);
+      expectDev(console.error.calls.count()).toBe(1);
+      expect(element.innerHTML.length > 0).toBe(true);
+      expect(element.innerHTML).not.toEqual(lastMarkup);
+
+      // Ensure the events system works after markup mismatch.
+      expect(numClicks).toEqual(1);
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+      expect(numClicks).toEqual(2);
+    });
 
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
       ).toThrowError(
-        ReactDOMFeatureFlags.useFiber
-          ? 'Objects are not valid as a React child (found: object with keys {x})'
-          : 'renderToString(): Invalid component element.',
+        'Objects are not valid as a React child (found: object with keys {x})',
       );
     });
   });
@@ -515,9 +469,7 @@ describe('ReactDOMServer', () => {
       expect(
         ReactDOMServer.renderToStaticMarkup.bind(ReactDOMServer, {x: 123}),
       ).toThrowError(
-        ReactDOMFeatureFlags.useFiber
-          ? 'Objects are not valid as a React child (found: object with keys {x})'
-          : 'renderToStaticMarkup(): Invalid component element.',
+        'Objects are not valid as a React child (found: object with keys {x})',
       );
     });
 

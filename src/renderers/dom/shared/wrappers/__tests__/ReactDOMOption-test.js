@@ -16,13 +16,11 @@ describe('ReactDOMOption', () => {
 
   var React;
   var ReactDOM;
-  var ReactDOMFeatureFlags;
   var ReactTestUtils;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
     ReactTestUtils = require('react-dom/test-utils');
   });
 
@@ -45,11 +43,9 @@ describe('ReactDOMOption', () => {
     expectDev(
       normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
     ).toContain(
-      ReactDOMFeatureFlags.useFiber
-        ? '<div> cannot appear as a child of <option>.\n' +
-            '    in div (at **)\n' +
-            '    in option (at **)'
-        : 'Only strings and numbers are supported as <option> children.',
+      '<div> cannot appear as a child of <option>.\n' +
+        '    in div (at **)\n' +
+        '    in option (at **)',
     );
   });
 

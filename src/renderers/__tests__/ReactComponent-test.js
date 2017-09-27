@@ -14,8 +14,6 @@ var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
 describe('ReactComponent', () => {
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -297,21 +295,11 @@ describe('ReactComponent', () => {
       'outer componentDidMount',
       'start update',
       // Previous (equivalent) refs get cleared
-      ...(ReactDOMFeatureFlags.useFiber
-        ? [
-            // Fiber renders first, resets refs later
-            'inner 1 render',
-            'inner 2 render',
-            'ref 1 got null',
-            'ref 2 got null',
-          ]
-        : [
-            // Stack resets refs before rendering
-            'ref 1 got null',
-            'inner 1 render',
-            'ref 2 got null',
-            'inner 2 render',
-          ]),
+      // Fiber renders first, resets refs later
+      'inner 1 render',
+      'inner 2 render',
+      'ref 1 got null',
+      'ref 2 got null',
       'inner 1 componentDidUpdate',
       'ref 1 got instance 1',
       'inner 2 componentDidUpdate',
@@ -406,8 +394,7 @@ describe('ReactComponent', () => {
       'Objects are not valid as a React child (found: object with keys ' +
         '{x, y, z}). If you meant to render a collection of children, use ' +
         'an array instead.' +
-        // Fiber gives a slightly better stack with the nearest host components
-        (ReactDOMFeatureFlags.useFiber ? '\n    in div (at **)' : ''),
+        '\n    in div (at **)',
     );
   });
 
@@ -434,8 +421,7 @@ describe('ReactComponent', () => {
       'Objects are not valid as a React child (found: object with keys ' +
         '{a, b, c}). If you meant to render a collection of children, use ' +
         'an array instead.\n' +
-        // Fiber gives a slightly better stack with the nearest host components
-        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in div (at **)\n' +
         '    in Foo (at **)',
     );
   });
@@ -458,8 +444,7 @@ describe('ReactComponent', () => {
       'Objects are not valid as a React child (found: object with keys ' +
         '{x, y, z}). If you meant to render a collection of children, use ' +
         'an array instead.' +
-        // Fiber gives a slightly better stack with the nearest host components
-        (ReactDOMFeatureFlags.useFiber ? '\n    in div (at **)' : ''),
+        '\n    in div (at **)',
     );
   });
 
@@ -486,79 +471,76 @@ describe('ReactComponent', () => {
       'Objects are not valid as a React child (found: object with keys ' +
         '{a, b, c}). If you meant to render a collection of children, use ' +
         'an array instead.\n' +
-        // Fiber gives a slightly better stack with the nearest host components
-        (ReactDOMFeatureFlags.useFiber ? '    in div (at **)\n' : '') +
+        '    in div (at **)\n' +
         '    in Foo (at **)',
     );
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    describe('with new features', () => {
-      it('warns on function as a return value from a function', () => {
-        function Foo() {
+  describe('with new features', () => {
+    it('warns on function as a return value from a function', () => {
+      function Foo() {
+        return Foo;
+      }
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<Foo />, container);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Functions are not valid as a React child. This may happen if ' +
+          'you return a Component instead of <Component /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '    in Foo (at **)',
+      );
+    });
+
+    it('warns on function as a return value from a class', () => {
+      class Foo extends React.Component {
+        render() {
           return Foo;
         }
-        spyOn(console, 'error');
-        var container = document.createElement('div');
-        ReactDOM.render(<Foo />, container);
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Functions are not valid as a React child. This may happen if ' +
-            'you return a Component instead of <Component /> from render. ' +
-            'Or maybe you meant to call this function rather than return it.\n' +
-            '    in Foo (at **)',
-        );
-      });
-
-      it('warns on function as a return value from a class', () => {
-        class Foo extends React.Component {
-          render() {
-            return Foo;
-          }
-        }
-        spyOn(console, 'error');
-        var container = document.createElement('div');
-        ReactDOM.render(<Foo />, container);
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Functions are not valid as a React child. This may happen if ' +
-            'you return a Component instead of <Component /> from render. ' +
-            'Or maybe you meant to call this function rather than return it.\n' +
-            '    in Foo (at **)',
-        );
-      });
-
-      it('warns on function as a child to host component', () => {
-        function Foo() {
-          return <div><span>{Foo}</span></div>;
-        }
-        spyOn(console, 'error');
-        var container = document.createElement('div');
-        ReactDOM.render(<Foo />, container);
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-          'Warning: Functions are not valid as a React child. This may happen if ' +
-            'you return a Component instead of <Component /> from render. ' +
-            'Or maybe you meant to call this function rather than return it.\n' +
-            '    in span (at **)\n' +
-            '    in div (at **)\n' +
-            '    in Foo (at **)',
-        );
-      });
-
-      it('does not warn for function-as-a-child that gets resolved', () => {
-        function Bar(props) {
-          return props.children();
-        }
-        function Foo() {
-          return <Bar>{() => 'Hello'}</Bar>;
-        }
-        spyOn(console, 'error');
-        var container = document.createElement('div');
-        ReactDOM.render(<Foo />, container);
-        expect(container.innerHTML).toBe('Hello');
-        expectDev(console.error.calls.count()).toBe(0);
-      });
+      }
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<Foo />, container);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Functions are not valid as a React child. This may happen if ' +
+          'you return a Component instead of <Component /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '    in Foo (at **)',
+      );
     });
-  }
+
+    it('warns on function as a child to host component', () => {
+      function Foo() {
+        return <div><span>{Foo}</span></div>;
+      }
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<Foo />, container);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Functions are not valid as a React child. This may happen if ' +
+          'you return a Component instead of <Component /> from render. ' +
+          'Or maybe you meant to call this function rather than return it.\n' +
+          '    in span (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)',
+      );
+    });
+
+    it('does not warn for function-as-a-child that gets resolved', () => {
+      function Bar(props) {
+        return props.children();
+      }
+      function Foo() {
+        return <Bar>{() => 'Hello'}</Bar>;
+      }
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<Foo />, container);
+      expect(container.innerHTML).toBe('Hello');
+      expectDev(console.error.calls.count()).toBe(0);
+    });
+  });
 });
