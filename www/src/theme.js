@@ -373,7 +373,7 @@ const sharedStyles = {
         marginTop: 15,
 
         '&:first-of-type': {
-          fontWeight: 'bold',
+          fontWeight: 700,
           marginTop: 0,
         },
 

@@ -81,7 +81,7 @@ const createLinkTutorial = ({item, location, onLinkClick, section}) => {
 };
 
 const activeLinkCss = {
-  fontWeight: 'bold',
+  fontWeight: 700,
 };
 
 const activeLinkBefore = {
