@@ -11,6 +11,7 @@
     "gatsby/react-dom": "16.0.0"
   },
   "dependencies": {
+    "@gaearon/react-live": "1.7.1-with-safari-fix",
     "array-from": "^2.1.1",
     "gatsby": "^1.9.9",
     "gatsby-link": "^1.6.9",
@@ -32,7 +33,6 @@
     "gatsby-transformer-sharp": "^1.6.1",
     "glamor": "^2.20.40",
     "hex2rgba": "^0.0.1",
-    "react-live": "^1.7.1",
     "remarkable": "^1.7.1",
     "slugify": "^1.2.1",
     "string.prototype.includes": "^1.0.0",
