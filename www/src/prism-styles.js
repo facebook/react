@@ -59,8 +59,8 @@ css.global('.gatsby-highlight + .gatsby-highlight', {
 css.global('.gatsby-highlight-code-line', {
   backgroundColor: prismColors.lineHighlight,
   display: 'block',
-  margin: '-0.125rem -1rem',
-  padding: '0.125rem 1rem',
+  margin: '-0.125rem calc(-1rem - 15px)',
+  padding: '0.125rem calc(1rem + 15px)',
 });
 
 css.global('.token.attr-name', {
