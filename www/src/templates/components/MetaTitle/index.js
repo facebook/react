@@ -22,7 +22,7 @@ const MetaTitle = ({
   <div
     onClick={onClick}
     css={{
-      color: onDark ? colors.subtleOnDark : colors.subtle,
+      color: onDark ? colors.subtleOnDark : colors.dark,
       cursor: onClick ? 'pointer' : null,
       fontSize: 14,
       fontWeight: 700,
