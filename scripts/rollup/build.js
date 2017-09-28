@@ -79,17 +79,21 @@ function getHeaderSanityCheck(bundleType, hasteName) {
 
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
-    // UMDs are not wrapped in conditions.
+    // UMDs are wrapped in IIFEs to avoid leaking globals.
     case UMD_DEV:
     case UMD_PROD:
-      return Header.getHeader(filename, reactVersion);
+      return (
+        Header.getHeader(filename, reactVersion) +
+        `'use strict';\n\n\n(function() {`
+      );
     // CommonJS DEV bundle is guarded to help weak dead code elimination.
     case NODE_DEV:
-      let banner = Header.getHeader(filename, reactVersion);
       // Wrap the contents of the if-DEV check with an IIFE.
       // Block-level function definitions can cause problems for strict mode.
-      banner += `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
-      return banner;
+      return (
+        Header.getHeader(filename, reactVersion) +
+        `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`
+      );
     case NODE_PROD:
       return Header.getHeader(filename, reactVersion);
     // All FB and RN bundles need Haste headers.
@@ -114,6 +118,10 @@ function getBanner(bundleType, hasteName, filename) {
 function getFooter(bundleType) {
   // Only need a footer if getBanner() has an opening brace.
   switch (bundleType) {
+    // UMDs are wrapped in IIFEs to avoid leaking globals.
+    case UMD_DEV:
+    case UMD_PROD:
+      return '\n})();\n';
     // Non-UMD DEV bundles need conditions to help weak dead code elimination.
     case NODE_DEV:
     case FB_DEV:
