@@ -3588,6 +3588,13 @@ gatsby-plugin-netlify@^1.0.4:
     lodash "^4.17.4"
     webpack-assets-manifest "^1.0.0"
 
+gatsby-plugin-nprogress@^1.0.7:
+  version "1.0.7"
+  resolved "https://registry.yarnpkg.com/gatsby-plugin-nprogress/-/gatsby-plugin-nprogress-1.0.7.tgz#36cf18776d22c282d3355d32b8c212afdf1a2907"
+  dependencies:
+    babel-runtime "^6.26.0"
+    nprogress "^0.2.0"
+
 gatsby-plugin-react-helmet@^1.0.3:
   version "1.0.6"
   resolved "https://registry.yarnpkg.com/gatsby-plugin-react-helmet/-/gatsby-plugin-react-helmet-1.0.6.tgz#32431fbfd072b05453080ed304142f4747868848"
@@ -3728,8 +3735,8 @@ gatsby-transformer-sharp@^1.6.1:
     image-size "^0.6.0"
 
 gatsby@^1.9.9:
-  version "1.9.45"
-  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.9.45.tgz#3ac9d238fcf4abb7276689b8dd91b06bc98617c6"
+  version "1.9.49"
+  resolved "https://registry.yarnpkg.com/gatsby/-/gatsby-1.9.49.tgz#ff934a985493e731ada7e81ec77b17dd474e3e61"
   dependencies:
     async "^2.1.2"
     babel-code-frame "^6.22.0"
@@ -6159,6 +6166,10 @@ npmlog@^4.0.2:
     console-control-strings "~1.1.0"
     gauge "~2.7.3"
     set-blocking "~2.0.0"
+
+nprogress@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/nprogress/-/nprogress-0.2.0.tgz#cb8f34c53213d895723fcbab907e9422adbcafb1"
 
 nth-check@^1.0.1, nth-check@~1.0.1:
   version "1.0.1"
