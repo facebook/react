@@ -210,7 +210,7 @@ const sharedStyles = {
     '& p': {
       marginTop: 35,
       fontSize: 18,
-      lineHeight: '35px',
+      lineHeight: 1.7,
       maxWidth: '42em',
 
       '&:first-of-type': {
