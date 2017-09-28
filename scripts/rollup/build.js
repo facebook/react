@@ -350,7 +350,9 @@ function getPlugins(
           languageOut: 'ECMASCRIPT5_STRICT',
           env: 'CUSTOM',
           warningLevel: 'QUIET',
-          assumeFunctionWrapper: true,
+          // Don't let it create global variables in the browser.
+          // https://github.com/facebook/react/issues/10909
+          assumeFunctionWrapper: bundleType !== UMD_PROD,
           applyInputSourceMaps: false,
           useTypesForOptimization: false,
           processCommonJsModules: false,
