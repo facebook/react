@@ -61,6 +61,9 @@ css.global('.gatsby-highlight-code-line', {
   display: 'block',
   margin: '-0.125rem calc(-1rem - 15px)',
   padding: '0.125rem calc(1rem + 15px)',
+  position: 'relative',
+  borderLeft: `4px solid ${colors.brand}`,
+  borderRight: '4px solid transparent',
 });
 
 css.global('.token.attr-name', {
