@@ -130,7 +130,7 @@ const todoItems = todos.map((todo, index) =>
 );
 ```
 
-We don't recommend using indexes for keys if the items can reorder, as that would be slow. You may read an [in-depth explanation about why keys are necessary](/react/docs/reconciliation.html#recursing-on-children) if you're interested.
+We don't recommend using indexes for keys if the items can reorder as that would impact performance, and may cause issues with the reordering of components and their respective states. If you choose not to assign a key to your list items then React will use indexes as keys. You may read an [in-depth explanation about why keys are necessary](/react/docs/reconciliation.html#recursing-on-children) if you're interested in more information.
 
 ### Extracting Components with Keys
 
