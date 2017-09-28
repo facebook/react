@@ -21,7 +21,12 @@ module.exports = {
     'gatsby-plugin-netlify',
     'gatsby-plugin-glamor',
     'gatsby-plugin-react-next',
-    'gatsby-plugin-nprogress',
+    {
+      resolve: 'gatsby-plugin-nprogress',
+      options: {
+        color: '#61dafb',
+      },
+    },
     {
       resolve: 'gatsby-source-filesystem',
       options: {
