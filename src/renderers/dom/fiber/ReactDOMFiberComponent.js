@@ -132,7 +132,7 @@ if (__DEV__) {
   // can be used for comparison.
   var normalizeHTML = function(parent: Element, html: string) {
     if (!testDocument) {
-      testDocument = document.implementation.createHTMLDocument();
+      testDocument = document.implementation.createHTMLDocument(""); // title is not optional in IE11
     }
     var testElement = parent.namespaceURI === HTML_NAMESPACE
       ? testDocument.createElement(parent.tagName)
