@@ -19,6 +19,18 @@
   <meta charset="utf-8">
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <title>{{ title }}</title>
+  <script>
+  (function() {
+    var path =
+      window.location.pathname +
+      window.location.search +
+      window.location.hash;
+    var match = /^\/react\/(.*)$/.exec(path);
+    if (match) {
+      window.location.replace('https://reactjs.org/' + match[1]);
+    }
+  })();
+  </script>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta property="og:title" content="{{ title }}">
   <meta property="og:type" content="{{ type }}">
