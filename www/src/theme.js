@@ -251,6 +251,8 @@ const sharedStyles = {
     },
 
     '& h1': {
+      lineHeight: 1.2,
+
       [media.size('xsmall')]: {
         fontSize: 30,
       },
@@ -268,6 +270,7 @@ const sharedStyles = {
       borderTop: `1px solid ${colors.divider}`,
       marginTop: 44,
       paddingTop: 40,
+      lineHeight: 1.2,
 
       ':first-child': {
         borderTop: 0,
