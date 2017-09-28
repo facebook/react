@@ -9,12 +9,12 @@
 
 'use strict';
 
-import Link from 'gatsby-link';
 import React from 'react';
 import {colors} from 'theme';
+import ExternalLinkSvg from 'templates/components/ExternalLinkSvg';
 
-const FooterLink = ({children, target, to}) => (
-  <Link
+const ExternalFooterLink = ({children, href, target}) => (
+  <a
     css={{
       fontWeight: 300,
       lineHeight: 2,
@@ -22,10 +22,18 @@ const FooterLink = ({children, target, to}) => (
         color: colors.brand,
       },
     }}
-    to={to}
+    href={href}
     target={target}>
     {children}
-  </Link>
+    <ExternalLinkSvg
+      cssProps={{
+        verticalAlign: -2,
+        display: 'inline-block',
+        marginLeft: 5,
+        color: colors.subtle,
+      }}
+    />
+  </a>
 );
 
-export default FooterLink;
+export default ExternalFooterLink;
