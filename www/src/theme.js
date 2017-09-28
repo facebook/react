@@ -223,7 +223,6 @@ const sharedStyles = {
 
       [media.lessThan('large')]: {
         fontSize: 16,
-        lineHeight: '30px',
       },
     },
 
