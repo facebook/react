@@ -62,5 +62,3 @@ To help you get your feet wet and get you familiar with our contribution process
 React is [MIT licensed](./LICENSE).
 
 React documentation is [Creative Commons licensed](./LICENSE-docs).
-
-Examples provided in this repository and in the documentation are [separately licensed](./LICENSE-examples).
