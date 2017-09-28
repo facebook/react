@@ -12,6 +12,8 @@
 
 ### Installation
 
+1. `cd react` to go into the project root
+1. `yarn` to install the main NPM dependencies
 1. `cd www` to go into the website project
 1. `yarn` to install the website's NPM dependencies
 
