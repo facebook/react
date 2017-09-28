@@ -89,7 +89,13 @@ exports.getMaskedContext = function(
 
   if (__DEV__) {
     const name = getComponentName(workInProgress) || 'Unknown';
-    ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
+    if (workInProgress !== ReactDebugCurrentFiber.current) {
+      warning(
+        false,
+        'Expected the work in progress to match the currently processed fiber. ' +
+          'This error is likely caused by a bug in React. Please file an issue.',
+      );
+    }
     checkPropTypes(
       contextTypes,
       context,
@@ -97,7 +103,6 @@ exports.getMaskedContext = function(
       name,
       ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
     );
-    ReactDebugCurrentFiber.resetCurrentFiber();
   }
 
   // Cache unmasked context so we can avoid recreating masked context unless necessary.
@@ -184,11 +189,19 @@ function processChildContext(
 
   let childContext;
   if (__DEV__) {
+    // TODO: we only have to store the "previous" fiber and phase and restore them
+    // because this method can be called outside of reconciliation. We can remove this
+    // when we stop supporting unstable_renderSubtreeIntoContainer.
+    const previousCurrentFiber = ReactDebugCurrentFiber.current;
+    const previousCurrentPhase = ReactDebugCurrentFiber.phase;
     ReactDebugCurrentFiber.setCurrentFiber(fiber, 'getChildContext');
     startPhaseTimer(fiber, 'getChildContext');
     childContext = instance.getChildContext();
     stopPhaseTimer();
-    ReactDebugCurrentFiber.resetCurrentFiber();
+    ReactDebugCurrentFiber.setCurrentFiber(
+      previousCurrentFiber,
+      previousCurrentPhase,
+    );
   } else {
     childContext = instance.getChildContext();
   }
@@ -208,6 +221,11 @@ function processChildContext(
     // assume anything about the given fiber. We won't pass it down if we aren't sure.
     // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
     const workInProgress = isReconciling ? fiber : null;
+    // TODO: we only have to store the "previous" fiber and phase and restore them
+    // because this method can be called outside of reconciliation. We can remove this
+    // when we stop supporting unstable_renderSubtreeIntoContainer.
+    const previousCurrentFiber = ReactDebugCurrentFiber.current;
+    const previousCurrentPhase = ReactDebugCurrentFiber.phase;
     ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     checkPropTypes(
       childContextTypes,
@@ -216,7 +234,10 @@ function processChildContext(
       name,
       ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
     );
-    ReactDebugCurrentFiber.resetCurrentFiber();
+    ReactDebugCurrentFiber.setCurrentFiber(
+      previousCurrentFiber,
+      previousCurrentPhase,
+    );
   }
 
   return {...parentContext, ...childContext};
