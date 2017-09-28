@@ -27,10 +27,10 @@ React is flexible and can be used in a variety of projects. You can create new a
        top: 1px;
        padding: 10px;
        margin: 0px 2px 0px 2px;
-       border: 1px solid #05A5D1;
+       border: 1px solid #046E8B;
        border-bottom-color: transparent;
        border-radius: 3px 3px 0px 0px;
-       color: #05A5D1;
+       color: #046E8B;
        background-color: transparent;
        font-size: 0.99em;
        cursor: pointer;
@@ -45,7 +45,7 @@ React is flexible and can be used in a variety of projects. You can create new a
       display: inline-block;
       list-style-type: none;
       margin: 0;
-      border-bottom: 1px solid #05A5D1;
+      border-bottom: 1px solid #046E8B;
       cursor: default;
     }
     @media screen and (max-width: 960px) {
@@ -53,7 +53,7 @@ React is flexible and can be used in a variety of projects. You can create new a
       .toggler li:first-child,
       .toggler li:last-child {
         display: block;
-        border-bottom-color: #05A5D1;
+        border-bottom-color: #046E8B;
         border-radius: 3px;
         margin: 2px 0px 2px 0px;
       }
@@ -64,13 +64,13 @@ React is flexible and can be used in a variety of projects. You can create new a
     .display-target-fiddle .toggler .button-fiddle:focus,
     .display-target-newapp .toggler .button-newapp:focus,
     .display-target-existingapp .toggler .button-existingapp:focus {
-      background-color: #046E8B;
+      border: solid 1px #61dafb;;
       color: white;
     }
     .display-target-fiddle .toggler .button-fiddle,
     .display-target-newapp .toggler .button-newapp,
     .display-target-existingapp .toggler .button-existingapp {
-      background-color: #05A5D1;
+      background-color: #046E8B;
       color: white;
     }
     section {

@@ -194,6 +194,7 @@ const Header = ({location}) => (
             id="algolia-doc-search"
             type="search"
             placeholder="Search docs"
+            aria-label="Search docs"
           />
         </form>
 
