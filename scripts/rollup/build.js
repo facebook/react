@@ -85,11 +85,12 @@ function getBanner(bundleType, hasteName, filename) {
       return Header.getHeader(filename, reactVersion);
     // CommonJS DEV bundle is guarded to help weak dead code elimination.
     case NODE_DEV:
-      let banner = Header.getHeader(filename, reactVersion);
       // Wrap the contents of the if-DEV check with an IIFE.
       // Block-level function definitions can cause problems for strict mode.
-      banner += `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
-      return banner;
+      return (
+        Header.getHeader(filename, reactVersion) +
+        `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`
+      );
     case NODE_PROD:
       return Header.getHeader(filename, reactVersion);
     // All FB and RN bundles need Haste headers.
