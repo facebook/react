@@ -9,7 +9,7 @@ class Comp extends React.Component {
   }
 }
 const Children = (props) => props.children;
-const result = Noop.render(
+Noop.render(
   <main>
     <div>Hello</div>
     <Children>
@@ -19,11 +19,28 @@ const result = Noop.render(
     </Children>
   </main>
 );
+Noop.flush();
+assert.deepEqual(
+  Noop.getChildren(),
+  [
+    {
+      type: 'main',
+      children: [
+        {type: 'div', children: [], prop: undefined},
+        {text: 'Hello world'},
+        {
+          type: 'span',
+          children: [
+            {text: 'Number '},
+            {text: '42'},
+          ],
+          prop: undefined,
+        },
+        {text: 'Active Comp'}
+      ],
+      prop: undefined,
+    }
+  ]
+);
 
-console.log('Noop dumping Tree');
-Noop.dumpTree();
-
-Noop.flushDeferredPri();
-console.log('Noop dumping Tree');
-Noop.dumpTree();
-
+console.log('Reconciler package is Ok!');
