@@ -1,24 +1,14 @@
 /**
- * Copyright (c) 2015-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-
-/**
  * This is a renderer of React that doesn't have a render target output.
- * It is useful to demonstrate the internals of the reconciler in isolation
- * and for testing semantics of reconciliation separate from the host
- * environment.
+ * It is used to test that the react-reconciler package doesn't blow up.
+ *
+ * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 var ReactFiberReconciler = require('react-reconciler');
 var emptyObject = require('fbjs/lib/emptyObject');
-
 var assert = require('assert');
 
 const UPDATE_SIGNAL = {};
@@ -36,8 +26,6 @@ type Instance = {|
 type TextInstance = {|text: string, id: number|};
 
 var instanceCounter = 0;
-
-var failInBeginPhase = false;
 
 function appendChild(
   parentInstance: Instance | Container,
@@ -79,9 +67,6 @@ function removeChild(
 
 var NoopRenderer = ReactFiberReconciler({
   getRootHostContext() {
-    if (failInBeginPhase) {
-      throw new Error('Error in host config.');
-    }
     return emptyObject;
   },
 
@@ -271,44 +256,8 @@ var ReactNoop = {
     }
   },
 
-  /* We don’t have access to ReactInstanceMap from the outside
-  findInstance(
-    componentOrElement: Element | ?React$Component<any, any>,
-  ): null | Instance | TextInstance {
-    if (componentOrElement == null) {
-      return null;
-    }
-    // Unsound duck typing.
-    const component = (componentOrElement: any);
-    if (typeof component.id === 'number') {
-      return component;
-    }
-    const inst = ReactInstanceMap.get(component);
-    return inst ? NoopRenderer.findHostInstance(inst) : null;
-  },
-  */
-
-  flushDeferredPri(timeout: number = Infinity): Array<mixed> {
-    // The legacy version of this function decremented the timeout before
-    // returning the new time.
-    // TODO: Convert tests to use flushUnitsOfWork or flushAndYield instead.
-    const n = timeout / 5 - 1;
-
-    let values = [];
-    for (const value of flushUnitsOfWork(n)) {
-      values.push(...value);
-    }
-    return values;
-  },
-
   flush(): Array<mixed> {
     return ReactNoop.flushUnitsOfWork(Infinity);
-  },
-
-  flushAndYield(
-    unitsOfWork: number = Infinity
-  ): Generator<Array<mixed>, void, void> {
-    return flushUnitsOfWork(unitsOfWork);
   },
 
   flushUnitsOfWork(n: number): Array<mixed> {
@@ -319,38 +268,6 @@ var ReactNoop = {
     return values;
   },
 
-  flushThrough(expected: Array<mixed>): void {
-    let actual = [];
-    if (expected.length !== 0) {
-      for (const value of flushUnitsOfWork(Infinity)) {
-        actual.push(...value);
-        if (actual.length >= expected.length) {
-          break;
-        }
-      }
-    }
-    assert.deepEqual(
-      actual,
-      expected,
-      'Unexpected flush results.\nExpected:\n  ' +
-        JSON.stringify(actual, null, 2) +
-        '\n\nActual:\n  ' +
-        JSON.stringify(expected, null, 2)
-    );
-  },
-
-  yield(value: mixed) {
-    if (yieldedValues === null) {
-      yieldedValues = [value];
-    } else {
-      yieldedValues.push(value);
-    }
-  },
-
-  hasScheduledCallback() {
-    return !!scheduledCallback;
-  },
-
   batchedUpdates: NoopRenderer.batchedUpdates,
 
   deferredUpdates: NoopRenderer.deferredUpdates,
@@ -358,110 +275,6 @@ var ReactNoop = {
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
   flushSync: NoopRenderer.flushSync,
-
-  // Logs the current state of the tree.
-  dumpTree(rootID: string = DEFAULT_ROOT_ID) {
-    const root = roots.get(rootID);
-    const rootContainer = rootContainers.get(rootID);
-    if (!root || !rootContainer) {
-      console.log('Nothing rendered yet.');
-      return;
-    }
-
-    var bufferedLog = [];
-    function log(...args) {
-      bufferedLog.push(...args, '\n');
-    }
-
-    function logHostInstances(children: Array<Instance | TextInstance>, depth) {
-      for (var i = 0; i < children.length; i++) {
-        var child = children[i];
-        var indent = '  '.repeat(depth);
-        if (typeof child.text === 'string') {
-          log(indent + '- ' + child.text);
-        } else {
-          // $FlowFixMe - The child should've been refined now.
-          log(indent + '- ' + child.type + '#' + child.id);
-          // $FlowFixMe - The child should've been refined now.
-          logHostInstances(child.children, depth + 1);
-        }
-      }
-    }
-    function logContainer(container: Container, depth) {
-      log('  '.repeat(depth) + '- [root#' + container.rootID + ']');
-      logHostInstances(container.children, depth + 1);
-    }
-
-    function logUpdateQueue(updateQueue: UpdateQueue, depth) {
-      log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
-      const firstUpdate = updateQueue.first;
-      if (!firstUpdate) {
-        return;
-      }
-
-      log(
-        '  '.repeat(depth + 1) + '~',
-        firstUpdate && firstUpdate.partialState,
-        firstUpdate.callback ? 'with callback' : '',
-        '[' + firstUpdate.priorityLevel + ']'
-      );
-      var next;
-      while ((next = firstUpdate.next)) {
-        log(
-          '  '.repeat(depth + 1) + '~',
-          next.partialState,
-          next.callback ? 'with callback' : '',
-          '[' + firstUpdate.priorityLevel + ']'
-        );
-      }
-    }
-
-    function logFiber(fiber: Fiber, depth) {
-      log(
-        '  '.repeat(depth) +
-          '- ' +
-          (fiber.type ? fiber.type.name || fiber.type : '[root]'),
-        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
-      );
-      if (fiber.updateQueue) {
-        logUpdateQueue(fiber.updateQueue, depth);
-      }
-      // const childInProgress = fiber.progressedChild;
-      // if (childInProgress && childInProgress !== fiber.child) {
-      //   log(
-      //     '  '.repeat(depth + 1) + 'IN PROGRESS: ' + fiber.pendingWorkPriority,
-      //   );
-      //   logFiber(childInProgress, depth + 1);
-      //   if (fiber.child) {
-      //     log('  '.repeat(depth + 1) + 'CURRENT');
-      //   }
-      // } else if (fiber.child && fiber.updateQueue) {
-      //   log('  '.repeat(depth + 1) + 'CHILDREN');
-      // }
-      if (fiber.child) {
-        logFiber(fiber.child, depth + 1);
-      }
-      if (fiber.sibling) {
-        logFiber(fiber.sibling, depth);
-      }
-    }
-
-    log('HOST INSTANCES:');
-    logContainer(rootContainer, 0);
-    log('FIBERS:');
-    logFiber(root.current, 0);
-
-    console.log(...bufferedLog);
-  },
-
-  simulateErrorInHostConfig(fn: () => void) {
-    failInBeginPhase = true;
-    try {
-      fn();
-    } finally {
-      failInBeginPhase = false;
-    }
-  },
 };
 
 module.exports = ReactNoop;

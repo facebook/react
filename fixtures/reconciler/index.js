@@ -1,3 +1,6 @@
+/**
+ * @flow
+ */
 var React = require('react');
 var Noop = require('./NoopRenderer');
 var assert = require('assert');
