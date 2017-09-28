@@ -69,30 +69,30 @@ expect(testInstance.findByProps({className: "sub"}).children).toEqual(['Sub']);
 
 ### TestRenderer
 
-* [`TestRenderer.create()`](#TestRenderer.create)
+* [`TestRenderer.create()`](#testrenderercreate)
 
 ### TestRenderer instance
 
-* [`testRenderer.toJSON()`](#testRenderer.toJSON)
-* [`testRenderer.toTree()`](#testRenderer.toTree)
-* [`testRenderer.update()`](#testRenderer.update)
-* [`testRenderer.unmount()`](#testRenderer.unmount)
-* [`testRenderer.getInstance()`](#testRenderer.getInstance)
-* [`testRenderer.root`](#testRenderer.root)
+* [`testRenderer.toJSON()`](#testrenderertojson)
+* [`testRenderer.toTree()`](#testrenderertotree)
+* [`testRenderer.update()`](#testrendererupdate)
+* [`testRenderer.unmount()`](#testrendererunmount)
+* [`testRenderer.getInstance()`](#testrenderergetinstance)
+* [`testRenderer.root`](#testrendererroot)
 
 ### TestInstance
 
-* [`testInstance.find()`](#testInstance.find)
-* [`testInstance.findByType()`](#testInstance.findByType)
-* [`testInstance.findByProps()`](#testInstance.findByProps)
-* [`testInstance.findAll()`](#testInstance.findAll)
-* [`testInstance.findAllByType()`](#testInstance.findAllByType)
-* [`testInstance.findAllByProps()`](#testInstance.findAllByProps)
-* [`testInstance.instance`](#testInstance.instance)
-* [`testInstance.type`](#testInstance.type)
-* [`testInstance.props`](#testInstance.props)
-* [`testInstance.parent`](#testInstance.parent)
-* [`testInstance.children`](#testInstance.children)
+* [`testInstance.find()`](#testinstancefind)
+* [`testInstance.findByType()`](#testinstancefindbytype)
+* [`testInstance.findByProps()`](#testinstancefindbyprops)
+* [`testInstance.findAll()`](#testinstancefindall)
+* [`testInstance.findAllByType()`](#testinstancefindallbytype)
+* [`testInstance.findAllByProps()`](#testinstancefindallbyprops)
+* [`testInstance.instance`](#testinstanceinstance)
+* [`testInstance.type`](#testinstancetype)
+* [`testInstance.props`](#testinstanceprops)
+* [`testInstance.parent`](#testinstanceparent)
+* [`testInstance.children`](#testinstancechildren)
 
 ## Reference
 
