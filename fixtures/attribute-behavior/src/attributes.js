@@ -93,12 +93,6 @@ const attributes = [
     read: getSVGAttribute('allowReorder'),
   },
   {
-    name: 'allowTransparency',
-    containerTagName: 'svg',
-    tagName: 'path',
-    read: getSVGAttribute('allowtransparency'),
-  },
-  {
     name: 'alphabetic',
     containerTagName: 'svg',
     tagName: 'font-face',

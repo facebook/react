@@ -18,7 +18,6 @@ var possibleStandardNames = {
   accesskey: 'accessKey',
   action: 'action',
   allowfullscreen: 'allowFullScreen',
-  allowtransparency: 'allowTransparency',
   alt: 'alt',
   as: 'as',
   async: 'async',
