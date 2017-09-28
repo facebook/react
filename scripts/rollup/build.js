@@ -79,10 +79,13 @@ function getHeaderSanityCheck(bundleType, hasteName) {
 
 function getBanner(bundleType, hasteName, filename) {
   switch (bundleType) {
-    // UMDs are not wrapped in conditions.
+    // UMDs are wrapped in IIFEs to avoid leaking globals.
     case UMD_DEV:
     case UMD_PROD:
-      return Header.getHeader(filename, reactVersion);
+      return (
+        Header.getHeader(filename, reactVersion) +
+        `'use strict';\n\n\n(function() {`
+      );
     // CommonJS DEV bundle is guarded to help weak dead code elimination.
     case NODE_DEV:
       // Wrap the contents of the if-DEV check with an IIFE.
@@ -115,6 +118,10 @@ function getBanner(bundleType, hasteName, filename) {
 function getFooter(bundleType) {
   // Only need a footer if getBanner() has an opening brace.
   switch (bundleType) {
+    // UMDs are wrapped in IIFEs to avoid leaking globals.
+    case UMD_DEV:
+    case UMD_PROD:
+      return '\n})();\n';
     // Non-UMD DEV bundles need conditions to help weak dead code elimination.
     case NODE_DEV:
     case FB_DEV:
