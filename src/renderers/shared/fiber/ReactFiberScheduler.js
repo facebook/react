@@ -317,7 +317,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAllHostEffects() {
     while (nextEffect !== null) {
       if (__DEV__) {
-        ReactDebugCurrentFiber.setCurrentFiber(nextEffect, null);
+        ReactDebugCurrentFiber.setCurrentFiber(nextEffect);
         recordEffect();
       }
 

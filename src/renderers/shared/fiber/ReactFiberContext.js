@@ -89,13 +89,6 @@ exports.getMaskedContext = function(
 
   if (__DEV__) {
     const name = getComponentName(workInProgress) || 'Unknown';
-    if (workInProgress !== ReactDebugCurrentFiber.current) {
-      warning(
-        false,
-        'Expected the work in progress to match the currently processed fiber. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
-      );
-    }
     checkPropTypes(
       contextTypes,
       context,
@@ -158,11 +151,7 @@ exports.pushTopLevelContextObject = function(
   push(didPerformWorkStackCursor, didChange, fiber);
 };
 
-function processChildContext(
-  fiber: Fiber,
-  parentContext: Object,
-  isReconciling: boolean,
-): Object {
+function processChildContext(fiber: Fiber, parentContext: Object): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
 
@@ -189,19 +178,11 @@ function processChildContext(
 
   let childContext;
   if (__DEV__) {
-    // TODO: we only have to store the "previous" fiber and phase and restore them
-    // because this method can be called outside of reconciliation. We can remove this
-    // when we stop supporting unstable_renderSubtreeIntoContainer.
-    const previousCurrentFiber = ReactDebugCurrentFiber.current;
-    const previousCurrentPhase = ReactDebugCurrentFiber.phase;
-    ReactDebugCurrentFiber.setCurrentFiber(fiber, 'getChildContext');
+    ReactDebugCurrentFiber.setCurrentPhase('getChildContext');
     startPhaseTimer(fiber, 'getChildContext');
     childContext = instance.getChildContext();
     stopPhaseTimer();
-    ReactDebugCurrentFiber.setCurrentFiber(
-      previousCurrentFiber,
-      previousCurrentPhase,
-    );
+    ReactDebugCurrentFiber.setCurrentPhase(null);
   } else {
     childContext = instance.getChildContext();
   }
@@ -215,28 +196,17 @@ function processChildContext(
   }
   if (__DEV__) {
     const name = getComponentName(fiber) || 'Unknown';
-    // We can only provide accurate element stacks if we pass work-in-progress tree
-    // during the begin or complete phase. However currently this function is also
-    // called from unstable_renderSubtree legacy implementation. In this case it unsafe to
-    // assume anything about the given fiber. We won't pass it down if we aren't sure.
-    // TODO: remove this hack when we delete unstable_renderSubtree in Fiber.
-    const workInProgress = isReconciling ? fiber : null;
-    // TODO: we only have to store the "previous" fiber and phase and restore them
-    // because this method can be called outside of reconciliation. We can remove this
-    // when we stop supporting unstable_renderSubtreeIntoContainer.
-    const previousCurrentFiber = ReactDebugCurrentFiber.current;
-    const previousCurrentPhase = ReactDebugCurrentFiber.phase;
-    ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
     checkPropTypes(
       childContextTypes,
       childContext,
       'child context',
       name,
+      // In practice, there is one case in which we won't get a stack. It's when
+      // somebody calls unstable_renderSubtreeIntoContainer() and we process
+      // context from the parent component instance. The stack will be missing
+      // because it's outside of the reconciliation, and so the pointer has not
+      // been set. This is rare and doesn't matter. We'll also remove that API.
       ReactDebugCurrentFiber.getCurrentFiberStackAddendum,
-    );
-    ReactDebugCurrentFiber.setCurrentFiber(
-      previousCurrentFiber,
-      previousCurrentPhase,
     );
   }
 
@@ -285,11 +255,7 @@ exports.invalidateContextProvider = function(
     // Merge parent and own context.
     // Skip this if we're not updating due to sCU.
     // This avoids unnecessarily recomputing memoized values.
-    const mergedContext = processChildContext(
-      workInProgress,
-      previousContext,
-      true,
-    );
+    const mergedContext = processChildContext(workInProgress, previousContext);
     instance.__reactInternalMemoizedMergedChildContext = mergedContext;
 
     // Replace the old (or empty) context with the new one.
