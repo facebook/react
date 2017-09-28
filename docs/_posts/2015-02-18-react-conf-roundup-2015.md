@@ -262,7 +262,6 @@ And, in case you missed a session, you can borrow **Michael Chan’s** [drawings
     <blockquote class="twitter-tweet" lang="en"><p>I really love the community shout outs by <a href="https://twitter.com/Vjeux">@vjeux</a> between talks at <a href="https://twitter.com/hashtag/reactjsconf?src=hash">#reactjsconf</a>!</p>&mdash; Andrew Rota (@AndrewRota) <a href="https://twitter.com/AndrewRota/status/560927339522297856">January 29, 2015</a></blockquote>
   </div>
 </div>
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
 
 **All proceeds from React.js Conf 2015 were donated to the wonderful programs at [code.org](http://code.org)**. These programs aim to increase access to the field of computer science by underrepresented members of our community. Watch this video to learn more.
 
