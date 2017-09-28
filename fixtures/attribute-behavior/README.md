@@ -8,7 +8,7 @@
 
 ## Instructions
 
-`cd scripts/attribute-behavior && yarn install && yarn start`
+`cd fixtures/attribute-behavior && yarn install && yarn start`
 
 ## Interpretation
 

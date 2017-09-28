@@ -473,31 +473,6 @@
 | `allowReorder=(null)`| (initial)| `<null>` |
 | `allowReorder=(undefined)`| (initial)| `<null>` |
 
-## `allowTransparency` (on `<path>` inside `<svg>`)
-| Test Case | Flags | Result |
-| --- | --- | --- |
-| `allowTransparency=(string)`| (changed)| `"a string"` |
-| `allowTransparency=(empty string)`| (changed)| `<empty string>` |
-| `allowTransparency=(array with string)`| (changed)| `"string"` |
-| `allowTransparency=(empty array)`| (changed)| `<empty string>` |
-| `allowTransparency=(object)`| (changed)| `"result of toString()"` |
-| `allowTransparency=(numeric string)`| (changed)| `"42"` |
-| `allowTransparency=(-1)`| (changed)| `"-1"` |
-| `allowTransparency=(0)`| (changed)| `"0"` |
-| `allowTransparency=(integer)`| (changed)| `"1"` |
-| `allowTransparency=(NaN)`| (changed, warning)| `"NaN"` |
-| `allowTransparency=(float)`| (changed)| `"99.99"` |
-| `allowTransparency=(true)`| (changed)| `"true"` |
-| `allowTransparency=(false)`| (changed)| `"false"` |
-| `allowTransparency=(string 'true')`| (changed)| `"true"` |
-| `allowTransparency=(string 'false')`| (changed)| `"false"` |
-| `allowTransparency=(string 'on')`| (changed)| `"on"` |
-| `allowTransparency=(string 'off')`| (changed)| `"off"` |
-| `allowTransparency=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `allowTransparency=(function)`| (initial, warning, ssr mismatch)| `<null>` |
-| `allowTransparency=(null)`| (initial)| `<null>` |
-| `allowTransparency=(undefined)`| (initial)| `<null>` |
-
 ## `alphabetic` (on `<font-face>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
