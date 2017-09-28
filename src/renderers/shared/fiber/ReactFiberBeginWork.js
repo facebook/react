@@ -725,10 +725,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return bailoutOnLowPriority(current, workInProgress);
     }
 
-    if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
-    }
-
     switch (workInProgress.tag) {
       case IndeterminateComponent:
         return mountIndeterminateComponent(
