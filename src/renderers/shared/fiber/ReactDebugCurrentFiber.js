@@ -55,9 +55,13 @@ function resetCurrentFiber() {
   ReactDebugCurrentFiber.phase = null;
 }
 
-function setCurrentFiber(fiber: Fiber | null, phase: LifeCyclePhase | null) {
+function setCurrentFiber(fiber: Fiber) {
   ReactDebugCurrentFrame.getCurrentStack = getCurrentFiberStackAddendum;
   ReactDebugCurrentFiber.current = fiber;
+  ReactDebugCurrentFiber.phase = null;
+}
+
+function setCurrentPhase(phase: LifeCyclePhase | null) {
   ReactDebugCurrentFiber.phase = phase;
 }
 
@@ -66,6 +70,7 @@ var ReactDebugCurrentFiber = {
   phase: (null: LifeCyclePhase | null),
   resetCurrentFiber,
   setCurrentFiber,
+  setCurrentPhase,
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 };

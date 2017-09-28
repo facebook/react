@@ -295,6 +295,43 @@ describe('ReactStatelessComponent', () => {
     console.error.calls.reset();
   });
 
+  // This guards against a regression caused by clearing the current debug fiber.
+  // https://github.com/facebook/react/issues/10831
+  it('should warn when giving a function ref with context', () => {
+    spyOn(console, 'error');
+
+    function Child() {
+      return null;
+    }
+    Child.contextTypes = {
+      foo: PropTypes.string,
+    };
+
+    class Parent extends React.Component {
+      static childContextTypes = {
+        foo: PropTypes.string,
+      };
+      getChildContext() {
+        return {
+          foo: 'bar',
+        };
+      }
+      render() {
+        return <Child ref={function() {}} />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Parent />);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Stateless function components cannot be given refs. ' +
+        'Attempts to access this ref will fail.\n\nCheck the render method ' +
+        'of `Parent`.\n' +
+        '    in Child (at **)\n' +
+        '    in Parent (at **)',
+    );
+  });
+
   it('should provide a null ref', () => {
     function Child() {
       return <div />;

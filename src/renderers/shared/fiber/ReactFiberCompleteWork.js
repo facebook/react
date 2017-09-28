@@ -42,10 +42,6 @@ var {
 var {Placement, Ref, Update} = ReactTypeOfSideEffect;
 var {OffscreenPriority} = ReactPriorityLevel;
 
-if (__DEV__) {
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-}
-
 var invariant = require('fbjs/lib/invariant');
 
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
@@ -187,10 +183,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     workInProgress: Fiber,
     renderPriority: PriorityLevel,
   ): Fiber | null {
-    if (__DEV__) {
-      ReactDebugCurrentFiber.setCurrentFiber(workInProgress, null);
-    }
-
     // Get the latest props.
     let newProps = workInProgress.pendingProps;
     if (newProps === null) {

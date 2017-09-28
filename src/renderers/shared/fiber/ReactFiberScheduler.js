@@ -317,7 +317,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function commitAllHostEffects() {
     while (nextEffect !== null) {
       if (__DEV__) {
-        ReactDebugCurrentFiber.setCurrentFiber(nextEffect, null);
+        ReactDebugCurrentFiber.setCurrentFiber(nextEffect);
         recordEffect();
       }
 
@@ -615,7 +615,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // means that we don't need an additional field on the work in
       // progress.
       const current = workInProgress.alternate;
+      if (__DEV__) {
+        ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
+      }
       const next = completeWork(current, workInProgress, nextPriorityLevel);
+      if (__DEV__) {
+        ReactDebugCurrentFiber.resetCurrentFiber();
+      }
 
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
@@ -706,8 +712,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // See if beginning this work spawns more work.
     if (__DEV__) {
       startWorkTimer(workInProgress);
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
     let next = beginWork(current, workInProgress, nextPriorityLevel);
+    if (__DEV__) {
+      ReactDebugCurrentFiber.resetCurrentFiber();
+    }
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
     }
@@ -718,9 +728,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     ReactCurrentOwner.current = null;
-    if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
-    }
 
     return next;
   }
@@ -735,8 +742,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // See if beginning this work spawns more work.
     if (__DEV__) {
       startWorkTimer(workInProgress);
+      ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
     let next = beginFailedWork(current, workInProgress, nextPriorityLevel);
+    if (__DEV__) {
+      ReactDebugCurrentFiber.resetCurrentFiber();
+    }
     if (__DEV__ && ReactFiberInstrumentation.debugTool) {
       ReactFiberInstrumentation.debugTool.onBeginWork(workInProgress);
     }
@@ -747,9 +758,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     ReactCurrentOwner.current = null;
-    if (__DEV__) {
-      ReactDebugCurrentFiber.resetCurrentFiber();
-    }
 
     return next;
   }
