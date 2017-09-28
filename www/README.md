@@ -34,8 +34,7 @@
 
 1. Follow the "Running locally" instructions
 1. Save the files and check in the browser
-  1. Any React components in `src/components` or `src/templates`) will hot-reload
-  1. Some other JS files, such as `html.js`, may require a full reload
+  1. Any React components in `src/components` or `src/templates` will hot-reload
   1. If working with plugins, you may need to remove the `.cache` directory and restart the server
 
 ### Test the change
