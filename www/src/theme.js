@@ -208,7 +208,7 @@ const sharedStyles = {
     },
 
     '& p': {
-      marginTop: 35,
+      marginTop: 30,
       fontSize: 18,
       lineHeight: 1.7,
       maxWidth: '42em',
@@ -223,7 +223,7 @@ const sharedStyles = {
 
       [media.lessThan('large')]: {
         fontSize: 16,
-        lineHeight: '30px',
+        marginTop: 25,
       },
     },
 
