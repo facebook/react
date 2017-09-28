@@ -54,6 +54,11 @@ October 13 in Stockholm, Sweden
 
 [Website](https://statejs.com/)
 
+### Second React Summit - NG 2017
+October 21 in Lagos, Nigeria
+
+[Website](https://reactsummit2017.splashthat.com/) - [Twitter](https://twitter.com/DevCircleLagos/) - [Facebook](https://www.facebook.com/groups/DevCLagos/)
+
 ### ReactiveConf 2017
 October 25–27, Bratislava, Slovakia
 
