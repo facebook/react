@@ -45,7 +45,7 @@ var failInBeginPhase = false;
 
 function appendChild(
   parentInstance: Instance | Container,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance
 ): void {
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
@@ -57,7 +57,7 @@ function appendChild(
 function insertBefore(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
+  beforeChild: Instance | TextInstance
 ): void {
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
@@ -72,7 +72,7 @@ function insertBefore(
 
 function removeChild(
   parentInstance: Instance | Container,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance
 ): void {
   const index = parentInstance.children.indexOf(child);
   if (index === -1) {
@@ -111,7 +111,7 @@ var NoopRenderer = ReactFiberReconciler({
 
   appendInitialChild(
     parentInstance: Instance,
-    child: Instance | TextInstance,
+    child: Instance | TextInstance
   ): void {
     parentInstance.children.push(child);
   },
@@ -119,7 +119,7 @@ var NoopRenderer = ReactFiberReconciler({
   finalizeInitialChildren(
     domElement: Instance,
     type: string,
-    props: Props,
+    props: Props
   ): boolean {
     return false;
   },
@@ -128,7 +128,7 @@ var NoopRenderer = ReactFiberReconciler({
     instance: Instance,
     type: string,
     oldProps: Props,
-    newProps: Props,
+    newProps: Props
   ): null | {} {
     return UPDATE_SIGNAL;
   },
@@ -142,7 +142,7 @@ var NoopRenderer = ReactFiberReconciler({
     updatePayload: Object,
     type: string,
     oldProps: Props,
-    newProps: Props,
+    newProps: Props
   ): void {
     instance.prop = newProps.prop;
   },
@@ -163,7 +163,7 @@ var NoopRenderer = ReactFiberReconciler({
     text: string,
     rootContainerInstance: Container,
     hostContext: Object,
-    internalInstanceHandle: Object,
+    internalInstanceHandle: Object
   ): TextInstance {
     var inst = {text: text, id: instanceCounter++};
     // Hide from unit tests
@@ -174,7 +174,7 @@ var NoopRenderer = ReactFiberReconciler({
   commitTextUpdate(
     textInstance: TextInstance,
     oldText: string,
-    newText: string,
+    newText: string
   ): void {
     textInstance.text = newText;
   },
@@ -190,7 +190,7 @@ var NoopRenderer = ReactFiberReconciler({
     if (scheduledCallback) {
       throw new Error(
         'Scheduling a callback twice is excessive. Instead, keep track of ' +
-          'whether the callback has already been scheduled.',
+          'whether the callback has already been scheduled.'
       );
     }
     scheduledCallback = callback;
@@ -253,7 +253,7 @@ var ReactNoop = {
   renderToRootWithID(
     element: React$Element<any>,
     rootID: string,
-    callback: ?Function,
+    callback: ?Function
   ) {
     let root = roots.get(rootID);
     if (!root) {
@@ -310,7 +310,7 @@ var ReactNoop = {
   },
 
   flushAndYield(
-    unitsOfWork: number = Infinity,
+    unitsOfWork: number = Infinity
   ): Generator<Array<mixed>, void, void> {
     return flushUnitsOfWork(unitsOfWork);
   },
@@ -336,8 +336,10 @@ var ReactNoop = {
     assert.deepEqual(
       actual,
       expected,
-      'Unexpected flush results.\nExpected:\n  ' + JSON.stringify(actual, null, 2) +
-      '\n\nActual:\n  ' + JSON.stringify(expected, null, 2)
+      'Unexpected flush results.\nExpected:\n  ' +
+        JSON.stringify(actual, null, 2) +
+        '\n\nActual:\n  ' +
+        JSON.stringify(expected, null, 2)
     );
   },
 
@@ -405,7 +407,7 @@ var ReactNoop = {
         '  '.repeat(depth + 1) + '~',
         firstUpdate && firstUpdate.partialState,
         firstUpdate.callback ? 'with callback' : '',
-        '[' + firstUpdate.priorityLevel + ']',
+        '[' + firstUpdate.priorityLevel + ']'
       );
       var next;
       while ((next = firstUpdate.next)) {
@@ -413,7 +415,7 @@ var ReactNoop = {
           '  '.repeat(depth + 1) + '~',
           next.partialState,
           next.callback ? 'with callback' : '',
-          '[' + firstUpdate.priorityLevel + ']',
+          '[' + firstUpdate.priorityLevel + ']'
         );
       }
     }
@@ -423,7 +425,7 @@ var ReactNoop = {
         '  '.repeat(depth) +
           '- ' +
           (fiber.type ? fiber.type.name || fiber.type : '[root]'),
-        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']',
+        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']'
       );
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);
@@ -464,7 +466,6 @@ var ReactNoop = {
       failInBeginPhase = false;
     }
   },
-
 };
 
 module.exports = ReactNoop;
