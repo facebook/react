@@ -7,4 +7,3 @@ author: [vjeux]
 
 
 <blockquote class="twitter-tweet" align="center"><p>React (by Facebook) is now available on JSFiddle. <a href="http://t.co/wNQf9JPv5u" title="http://facebook.github.io/react/">facebook.github.io/react/</a></p>&mdash; JSFiddle (@jsfiddle) <a href="https://twitter.com/jsfiddle/status/341114115781177344">June 2, 2013</a></blockquote>
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>

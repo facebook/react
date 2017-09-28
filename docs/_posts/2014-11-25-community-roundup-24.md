@@ -95,5 +95,3 @@ We're counting down the days until [React.js Conf](http://conf.reactjs.com) at F
     <blockquote class="twitter-tweet" lang="en"><p>If anyone in Sydney is curious about <a href="https://twitter.com/reactjs">@reactjs</a>, I&#39;m presenting at <a href="https://twitter.com/sydjs">@sydjs</a> tonight on how to use it and why it is the future. <a href="https://twitter.com/hashtag/javascript?src=hash">#javascript</a></p>&mdash; Jed Watson (@JedWatson) <a href="https://twitter.com/JedWatson/status/534943557568565248">November 19, 2014</a></blockquote>
   </div>
 </div>
-
-<script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script>
