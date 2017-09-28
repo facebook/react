@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #14"
-author: vjeux
+author: [vjeux]
 ---
 
 The theme of this first round-up of 2014 is integration. I've tried to assemble a list of articles and projects that use React in various environments.
@@ -21,14 +21,14 @@ React is only one-piece of your web application stack. [Mark Lussier](https://gi
 ## Animal Sounds
 
 [Josh Duck](http://joshduck.com/) used React in order to build a Windows 8 tablet app. This is a good example of a touch app written in React.
-<figure>[![](/react/img/blog/animal-sounds.jpg)](http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9)</figure>
+[![](../img/blog/animal-sounds.jpg)](http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9)
 
 [Download the app...](http://apps.microsoft.com/windows/en-us/app/baby-play-animal-sounds/9280825c-2ed9-41c0-ba38-aa9a5b890bb9)
 
 
 ## React Rails Tutorial
 
-[Selem Delul](http://selem.im) bundled the [React Tutorial](/react/tutorial/tutorial.html) into a rails app. This is a good example on how to get started with a rails project.
+[Selem Delul](http://selem.im) bundled the [React Tutorial](/tutorial/tutorial.html) into a rails app. This is a good example on how to get started with a rails project.
 
 > ```
 git clone https://github.com/necrodome/react-rails-tutorial

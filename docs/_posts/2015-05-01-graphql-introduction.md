@@ -1,6 +1,6 @@
 ---
 title: "GraphQL Introduction"
-author: schrockn
+author: [schrockn]
 ---
 
 At the React.js conference in late January 2015, we revealed our next major technology in the React family: [Relay](http://facebook.github.io/react/blog/2015/02/20/introducing-relay-and-graphql.html). 

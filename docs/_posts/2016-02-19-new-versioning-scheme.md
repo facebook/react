@@ -1,6 +1,6 @@
 ---
 title: "New Versioning Scheme"
-author: sebmarkbage
+author: [sebmarkbage]
 ---
 
 Today we're announcing that we're switching to major revisions for React. The current version is 0.14.7. The next release will be: **15.0.0**
@@ -13,21 +13,21 @@ The core of the React API has been stable for years. Our business as well as man
 
 React isn't just a library but an ecosystem. We know that your applications and ours are not just isolated islands of code. It is a network of your own application code, your own open source components and third party libraries that all depend on React.
 
-<img src="/react/img/blog/versioning-1.png" width="403">
+<img src="../img/blog/versioning-1.png" width="403">
 
 Therefore it is important that we don't just upgrade our own codebases but that we bring our whole community with us. We take the upgrade path very seriously - for everyone.
 
-<img src="/react/img/blog/versioning-poll.png" width="596">
+<img src="../img/blog/versioning-poll.png" width="596">
 
 ## Introducing Minor Releases
 
 Ideally everyone could just depend on the latest version of React all the time.
 
-<img src="/react/img/blog/versioning-2.png" width="463">
+<img src="../img/blog/versioning-2.png" width="463">
 
 We know that in practice that is not possible. In the future, we expect more new additive APIs rather than breakage of existing ones. By moving to major revisions in the semver scheme, we can release new versions without breaking existing ones.
 
-<img src="/react/img/blog/versioning-3.png" width="503">
+<img src="../img/blog/versioning-3.png" width="503">
 
 That means that if one component needs a new API, there is no need for any of the other components to do any further work. They remain compatible.
 
@@ -47,14 +47,14 @@ Once we've reached the end of life for a particular major version, we'll release
 
 If you try to upgrade your component to 16.0.0 you might find that your application no longer works if you still have other dependencies. E.g. if Ryan's and Jed's components are only compatible with 15.x.x.
 
-<img src="/react/img/blog/versioning-4.png" width="498">
+<img src="../img/blog/versioning-4.png" width="498">
 
 Worst case, you revert back to 15.1.0 for your application. Since you'll want to use your component, you might also revert that one.
 
-<img src="/react/img/blog/versioning-5.png" width="493">
+<img src="../img/blog/versioning-5.png" width="493">
 
 Of course, Ryan and Jed think the same way. If we're not careful, we can hit a cliff where nobody upgrades. This has happened to many software project ecosystems in the past.
 
 Therefore, we're committed to making it easy for most components and libraries built on top of React to be compatible with two major versions at the same time. We will do this by introducing new APIs before completely removing the old ones, thereby avoiding those cliffs.
 
-<img src="/react/img/blog/versioning-6.png" width="493">
+<img src="../img/blog/versioning-6.png" width="493">

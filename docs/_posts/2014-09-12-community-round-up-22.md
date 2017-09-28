@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #22"
 layout: post
-author: LoukaN
+author: [LoukaN]
 ---
 
 This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb and Reddit announced that they were using React!
@@ -20,7 +20,7 @@ This has been an exciting summer as four big companies: Yahoo, Mozilla, Airbnb a
 
 [Vjeux](http://blog.vjeux.com/), from the React team, gave a talk at OSCON on the history of React and the various optimizations strategies that are implemented. You can also check out the [annotated slides](https://speakerdeck.com/vjeux/oscon-react-architecture) or [Chris Dawson](http://thenewstack.io/author/chrisdawson/)'s notes titled [JavaScript’s History and How it Led To React](http://thenewstack.io/javascripts-history-and-how-it-led-to-reactjs/).
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/eCf5CquV_Bw" frameborder="0" allowfullscreen></iframe>
 
 
 ## v8 optimizations
@@ -48,7 +48,7 @@ var translated = (
 
 [Trường](http://truongtx.me/) wrote a little guide to help your [getting started using React, Browserify and Gulp](http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/).
 
-<figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="/react/img/blog/react-browserify-gulp.jpg" /></a></figure>
+<figure><a href="http://truongtx.me/2014/07/18/using-reactjs-with-browserify-and-gulp/"><img src="../img/blog/react-browserify-gulp.jpg" /></a></figure>
 
 
 ## React Style
@@ -89,7 +89,7 @@ var Button = React.createClass({
 
 If you are getting started with React, [Joe Maddalone](http://www.joemaddalone.com/) made a good tutorial on how to build your first component.
 
-<iframe width="100%" height="200" src="//www.youtube-nocookie.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="200" src="//www.youtube-nocookie.com/embed/rFvZydtmsxM" frameborder="0" allowfullscreen></iframe>
 
 
 ## Saving time & staying sane?
@@ -111,4 +111,4 @@ When [Kent William Innholt](http://http://kentwilliam.com/) who works at [M>Path
 To finish this round-up, Andrew Gleave made a page that displays the [Weather](https://github.com/andrewgleave/react-weather). It's great to see that React is also used for small prototypes.
 
 
-<figure><a href="https://github.com/andrewgleave/react-weather"><img src="/react/img/blog/weather.png" /></a></figure>
+<figure><a href="https://github.com/andrewgleave/react-weather"><img src="../img/blog/weather.png" /></a></figure>

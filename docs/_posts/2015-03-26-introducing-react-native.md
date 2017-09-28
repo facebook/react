@@ -1,6 +1,6 @@
 ---
 title: "Introducing React Native"
-author: sophiebits
+author: [sophiebits]
 ---
 
 In January at React.js Conf, we announced React Native, a new framework for building native apps using React. We're happy to announce that we're open-sourcing React Native and you can start building your apps with it today.

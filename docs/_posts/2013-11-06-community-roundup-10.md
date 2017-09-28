@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #10"
-author: vjeux
+author: [vjeux]
 ---
 
 This is the 10th round-up already and React has come quite far since it was open sourced. Almost all new web projects at Khan Academy, Facebook, and Instagram are being developed using React. React has been deployed in a variety of contexts: a Chrome extension, a Windows 8 application, mobile websites, and desktop websites supporting Internet Explorer 8! Language-wise, React is not only being used within JavaScript but also CoffeeScript and ClojureScript.
@@ -26,7 +26,7 @@ The best part is that no drastic changes have been required to support all those
 
 [Pete Hunt](http://www.petehunt.net/)'s talk at JSConf EU 2013 is now available in video.
 
-<figure><iframe width="100%" height="370" src="//www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="650" height="370" src="//www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## Server-side React with PHP
@@ -47,7 +47,7 @@ The best part is that no drastic changes have been required to support all those
 > [**Read part 2 ...**](http://www.phpied.com/server-side-react-with-php-part-2/)
 >
 > Rendered markup on the server:
-> <figure>[![](/react/img/blog/react-php.png)](http://www.phpied.com/server-side-react-with-php-part-2/)</figure>
+> <figure><a href="http://www.phpied.com/server-side-react-with-php-part-2/"><img src="../img/blog/react-php.png"></a></figure>
 
 
 ## TodoMVC Benchmarks
@@ -92,7 +92,7 @@ The fact that you can control when components are rendered is a very important c
 ## Guess the filter
 
 [Connor McSheffrey](http://conr.me) implemented a small game using React. The goal is to guess which filter has been used to create the Instagram photo.
-<figure>[![](/react/img/blog/guess_filter.jpg)](http://guessthefilter.com/)</figure>
+<figure><a href="http://guessthefilter.com/"><img src="../img/blog/guess_filter.jpg"></a></figure>
 
 
 ## React vs FruitMachine

@@ -1,0 +1,39 @@
+html {
+  box-sizing: border-box;
+  font-family: "proxima-nova", sans-serif;
+  font-style: normal;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  overflow-x: hidden;
+  position: relative;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
+  border-color: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img {
+  display: inline-block;
+  vertical-align: top;
+}
+
+pre, code {
+  font-family: source-code-pro, Menlo, Consolas, "Courier New", monospace;
+}

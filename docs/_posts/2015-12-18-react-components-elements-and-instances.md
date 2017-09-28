@@ -1,6 +1,6 @@
 ---
 title: "React Components, Elements, and Instances"
-author: gaearon
+author: [gaearon]
 ---
 
 The difference between **components, their instances, and elements** confuses many React beginners. Why are there three different terms to refer to something that is painted on screen?
@@ -350,13 +350,13 @@ React will ask the `Form` component what element tree it returns, given those `p
 }
 ```
 
-This is a part of the process that React calls [reconciliation](/react/docs/reconciliation.html) which starts when you call [`ReactDOM.render()`](/react/docs/top-level-api.html#reactdom.render) or [`setState()`](/react/docs/component-api.html#setstate). By the end of the reconciliation, React knows the result DOM tree, and a renderer like `react-dom` or `react-native` applies the minimal set of changes necessary to update the DOM nodes (or the platform-specific views in case of React Native).
+This is a part of the process that React calls [reconciliation](/docs/reconciliation.html) which starts when you call [`ReactDOM.render()`](/docs/top-level-api.html#reactdom.render) or [`setState()`](/docs/component-api.html#setstate). By the end of the reconciliation, React knows the result DOM tree, and a renderer like `react-dom` or `react-native` applies the minimal set of changes necessary to update the DOM nodes (or the platform-specific views in case of React Native).
 
-This gradual refining process is also the reason React apps are easy to optimize. If some parts of your component tree become too large for React to visit efficiently, you can tell it to [skip this “refining” and diffing certain parts of the tree if the relevant props have not changed](/react/docs/advanced-performance.html). It is very fast to calculate whether the props have changed if they are immutable, so React and immutability work great together, and can provide great optimizations with the minimal effort.
+This gradual refining process is also the reason React apps are easy to optimize. If some parts of your component tree become too large for React to visit efficiently, you can tell it to [skip this “refining” and diffing certain parts of the tree if the relevant props have not changed](/docs/advanced-performance.html). It is very fast to calculate whether the props have changed if they are immutable, so React and immutability work great together, and can provide great optimizations with the minimal effort.
 
 You might have noticed that this blog entry talks a lot about components and elements, and not so much about the instances. The truth is, instances have much less importance in React than in most object-oriented UI frameworks.
 
-Only components declared as classes have instances, and you never create them directly: React does that for you. While [mechanisms for a parent component instance to access a child component instance](/react/docs/more-about-refs.html) exist, they are only used for imperative actions (such as setting focus on a field), and should generally be avoided.
+Only components declared as classes have instances, and you never create them directly: React does that for you. While [mechanisms for a parent component instance to access a child component instance](/docs/more-about-refs.html) exist, they are only used for imperative actions (such as setting focus on a field), and should generally be avoided.
 
 React takes care of creating an instance for every class component, so you can write components in an object-oriented way with methods and local state, but other than that, instances are not very important in the React’s programming model and are managed by React itself.
 
@@ -368,16 +368,16 @@ A *component* can be declared in several different ways. It can be a class with 
 
 When a component receives some props as an input, it is because a particular parent component returned an element with its `type` and these props. This is why people say that the props flows one way in React: from parents to children.
 
-An *instance* is what you refer to as `this` in the component class you write. It is useful for [storing local state and reacting to the lifecycle events](/react/docs/component-api.html).
+An *instance* is what you refer to as `this` in the component class you write. It is useful for [storing local state and reacting to the lifecycle events](/docs/component-api.html).
 
 Functional components don’t have instances at all. Class components have instances, but you never need to create a component instance directly—React takes care of this.
 
-Finally, to create elements, use [`React.createElement()`](/react/docs/top-level-api.html#react.createelement), [JSX](/react/docs/jsx-in-depth.html), or an [element factory helper](/react/docs/top-level-api.html#react.createfactory). Don’t write elements as plain objects in the real code—just know that they are plain objects under the hood.
+Finally, to create elements, use [`React.createElement()`](/docs/top-level-api.html#react.createelement), [JSX](/docs/jsx-in-depth.html), or an [element factory helper](/docs/top-level-api.html#react.createfactory). Don’t write elements as plain objects in the real code—just know that they are plain objects under the hood.
 
 ## Further Reading
 
-* [Introducing React Elements](/react/blog/2014/10/14/introducing-react-elements.html)
-* [Streamlining React Elements](/react/blog/2015/02/24/streamlining-react-elements.html)
-* [React (Virtual) DOM Terminology](/react/docs/glossary.html)
+* [Introducing React Elements](/blog/2014/10/14/introducing-react-elements.html)
+* [Streamlining React Elements](/blog/2015/02/24/streamlining-react-elements.html)
+* [React (Virtual) DOM Terminology](/docs/glossary.html)
 
 [^1]: All React elements require an additional ``$$typeof: Symbol.for('react.element')`` field declared on the object for [security reasons](https://github.com/facebook/react/pull/4832). It is omitted in the examples above. This blog entry uses inline objects for elements to give you an idea of what’s happening underneath but the code won’t run as is unless you either add `$$typeof` to the elements, or change the code to use `React.createElement()` or JSX.

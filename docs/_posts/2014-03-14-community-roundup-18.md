@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #18"
-author: jgebhardt
+author: [jgebhardt]
 ---
 
 In this Round-up, we are taking a few closer looks at React's interplay with different frameworks and architectures.
@@ -75,7 +75,7 @@ Ian Bicking ([@ianbicking](https://twitter.com/ianbicking)) of Mozilla Labs [exp
 
 React was also recently mentioned at ng-conf, where the Angular team commented on React's concept of the virtual DOM:
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/srt3OBP2kGc?start=113" frameborder="0" allowfullscreen></iframe>
 
 ## React and Web Components
 

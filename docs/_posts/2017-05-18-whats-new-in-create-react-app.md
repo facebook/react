@@ -1,9 +1,9 @@
 ---
 title: "What's New in Create React App"
-author: gaearon
+author: [gaearon]
 ---
 
-Less than a year ago, we introduced [Create React App](/react/blog/2016/07/22/create-apps-with-no-configuration.html) as an officially supported way to create apps with zero configuration. The project has since enjoyed tremendous growth, with over 950 commits by more than 250 contributors.
+Less than a year ago, we introduced [Create React App](/blog/2016/07/22/create-apps-with-no-configuration.html) as an officially supported way to create apps with zero configuration. The project has since enjoyed tremendous growth, with over 950 commits by more than 250 contributors.
 
 Today, we are excited to announce that many features that have been in the pipeline for the last few months are finally released.
 
@@ -23,7 +23,7 @@ If you had to eject your app for one reason or another, Webpack provides a [conf
 
 The biggest notable webpack 2 feature is the ability to write and import [ES6 modules](http://2ality.com/2014/09/es6-modules-final.html) directly without compiling them to CommonJS. This shouldn’t affect how you write code since you likely already use `import` and `export` statements, but it will help catch more mistakes like missing named exports at compile time:
 
-<img src='/react/img/blog/cra-update-exports.gif' alt='Export validation' style="max-width:100%"> 
+![Export validation](../img/blog/cra-update-exports.gif) 
 
 In the future, as the ecosystem around ES6 modules matures, you can expect more improvements to your app's bundle size thanks to [tree shaking](https://webpack.js.org/guides/tree-shaking/).
 
@@ -37,7 +37,7 @@ To address these issues, we are introducing an overlay that pops up whenever the
 
 A GIF is worth a thousand words:
     
-<img src='/react/img/blog/cra-runtime-error.gif' alt='Runtime error overlay' style="max-width:100%"> 
+![Runtime error overlay](../img/blog/cra-runtime-error.gif) 
 
 (Yes, it integrates with your editor!)
 
@@ -50,7 +50,7 @@ In the future, we plan to teach the runtime error overlay to understand more abo
 
 Newly created projects are built as [Progressive Web Apps](https://developers.google.com/web/progressive-web-apps/) by default. This means that they employ [service workers](https://developers.google.com/web/fundamentals/getting-started/primers/service-workers) with an [offline-first caching strategy](https://developers.google.com/web/fundamentals/instant-and-offline/offline-cookbook/#cache-falling-back-to-network) to minimize the time it takes to serve the app to the users who visit it again. You can opt out of this behavior, but we recommend it both for new and existing apps, especially if you target mobile devices.
 
-<img src='/react/img/blog/cra-pwa.png' alt='Loading assets from service worker' style="max-width:100%"> 
+![Loading assets from service worker](../img/blog/cra-pwa.png) 
 
 New apps automatically have these features, but you can easily convert an existing project to a Progressive Web App  by following [our migration guide](https://github.com/facebookincubator/create-react-app/releases/tag/v1.0.0).
 
@@ -65,7 +65,7 @@ We are now using the latest version of Jest that includes numerous bugfixes and 
 
 Highlights include a new [immersive watch mode](https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#immersive-watch-mode), [a better snapshot format](https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#snapshot-updates), [improvements to printing skipped tests](https://facebook.github.io/jest/blog/2017/02/21/jest-19-immersive-watch-mode-test-platform-improvements.html#improved-printing-of-skipped-tests), and [new testing APIs](https://facebook.github.io/jest/blog/2017/05/06/jest-20-delightful-testing-multi-project-runner.html#new-improved-testing-apis).
 
-<img src='/react/img/blog/cra-jest-search.gif' alt='Immersive test watcher' style="max-width:100%"> 
+![Immersive test watcher](../img/blog/cra-jest-search.gif) 
 
 Additionally, Create React App now support configuring a few Jest options related to coverage reporting.
 
@@ -77,7 +77,7 @@ It is important to keep the initial JavaScript payload of web apps down to the m
    
 In this release, we are adding support for the [dynamic `import()` proposal](http://2ality.com/2017/01/import-operator.html#loading-code-on-demand) which aligns with the future web standards. Unlike `require.ensure()`, it doesn't break Jest tests, and should eventually become a part of JavaScript. We encourage you to use `import()` to delay loading the code for non-critical component subtrees until you need to render them.
 
-<img src='/react/img/blog/cra-dynamic-import.gif' alt='Creating chunks with dynamic import' style="max-width:100%">
+![Creating chunks with dynamic import](../img/blog/cra-dynamic-import.gif)
 
 ### Better Console Output
 
@@ -87,7 +87,7 @@ We have improved the console output across the board.
 
 For example, when you start the development server, we now display the LAN address in additional to the localhost address so that you can quickly access the app from a mobile device on the same network:
 
-<img src='/react/img/blog/cra-better-output.png' alt='Better console output' style="max-width:100%"> 
+![Better console output](../img/blog/cra-better-output.png) 
 
 When lint errors are reported, we no longer show the warnings so that you can concentrate on more critical issues. Errors and warnings in the production build output are better formatted, and the build error overlay font size now matches the browser font size more closely.
 

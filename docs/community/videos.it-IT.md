@@ -8,7 +8,7 @@ next: complementary-tools-it-IT.html
 
 ### Riconsiderare le best practice - JSConf.eu
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
 "A Facebook e Instagram, con React stiamo provando a spingerci oltre i limiti di ciò che è possibile realizzare sul web. Il mio talk comincerà con una breve introduzione al framework, e poi approfondirà tre argomenti controversi: Gettare via la nozione dei template e costruire le viste con JavaScript, effettuare il “ri-rendering” dell'intera applicazione quando i dati cambiano, e un'implementazione leggera del DOM e degli eventi." -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -16,14 +16,14 @@ next: complementary-tools-it-IT.html
 
 ### Pensare in react - tagtree.tv
 
-Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare in React](/react/docs/thinking-in-react.html) mentre costruisci una semplice applicazione
-<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
+Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare in React](/docs/thinking-in-react.html) mentre costruisci una semplice applicazione
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *
 
 ### I Segreti del DOM Virtuale - MtnWest JS
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
 
 "In questo talk discuterò perché abbiamo costruito un DOM virtuale, i vantaggi rispetto ad altri sistemi, e la sua rilevanza per il futuro della tecnologia dei browser." -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -32,14 +32,14 @@ Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare i
 ### Pensare in grande con React
 
 "Sulla carta, tutti questi framework JS sembrano promettenti: implementazioni pulite, design veloce del codice, esecuzione perfetta. Ma che succede quando metti JavaScript sotto stress? Che succede se gli dài in pasto 6 megabyte di codice? In questo talk investigheremo come si comporta React in situazioni di stress elevato, e come ha aiutato il nostro team a costruire codice sicuro ad una scala enorme."
-<figure>[![](https://i.vimeocdn.com/video/481670116_650.jpg)](https://skillsmatter.com/skillscasts/5429-going-big-with-react#video)</figure>
+<figure><a href="https://skillsmatter.com/skillscasts/5429-going-big-with-react#video"><img src="https://i.vimeocdn.com/video/481670116_650.jpg"></a></figure>
 
 * * *
 
 ### CodeWinds
 
 [Pete Hunt](http://www.petehunt.net/) ha parlato con [Jeff Barczewski](http://jeff.barczewski.com/) a proposito di React nell'Episodio 4 di CodeWinds.
-<figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
+<figure><a href="http://codewinds.com/4"><img src="../img/docs/codewinds-004.png"></a></figure>
 
 <table width="100%"><tr><td>
 02:08 - Cos'è React e perché usarlo?<br />
@@ -72,7 +72,7 @@ Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare i
 ### JavaScript Jabber
 
 [Pete Hunt](http://www.petehunt.net/) e [Jordan Walke](https://github.com/jordwalke) hanno parlato di React in JavaScript Jabber 73.
-<figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="../img/docs/javascript-jabber.png"></a></figure>
 
 <table width="100%"><tr><td>
 01:34 – Introduzione di Pete Hunt<br />
@@ -99,14 +99,14 @@ Un video di [tagtree.tv](http://tagtree.tv/) che espone i principi di [Pensare i
 
 ### Introduzione a React.js - Facebook Seattle
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
 
 Di [Tom Occhino](http://tomocchino.com/) e [Jordan Walke](https://github.com/jordwalke)
 
 * * *
 
 ### Backbone + React + Middleman Screencast
-<iframe width="100%" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
 Backbone è una grande maniera di interfacciare una API REST con React. Questo screencast mostra come integrare i due usando [Backbone-React-Component](https://github.com/magalhas/backbone-react-component). Middleman è il framework utilizzato in questo esempio, ma può essere facilmente sostituito con altri framework. Si può trovare un template supportato per questo esempio [qui](https://github.com/jbhatab/middleman-backbone-react-template). -- [Open Minded Innovations](http://www.openmindedinnovations.com/)
 
@@ -114,7 +114,7 @@ Backbone è una grande maniera di interfacciare una API REST con React. Questo s
 
 ### Sviluppare Interfacce Utente Con React - Super VanJS
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
 
 Di [Steven Luscher](https://github.com/steveluscher)
 
@@ -122,7 +122,7 @@ Di [Steven Luscher](https://github.com/steveluscher)
 
 ### Introduzione a React - LAWebSpeed meetup
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
 
 Di [Stoyan Stefanov](http://www.phpied.com/)
 
@@ -130,7 +130,7 @@ Di [Stoyan Stefanov](http://www.phpied.com/)
 
 ### React, o come rendere la vita più semplice - FrontEnd Dev Conf '14
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
 **In Russo** di [Alexander Solovyov](http://solovyov.net/)
 
@@ -138,19 +138,19 @@ Di [Stoyan Stefanov](http://www.phpied.com/)
 
 ### "Programmazione funzionale del DOM" - Meteor DevShop 11
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### "Ripensare lo Sviluppo di Applicazioni Web a Facebook" - Facebook F8 Conference 2014
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### React e Flux: Costruire Applicazioni con un Flusso Dati Unidirezionale - Forward JS 2014
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 Gli ingegneri di Facebook [Bill Fisher](https://twitter.com/fisherwebdev) e [Jing Chen](https://twitter.com/jingc) parlano di Flux e React, e di come usare un'architettura dell'applicazione con un flusso di dati unidirezionale rende gran parte del loro codice più pulito.
 
@@ -168,6 +168,6 @@ Gli ingegneri di Facebook [Bill Fisher](https://twitter.com/fisherwebdev) e [Jin
 
 ### Introduzione a React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/KVZ-P-ZI6W4?list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
 [Tom Occhino](https://twitter.com/tomocchino) ripercorre il passato e il presente di React nel 2015, e ci mostra dove è diretto nell'immediato futuro.

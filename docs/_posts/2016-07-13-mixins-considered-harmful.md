@@ -1,6 +1,6 @@
 ---
 title: "Mixins Considered Harmful"
-author: gaearon
+author: [gaearon]
 ---
 
 “How do I share the code between several components?” is one of the first questions that people ask when they learn React. Our answer has always been to use component composition for code reuse. You can define a component and use it in several other components.
@@ -65,7 +65,7 @@ We hope that you find this list helpful. Please let us know if we missed importa
 
 ### Performance Optimizations
 
-One of the most commonly used mixins is [`PureRenderMixin`](/react/docs/pure-render-mixin.html). You might be using it in some components to [prevent unnecessary re-renders](/react/docs/advanced-performance.html#shouldcomponentupdate-in-action) when the props and state are shallowly equal to the previous props and state:
+One of the most commonly used mixins is [`PureRenderMixin`](/docs/pure-render-mixin.html). You might be using it in some components to [prevent unnecessary re-renders](/docs/advanced-performance.html#shouldcomponentupdate-in-action) when the props and state are shallowly equal to the previous props and state:
 
 ```javascript
 var PureRenderMixin = require('react-addons-pure-render-mixin');
@@ -80,7 +80,7 @@ var Button = React.createClass({
 
 #### Solution
 
-To express the same without mixins, you can use the [`shallowCompare`](/react/docs/shallow-compare.html) function directly instead:
+To express the same without mixins, you can use the [`shallowCompare`](/docs/shallow-compare.html) function directly instead:
 
 ```js
 var shallowCompare = require('react-addons-shallow-compare');
@@ -393,7 +393,7 @@ module.exports = withSubscription(CommentList);
 
 Higher-order components are a powerful pattern. You can pass additional arguments to them if you want to further customize their behavior. After all, they are not even a feature of React. They are just functions that receive components and return components that wrap them.
 
-Like any solution, higher-order components have their own pitfalls. For example, if you heavily use [refs](/react/docs/more-about-refs.html), you might notice that wrapping something into a higher-order component changes the ref to point to the wrapping component. In practice we discourage using refs for component communication so we don’t think it’s a big issue. In the future, we might consider adding [ref forwarding](https://github.com/facebook/react/issues/4213) to React to solve this annoyance.
+Like any solution, higher-order components have their own pitfalls. For example, if you heavily use [refs](/docs/more-about-refs.html), you might notice that wrapping something into a higher-order component changes the ref to point to the wrapping component. In practice we discourage using refs for component communication so we don’t think it’s a big issue. In the future, we might consider adding [ref forwarding](https://github.com/facebook/react/issues/4213) to React to solve this annoyance.
 
 ### Rendering Logic
 
@@ -471,7 +471,7 @@ Props keep component dependencies explicit, easy to replace, and enforceable wit
 
 ### Context
 
-Another group of mixins we discovered were helpers for providing and consuming [React context](/react/docs/context.html). Context is an experimental unstable feature, has [certain issues](https://github.com/facebook/react/issues/2517), and will likely change its API in the future. We don’t recommend using it unless you’re confident there is no other way of solving your problem.
+Another group of mixins we discovered were helpers for providing and consuming [React context](/docs/context.html). Context is an experimental unstable feature, has [certain issues](https://github.com/facebook/react/issues/2517), and will likely change its API in the future. We don’t recommend using it unless you’re confident there is no other way of solving your problem.
 
 Nevertheless, if you already use context today, you might have been hiding its usage with mixins like this:
 

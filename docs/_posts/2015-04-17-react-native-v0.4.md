@@ -1,7 +1,7 @@
 ---
 title: "React Native v0.4"
 layout: post
-author: vjeux
+author: [vjeux]
 ---
 
 It's been three weeks since we open sourced React Native and there's been some insane amount of activity already: over 12.5k stars, 1000 commits, 500 issues, 380 pull requests, and 100 contributors, plus [35 plugins](http://react.parts/native-ios) and [1 app in the app store](http://herman.asia/building-a-flashcard-app-with-react-native)! We were expecting some buzz around the project but this is way beyond anything we imagined. Thank you!

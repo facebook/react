@@ -98,6 +98,7 @@
   },
   "scripts": {
     "build": "npm run version-check && node scripts/rollup/build.js",
+    "build:docs": "cd www && yarn install && yarn build",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
     "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",

@@ -1,6 +1,6 @@
 ---
 title: "Error Handling in React 16"
-author: gaearon
+author: [gaearon]
 ---
 
 As React 16 release is getting closer, we would like to announce a few changes to how React handles JavaScript errors inside components. These changes are included in React 16 beta versions, and will be a part of React 16.
@@ -79,11 +79,11 @@ We also encourage you to use JS error reporting services (or build your own) so 
 
 React 16 prints all errors that occurred during rendering to the console in development, even if the application accidentally swallows them. In addition to the error message and the JavaScript stack, it also provides component stack traces. Now you can see where exactly in the component tree the failure has happened:
 
-<img src="/react/img/blog/error-boundaries-stack-trace.png" alt="Component stack traces in error message" style="width: 100%;">
+<img src="../img/blog/error-boundaries-stack-trace.png" alt="Component stack traces in error message" style="width: 100%;">
 
 You can also see the filenames and line numbers in the component stack trace. This works by default in [Create React App](https://github.com/facebookincubator/create-react-app) projects:
 
-<img src="/react/img/blog/error-boundaries-stack-trace-line-numbers.png" alt="Component stack traces with line numbers in error message" style="width: 100%;">
+<img src="../img/blog/error-boundaries-stack-trace-line-numbers.png" alt="Component stack traces with line numbers in error message" style="width: 100%;">
 
 If you don’t use Create React App, you can add [this plugin](https://www.npmjs.com/package/babel-plugin-transform-react-jsx-source) manually to your Babel configuration. Note that it’s intended only for development and **must be disabled in production**.
 

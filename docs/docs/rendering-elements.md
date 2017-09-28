@@ -19,7 +19,7 @@ Unlike browser DOM elements, React elements are plain objects, and are cheap to 
 
 >**Note:**
 >
->One might confuse elements with a more widely known concept of "components". We will introduce components in the [next section](/react/docs/components-and-props.html). Elements are what components are "made of", and we encourage you to read this section before jumping ahead.
+>One might confuse elements with a more widely known concept of "components". We will introduce components in the [next section](/docs/components-and-props.html). Elements are what components are "made of", and we encourage you to read this section before jumping ahead.
 
 ## Rendering an Element into the DOM
 
@@ -78,7 +78,7 @@ It calls `ReactDOM.render()` every second from a [`setInterval()`](https://devel
 
 >**Note:**
 >
->In practice, most React apps only call `ReactDOM.render()` once. In the next sections we will learn how such code gets encapsulated into [stateful components](/react/docs/state-and-lifecycle.html).
+>In practice, most React apps only call `ReactDOM.render()` once. In the next sections we will learn how such code gets encapsulated into [stateful components](/docs/state-and-lifecycle.html).
 >
 >We recommend that you don't skip topics because they build on each other.
 
@@ -88,7 +88,7 @@ React DOM compares the element and its children to the previous one, and only ap
 
 You can verify by inspecting the [last example](http://codepen.io/gaearon/pen/gwoJZk?editors=0010) with the browser tools:
 
-![DOM inspector showing granular updates](/react/img/docs/granular-dom-updates.gif)
+![DOM inspector showing granular updates](../img/docs/granular-dom-updates.gif)
 
 Even though we create an element describing the whole UI tree on every tick, only the text node whose contents has changed gets updated by React DOM.
 

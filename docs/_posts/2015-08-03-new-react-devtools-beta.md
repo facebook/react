@@ -1,12 +1,12 @@
 ---
 title: "New React Devtools Beta"
-author: jaredly
+author: [jaredly]
 ---
 
 We've made an entirely new version of the devtools, and we want you to try it
 out!
 
-![The full devtools gif](/react/img/blog/devtools-full.gif)
+![The full devtools gif](../img/blog/devtools-full.gif)
 
 ## Why entirely new?
 
@@ -33,7 +33,7 @@ Yeah!
 
 ### The Tree View
 
-![The new tree view of the devtools](/react/img/blog/devtools-tree-view.png)
+![The new tree view of the devtools](../img/blog/devtools-tree-view.png)
 
 - Much richer view of your props, including the contents of objects and arrays
 - Custom components are emphasized, native components are de-emphasized
@@ -52,14 +52,14 @@ Yeah!
 Select the search bar (or press "/"), and start searching for a component by
 name.
 
-![](/react/img/blog/devtools-search.gif)
+![](../img/blog/devtools-search.gif)
 
 ### The Side Pane
 
 - Now shows the `context` for a component
 - Right-click to store a prop/state value as a global variable
 
-![](/react/img/blog/devtools-side-pane.gif)
+![](../img/blog/devtools-side-pane.gif)
 
 ## How do I install it?
 

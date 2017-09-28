@@ -53,7 +53,7 @@ This is more work, but lets you work from the comfort of your editor.
 If you want to do it, here are the steps to follow:
 
 1. Make sure you have a recent version of [Node.js](https://nodejs.org/en/) installed.
-2. Follow the [installation instructions](/react/docs/installation.html#creating-a-new-application) to create a new project.
+2. Follow the [installation instructions](/docs/installation.html#creating-a-new-application) to create a new project.
 3. Delete all files in the `src/` folder of the new project.
 4. Add a file named `index.css` in the `src/` folder with [this CSS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0100).
 5. Add a file named `index.js` in the `src/` folder with [this JS code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010).
@@ -71,7 +71,7 @@ We recommend following [these instructions](http://babeljs.io/docs/editors) to c
 
 ### Help, I'm Stuck!
 
-If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/react/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
+If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
 
 With this out of the way, let's get started!
 
@@ -117,7 +117,7 @@ return React.createElement('div', {className: 'shopping-list'},
 
 [See full expanded version.](https://babeljs.io/repl/#?babili=false&evaluate=false&lineWrap=false&presets=react&targets=&browsers=&builtIns=false&debug=false&experimental=false&loose=false&spec=false&playground=true&code=%3Cdiv%20className%3D%22shopping-list%22%3E%0A%20%20%3Ch1%3EShopping%20List%20for%20%7Bprops.name%7D%3C%2Fh1%3E%0A%20%20%3Cul%3E%0A%20%20%20%20%3Cli%3EInstagram%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EWhatsApp%3C%2Fli%3E%0A%20%20%20%20%3Cli%3EOculus%3C%2Fli%3E%0A%20%20%3C%2Ful%3E%0A%3C%2Fdiv%3E)
 
-If you're curious, `createElement()` is described in more detail in the [API reference](/react/docs/react-api.html#createelement), but we won't be using it directly in this tutorial. Instead, we will keep using JSX.
+If you're curious, `createElement()` is described in more detail in the [API reference](/docs/react-api.html#createelement), but we won't be using it directly in this tutorial. Instead, we will keep using JSX.
 
 You can put any JavaScript expression within braces inside JSX. Each React element is a real JavaScript object that you can store in a variable or pass around your program.
 
@@ -166,11 +166,11 @@ class Square extends React.Component {
 
 Before:
 
-![React Devtools](/react/img/tutorial/tictac-empty.png)
+![React Devtools](../img/tutorial/tictac-empty.png)
 
 After: You should see a number in each square in the rendered output.
 
-![React Devtools](/react/img/tutorial/tictac-numbers.png)
+![React Devtools](../img/tutorial/tictac-numbers.png)
 
 [View the current code.](https://codepen.io/gaearon/pen/aWWQOG?editors=0010)
 
@@ -255,7 +255,7 @@ If you click on any square, an X should show up in it.
 
 The React Devtools extension for [Chrome](https://chrome.google.com/webstore/detail/react-developer-tools/fmkadmapgofadopljbjfkapdkoienihi?hl=en) and [Firefox](https://addons.mozilla.org/en-US/firefox/addon/react-devtools/) lets you inspect a React component tree in your browser devtools.
 
-<img src="/react/img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%">
+<img src="../img/tutorial/devtools.png" alt="React Devtools" style="max-width: 100%">
 
 It lets you inspect the props and state of any of the components in your tree.
 
@@ -450,7 +450,7 @@ class Board extends React.Component {
 
 [View the current code.](https://codepen.io/gaearon/pen/ybbQJX?editors=0010)
 
-We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/react/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
+We call `.slice()` to copy the `squares` array instead of mutating the existing array. Jump ahead a [section](/tutorial/tutorial.html#why-immutability-is-important) to learn why immutability is important.
 
 Now you should be able to click in squares to fill them again, but the state is stored in the Board component instead of in each Square, which lets us continue building the game. Note how whenever Board's state changes, the Square components rerender automatically.
 
@@ -496,7 +496,7 @@ Determining how an immutable object has changed is considerably easier. If the o
 
 The biggest benefit of immutability in React comes when you build simple _pure components_. Since immutable data can more easily determine if changes have been made it also helps to determine when a component requires being re-rendered.
 
-To learn more about `shouldComponentUpdate()` and how you can build *pure components* take a look at [Optimizing Performance](/react/docs/optimizing-performance.html#examples).
+To learn more about `shouldComponentUpdate()` and how you can build *pure components* take a look at [Optimizing Performance](/docs/optimizing-performance.html#examples).
 
 ### Functional Components
 
@@ -1096,4 +1096,4 @@ If you have extra time or want to practice your new skills, here are some ideas 
 4. Add a toggle button that lets you sort the moves in either ascending or descending order.
 5. When someone wins, highlight the three squares that caused the win.
 
-Throughout this tutorial, we have touched on a number of React concepts including elements, components, props, and state. For a more in-depth explanation for each of these topics, check out [the rest of the documentation](/react/docs/hello-world.html). To learn more about defining components, check out the [`React.Component` API reference](/react/docs/react-component.html).
+Throughout this tutorial, we have touched on a number of React concepts including elements, components, props, and state. For a more in-depth explanation for each of these topics, check out [the rest of the documentation](/docs/hello-world.html). To learn more about defining components, check out the [`React.Component` API reference](/docs/react-component.html).

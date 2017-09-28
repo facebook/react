@@ -17,4 +17,5 @@ coverage/
 scripts/bench/benchmarks/**/*.js
 scripts/bench/remote-repo/
 vendor/*
+www/public/*
 **/node_modules

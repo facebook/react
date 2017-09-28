@@ -1,11 +1,11 @@
 ---
 title: "Community Round-up #9"
-author: vjeux
+author: [vjeux]
 ---
 
 We organized a React hackathon last week-end in the Facebook Seattle office. 50 people, grouped into 15 teams, came to hack for a day on React. It was a lot of fun and we'll probably organize more in the future.
 
-![](/react/img/blog/react-hackathon.jpg)
+![](../img/blog/react-hackathon.jpg)
 
 
 ## React Hackathon Winner
@@ -15,7 +15,7 @@ We organized a React hackathon last week-end in the Facebook Seattle office. 50 
 > The game itself is pretty simple. People join the "room" by going to [http://qu.izti.me](http://qu.izti.me/) on their device. Large displays will show a leaderboard along with the game, and small displays (such as phones) will act as personal gamepads. Users will see questions and a choice of answers. The faster you answer, the more points you earn.
 >
 > In my opinion, Socket.io and React go together like chocolate and peanut butter. The page was always an accurate representation of the game object.
-><figure>[![](/react/img/blog/quiztime.png)](http://bold-it.com/javascript/facebook-react-example/)</figure>
+><figure><a href="http://bold-it.com/javascript/facebook-react-example/"><img src="../img/blog/quiztime.png"></a></figure>
 >
 > [Read More...](http://bold-it.com/javascript/facebook-react-example/)
 
@@ -59,8 +59,8 @@ The video will be available soon on the [JSConf EU website](http://2013.jsconf.e
 > A wrapper around JSHint to allow linting of files containing JSX syntax. Accepts glob patterns. Respects your local .jshintrc file and .gitignore to filter your glob patterns.
 >
 > ```
-npm install -g jsxhint
-```
+> npm install -g jsxhint
+> ```
 >
 > [Check it out on GitHub...](https://github.com/CondeNast/JSXHint)
 
@@ -74,7 +74,7 @@ npm install -g jsxhint
 > The panel is rendered with a random panel- class on each request, and the progress bar gets a random widthX class.
 >
 > With Turbolinks alone, the entire <body> would be replaced, and transitions would not happen. In this little demo though, React adds and removes classes and text, and the attribute changes are animated with CSS transitions. The DOM is otherwise left intact.
-><figure>[![](/react/img/blog/turboreact.png)](https://turbo-react.herokuapp.com/)</figure>
+><figure><a href="https://turbo-react.herokuapp.com/"><img src="../img/blog/turboreact.png"></a></figure>
 >
 > [Check out the demo...](https://turbo-react.herokuapp.com/)
 
@@ -88,10 +88,10 @@ npm install -g jsxhint
 > Let's call it Table (to avoid any confusion what the component is about).
 >
 > ```javascript
-var Table = React.createClass({
-  /*stuff goeth here*/
-});
-```
+> var Table = React.createClass({
+>   /*stuff goeth here*/
+> });
+> ```
 >
 > You see that React components are defined using a regular JS object. Some properties and methods of the object such as render() have special meanings, the rest is upforgrabs.
 >

@@ -9,7 +9,7 @@ next: implementation-notes.html
 
 This section will give you an overview of the React codebase organization, its conventions, and the implementation.
 
-If you want to [contribute to React](/react/contributing/how-to-contribute.html) we hope that this guide will help you feel more comfortable making changes.
+If you want to [contribute to React](/contributing/how-to-contribute.html) we hope that this guide will help you feel more comfortable making changes.
 
 We don't necessarily recommend any of these conventions in React apps. Many of them exist for historical reasons and might change with time.
 
@@ -68,7 +68,7 @@ After cloning the [React repository](https://github.com/facebook/react), you wil
 * [`docs`](https://github.com/facebook/react/tree/master/docs) is the React documentation website. When you change APIs, make sure to update the relevant Markdown files.
 * [`fixtures`](https://github.com/facebook/react/tree/master/fixtures) contains a few small React test applications for contributors.
 * [`packages`](https://github.com/facebook/react/tree/master/packages) contains metadata (such as `package.json`) for all packages in the React repository. Nevertheless, their source code is still located inside [`src`](https://github.com/facebook/react/tree/master/src).
-* `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/react/contributing/how-to-contribute.html#development-workflow) for the first time.
+* `build` is the build output of React. It is not in the repository but it will appear in your React clone after you [build it](/contributing/how-to-contribute.html#development-workflow) for the first time.
 
 There are a few other top-level folders but they are mostly used for the tooling and you likely won't ever encounter them when contributing.
 
@@ -299,13 +299,13 @@ While the code is separated in the source tree, the exact package boundaries are
 
 ### React Core
 
-The "core" of React includes all the [top-level `React` APIs](/react/docs/top-level-api.html#react), for example:
+The "core" of React includes all the [top-level `React` APIs](/docs/top-level-api.html#react), for example:
 
 * `React.createElement()`
 * `React.Component`
 * `React.Children`
 
-**React core only includes the APIs necessary to define components.** It does not include the [reconciliation](/react/docs/reconciliation.html) algorithm or any platform-specific code. It is used both by React DOM and React Native components.
+**React core only includes the APIs necessary to define components.** It does not include the [reconciliation](/docs/reconciliation.html) algorithm or any platform-specific code. It is used both by React DOM and React Native components.
 
 The code for React core is located in [`src/isomorphic`](https://github.com/facebook/react/tree/master/src/isomorphic) in the source tree. It is available on npm as the [`react`](https://www.npmjs.com/package/react) package. The corresponding standalone browser build is called `react.js`, and it exports a global called `React`.
 
@@ -323,7 +323,7 @@ React was originally created for the DOM but it was later adapted to also suppor
 
 Renderers are located in [`src/renderers`](https://github.com/facebook/react/tree/master/src/renderers/):
 
-* [React DOM Renderer](https://github.com/facebook/react/tree/master/src/renderers/dom) renders React components to the DOM. It implements [top-level `ReactDOM` APIs](/react/docs/top-level-api.html#reactdom) and is available as [`react-dom`](https://www.npmjs.com/package/react-dom) npm package. It can also be used as standalone browser bundle called `react-dom.js` that exports a `ReactDOM` global.
+* [React DOM Renderer](https://github.com/facebook/react/tree/master/src/renderers/dom) renders React components to the DOM. It implements [top-level `ReactDOM` APIs](/docs/top-level-api.html#reactdom) and is available as [`react-dom`](https://www.npmjs.com/package/react-dom) npm package. It can also be used as standalone browser bundle called `react-dom.js` that exports a `ReactDOM` global.
 * [React Native Renderer](https://github.com/facebook/react/tree/master/src/renderers/native) renders React components to native views. It is used internally by React Native via [`react-native-renderer`](https://www.npmjs.com/package/react-native-renderer) npm package. In the future a copy of it may get checked into the React Native [repository](https://github.com/facebook/react-native) so that React Native can update React at its own pace.
 * [React Test Renderer](https://github.com/facebook/react/tree/master/src/renderers/testing) renders React components to JSON trees. It is used by the [Snapshot Testing](https://facebook.github.io/jest/blog/2016/07/27/jest-14.html) feature of [Jest](https://facebook.github.io/jest) and is available as [react-test-renderer](https://www.npmjs.com/package/react-test-renderer) npm package.
 
@@ -337,7 +337,7 @@ While it is [technically possible](https://github.com/iamdustan/tiny-react-rende
 
 ### Reconcilers
 
-Even vastly different renderers like React DOM and React Native need to share a lot of logic. In particular, the [reconciliation](/react/docs/reconciliation.html) algorithm should be as similar as possible so that declarative rendering, custom components, state, lifecycle methods, and refs work consistently across platforms.
+Even vastly different renderers like React DOM and React Native need to share a lot of logic. In particular, the [reconciliation](/docs/reconciliation.html) algorithm should be as similar as possible so that declarative rendering, custom components, state, lifecycle methods, and refs work consistently across platforms.
 
 To solve this, different renderers share some code between them. We call this part of React a "reconciler". When an update such as `setState()` is scheduled, the reconciler calls `render()` on components in the tree and mounts, updates, or unmounts them.
 
@@ -363,17 +363,17 @@ User-defined ("composite") components should behave the same way with all render
 
 Composite components also implement [mounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L181), [updating](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L703), and [unmounting](https://github.com/facebook/react/blob/87724bd87506325fcaf2648c70fc1f43411a87be/src/renderers/shared/stack/reconciler/ReactCompositeComponent.js#L524). However, unlike host components, `ReactCompositeComponent` needs to behave differently depending on the user's code. This is why it calls methods, such as `render()` and `componentDidMount()`, on the user-supplied class.
 
-During an update, `ReactCompositeComponent` checks whether the `render()` output has a different `type` or `key` than the last time. If neither `type` nor `key` has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance and mounts a new one. This is described in the [reconciliation algorithm](/react/docs/reconciliation.html).
+During an update, `ReactCompositeComponent` checks whether the `render()` output has a different `type` or `key` than the last time. If neither `type` nor `key` has changed, it delegates the update to the existing child internal instance. Otherwise, it unmounts the old child instance and mounts a new one. This is described in the [reconciliation algorithm](/docs/reconciliation.html).
 
 #### Recursion
 
 During an update, the stack reconciler "drills down" through composite components, runs their `render()` methods, and decides whether to update or replace their single child instance. It executes platform-specific code as it passes through the host components like `<div>` and `<View>`. Host components may have multiple children which are also processed recursively.
 
-It is important to understand that the stack reconciler always processes the component tree synchronously in a single pass. While individual tree branches may [bail out of reconciliation](/react/docs/advanced-performance.html#avoiding-reconciling-the-dom), the stack reconciler can't pause, and so it is suboptimal when the updates are deep and the available CPU time is limited.
+It is important to understand that the stack reconciler always processes the component tree synchronously in a single pass. While individual tree branches may [bail out of reconciliation](/docs/advanced-performance.html#avoiding-reconciling-the-dom), the stack reconciler can't pause, and so it is suboptimal when the updates are deep and the available CPU time is limited.
 
 #### Learn More
 
-**The [next section](/react/contributing/implementation-notes.html) describes the current implementation in more details.**
+**The [next section](/contributing/implementation-notes.html) describes the current implementation in more details.**
 
 ### Fiber Reconciler
 
@@ -401,4 +401,4 @@ There is a [video with a deep code dive into it](https://www.youtube.com/watch?v
 
 ### What Next?
 
-Read the [next section](/react/contributing/implementation-notes.html) to learn about the current implementation of reconciler in more detail.
+Read the [next section](/contributing/implementation-notes.html) to learn about the current implementation of reconciler in more detail.

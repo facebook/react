@@ -1,6 +1,6 @@
 ---
 title: "DOM Attributes in React 16"
-author: gaearon
+author: [gaearon]
 ---
 
 In the past, React used to ignore unknown DOM attributes. If you wrote JSX with an attribute that React doesn't recognize, React would just skip it. For example, this:
@@ -80,11 +80,11 @@ Just like before, React lets you pass `data-` and `aria-` attributes freely:
 
 This has not changed.
 
-[Accessibility](/react/docs/accessibility.html) is very important, so even though React 16 passes any attributes through, it still validates that `aria-` props have correct names in development mode, just like React 15 did.
+[Accessibility](/docs/accessibility.html) is very important, so even though React 16 passes any attributes through, it still validates that `aria-` props have correct names in development mode, just like React 15 did.
 
 ## Migration Path
 
-We have included [a warning about unknown attributes](/react/warnings/unknown-prop.html) since [React 15.2.0](https://github.com/facebook/react/releases/tag/v15.2.0) which came out more than a year ago. The vast majority of third-party libraries have already updated their code. If your app doesn't produce warnings with React 15.2.0 or higher, this change should not require modifications in your application code.
+We have included [a warning about unknown attributes](/warnings/unknown-prop.html) since [React 15.2.0](https://github.com/facebook/react/releases/tag/v15.2.0) which came out more than a year ago. The vast majority of third-party libraries have already updated their code. If your app doesn't produce warnings with React 15.2.0 or higher, this change should not require modifications in your application code.
 
 If you still accidentally forward non-DOM props to DOM components, with React 16 you will start seeing those attributes in the DOM, for example:
 

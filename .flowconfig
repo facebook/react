@@ -7,6 +7,7 @@
 <PROJECT_ROOT>/node_modules/chrome-devtools-frontend/.*
 <PROJECT_ROOT>/node_modules/devtools-timeline-model/.*
 <PROJECT_ROOT>/node_modules/create-react-class/.*
+<PROJECT_ROOT>/www/node_modules/.*
 <PROJECT_ROOT>/.*/__mocks__/.*
 <PROJECT_ROOT>/.*/__tests__/.*
 
@@ -15,6 +16,7 @@
 <PROJECT_ROOT>/.*/docs/.*
 
 [include]
+./www/node_modules/hex2rgba/
 
 [libs]
 ./node_modules/fbjs/flow/lib/dev.js

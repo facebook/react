@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #5"
-author: vjeux
+author: [vjeux]
 ---
 
 We launched the [React Facebook Page](https://www.facebook.com/react) along with the React v0.4 launch. 700 people already liked it to get updated on the project :)
@@ -75,7 +75,7 @@ React.renderComponent(
 
 [Tom Occhino](http://tomocchino.com/) and [Jordan Walke](https://github.com/jordwalke), React developers, did a presentation of React at Facebook Seattle's office. Check out the first 25 minutes for the presentation and the remaining 45 for a Q&A. I highly recommend you watching this video.
 
-<figure><iframe width="100%" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
+<figure><iframe width="650" height="400" src="//www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe></figure>
 
 
 ## Docs
@@ -84,15 +84,15 @@ React.renderComponent(
 
 > Guides
 >
-> * [Why React?](/react/docs/why-react.html)
-> * [Displaying Data](/react/docs/displaying-data.html)
->   * [JSX in Depth](/react/docs/jsx-in-depth.html)
->   * [JSX Gotchas](/react/docs/jsx-gotchas.html)
-> * [Interactivity and Dynamic UIs](/react/docs/interactivity-and-dynamic-uis.html)
-> * [Multiple Components](/react/docs/multiple-components.html)
-> * [Reusable Components](/react/docs/reusable-components.html)
-> * [Forms](/react/docs/forms.html)
-> * [Working With the Browser](/react/docs/working-with-the-browser.html)
->   * [More About Refs](/react/docs/more-about-refs.html)
-> * [Tooling integration](/react/docs/tooling-integration.html)
-> * [Reference](/react/docs/top-level-api.html)
+> * [Why React?](/docs/why-react.html)
+> * [Displaying Data](/docs/displaying-data.html)
+>   * [JSX in Depth](/docs/jsx-in-depth.html)
+>   * [JSX Gotchas](/docs/jsx-gotchas.html)
+> * [Interactivity and Dynamic UIs](/docs/interactivity-and-dynamic-uis.html)
+> * [Multiple Components](/docs/multiple-components.html)
+> * [Reusable Components](/docs/reusable-components.html)
+> * [Forms](/docs/forms.html)
+> * [Working With the Browser](/docs/working-with-the-browser.html)
+>   * [More About Refs](/docs/more-about-refs.html)
+> * [Tooling integration](/docs/tooling-integration.html)
+> * [Reference](/docs/top-level-api.html)

@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #7"
-author: vjeux
+author: [vjeux]
 ---
 
 It's been three months since we open sourced React and it is going well. Some stats so far:
@@ -10,14 +10,14 @@ It's been three months since we open sourced React and it is going well. Some st
 * [226 posts on Google Group](https://groups.google.com/forum/#!forum/reactjs)
 * [76 GitHub projects using React](https://gist.github.com/vjeux/6335762)
 * [30 contributors](https://github.com/facebook/react/graphs/contributors)
-* [15 blog posts](/react/blog/)
+* [15 blog posts](/blog/)
 * 2 early adopters: [Khan Academy](http://sophiebits.com/2013/06/09/using-react-to-speed-up-khan-academy.html) and [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/)
 
 
 ## Wolfenstein Rendering Engine Ported to React
 
 [Pete Hunt](http://www.petehunt.net/) ported the render code of the web version of Wolfenstein 3D to React. Check out [the demo](http://www.petehunt.net/wolfenstein3D-react/wolf3d.html) and [render.js](https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183) file for the implementation.
-<figure>[![](/react/img/blog/wolfenstein_react.png)](http://www.petehunt.net/wolfenstein3D-react/wolf3d.html)</figure>
+<figure><a href="http://www.petehunt.net/wolfenstein3D-react/wolf3d.html"><img src="../img/blog/wolfenstein_react.png"></a></figure>
 
 
 ## React & Meteor
@@ -51,7 +51,7 @@ It's been three months since we open sourced React and it is going well. Some st
 [Jordan Walke](https://github.com/jordwalke) implemented a complete React project creator called [react-page](https://github.com/facebook/react-page/). It supports both server-side and client-side rendering, source transform and packaging JSX files using CommonJS modules, and instant reload.
 
 > Easy Application Development with React JavaScript
-> <figure>[![](/react/img/blog/react-page.png)](https://github.com/facebook/react-page/)</figure>
+> <figure><a href="https://github.com/facebook/react-page/"><img src="../img/blog/react-page.png"></a></figure>
 >
 > **Why Server Rendering?**
 >

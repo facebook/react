@@ -1,6 +1,6 @@
 ---
 title: "Introducing the JSX Specification"
-author: sebmarkbage
+author: [sebmarkbage]
 ---
 
 At Facebook we've been using JSX for a long time. We originally introduced it to the world last year alongside React, but we actually used it in another form before that to create native DOM nodes. We've also seen some similar efforts grow out of our work in order to be used with other libraries and in interesting ways. At this point React JSX is just one of many implementations.

@@ -1,6 +1,6 @@
 ---
 title: "Streamlining React Elements"
-author: sebmarkbage
+author: [sebmarkbage]
 date: 2015-02-24 11:00
 ---
 

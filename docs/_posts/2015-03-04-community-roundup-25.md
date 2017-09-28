@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #25"
 layout: post
-author: matthewjohnston4
+author: [matthewjohnston4]
 ---
 
 ## React 101
@@ -12,7 +12,7 @@ Interest in React has been exploding recently, so it's a good time to explore so
 
 [Formidable Labs](https://github.com/FormidableLabs) and [Seattle JS](http://www.meetup.com/seattlejs/) recently hosted a series of React, Flux, and Flow workshops, and the first part is available to watch online:
 
-<iframe width="100%" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="300" src="//www.youtube-nocookie.com/embed/Pd6Ub7Ju2RM" frameborder="0" allowfullscreen></iframe>
 
 [AEFlash](https://github.com/aearly) writes up [some best practices and tips](http://aeflash.com/2015-02/react-tips-and-best-practices.html) to help you avoid potential pitfalls when developing with React.
 
@@ -44,7 +44,7 @@ A team from New Zealand called [Atomic](https://atomic.io/) is [building web and
 
 [Polarr](https://github.com/Polarrco) have rebuilt [their browser-based photo editor](http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here) with React.
 
-<center><a href="http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here"><img src="/react/img/blog/polarr.jpg"></a></center>
+<center><a href="http://polarrist.tumblr.com/post/111290422225/polarr-photo-editor-2-0-alpha-is-here"><img src="../img/blog/polarr.jpg"></a></center>
 
 ## It's F8!
 

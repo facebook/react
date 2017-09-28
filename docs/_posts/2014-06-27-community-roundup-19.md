@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #19"
-author: chenglou
+author: [chenglou]
 ---
 
 ## React Meetups!
@@ -23,11 +23,11 @@ These are some of the links that often pop up on the #reactjs IRC channel. If yo
 
 The core concepts React themselves is something very valuable that the community is exploring and pushing further. A year ago, we wouldn't have imagined something like [Bruce Hauman](http://rigsomelight.com)'s [Flappy Bird ClojureScript port](http://rigsomelight.com/2014/05/01/interactive-programming-flappy-bird-clojurescript.html), whose interactive programming has been made possible through React:
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/KZjFVdU8VLI" frameborder="0" allowfullscreen></iframe>
 
 And don't forget [Pete Hunt](https://github.com/petehunt)'s Wolfenstein 3D rendering engine in React ([source code](https://github.com/petehunt/wolfenstein3D-react/blob/master/js/renderer.js#L183)). While it's nearly a year old, it's still a nice demo.
 
-[![](/react/img/blog/wolfenstein_react.png)](http://www.petehunt.net/wolfenstein3D-react/wolf3d.html)
+[![](../img/blog/wolfenstein_react.png)](http://www.petehunt.net/wolfenstein3D-react/wolf3d.html)
 
 Give us a shoutout on IRC or [React Google Groups](https://groups.google.com/forum/#!forum/reactjs) if you've used React in some Interesting places.
 

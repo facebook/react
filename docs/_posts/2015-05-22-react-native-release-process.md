@@ -1,6 +1,6 @@
 ---
 title: "React Native Release Process"
-author: vjeux
+author: [vjeux]
 ---
 
 The React Native release process have been a bit chaotic since we open sourced. It was unclear when new code was released, there was no changelog, we bumped the minor and patch version inconsistently and we often had to submit updates right after a release to fix a bad bug. In order to *move fast with stable infra*, we are introducing a real release process with a two-week release schedule.
@@ -19,4 +19,4 @@ You now have three ways to get React Native. You should chose the one you want b
 
 If you want more details, I highly recommend this video that explains how Facebook mobile release process works and why it was setup this way.
 
-<iframe width="100%" height="300" src="https://www.youtube.com/embed/mOyoTUETmSM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="300" src="https://www.youtube.com/embed/mOyoTUETmSM" frameborder="0" allowfullscreen></iframe>

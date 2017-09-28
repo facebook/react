@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #21"
-author: LoukaN
+author: [LoukaN]
 ---
 
 ## React Router
@@ -23,7 +23,7 @@ React.renderComponent((
 
 Areeb Malik, from Facebook, talks about his experience using React. "On paper, all those JS frameworks look promising: clean implementations, quick code design, flawless execution. But what happens when you stress test JavaScript? What happens when you throw 6 megabytes of code at it? In this talk, we'll investigate how React performs in a high stress situation, and how it has helped our team build safe code on a massive scale"
 
-[![](/react/img/blog/skills-matter.png)](https://skillsmatter.com/skillscasts/5429-going-big-with-react)
+[![](../img/blog/skills-matter.png)](https://skillsmatter.com/skillscasts/5429-going-big-with-react)
 
 <!--
 <iframe allowfullscreen="" data-progress="true" frameborder="0" height="390" id="vimeo-player" mozallowfullscreen="" src="//player.vimeo.com/video/100245392?api=1&amp;title=0" webkitallowfullscreen="" width="640"></iframe>
@@ -69,21 +69,21 @@ var App = React.createClass({
 
 Have you ever wondered how JSX was implemented? James Long wrote a very instructive blog post that explains how to [compile JSX with Sweet.js using Readtables](http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables).
 
-[![](/react/img/blog/sweet-jsx.png)](http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables)
+[![](../img/blog/sweet-jsx.png)](http://jlongster.com/Compiling-JSX-with-Sweet.js-using-Readtables)
 
 
 ## First Look: Getting Started with React
 
 [Kirill Buga](http://modernweb.com/authors/kirill-buga/) wrote an article on Modern Web explaining how [React is different from traditional MVC](http://modernweb.com/2014/07/23/getting-started-reactjs/) used by most JavaScript applications
 
-<figure><a href="http://modernweb.com/2014/07/23/getting-started-reactjs"><img src="/react/img/blog/first-look.png" /></a></figure>
+<figure><a href="http://modernweb.com/2014/07/23/getting-started-reactjs"><img src="../img/blog/first-look.png" /></a></figure>
 
 
 ## React Draggable
 
 [Matt Zabriskie](https://github.com/mzabriskie) released a [project](https://github.com/mzabriskie/react-draggable) to make your react components draggable.
 
-[![](/react/img/blog/react-draggable.png)](https://mzabriskie.github.io/react-draggable/example/)
+[![](../img/blog/react-draggable.png)](https://mzabriskie.github.io/react-draggable/example/)
 
 
 ## HTML Parser2 React
@@ -104,7 +104,7 @@ var parsedComponent = reactParser(html, React);
 
 If you haven't yet tried out React, Jacob Rios did a Hangout where he covers the most important aspects and thankfully he recorded it!
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/lAn7GVoGlKU" frameborder="0" allowfullscreen></iframe>
 
 
 ## Random Tweets

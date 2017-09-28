@@ -19,7 +19,7 @@ All work on React happens directly on [GitHub](https://github.com/facebook/react
 
 ### Branch Organization
 
-We will do our best to keep the [`master` branch](https://github.com/facebook/react/tree/master) in good shape, with tests passing at all times. But in order to move fast, we will make API changes that your application might not be compatible with. We recommend that you use [the latest stable version of React](/react/downloads.html).
+We will do our best to keep the [`master` branch](https://github.com/facebook/react/tree/master) in good shape, with tests passing at all times. But in order to move fast, we will make API changes that your application might not be compatible with. We recommend that you use [the latest stable version of React](/downloads.html).
 
 If you send a pull request, please do it against the `master` branch. We maintain stable branches for major versions separately but we don't accept pull requests to them directly. Instead, we cherry-pick non-breaking changes from master to the latest stable major version.
 
@@ -160,4 +160,4 @@ By contributing to React, you agree that your contributions will be licensed und
 
 ### What Next?
 
-Read the [next section](/react/contributing/codebase-overview.html) to learn how the codebase is organized.
+Read the [next section](/contributing/codebase-overview.html) to learn how the codebase is organized.

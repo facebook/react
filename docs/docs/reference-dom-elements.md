@@ -98,7 +98,7 @@ The `value` attribute is supported by `<input>` and `<textarea>` components. You
 
 ## All Supported HTML Attributes
 
-As of React 16, any standard [or custom](/react/blog/2017/09/08/dom-attributes-in-react-16.html) DOM attributes are fully supported.
+As of React 16, any standard [or custom](/blog/2017/09/08/dom-attributes-in-react-16.html) DOM attributes are fully supported.
 
 React has always provided a JavaScript-centric API to the DOM. Since React components often take both custom and DOM-related props, React uses the `camelCase` convention just like the DOM APIs:
 

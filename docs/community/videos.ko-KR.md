@@ -8,7 +8,7 @@ next: complementary-tools-ko-KR.html
 
 ### Rethinking best practices - JSConf.eu
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/x7cQ3mrcKaY" frameborder="0" allowfullscreen></iframe>
 
 "페이스북과 인스타그램에서, 우리는 React 를 이용해 웹에서 벌어질 수 있는 한계를 뛰어넘으려 노력하고 있습니다. 저는 프레임워크에 대한 짤막한 소개로 시작해서, 논쟁이 벌어질 수 있는 다음의 세가지 주제로 넘어갈겁니다. 템플릿의 개념을 버리고 JavaScript 를 이용해 View 를 구축하기, 자료가 변할때 전체 어플리케이션을 다시 그리기(“re-rendering”), 그리고 DOM과 events의 경량화된 구현 입니다." -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -16,14 +16,14 @@ next: complementary-tools-ko-KR.html
 
 ### Thinking in react - tagtree.tv
 
-[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/react/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
-<figure>[![](/react/img/docs/thinking-in-react-tagtree.png)](http://tagtree.tv/thinking-in-react)</figure>
+[tagtree.tv](http://tagtree.tv/)의 비디오는 간단한 어플리케이션을 구성하면서 [Thinking in React](/docs/thinking-in-react-ko-KR.html)의 원리들을 전달합니다.
+<figure><a href="http://tagtree.tv/thinking-in-react"><img src="../img/docs/thinking-in-react-tagtree.png"></a></figure>
 
 * * *
 
 ### Secrets of the Virtual DOM - MtnWest JS
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/h3KksH8gfcQ" frameborder="0" allowfullscreen></iframe>
 
 "이번에는 왜 우리가 virtual DOM을 만들었는지, 이것이 다른 시스템들과는 어떻게 다른지, 그리고 브라우져 기술들의 미래와 어떻게 관련이 있는지에 대해서 이야기 해 볼 겁니다." -- [Pete Hunt](http://www.petehunt.net/)
 
@@ -40,7 +40,7 @@ next: complementary-tools-ko-KR.html
 
 CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barczewski](http://jeff.barczewski.com/)가 React에 대해서 이야기 합니다.
 
-<figure>[![](/react/img/docs/codewinds-004.png)](http://codewinds.com/4)</figure>
+<figure><a href="http://codewinds.com/4"><img src="../img/docs/codewinds-004.png"></a></figure>
 
 <table width="100%"><tr><td>
 02:08 - What is React and why use it?<br />
@@ -74,7 +74,7 @@ CodeWinds Episode 4 에서 [Pete Hunt](http://www.petehunt.net/)와 [Jeff Barcze
 
 JavaScript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walke](https://github.com/jordwalke)가 React에 대해서 이야기했습니다.
 
-<figure>[![](/react/img/docs/javascript-jabber.png)](http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content)</figure>
+<figure><a href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="../img/docs/javascript-jabber.png"></a></figure>
 
 <table width="100%"><tr><td>
 01:34 – Pete Hunt Introduction<br />
@@ -101,14 +101,14 @@ JavaScript Jabber 73에서 [Pete Hunt](http://www.petehunt.net/)와 [Jordan Walk
 
 ### Introduction to React.js - Facebook Seattle
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/XxVg_s8xAms" frameborder="0" allowfullscreen></iframe>
 
 By [Tom Occhino](http://tomocchino.com/), [Jordan Walke](https://github.com/jordwalke)
 
 * * *
 
 ### Backbone + React + Middleman Screencast
-<iframe width="100%" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="488" src="https://www.youtube-nocookie.com/embed/iul1fWHVU6A" frameborder="0" allowfullscreen></iframe>
 
 Backbone은 React로 REST API를 제공하기 위한 아주 좋은 방법입니다. 이 화면중개는 [Backbone-React-Component](https://github.com/magalhas/backbone-react-component)을 이용해서 어떻게 이 두가지를 연동하는지 보여줍니다. Middleman은 이 예제에서 사용되는 프레임워크이지만, 쉽게 다른 프레임워크로 대체하실 수 있습니다. 지원되는 템플릿은 [이곳](https://github.com/jbhatab/middleman-backbone-react-template)에서 찾으실 수 있습니다. -- [열린 마음의 혁명들](http://www.openmindedinnovations.com/)
 
@@ -116,7 +116,7 @@ Backbone은 React로 REST API를 제공하기 위한 아주 좋은 방법입니�
 
 ### Developing User Interfaces With React - Super VanJS
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/1OeXsL5mr4g" frameborder="0" allowfullscreen></iframe>
 
 By [Steven Luscher](https://github.com/steveluscher)
 
@@ -124,7 +124,7 @@ By [Steven Luscher](https://github.com/steveluscher)
 
 ### Introduction to React - LAWebSpeed meetup
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/SMMRJif5QW0" frameborder="0" allowfullscreen></iframe>
 
 by [Stoyan Stefanov](http://www.phpied.com/)
 
@@ -132,7 +132,7 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 
 ### React, or how to make life simpler - FrontEnd Dev Conf '14
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/YJNUK0EA_Jo" frameborder="0" allowfullscreen></iframe>
 
 **러시아어** by [Alexander Solovyov](http://solovyov.net/)
 
@@ -140,19 +140,19 @@ by [Stoyan Stefanov](http://www.phpied.com/)
 
 ### "Functional DOM programming" - Meteor DevShop 11
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/qqVbr_LaCIo" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### "Rethinking Web App Development at Facebook" - Facebook F8 Conference 2014
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/nYkdrAPrdcw" frameborder="0" allowfullscreen></iframe>
 
 * * *
 
 ### React and Flux: Building Applications with a Unidirectional Data Flow - Forward JS 2014
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 Facebook 개발자 [Bill Fisher](https://twitter.com/fisherwebdev)와 [Jing Chen](https://twitter.com/jingc)가 Flux 와 React 에 대해서 이야기합니다. 그리고 어떻게 단일 방향의 자료흐름을 사용하는 어플리케이션 구조가 방대한 코드를 정리하는지에 대해서 이야기합니다."
 
@@ -169,6 +169,6 @@ Server-side rendering을 위해 [SoundCloud](https://developers.soundcloud.com/b
 
 ### Introducing React Native (+Playlist) - React.js Conf 2015
 
-<iframe width="100%" height="366" src="https://www.youtube-nocookie.com/v/KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="https://www.youtube-nocookie.com/v/KVZ-P-ZI6W4&index=1&list=PLb0IAmt7-GS1cbw4qonlQztYV1TAW0sCr" frameborder="0" allowfullscreen></iframe>
 
 2015년에 [Tom Occhino](https://twitter.com/tomocchino)님이 React의 과거와 현재를 리뷰하고 나아갈 방향을 제시했습니다.

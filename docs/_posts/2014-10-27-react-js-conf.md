@@ -1,6 +1,6 @@
 ---
 title: React.js Conf
-author: vjeux
+author: [vjeux]
 ---
 
 Every few weeks someone asks us when we are going to organize a conference for React. Our answer has always been "some day". In the mean time, people have been talking about React at other JavaScript conferences around the world. But now the time has finally come for us to have a conference of our own.

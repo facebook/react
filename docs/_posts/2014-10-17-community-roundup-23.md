@@ -1,7 +1,7 @@
 ---
 title: "Community Round-up #23"
 layout: post
-author: LoukaN
+author: [LoukaN]
 ---
 
 This round-up is a special edition on [Flux](https://facebook.github.io/flux/). If you expect to see diagrams showing arrows that all point in the same direction, you won't be disappointed!
@@ -10,7 +10,7 @@ This round-up is a special edition on [Flux](https://facebook.github.io/flux/). 
 
 Facebook engineers [Jing Chen](https://github.com/jingc) and [Bill Fisher](https://github.com/fisherwebdev) gave a talk about Flux and React at [ForwardJS](http://forwardjs.com/), and how using an application architecture with a unidirectional data flow helped solve recurring bugs.
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/i__969noyAM" frameborder="0" allowfullscreen></iframe>
 
 # Yahoo
 
@@ -27,7 +27,7 @@ Yahoo is converting Yahoo Mail to React and Flux and in the process, they open s
 [Mikael Brassman](https://spoike.ghost.io/) wrote [Reflux](https://github.com/spoike/refluxjs), a library that implements Flux concepts. Note that it diverges significantly from the way we use Flux at Facebook. He explains [the reasons why in a blog post](https://spoike.ghost.io/deconstructing-reactjss-flux/).
 
 <center>
-<a href="https://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="/react/img/blog/reflux-flux.png" width="400" /></a>
+<a href="https://spoike.ghost.io/deconstructing-reactjss-flux/"><img src="../img/blog/reflux-flux.png" width="400" /></a>
 </center>
 
 
@@ -47,7 +47,7 @@ Yahoo is converting Yahoo Mail to React and Flux and in the process, they open s
 [Kevin Dangoor](http://www.kevindangoor.com/) is converting the project tree of [Adobe's Bracket text editor](http://brackets.io/) to React and Flux. He wrote about his experience [using Flux](http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/).
 
 <center>
-<a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/"><img src="/react/img/blog/flux-diagram.png" width="400" /></a>
+<a href="http://www.kevindangoor.com/2014/09/intro-to-the-new-brackets-project-tree/"><img src="../img/blog/flux-diagram.png" width="400" /></a>
 </center>
 
 
@@ -122,7 +122,7 @@ undo: function() {
 [Nicola Paolucci](https://github.com/durdn) from Atlassian wrote a great guide to help your getting understand [Flux step by step](https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/).
 
 <center>
-<a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="/react/img/blog/flux-chart.png" width="400" /></a>
+<a href="https://blogs.atlassian.com/2014/08/flux-architecture-step-by-step/"><img src="../img/blog/flux-chart.png" width="400" /></a>
 </center>
 
 
@@ -144,7 +144,7 @@ undo: function() {
 
 Last but not least, Flux and React ideas are not limited to JavaScript inside of the browser. The iOS team at Facebook re-implemented Newsfeed using very similar patterns.
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/XhXC4SKOGfQ" frameborder="0" allowfullscreen></iframe>
 
 
 ## Random Tweet

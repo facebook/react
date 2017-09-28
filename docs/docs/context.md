@@ -8,7 +8,7 @@ permalink: docs/context.html
 >
 > `React.PropTypes` has moved into a different package since React v15.5. Please use [the `prop-types` library instead](https://www.npmjs.com/package/prop-types) to define `contextTypes`.
 >
->We provide [a codemod script](/react/blog/2017/04/07/react-v15.5.0.html#migrating-from-react.proptypes) to automate the conversion.
+>We provide [a codemod script](/blog/2017/04/07/react-v15.5.0.html#migrating-from-react.proptypes) to automate the conversion.
 
 With React, it's easy to track the flow of data through your React components. When you look at a component, you can see which props are being passed, which makes your apps easy to reason about.
 
@@ -147,12 +147,12 @@ Before you build components with an API similar to this, consider if there are c
 
 ## Referencing Context in Lifecycle Methods
 
-If `contextTypes` is defined within a component, the following [lifecycle methods](/react/docs/react-component.html#the-component-lifecycle) will receive an additional parameter, the `context` object:
+If `contextTypes` is defined within a component, the following [lifecycle methods](/docs/react-component.html#the-component-lifecycle) will receive an additional parameter, the `context` object:
 
-- [`constructor(props, context)`](/react/docs/react-component.html#constructor)
-- [`componentWillReceiveProps(nextProps, nextContext)`](/react/docs/react-component.html#componentwillreceiveprops)
-- [`shouldComponentUpdate(nextProps, nextState, nextContext)`](/react/docs/react-component.html#shouldcomponentupdate)
-- [`componentWillUpdate(nextProps, nextState, nextContext)`](/react/docs/react-component.html#componentwillupdate)
+- [`constructor(props, context)`](/docs/react-component.html#constructor)
+- [`componentWillReceiveProps(nextProps, nextContext)`](/docs/react-component.html#componentwillreceiveprops)
+- [`shouldComponentUpdate(nextProps, nextState, nextContext)`](/docs/react-component.html#shouldcomponentupdate)
+- [`componentWillUpdate(nextProps, nextState, nextContext)`](/docs/react-component.html#componentwillupdate)
 
 > Note:
 >

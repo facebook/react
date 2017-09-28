@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #8"
-author: vjeux
+author: [vjeux]
 ---
 
 A lot has happened in the month since our last update. Here are some of the more interesting things we've found. But first, we have a couple updates before we share links.
@@ -54,13 +54,13 @@ While this is not going to work for all the attributes since they are camelCased
 ## Markdown in React
 
 [Sophie Alpert](http://sophiebits.com/) converted [marked](https://github.com/chjj/marked), a Markdown JavaScript implementation, in React: [marked-react](https://github.com/sophiebits/marked-react). Even without using JSX, the HTML generation is now a lot cleaner. It is also safer as forgetting a call to `escape` will not introduce an XSS vulnerability.
-<figure>[![](/react/img/blog/markdown_refactor.png)](https://github.com/sophiebits/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457)</figure>
+<figure><a href="https://github.com/sophiebits/marked-react/commit/cb70c9df6542c7c34ede9efe16f9b6580692a457"><img src="../img/blog/markdown_refactor.png"></a></figure>
 
 
 ## Unite from BugBusters
 
 [Renault John Lecoultre](https://twitter.com/renajohn) wrote [Unite](https://www.bugbuster.com/), an interactive tool for analyzing code dynamically using React. It integrates with CodeMirror.
-<figure>[![](/react/img/blog/unite.png)](https://unite.bugbuster.com/)</figure>
+<figure><a href="https://unite.bugbuster.com/"><img src="../img/blog/unite.png"></a></figure>
 
 ## #reactjs IRC Logs
 

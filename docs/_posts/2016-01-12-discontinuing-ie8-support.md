@@ -1,6 +1,6 @@
 ---
 title: "Discontinuing IE 8 Support in React DOM"
-author: sophiebits
+author: [sophiebits]
 ---
 
 Since its 2013 release, React has supported all popular browsers, including Internet Explorer 8 and above. We handle normalizing many quirks present in old browser versions, including event system differences, so that your app code doesn't have to worry about most browser bugs.

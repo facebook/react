@@ -1,14 +1,14 @@
 ---
 title: "Introducing Relay and GraphQL"
 layout: post
-author: wincent
+author: [wincent]
 ---
 
 ## Data fetching for React applications
 
 There's more to building an application than creating a user interface. Data fetching is still a tricky problem, especially as applications become more complicated. At [React.js Conf](http://conf.reactjs.com/) we announced two projects we've created at Facebook to make data fetching simple for developers, even as a product grows to include dozens of contributors and the application becomes as complex as Facebook itself.
 
-<iframe width="100%" height="315" src="https://www.youtube-nocookie.com/embed/9sc8Pyc51uU" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="https://www.youtube-nocookie.com/embed/9sc8Pyc51uU" frameborder="0" allowfullscreen></iframe>
 
 The two projects &mdash; Relay and GraphQL &mdash; have been in use in production at Facebook for some time, and we're excited to be bringing them to the world as open source in the future. In the meantime, we wanted to share some additional information about the projects here.
 

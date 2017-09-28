@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #17"
-author: jgebhardt
+author: [jgebhardt]
 ---
 
 
@@ -20,7 +20,7 @@ Sberbank, Russia's largest bank, recently switched large parts of their site to 
 ### Makona Editor
 
  John Lynch ([@johnrlynch](https://twitter.com/johnrlynch)) created Makona, a block-style document editor for the web. Blocks of different content types comprise documents, authored using plain markup. At the switch of a toggle, block contents are then rendered on the page. While not quite a WYSIWYG editor, Makona uses plain textareas for input. This makes it compatible with a wider range of platforms than traditional rich text editors.
-<figure>[![](/react/img/blog/makona-editor.png)](https://johnthethird.github.io/makona-editor/)</figure>
+[![](../img/blog/makona-editor.png)](https://johnthethird.github.io/makona-editor/)
 
 ### Create Chrome extensions using React
 React is in no way limited to just web pages. Brandon Tilley ([@BinaryMuse](https://twitter.com/BinaryMuse)) just released a detailed walk-through of [how he built his Chrome extension "Fast Tab Switcher" using React](http://brandontilley.com/2014/02/24/creating-chrome-extensions-with-react.html).
@@ -41,7 +41,7 @@ Javier Aguirre ([@javaguirre](https://twitter.com/javaguirre)) put together a si
 
 ### SVG-based graphical node editor
 [NoFlo](http://noflojs.org/) and [Meemoo](http://meemoo.org/) developer [Forresto Oliphant](http://www.forresto.com/) built an awesome SVG-based [node editor](https://forresto.github.io/prototyping/react/) in React.
- <figure>[![](/react/img/blog/react-svg-fbp.png)](https://forresto.github.io/prototyping/react/)</figure>
+ [![](../img/blog/react-svg-fbp.png)](https://forresto.github.io/prototyping/react/)
 
 
 ### Ultimate Tic-Tac-Toe Game in React
@@ -55,7 +55,7 @@ Rafał Cieślak ([@Ravicious](https://twitter.com/Ravicious)) wrote a [React ver
 
 Emanuele shared this awesome demo video with us:
 
-<iframe width="100%" height="315" src="//www.youtube-nocookie.com/embed/jYcpaemt90M" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="315" src="//www.youtube-nocookie.com/embed/jYcpaemt90M" frameborder="0" allowfullscreen></iframe>
 
 
 

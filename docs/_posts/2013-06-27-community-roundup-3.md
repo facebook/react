@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #3"
-author: vjeux
+author: [vjeux]
 ---
 
 The highlight of this week is that an interaction-heavy app has been ported to React. React components are solving issues they had with nested views.
@@ -9,7 +9,7 @@ The highlight of this week is that an interaction-heavy app has been ported to R
 
 [Clay Allsopp](https://twitter.com/clayallsopp) successfully ported [Propeller](http://usepropeller.com/blog/posts/from-backbone-to-react/), a fairly big, interaction-heavy JavaScript app, to React.
 
-> [<img style="float: right; margin: 0 0 10px 10px;" src="/react/img/blog/propeller-logo.png" />](http://usepropeller.com/blog/posts/from-backbone-to-react/)Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn't automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they're all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.
+> [<img style="float: right; margin: 0 0 10px 10px;" src="../img/blog/propeller-logo.png" />](http://usepropeller.com/blog/posts/from-backbone-to-react/)Subviews involve a lot of easy-to-forget boilerplate that Backbone (by design) doesn't automate. Libraries like Backbone.Marionette offer more abstractions to make view nesting easier, but they're all limited by the fact that Backbone delegates how and went view-document attachment occurs to the application code.
 >
 > React, on the other hand, manages the DOM and only exposes real nodes at select points in its API. The "elements" you code in React are actually objects which wrap DOM nodes, not the actual objects which get inserted into the DOM. Internally, React converts those abstractions into actual DOMElements and fills out the document accordingly. [...]
 >
@@ -24,24 +24,24 @@ The highlight of this week is that an interaction-heavy app has been ported to R
 > Grunt task for compiling Facebook React's .jsx templates into .js
 >
 > ```javascript
-grunt.initConfig({
-  react: {
-    app: {
-      options: { extension: 'js' },
-      files: { 'path/to/output/dir': 'path/to/jsx/templates/dir' }
-```
+> grunt.initConfig({
+>   react: {
+>     app: {
+>       options: { extension: 'js' },
+>       files: { 'path/to/output/dir': 'path/to/jsx/templates/dir' }
+> ```
 >
 > It also works great with `grunt-browserify`!
 >
 > ```javascript
-browserify: {
-  options: {
-    transform: [ require('grunt-react').browserify ]
-  },
-  app: {
-    src: 'path/to/source/main.js',
-    dest: 'path/to/target/output.js'
-```
+> browserify: {
+>   options: {
+>     transform: [ require('grunt-react').browserify ]
+>   },
+>   app: {
+>     src: 'path/to/source/main.js',
+>     dest: 'path/to/target/output.js'
+> ```
 >
 > [Check out the project ...](https://github.com/ericclemmons/grunt-react)
 
@@ -70,14 +70,14 @@ browserify: {
 > Multiple people asked what's the story about JSX and CoffeeScript. There is no JSX pre-processor for CoffeeScript and I'm not aware of anyone working on it. Fortunately, CoffeeScript is pretty expressive and we can play around the syntax to come up with something that is usable.
 >
 > ```javascript
-{div, h3, textarea} = React.DOM
-(div {className: 'MarkdownEditor'}, [
-  (h3 {}, 'Input'),
-  (textarea {onKeyUp: @handleKeyUp, ref: 'textarea'},
-    @state.value
-  )
-])
-```
+> {div, h3, textarea} = React.DOM
+> (div {className: 'MarkdownEditor'}, [
+>   (h3 {}, 'Input'),
+>   (textarea {onKeyUp: @handleKeyUp, ref: 'textarea'},
+>     @state.value
+>   )
+> ])
+> ```
 >
 > [Read the full post...](http://blog.vjeux.com/2013/javascript/react-coffeescript.html)
 

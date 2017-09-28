@@ -2,7 +2,6 @@
 node_modules
 *~
 *.pyc
-static
 .grunt
 _SpecRunner.html
 __benchmarks__

@@ -1,6 +1,6 @@
 ---
 title: "Community Round-up #2"
-author: vjeux
+author: [vjeux]
 ---
 
 Since the launch we have received a lot of feedback and are actively working on React 0.4. In the meantime, here are the highlights of this week.
@@ -24,7 +24,7 @@ Since the launch we have received a lot of feedback and are actively working on 
 [Danial Khosravi](https://danialk.github.io/) made a real-time chat application that interacts with the back-end using Socket.IO.
 
 > A week ago I was playing with AngularJS and [this little chat application](https://github.com/btford/angular-socket-io-im) which uses socket.io and nodejs for realtime communication. Yesterday I saw a post about ReactJS in [EchoJS](http://www.echojs.com/) and started playing with this UI library. After playing a bit with React, I decided to write and chat application using React and I used Bran Ford's Backend for server side of this little app.
-> <figure>[![](/react/img/blog/chatapp.png)](https://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/)</figure>
+> <figure><a href="https://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/"><img src="../img/blog/chatapp.png"></a></figure>
 >
 > [Read the full post...](https://danialk.github.io/blog/2013/06/16/reactjs-and-socket-dot-io-chat-application/)
 
@@ -45,7 +45,7 @@ In the same vein, [Markov Twain](https://twitter.com/markov_twain/status/3457029
 Mozilla and Google are actively working on Web Components. [Vjeux](http://blog.vjeux.com/) wrote a proof of concept that shows how to implement them using React.
 
 > Using [x-tags](http://www.x-tags.org/) from Mozilla, we can write custom tags within the DOM. This is a great opportunity to be able to write reusable components without being tied to a particular library. I wrote [x-react](https://github.com/vjeux/react-xtags/) to have them being rendered in React.
-> <figure>[![](/react/img/blog/xreact.png)](http://blog.vjeux.com/2013/javascript/custom-components-react-x-tags.html)</figure>
+> <figure><a href="http://blog.vjeux.com/2013/javascript/custom-components-react-x-tags.html"><img src="../img/blog/xreact.png"></a></figure>
 >
 > [Read the full post...](http://blog.vjeux.com/2013/javascript/custom-components-react-x-tags.html)
 
@@ -56,7 +56,7 @@ Mozilla and Google are actively working on Web Components. [Vjeux](http://blog.v
 > Developers these days are spoiled with choice when it comes to selecting an MV* framework for structuring and organizing their JavaScript web apps.
 >
 > To help solve this problem, we created TodoMVC - a project which offers the same Todo application implemented using MV* concepts in most of the popular JavaScript MV* frameworks of today.
-> <figure>[![](/react/img/blog/todomvc.png)](http://todomvc.com/labs/architecture-examples/react/)</figure>
+> <figure><a href="http://todomvc.com/labs/architecture-examples/react/"><img src="../img/blog/todomvc.png"></a></figure>
 >
 > [Read the source code...](https://github.com/tastejs/todomvc/tree/gh-pages/labs/architecture-examples/react)
 
@@ -64,7 +64,7 @@ Mozilla and Google are actively working on Web Components. [Vjeux](http://blog.v
 
 Many of you pointed out differences between JSX and HTML. In order to clear up some confusion, we have added some documentation that covers the four main differences:
 
-  - [Whitespace removal](/react/docs/jsx-is-not-html.html)
-  - [HTML Entities](/react/docs/jsx-is-not-html.html)
-  - [Comments](/react/docs/jsx-is-not-html.html)
-  - [Custom HTML Attributes](/react/docs/jsx-is-not-html.html)
+  - [Whitespace removal](/docs/jsx-is-not-html.html)
+  - [HTML Entities](/docs/jsx-is-not-html.html)
+  - [Comments](/docs/jsx-is-not-html.html)
+  - [Custom HTML Attributes](/docs/jsx-is-not-html.html)

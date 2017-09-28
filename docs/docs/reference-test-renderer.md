@@ -69,30 +69,30 @@ expect(testInstance.findByProps({className: "sub"}).children).toEqual(['Sub']);
 
 ### TestRenderer
 
-* [`TestRenderer.create()`](#TestRenderer.create)
+* [`TestRenderer.create()`](#testrenderercreate)
 
 ### TestRenderer instance
 
-* [`testRenderer.toJSON()`](#testRenderer.toJSON)
-* [`testRenderer.toTree()`](#testRenderer.toTree)
-* [`testRenderer.update()`](#testRenderer.update)
-* [`testRenderer.unmount()`](#testRenderer.unmount)
-* [`testRenderer.getInstance()`](#testRenderer.getInstance)
-* [`testRenderer.root`](#testRenderer.root)
+* [`testRenderer.toJSON()`](#testrenderertojson)
+* [`testRenderer.toTree()`](#testrenderertotree)
+* [`testRenderer.update()`](#testrendererupdate)
+* [`testRenderer.unmount()`](#testrendererunmount)
+* [`testRenderer.getInstance()`](#testrenderergetinstance)
+* [`testRenderer.root`](#testrendererroot)
 
 ### TestInstance
 
-* [`testInstance.find()`](#testInstance.find)
-* [`testInstance.findByType()`](#testInstance.findByType)
-* [`testInstance.findByProps()`](#testInstance.findByProps)
-* [`testInstance.findAll()`](#testInstance.findAll)
-* [`testInstance.findAllByType()`](#testInstance.findAllByType)
-* [`testInstance.findAllByProps()`](#testInstance.findAllByProps)
-* [`testInstance.instance`](#testInstance.instance)
-* [`testInstance.type`](#testInstance.type)
-* [`testInstance.props`](#testInstance.props)
-* [`testInstance.parent`](#testInstance.parent)
-* [`testInstance.children`](#testInstance.children)
+* [`testInstance.find()`](#testinstancefind)
+* [`testInstance.findByType()`](#testinstancefindbytype)
+* [`testInstance.findByProps()`](#testinstancefindbyprops)
+* [`testInstance.findAll()`](#testinstancefindall)
+* [`testInstance.findAllByType()`](#testinstancefindallbytype)
+* [`testInstance.findAllByProps()`](#testinstancefindallbyprops)
+* [`testInstance.instance`](#testinstanceinstance)
+* [`testInstance.type`](#testinstancetype)
+* [`testInstance.props`](#testinstanceprops)
+* [`testInstance.parent`](#testinstanceparent)
+* [`testInstance.children`](#testinstancechildren)
 
 ## Reference
 
@@ -102,7 +102,7 @@ expect(testInstance.findByProps({className: "sub"}).children).toEqual(['Sub']);
 TestRenderer.create(element, options);
 ```
 
-Create a TestRenderer instance with a passed element, which has the following methods and properties.
+Create a `TestRenderer` instance with the passed React element. It doesn't use the real DOM, but it still fully renders the component tree into memory so you can make assertions about it. The returned instance has the following methods and properties.
 
 ### `testRenderer.toJSON()`
 
@@ -110,7 +110,7 @@ Create a TestRenderer instance with a passed element, which has the following me
 testRenderer.toJSON()
 ```
 
-Return a JSON object representing the element.
+Return an object representing the rendered tree. This tree only contains the platform-specific nodes like `<div>` or `<View>` and their props, but doesn't contain any user-written components. This is handy for [snapshot testing](http://facebook.github.io/jest/docs/en/snapshot-testing.html#snapshot-testing-with-jest).
 
 ### `testRenderer.toTree()`
 
@@ -118,7 +118,7 @@ Return a JSON object representing the element.
 testRenderer.toTree()
 ```
 
-Return a tree object representing the element.
+Return an object representing the rendered tree. Unlike `toJSON()`, the representation is more detailed than the one provided by `toJSON()`, and includes the user-written components. You probably don't need this method unless you're writing your own assertion library on top of the test rendererer.
 
 ### `testRenderer.update()`
 
@@ -126,7 +126,7 @@ Return a tree object representing the element.
 testRenderer.update(element)
 ```
 
-Update the element with a passed element.
+Re-render the in-memory tree with a new root element. This simulates a React update at the root. If the new element has the same type and key as the previous element, the tree will be updated; otherwise, it will re-mount a new tree.
 
 ### `testRenderer.unmount()`
 
@@ -134,7 +134,7 @@ Update the element with a passed element.
 testRenderer.unmount()
 ```
 
-Unmount the element from testRenderer.
+Unmount the in-memory tree, triggering the appropriate lifecycle events.
 
 ### `testRenderer.getInstance()`
 
@@ -142,7 +142,7 @@ Unmount the element from testRenderer.
 testRenderer.getInstance()
 ```
 
-Return a root container instance.
+Return the instance corresponding to the root element, if available. This will not work if the root element is a functional component because they don't have instances.
 
 ### `testRenderer.root`
 
@@ -150,7 +150,7 @@ Return a root container instance.
 testRenderer.root
 ```
 
-`root` is a testInstance, which has the following methods and properties.
+Returns the root "test instance" object that is useful for making assertions about specific nodes in the tree. You can use it to find other "test instances" deeper below.
 
 ### `testInstance.find()`
 
@@ -158,7 +158,7 @@ testRenderer.root
 testInstance.find(test)
 ```
 
-Find a descendant testInstance that `test(testInstance)` is `true`.
+Find the first descendant test instance for which `test(testInstance)` returns `true`.
 
 ### `testInstance.findByType()`
 
@@ -166,7 +166,7 @@ Find a descendant testInstance that `test(testInstance)` is `true`.
 testInstance.findByType(type)
 ```
 
-Find a descendant testInstance that matches the provided type.
+Find the first descendant test instance with the provided `type`.
 
 ### `testInstance.findByProps()`
 
@@ -174,7 +174,7 @@ Find a descendant testInstance that matches the provided type.
 testInstance.findByProps(props)
 ```
 
-Find a descendant testInstance that matches the provided props.
+Find the first descendant test instance with the provided `props`.
 
 ### `testInstance.findAll()`
 
@@ -182,7 +182,7 @@ Find a descendant testInstance that matches the provided props.
 testInstance.findAll(test)
 ```
 
-Find all descendant testInstances that `test(testInstance)` is `true`.
+Find all descendant test instances for which `test(testInstance)` returns `true`.
 
 ### `testInstance.findAllByType()`
 
@@ -190,7 +190,7 @@ Find all descendant testInstances that `test(testInstance)` is `true`.
 testInstance.findAllByType(type)
 ```
 
-Find all descendant testInstances that matches the provided type.
+Find all descendant test instances with the provided `type`.
 
 ### `testInstance.findAllByProps()`
 
@@ -198,7 +198,7 @@ Find all descendant testInstances that matches the provided type.
 testInstance.findAllByProps(props)
 ```
 
-Find all descendant testInstances that matches the provided props.
+Find all descendant test instances with the provided `props`.
 
 ### `testInstance.instance`
 
@@ -206,7 +206,7 @@ Find all descendant testInstances that matches the provided props.
 testInstance.instance
 ```
 
-`instance` is a component instance of the testInstance.
+The component instance corresponding to this test instance. It is only available for class components, as functional components don't have instances. It matches the `this` value inside the given component.
 
 ### `testInstance.type`
 
@@ -214,7 +214,7 @@ testInstance.instance
 testInstance.type
 ```
 
-`type` is a Component type of the testInstance.
+The component type corresponding to this test instance. For example, a `<Button />` component has a type of `Button`.
 
 ### `testInstance.props`
 
@@ -222,7 +222,7 @@ testInstance.type
 testInstance.props
 ```
 
-`props` is a props object of the testInstance.
+The props corresponding to this test instance. For example, a `<Button size="small />` component has `{size: 'small'}` as props.
 
 ### `testInstance.parent`
 
@@ -230,7 +230,7 @@ testInstance.props
 testInstance.parent
 ```
 
-`parent` is a parent testInstance.
+The parent test instance of this test instance.
 
 ### `testInstance.children`
 
@@ -238,7 +238,7 @@ testInstance.parent
 testInstance.children
 ```
 
-`children` is children of the testInstance.
+The children test instances of this test instance.
 
 ## Ideas
 

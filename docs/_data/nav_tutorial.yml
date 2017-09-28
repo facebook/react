@@ -2,87 +2,89 @@
   items:
     - id: tutorial
       title: Before We Start
+      href: /tutorial/tutorial.html#before-we-start
+      forceInternal: true
       subitems:
-        - id: what-were-building 
+        - id: what-were-building
           title: What We're Building
-          href: /react/tutorial/tutorial.html#what-were-building
+          href: /tutorial/tutorial.html#what-were-building
           forceInternal: true
         - id: prerequisites
           title: Prerequisites
-          href: /react/tutorial/tutorial.html#prerequisites
+          href: /tutorial/tutorial.html#prerequisites
           forceInternal: true
         - id: how-to-follow-along
           title: How to Follow Along
-          href: /react/tutorial/tutorial.html#how-to-follow-along
+          href: /tutorial/tutorial.html#how-to-follow-along
           forceInternal: true
         - id: help-im-stuck
           title: Help, I'm Stuck!
-          href: /react/tutorial/tutorial.html#help-im-stuck
+          href: /tutorial/tutorial.html#help-im-stuck
           forceInternal: true
     - id: overview
       title: Overview
-      href: /react/tutorial/tutorial.html#overview
+      href: /tutorial/tutorial.html#overview
       forceInternal: true
       subitems:
         - id: what-is-react
           title: What is React?
-          href: /react/tutorial/tutorial.html#what-is-react
+          href: /tutorial/tutorial.html#what-is-react
           forceInternal: true
         - id: getting-started
           title: Getting Started
-          href: /react/tutorial/tutorial.html#getting-started
+          href: /tutorial/tutorial.html#getting-started
           forceInternal: true
         - id: passing-data-through-props
           title: Passing Data Through Props
-          href: /react/tutorial/tutorial.html#passing-data-through-props
+          href: /tutorial/tutorial.html#passing-data-through-props
           forceInternal: true
         - id: an-interactive-component
           title: An Interactive Component
-          href: /react/tutorial/tutorial.html#an-interactive-component
+          href: /tutorial/tutorial.html#an-interactive-component
           forceInternal: true
-        - id: developer-tools 
+        - id: developer-tools
           title: Developer Tools
-          href: /react/tutorial/tutorial.html#developer-tools
+          href: /tutorial/tutorial.html#developer-tools
           forceInternal: true
     - id: lifting-state-up
       title: Lifting State Up
-      href: /react/tutorial/tutorial.html#lifting-state-up
+      href: /tutorial/tutorial.html#lifting-state-up
       forceInternal: true
       subitems:
-        - id: why-immutability-is-important 
+        - id: why-immutability-is-important
           title: Why Immutability Is Important
-          href: /react/tutorial/tutorial.html#why-immutability-is-important
+          href: /tutorial/tutorial.html#why-immutability-is-important
           forceInternal: true
-        - id: functional-components 
+        - id: functional-components
           title: Functional Components
-          href: /react/tutorial/tutorial.html#functional-components
+          href: /tutorial/tutorial.html#functional-components
           forceInternal: true
         - id: taking-turns
           title: Taking Turns
-          href: /react/tutorial/tutorial.html#taking-turns
+          href: /tutorial/tutorial.html#taking-turns
           forceInternal: true
         - id: declaring-a-winner
           title: Declaring a Winner
-          href: /react/tutorial/tutorial.html#declaring-a-winner
+          href: /tutorial/tutorial.html#declaring-a-winner
           forceInternal: true
     - id: storing-a-history
       title: Storing A History
-      href: /react/tutorial/tutorial.html#storing-a-history
+      href: /tutorial/tutorial.html#storing-a-history
       forceInternal: true
       subitems:
         - id: showing-the-moves
           title: Showing the Moves
-          href: /react/tutorial/tutorial.html#showing-the-moves
+          href: /tutorial/tutorial.html#showing-the-moves
           forceInternal: true
         - id: keys
           title: Keys
-          href: /react/tutorial/tutorial.html#keys
+          href: /tutorial/tutorial.html#keys
           forceInternal: true
-        - id: implementing-time-travel 
+        - id: implementing-time-travel
           title: Implementing Time Travel
-          href: /react/tutorial/tutorial.html#implementing-time-travel
+          href: /tutorial/tutorial.html#implementing-time-travel
           forceInternal: true
         - id: wrapping-up
           title: Wrapping Up
-          href: /react/tutorial/tutorial.html#wrapping-up
+          href: /tutorial/tutorial.html#wrapping-up
           forceInternal: true

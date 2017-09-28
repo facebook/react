@@ -1,46 +1,46 @@
 ---
 title: "ReactEurope Round-up"
 layout: post
-author: matthewjohnston4
+author: [matthewjohnston4]
 ---
 
 Last month, the first React.js European conference took place in the city of Paris, at ReactEurope. Attendees were treated to a range of talks covering React, React Native, Flux, Relay, and GraphQL. Big thanks to everyone involved with organizing the conference, to all the attendees, and everyone who gave their time to speak - it wouldn't have been possible without the help and support of the React community.
 
 [Christopher Chedeau](https://github.com/vjeux) gave the opening keynote to the conference:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/PAA9O4E1IM4" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/PAA9O4E1IM4" frameborder="0" allowfullscreen></iframe>
 
 [Spencer Ahrens](https://github.com/sahrens) walks through building an advanced gestural UI leveraging the unique power of the React Native layout and animation systems to build a complex and fluid experience:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/xDlfrcM6YBk" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/xDlfrcM6YBk" frameborder="0" allowfullscreen></iframe>
 
 [Lee Byron](https://github.com/leebyron) explores GraphQL, its core principles, how it works, and what makes it a powerful tool:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/WQLzZf34FJ8" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/WQLzZf34FJ8" frameborder="0" allowfullscreen></iframe>
 
 [Joseph Savona](https://github.com/josephsavona) explores the problems Relay solves, its architecture and the query lifecycle, and how can you use Relay to build more scalable apps. There are examples of how Relay powers applications as complex as the Facebook News Feed:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/IrgHurBjQbg" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/IrgHurBjQbg" frameborder="0" allowfullscreen></iframe>
 
 [Nick Schrock](https://github.com/schrockn) and [Dan Schafer](https://github.com/dschafer) take a deeper dive into putting GraphQL to work. How can we build a GraphQL API to work with an existing REST API or server-side data model? What are best practices when building a GraphQL API, and how do they differ from traditional REST best practices? How does Facebook use GraphQL? Most importantly, what does a complete and coherent GraphQL API looks like, and how can we get started building one?
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/gY48GW87Feo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/gY48GW87Feo" frameborder="0" allowfullscreen></iframe>
 
 [Sebastian Markbåge](https://github.com/sebmarkbage) talks about why the DOM is flawed and how it is becoming a second-class citizen in the land of React apps:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/Zemce4Y1Y-A" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/Zemce4Y1Y-A" frameborder="0" allowfullscreen></iframe>
 
 [Sebastian McKenzie](https://github.com/sebmck) goes over how existing JSX build pipeline infrastructure can be further utilised to perform even more significant code transformations such as transpilation, optimisation, profiling and more, reducing bugs, making your code faster and you as a developer more productive and happy:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/OFuDvqZmUrE" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/OFuDvqZmUrE" frameborder="0" allowfullscreen></iframe>
 
 [Cheng Lou](https://github.com/chenglou) gives a talk on the past, the present and the future of animation, and the place React can potentially take in this:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/1tavDv5hXpo" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/1tavDv5hXpo" frameborder="0" allowfullscreen></iframe>
 
 And there was a Q&A session with the whole team covering a range of React topics:
 
-<iframe width="100%" height="366" src="//www.youtube.com/embed/CRJZBZ_-6hQ" frameborder="0" allowfullscreen></iframe>
+<iframe width="650" height="366" src="//www.youtube.com/embed/CRJZBZ_-6hQ" frameborder="0" allowfullscreen></iframe>
 
 And there were lots of great talks from the React community:
 

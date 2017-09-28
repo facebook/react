@@ -35,9 +35,10 @@ id: home
         `render()` via `this.props`.
       </p>
       <p>
-        <strong>JSX is optional and not required to use React.</strong> Try
-        clicking on "Compiled JS" to see the raw JavaScript code produced by
-        the JSX compiler.
+        <strong>JSX is optional and not required to use React.</strong>
+        Try the
+        <a href="http://babeljs.io/repl#?babili=false&browsers=&build=&builtIns=false&code_lz=MYGwhgzhAEASCmIQHsCy8pgOb2vAHgC7wB2AJjAErxjCEB0AwsgLYAOyJph0A3gFABIAE6ky8YQAoAlHyEj4hAK7CS0ADxkAlgDcAfAiTI-hABZaI9NsORtLJMC3gBfdQHpt-gNxDn_P_zUtIQAIgDyqPSi5BKS6oYo6Jg40A5OALwARCHwOlokmdBuegA00CzISiSEAHLI4tJeQA&debug=false&circleciRepo=&evaluate=false&lineWrap=false&presets=react&prettier=true&targets=&version=6.26.0">Babel REPL</a>
+        to see the raw JavaScript code produced by the JSX compilation step.
       </p>
       <div id="helloExample"></div>
     </div>
@@ -77,11 +78,4 @@ id: home
   <script src="/react/js/examples/timer.js"></script>
   <script src="/react/js/examples/todo.js"></script>
   <script src="/react/js/examples/markdown.js"></script>
-</section>
-<hr class="home-divider" />
-<section class="home-bottom-section">
-  <div class="buttons-unit">
-    <a href="docs/hello-world.html" class="button">Get Started</a>
-    <a href="tutorial/tutorial.html" class="button">Take the Tutorial</a>
-  </div>
 </section>
