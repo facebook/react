@@ -93,7 +93,7 @@ The `render()` method is required.
 
 When called, it should examine `this.props` and `this.state` and return one of the following types:
 
-- **React elements.** Typically created via JSX. A element can either be a representation of a native DOM component (`<div />`), or a user-defined composite component (`<MyComponent />`).
+- **React elements.** Typically created via JSX. An element can either be a representation of a native DOM component (`<div />`), or a user-defined composite component (`<MyComponent />`).
 - **String and numbers.** These are rendered as text nodes in the DOM.
 - **Portals**. Created with [`ReactDOM.createPortal`](/react/docs/portals.html).
 - `null`. Renders nothing.
