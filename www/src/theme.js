@@ -236,6 +236,7 @@ const sharedStyles = {
       padding: '0 3px',
       fontSize: 16,
       color: colors.text,
+      wordBreak: 'break-word',
     },
 
     '& hr': {
