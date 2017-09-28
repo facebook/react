@@ -10,7 +10,7 @@ JSX is not a requirement for using React. React exposes an API for creating elem
 
 Each JSX element is actually syntactic sugar for calling `React.createElement(component, props, ...children)`. Therefore, creating elements without JSX is possible by using `React.createElement()`.
 
-For example, the code below written with JSX:
+Consider the code below written with JSX:
 
 ```js
 class Hello extends React.Component {
@@ -40,19 +40,25 @@ ReactDOM.render(
 );
 ```
 
-`React.createElement()` takes a component, a `props` object, and any amount of children. The given component can be in the form of a string (`React.createElement("div", null, null)`), a sub-class of `React.Component`, or a plain stateless-functional component.
+`React.createElement()` takes three arguments arguments: a component, a `props` object, and any number of children as the final arguments.
 
-To learn more about the function signature and arguments, you can read [the API documentation.](https://facebook.github.io/react/docs/react-api.html#createelement)
+The component argument can take a number of forms:
+
+1. A string - `React.createElement("div", null, null)`
+2. A sub-class of `React.Component` - `React.createElement(Hello, null, null)`
+3. A plain stateless-functional componet - `React.createElement(HelloFunctionalComponent, null, null)`
+
+To learn more about the function signature and arguments, you can read [the API documentation.](/docs/react-api.html#createelement)
 
 ### Examples 
 
 If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel compiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
 
-If you want to use `React.createElement()` API without ES6, follow the [React Without ES6 Guide](https://facebook.github.io/react/docs/react-without-es6.html) and use `React.createElement()` instead of JSX.
+If you want to use `React.createElement()` API without ES6, follow the [React Without ES6 Guide](/docs/react-without-es6.html) and use `React.createElement()` instead of JSX.
 
 ### Eliminating Boilerplate
 
-If writing `React.createElement()` often becomes tiring, a common pattern is the assign the function to a shorter variable and use it as shorthand. Using this shorthand allows for creating elements without JSX to be almost as convenient creating elements with JSX.
+If writing `React.createElement()` often becomes tiring, a common pattern is to assign the function to a shorter variable and use it as shorthand. Using this shorthand allows for creating elements without JSX to be almost as convenient as creating elements with JSX.
 
 ```js
 const e = React.createElement;
