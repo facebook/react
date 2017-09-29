@@ -17,15 +17,14 @@ import slugify from './slugify';
  */
 const findSectionForPath = (pathname, sections) => {
   let activeSection;
+  const itemName = pathname.split('/').slice(-1)[0];
 
   sections.forEach(section => {
     const match = section.items.some(
       item =>
-        pathname.includes(slugify(item.id)) ||
+        itemName === slugify(item.id) ||
         (item.subitems &&
-          item.subitems.some(subitem =>
-            pathname.includes(slugify(subitem.id)),
-          )),
+          item.subitems.some(subitem => itemName === slugify(subitem.id))),
     );
     if (match) {
       activeSection = section;
