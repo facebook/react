@@ -26,6 +26,9 @@ class TodoApp extends React.Component {
 
   handleSubmit(e) {
     e.preventDefault();
+    if (!this.state.text.length) {
+      return;
+    }
     var newItem = {
       text: this.state.text,
       id: Date.now()
