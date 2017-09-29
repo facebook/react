@@ -49,12 +49,6 @@ export default class HTML extends Component {
             content="width=device-width, initial-scale=1.0"
           />
           <link rel="icon" href="/favicon.ico" />
-          <script src="https://use.typekit.net/vqa1hcx.js" />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: 'try{Typekit.load({ async: true });}catch(e){}',
-            }}
-          />
           {this.props.headComponents}
           {js}
           {css}
