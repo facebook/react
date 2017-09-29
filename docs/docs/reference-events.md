@@ -1,7 +1,7 @@
 ---
 id: events
 title: SyntheticEvent
-permalink: docs/events.html
+permalink: docs/synthetic-events.html
 layout: docs
 category: Reference
 ---
