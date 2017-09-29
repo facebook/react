@@ -58,9 +58,9 @@ By comparing these two elements, React knows to only modify the `className` on t
 When updating `style`, React also knows to update only the properties that changed. For example:
 
 ```xml
-<div style={{'{{'}}color: 'red', fontWeight: 'bold'}} />
+<div style={{color: 'red', fontWeight: 'bold'}} />
 
-<div style={{'{{'}}color: 'green', fontWeight: 'bold'}} />
+<div style={{color: 'green', fontWeight: 'bold'}} />
 ```
 
 When converting between these two elements, React knows to only modify the `color` style, not the `fontWeight`.

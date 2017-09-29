@@ -36,7 +36,7 @@ Suppose you have a structure like:
 class Button extends React.Component {
   render() {
     return (
-      <button style={{'{{'}}background: this.props.color}}>
+      <button style={{background: this.props.color}}>
         {this.props.children}
       </button>
     );
@@ -72,7 +72,7 @@ import PropTypes from 'prop-types';
 class Button extends React.Component {
   render() {
     return (
-      <button style={{'{{'}}background: this.context.color}}>
+      <button style={{background: this.context.color}}>
         {this.props.children}
       </button>
     );
@@ -166,7 +166,7 @@ Stateless functional components are also able to reference `context` if `context
 import PropTypes from 'prop-types';
 
 const Button = ({children}, context) =>
-  <button style={{'{{'}}background: context.color}}>
+  <button style={{background: context.color}}>
     {children}
   </button>;
 
