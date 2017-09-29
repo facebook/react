@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "dependencies": {
     "create-react-class": "^15.6.2",
     "fbjs": "^0.8.16",

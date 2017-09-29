@@ -13,6 +13,6 @@ In order to make debugging in production easier, we're introducing an Error Code
 
 While we hope you don't see errors often, you can see how it works [here](/docs/error-decoder.html?invariant=109&args[]=Foo). This is what the same error from above will look like:
 
-> Minified React error #109; visit https://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Foo for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
+> Minified React error #109; visit https://reactjs.org/docs/error-decoder.html?invariant=109&args[]=Foo for the full message or use the non-minified dev environment for full errors and additional helpful warnings.
 
 We do this so that the developer experience is as good as possible, while also keeping the production bundle size as small as possible. This feature shouldn't require any changes on your side — use the `min.js` files in production or bundle your application code with `process.env.NODE_ENV === 'production'` and you should be good to go!

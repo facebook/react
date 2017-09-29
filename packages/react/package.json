@@ -5,7 +5,7 @@
     "react"
   ],
   "version": "16.0.0",
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "bugs": "https://github.com/facebook/react/issues",
   "license": "MIT",
   "files": [

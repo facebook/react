@@ -1,10 +1,10 @@
 # React Documentation & Website
 
-## [Read the React Documentation](https://facebook.github.io/react/)
+## [Read the React Documentation](https://reactjs.org/)
 
 This folder is not the right place to *read* the documentation.
 
-Instead, head over [to the React website](https://facebook.github.io/react/) to read it.
+Instead, head over [to the React website](https://reactjs.org/) to read it.
 
 This folder only contains the source code for the website.
 

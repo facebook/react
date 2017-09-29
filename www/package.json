@@ -48,7 +48,7 @@
   "engines": {
     "node": ">=7.6.0"
   },
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "keywords": [
     "gatsby"
   ],
