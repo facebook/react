@@ -1,9 +1,7 @@
 var name = Math.random() > 0.5 ? 'Jane' : 'John';
 var HELLO_COMPONENT = `
-class HelloMessage extends React.Component {
-  render() {
-    return <div>Hello {this.props.name}</div>;
-  }
+function HelloMessage(props) {
+  return <div>Hello {props.name}</div>;
 }
 
 ReactDOM.render(<HelloMessage name="${name}" />, mountNode);
