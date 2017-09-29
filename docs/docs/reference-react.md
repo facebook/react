@@ -22,8 +22,8 @@ redirect_from:
 
 React components let you split the UI into independent, reusable pieces, and think about each piece in isolation. React components can be defined by subclassing `React.Component` or `React.PureComponent`.
 
- - [`React.Component`](#react.component)
- - [`React.PureComponent`](#react.purecomponent)
+ - [`React.Component`](#reactcomponent)
+ - [`React.PureComponent`](#reactpurecomponent)
 
 If you don't use ES6 classes, you may use the `create-react-class` module instead. See [Using React without ES6](/docs/react-without-es6.html) for more information.
 
@@ -42,7 +42,7 @@ See [Using React without JSX](/docs/react-without-jsx.html) for more information
 
 - [`cloneElement()`](#cloneelement)
 - [`isValidElement()`](#isvalidelement)
-- [`React.Children`](#react.children)
+- [`React.Children`](#reactchildren)
 
 * * *
 
@@ -66,7 +66,7 @@ See the [React.Component API Reference](/docs/react-component.html) for a list o
 
 ### `React.PureComponent`
 
-`React.PureComponent` is exactly like [`React.Component`](#react.component) but implements [`shouldComponentUpdate()`](/docs/react-component.html#shouldcomponentupdate) with a shallow prop and state comparison.
+`React.PureComponent` is exactly like [`React.Component`](#reactcomponent) but implements [`shouldComponentUpdate()`](/docs/react-component.html#shouldcomponentupdate) with a shallow prop and state comparison.
 
 If your React component's `render()` function renders the same result given the same props and state, you can use `React.PureComponent` for a performance boost in some cases.
 
@@ -162,7 +162,7 @@ Invokes a function on every immediate child contained within `children` with `th
 React.Children.forEach(children, function[(thisArg)])
 ```
 
-Like [`React.Children.map()`](#react.children.map) but does not return an array.
+Like [`React.Children.map()`](#reactchildrenmap) but does not return an array.
 
 #### `React.Children.count`
 
