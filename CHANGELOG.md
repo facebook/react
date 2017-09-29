@@ -37,6 +37,7 @@ No unreleased changes yet.
   * Non-unique keys may now cause children to be duplicated and/or omitted. Using non-unique keys is not (and has never been) supported, but previously it was a hard error.
   * Shallow renderer no longer calls `componentDidUpdate()` because DOM refs are not available. This also makes it consistent with `componentDidMount()` (which does not get called in previous versions either).
   * Shallow renderer does not implement `unstable_batchedUpdates()` anymore.
+  * `ReactDOM.unstable_batchedUpdates` now only takes one extra argument after the callback.
 - The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds. For example:
   - `react/dist/react.js` → `react/umd/react.development.js`
   - `react/dist/react.min.js` → `react/umd/react.production.min.js`
