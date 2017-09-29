@@ -67,7 +67,7 @@ class MessageList extends React.Component {
 In this example, we manually thread through a `color` prop in order to style the `Button` and `Message` components appropriately. Using context, we can pass this through the tree automatically:
 
 ```javascript{6,13-15,21,28-30,40-42}
-const PropTypes = require('prop-types');
+import PropTypes from 'prop-types';
 
 class Button extends React.Component {
   render() {
@@ -163,7 +163,7 @@ If `contextTypes` is defined within a component, the following [lifecycle method
 Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows a `Button` component written as a stateless functional component.
 
 ```javascript
-const PropTypes = require('prop-types');
+import PropTypes from 'prop-types';
 
 const Button = ({children}, context) =>
   <button style={{'{{'}}background: context.color}}>
@@ -182,7 +182,7 @@ React has an API to update context, but it is fundamentally broken and you shoul
 The `getChildContext` function will be called when the state or props changes. In order to update data in the context, trigger a local state update with `this.setState`. This will trigger a new context and changes will be received by the children.
 
 ```javascript
-const PropTypes = require('prop-types');
+import PropTypes from 'prop-types';
 
 class MediaQuery extends React.Component {
   constructor(props) {
