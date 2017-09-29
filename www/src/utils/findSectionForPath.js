@@ -16,22 +16,26 @@ import slugify from './slugify';
  * This method specifically works with the nav_*.yml format.
  */
 const findSectionForPath = (pathname, sections) => {
+  console.log(pathname)
+  console.log(sections)
   let activeSection;
 
-  sections.forEach(section => {
-    const match = section.items.some(
+
+  for(let index = 0; index < sections.length; index++) {
+    const match = sections[index].items.some(
       item =>
         pathname.includes(slugify(item.id)) ||
         (item.subitems &&
-          item.subitems.some(subitem =>
-            pathname.includes(slugify(subitem.id)),
-          )),
+        item.subitems.some(subitem => 
+          pathname.includes(slugify(subitem.id)),
+        )),
     );
-    if (match) {
-      activeSection = section;
+    if(match) {
+      activeSection = sections[index];
+      break;
     }
-  });
-
+  };
+  
   return activeSection;
 };
 
