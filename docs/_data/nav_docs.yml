@@ -69,7 +69,7 @@
       title: ReactDOMServer
     - id: dom-elements
       title: DOM Elements
-    - id: events
+    - id: synthetic-events
       title: SyntheticEvent
     - id: test-utils
       title: Test Utilities
