@@ -163,7 +163,7 @@ If `contextTypes` is defined within a component, the following [lifecycle method
 Stateless functional components are also able to reference `context` if `contextTypes` is defined as a property of the function. The following code shows a `Button` component written as a stateless functional component.
 
 ```javascript
-const PropTypes = require('prop-types');
+import PropTypes from 'prop-types';
 
 const Button = ({children}, context) =>
   <button style={{'{{'}}background: context.color}}>
