@@ -1,6 +1,10 @@
 html {
   box-sizing: border-box;
-  font-family: "proxima-nova", sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Roboto", "Oxygen", "Ubuntu", "Cantarell",
+    "Fira Sans", "Droid Sans", "Helvetica Neue",
+    sans-serif;
+  font-weight: 400;
   font-style: normal;
   -webkit-font-smoothing: antialiased;
 }
@@ -35,5 +39,5 @@ img {
 }
 
 pre, code {
-  font-family: source-code-pro, Menlo, Consolas, "Courier New", monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }

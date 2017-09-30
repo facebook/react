@@ -164,6 +164,7 @@ const Header = ({location}) => (
               border: 0,
               color: colors.white,
               fontSize: 18,
+              fontWeight: 300,
               fontFamily: 'inherit',
               position: 'relative',
               paddingLeft: '24px',

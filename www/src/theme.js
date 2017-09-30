@@ -198,18 +198,21 @@ const sharedStyles = {
 
     '& > p:first-child': {
       fontSize: 18,
-      lineHeight: '30px',
+      fontWeight: 300,
       color: colors.subtle,
 
       [media.greaterThan('xlarge')]: {
         fontSize: 24,
-        lineHeight: '40px',
+      },
+
+      '& a, & strong': {
+        fontWeight: 400,
       },
     },
 
     '& p': {
       marginTop: 30,
-      fontSize: 18,
+      fontSize: 17,
       lineHeight: 1.7,
       maxWidth: '42em',
 

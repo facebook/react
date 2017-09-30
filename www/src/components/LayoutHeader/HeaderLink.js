@@ -44,7 +44,6 @@ const style = {
     paddingLeft: 20,
     paddingRight: 20,
     fontSize: 18,
-    fontWeight: 400,
 
     ':hover': {
       color: colors.brand,
