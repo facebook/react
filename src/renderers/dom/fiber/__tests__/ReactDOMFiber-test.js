@@ -748,7 +748,6 @@ describe('ReactDOMFiber', () => {
           getFoo: () => this.state.bar,
         };
       }
-    }
 
       render() {
         return ReactDOM.createPortal(<Component />, portalContainer);
