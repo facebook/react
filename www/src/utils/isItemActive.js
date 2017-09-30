@@ -27,7 +27,8 @@ const isItemActive = (location, item) => {
   } else if (item.id.includes('html')) {
     return location.pathname.includes(item.id);
   } else {
-    return location.pathname.includes(slugify(item.id));
+    const slugId = location.pathname.split('/').slice(-1)[0];
+    return slugId === slugify(item.id);
   }
 };
 
