@@ -24,9 +24,7 @@ const findSectionForPath = (pathname, sections) => {
       item =>
         slugId === slugify(item.id) ||
         (item.subitems &&
-          item.subitems.some(subitem =>
-            slugId === slugify(subitem.id),
-          )),
+          item.subitems.some(subitem => slugId === slugify(subitem.id))),
     );
     if (match) {
       activeSection = section;
