@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import {colors, media, sharedStyles} from 'theme';
-import {urlRoot} from 'constants';
+import createOgUrl from 'utils/createOgUrl';
 
 class Home extends Component {
   componentDidMount() {
@@ -35,7 +35,7 @@ class Home extends Component {
       <div css={{width: '100%'}}>
         <TitleAndMetaTags
           title={title}
-          ogUrl={`${urlRoot}/${data.markdownRemark.fields.path}`}
+          ogUrl={createOgUrl(data.markdownRemark.fields.slug)}
         />
         <header
           css={{
@@ -201,7 +201,7 @@ export const pageQuery = graphql`
         title
       }
       fields {
-        path
+        slug
       }
     }
   }

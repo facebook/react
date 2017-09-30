@@ -66,6 +66,7 @@ export const pageQuery = graphql`
       fields {
         date(formatString: "MMMM DD, YYYY")
         path
+        slug
       }
     }
     allMarkdownRemark(
