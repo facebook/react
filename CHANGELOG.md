@@ -25,10 +25,10 @@
 
 ### New Features
 * Components can now return arrays and strings from `render`. (Docs coming soon!)
-* Improved error handling with introduction of "error boundaries". [Error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
+* Improved error handling with introduction of "error boundaries". [Error boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
 * First-class support for declaratively rendering a subtree into another DOM node with `ReactDOM.createPortal()`. (Docs coming soon!)
 * Streaming mode for server side rendering is enabled with `ReactDOMServer.renderToNodeStream()` and `ReactDOMServer.renderToStaticNodeStream()`. ([@aickin](https://github.com/aickin) in [#10425](https://github.com/facebook/react/pull/10425), [#10044](https://github.com/facebook/react/pull/10044), [#10039](https://github.com/facebook/react/pull/10039), [#10024](https://github.com/facebook/react/pull/10024), [#9264](https://github.com/facebook/react/pull/9264), and others.)
-* [React DOM now allows passing non-standard attributes](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html). ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
+* [React DOM now allows passing non-standard attributes](https://reactjs.org/blog/2017/09/08/dom-attributes-in-react-16.html). ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
 ### Breaking Changes
 - There are several changes to the behavior of scheduling and lifecycle methods:
@@ -54,13 +54,13 @@
 * The server renderer has been completely rewritten, with some improvements:
   * Server rendering does not use markup validation anymore, and instead tries its best to attach to existing DOM, warning about inconsistencies. It also doesn't use comments for empty components and data-reactid attributes on each node anymore.
   * Hydrating a server rendered container now has an explicit API. Use `ReactDOM.hydrate` instead of `ReactDOM.render` if you're reviving server rendered HTML. Keep using `ReactDOM.render` if you're just doing client-side rendering.
-* When "unknown" props are passed to DOM components, for valid values, React will now render them in the DOM. [See this post for more details.](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
-* Errors in the render and lifecycle methods now unmount the component tree by default. To prevent this, add [error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) to the appropriate places in the UI.
+* When "unknown" props are passed to DOM components, for valid values, React will now render them in the DOM. [See this post for more details.](https://reactjs.org/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
+* Errors in the render and lifecycle methods now unmount the component tree by default. To prevent this, add [error boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) to the appropriate places in the UI.
 
 ### Removed Deprecations
 
 - There is no `react-with-addons.js` build anymore. All compatible addons are published separately on npm, and have single-file browser versions if you need them.
-- The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
+- The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://reactjs.org/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://reactjs.org/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
 
 ## 15.6.2 (September 25, 2017)
 
@@ -605,7 +605,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 - Split the main `react` package into two: `react` and `react-dom`.  This paves the way to writing components that can be shared between the web version of React and React Native.  This means you will need to include both files and some functions have been moved from `React` to `ReactDOM`.
 - Addons have been moved to separate packages (`react-addons-clone-with-props`, `react-addons-create-fragment`, `react-addons-css-transition-group`, `react-addons-linked-state-mixin`, `react-addons-perf`, `react-addons-pure-render-mixin`, `react-addons-shallow-compare`, `react-addons-test-utils`, `react-addons-transition-group`, `react-addons-update`, `ReactDOM.unstable_batchedUpdates`).
-- Stateless functional components - React components were previously created using React.createClass or using ES6 classes.  This release adds a [new syntax](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions) where a user defines a single [stateless render function](https://facebook.github.io/react/docs/reusable-components.html#stateless-functions) (with one parameter: `props`) which returns a JSX element, and this function may be used as a component.
+- Stateless functional components - React components were previously created using React.createClass or using ES6 classes.  This release adds a [new syntax](https://reactjs.org/docs/reusable-components.html#stateless-functions) where a user defines a single [stateless render function](https://reactjs.org/docs/reusable-components.html#stateless-functions) (with one parameter: `props`) which returns a JSX element, and this function may be used as a component.
 - Refs to DOM components as the DOM node itself. Previously the only useful thing you can do with a DOM component is call `getDOMNode()` to get the underlying DOM node. Starting with this release, a ref to a DOM component _is_ the actual DOM node. **Note that refs to custom (user-defined) components work exactly as before; only the built-in DOM components are affected by this change.**
 
 
@@ -613,8 +613,8 @@ Each of these changes will continue to work as before with a new warning until t
 
 - `React.initializeTouchEvents` is no longer necessary and has been removed completely. Touch events now work automatically.
 - Add-Ons: Due to the DOM node refs change mentioned above, `TestUtils.findAllInRenderedTree` and related helpers are no longer able to take a DOM component, only a custom component.
-- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://facebook.github.io/react/docs/react-api.html#cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
-- Plain objects are no longer supported as React children; arrays should be used instead. You can use the [`createFragment`](https://facebook.github.io/react/docs/create-fragment.html) helper to migrate, which now returns an array.
+- The `props` object is now frozen, so mutating props after creating a component element is no longer supported. In most cases, [`React.cloneElement`](https://reactjs.org/docs/react-api.html#cloneelement) should be used instead. This change makes your components easier to reason about and enables the compiler optimizations mentioned above.
+- Plain objects are no longer supported as React children; arrays should be used instead. You can use the [`createFragment`](https://reactjs.org/docs/create-fragment.html) helper to migrate, which now returns an array.
 - Add-Ons: `classSet` has been removed. Use [classnames](https://github.com/JedWatson/classnames) instead.
 - Web components (custom elements) now use native property names.  Eg: `class` instead of `className`.
 
@@ -622,9 +622,9 @@ Each of these changes will continue to work as before with a new warning until t
 
 - `this.getDOMNode()` is now deprecated and `ReactDOM.findDOMNode(this)` can be used instead. Note that in the common case, `findDOMNode` is now unnecessary since a ref to the DOM component is now the actual DOM node.
 - `setProps` and `replaceProps` are now deprecated. Instead, call ReactDOM.render again at the top level with the new props.
-- ES6 component classes must now extend `React.Component` in order to enable stateless function components. The [ES3 module pattern](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages) will continue to work.
+- ES6 component classes must now extend `React.Component` in order to enable stateless function components. The [ES3 module pattern](https://reactjs.org/blog/2015/01/27/react-v0.13.0-beta-1.html#other-languages) will continue to work.
 - Reusing and mutating a `style` object between renders has been deprecated. This mirrors our change to freeze the `props` object.
-- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://facebook.github.io/react/docs/react-api.html#cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
+- Add-Ons: `cloneWithProps` is now deprecated. Use [`React.cloneElement`](https://reactjs.org/docs/react-api.html#cloneelement) instead (unlike `cloneWithProps`, `cloneElement` does not merge `className` or `style` automatically; you can merge them manually if needed).
 - Add-Ons: To improve reliability, `CSSTransitionGroup` will no longer listen to transition events. Instead, you should specify transition durations manually using props such as `transitionEnterTimeout={500}`.
 
 ### Notable enhancements
@@ -665,7 +665,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### Breaking Changes
 
-- The `react-tools` package and `JSXTransformer.js` browser file [have been deprecated](https://facebook.github.io/react/blog/2015/06/12/deprecating-jstransform-and-react-tools.html). You can continue using version `0.13.3` of both, but we no longer support them and recommend migrating to [Babel](http://babeljs.io/), which has built-in support for React and JSX.
+- The `react-tools` package and `JSXTransformer.js` browser file [have been deprecated](https://reactjs.org/blog/2015/06/12/deprecating-jstransform-and-react-tools.html). You can continue using version `0.13.3` of both, but we no longer support them and recommend migrating to [Babel](http://babeljs.io/), which has built-in support for React and JSX.
 
 #### New Features
 
@@ -765,9 +765,9 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### New Features
 
-* Support for using ES6 classes to build React components; see the [v0.13.0 beta 1 notes](https://facebook.github.io/react/blog/2015/01/27/react-v0.13.0-beta-1.html) for details.
+* Support for using ES6 classes to build React components; see the [v0.13.0 beta 1 notes](https://reactjs.org/blog/2015/01/27/react-v0.13.0-beta-1.html) for details.
 * Added new top-level API `React.findDOMNode(component)`, which should be used in place of `component.getDOMNode()`. The base class for ES6-based components will not have `getDOMNode`. This change will enable some more patterns moving forward.
-* Added a new top-level API `React.cloneElement(el, props)` for making copies of React elements – see the [v0.13 RC2 notes](https://facebook.github.io/react/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement) for more details.
+* Added a new top-level API `React.cloneElement(el, props)` for making copies of React elements – see the [v0.13 RC2 notes](https://reactjs.org/blog/2015/03/03/react-v0.13-rc2.html#react.cloneelement) for more details.
 * New `ref` style, allowing a callback to be used in place of a name: `<Photo ref={(c) => this._photo = c} />` allows you to reference the component with `this._photo` (as opposed to `ref="photo"` which gives `this.refs.photo`).
 * `this.setState()` can now take a function as the first argument for transactional state updates, such as `this.setState((state, props) => ({count: state.count + 1}));` – this means that you no longer need to use `this._pendingState`, which is now gone.
 * Support for iterators and immutable-js sequences as children.
@@ -781,7 +781,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### New Features
 
-* [`React.addons.createFragment` was added](https://facebook.github.io/react/docs/create-fragment.html) for adding keys to entire sets of children.
+* [`React.addons.createFragment` was added](https://reactjs.org/docs/create-fragment.html) for adding keys to entire sets of children.
 
 #### Deprecations
 
@@ -1007,7 +1007,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 #### New Features
 * Added warnings to help migrate towards descriptors
-* Made it possible to server render without React-related markup (`data-reactid`, `data-react-checksum`). This DOM will not be mountable by React. [Read the docs for `React.renderComponentToStaticMarkup`](https://facebook.github.io/react/docs/top-level-api.html#react.rendercomponenttostaticmarkup)
+* Made it possible to server render without React-related markup (`data-reactid`, `data-react-checksum`). This DOM will not be mountable by React. [Read the docs for `React.renderComponentToStaticMarkup`](https://reactjs.org/docs/top-level-api.html#react.rendercomponenttostaticmarkup)
 * Added support for more attributes:
   * `srcSet` for `<img>` to specify images at different pixel ratios
   * `textAnchor` for SVG
@@ -1019,7 +1019,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 ### Addons
 
-* `update` function to deal with immutable data. [Read the docs](https://facebook.github.io/react/docs/update.html)
+* `update` function to deal with immutable data. [Read the docs](https://reactjs.org/docs/update.html)
 
 ### react-tools
 * Added an option argument to `transform` function. The only option supported is `harmony`, which behaves the same as `jsx --harmony` on the command line. This uses the ES6 transforms from [jstransform](https://github.com/facebook/jstransform).
@@ -1181,7 +1181,7 @@ Each of these changes will continue to work as before with a new warning until t
 
 ### React with Addons (New!)
 
-* Introduced a separate build with several "addons" which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. [Read more in the docs](https://facebook.github.io/react/docs/addons.html).
+* Introduced a separate build with several "addons" which we think can help improve the React experience. We plan to deprecate this in the long-term, instead shipping each as standalone pieces. [Read more in the docs](https://reactjs.org/docs/addons.html).
 
 ### JSX
 
@@ -1214,10 +1214,10 @@ Each of these changes will continue to work as before with a new warning until t
 * Switch from using `id` attribute to `data-reactid` to track DOM nodes. This allows you to integrate with other JS and CSS libraries more easily.
 * Support for more DOM elements and attributes (e.g., `<canvas>`)
 * Improved server-side rendering APIs. `React.renderComponentToString(<component>, callback)` allows you to use React on the server and generate markup which can be sent down to the browser.
-* `prop` improvements: validation and default values. [Read our blog post for details...](https://facebook.github.io/react/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html)
-* Support for the `key` prop, which allows for finer control over reconciliation. [Read the docs for details...](https://facebook.github.io/react/docs/multiple-components.html)
-* Removed `React.autoBind`. [Read our blog post for details...](https://facebook.github.io/react/blog/2013/07/02/react-v0-4-autobind-by-default.html)
-* Improvements to forms. We've written wrappers around `<input>`, `<textarea>`, `<option>`, and `<select>` in order to standardize many inconsistencies in browser implementations. This includes support for `defaultValue`, and improved implementation of the `onChange` event, and circuit completion. [Read the docs for details...](https://facebook.github.io/react/docs/forms.html)
+* `prop` improvements: validation and default values. [Read our blog post for details...](https://reactjs.org/blog/2013/07/11/react-v0-4-prop-validation-and-default-values.html)
+* Support for the `key` prop, which allows for finer control over reconciliation. [Read the docs for details...](https://reactjs.org/docs/multiple-components.html)
+* Removed `React.autoBind`. [Read our blog post for details...](https://reactjs.org/blog/2013/07/02/react-v0-4-autobind-by-default.html)
+* Improvements to forms. We've written wrappers around `<input>`, `<textarea>`, `<option>`, and `<select>` in order to standardize many inconsistencies in browser implementations. This includes support for `defaultValue`, and improved implementation of the `onChange` event, and circuit completion. [Read the docs for details...](https://reactjs.org/docs/forms.html)
 * We've implemented an improved synthetic event system that conforms to the W3C spec.
 * Updates to your component are batched now, which may result in a significantly faster re-render of components. `this.setState` now takes an optional callback as it's second parameter. If you were using `onClick={this.setState.bind(this, state)}` previously, you'll want to make sure you add a third parameter so that the event is not treated as the callback.
 

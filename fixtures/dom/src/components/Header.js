@@ -34,7 +34,7 @@ class Header extends React.Component {
         <div className="header__inner">
           <span className="header__logo">
             <img
-              src="https://facebook.github.io/react/img/logo.svg"
+              src="https://reactjs.org/img/logo.svg"
               alt=""
               width="32"
               height="32"

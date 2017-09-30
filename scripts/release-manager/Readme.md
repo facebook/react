@@ -457,7 +457,7 @@ git commit -am 'Rebuild the website'
 git push
 ```
 
-Now open https://facebook.github.io/react/, give it a few minutes, refresh, and behold.
+Now open https://reactjs.org/, give it a few minutes, refresh, and behold.
 
 Don’t forget to switch to `master` for the future development.
 

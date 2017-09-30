@@ -71,7 +71,7 @@ We recommend following [these instructions](http://babeljs.io/docs/editors) to c
 
 ### Help, I'm Stuck!
 
-If you get stuck, check out the [community support resources](https://facebook.github.io/react/community/support.html). In particular, [Reactiflux chat](/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
+If you get stuck, check out the [community support resources](https://reactjs.org/community/support.html). In particular, [Reactiflux chat](/community/support.html#reactiflux-chat) is a great way to get quick help. If you don't get a good answer anywhere, please file an issue, and we'll help you out.
 
 With this out of the way, let's get started!
 

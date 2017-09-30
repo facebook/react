@@ -11,7 +11,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "dependencies": {
     "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
