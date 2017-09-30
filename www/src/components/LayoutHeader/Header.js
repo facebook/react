@@ -140,6 +140,7 @@ const Header = ({location}) => (
             flexDirection: 'row',
             alignItems: 'center',
             paddingLeft: '0.5rem',
+            paddingRight: '0.5rem',
 
             [media.lessThan('small')]: {
               justifyContent: 'flex-end',

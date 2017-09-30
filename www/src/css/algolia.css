@@ -388,6 +388,13 @@
   padding: 8px 0;
   text-align: center;
   font-size: 1.2em;
+  background-color: #373940;
+  margin-top: -8px;
+}
+
+.algolia-autocomplete .algolia-docsearch-suggestion--no-results .algolia-docsearch-suggestion--text {
+  color: #ffffff;
+  margin-top: 4px;
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion--no-results::before {
@@ -419,7 +426,7 @@
 
 .algolia-autocomplete .algolia-docsearch-footer {
   width: 110px;
-  height: 20px;
+  height: 0px;
   z-index: 2000;
   float: right;
   font-size: 0;
