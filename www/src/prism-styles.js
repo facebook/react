@@ -16,7 +16,7 @@ const prismColors = {
   char: '#D8DEE9',
   comment: '#999999',
   keyword: '#c5a5c5',
-  lineHighlight: '#393d45',
+  lineHighlight: '#14161a',
   primitive: '#5a9bcf',
   string: '#8dc891',
   variable: '#d7deea',
