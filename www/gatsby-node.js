@@ -31,7 +31,6 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   const blogTemplate = resolve('./src/templates/blog.js');
   const communityTemplate = resolve('./src/templates/community.js');
   const docsTemplate = resolve('./src/templates/docs.js');
-  const errorDecoderTemplate = resolve('./src/templates/error-decoder.js');
   const tutorialTemplate = resolve('./src/templates/tutorial.js');
   const homeTemplate = resolve('./src/templates/home.js');
   const installationTemplate = resolve('./src/templates/installation.js');
@@ -234,7 +233,7 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
 exports.onCreatePage = async ({ page, boundActionCreators }) => {
   const { createPage } = boundActionCreators;
 
-  return new Promise((resolve, reject) => {
+  return new Promise(resolvePromise => {
     // page.matchPath is a special key that's used for matching pages only on the client.
     // Explicitly wire up all error code wildcard matches to redirect to the error code page.
     if (page.path.includes('docs/error-decoder.html')) {
@@ -244,6 +243,6 @@ exports.onCreatePage = async ({ page, boundActionCreators }) => {
       createPage(page);
     }
 
-    resolve();
-  })
+    resolvePromise();
+  });
 };
