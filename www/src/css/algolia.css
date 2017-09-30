@@ -394,6 +394,7 @@
 
 .algolia-autocomplete .algolia-docsearch-suggestion--no-results .algolia-docsearch-suggestion--text {
   color: #ffffff;
+  margin-top: 4px;
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion--no-results::before {
