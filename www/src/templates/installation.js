@@ -21,7 +21,7 @@ import {createLinkDocs} from 'utils/createLink';
 import findSectionForPath from 'utils/findSectionForPath';
 import {sectionListDocs} from 'utils/sectionList';
 import {sharedStyles} from 'theme';
-import {urlRoot} from 'constants';
+import createOgUrl from 'utils/createOgUrl';
 
 // HACK: copied from 'installation.md'
 // TODO: clean this up.
@@ -141,7 +141,7 @@ class InstallationPage extends Component {
         }}>
         <TitleAndMetaTags
           title="Installation - React"
-          ogUrl={`${urlRoot}/${markdownRemark.fields.path || ''}`}
+          ogUrl={createOgUrl(markdownRemark.fields.slug)}
         />
         <div css={{flex: '1 0 auto'}}>
           <Container>
@@ -211,6 +211,7 @@ export const pageQuery = graphql`
       }
       fields {
         path
+        slug
       }
     }
   }
