@@ -17,7 +17,7 @@ import PropTypes from 'prop-types';
 import React, {Component} from 'react';
 import TitleAndMetaTags from 'components/TitleAndMetaTags';
 import {colors, media, sharedStyles} from 'theme';
-import createOgUrl from 'utils/createOgUrl';
+import {urlRoot} from 'constants';
 
 class Home extends Component {
   componentDidMount() {
@@ -35,7 +35,7 @@ class Home extends Component {
       <div css={{width: '100%'}}>
         <TitleAndMetaTags
           title={title}
-          ogUrl={createOgUrl(data.markdownRemark.fields.slug)}
+          ogUrl={`${urlRoot}/${data.markdownRemark.fields.path}`}
         />
         <header
           css={{
@@ -71,7 +71,6 @@ class Home extends Component {
                   textAlign: 'center',
                   margin: 0,
                   fontSize: 45,
-                  letterSpacing: '0.01em',
                   [media.size('xsmall')]: {
                     fontSize: 30,
                   },
@@ -86,8 +85,6 @@ class Home extends Component {
                   paddingTop: 15,
                   textAlign: 'center',
                   fontSize: 24,
-                  letterSpacing: '0.01em',
-                  fontWeight: 200,
 
                   [media.size('xsmall')]: {
                     fontSize: 16,
@@ -99,6 +96,7 @@ class Home extends Component {
                   [media.greaterThan('xlarge')]: {
                     paddingTop: 20,
                     fontSize: 30,
+                    fontWeight: 300,
                   },
                 }}>
                 A JavaScript library for building user interfaces
@@ -203,7 +201,7 @@ export const pageQuery = graphql`
         title
       }
       fields {
-        slug
+        path
       }
     }
   }
@@ -283,12 +281,15 @@ const markdownStyles = {
     '& h3': {
       color: colors.subtle,
       paddingTop: 0,
-      fontWeight: 300,
-      fontSize: 20,
+
+      [media.lessThan('large')]: {
+        fontSize: 18,
+        fontWeight: 400,
+      },
 
       [media.greaterThan('xlarge')]: {
         fontSize: 24,
-        fontWeight: 200,
+        fontWeight: 400,
       },
     },
 

@@ -5,15 +5,7 @@
     Click to see more.
   </summary>
 
-### All Packages
-
-* Fix an accidental extra global variable in the UMD builds. ([@gaearon](https://github.com/gaearon) in [#10935](https://github.com/facebook/react/pull/10935))
-
-### React DOM
-
-* Fix `null` showing up in a warning instead of the component stack. ([@gaearon](https://github.com/gaearon) in [#10915](https://github.com/facebook/react/pull/10915))
-* Fix IE11 crash in development mode. ([@leidegre](https://github.com/leidegre) in [#10921](https://github.com/facebook/react/pull/10921))
-* Minor bundle size improvements. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
+No unreleased changes yet.
 
 </details>
 
@@ -25,10 +17,10 @@
 
 ### New Features
 * Components can now return arrays and strings from `render`. (Docs coming soon!)
-* Improved error handling with introduction of "error boundaries". [Error boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
+* Improved error handling with introduction of "error boundaries". [Error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) are React components that catch JavaScript errors anywhere in their child component tree, log those errors, and display a fallback UI instead of the component tree that crashed.
 * First-class support for declaratively rendering a subtree into another DOM node with `ReactDOM.createPortal()`. (Docs coming soon!)
 * Streaming mode for server side rendering is enabled with `ReactDOMServer.renderToNodeStream()` and `ReactDOMServer.renderToStaticNodeStream()`. ([@aickin](https://github.com/aickin) in [#10425](https://github.com/facebook/react/pull/10425), [#10044](https://github.com/facebook/react/pull/10044), [#10039](https://github.com/facebook/react/pull/10039), [#10024](https://github.com/facebook/react/pull/10024), [#9264](https://github.com/facebook/react/pull/9264), and others.)
-* [React DOM now allows passing non-standard attributes](https://reactjs.org/blog/2017/09/08/dom-attributes-in-react-16.html). ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
+* [React DOM now allows passing non-standard attributes](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html). ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
 
 ### Breaking Changes
 - There are several changes to the behavior of scheduling and lifecycle methods:
@@ -45,7 +37,6 @@
   * Non-unique keys may now cause children to be duplicated and/or omitted. Using non-unique keys is not (and has never been) supported, but previously it was a hard error.
   * Shallow renderer no longer calls `componentDidUpdate()` because DOM refs are not available. This also makes it consistent with `componentDidMount()` (which does not get called in previous versions either).
   * Shallow renderer does not implement `unstable_batchedUpdates()` anymore.
-  * `ReactDOM.unstable_batchedUpdates` now only takes one extra argument after the callback.
 - The names and paths to the single-file browser builds have changed to emphasize the difference between development and production builds. For example:
   - `react/dist/react.js` → `react/umd/react.development.js`
   - `react/dist/react.min.js` → `react/umd/react.production.min.js`
@@ -54,13 +45,13 @@
 * The server renderer has been completely rewritten, with some improvements:
   * Server rendering does not use markup validation anymore, and instead tries its best to attach to existing DOM, warning about inconsistencies. It also doesn't use comments for empty components and data-reactid attributes on each node anymore.
   * Hydrating a server rendered container now has an explicit API. Use `ReactDOM.hydrate` instead of `ReactDOM.render` if you're reviving server rendered HTML. Keep using `ReactDOM.render` if you're just doing client-side rendering.
-* When "unknown" props are passed to DOM components, for valid values, React will now render them in the DOM. [See this post for more details.](https://reactjs.org/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
-* Errors in the render and lifecycle methods now unmount the component tree by default. To prevent this, add [error boundaries](https://reactjs.org/blog/2017/07/26/error-handling-in-react-16.html) to the appropriate places in the UI.
+* When "unknown" props are passed to DOM components, for valid values, React will now render them in the DOM. [See this post for more details.](https://facebook.github.io/react/blog/2017/09/08/dom-attributes-in-react-16.html) ([@nhunzaker](https://github.com/nhunzaker) in [#10385](https://github.com/facebook/react/pull/10385), [10564](https://github.com/facebook/react/pull/10564), [#10495](https://github.com/facebook/react/pull/10495) and others)
+* Errors in the render and lifecycle methods now unmount the component tree by default. To prevent this, add [error boundaries](https://facebook.github.io/react/blog/2017/07/26/error-handling-in-react-16.html) to the appropriate places in the UI.
 
 ### Removed Deprecations
 
 - There is no `react-with-addons.js` build anymore. All compatible addons are published separately on npm, and have single-file browser versions if you need them.
-- The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://reactjs.org/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://reactjs.org/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
+- The deprecations introduced in 15.x have been removed from the core package. `React.createClass` is now available as create-react-class, `React.PropTypes` as prop-types, `React.DOM` as react-dom-factories, react-addons-test-utils as react-dom/test-utils, and shallow renderer as react-test-renderer/shallow. See [15.5.0](https://facebook.github.io/react/blog/2017/04/07/react-v15.5.0.html) and [15.6.0](https://facebook.github.io/react/blog/2017/06/13/react-v15.6.0.html) blog posts for instructions on migrating code and automated codemods.
 
 ## 15.6.2 (September 25, 2017)
 

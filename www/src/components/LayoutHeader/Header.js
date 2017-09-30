@@ -140,7 +140,6 @@ const Header = ({location}) => (
             flexDirection: 'row',
             alignItems: 'center',
             paddingLeft: '0.5rem',
-            paddingRight: '0.5rem',
 
             [media.lessThan('small')]: {
               justifyContent: 'flex-end',
@@ -165,7 +164,6 @@ const Header = ({location}) => (
               border: 0,
               color: colors.white,
               fontSize: 18,
-              fontWeight: 300,
               fontFamily: 'inherit',
               position: 'relative',
               paddingLeft: '24px',
@@ -196,7 +194,6 @@ const Header = ({location}) => (
             id="algolia-doc-search"
             type="search"
             placeholder="Search docs"
-            aria-label="Search docs"
           />
         </form>
 

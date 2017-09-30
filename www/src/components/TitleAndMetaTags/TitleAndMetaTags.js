@@ -20,7 +20,10 @@ const TitleAndMetaTags = ({title, ogDescription, ogUrl}) => {
       <meta property="og:title" content={title} />
       <meta property="og:type" content="website" />
       {ogUrl && <meta property="og:url" content={ogUrl} />}
-      <meta property="og:image" content="/logo-og.png" />
+      <meta
+        property="og:image"
+        content="https://facebook.github.io/react/img/logo_og.png"
+      />
       <meta
         property="og:description"
         content={ogDescription || defaultDescription}

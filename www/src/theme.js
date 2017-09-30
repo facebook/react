@@ -198,22 +198,19 @@ const sharedStyles = {
 
     '& > p:first-child': {
       fontSize: 18,
-      fontWeight: 300,
+      lineHeight: '30px',
       color: colors.subtle,
 
       [media.greaterThan('xlarge')]: {
         fontSize: 24,
-      },
-
-      '& a, & strong': {
-        fontWeight: 400,
+        lineHeight: '40px',
       },
     },
 
     '& p': {
-      marginTop: 30,
-      fontSize: 17,
-      lineHeight: 1.7,
+      marginTop: 35,
+      fontSize: 18,
+      lineHeight: '35px',
       maxWidth: '42em',
 
       '&:first-of-type': {
@@ -226,7 +223,7 @@ const sharedStyles = {
 
       [media.lessThan('large')]: {
         fontSize: 16,
-        marginTop: 25,
+        lineHeight: '30px',
       },
     },
 
@@ -239,7 +236,6 @@ const sharedStyles = {
       padding: '0 3px',
       fontSize: 16,
       color: colors.text,
-      wordBreak: 'break-word',
     },
 
     '& hr': {
@@ -255,8 +251,6 @@ const sharedStyles = {
     },
 
     '& h1': {
-      lineHeight: 1.2,
-
       [media.size('xsmall')]: {
         fontSize: 30,
       },
@@ -274,7 +268,6 @@ const sharedStyles = {
       borderTop: `1px solid ${colors.divider}`,
       marginTop: 44,
       paddingTop: 40,
-      lineHeight: 1.2,
 
       ':first-child': {
         borderTop: 0,

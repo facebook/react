@@ -16,7 +16,7 @@ const prismColors = {
   char: '#D8DEE9',
   comment: '#999999',
   keyword: '#c5a5c5',
-  lineHighlight: '#14161a',
+  lineHighlight: '#393d45',
   primitive: '#5a9bcf',
   string: '#8dc891',
   variable: '#d7deea',
@@ -59,8 +59,8 @@ css.global('.gatsby-highlight + .gatsby-highlight', {
 css.global('.gatsby-highlight-code-line', {
   backgroundColor: prismColors.lineHighlight,
   display: 'block',
-  margin: '-0.125rem calc(-1rem - 15px)',
-  padding: '0.125rem calc(1rem + 15px)',
+  margin: '-0.125rem -1rem',
+  padding: '0.125rem 1rem',
 });
 
 css.global('.token.attr-name', {

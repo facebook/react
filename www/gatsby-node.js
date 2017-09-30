@@ -12,7 +12,7 @@
 const {resolve} = require('path');
 const webpack = require('webpack');
 
-exports.modifyWebpackConfig = ({config, stage}) => {
+exports.modifyWebpackConfig = ({ config, stage }) => {
   // See https://github.com/FormidableLabs/react-live/issues/5
   config.plugin('ignore', () => new webpack.IgnorePlugin(/^(xor|props)$/));
 
@@ -35,8 +35,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   const homeTemplate = resolve('./src/templates/home.js');
   const installationTemplate = resolve('./src/templates/installation.js');
 
-  const allMarkdown = await graphql(
-    `
+  const allMarkdown = await graphql(`
     {
       allMarkdownRemark(limit: 1000) {
         edges {
@@ -49,8 +48,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
         }
       }
     }
-  `,
-  );
+  `);
 
   if (allMarkdown.errors) {
     console.error(allMarkdown.errors);
@@ -77,9 +75,11 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
           slug,
         },
       });
+
     } else if (slug === 'docs/error-decoder.html') {
       // No-op so far as markdown templates go.
       // Error codes are managed by a page (which gets created automatically).
+
     } else if (
       slug.includes('blog/') ||
       slug.includes('community/') ||
@@ -92,7 +92,10 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
         template = blogTemplate;
       } else if (slug.includes('community/')) {
         template = communityTemplate;
-      } else if (slug.includes('contributing/') || slug.includes('docs/')) {
+      } else if (
+        slug.includes('contributing/') ||
+        slug.includes('docs/')
+      ) {
         template = docsTemplate;
       } else if (slug.includes('tutorial/')) {
         template = tutorialTemplate;
@@ -122,14 +125,13 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
             fromPath: `/${fromPath}`,
             redirectInBrowser: true,
             toPath: `/${slug}`,
-          }),
+          })
         );
       }
     }
   });
 
-  const newestBlogEntry = await graphql(
-    `
+  const newestBlogEntry = await graphql(`
     {
       allMarkdownRemark(
         limit: 1,
@@ -145,8 +147,7 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
         }
       }
     }
-  `,
-  );
+  `);
   const newestBlogNode = newestBlogEntry.data.allMarkdownRemark.edges[0].node;
 
   // Blog landing page should always show the most recent blog entry.
@@ -201,7 +202,7 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
         // This should (probably) only happen for the index.md,
         // But let's log it in case it happens for other files also.
         console.warn(
-          `Warning: No slug found for "${relativePath}". Falling back to default "${slug}".`,
+          `Warning: No slug found for "${relativePath}". Falling back to default "${slug}".`
         );
       }
 
@@ -229,8 +230,8 @@ exports.onCreateNode = ({node, boundActionCreators, getNode}) => {
   }
 };
 
-exports.onCreatePage = async ({page, boundActionCreators}) => {
-  const {createPage} = boundActionCreators;
+exports.onCreatePage = async ({ page, boundActionCreators }) => {
+  const { createPage } = boundActionCreators;
 
   return new Promise(resolvePromise => {
     // page.matchPath is a special key that's used for matching pages only on the client.

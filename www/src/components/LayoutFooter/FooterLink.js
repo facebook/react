@@ -9,22 +9,32 @@
 
 'use strict';
 
-import Link from 'gatsby-link';
 import React from 'react';
 import {colors} from 'theme';
+import ExternalLinkSvg from 'templates/components/ExternalLinkSvg';
 
 const FooterLink = ({children, target, to}) => (
-  <Link
+  <a
     css={{
+      fontWeight: 300,
       lineHeight: 2,
       ':hover': {
         color: colors.brand,
       },
     }}
-    to={to}
+    href={to}
     target={target}>
     {children}
-  </Link>
+    {target === '_blank' &&
+      <ExternalLinkSvg
+        cssProps={{
+          verticalAlign: -2,
+          display: 'inline-block',
+          marginLeft: 5,
+          color: colors.subtle,
+        }}
+      />}
+  </a>
 );
 
 export default FooterLink;
