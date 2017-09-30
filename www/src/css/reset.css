@@ -1,6 +1,6 @@
 html {
   box-sizing: border-box;
-  font-family: "proxima-nova", sans-serif;
+  font-family: sans-serif;
   font-style: normal;
   -webkit-font-smoothing: antialiased;
 }
@@ -35,5 +35,5 @@ img {
 }
 
 pre, code {
-  font-family: source-code-pro, Menlo, Consolas, "Courier New", monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
