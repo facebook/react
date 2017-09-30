@@ -207,7 +207,7 @@ const sharedStyles = {
 
       '& a, & strong': {
         fontWeight: 400,
-      }
+      },
     },
 
     '& p': {
