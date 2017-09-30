@@ -16,7 +16,6 @@ import {colors} from 'theme';
 const FooterLink = ({children, target, to}) => (
   <Link
     css={{
-      fontWeight: 300,
       lineHeight: 2,
       ':hover': {
         color: colors.brand,

@@ -401,7 +401,7 @@
   color: #222222;
   background-color: #EBEBEB;
   border-radius: 3px;
-  font-family: Menlo,Monaco,Consolas,"Courier New",monospace;
+  font-family: source-code-pro, Menlo, Monaco, Consolas, "Courier New", monospace;
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion code .algolia-docsearch-suggestion--highlight {

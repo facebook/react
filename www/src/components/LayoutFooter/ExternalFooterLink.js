@@ -16,7 +16,6 @@ import ExternalLinkSvg from 'templates/components/ExternalLinkSvg';
 const ExternalFooterLink = ({children, href, target}) => (
   <a
     css={{
-      fontWeight: 300,
       lineHeight: 2,
       ':hover': {
         color: colors.brand,

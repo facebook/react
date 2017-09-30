@@ -59,12 +59,6 @@ export default class HTML extends Component {
             dangerouslySetInnerHTML={{__html: this.props.body}}
           />
           {this.props.postBodyComponents}
-          <script src="https://use.typekit.net/vqa1hcx.js" />
-          <script
-            dangerouslySetInnerHTML={{
-              __html: 'try{Typekit.load({ async: true });}catch(e){}',
-            }}
-          />
         </body>
       </html>
     );

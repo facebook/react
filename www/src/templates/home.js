@@ -71,6 +71,7 @@ class Home extends Component {
                   textAlign: 'center',
                   margin: 0,
                   fontSize: 45,
+                  letterSpacing: '0.01em',
                   [media.size('xsmall')]: {
                     fontSize: 30,
                   },
@@ -85,6 +86,8 @@ class Home extends Component {
                   paddingTop: 15,
                   textAlign: 'center',
                   fontSize: 24,
+                  letterSpacing: '0.01em',
+                  fontWeight: 200,
 
                   [media.size('xsmall')]: {
                     fontSize: 16,
@@ -96,7 +99,6 @@ class Home extends Component {
                   [media.greaterThan('xlarge')]: {
                     paddingTop: 20,
                     fontSize: 30,
-                    fontWeight: 300,
                   },
                 }}>
                 A JavaScript library for building user interfaces
@@ -281,15 +283,12 @@ const markdownStyles = {
     '& h3': {
       color: colors.subtle,
       paddingTop: 0,
-
-      [media.lessThan('large')]: {
-        fontSize: 18,
-        fontWeight: 400,
-      },
+      fontWeight: 300,
+      fontSize: 20,
 
       [media.greaterThan('xlarge')]: {
         fontSize: 24,
-        fontWeight: 400,
+        fontWeight: 200,
       },
     },
 
