@@ -161,6 +161,7 @@ const Header = ({location}) => (
             css={{
               appearance: 'none',
               background: 'transparent',
+              outline: 'none',
               border: 0,
               color: colors.white,
               fontSize: 18,
