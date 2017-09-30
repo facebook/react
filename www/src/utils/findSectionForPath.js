@@ -22,11 +22,9 @@ const findSectionForPath = (pathname, sections) => {
   sections.forEach(section => {
     const match = section.items.some(
       item =>
-       slugId === slugify(item.id) ||
+        slugId === slugify(item.id) ||
         (item.subitems &&
-          item.subitems.some(subitem =>
-            slugId === slugify(subitem.id),
-          )),
+          item.subitems.some(subitem => slugId === slugify(subitem.id))),
     );
     if (match) {
       activeSection = section;
