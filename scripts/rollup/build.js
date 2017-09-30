@@ -3,7 +3,10 @@
 const rollup = require('rollup').rollup;
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
-const alias = require('rollup-plugin-alias');
+// temporary load edited version of rollup-plugin-alias until issue
+// https://github.com/rollup/rollup-plugin-alias/issues/11 got resolved
+// TODO watch rollup-plugin-alias and revert to it when issue got resolved
+const alias = require('./plugins/rollup-plugin-alias');
 const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
@@ -296,6 +299,17 @@ function getCommonJsConfig(bundleType) {
   }
 }
 
+// for use with rollup repalce plugin:
+// windows paths breaks the string if we dosn't replace all "\" with "/"
+// it only make effect on windows paths
+function normalizeWindowsPathsInReplaceModules(mapToReplace) {
+  const newMap = {};
+  Object.keys(mapToReplace).forEach(key => {
+    newMap[key] = mapToReplace[key].replace(/\\/g, '/');
+  });
+  return newMap;
+}
+
 function getPlugins(
   entry,
   babelOpts,
@@ -323,7 +337,9 @@ function getPlugins(
   // We have to do this check because Rollup breaks on empty object.
   // TODO: file an issue with rollup-plugin-replace.
   if (Object.keys(replaceModules).length > 0) {
-    plugins.unshift(replace(replaceModules));
+    plugins.unshift(
+      replace(normalizeWindowsPathsInReplaceModules(replaceModules))
+    );
   }
 
   const headerSanityCheck = getHeaderSanityCheck(bundleType, hasteName);
