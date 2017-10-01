@@ -21,7 +21,6 @@ body {
 
 *, *::before, *::after {
   box-sizing: inherit;
-  border-color: inherit;
 }
 
 a {
