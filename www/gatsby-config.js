@@ -12,6 +12,8 @@
 module.exports = {
   siteMetadata: {
     title: 'React: A JavaScript library for building user interfaces',
+    description: 'A JavaScript library for building user interfaces',
+    siteUrl: 'https://reactjs.org',
   },
   mapping: {
     'MarkdownRemark.frontmatter.author': 'AuthorYaml',
@@ -73,6 +75,61 @@ module.exports = {
       resolve: 'gatsby-plugin-google-analytics',
       options: {
         trackingId: 'UA-41298772-1',
+      },
+    },
+    {
+      resolve: 'gatsby-plugin-feed',
+      options: {
+        query: `
+         {
+          site {
+            siteMetadata {
+              title
+              description
+              siteUrl
+              site_url: siteUrl
+            }
+          }
+        }`,
+        feeds: [
+          {
+            serialize: ({ query: { site, allMarkdownRemark } }) => {
+              return allMarkdownRemark.edges.map(edge => {
+                return Object.assign({}, {
+                  title: edge.node.frontmatter.title,
+                  description: edge.node.html,
+                  date: edge.node.fields.date,
+                  url: site.siteMetadata.siteUrl + edge.node.fields.slug,
+                  guid: site.siteMetadata.siteUrl + edge.node.fields.slug,
+                });
+              });
+          },
+            query: `
+              {
+                  allMarkdownRemark
+                  (limit: 10, 
+                  filter: {id: {regex: "/_posts/"}}, 
+                  sort: {fields: [fields___date], 
+                  order: DESC}) {
+                    edges {
+                      node {
+                        fields {
+                          date(formatString:"MMMM DD, YYYY, h:mm A")
+                          slug
+                        }
+                        frontmatter {
+                          title
+                        }
+                        excerpt
+                        html
+                      }
+                    }
+                  }
+                }
+            `,
+            output: '/feed.xml',
+          },
+        ],
       },
     },
     'gatsby-plugin-react-helmet',
