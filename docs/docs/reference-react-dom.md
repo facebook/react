@@ -16,7 +16,7 @@ The `react-dom` package provides DOM-specific methods that can be used at the to
 - [`hydrate()`](#hydrate)
 - [`unmountComponentAtNode()`](#unmountcomponentatnode)
 - [`findDOMNode()`](#finddomnode)
-- [`createPortal()`](#createPortal)
+- [`createPortal()`](#createportal)
 
 ### Browser Support
 
