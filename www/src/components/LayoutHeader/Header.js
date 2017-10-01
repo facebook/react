@@ -217,7 +217,9 @@ const Header = ({location}) => (
               whiteSpace: 'nowrap',
               ...fonts.small,
             }}
-            href="https://github.com/facebook/react/releases">
+            href="https://github.com/facebook/react/releases"
+            target="_blank"
+            rel="noopener">
             v{version}
           </a>
           <a
@@ -230,7 +232,9 @@ const Header = ({location}) => (
                 color: colors.brand,
               },
             }}
-            href="https://github.com/facebook/react/">
+            href="https://github.com/facebook/react/"
+            target="_blank"
+            rel="noopener">
             GitHub
             <ExternalLinkSvg
               cssProps={{

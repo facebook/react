@@ -17,21 +17,21 @@ import navDocs from '../../../docs/_data/nav_docs.yml';
 import navTutorial from '../../../docs/_data/nav_tutorial.yml';
 
 const sectionListDocs = navDocs
-  .map(item => {
-    item.directory = 'docs';
-    return item;
-  })
+  .map(item => ({
+    ...item,
+    directory: 'docs',
+  }))
   .concat(
-    navContributing.map(item => {
-      item.directory = 'contributing';
-      return item;
-    }),
+    navContributing.map(item => ({
+      ...item,
+      directory: 'contributing',
+    })),
   );
 
-const sectionListCommunity = navCommunity.map(item => {
-  item.directory = 'community';
-  return item;
-});
+const sectionListCommunity = navCommunity.map(item => ({
+  ...item,
+  directory: 'community',
+}));
 
 export {
   sectionListCommunity,
