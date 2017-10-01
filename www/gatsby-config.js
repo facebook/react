@@ -93,20 +93,17 @@ module.exports = {
         }`,
         feeds: [
           {
-            serialize: ({query: {site, allMarkdownRemark}}) => {
+            serialize: ({ query: { site, allMarkdownRemark } }) => {
               return allMarkdownRemark.edges.map(edge => {
-                return Object.assign(
-                  {},
-                  {
-                    title: edge.node.frontmatter.title,
-                    description: edge.node.html,
-                    date: edge.node.fields.date,
-                    url: site.siteMetadata.siteUrl + edge.node.fields.slug,
-                    guid: site.siteMetadata.siteUrl + edge.node.fields.slug,
-                  },
-                );
+                return Object.assign({}, {
+                  title: edge.node.frontmatter.title,
+                  description: edge.node.html,
+                  date: edge.node.fields.date,
+                  url: site.siteMetadata.siteUrl + edge.node.fields.slug,
+                  guid: site.siteMetadata.siteUrl + edge.node.fields.slug,
+                });
               });
-            },
+          },
             query: `
               {
                   allMarkdownRemark
