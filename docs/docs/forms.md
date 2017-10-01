@@ -184,7 +184,11 @@ Overall, this makes it so that `<input type="text">`, `<textarea>`, and `<select
 
 > Note
 >
-> You can pass an array into the `value` attribute, allowing you to select multiple options in a `select` tag: `<select multiple={true} value={['B', 'C']}>`.
+> You can pass an array into the `value` attribute, allowing you to select multiple options in a `select` tag:
+>
+>```js
+><select multiple={true} value={['B', 'C']}>
+>```
 
 ## Handling Multiple Inputs
 
