@@ -42,7 +42,7 @@ function BrickFlipbox() {
 ## Using React in your Web Components
 
 ```javascript
-class XSearch {
+class XSearch extends HTMLElement {
   connectedCallback() {
     const mountPoint = document.createElement('span');
     this.attachShadow({ mode: 'open' }).appendChild(mountPoint);
