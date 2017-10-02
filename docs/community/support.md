@@ -29,7 +29,11 @@ If you need an answer right away, check out the [Reactiflux Discord](https://dis
 
 ## Freenode IRC
 
-Many developers also hang out in [#reactjs on Freenode](http://irc.lc/freenode/reactjs).
+Some developers also hang out in [#reactjs on Freenode](http://irc.lc/freenode/reactjs).
+
+>Note:
+>
+>Our IRC channel is called **#reactjs**, *not* **#react**. The **#react** channel belongs to an unrelated [ReactOS](https://reactos.org/) operating system project. Make sure that you post in **#reactjs** if you want to talk about the React JavaScript library.
 
 ## Facebook and Twitter
 
