@@ -174,7 +174,7 @@ var DOMRenderer = ReactFiberReconciler({
       }
       default: {
         const container: any = nodeType === COMMENT_NODE
-          ? rootContainerInstance.parentNode
+          ? rootContainerInstance.parentNode || rootContainerInstance
           : rootContainerInstance;
         const ownNamespace = container.namespaceURI || null;
         type = container.tagName;
