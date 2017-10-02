@@ -11,114 +11,24 @@ redirect_from:
   - "docs/environments.html"
 next: hello-world.html
 ---
-<style>
-  .tab-hidden {
-    display: none;
-  }
-</style>
 
 React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
 
-<div class="toggler">
-  <style>
-    .toggler li {
-       display: inline-block;
-       position: relative;
-       top: 1px;
-       padding: 10px;
-       margin: 0px 2px 0px 2px;
-       border-bottom-color: transparent;
-       border-radius: 3px 3px 0px 0px;
-       color: #373940;
-       background-color: transparent;
-       font-size: 0.99em;
-       cursor: pointer;
-       opacity: 0.5;
-    }
-    .toggler li:active {
-      opacity: 1;
-    }
-    .toggler li:first-child {
-      margin-left: 0;
-    }
-    .toggler li:last-child {
-      margin-right: 0;
-    }
-    .toggler ul {
-      display: inline-block;
-      list-style-type: none;
-      margin: 0;
-      border-bottom: 1px solid #ececec;
-      cursor: default;
-      margin: 0 -15px;
-      padding: 0 15px;
-    }
-    @media screen and (max-width: 960px) {
-      .toggler li,
-      .toggler li:first-child,
-      .toggler li:last-child {
-        display: block;
-        border-radius: 3px;
-        margin: 2px 0px 2px 0px;
-      }
-    }
-    .display-target-fiddle .toggler .button-fiddle:focus,
-    .display-target-newapp .toggler .button-newapp:focus,
-    .display-target-existingapp .toggler .button-existingapp:focus {
-      opacity: 1;
-    }
-    .display-target-fiddle .toggler .button-fiddle,
-    .display-target-newapp .toggler .button-newapp,
-    .display-target-existingapp .toggler .button-existingapp {
-      opacity: 1;
-      font-weight: 700;
-    }
-    section {
-      display: none;
-    }
-    .display-target-fiddle .fiddle,
-    .display-target-newapp .newapp,
-    .display-target-existingapp .existingapp {
-      display: block;
-    }
-  </style>
-  <script>
-    document.querySelector('.toggler').parentElement.className += ' display-target-fiddle';
-  </script>
-  <span>Which of these options best describes what you want to do?</span>
-  <br />
-  <br />
-   <ul role="tablist" >
-      <li id="fiddle" class="button-fiddle" aria-selected="false" role="tab" tabindex="0" aria-controls="fiddletab"
-          onclick="display('target', 'fiddle')" onkeyup="keyToggle(event, 'fiddle', 'existingapp', 'newapp')">
-        Try React
-      </li>
-      <li id="newapp" class="button-newapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="newapptab"
-          onclick="display('target', 'newapp')" onkeyup="keyToggle(event, 'newapp', 'fiddle', 'existingapp')">
-        Create a New App
-      </li>
-      <li id="existingapp" class="button-existingapp" aria-selected="false" role="tab" tabindex="-1" aria-controls="existingapptab"
-          onclick="display('target', 'existingapp')" onkeyup="keyToggle(event, 'existingapp', 'newapp', 'fiddle')">
-        Add React to an Existing App
-      </li>
-    </ul>
-</div>
+Here are a couple of ways to get started:
 
-<div>
-<section id="fiddletab" role="tabpanel" class="fiddle">
+* [Try React](#trying-out-react)
+* [Create a New App](#creating-a-new-application)
+* [Add React to an Existing App](#adding-react-to-an-existing-application)
 
-### Trying Out React
+## Trying Out React
 
 If you're just interested in playing around with React, you can use CodePen. Try starting from [this Hello World example code](http://codepen.io/gaearon/pen/rrpgNB?editors=0010). You don't need to install anything; you can just modify the code and see if it works.
 
 If you prefer to use your own text editor, you can also <a href="https://raw.githubusercontent.com/facebook/react/master/docs/downloads/single-file-example.html" download="hello.html">download this HTML file</a>, edit it, and open it from the local filesystem in your browser. It does a slow runtime code transformation, so don't use it in production.
 
 If you want to use it for a full application, there are two popular ways to get started with React: using Create React App, or adding it to an existing application.
-</section>
 
-<section id="newapptab" role="tabpanel" class="newapp">
-
-### Creating a New Application
+## Creating a New Application
 
 [Create React App](http://github.com/facebookincubator/create-react-app) is the best way to start building a new React single page application. It sets up your development environment so that you can use the latest JavaScript features, provides a nice developer experience, and optimizes your app for production.
 
@@ -133,11 +43,8 @@ npm start
 Create React App doesn't handle backend logic or databases; it just creates a frontend build pipeline, so you can use it with any backend you want. It uses build tools like Babel and webpack under the hood, but works with zero configuration.
 
 When you're ready to deploy to production, running `npm run build` will create an optimized build of your app in the `build` folder. You can learn more about Create React App [from its README](https://github.com/facebookincubator/create-react-app#create-react-app-) and the [User Guide](https://github.com/facebookincubator/create-react-app/blob/master/packages/react-scripts/template/README.md#table-of-contents).
-</section>
 
-<section id="existingapptab" role="tabpanel" class="existingapp">
-
-### Adding React to an Existing Application
+## Adding React to an Existing Application
 
 You don't need to rewrite your app to start using React.
 
@@ -249,5 +156,3 @@ We also recommend to verify that the CDN you are using sets the `Access-Control-
 ![Access-Control-Allow-Origin: *](../img/docs/cdn-cors-header.png)
 
 This enables a better [error handling experience](/blog/2017/07/26/error-handling-in-react-16.html) in React 16 and later.
-</section>
-</div>
