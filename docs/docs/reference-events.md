@@ -148,6 +148,8 @@ boolean shiftKey
 number which
 ```
 
+React normalizes the `keyCode` into `key` for browsers that don't support `key`.
+
 * * *
 
 ### Focus Events
