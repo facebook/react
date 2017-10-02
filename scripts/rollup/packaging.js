@@ -24,8 +24,6 @@ const facebookWWWSrcDependencies = [
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
-  // TODO: copy this to RN repository and delete from React
-  'src/renderers/native/PooledClass.js',
   'src/renderers/shared/fiber/isomorphic/ReactTypes.js',
   'src/renderers/native/ReactNativeTypes.js',
 ];
