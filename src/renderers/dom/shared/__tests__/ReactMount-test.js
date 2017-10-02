@@ -17,7 +17,6 @@ var React;
 var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
-var WebComponents;
 
 describe('ReactMount', () => {
   beforeEach(() => {
@@ -27,16 +26,6 @@ describe('ReactMount', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-
-    try {
-      if (WebComponents === undefined && typeof jest !== 'undefined') {
-        WebComponents = require('WebComponents');
-      }
-    } catch (e) {
-      // Parse error expected on engines that don't support setters
-      // or otherwise aren't supportable by the polyfill.
-      // Leave WebComponents undefined.
-    }
   });
 
   describe('unmountComponentAtNode', () => {
@@ -200,29 +189,6 @@ describe('ReactMount', () => {
         'Client: "This markup contains an nbsp entity:   client text"',
     );
   });
-
-  if (WebComponents !== undefined) {
-    it('should allow mounting/unmounting to document fragment container', () => {
-      var shadowRoot;
-      var proto = Object.create(HTMLElement.prototype, {
-        createdCallback: {
-          value: function() {
-            shadowRoot = this.createShadowRoot();
-            ReactDOM.render(<div>Hi, from within a WC!</div>, shadowRoot);
-            expect(shadowRoot.firstChild.tagName).toBe('DIV');
-            ReactDOM.render(<span>Hi, from within a WC!</span>, shadowRoot);
-            expect(shadowRoot.firstChild.tagName).toBe('SPAN');
-          },
-        },
-      });
-      proto.unmount = function() {
-        ReactDOM.unmountComponentAtNode(shadowRoot);
-      };
-      document.registerElement('x-foo', {prototype: proto});
-      var element = document.createElement('x-foo');
-      element.unmount();
-    });
-  }
 
   it('should warn if render removes React-rendered children', () => {
     var container = document.createElement('container');
