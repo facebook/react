@@ -115,9 +115,9 @@ module.exports = {
             query: `
               {
                   allMarkdownRemark
-                  (limit: 10, 
-                  filter: {id: {regex: "/_posts/"}}, 
-                  sort: {fields: [fields___date], 
+                  (limit: 10,
+                  filter: {id: {regex: "/_posts/"}},
+                  sort: {fields: [fields___date],
                   order: DESC}) {
                     edges {
                       node {
