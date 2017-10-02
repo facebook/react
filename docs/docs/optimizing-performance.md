@@ -3,6 +3,8 @@ id: optimizing-performance
 title: Optimizing Performance
 permalink: docs/optimizing-performance.html
 redirect_from: "docs/advanced-performance.html"
+prev: uncontrolled-components.html
+next: react-without-es6.html
 ---
 
 Internally, React uses several clever techniques to minimize the number of costly DOM operations required to update the UI. For many applications, using React will lead to a fast user interface without doing much work to specifically optimize for performance. Nevertheless, there are several ways you can speed up your React application.
@@ -74,10 +76,10 @@ For the most efficient Browserify production build, install a few plugins:
 
 ```
 # If you use npm
-npm install --save-dev bundle-collapser envify uglify-js uglifyify 
+npm install --save-dev bundle-collapser envify uglify-js uglifyify
 
 # If you use Yarn
-yarn add --dev bundle-collapser envify uglify-js uglifyify 
+yarn add --dev bundle-collapser envify uglify-js uglifyify
 ```
 
 To create a production build, make sure that you add these transforms **(the order matters)**:
@@ -110,10 +112,10 @@ For the most efficient Rollup production build, install a few plugins:
 
 ```
 # If you use npm
-npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+npm install --save-dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify
 
 # If you use Yarn
-yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify 
+yarn add --dev rollup-plugin-commonjs rollup-plugin-replace rollup-plugin-uglify
 ```
 
 To create a production build, make sure that you add these plugins **(the order matters)**:

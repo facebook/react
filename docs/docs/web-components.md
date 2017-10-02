@@ -2,6 +2,8 @@
 id: web-components
 title: Web Components
 permalink: docs/web-components.html
+prev: context.html
+next: higher-order-components.html
 redirect_from: "docs/webcomponents.html"
 ---
 

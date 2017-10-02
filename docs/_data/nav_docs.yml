@@ -32,6 +32,8 @@
       title: JSX In Depth
     - id: typechecking-with-proptypes
       title: Typechecking With PropTypes
+    - id: static-type-checking
+      title: Static Type Checking
     - id: refs-and-the-dom
       title: Refs and the DOM
     - id: uncontrolled-components
