@@ -100,10 +100,6 @@ browserify ./index.js \
 >The package name is `uglify-js`, but the binary it provides is called `uglifyjs`.<br>
 >This is not a typo.
 
->**Note:**
->
->[`bundle-collapser`](https://github.com/substack/bundle-collapser) may further reduce the size of your bundle but is currently removed as a recommendation due to potential resolution failures when file contents are not unique. See: [react#11049](https://github.com/facebook/react/issues/11049).
-
 Remember that you only need to do this for production builds. You shouldn't apply these plugins in development because they will hide useful React warnings, and make the builds much slower.
 
 ### Rollup
