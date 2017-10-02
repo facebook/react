@@ -75,6 +75,9 @@ describe('ReactIncrementalTriangle', () => {
           this.leafIndex = leafTriangles.length;
           leafTriangles.push(this);
         }
+        this.didPrepareMount = false;
+        this.didDestroyMount = false;
+        this.didPrepareUpdate = false;
         this.state = {isActive: false};
       }
       activate() {
@@ -88,6 +91,42 @@ describe('ReactIncrementalTriangle', () => {
           throw new Error('Cannot deactivate non-leaf component');
         }
         this.setState({isActive: false});
+      }
+      unstable_prepareMount() {
+        this.didPrepareMount = true;
+        this.props.app.pendingMountCount += 1;
+      }
+      unstable_abortMount() {
+        if (!this.didPrepareMount) {
+          throw new Error('Did not prepare mount.');
+        }
+        if (this.didDestroyMount) {
+          throw new Error('Destroyed mount multiple times.');
+        }
+        this.didDestroyMount = true;
+        this.props.app.pendingMountCount -= 1;
+      }
+      unstable_prepareUpdate() {
+        this.didPrepareUpdate = true;
+        this.props.app.pendingUpdateCount += 1;
+      }
+      unstable_abortUpdate() {
+        if (!this.didPrepareUpdate) {
+          throw new Error('Did not prepare update.');
+        }
+        if (this.didDestroyUpdate) {
+          throw new Error('Destroyed update multiple times.');
+        }
+        this.props.app.pendingUpdateCount -= 1;
+      }
+      componentDidMount() {
+        if (this.didDestroyMount) {
+          throw new Error('Both destroyed and mounted.');
+        }
+        this.props.app.pendingMountCount -= 1;
+      }
+      componentDidUpdate() {
+        this.props.app.pendingUpdateCount -= 1;
       }
       shouldComponentUpdate(nextProps, nextState) {
         return (
@@ -107,9 +146,24 @@ describe('ReactIncrementalTriangle', () => {
           return <span prop={counter} />;
         }
         return [
-          <Triangle key={1} counter={counter} depth={depth - 1} />,
-          <Triangle key={2} counter={counter} depth={depth - 1} />,
-          <Triangle key={3} counter={counter} depth={depth - 1} />,
+          <Triangle
+            key={1}
+            app={this.props.app}
+            counter={counter}
+            depth={depth - 1}
+          />,
+          <Triangle
+            key={2}
+            app={this.props.app}
+            counter={counter}
+            depth={depth - 1}
+          />,
+          <Triangle
+            key={3}
+            app={this.props.app}
+            counter={counter}
+            depth={depth - 1}
+          />,
         ];
       }
     }
@@ -117,6 +171,8 @@ describe('ReactIncrementalTriangle', () => {
     let appInstance;
     class App extends React.Component {
       state = {counter: 0};
+      pendingMountCount = 0;
+      pendingUpdateCount = 0;
       interrupt() {
         // Triggers a restart from the top.
         this.forceUpdate();
@@ -128,7 +184,7 @@ describe('ReactIncrementalTriangle', () => {
       }
       render() {
         appInstance = this;
-        return <Triangle counter={this.state.counter} depth={3} />;
+        return <Triangle app={this} counter={this.state.counter} depth={3} />;
       }
     }
 
@@ -232,6 +288,19 @@ describe('ReactIncrementalTriangle', () => {
       // Flush remaining work
       ReactNoop.flush();
       assertConsistentTree(activeTriangle, expectedCounterAtEnd);
+
+      ReactNoop.render(null);
+      ReactNoop.flush();
+      if (app.pendingMountCount !== 0) {
+        throw new Error(
+          'Memory leak! Some pendings mounts were not cleaned up.',
+        );
+      }
+      if (app.pendingUpdateCount !== 0) {
+        throw new Error(
+          'Memory leak! Some pendings updates were not cleaned up.',
+        );
+      }
     }
 
     return {simulate, totalChildren, totalTriangles};
@@ -245,6 +314,7 @@ describe('ReactIncrementalTriangle', () => {
     simulate(step(1), flush(3), toggle(0), step(0));
     simulate(step(1), flush(3), toggle(18), step(0));
     simulate(interrupt(), step(6), step(7), toggle(6), interrupt());
+    simulate(step(4), toggle(5), flush(15), interrupt());
   });
 
   it('fuzz tester', () => {

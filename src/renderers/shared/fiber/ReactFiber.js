@@ -20,7 +20,6 @@ import type {
 import type {TypeOfWork} from 'ReactTypeOfWork';
 import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
@@ -36,13 +35,13 @@ var {
   Fragment,
 } = require('ReactTypeOfWork');
 
-var {NoWork} = require('ReactPriorityLevel');
-
 var {Done} = require('ReactFiberExpirationTime');
 
 var {NoContext} = require('ReactTypeOfInternalContext');
 
 var {NoEffect} = require('ReactTypeOfSideEffect');
+
+var {dropTree} = require('ReactFiberGarbageCollection');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -272,6 +271,17 @@ exports.createWorkInProgress = function(
     workInProgress.nextEffect = null;
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
+    if (
+      workInProgress.child !== null &&
+      (current === null || current.child !== workInProgress.child)
+    ) {
+      // We're dropping a work-in-progress child. If it contains completed
+      // work, we need to garbage collect it.
+      // TODO: We don't have to do this work immediately. Schedule a callback
+      // to do it later. Requires some refactoring so we have access to
+      // the scheduler.
+      dropTree(workInProgress.child);
+    }
   }
 
   workInProgress.expirationTime = expirationTime;
@@ -451,11 +461,4 @@ exports.createFiberFromPortal = function(
     implementation: portal.implementation,
   };
   return fiber;
-};
-
-exports.largerPriority = function(
-  p1: PriorityLevel,
-  p2: PriorityLevel,
-): PriorityLevel {
-  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
 };

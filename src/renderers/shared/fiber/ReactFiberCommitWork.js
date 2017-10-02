@@ -29,7 +29,13 @@ var {
   clearCaughtError,
 } = require('ReactErrorUtils');
 
-var {Placement, Update, ContentReset} = require('ReactTypeOfSideEffect');
+var {
+  PreparedWork,
+  NeedsCleanUp,
+  Placement,
+  Update,
+  ContentReset,
+} = require('ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -67,6 +73,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
+    instance.props = current.memoizedProps;
+    instance.state = current.memoizedState;
     if (__DEV__) {
       invokeGuardedCallback(
         null,
@@ -81,8 +89,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     } else {
       try {
-        instance.props = current.memoizedProps;
-        instance.state = current.memoizedState;
         instance.componentWillUnmount();
       } catch (unmountError) {
         captureError(current, unmountError);
@@ -510,6 +516,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case ClassComponent: {
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
+          // Clear the PreparedWork tag. This is necessary to avoid a "previous
+          // current" problem, where a committed fiber is confused for a work-
+          // in-progress. If we didn't clear this flag, an abort lifecycle
+          // could be mistakenly fired.
+          // TODO: We should fix the "previous current" problem for real.
+          finishedWork.effectTag &= ~(PreparedWork | NeedsCleanUp);
           if (current === null) {
             if (__DEV__) {
               startPhaseTimer(finishedWork, 'componentDidMount');

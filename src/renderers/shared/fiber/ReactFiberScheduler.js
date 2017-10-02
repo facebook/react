@@ -75,7 +75,7 @@ var {
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
 
 var {
-  PerformedWork,
+  InsigificantBits,
   Placement,
   Update,
   PlacementAndUpdate,
@@ -459,7 +459,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // possible bitmap value, we remove the secondary effects from the
       // effect tag and switch on that value.
       let primaryEffectTag =
-        effectTag & ~(Callback | Err | ContentReset | Ref | PerformedWork);
+        effectTag & ~(Callback | Err | ContentReset | Ref | InsigificantBits);
       switch (primaryEffectTag) {
         case Placement: {
           commitPlacement(nextEffect);
@@ -572,7 +572,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     ReactCurrentOwner.current = null;
 
     let firstEffect;
-    if (finishedWork.effectTag > PerformedWork) {
+    if (finishedWork.effectTag > InsigificantBits) {
       // A fiber's effect list consists only of its children, not itself. So if
       // the root has an effect, we need to add it to the end of the list. The
       // resulting list is the set that would belong to the root's parent, if
@@ -787,9 +787,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // reusing children we'll schedule this effect onto itself since we're
         // at the end.
         const effectTag = workInProgress.effectTag;
-        // Skip both NoWork and PerformedWork tags when creating the effect list.
-        // PerformedWork effect is read by React DevTools but shouldn't be committed.
-        if (effectTag > PerformedWork) {
+        // Skip insigificant effect fields
+        if (effectTag > InsigificantBits) {
           if (returnFiber.lastEffect !== null) {
             returnFiber.lastEffect.nextEffect = workInProgress;
           } else {

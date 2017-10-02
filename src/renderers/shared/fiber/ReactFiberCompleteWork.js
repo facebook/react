@@ -26,6 +26,7 @@ var {
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactFiberExpirationTime = require('ReactFiberExpirationTime');
+var ReactFiberGarbageCollection = require('ReactFiberGarbageCollection');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -39,8 +40,15 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
+var {
+  Placement,
+  Ref,
+  Update,
+  PerformedWork,
+  PreparedWork,
+} = ReactTypeOfSideEffect;
 var {Never} = ReactFiberExpirationTime;
+var {markForCleanUp} = ReactFiberGarbageCollection;
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -198,7 +206,33 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case FunctionalComponent:
         return null;
       case ClassComponent: {
-        // We are leaving this subtree, so pop context if any.
+        if (
+          workInProgress.effectTag & PerformedWork &&
+          !(workInProgress.effectTag & PreparedWork)
+        ) {
+          // This fiber performed work. Call prepare lifecycles. Don't prepare
+          // the same work more than once.
+          const instance = workInProgress.stateNode;
+          if (current === null) {
+            // Prepare for mount.
+            // Mark for clean-up first, so that if the lifecycle throws, we
+            // still clean it up.
+            if (typeof instance.unstable_abortMount === 'function') {
+              markForCleanUp(workInProgress);
+            }
+            if (typeof instance.unstable_prepareMount === 'function') {
+              instance.unstable_prepareMount();
+            }
+          } else {
+            // Prepare for update.
+            if (typeof instance.unstable_abortUpdate === 'function') {
+              markForCleanUp(workInProgress);
+            }
+            if (typeof instance.unstable_prepareUpdate === 'function') {
+              instance.unstable_prepareUpdate();
+            }
+          }
+        }
         popContextProvider(workInProgress);
         return null;
       }
