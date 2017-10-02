@@ -132,7 +132,7 @@ the cancel button (preventing the keyboard user from accidentally activating the
 initially triggered the modal.
 
 >Note:
-
+>
 >While this is a very important accessibility feature, it is also a technique that should be used judiciously. Use it to repair the keyboard focus flow when it is disturbed, not to try and anticipate how
 >users want to use applications.
 
