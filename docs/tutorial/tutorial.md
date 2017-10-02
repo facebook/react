@@ -905,7 +905,7 @@ Let's show the previous moves made in the game so far. We learned earlier that R
         'Game start';
       return (
         <li>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>
       );
     });
@@ -992,7 +992,7 @@ For our move list, we already have a unique ID for each step: the number of the 
         'Game start';
       return (
         <li key={move}>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>
       );
     });
