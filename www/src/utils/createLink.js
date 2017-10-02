@@ -32,7 +32,7 @@ const createLinkBlog = ({item, location, section}) => {
 const createLinkCommunity = ({item, location, section}) => {
   if (item.href) {
     return (
-      <a css={[linkCss]} href={item.href}>
+      <a css={[linkCss]} href={item.href} target="_blank" rel="noopener">
         {item.title}
         <ExternalLinkSvg
           cssProps={{
@@ -44,13 +44,12 @@ const createLinkCommunity = ({item, location, section}) => {
         />
       </a>
     );
-  } else {
-    return createLinkDocs({
-      item,
-      location,
-      section,
-    });
   }
+  return createLinkDocs({
+    item,
+    location,
+    section,
+  });
 };
 
 const createLinkDocs = ({item, location, section}) => {
