@@ -174,7 +174,7 @@ var DOMRenderer = ReactFiberReconciler({
       }
       case COMMENT_NODE: {
         invariant(
-          rootContainerInstance.parentNode != null, // match null & undefined
+          rootContainerInstance.parentNode !== null,
           'The commentNode which you are rendering into must have a parent.',
         );
         const container: any =
