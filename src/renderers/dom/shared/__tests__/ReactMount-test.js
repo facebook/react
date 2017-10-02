@@ -358,11 +358,11 @@ describe('ReactMount', () => {
     let mountPoint;
 
     beforeEach(() => {
-      mountPoint = document.createComment('react-mount-point-unstable');
+      mountPoint = document.createComment(' react-mount-point-unstable ');
       invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
     });
 
-    fit('renders at a comment node', () => {
+    it('throws an informative error', () => {
       function Char(props) {
         return props.children;
       }
@@ -372,7 +372,10 @@ describe('ReactMount', () => {
 
       expect(() => {
         ReactDOM.render(list('aeiou'), mountPoint);
-      }).not.toThrow();
+      })
+      .toThrowError(
+        /The commentNode which you are rendering into must have a parent/
+      );
     });
   });
 });
