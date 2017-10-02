@@ -372,9 +372,8 @@ describe('ReactMount', () => {
 
       expect(() => {
         ReactDOM.render(list('aeiou'), mountPoint);
-      })
-      .toThrowError(
-        /The commentNode which you are rendering into must have a parent/
+      }).toThrowError(
+        /The commentNode which you are rendering into must have a parent/,
       );
     });
   });
