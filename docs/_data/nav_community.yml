@@ -12,3 +12,6 @@
     - id: examples
       title: Examples
       href: https://github.com/facebook/react/wiki/Examples
+    - id: catalog-of-components
+      title: Catalog of Components
+      href: http://devarchy.com/react-components
