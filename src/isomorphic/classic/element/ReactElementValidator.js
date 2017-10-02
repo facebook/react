@@ -61,7 +61,7 @@ var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 
 function getDeclarationErrorAddendum() {
-  if (ReactCurrentOwner.current) {
+  if (ReactCurrentOwner.current !== null) {
     var name = getComponentName(ReactCurrentOwner.current);
     if (name) {
       return '\n\nCheck the render method of `' + name + '`.';

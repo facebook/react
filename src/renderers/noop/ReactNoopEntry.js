@@ -289,7 +289,7 @@ var ReactNoop = {
       return component;
     }
     const inst = ReactInstanceMap.get(component);
-    return inst ? NoopRenderer.findHostInstance(inst) : null;
+    return inst !== undefined ? NoopRenderer.findHostInstance(inst) : null;
   },
 
   flushDeferredPri(timeout: number = Infinity): Array<mixed> {

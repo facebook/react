@@ -292,7 +292,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       container: OpaqueRoot,
     ): React$Component<any, any> | PI | null {
       const containerFiber = container.current;
-      if (!containerFiber.child) {
+      if (containerFiber.child === null) {
         return null;
       }
       switch (containerFiber.child.tag) {

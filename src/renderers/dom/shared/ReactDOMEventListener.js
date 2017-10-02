@@ -85,12 +85,12 @@ function handleTopLevelImpl(bookKeeping) {
   // inconsistencies with ReactMount's node cache. See #1105.
   var ancestor = targetInst;
   do {
-    if (!ancestor) {
+    if (ancestor === null) {
       bookKeeping.ancestors.push(ancestor);
       break;
     }
     var root = findRootContainerNode(ancestor);
-    if (!root) {
+    if (root === null) {
       break;
     }
     bookKeeping.ancestors.push(ancestor);

@@ -293,7 +293,7 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
     }
     const parent = node.return;
     invariant(
-      parent,
+      parent !== null,
       'Found unexpected detached subtree parent. ' +
         'This error is likely caused by a bug in React. Please file an issue.',
     );

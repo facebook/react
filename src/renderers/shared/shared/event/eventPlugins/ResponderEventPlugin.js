@@ -353,7 +353,7 @@ function setResponderAndExtractTransfer(
     shouldSetEvent.constructor.release(shouldSetEvent);
   }
 
-  if (!wantsResponderInst || wantsResponderInst === responderInst) {
+  if (wantsResponderInst === null || wantsResponderInst === responderInst) {
     return null;
   }
   var extracted;

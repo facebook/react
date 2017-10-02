@@ -266,7 +266,7 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var targetNode = targetInst
+    var targetNode = targetInst !== null
       ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
       : window;
 
@@ -286,7 +286,7 @@ var ChangeEventPlugin = {
 
     if (getTargetInstFunc) {
       var inst = getTargetInstFunc(topLevelType, targetInst);
-      if (inst) {
+      if (inst != null) {
         var event = createAndAccumulateChangeEvent(
           inst,
           nativeEvent,

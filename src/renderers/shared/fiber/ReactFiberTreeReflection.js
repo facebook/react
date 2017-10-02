@@ -38,7 +38,7 @@ var UNMOUNTED = 3;
 
 function isFiberMountedImpl(fiber: Fiber): number {
   let node = fiber;
-  if (!fiber.alternate) {
+  if (fiber.alternate === null) {
     // If there is no alternate, this might be a new tree that isn't inserted
     // yet. If it is, then it will have a pending insertion effect on it.
     if ((node.effectTag & Placement) !== NoEffect) {
@@ -87,8 +87,8 @@ exports.isMounted = function(component: React$Component<any, any>): boolean {
     }
   }
 
-  var fiber: ?Fiber = ReactInstanceMap.get(component);
-  if (!fiber) {
+  var fiber: Fiber | void = ReactInstanceMap.get(component);
+  if (fiber === undefined) {
     return false;
   }
   return isFiberMountedImpl(fiber) === MOUNTED;
@@ -103,7 +103,7 @@ function assertIsMounted(fiber) {
 
 function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   let alternate = fiber.alternate;
-  if (!alternate) {
+  if (alternate === null) {
     // If there is no alternate, then we only need to check if it is mounted.
     const state = isFiberMountedImpl(fiber);
     invariant(
@@ -122,8 +122,8 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   let b = alternate;
   while (true) {
     let parentA = a.return;
-    let parentB = parentA ? parentA.alternate : null;
-    if (!parentA || !parentB) {
+    let parentB = parentA !== null ? parentA.alternate : null;
+    if (parentA === null || parentB === null) {
       // We're at the root.
       break;
     }
@@ -133,7 +133,7 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
     // priority: the bailed out fiber's child reuses the current child.
     if (parentA.child === parentB.child) {
       let child = parentA.child;
-      while (child) {
+      while (child !== null) {
         if (child === a) {
           // We've determined that A is the current branch.
           assertIsMounted(parentA);
@@ -166,7 +166,7 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
       // Search parent A's child set
       let didFindChild = false;
       let child = parentA.child;
-      while (child) {
+      while (child !== null) {
         if (child === a) {
           didFindChild = true;
           a = parentA;
@@ -184,7 +184,7 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
       if (!didFindChild) {
         // Search parent B's child set
         child = parentB.child;
-        while (child) {
+        while (child !== null) {
           if (child === a) {
             didFindChild = true;
             a = parentB;
@@ -230,7 +230,7 @@ exports.findCurrentFiberUsingSlowPath = findCurrentFiberUsingSlowPath;
 
 exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
   const currentParent = findCurrentFiberUsingSlowPath(parent);
-  if (!currentParent) {
+  if (currentParent === null) {
     return null;
   }
 
@@ -239,7 +239,7 @@ exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
   while (true) {
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
-    } else if (node.child) {
+    } else if (node.child !== null) {
       node.child.return = node;
       node = node.child;
       continue;
@@ -247,8 +247,8 @@ exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
     if (node === currentParent) {
       return null;
     }
-    while (!node.sibling) {
-      if (!node.return || node.return === currentParent) {
+    while (node.sibling === null) {
+      if (node.return === null || node.return === currentParent) {
         return null;
       }
       node = node.return;
@@ -265,7 +265,7 @@ exports.findCurrentHostFiberWithNoPortals = function(
   parent: Fiber,
 ): Fiber | null {
   const currentParent = findCurrentFiberUsingSlowPath(parent);
-  if (!currentParent) {
+  if (currentParent === null) {
     return null;
   }
 
@@ -274,7 +274,7 @@ exports.findCurrentHostFiberWithNoPortals = function(
   while (true) {
     if (node.tag === HostComponent || node.tag === HostText) {
       return node;
-    } else if (node.child && node.tag !== HostPortal) {
+    } else if (node.child !== null && node.tag !== HostPortal) {
       node.child.return = node;
       node = node.child;
       continue;
@@ -282,8 +282,8 @@ exports.findCurrentHostFiberWithNoPortals = function(
     if (node === currentParent) {
       return null;
     }
-    while (!node.sibling) {
-      if (!node.return || node.return === currentParent) {
+    while (node.sibling === null) {
+      if (node.return === null || node.return === currentParent) {
         return null;
       }
       node = node.return;

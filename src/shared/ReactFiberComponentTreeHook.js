@@ -32,7 +32,7 @@ function describeFiber(fiber: Fiber): string {
       var source = fiber._debugSource;
       var name = getComponentName(fiber);
       var ownerName = null;
-      if (owner) {
+      if (owner != null) {
         ownerName = getComponentName(owner);
       }
       return describeComponentFrame(name, source, ownerName);

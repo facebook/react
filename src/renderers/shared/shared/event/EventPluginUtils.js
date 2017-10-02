@@ -65,12 +65,12 @@ if (__DEV__) {
     var listenersIsArr = Array.isArray(dispatchListeners);
     var listenersLen = listenersIsArr
       ? dispatchListeners.length
-      : dispatchListeners ? 1 : 0;
+      : dispatchListeners != null ? 1 : 0;
 
     var instancesIsArr = Array.isArray(dispatchInstances);
     var instancesLen = instancesIsArr
       ? dispatchInstances.length
-      : dispatchInstances ? 1 : 0;
+      : dispatchInstances != null ? 1 : 0;
 
     warning(
       instancesIsArr === listenersIsArr && instancesLen === listenersLen,
@@ -150,7 +150,7 @@ function executeDispatchesInOrderStopAtTrueImpl(event) {
         return dispatchInstances[i];
       }
     }
-  } else if (dispatchListeners) {
+  } else if (dispatchListeners != null) {
     if (dispatchListeners(event, dispatchInstances)) {
       return dispatchInstances;
     }

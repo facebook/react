@@ -587,7 +587,7 @@ function renderSubtreeIntoContainer(
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
     const hasNonRootReactChild = !!(rootEl &&
-      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+      ReactDOMComponentTree.getInstanceFromNode(rootEl) !== null);
 
     warning(
       !hasNonRootReactChild || isRootRenderedBySomeReact,
@@ -723,7 +723,7 @@ var ReactDOMFiber = {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
         const renderedByDifferentReact =
-          rootEl && !ReactDOMComponentTree.getInstanceFromNode(rootEl);
+          rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl) === null;
         warning(
           !renderedByDifferentReact,
           "unmountComponentAtNode(): The node you're attempting to unmount " +
@@ -744,7 +744,7 @@ var ReactDOMFiber = {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
         const hasNonRootReactChild = !!(rootEl &&
-          ReactDOMComponentTree.getInstanceFromNode(rootEl));
+          ReactDOMComponentTree.getInstanceFromNode(rootEl) !== null);
 
         // Check if the container itself is a React root node.
         const isContainerReactRoot =

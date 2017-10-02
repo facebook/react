@@ -73,13 +73,10 @@ function findAllInRenderedStackTreeInternal(inst, test) {
 }
 
 function findAllInRenderedFiberTreeInternal(fiber, test) {
-  if (!fiber) {
-    return [];
-  }
   var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
     fiber,
   );
-  if (!currentParent) {
+  if (currentParent === null) {
     return [];
   }
   let node = currentParent;
@@ -96,7 +93,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
         ret.push(publicInst);
       }
     }
-    if (node.child) {
+    if (node.child !== null) {
       node.child.return = node;
       node = node.child;
       continue;
@@ -104,8 +101,8 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
     if (node === currentParent) {
       return ret;
     }
-    while (!node.sibling) {
-      if (!node.return || node.return === currentParent) {
+    while (node.sibling === null) {
+      if (node.return === null || node.return === currentParent) {
         return ret;
       }
       node = node.return;
