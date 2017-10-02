@@ -10773,6 +10773,31 @@
 | `tabIndex=(null)`| (initial)| `<number: -1>` |
 | `tabIndex=(undefined)`| (initial)| `<number: -1>` |
 
+## `tabIndex` (on `<svg>` inside `<div>`)
+| Test Case | Flags | Result |
+| --- | --- | --- |
+| `tabIndex=(string)`| (initial)| `<number: -1>` |
+| `tabIndex=(empty string)`| (initial)| `<number: -1>` |
+| `tabIndex=(array with string)`| (initial)| `<number: -1>` |
+| `tabIndex=(empty array)`| (initial)| `<number: -1>` |
+| `tabIndex=(object)`| (initial)| `<number: -1>` |
+| `tabIndex=(numeric string)`| (initial, ssr mismatch)| `<number: -1>` |
+| `tabIndex=(-1)`| (initial)| `<number: -1>` |
+| `tabIndex=(0)`| (initial, ssr mismatch)| `<number: -1>` |
+| `tabIndex=(integer)`| (initial, ssr mismatch)| `<number: -1>` |
+| `tabIndex=(NaN)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(float)`| (initial, ssr mismatch)| `<number: -1>` |
+| `tabIndex=(true)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(false)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(string 'true')`| (initial)| `<number: -1>` |
+| `tabIndex=(string 'false')`| (initial)| `<number: -1>` |
+| `tabIndex=(string 'on')`| (initial)| `<number: -1>` |
+| `tabIndex=(string 'off')`| (initial)| `<number: -1>` |
+| `tabIndex=(symbol)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(function)`| (initial, warning)| `<number: -1>` |
+| `tabIndex=(null)`| (initial)| `<number: -1>` |
+| `tabIndex=(undefined)`| (initial)| `<number: -1>` |
+
 ## `tableValues` (on `<feFuncA>` inside `<svg>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
