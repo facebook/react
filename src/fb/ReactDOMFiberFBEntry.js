@@ -19,8 +19,6 @@ Object.assign(
     ReactFiberTreeReflection: require('ReactFiberTreeReflection'),
     ReactDOMComponentTree: require('ReactDOMComponentTree'),
     ReactInstanceMap: require('ReactInstanceMap'),
-    // This is used for ajaxify on www:
-    DOMProperty: require('DOMProperty'),
     // These are dependencies of TapEventPlugin:
     EventPluginUtils: require('EventPluginUtils'),
     EventPropagators: require('EventPropagators'),
