@@ -11,29 +11,21 @@
 
 var ReactControlledComponent = require('ReactControlledComponent');
 
-// Used as a way to call batchedUpdates when we don't know if we're in a Fiber
-// or Stack context. Such as when we're dispatching events or if third party
+// Used as a way to call batchedUpdates when we don't have a reference to
+// the renderer. Such as when we're dispatching events or if third party
 // libraries need to call batchedUpdates. Eventually, this API will go away when
 // everything is batched by default. We'll then have a similar API to opt-out of
 // scheduled work and instead do synchronous work.
 
 // Defaults
-var stackBatchedUpdates = function(fn, a, b, c, d, e) {
-  return fn(a, b, c, d, e);
-};
 var fiberBatchedUpdates = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
 
-function performFiberBatchedUpdates(fn, bookkeeping) {
+function batchedUpdates(fn, bookkeeping) {
   // If we have Fiber loaded, we need to wrap this in a batching call so that
   // Fiber can apply its default priority for this call.
   return fiberBatchedUpdates(fn, bookkeeping);
-}
-function batchedUpdates(fn, bookkeeping) {
-  // We first perform work with the stack batching strategy, by passing our
-  // indirection to it.
-  return stackBatchedUpdates(performFiberBatchedUpdates, fn, bookkeeping);
 }
 
 var isNestingBatched = false;
@@ -58,9 +50,6 @@ function batchedUpdatesWithControlledComponents(fn, bookkeeping) {
 }
 
 var ReactGenericBatchingInjection = {
-  injectStackBatchedUpdates: function(_batchedUpdates) {
-    stackBatchedUpdates = _batchedUpdates;
-  },
   injectFiberBatchedUpdates: function(_batchedUpdates) {
     fiberBatchedUpdates = _batchedUpdates;
   },

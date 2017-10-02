@@ -34,7 +34,7 @@ import type {
   DispatchConfig,
   ReactSyntheticEvent,
 } from 'ReactSyntheticEventType';
-import type {ReactInstance} from 'ReactInstanceType';
+import type {Fiber} from 'ReactFiber';
 import type {EventTypes, PluginModule} from 'PluginModuleType';
 
 /**
@@ -179,7 +179,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
 
   extractEvents: function(
     topLevelType: TopLevelTypes,
-    targetInst: ReactInstance,
+    targetInst: Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {

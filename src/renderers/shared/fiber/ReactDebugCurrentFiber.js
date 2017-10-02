@@ -29,8 +29,9 @@ function getCurrentFiberOwnerName(): string | null {
     if (fiber === null) {
       return null;
     }
-    if (fiber._debugOwner != null) {
-      return getComponentName(fiber._debugOwner);
+    const owner = fiber._debugOwner;
+    if (owner !== null && typeof owner !== 'undefined') {
+      return getComponentName(owner);
     }
   }
   return null;

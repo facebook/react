@@ -9,6 +9,8 @@
 
 'use strict';
 
+var {HostComponent} = require('ReactTypeOfWork');
+
 var EventPluginHub;
 var ResponderEventPlugin;
 
@@ -318,35 +320,37 @@ var PARENT_HOST_NODE = {};
 var CHILD_HOST_NODE = {};
 var CHILD_HOST_NODE2 = {};
 
+// These intentionally look like Fibers. ReactTreeTraversal depends on their field names.
+// TODO: we could test this with regular DOM nodes (and real fibers) instead.
 var GRANDPARENT_INST = {
-  _hostParent: null,
-  _rootNodeID: '1',
-  _hostNode: GRANDPARENT_HOST_NODE,
-  _currentElement: {props: {}},
+  return: null,
+  tag: HostComponent,
+  stateNode: GRANDPARENT_HOST_NODE,
+  memoizedProps: {},
 };
 var PARENT_INST = {
-  _hostParent: GRANDPARENT_INST,
-  _rootNodeID: '2',
-  _hostNode: PARENT_HOST_NODE,
-  _currentElement: {props: {}},
+  return: GRANDPARENT_INST,
+  tag: HostComponent,
+  stateNode: PARENT_HOST_NODE,
+  memoizedProps: {},
 };
 var CHILD_INST = {
-  _hostParent: PARENT_INST,
-  _rootNodeID: '3',
-  _hostNode: CHILD_HOST_NODE,
-  _currentElement: {props: {}},
+  return: PARENT_INST,
+  tag: HostComponent,
+  stateNode: CHILD_HOST_NODE,
+  memoizedProps: {},
 };
 var CHILD_INST2 = {
-  _hostParent: PARENT_INST,
-  _rootNodeID: '4',
-  _hostNode: CHILD_HOST_NODE2,
-  _currentElement: {props: {}},
+  return: PARENT_INST,
+  tag: HostComponent,
+  stateNode: CHILD_HOST_NODE2,
+  memoizedProps: {},
 };
 
-GRANDPARENT_HOST_NODE._reactInstance = GRANDPARENT_INST;
-PARENT_HOST_NODE._reactInstance = PARENT_INST;
-CHILD_HOST_NODE._reactInstance = CHILD_INST;
-CHILD_HOST_NODE2._reactInstance = CHILD_INST2;
+GRANDPARENT_HOST_NODE.testInstance = GRANDPARENT_INST;
+PARENT_HOST_NODE.testInstance = PARENT_INST;
+CHILD_HOST_NODE.testInstance = CHILD_INST;
+CHILD_HOST_NODE2.testInstance = CHILD_INST2;
 
 var three = {
   grandParent: GRANDPARENT_HOST_NODE,
@@ -361,19 +365,23 @@ var siblings = {
 };
 
 function getInstanceFromNode(node) {
-  return node._reactInstance;
+  return node.testInstance;
 }
 
 function getNodeFromInstance(inst) {
-  return inst._hostNode;
+  return inst.stateNode;
 }
 
-function putListener(node, registrationName, handler) {
-  node._currentElement.props[registrationName] = handler;
+function getFiberCurrentPropsFromNode(node) {
+  return node.testInstance.memoizedProps;
 }
 
-function deleteAllListeners(node) {
-  node._currentElement.props = {};
+function putListener(instance, registrationName, handler) {
+  instance.memoizedProps[registrationName] = handler;
+}
+
+function deleteAllListeners(instance) {
+  instance.memoizedProps = {};
 }
 
 describe('ResponderEventPlugin', () => {
@@ -398,6 +406,7 @@ describe('ResponderEventPlugin', () => {
     injectComponentTree({
       getInstanceFromNode,
       getNodeFromInstance,
+      getFiberCurrentPropsFromNode,
     });
   });
 

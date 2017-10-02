@@ -13,7 +13,6 @@
 import type {ReactElement} from 'ReactElementType';
 import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
-import type {ReactInstance} from 'ReactInstanceType';
 import type {PriorityLevel} from 'ReactPriorityLevel';
 
 var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
@@ -120,20 +119,15 @@ function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
   if (mixedRef !== null && typeof mixedRef !== 'function') {
     if (element._owner) {
-      const owner: ?(Fiber | ReactInstance) = (element._owner: any);
+      const owner: ?Fiber = (element._owner: any);
       let inst;
       if (owner) {
-        if (typeof owner.tag === 'number') {
-          const ownerFiber = ((owner: any): Fiber);
-          invariant(
-            ownerFiber.tag === ClassComponent,
-            'Stateless function components cannot have refs.',
-          );
-          inst = ownerFiber.stateNode;
-        } else {
-          // Stack
-          inst = (owner: any).getPublicInstance();
-        }
+        const ownerFiber = ((owner: any): Fiber);
+        invariant(
+          ownerFiber.tag === ClassComponent,
+          'Stateless function components cannot have refs.',
+        );
+        inst = ownerFiber.stateNode;
       }
       invariant(
         inst,

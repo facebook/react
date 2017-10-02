@@ -12,7 +12,7 @@
 
 'use strict';
 
-import type {ReactInstance} from 'ReactInstanceType';
+import type {Fiber} from 'ReactFiber';
 
 export type DispatchConfig = {
   dependencies: Array<string>,
@@ -27,7 +27,7 @@ export type ReactSyntheticEvent = {
   dispatchConfig: DispatchConfig,
   getPooled: (
     dispatchConfig: DispatchConfig,
-    targetInst: ReactInstance,
+    targetInst: Fiber,
     nativeTarget: Event,
     nativeEventTarget: EventTarget,
   ) => ReactSyntheticEvent,

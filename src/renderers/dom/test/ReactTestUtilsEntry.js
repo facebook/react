@@ -43,35 +43,6 @@ function Event(suffix) {}
  * @class ReactTestUtils
  */
 
-function findAllInRenderedStackTreeInternal(inst, test) {
-  if (!inst || !inst.getPublicInstance) {
-    return [];
-  }
-  var publicInst = inst.getPublicInstance();
-  var ret = test(publicInst) ? [publicInst] : [];
-  var currentElement = inst._currentElement;
-  if (ReactTestUtils.isDOMComponent(publicInst)) {
-    var renderedChildren = inst._renderedChildren;
-    var key;
-    for (key in renderedChildren) {
-      if (!renderedChildren.hasOwnProperty(key)) {
-        continue;
-      }
-      ret = ret.concat(
-        findAllInRenderedStackTreeInternal(renderedChildren[key], test),
-      );
-    }
-  } else if (
-    React.isValidElement(currentElement) &&
-    typeof currentElement.type === 'function'
-  ) {
-    ret = ret.concat(
-      findAllInRenderedStackTreeInternal(inst._renderedComponent, test),
-    );
-  }
-  return ret;
-}
-
 function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
@@ -169,10 +140,7 @@ var ReactTestUtils = {
       return false;
     }
     var internalInstance = ReactInstanceMap.get(inst);
-    var constructor = typeof internalInstance.tag === 'number'
-      ? internalInstance.type // Fiber reconciler
-      : internalInstance._currentElement.type; // Stack reconciler
-
+    var constructor = internalInstance.type;
     return constructor === type;
   },
 
@@ -185,11 +153,7 @@ var ReactTestUtils = {
       'findAllInRenderedTree(...): instance must be a composite component',
     );
     var internalInstance = ReactInstanceMap.get(inst);
-    if (internalInstance && typeof internalInstance.tag === 'number') {
-      return findAllInRenderedFiberTreeInternal(internalInstance, test);
-    } else {
-      return findAllInRenderedStackTreeInternal(internalInstance, test);
-    }
+    return findAllInRenderedFiberTreeInternal(internalInstance, test);
   },
 
   /**

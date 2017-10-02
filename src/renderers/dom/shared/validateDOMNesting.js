@@ -10,7 +10,6 @@
 'use strict';
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var getComponentName = require('getComponentName');
 
 var validateDOMNesting = emptyFunction;
 
@@ -405,83 +404,9 @@ if (__DEV__) {
     return null;
   };
 
-  /**
-   * Given a ReactCompositeComponent instance, return a list of its recursive
-   * owners, starting at the root and ending with the instance itself.
-   */
-  var findOwnerStack = function(instance) {
-    if (!instance) {
-      return [];
-    }
-
-    var stack = [];
-    do {
-      stack.push(instance);
-    } while ((instance = instance._currentElement._owner));
-    stack.reverse();
-    return stack;
-  };
-
-  var getOwnerInfo = function(
-    childInstance,
-    childTag,
-    ancestorInstance,
-    ancestorTag,
-    isParent,
-  ) {
-    var childOwner = childInstance && childInstance._currentElement._owner;
-    var ancestorOwner =
-      ancestorInstance && ancestorInstance._currentElement._owner;
-
-    var childOwners = findOwnerStack(childOwner);
-    var ancestorOwners = findOwnerStack(ancestorOwner);
-
-    var minStackLen = Math.min(childOwners.length, ancestorOwners.length);
-    var i;
-
-    var deepestCommon = -1;
-    for (i = 0; i < minStackLen; i++) {
-      if (childOwners[i] === ancestorOwners[i]) {
-        deepestCommon = i;
-      } else {
-        break;
-      }
-    }
-
-    var UNKNOWN = '(unknown)';
-    var childOwnerNames = childOwners
-      .slice(deepestCommon + 1)
-      .map(inst => getComponentName(inst) || UNKNOWN);
-    var ancestorOwnerNames = ancestorOwners
-      .slice(deepestCommon + 1)
-      .map(inst => getComponentName(inst) || UNKNOWN);
-    var ownerInfo = []
-      .concat(
-        // If the parent and child instances have a common owner ancestor, start
-        // with that -- otherwise we just start with the parent's owners.
-        deepestCommon !== -1
-          ? getComponentName(childOwners[deepestCommon]) || UNKNOWN
-          : [],
-        ancestorOwnerNames,
-        ancestorTag,
-        // If we're warning about an invalid (non-parent) ancestry, add '...'
-        isParent ? [] : ['...'],
-        childOwnerNames,
-        childTag,
-      )
-      .join(' > ');
-
-    return ownerInfo;
-  };
-
   var didWarn = {};
 
-  validateDOMNesting = function(
-    childTag,
-    childText,
-    childInstance,
-    ancestorInfo,
-  ) {
+  validateDOMNesting = function(childTag, childText, ancestorInfo) {
     ancestorInfo = ancestorInfo || emptyAncestorInfo;
     var parentInfo = ancestorInfo.current;
     var parentTag = parentInfo && parentInfo.tag;
@@ -505,24 +430,8 @@ if (__DEV__) {
       return;
     }
 
-    var ancestorInstance = invalidParentOrAncestor.instance;
     var ancestorTag = invalidParentOrAncestor.tag;
-    var addendum;
-
-    if (childInstance != null) {
-      addendum =
-        ' See ' +
-        getOwnerInfo(
-          childInstance,
-          childTag,
-          ancestorInstance,
-          ancestorTag,
-          !!invalidParent,
-        ) +
-        '.';
-    } else {
-      addendum = getCurrentFiberStackAddendum();
-    }
+    var addendum = getCurrentFiberStackAddendum();
 
     var warnKey =
       !!invalidParent + '|' + childTag + '|' + ancestorTag + '|' + addendum;
