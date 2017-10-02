@@ -352,4 +352,27 @@ describe('ReactMount', () => {
       );
     });
   });
+
+  describe('mount point is a comment node with no parent', () => {
+    let containerDiv;
+    let mountPoint;
+
+    beforeEach(() => {
+      mountPoint = document.createComment('react-mount-point-unstable');
+      invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
+    });
+
+    fit('renders at a comment node', () => {
+      function Char(props) {
+        return props.children;
+      }
+      function list(chars) {
+        return chars.split('').map(c => <Char key={c}>{c}</Char>);
+      }
+
+      expect(() => {
+        ReactDOM.render(list('aeiou'), mountPoint);
+      }).not.toThrow();
+    });
+  });
 });
