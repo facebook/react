@@ -12,8 +12,9 @@
 module.exports = {
   siteMetadata: {
     title: 'React: A JavaScript library for building user interfaces',
-    description: 'A JavaScript library for building user interfaces',
     siteUrl: 'https://reactjs.org',
+    rssFeedTitle: 'React',
+    rssFeedDescription: 'A JavaScript library for building user interfaces',
   },
   mapping: {
     'MarkdownRemark.frontmatter.author': 'AuthorYaml',
@@ -84,8 +85,10 @@ module.exports = {
          {
           site {
             siteMetadata {
-              title
-              description
+              rssFeedTitle
+              title: rssFeedTitle
+              rssFeedDescription
+              description: rssFeedDescription
               siteUrl
               site_url: siteUrl
             }
@@ -100,7 +103,9 @@ module.exports = {
                   {
                     title: edge.node.frontmatter.title,
                     description: edge.node.html,
-                    date: edge.node.fields.date,
+                    date: require('moment')(edge.node.fields.date).format(
+                      'MMMM DD, YYYY, h:mm A',
+                    ),
                     url: site.siteMetadata.siteUrl + edge.node.fields.slug,
                     guid: site.siteMetadata.siteUrl + edge.node.fields.slug,
                   },
@@ -117,13 +122,12 @@ module.exports = {
                     edges {
                       node {
                         fields {
-                          date(formatString:"MMMM DD, YYYY, h:mm A")
+                          date
                           slug
                         }
                         frontmatter {
                           title
                         }
-                        excerpt
                         html
                       }
                     }
