@@ -85,14 +85,19 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       slug.includes('community/') ||
       slug.includes('contributing/') ||
       slug.includes('docs/') ||
-      slug.includes('tutorial/')
+      slug.includes('tutorial/') ||
+      slug.includes('warnings/')
     ) {
       let template;
       if (slug.includes('blog/')) {
         template = blogTemplate;
       } else if (slug.includes('community/')) {
         template = communityTemplate;
-      } else if (slug.includes('contributing/') || slug.includes('docs/')) {
+      } else if (
+        slug.includes('contributing/') ||
+        slug.includes('docs/') ||
+        slug.includes('warnings/')
+      ) {
         template = docsTemplate;
       } else if (slug.includes('tutorial/')) {
         template = tutorialTemplate;
