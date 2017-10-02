@@ -88,7 +88,7 @@ Facebook engineers [Bill Fisher](https://twitter.com/fisherwebdev) and [Jing Che
 ### CodeWinds Podcast
 
 [Pete Hunt](http://www.petehunt.net/) talked with [Jeff Barczewski](http://jeff.barczewski.com/) about React in [CodeWinds Episode 4](http://codewinds.com/podcast/004.html).
-<figure><a aria-label="link to play Codewinds Podcast episode 4" href="http://codewinds.com/4"><img alt="Pete Hunt talked with Jeff Barczewski about React in Codewinds Episode 4" src="../img/docs/codewinds-004.png"></a></figure>
+<figure><a aria-label="link to play Codewinds Podcast episode 4" href="http://codewinds.com/4"><img src="../img/docs/codewinds-004.png"></a></figure>
 
 <table width="100%">
 <tr>
@@ -136,7 +136,7 @@ Facebook engineers [Bill Fisher](https://twitter.com/fisherwebdev) and [Jing Che
 ### JavaScript Jabber Podcast
 
 [Pete Hunt](http://www.petehunt.net/) and [Jordan Walke](https://github.com/jordwalke) talked about React in [JavaScript Jabber 73](https://devchat.tv/js-jabber/073-jsj-react-with-pete-hunt-and-jordan-walke).
-<figure><a aria-label="link to play JavaScript Jabber Podcast episode 73" href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img alt="Pete Hunt and Jordan Walke talk about React in JavaScript Jabber 73" src="../img/docs/javascript-jabber.png"></a></figure>
+<figure><a aria-label="link to play JavaScript Jabber Podcast episode 73" href="http://javascriptjabber.com/073-jsj-react-with-pete-hunt-and-jordan-walke/#content"><img src="../img/docs/javascript-jabber.png"></a></figure>
 
 <table width="100%">
   <tr>
