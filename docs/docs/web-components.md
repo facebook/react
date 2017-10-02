@@ -42,17 +42,15 @@ function BrickFlipbox() {
 ## Using React in your Web Components
 
 ```javascript
-const proto = Object.create(HTMLElement.prototype, {
-  attachedCallback: {
-    value: function() {
-      const mountPoint = document.createElement('span');
-      this.createShadowRoot().appendChild(mountPoint);
+class XSearch {
+  connectedCallback() {
+    const mountPoint = document.createElement('span');
+    this.attachShadow({ mode: 'open' }).appendChild(mountPoint);
 
-      const name = this.getAttribute('name');
-      const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
-      ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
-    }
+    const name = this.getAttribute('name');
+    const url = 'https://www.google.com/search?q=' + encodeURIComponent(name);
+    ReactDOM.render(<a href={url}>{name}</a>, mountPoint);
   }
-});
-document.registerElement('x-search', {prototype: proto});
+}
+customElements.define('x-search', XSearch);
 ```
