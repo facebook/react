@@ -109,8 +109,19 @@ if (__DEV__) {
   Object.assign(
     ReactNativeFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
-      ReactDebugTool: require('ReactDebugTool'), // RCTRenderingPerf, Systrace
-      ReactPerf: require('ReactPerf'), // ReactPerfStallHandler, RCTRenderingPerf
+      // TODO: none of these work since Fiber. Remove these dependencies.
+      // Used by RCTRenderingPerf, Systrace:
+      ReactDebugTool: {
+        addHook() {},
+        removeHook() {},
+      },
+      // Used by ReactPerfStallHandler, RCTRenderingPerf:
+      ReactPerf: {
+        start() {},
+        stop() {},
+        printInclusive() {},
+        printWasted() {},
+      },
     },
   );
 }

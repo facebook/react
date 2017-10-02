@@ -22,27 +22,17 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {
-    ReactComponentTreeHook,
-    ReactDebugCurrentFrame,
-  } = require('ReactGlobalSharedState');
-  var {getStackAddendumByID} = ReactComponentTreeHook;
+  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
 
   var validAriaProperties = require('./validAriaProperties');
 }
 
-function getStackAddendum(debugID) {
-  if (debugID != null) {
-    // This can only happen on Stack
-    return getStackAddendumByID(debugID);
-  } else {
-    // This can only happen on Fiber / Server
-    var stack = ReactDebugCurrentFrame.getStackAddendum();
-    return stack != null ? stack : '';
-  }
+function getStackAddendum() {
+  var stack = ReactDebugCurrentFrame.getStackAddendum();
+  return stack != null ? stack : '';
 }
 
-function validateProperty(tagName, name, debugID) {
+function validateProperty(tagName, name) {
   if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
     return true;
   }
@@ -60,7 +50,7 @@ function validateProperty(tagName, name, debugID) {
         false,
         'Invalid ARIA attribute `%s`. ARIA attributes follow the pattern aria-* and must be lowercase.%s',
         name,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -72,7 +62,7 @@ function validateProperty(tagName, name, debugID) {
         'Invalid ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         correctName,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -98,7 +88,7 @@ function validateProperty(tagName, name, debugID) {
         'Unknown ARIA attribute `%s`. Did you mean `%s`?%s',
         name,
         standardName,
-        getStackAddendum(debugID),
+        getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
@@ -108,11 +98,11 @@ function validateProperty(tagName, name, debugID) {
   return true;
 }
 
-function warnInvalidARIAProps(type, props, debugID) {
+function warnInvalidARIAProps(type, props) {
   const invalidProps = [];
 
   for (var key in props) {
-    var isValid = validateProperty(type, key, debugID);
+    var isValid = validateProperty(type, key);
     if (!isValid) {
       invalidProps.push(key);
     }
@@ -129,7 +119,7 @@ function warnInvalidARIAProps(type, props, debugID) {
         'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID),
+      getStackAddendum(),
     );
   } else if (invalidProps.length > 1) {
     warning(
@@ -138,32 +128,20 @@ function warnInvalidARIAProps(type, props, debugID) {
         'For details, see https://fb.me/invalid-aria-prop%s',
       unknownPropString,
       type,
-      getStackAddendum(debugID),
+      getStackAddendum(),
     );
   }
 }
 
-function validateProperties(type, props, debugID /* Stack only */) {
+function validateProperties(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
-  warnInvalidARIAProps(type, props, debugID);
+  warnInvalidARIAProps(type, props);
 }
 
 var ReactDOMInvalidARIAHook = {
-  // Fiber
   validateProperties,
-  // Stack
-  onBeforeMountComponent(debugID, element) {
-    if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, debugID);
-    }
-  },
-  onBeforeUpdateComponent(debugID, element) {
-    if (__DEV__ && element != null && typeof element.type === 'string') {
-      validateProperties(element.type, element.props, debugID);
-    }
-  },
 };
 
 module.exports = ReactDOMInvalidARIAHook;
