@@ -163,17 +163,24 @@ var DOMRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
-    if (rootContainerInstance.nodeType === DOCUMENT_NODE) {
-      type = '#document';
-      let root = (rootContainerInstance: any).documentElement;
-      namespace = root ? root.namespaceURI : getChildNamespace(null, '');
-    } else {
-      const container: any = rootContainerInstance.nodeType === COMMENT_NODE
-        ? rootContainerInstance.parentNode
-        : rootContainerInstance;
-      const ownNamespace = container.namespaceURI || null;
-      type = container.tagName;
-      namespace = getChildNamespace(ownNamespace, type);
+    const nodeType = rootContainerInstance.nodeType;
+    switch (nodeType) {
+      case DOCUMENT_NODE:
+      case DOCUMENT_FRAGMENT_NODE: {
+        type = nodeType === DOCUMENT_NODE ? '#document' : '#fragment';
+        let root = (rootContainerInstance: any).documentElement;
+        namespace = root ? root.namespaceURI : getChildNamespace(null, '');
+        break;
+      }
+      default: {
+        const container: any = nodeType === COMMENT_NODE
+          ? rootContainerInstance.parentNode
+          : rootContainerInstance;
+        const ownNamespace = container.namespaceURI || null;
+        type = container.tagName;
+        namespace = getChildNamespace(ownNamespace, type);
+        break;
+      }
     }
     if (__DEV__) {
       const validatedTag = type.toLowerCase();
