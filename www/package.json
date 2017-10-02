@@ -15,6 +15,7 @@
     "array-from": "^2.1.1",
     "gatsby": "^1.9.9",
     "gatsby-link": "^1.6.9",
+    "gatsby-plugin-feed": "^1.3.9",
     "gatsby-plugin-glamor": "^1.6.4",
     "gatsby-plugin-google-analytics": "^1.0.4",
     "gatsby-plugin-manifest": "^1.0.4",
