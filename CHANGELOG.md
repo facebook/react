@@ -13,6 +13,7 @@
 
 * Fix `null` showing up in a warning instead of the component stack. ([@gaearon](https://github.com/gaearon) in [#10915](https://github.com/facebook/react/pull/10915))
 * Fix IE11 crash in development mode. ([@leidegre](https://github.com/leidegre) in [#10921](https://github.com/facebook/react/pull/10921))
+* Fix `tabIndex` not getting applied to SVG elements. ([@gaearon](http://github.com/gaearon) in [#11034](https://github.com/facebook/react/pull/11034))
 * Minor bundle size improvements. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
 
 </details>
