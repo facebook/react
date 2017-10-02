@@ -148,6 +148,8 @@ boolean shiftKey
 number which
 ```
 
+The `key` property can take any of the values documented in the [DOM Level 3 Events spec](https://www.w3.org/TR/uievents-key/#named-key-attribute-values).
+
 * * *
 
 ### Focus Events
