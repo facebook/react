@@ -4,6 +4,8 @@ import TestCase from '../../TestCase';
 const React = window.React;
 const ReactDOM = window.ReactDOM;
 
+const supportsCustomElements = typeof customElements !== 'undefined';
+
 class HelloWorld extends React.Component {
   render() {
     return <h1>Hello, world!</h1>;
@@ -27,7 +29,9 @@ return class MyElement extends HTMLElement {
 }`
 )(React, ReactDOM, HelloWorld);
 
-customElements.define('my-element', MyElement);
+if (supportsCustomElements) {
+  customElements.define('my-element', MyElement);
+}
 
 export default class ButtonTestCases extends React.Component {
   render() {
@@ -39,7 +43,11 @@ export default class ButtonTestCases extends React.Component {
           <TestCase.ExpectedResult>
             You should see "Hello, World" printed below.{' '}
           </TestCase.ExpectedResult>
-          <my-element />
+          {supportsCustomElements
+            ? <my-element />
+            : <div>
+                This browser does not support custom elements.
+              </div>}
         </TestCase>
       </FixtureSet>
     );
