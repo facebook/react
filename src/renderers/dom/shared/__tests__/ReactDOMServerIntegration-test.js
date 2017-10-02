@@ -1243,6 +1243,19 @@ describe('ReactDOMServerIntegration', () => {
         );
       });
 
+      itRenders('svg element with a tabIndex attribute', async render => {
+        let e = await render(<svg tabIndex="1" />);
+        expect(e.tabIndex).toBe(1);
+      });
+
+      itRenders(
+        'svg element with a badly cased tabIndex attribute',
+        async render => {
+          let e = await render(<svg tabindex="1" />, 1);
+          expect(e.tabIndex).toBe(1);
+        },
+      );
+
       itRenders('a math element', async render => {
         const e = await render(<math />);
         expect(e.childNodes.length).toBe(0);

@@ -67,6 +67,8 @@ var HTMLDOMPropertyConfig = {
     // Style must be explicitly set in the attribute list. React components
     // expect a style object
     style: 0,
+    // Keep it in the whitelist because it is case-sensitive for SVG.
+    tabIndex: 0,
     // itemScope is for for Microdata support.
     // See http://schema.org/docs/gs.html
     itemScope: HAS_BOOLEAN_VALUE,
