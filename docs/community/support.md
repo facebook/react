@@ -33,7 +33,9 @@ Some developers also hang out in [#reactjs on Freenode](http://irc.lc/freenode/r
 
 >Note:
 >
->Our IRC channel is called **#reactjs**, *not* **#react**. The **#react** channel belongs to an unrelated [ReactOS](https://reactos.org/) operating system project. Make sure that you post in **#reactjs** if you want to talk about the React JavaScript library.
+>Our IRC channel is called **#reactjs**. It is *not* called **#react** or **#reactos**.
+>
+>The **#reactos** channel belongs to an unrelated [ReactOS](https://reactos.org/) operating system project. The **#react** channel is not affiliated with us either. To discuss the React JavaScript library on its official IRC channel, please make sure that you post in **#reactjs**.
 
 ## Facebook and Twitter
 
