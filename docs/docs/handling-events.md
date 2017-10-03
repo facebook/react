@@ -67,10 +67,10 @@ class Toggle extends React.Component {
     this.state = {isToggleOn: true};
 
     // This binding is necessary to make `this` work in the callback
-    this.handleClick = this.handleClick.bind(this);
+    //this.handleClick = this.handleClick.bind(this); What if we make handleClick also an arrow function then we do not need this line of code
   }
 
-  handleClick() {
+  handleClick = () => {
     this.setState(prevState => ({
       isToggleOn: !prevState.isToggleOn
     }));
