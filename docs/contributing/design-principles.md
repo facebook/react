@@ -32,7 +32,7 @@ For example, if React didn't provide support for local state or lifecycle hooks,
 
 This is why sometimes we add features to React itself. If we notice that many components implement a certain feature in incompatible or inefficient ways, we might prefer to bake it into React. We don't do it lightly. When we do it, it's because we are confident that raising the abstraction level benefits the whole ecosystem. State, lifecycle hooks, cross-browser event normalization are good examples of this.
 
-We always discuss such improvement proposals with the community. You can find some of those discussions by the [“big picture”](https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22big+picture%22) label on the React issue tracker.
+We always discuss such improvement proposals with the community. You can find some of those discussions by the ["big picture"](https://github.com/facebook/react/issues?q=is:open+is:issue+label:"big+picture") label on the React issue tracker.
 
 ### Escape Hatches
 
