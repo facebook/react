@@ -20,7 +20,7 @@ Today, we're going to build an interactive tic-tac-toe game.
 
 If you like, you can check out the final result here: [Final Result](https://codepen.io/gaearon/pen/gWWZgR?editors=0010). Don't worry if the code doesn't make sense to you yet, or if it uses an unfamiliar syntax. We will be learning how to build this game step by step throughout this tutorial.
 
-Try playing the game. You can also click on a link in the move list to go "back in time" and see what the board looked like just after that move was made.
+Try playing the game. You can also click on a button in the move list to go "back in time" and see what the board looked like just after that move was made.
 
 Once you get a little familiar with the game, feel free to close that tab, as we'll start from a simpler template in the next sections.
 
@@ -905,7 +905,7 @@ Let's show the previous moves made in the game so far. We learned earlier that R
         'Game start';
       return (
         <li>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>
       );
     });
@@ -936,7 +936,7 @@ Let's show the previous moves made in the game so far. We learned earlier that R
 
 [View the current code.](https://codepen.io/gaearon/pen/EmmGEa?editors=0010)
 
-For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says:
+For each step in the history, we create a list item `<li>` with a button `<button>` inside it that has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says:
 
 >  Warning:
 >  Each child in an array or iterator should have a unique "key" prop. Check the render method of "Game".
@@ -992,7 +992,7 @@ For our move list, we already have a unique ID for each step: the number of the 
         'Game start';
       return (
         <li key={move}>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>
       );
     });
@@ -1000,7 +1000,7 @@ For our move list, we already have a unique ID for each step: the number of the 
 
 [View the current code.](https://codepen.io/gaearon/pen/PmmXRE?editors=0010)
 
-Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing.
+Clicking any of the move buttons throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing.
 
 First, add `stepNumber: 0` to the initial state in Game's `constructor`:
 
@@ -1073,7 +1073,7 @@ Now you can modify Game's `render` to read from that step in the history:
 
 [View the current code.](https://codepen.io/gaearon/pen/gWWZgR?editors=0010)
 
-If you click any move link now, the board should immediately update to show what the game looked like at that time.
+If you click any move button now, the board should immediately update to show what the game looked like at that time.
 
 ### Wrapping Up
 
