@@ -901,8 +901,8 @@ Let's show the previous moves made in the game so far. We learned earlier that R
 
     const moves = history.map((step, move) => {
       const desc = move ?
-        'Move #' + move :
-        'Game start';
+        'Go to move #' + move :
+        'Go to game start';
       return (
         <li>
           <button onClick={() => this.jumpTo(move)}>{desc}</button>
@@ -988,8 +988,8 @@ For our move list, we already have a unique ID for each step: the number of the 
 ```js{6}
     const moves = history.map((step, move) => {
       const desc = move ?
-        'Move #' + move :
-        'Game start';
+        'Go to move #' + move :
+        'Go to game start';
       return (
         <li key={move}>
           <button onClick={() => this.jumpTo(move)}>{desc}</button>
