@@ -9,16 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### React Boston 2017
-September 23-24 in Boston, Massachusetts USA
-
-[Website](http://www.reactboston.com/) - [Twitter](https://twitter.com/ReactBoston)
-
-### React Alicante 2017
-September 28-30 in Alicante, Spain
-
-[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
-
 ### ReactJS Day 2017
 October 6 in Verona, Italy
 
@@ -167,3 +157,13 @@ September 8-10 in Tel Aviv, Israel
 September 14 in Bangalore, India
 
 [Website](https://reactfoo.in/2017/)
+
+### React Boston 2017
+September 23-24 in Boston, Massachusetts USA
+
+[Website](http://www.reactboston.com/) - [Twitter](https://twitter.com/ReactBoston)
+
+### React Alicante 2017
+September 28-30 in Alicante, Spain
+
+[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
