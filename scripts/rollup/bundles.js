@@ -288,6 +288,40 @@ const bundles = [
     useFiber: true,
   },
 
+  /******* React Native *******/
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [RN_DEV, RN_PROD],
+    config: {
+      destDir: 'build/',
+      moduleName: 'ReactNativeRTFiber',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/native-rt/ReactNativeRTFiberEntry',
+    externals: [
+      'ExceptionsManager',
+      'InitializeCore',
+      'Platform',
+      'RCTEventEmitter',
+      'RTManager',
+      'prop-types/checkPropTypes',
+    ],
+    hasteName: 'ReactNativeRTFiber',
+    isRenderer: true,
+    label: 'native-rt-fiber',
+    manglePropertiesOnProd: false,
+    name: 'react-native-rt-renderer',
+    paths: [
+      'src/renderers/native/**/*.js', // This is used since we reuse the error dialog code
+      'src/renderers/native-rt/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+    useFiber: true,
+  },
+
   /******* React Test Renderer *******/
   {
     babelOpts: babelOptsReact,
