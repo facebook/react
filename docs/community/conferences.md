@@ -9,36 +9,6 @@ redirect_from: "docs/conferences.html"
 
 ## Upcoming Conferences
 
-### React Rally
-August 24-25 in Salt Lake City, Utah USA
-
-[Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
-
-### React Native EU 2017
-September 6-7 in Wroclaw, Poland
-
-[Website](http://react-native.eu/)
-
-### ReactNext 2017
-September 8-10 in Tel Aviv, Israel
-
-[Website](http://react-next.com/) - [Twitter](https://twitter.com/ReactNext)
-
-### ReactFoo 2017
-September 14 in Bangalore, India
-
-[Website](https://reactfoo.in/2017/)
-
-### React Boston 2017
-September 23-24 in Boston, Massachusetts USA
-
-[Website](http://www.reactboston.com/) - [Twitter](https://twitter.com/ReactBoston)
-
-### React Alicante 2017
-September 28-30 in Alicante, Spain
-
-[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
-
 ### ReactJS Day 2017
 October 6 in Verona, Italy
 
@@ -177,3 +147,33 @@ May 18th & 19th in Paris, France
 July 10-11 in Portland, Oregon USA
 
 [Website](https://infinite.red/ChainReactConf) - [Twitter](https://twitter.com/chainreactconf)
+
+### React Rally
+August 24-25 in Salt Lake City, Utah USA
+
+[Website](http://www.reactrally.com) - [Twitter](https://twitter.com/reactrally)
+
+### React Native EU 2017
+September 6-7 in Wroclaw, Poland
+
+[Website](http://react-native.eu/)
+
+### ReactNext 2017
+September 8-10 in Tel Aviv, Israel
+
+[Website](http://react-next.com/) - [Twitter](https://twitter.com/ReactNext)
+
+### ReactFoo 2017
+September 14 in Bangalore, India
+
+[Website](https://reactfoo.in/2017/)
+
+### React Boston 2017
+September 23-24 in Boston, Massachusetts USA
+
+[Website](http://www.reactboston.com/) - [Twitter](https://twitter.com/ReactBoston)
+
+### React Alicante 2017
+September 28-30 in Alicante, Spain
+
+[Website](http://reactalicante.es) - [Twitter](https://twitter.com/ReactAlicante)
