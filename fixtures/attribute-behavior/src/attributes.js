@@ -1859,6 +1859,11 @@ const attributes = [
   },
   {name: 'tabIndex'},
   {
+    name: 'tabIndex',
+    read: getSVGProperty('tabIndex'),
+    tagName: 'svg',
+  },
+  {
     name: 'tableValues',
     read: getSVGProperty('tableValues'),
     containerTagName: 'svg',

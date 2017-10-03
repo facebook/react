@@ -66,6 +66,8 @@ if (__DEV__) {
     // *don't* warn for <time> even if it's unrecognized by Chrome because
     // it soon will be, and many apps have been using it anyway.
     time: true,
+    // There are working polyfills for <dialog>. Let people use it.
+    dialog: true,
   };
 
   var validatePropertiesInDevelopment = function(type, props) {

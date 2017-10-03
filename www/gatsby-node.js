@@ -33,7 +33,6 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
   const docsTemplate = resolve('./src/templates/docs.js');
   const tutorialTemplate = resolve('./src/templates/tutorial.js');
   const homeTemplate = resolve('./src/templates/home.js');
-  const installationTemplate = resolve('./src/templates/installation.js');
 
   const allMarkdown = await graphql(
     `
@@ -69,14 +68,6 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
           slug,
         },
       });
-    } else if (slug === 'docs/installation.html') {
-      createPage({
-        path: slug,
-        component: installationTemplate,
-        context: {
-          slug,
-        },
-      });
     } else if (slug === 'docs/error-decoder.html') {
       // No-op so far as markdown templates go.
       // Error codes are managed by a page (which gets created automatically).
@@ -85,14 +76,19 @@ exports.createPages = async ({graphql, boundActionCreators}) => {
       slug.includes('community/') ||
       slug.includes('contributing/') ||
       slug.includes('docs/') ||
-      slug.includes('tutorial/')
+      slug.includes('tutorial/') ||
+      slug.includes('warnings/')
     ) {
       let template;
       if (slug.includes('blog/')) {
         template = blogTemplate;
       } else if (slug.includes('community/')) {
         template = communityTemplate;
-      } else if (slug.includes('contributing/') || slug.includes('docs/')) {
+      } else if (
+        slug.includes('contributing/') ||
+        slug.includes('docs/') ||
+        slug.includes('warnings/')
+      ) {
         template = docsTemplate;
       } else if (slug.includes('tutorial/')) {
         template = tutorialTemplate;

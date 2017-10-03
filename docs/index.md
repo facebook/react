@@ -67,7 +67,7 @@ id: home
       <h3>A Component Using External Plugins</h3>
       <p>
         React is flexible and provides hooks that allow you to interface with
-        other libraries and frameworks. This example uses **remarkable**, an
+        other libraries and frameworks. This example uses <strong>remarkable</strong>, an
         external Markdown library, to convert the textarea's value in real time.
       </p>
       <div id="markdownExample"></div>

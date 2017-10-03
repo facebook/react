@@ -379,7 +379,7 @@ It is important to understand that the stack reconciler always processes the com
 
 The "fiber" reconciler is a new effort aiming to resolve the problems inherent in the stack reconciler and fix a few long-standing issues.
 
-It is a complete rewrite of the reconciler and is currently [in active development](https://github.com/facebook/react/pulls?utf8=%E2%9C%93&q=is%3Apr%20is%3Aopen%20fiber).
+It is a complete rewrite of the reconciler and is currently [in active development](https://github.com/facebook/react/pulls?utf8=✓&q=is:pr+is:open+fiber).
 
 Its main goals are:
 

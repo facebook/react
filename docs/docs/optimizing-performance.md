@@ -74,17 +74,16 @@ For the most efficient Browserify production build, install a few plugins:
 
 ```
 # If you use npm
-npm install --save-dev bundle-collapser envify uglify-js uglifyify 
+npm install --save-dev envify uglify-js uglifyify 
 
 # If you use Yarn
-yarn add --dev bundle-collapser envify uglify-js uglifyify 
+yarn add --dev envify uglify-js uglifyify 
 ```
 
 To create a production build, make sure that you add these transforms **(the order matters)**:
 
 * The [`envify`](https://github.com/hughsk/envify) transform ensures the right build environment is set. Make it global (`-g`).
 * The [`uglifyify`](https://github.com/hughsk/uglifyify) transform removes development imports. Make it global too (`-g`).
-* The [`bundle-collapser`](https://github.com/substack/bundle-collapser) plugin replaces long module IDs with numbers.
 * Finally, the resulting bundle is piped to [`uglify-js`](https://github.com/mishoo/UglifyJS2) for mangling ([read why](https://github.com/hughsk/uglifyify#motivationusage)).
 
 For example:
@@ -93,7 +92,6 @@ For example:
 browserify ./index.js \
   -g [ envify --NODE_ENV production ] \
   -g uglifyify \
-  -p bundle-collapser/plugin \
   | uglifyjs --compress --mangle > ./bundle.js
 ```
 

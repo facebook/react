@@ -62,6 +62,7 @@ class Header extends React.Component {
                 <option value="/date-inputs">Date Inputs</option>
                 <option value="/error-handling">Error Handling</option>
                 <option value="/event-pooling">Event Pooling</option>
+                <option value="/custom-elements">Custom Elements</option>
               </select>
             </label>
             <label htmlFor="react_version">

@@ -130,12 +130,14 @@ const Footer = ({layoutHasSidebar = false}) => (
             <FooterLink to="/blog/">Blog</FooterLink>
             <ExternalFooterLink
               href="https://github.com/facebook/react"
-              target="_blank">
+              target="_blank"
+              rel="noopener">
               GitHub
             </ExternalFooterLink>
             <ExternalFooterLink
               href="http://facebook.github.io/react-native/"
-              target="_blank">
+              target="_blank"
+              rel="noopener">
               React Native
             </ExternalFooterLink>
             <FooterLink to="/acknowledgements.html">
@@ -162,7 +164,10 @@ const Footer = ({layoutHasSidebar = false}) => (
               paddingTop: 40,
             },
           }}>
-          <a href="https://code.facebook.com/projects/" target="_blank">
+          <a
+            href="https://code.facebook.com/projects/"
+            target="_blank"
+            rel="noopener">
             <img
               alt="Facebook Open Source"
               css={{

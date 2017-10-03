@@ -8,4 +8,3 @@
   tag.setAttribute('type', 'text/jsx;harmony=true');
   tag.textContent = tag.textContent.replace(/^\/\/<!\[CDATA\[/, '');
 })();
-
