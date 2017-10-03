@@ -133,7 +133,7 @@ class CodeEditor extends Component {
                   },
                 }}
                 className="gatsby-highlight">
-                <LiveEditor onChange={this._onChange} />
+                <LiveEditor onChange={this._onChange} ignoreTabKey={true} />
               </div>
             </div>
             {error &&
