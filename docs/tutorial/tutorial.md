@@ -905,7 +905,7 @@ Let's show the previous moves made in the game so far. We learned earlier that R
         'Game start';
       return (
         <li>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>
       );
     });
@@ -934,9 +934,9 @@ Let's show the previous moves made in the game so far. We learned earlier that R
   }
 ```
 
-[View the current code.](https://codepen.io/gaearon/pen/EmmGEa?editors=0010)
+[View the current code.](https://codepen.io/strahek/pen/ZXXvKj?editors=0010)
 
-For each step in the history, we create a list item `<li>` with a link `<a>` inside it that goes nowhere (`href="#"`) but has a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says:
+For each step in the history, we create a list item `<li>` with a button `<button>` inside with a click handler which we'll implement shortly. With this code, you should see a list of the moves that have been made in the game, along with a warning that says:
 
 >  Warning:
 >  Each child in an array or iterator should have a unique "key" prop. Check the render method of "Game".
@@ -992,13 +992,13 @@ For our move list, we already have a unique ID for each step: the number of the 
         'Game start';
       return (
         <li key={move}>
-          <a href="#" onClick={() => this.jumpTo(move)}>{desc}</a>
+          <button onClick={() => this.jumpTo(move)}>{desc}</button>
         </li>
       );
     });
 ```
 
-[View the current code.](https://codepen.io/gaearon/pen/PmmXRE?editors=0010)
+[View the current code.](https://codepen.io/strahek/pen/MEErmX?editors=0010)
 
 Clicking any of the move links throws an error because `jumpTo` is undefined. Let's add a new key to Game's state to indicate which step we're currently viewing.
 
@@ -1071,7 +1071,7 @@ Now you can modify Game's `render` to read from that step in the history:
     // the rest has not changed
 ```
 
-[View the current code.](https://codepen.io/gaearon/pen/gWWZgR?editors=0010)
+[View the current code.](https://codepen.io/strahek/pen/pWWpPa?editors=0010)
 
 If you click any move link now, the board should immediately update to show what the game looked like at that time.
 
@@ -1086,7 +1086,7 @@ Now, you've made a tic-tac-toe game that:
 
 Nice work! We hope you now feel like you have a decent grasp on how React works.
 
-Check out the final result here: [Final Result](https://codepen.io/gaearon/pen/gWWZgR?editors=0010).
+Check out the final result here: [Final Result](https://codepen.io/strahek/pen/pWWpPa?editors=0010).
 
 If you have extra time or want to practice your new skills, here are some ideas for improvements you could make, listed in order of increasing difficulty:
 
