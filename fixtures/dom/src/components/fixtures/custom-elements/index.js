@@ -12,24 +12,23 @@ class HelloWorld extends React.Component {
   }
 }
 
-// Babel breaks web components.
-// https://github.com/w3c/webcomponents/issues/587
-// eslint-disable-next-line no-new-func
-const MyElement = new Function(
-  'React',
-  'ReactDOM',
-  'HelloWorld',
-  `
-return class MyElement extends HTMLElement {
-  constructor() {
-    super();
-    const shadowRoot = this.attachShadow({ mode:'open' });
-    ReactDOM.render(React.createElement(HelloWorld), shadowRoot);
-  }
-}`
-)(React, ReactDOM, HelloWorld);
-
 if (supportsCustomElements) {
+  // Babel breaks web components.
+  // https://github.com/w3c/webcomponents/issues/587
+  // eslint-disable-next-line no-new-func
+  const MyElement = new Function(
+    'React',
+    'ReactDOM',
+    'HelloWorld',
+    `
+    return class MyElement extends HTMLElement {
+      constructor() {
+        super();
+        const shadowRoot = this.attachShadow({ mode:'open' });
+        ReactDOM.render(React.createElement(HelloWorld), shadowRoot);
+      }
+    }`
+  )(React, ReactDOM, HelloWorld);
   customElements.define('my-element', MyElement);
 }
 
