@@ -64,7 +64,7 @@ Working on your first Pull Request? You can learn how from this free video serie
 
 **[How to Contribute to an Open Source Project on GitHub](https://egghead.io/series/how-to-contribute-to-an-open-source-project-on-github)**
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of **[beginner friendly issues](https://github.com/facebook/react/issues?q=is%3Aopen+is%3Aissue+label%3A%22Difficulty%3A+beginner%22)** that contain bugs which are fairly easy to fix. This is a great place to get started.
+To help you get your feet wet and get you familiar with our contribution process, we have a list of **[beginner friendly issues](https://github.com/facebook/react/issues?q=is:open+is:issue+label:%22Difficulty:+beginner%22)** that contain bugs which are fairly easy to fix. This is a great place to get started.
 
 If you decide to fix an issue, please be sure to check the comment thread in case somebody is already working on a fix. If nobody is working on it at the moment, please leave a comment stating that you intend to work on it so other people don't accidentally duplicate your effort.
 
