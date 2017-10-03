@@ -338,7 +338,7 @@
 .algolia-autocomplete .algolia-docsearch-suggestion--wrapper {
   width: 100%;
   float: left;
-  padding: 8px 2px 0 0;
+  padding: 8px 0 0 0;
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion--subcategory-column {
@@ -386,6 +386,7 @@
   line-height: 1.2em;
   font-size: 0.85em;
   color: #63676D;
+  padding-right: 2px;
 }
 
 .algolia-autocomplete .algolia-docsearch-suggestion--no-results {
