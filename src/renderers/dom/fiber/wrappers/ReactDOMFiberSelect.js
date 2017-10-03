@@ -180,7 +180,7 @@ var ReactDOMSelect = {
     node.multiple = !!props.multiple;
     var value = props.value;
     if (value != null) {
-      updateOptions(node, !!props.multiple, value);
+      updateOptions(node, !!props.multiple, value, false);
     } else if (props.defaultValue != null) {
       updateOptions(node, !!props.multiple, props.defaultValue, true);
     }
@@ -197,14 +197,14 @@ var ReactDOMSelect = {
 
     var value = props.value;
     if (value != null) {
-      updateOptions(node, !!props.multiple, value);
+      updateOptions(node, !!props.multiple, value, false);
     } else if (wasMultiple !== !!props.multiple) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
         updateOptions(node, !!props.multiple, props.defaultValue, true);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(node, !!props.multiple, props.multiple ? [] : '');
+        updateOptions(node, !!props.multiple, props.multiple ? [] : '', false);
       }
     }
   },
@@ -214,7 +214,7 @@ var ReactDOMSelect = {
     var value = props.value;
 
     if (value != null) {
-      updateOptions(node, !!props.multiple, value);
+      updateOptions(node, !!props.multiple, value, false);
     }
   },
 };
