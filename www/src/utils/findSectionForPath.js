@@ -10,6 +10,7 @@
 'use strict';
 
 import slugify from './slugify';
+import {itemName} from './isItemActive';
 
 /**
  * Helper method to locate the section containing the current URL/path.
@@ -17,15 +18,14 @@ import slugify from './slugify';
  */
 const findSectionForPath = (pathname, sections) => {
   let activeSection;
+  const itemPathName = itemName(pathname);
 
   sections.forEach(section => {
     const match = section.items.some(
       item =>
-        pathname.includes(slugify(item.id)) ||
+        itemPathName === slugify(item.id) ||
         (item.subitems &&
-          item.subitems.some(subitem =>
-            pathname.includes(slugify(subitem.id)),
-          )),
+          item.subitems.some(subitem => itemPathName === slugify(subitem.id))),
     );
     if (match) {
       activeSection = section;
