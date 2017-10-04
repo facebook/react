@@ -14,7 +14,25 @@ redirect_from:
   - "docs/glossary.html"
 ---
 
-`React` is the entry point to the React library. If you load React from a `<script>` tag, these top-level APIs are available on the `React` global. If you use ES6 with npm, you can write `import React from 'react'`. If you use ES5 with npm, you can write `var React = require('react')`.
+`React` is the entry point to the React library.
+
+If you load React from a `<script>` tag, these top-level APIs are available on the `React` global:
+
+```js
+var React = window.React;
+```
+
+If you use ES6 with npm, you can write:
+
+```js
+import React from 'react';
+```
+
+If you use ES5 with npm, you can write:
+
+```js
+var React = require('react');
+```
 
 ## Overview
 
