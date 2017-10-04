@@ -11,7 +11,6 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {Update} = require('ReactTypeOfSideEffect');
@@ -25,10 +24,7 @@ var {
   getUnmaskedContext,
   isContextConsumer,
 } = require('ReactFiberContext');
-var {
-  insertUpdateIntoFiber,
-  beginUpdateQueue,
-} = require('ReactFiberUpdateQueue');
+var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
 var {hasContextChanged} = require('ReactFiberContext');
 var {isMounted} = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -76,96 +72,42 @@ if (__DEV__) {
 }
 
 module.exports = function(
-  scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  getPriorityContext: (
+  scheduleUpdate: (
     fiber: Fiber,
-    forceAsync: boolean,
-  ) => PriorityLevel | null,
+    partialState: mixed,
+    callback: (() => mixed) | null,
+    isReplace: boolean,
+    isForced: boolean,
+  ) => void,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
-  recalculateCurrentTime: () => ExpirationTime,
-  getExpirationTimeForPriority: (
-    currentTime: ExpirationTime,
-    priorityLevel: PriorityLevel | null,
-  ) => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = getExpirationTimeForPriority(
-        currentTime,
-        priorityLevel,
-      );
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      const update = {
-        priorityLevel,
-        expirationTime,
-        partialState,
-        callback,
-        isReplace: false,
-        isForced: false,
-        isTopLevelUnmount: false,
-        next: null,
-      };
-      insertUpdateIntoFiber(fiber, update, currentTime);
-      scheduleUpdate(fiber, expirationTime);
+      scheduleUpdate(fiber, partialState, callback, false, false);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = getExpirationTimeForPriority(
-        currentTime,
-        priorityLevel,
-      );
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      const update = {
-        priorityLevel,
-        expirationTime,
-        partialState: state,
-        callback,
-        isReplace: true,
-        isForced: false,
-        isTopLevelUnmount: false,
-        next: null,
-      };
-      insertUpdateIntoFiber(fiber, update, currentTime);
-      scheduleUpdate(fiber, expirationTime);
+      scheduleUpdate(fiber, state, callback, true, false);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = getExpirationTimeForPriority(
-        currentTime,
-        priorityLevel,
-      );
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      const update = {
-        priorityLevel,
-        expirationTime,
-        partialState: null,
-        callback,
-        isReplace: false,
-        isForced: true,
-        isTopLevelUnmount: false,
-        next: null,
-      };
-      insertUpdateIntoFiber(fiber, update, currentTime);
-      scheduleUpdate(fiber, expirationTime);
+      scheduleUpdate(fiber, null, callback, false, true);
     },
   };
 
