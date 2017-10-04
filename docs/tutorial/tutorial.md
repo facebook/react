@@ -393,7 +393,7 @@ Now when the square is clicked, it calls the `onClick` function that was passed 
 4. Board passed `onClick={() => this.handleClick(i)}` to Square, so, when called, it runs `this.handleClick(i)` on the Board.
 5. We have not defined the `handleClick()` method on the Board yet, so the code crashes.
 
-Note that `onClick` on the DOM `<button>` component has a special meaning to React, but we could have called `onClick` prop in Square and `handleClick` in Board something else. It is, however, a common convention in React apps to use `on*` names for the handler prop names and `handle*` for their implementations.
+Note that DOM `<button>` element's `onClick` attribute has a special meaning to React, but we could have named Square's `onClick` prop or Board's `handleClick` method differently. It is, however, conventional in React apps to use `on*` names for the attributes and `handle*` for the handler methods.
 
 Try clicking a square – you should get an error because we haven't defined `handleClick` yet. Add it to the Board class.
 
