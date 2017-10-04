@@ -97,6 +97,7 @@ var {
   processUpdateQueue,
   createUpdateQueue,
   insertUpdateIntoQueue,
+  insertUpdateIntoFiber,
 } = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
@@ -179,9 +180,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hostContext,
     hydrationContext,
     scheduleUpdate,
-    getPriorityContext,
-    recalculateCurrentTime,
-    getExpirationTimeForPriority,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -1530,11 +1528,38 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function scheduleUpdate(fiber: Fiber, expirationTime: ExpirationTime) {
-    return scheduleUpdateImpl(fiber, expirationTime, false);
+  function scheduleUpdate(
+    fiber: Fiber,
+    partialState: mixed,
+    callback: (() => mixed) | null,
+    isReplace: boolean,
+    isForced: boolean,
+  ) {
+    const priorityLevel = getPriorityContext(fiber, false);
+    const currentTime = recalculateCurrentTime();
+    const expirationTime = getExpirationTimeForPriority(
+      currentTime,
+      priorityLevel,
+    );
+    const update = {
+      priorityLevel,
+      expirationTime,
+      partialState,
+      callback,
+      isReplace,
+      isForced,
+      nextCallback: null,
+      next: null,
+    };
+    insertUpdateIntoFiber(fiber, update, currentTime);
+    scheduleWork(fiber, expirationTime);
   }
 
-  function scheduleUpdateImpl(
+  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
+    return scheduleWorkImpl(fiber, expirationTime, false);
+  }
+
+  function scheduleWorkImpl(
     fiber: Fiber,
     expirationTime: ExpirationTime,
     isErrorRecovery: boolean,
@@ -1668,7 +1693,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // callback synchronously.
       performWork(TaskPriority, null);
     } else {
-      scheduleUpdate(root.current, expirationTime);
+      scheduleWork(root.current, expirationTime);
     }
   }
 
@@ -1723,7 +1748,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       mostRecentCurrentTime,
       TaskPriority,
     );
-    scheduleUpdateImpl(fiber, taskTime, true);
+    scheduleWorkImpl(fiber, taskTime, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
@@ -1817,7 +1842,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    scheduleUpdate: scheduleUpdate,
+    scheduleWork: scheduleWork,
     scheduleCompletionCallback: scheduleCompletionCallback,
     getPriorityContext: getPriorityContext,
     recalculateCurrentTime: recalculateCurrentTime,

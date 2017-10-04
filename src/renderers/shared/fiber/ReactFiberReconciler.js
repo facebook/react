@@ -257,7 +257,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {getPublicInstance} = config;
 
   var {
-    scheduleUpdate,
+    scheduleWork,
     scheduleCompletionCallback,
     getPriorityContext,
     getExpirationTimeForPriority,
@@ -371,7 +371,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       insertUpdateIntoQueue(root.blockers, block, currentTime);
     }
 
-    scheduleUpdate(current, expirationTime);
+    scheduleWork(current, expirationTime);
     return expirationTime;
   }
 
