@@ -127,7 +127,7 @@ The `ShoppingList` component only renders built-in DOM components, but you can c
 
 Start with this example: [Starter Code](https://codepen.io/gaearon/pen/oWWQNa?editors=0010).
 
-It contains the shell of what we're building today. We've provided the styles so you only need to worry about the JavaScript.
+It contains the shell of what we're building today. We've provided the styles so you only need to worry about the CSS.
 
 In particular, we have three components:
 
