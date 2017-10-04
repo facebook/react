@@ -41,6 +41,8 @@ function BrickFlipbox() {
 
 ## Using React in your Web Components
 
+Similarly, you can call `ReactDOM.render()` from inside a web component:
+
 ```javascript
 class XSearch extends HTMLElement {
   connectedCallback() {
@@ -54,3 +56,7 @@ class XSearch extends HTMLElement {
 }
 customElements.define('x-search', XSearch);
 ```
+
+>Note:
+>
+>This code will **not** work if compiled with Babel [due to an intentional limitation in the specification](https://github.com/w3c/webcomponents/issues/587). It will only work if you use the `class` syntax directly in the browser without compiling the code first.
