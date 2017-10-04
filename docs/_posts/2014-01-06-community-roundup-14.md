@@ -30,13 +30,13 @@ React is only one-piece of your web application stack. [Mark Lussier](https://gi
 
 [Selem Delul](http://selem.im) bundled the [React Tutorial](/tutorial/tutorial.html) into a rails app. This is a good example on how to get started with a rails project.
 
+> ```sh
+> git clone https://github.com/necrodome/react-rails-tutorial
+> cd react-rails-tutorial
+> bundle install
+> rake db:migrate
+> rails s
 > ```
-git clone https://github.com/necrodome/react-rails-tutorial
-cd react-rails-tutorial
-bundle install
-rake db:migrate
-rails s
-```
 > Then visit http://localhost:3000/app to see the React application that is explained in the React Tutorial. Try opening multiple tabs!
 >
 > [View on GitHub...](https://github.com/necrodome/react-rails-tutorial)

@@ -184,6 +184,7 @@ const sharedStyles = {
       marginTop: 25,
       marginLeft: -30,
       marginRight: -30,
+      marginBottom: 25,
       paddingLeft: 15,
       paddingRight: 15,
 
@@ -237,7 +238,7 @@ const sharedStyles = {
     '& p > code, & li > code': {
       background: hex2rgba(colors.note, 0.3),
       padding: '0 3px',
-      fontSize: 16,
+      fontSize: 'inherit',
       color: colors.text,
       wordBreak: 'break-word',
     },

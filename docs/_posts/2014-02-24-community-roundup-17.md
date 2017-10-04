@@ -74,7 +74,7 @@ Dmitry Chestnykh [@dchest](https://twitter.com/dchest) wrote a [static search in
 [Martin Andert](https://github.com/martinandert) created [react-lorem-component](https://github.com/martinandert/react-lorem-component), a simple component for all your placeholding needs.
 
 ### Input with placeholder shim
-[react-input=placeholder](https://github.com/enigma-io/react-input-placeholder) by [enigma-io](https://github.com/enigma-io) is a small wrapper around React.DOM.input that shims in placeholder functionality for browsers that don't natively support it.
+[react-input-placeholder](https://github.com/enigma-io/react-input-placeholder) by [enigma-io](https://github.com/enigma-io) is a small wrapper around React.DOM.input that shims in placeholder functionality for browsers that don't natively support it.
 
 ### diContainer
 

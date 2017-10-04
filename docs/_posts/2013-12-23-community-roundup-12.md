@@ -26,7 +26,7 @@ Managing the scroll position when new content is inserted is usually very tricky
 
 > We can check the scroll position before the component has updated with componentWillUpdate and scroll if necessary at componentDidUpdate
 >
-> ```
+> ```js
 > componentWillUpdate: function() {
 >   var node = this.getDOMNode();
 >   this.shouldScrollBottom =

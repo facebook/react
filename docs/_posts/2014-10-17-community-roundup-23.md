@@ -130,14 +130,13 @@ undo: function() {
 
 [DeLorean](https://github.com/deloreanjs/delorean) is a tiny Flux pattern implementation developed by [Fatih Kadir Akin](https://github.com/f).
 
->
-- Unidirectional data flow, it makes your app logic simpler than MVC
-- Automatically listens to data changes and keeps your data updated
-- Makes data more consistent across your whole application
-- It's framework agnostic, completely. There's no view framework dependency
-- Very small, just 4K gzipped
-- Built-in React.js integration, easy to use with Flight.js and Ractive.js and probably all others
-- Improve your UI/data consistency using rollbacks
+> - Unidirectional data flow, it makes your app logic simpler than MVC
+> - Automatically listens to data changes and keeps your data updated
+> - Makes data more consistent across your whole application
+> - It's framework agnostic, completely. There's no view framework dependency
+> - Very small, just 4K gzipped
+> - Built-in React.js integration, easy to use with Flight.js and Ractive.js and probably all others
+> - Improve your UI/data consistency using rollbacks
 
 
 ## Facebook's iOS Infrastructure

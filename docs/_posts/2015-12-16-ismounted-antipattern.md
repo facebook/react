@@ -10,7 +10,7 @@ The primary use case for `isMounted()` is to avoid calling `setState()` after a 
 To avoid the error message, people often add lines like this:
 
 ```js
-if(this.isMounted()) { // This is bad.
+if (this.isMounted()) { // This is bad.
   this.setState({...});
 }
 ```
