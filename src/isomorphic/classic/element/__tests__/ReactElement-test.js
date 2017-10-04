@@ -463,6 +463,21 @@ describe('ReactElement', () => {
     var jsonElement = JSON.stringify(React.createElement('div'));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
+
+  it('warns about props with Symbol key', function() {
+    global.Symbol = originalSymbol;
+
+    spyOn(console, 'error');
+    expect(console.error).not.toHaveBeenCalled();
+    React.createElement('div', {[Symbol()]: '12'});
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'React.createElement(...): Unsupported Symbol key in props. ' +
+      'Properties keyed by Symbol will be ignored.'
+    );
+
+    global.Symbol = undefined;
+  });
 });
 
 describe('comparing jsx vs .createFactory() vs .createElement()', () => {

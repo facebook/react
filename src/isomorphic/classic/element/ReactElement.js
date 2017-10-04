@@ -189,6 +189,14 @@ ReactElement.createElement = function(type, config, children) {
   var source = null;
 
   if (config != null) {
+    if (__DEV__) {
+      warning(
+        !Object.getOwnPropertySymbols || !Object.getOwnPropertySymbols(config).length,
+        'React.createElement(...): Unsupported Symbol key in props. ' +
+        'Properties keyed by Symbol will be ignored.'
+      );
+    }
+
     if (hasValidRef(config)) {
       ref = config.ref;
     }
