@@ -86,7 +86,7 @@ Jonathan Krause ([@jonykrause](https://twitter.com/jonykrause)) offers his thoug
 [Peter Hausel](http://pk11.kinja.com/) shows how to build a Wikipedia auto-complete demo based on immutable data structures (similar to [mori](https://npmjs.org/package/mori)), really taking advantage of the framework's one-way reactive data binding:
 
 > Its truly reactive design makes DOM updates finally sane and when combined with persistent data structures one can experience JavaScript development like it was never done before.
-
+>
 > [Read the full post](http://tech.kinja.com/immutable-react-1495205675)
 
 

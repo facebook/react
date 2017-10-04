@@ -27,14 +27,15 @@ While we're talking about tree diffing: Matt Esch ([@MatthewEsch](https://twitte
 
 
 James Padosley wrote a short post on the basics (and merits) of React: [What is React?](http://james.padolsey.com/javascript/what-is-react/)
-> What I like most about React is that it doesn't impose heady design patterns and data-modelling abstractions on me. [...] Its opinions are so minimal and its abstractions so focused on the problem of the DOM, that you can merrily slap your design choices atop.
 
+> What I like most about React is that it doesn't impose heady design patterns and data-modelling abstractions on me. [...] Its opinions are so minimal and its abstractions so focused on the problem of the DOM, that you can merrily slap your design choices atop.
+>
 > [Read the full post...](http://james.padolsey.com/javascript/what-is-react/)
 
 Taylor Lapeyre ([@taylorlapeyre](https://twitter.com/taylorlapeyre)) wrote another nice [introduction to React](http://words.taylorlapeyre.me/an-introduction-to-react).
 
 > React expects you to do the work of getting and pushing data from the server. This makes it very easy to implement React as a front end solution, since it simply expects you to hand it data. React does all the other work.
-
+>
 > [Read the full post...](http://words.taylorlapeyre.me/an-introduction-to-react)
 
 

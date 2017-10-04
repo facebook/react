@@ -74,6 +74,6 @@ este.demos.react.todoApp = este.react.create (`/** @lends {React.ReactComponent.
 > I'm the author of "[Land of Lisp](http://landoflisp.com/)" and I love your framework. I built a somewhat similar framework a year ago [WebFUI](https://github.com/drcode/webfui) aimed at ClojureScript. My framework also uses global event delegates, a global "render" function, DOM reconciliation, etc just like react.js. (Of course these ideas all have been floating around the ether for ages, always great to see more people building on them.)
 >
 > Your implementation is more robust, and so I think the next point release of webfui will simply delegate all the "hard work" to react.js and will only focus on the areas where it adds value (enabling purely functional UI programming in clojurescript, and some other stuff related to streamlining event handling)
-<figure><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ"><img src="../img/blog/landoflisp.png"></a></figure>
+> <figure><a href="https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ"><img src="../img/blog/landoflisp.png"></a></figure>
 >
 > [Read the full post...](https://groups.google.com/forum/#!msg/reactjs/e3bYersyd64/qODfcuBR9LwJ)
