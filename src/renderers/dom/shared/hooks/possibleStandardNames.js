@@ -401,6 +401,7 @@ var possibleStandardNames = {
   strokeopacity: 'strokeOpacity',
   'stroke-opacity': 'strokeOpacity',
   suppresscontenteditablewarning: 'suppressContentEditableWarning',
+  suppresshydrationwarning: 'suppressHydrationWarning',
   surfacescale: 'surfaceScale',
   systemlanguage: 'systemLanguage',
   tablevalues: 'tableValues',

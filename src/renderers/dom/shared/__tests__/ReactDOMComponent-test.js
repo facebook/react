@@ -318,6 +318,7 @@ describe('ReactDOMComponent', () => {
         <my-component
           children={['foo']}
           suppressContentEditableWarning={true}
+          suppressHydrationWarning={true}
         />,
         container,
       );
@@ -325,17 +326,24 @@ describe('ReactDOMComponent', () => {
       expect(
         container.firstChild.hasAttribute('suppressContentEditableWarning'),
       ).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressHydrationWarning'),
+      ).toBe(false);
 
       ReactDOM.render(
         <my-component
           children={['bar']}
           suppressContentEditableWarning={false}
+          suppressHydrationWarning={false}
         />,
         container,
       );
       expect(container.firstChild.hasAttribute('children')).toBe(false);
       expect(
         container.firstChild.hasAttribute('suppressContentEditableWarning'),
+      ).toBe(false);
+      expect(
+        container.firstChild.hasAttribute('suppressHydrationWarning'),
       ).toBe(false);
     });
 

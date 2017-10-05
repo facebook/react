@@ -21,6 +21,7 @@ var RESERVED_PROPS = {
   defaultChecked: true,
   innerHTML: true,
   suppressContentEditableWarning: true,
+  suppressHydrationWarning: true,
   style: true,
 };
 
