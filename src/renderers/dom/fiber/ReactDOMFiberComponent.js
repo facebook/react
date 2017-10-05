@@ -77,11 +77,12 @@ if (__DEV__) {
   };
 
   // HTML parsing normalizes CR and CRLF to LF.
+  // It also can turn \u0000 into \uFFFD inside attributes.
   // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
   // If we have a mismatch, it might be caused by that.
   // We won't be patching up in this case as that matches our past behavior.
   var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
-  var NORMALIZE_NULL_REGEX = /\u0000/g;
+  var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
   var normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
     const markupString = typeof markup === 'string'
@@ -89,7 +90,7 @@ if (__DEV__) {
       : '' + (markup: any);
     return markupString
       .replace(NORMALIZE_NEWLINES_REGEX, '\n')
-      .replace(NORMALIZE_NULL_REGEX, '');
+      .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
   };
 
   var warnForTextDifference = function(
