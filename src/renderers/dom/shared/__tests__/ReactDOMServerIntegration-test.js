@@ -1117,6 +1117,30 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(e.childNodes[1], 'bar');
         }
       });
+
+      itRenders(
+        'a component returning text node between two text nodes',
+        async render => {
+          const B = () => 'b';
+          const e = await render(<div>{'a'}<B />{'c'}</div>);
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // In the server render output there's a comment between them.
+            expect(e.childNodes.length).toBe(5);
+            expectTextNode(e.childNodes[0], 'a');
+            expectTextNode(e.childNodes[2], 'b');
+            expectTextNode(e.childNodes[4], 'c');
+          } else {
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], 'a');
+            expectTextNode(e.childNodes[1], 'b');
+            expectTextNode(e.childNodes[2], 'c');
+          }
+        },
+      );
     });
 
     describe('number children', function() {
