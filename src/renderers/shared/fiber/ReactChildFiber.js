@@ -35,6 +35,7 @@ if (__DEV__) {
    * updates.
    */
   var ownerHasKeyUseWarning = {};
+  var ownerHasFunctionTypeWarning = {};
 
   var warnForMissingKey = (child: mixed) => {
     if (child === null || typeof child !== 'object') {
@@ -192,6 +193,17 @@ function throwOnInvalidObjectType(returnFiber: Fiber, newChild: Object) {
 }
 
 function warnOnFunctionType() {
+  const currentComponentErrorInfo =
+    'Functions are not valid as a React child. This may happen if ' +
+    'you return a Component instead of <Component /> from render. ' +
+    'Or maybe you meant to call this function rather than return it.' +
+    (getCurrentFiberStackAddendum() || '');
+
+  if (ownerHasFunctionTypeWarning[currentComponentErrorInfo]) {
+    return;
+  }
+  ownerHasFunctionTypeWarning[currentComponentErrorInfo] = true;
+
   warning(
     false,
     'Functions are not valid as a React child. This may happen if ' +
