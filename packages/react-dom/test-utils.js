@@ -1,7 +1,7 @@
 'use strict';
 
 if (process.env.NODE_ENV === 'production') {
-  throw Error('test-utils is not available in production mode.');
+  module.exports = require('./cjs/react-dom-test-utils.production.min.js');
 } else {
-  module.exports = require('./cjs/react-dom-test-utils.development');
+  module.exports = require('./cjs/react-dom-test-utils.development.js');
 }

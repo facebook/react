@@ -203,6 +203,10 @@
     "react-test-renderer-shallow.production.min.js (NODE_PROD)": {
       "size": 4508,
       "gzip": 1637
+    },
+    "react-dom-test-utils.production.min.js (NODE_PROD)": {
+      "size": 11608,
+      "gzip": 4241
     }
   }
 }
