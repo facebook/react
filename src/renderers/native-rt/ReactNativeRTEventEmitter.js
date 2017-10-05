@@ -26,9 +26,7 @@ var ReactNativeRTEventEmitter = {
     nativeEventParam: Object,
   ) {
     var nativeEvent = nativeEventParam;
-    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(
-      tag,
-    );
+    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(tag);
     if (props == null) {
       return;
     }
