@@ -82,16 +82,21 @@ if (__DEV__) {
   // We won't be patching up in this case as that matches our past behavior.
   var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
 
-  var warnForTextDifference = function(serverText: string, clientText: string) {
+  var warnForTextDifference = function(
+    serverText: string,
+    clientText: string | number,
+  ) {
     if (didWarnInvalidHydration) {
       return;
     }
-    const normalizedClientText = clientText.replace(
-      NORMALIZE_NEWLINES_REGEX,
-      '\n',
-    );
-    if (serverText === normalizedClientText) {
-      return;
+    if (typeof clientText === 'string') {
+      const normalizedClientText = clientText.replace(
+        NORMALIZE_NEWLINES_REGEX,
+        '\n',
+      );
+      if (serverText === normalizedClientText) {
+        return;
+      }
     }
     didWarnInvalidHydration = true;
     warning(
