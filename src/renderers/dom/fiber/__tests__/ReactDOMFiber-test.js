@@ -10,7 +10,6 @@
 'use strict';
 
 var React = require('react');
-var ReactDOM = require('react-dom');
 var ReactTestUtils = require('react-dom/test-utils');
 var PropTypes = require('prop-types');
 
@@ -20,9 +19,28 @@ describe('ReactDOMFiber', () => {
   }
 
   var container;
+  var ReactDOM;
 
   beforeEach(() => {
+    ReactDOM = require('react-dom');
     container = document.createElement('div');
+  });
+
+  it('warns when requestAnimationFrame is not polyfilled in the browser', () => {
+    const previousRAF = global.requestAnimationFrame;
+    try {
+      global.requestAnimationFrame = undefined;
+      spyOn(console, 'error');
+
+      ReactDOM.render(<div />, container);
+
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'React depends on requestAnimationFrame.',
+      );
+    } finally {
+      global.requestAnimationFrame = previousRAF;
+    }
   });
 
   it('should render strings as children', () => {

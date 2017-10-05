@@ -57,11 +57,29 @@ var {
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
+let checkForRAF = () => {};
+
 if (__DEV__) {
   var lowPriorityWarning = require('lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
+  var checkedRaf = false;
+
+  checkForRAF = () => {
+    if (
+      !checkedRaf &&
+      ExecutionEnvironment.canUseDOM &&
+      typeof requestAnimationFrame !== 'function'
+    ) {
+      warning(
+        false,
+        'React depends on requestAnimationFrame. Make sure that you load a ' +
+          'polyfill in older browsers. http://fb.me/react-polyfills',
+      );
+    }
+    checkedRaf = true;
+  };
 
   if (
     typeof Map !== 'function' ||
@@ -731,6 +749,7 @@ var ReactDOMFiber = {
     container: DOMContainer,
     callback: ?Function,
   ) {
+    checkForRAF();
     return renderSubtreeIntoContainer(
       null,
       element,

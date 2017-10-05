@@ -22,21 +22,6 @@ import type {Deadline} from 'ReactFiberReconciler';
 
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
-  if (
-    ExecutionEnvironment.canUseDOM &&
-    typeof requestAnimationFrame !== 'function'
-  ) {
-    warning(
-      false,
-      'React depends on requestAnimationFrame. Make sure that you load a ' +
-        'polyfill in older browsers. http://fb.me/react-polyfills',
-    );
-  }
-}
-
 // TODO: There's no way to cancel, because Fiber doesn't atm.
 let rIC: (callback: (deadline: Deadline) => void) => number;
 
