@@ -10,12 +10,15 @@
 'use strict';
 
 var DOMProperty = require('DOMProperty');
+var {Namespaces} = require('DOMNamespaces');
 
 var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
+
+var HTML_NAMESPACE = Namespaces.html;
 
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
@@ -85,13 +88,16 @@ var DOMMarkupOperations = {
    * @param {*} value
    * @return {?string} Markup string, or null if the property was invalid.
    */
-  createMarkupForProperty: function(name, value) {
+  createMarkupForProperty: function(name, value, namespace) {
     var propertyInfo = DOMProperty.getPropertyInfo(name);
     if (propertyInfo) {
       if (shouldIgnoreValue(propertyInfo, value)) {
         return '';
       }
       var attributeName = propertyInfo.attributeName;
+      if (namespace === HTML_NAMESPACE) {
+        attributeName = attributeName.toLowerCase();
+      }
       if (
         propertyInfo.hasBooleanValue ||
         (propertyInfo.hasOverloadedBooleanValue && value === true)
@@ -106,6 +112,9 @@ var DOMMarkupOperations = {
     } else if (DOMProperty.shouldSetAttribute(name, value)) {
       if (value == null) {
         return '';
+      }
+      if (namespace === HTML_NAMESPACE) {
+        name = name.toLowerCase();
       }
       return name + '=' + quoteAttributeValueForBrowser(value);
     }
