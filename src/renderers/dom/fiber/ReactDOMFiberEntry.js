@@ -523,8 +523,21 @@ var DOMRenderer = ReactFiberReconciler({
     return diffHydratedText(textInstance, text);
   },
 
+  didNotHydrateContainerInstance(
+    parentContainer: Container,
+    instance: Instance | TextInstance,
+  ) {
+    if (instance.nodeType === 1) {
+      warnForDeletedHydratableElement(parentContainer, (instance: any));
+    } else {
+      warnForDeletedHydratableText(parentContainer, (instance: any));
+    }
+  },
+
   didNotHydrateInstance(
-    parentInstance: Instance | Container,
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
     instance: Instance | TextInstance,
   ) {
     if (instance.nodeType === 1) {
@@ -534,8 +547,25 @@ var DOMRenderer = ReactFiberReconciler({
     }
   },
 
+  didNotFindHydratableContainerInstance(
+    parentContainer: Container,
+    type: string,
+    props: Props,
+  ) {
+    warnForInsertedHydratedElement(parentContainer, type, props);
+  },
+
+  didNotFindHydratableContainerTextInstance(
+    parentContainer: Container,
+    text: string,
+  ) {
+    warnForInsertedHydratedText(parentContainer, text);
+  },
+
   didNotFindHydratableInstance(
-    parentInstance: Instance | Container,
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
     type: string,
     props: Props,
   ) {
@@ -543,7 +573,9 @@ var DOMRenderer = ReactFiberReconciler({
   },
 
   didNotFindHydratableTextInstance(
-    parentInstance: Instance | Container,
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
     text: string,
   ) {
     warnForInsertedHydratedText(parentInstance, text);
