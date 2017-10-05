@@ -1117,52 +1117,6 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(e.childNodes[1], 'bar');
         }
       });
-
-      describe('with carriage returns', () => {
-        // HTML parsing normalizes CR and CRLF to LF.
-        // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
-        // If we have a mismatch, it might be caused by that (and should not be reported).
-        // We won't be patching up in this case as that matches our past behavior.
-
-        itRenders('a div with one text CR child', async render => {
-          const e = await render(<div>{'foo\rbar\r\nbaz\nqux'}</div>);
-          if (
-            render === serverRender ||
-            render === clientRenderOnServerString ||
-            render === streamRender
-          ) {
-            expect(e.childNodes.length).toBe(1);
-            // Both CR and CRLF are replaced with LF.
-            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
-          } else {
-            expect(e.childNodes.length).toBe(1);
-            // Client rendering leaves CRs as they are.
-            // TODO: verify that it doesn't cause any observable difference.
-            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar\r\nbaz\nqux');
-          }
-        });
-
-        itRenders('a div with two text CR children', async render => {
-          const e = await render(<div>{'foo\rbar'}{'\r\nbaz\nqux'}</div>);
-          if (
-            render === serverRender ||
-            render === clientRenderOnServerString ||
-            render === streamRender
-          ) {
-            // Both CR and CRLF are replaced with LF.
-            // We have three nodes because there is a comment between them.
-            expect(e.childNodes.length).toBe(3);
-            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
-            expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
-          } else {
-            expect(e.childNodes.length).toBe(2);
-            // Client rendering leaves CRs as they are.
-            // TODO: verify that it doesn't cause any observable difference.
-            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
-            expectNode(e.childNodes[1], TEXT_NODE_TYPE, '\r\nbaz\nqux');
-          }
-        });
-      });
     });
 
     describe('number children', function() {
@@ -1545,6 +1499,59 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(e.childNodes[1], '<span>Text2&quot;</span>');
         }
       });
+    });
+
+    describe('carriage return', () => {
+
+      // HTML parsing normalizes CR and CRLF to LF.
+      // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+      // If we have a mismatch, it might be caused by that (and should not be reported).
+      // We won't be patching up in this case as that matches our past behavior.
+
+      itRenders(
+        'an element with one text child with carriage returns',
+        async render => {
+          const e = await render(<div>{'foo\rbar\r\nbaz\nqux'}</div>);
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            expect(e.childNodes.length).toBe(1);
+            // Both CR and CRLF are replaced with LF.
+            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
+          } else {
+            expect(e.childNodes.length).toBe(1);
+            // Client rendering leaves CRs as they are.
+            // TODO: verify that it doesn't cause any observable difference.
+            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar\r\nbaz\nqux');
+          }
+        },
+      );
+
+      itRenders(
+        'an element with two text children with carriage returns',
+        async render => {
+          const e = await render(<div>{'foo\rbar'}{'\r\nbaz\nqux'}</div>);
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // Both CR and CRLF are replaced with LF.
+            // We have three nodes because there is a comment between them.
+            expect(e.childNodes.length).toBe(3);
+            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
+            expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
+          } else {
+            expect(e.childNodes.length).toBe(2);
+            // Client rendering leaves CRs as they are.
+            // TODO: verify that it doesn't cause any observable difference.
+            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
+            expectNode(e.childNodes[1], TEXT_NODE_TYPE, '\r\nbaz\nqux');
+          }
+        },
+      );
     });
 
     describe('components that throw errors', function() {
