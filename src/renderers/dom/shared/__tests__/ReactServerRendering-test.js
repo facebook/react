@@ -701,4 +701,27 @@ describe('ReactDOMServer', () => {
       'tabindex=',
     );
   });
+
+  it('keeps tracks of attribute case sensitivity based on the namespace', () => {
+    const html = ReactDOMServer.renderToString(
+      <div itemProp="name">
+        <svg textRendering="optimizeLegibility" baseProfile="full">
+          <foreignObject externalResourcesRequired={true} tabIndex="1">
+            <img srcSet="wow" />
+            <svg viewBox="0 0 0 0" />
+          </foreignObject>
+        </svg>
+        <input minLength="10" />
+      </div>,
+    );
+    // SVG is case sensitive
+    expect(html).toContain('text-rendering=');
+    expect(html).toContain('baseProfile=');
+    expect(html).toContain('tabindex=');
+    expect(html).toContain('viewBox=');
+    // HTML is not, but people expect lowercase output
+    expect(html).toContain('itemprop=');
+    expect(html).toContain('srcset=');
+    expect(html).toContain('minlength=');
+  });
 });
