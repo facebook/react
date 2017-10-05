@@ -93,7 +93,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
     config: {
       destDir: 'build/',
       globals: {
@@ -325,7 +325,7 @@ const bundles = [
   /******* React Test Renderer *******/
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactTestRenderer',
@@ -350,7 +350,7 @@ const bundles = [
   },
   {
     babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
     config: {
       destDir: 'build/',
       moduleName: 'ReactShallowRenderer',

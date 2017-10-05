@@ -195,6 +195,18 @@
     "ReactNativeRTFiber-prod.js (RN_PROD)": {
       "size": 167912,
       "gzip": 28774
+    },
+    "react-test-renderer.production.min.js (NODE_PROD)": {
+      "size": 53838,
+      "gzip": 16625
+    },
+    "react-test-renderer-shallow.production.min.js (NODE_PROD)": {
+      "size": 4508,
+      "gzip": 1637
+    },
+    "react-dom-test-utils.production.min.js (NODE_PROD)": {
+      "size": 11608,
+      "gzip": 4241
     }
   }
 }
