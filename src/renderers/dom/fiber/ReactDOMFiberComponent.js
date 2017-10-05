@@ -125,7 +125,7 @@ if (__DEV__) {
       clientValue,
     );
     const normalizedServerValue = normalizeMarkupForTextOrAttribute(
-      clientValue,
+      serverValue,
     );
     if (normalizedServerValue === normalizedClientValue) {
       return;
