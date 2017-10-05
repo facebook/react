@@ -76,16 +76,41 @@ if (__DEV__) {
     validateUnknownProperties(type, props);
   };
 
-  var warnForTextDifference = function(serverText: string, clientText: string) {
+  // HTML parsing normalizes CR and CRLF to LF.
+  // It also can turn \u0000 into \uFFFD inside attributes.
+  // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+  // If we have a mismatch, it might be caused by that.
+  // We will still patch up in this case but not fire the warning.
+  var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+  var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
+
+  var normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+    const markupString = typeof markup === 'string'
+      ? markup
+      : '' + (markup: any);
+    return markupString
+      .replace(NORMALIZE_NEWLINES_REGEX, '\n')
+      .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
+  };
+
+  var warnForTextDifference = function(
+    serverText: string,
+    clientText: string | number,
+  ) {
     if (didWarnInvalidHydration) {
+      return;
+    }
+    const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
+    const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
+    if (normalizedServerText === normalizedClientText) {
       return;
     }
     didWarnInvalidHydration = true;
     warning(
       false,
       'Text content did not match. Server: "%s" Client: "%s"',
-      serverText,
-      clientText,
+      normalizedServerText,
+      normalizedClientText,
     );
   };
 
@@ -97,13 +122,22 @@ if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
+    const normalizedClientValue = normalizeMarkupForTextOrAttribute(
+      clientValue,
+    );
+    const normalizedServerValue = normalizeMarkupForTextOrAttribute(
+      serverValue,
+    );
+    if (normalizedServerValue === normalizedClientValue) {
+      return;
+    }
     didWarnInvalidHydration = true;
     warning(
       false,
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
-      JSON.stringify(serverValue),
-      JSON.stringify(clientValue),
+      JSON.stringify(normalizedServerValue),
+      JSON.stringify(normalizedClientValue),
     );
   };
 
