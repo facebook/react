@@ -76,8 +76,21 @@ if (__DEV__) {
     validateUnknownProperties(type, props);
   };
 
+  // HTML parsing normalizes CR and CRLF to LF.
+  // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
+  // If we have a mismatch, it might be caused by that.
+  // We won't be patching up in this case as that matches our past behavior.
+  var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+
   var warnForTextDifference = function(serverText: string, clientText: string) {
     if (didWarnInvalidHydration) {
+      return;
+    }
+    const normalizedClientText = clientText.replace(
+      NORMALIZE_NEWLINES_REGEX,
+      '\n',
+    );
+    if (serverText === normalizedClientText) {
       return;
     }
     didWarnInvalidHydration = true;
@@ -96,6 +109,15 @@ if (__DEV__) {
   ) {
     if (didWarnInvalidHydration) {
       return;
+    }
+    if (typeof clientValue === 'string') {
+      const normalizedClientValue = clientValue.replace(
+        NORMALIZE_NEWLINES_REGEX,
+        '\n',
+      );
+      if (serverValue === normalizedClientValue) {
+        return;
+      }
     }
     didWarnInvalidHydration = true;
     warning(

@@ -1511,18 +1511,13 @@ describe('ReactDOMServerIntegration', () => {
         'an element with one text child with carriage returns',
         async render => {
           const e = await render(<div>{'foo\rbar\r\nbaz\nqux'}</div>);
-          if (
-            render === serverRender ||
-            render === clientRenderOnServerString ||
-            render === streamRender
-          ) {
+          if (render === serverRender || render === streamRender) {
             expect(e.childNodes.length).toBe(1);
-            // Both CR and CRLF are replaced with LF.
+            // Everything becomes LF when parsed from server HTML.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(1);
-            // Client rendering leaves CRs as they are.
-            // TODO: verify that it doesn't cause any observable difference.
+            // Client rendering (or hydration) uses JS value with CR.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar\r\nbaz\nqux');
           }
         },
@@ -1532,20 +1527,21 @@ describe('ReactDOMServerIntegration', () => {
         'an element with two text children with carriage returns',
         async render => {
           const e = await render(<div>{'foo\rbar'}{'\r\nbaz\nqux'}</div>);
-          if (
-            render === serverRender ||
-            render === clientRenderOnServerString ||
-            render === streamRender
-          ) {
-            // Both CR and CRLF are replaced with LF.
+          if (render === serverRender || render === streamRender) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
+            // Everything becomes LF when parsed from server HTML.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar');
             expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\nbaz\nqux');
+          } else if (render === clientRenderOnServerString) {
+            // We have three nodes because there is a comment between them.
+            expect(e.childNodes.length).toBe(3);
+            // Hydration uses JS value with CR.
+            expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
+            expectNode(e.childNodes[2], TEXT_NODE_TYPE, '\r\nbaz\nqux');
           } else {
             expect(e.childNodes.length).toBe(2);
-            // Client rendering leaves CRs as they are.
-            // TODO: verify that it doesn't cause any observable difference.
+            // Client rendering uses JS value with CR.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[1], TEXT_NODE_TYPE, '\r\nbaz\nqux');
           }
@@ -1558,13 +1554,14 @@ describe('ReactDOMServerIntegration', () => {
           const e = await render(<a title={'foo\rbar\r\nbaz\nqux'} />);
           if (
             render === serverRender ||
-            render === clientRenderOnServerString ||
-            render === streamRender
+            render === streamRender ||
+            render === clientRenderOnServerString
           ) {
-            // Both CR and CRLF are replaced with LF.
+            // Everything becomes LF when parsed from server HTML.
+            // Hydration also ends up with LF because we don't patch up attributes.
             expect(e.title).toBe('foo\nbar\nbaz\nqux');
           } else {
-            // Client rendering leaves CRs as they are.
+            // Client rendering uses JS value with CR.
             expect(e.title).toBe('foo\rbar\r\nbaz\nqux');
           }
         },
@@ -1575,8 +1572,7 @@ describe('ReactDOMServerIntegration', () => {
 
       // itRenders('an element with dangerouslySetInnerHTML with carriage returns', async render => {
       //   const e = await render(<div dangerouslySetInnerHTML={{ __html: 'foo\rbar\r\nbaz\nqux' }} />);
-      //   // Both CR and CRLF are replaced with LF.
-      //   // It happens on the client too because it uses the .innerHTML code path node.
+      //   // Even client doesn't have CRs because it sets .innerHTML which converts to LF.
       //   expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
       // });
     });
