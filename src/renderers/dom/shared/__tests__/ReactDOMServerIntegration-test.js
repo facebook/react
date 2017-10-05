@@ -1566,15 +1566,6 @@ describe('ReactDOMServerIntegration', () => {
           }
         },
       );
-
-      // TODO: this fails because the suite always fails when __html is just text.
-      // I don't know if it's a bug or a mistake in the test code yet.s
-
-      // itRenders('an element with dangerouslySetInnerHTML with carriage returns', async render => {
-      //   const e = await render(<div dangerouslySetInnerHTML={{ __html: 'foo\rbar\r\nbaz\nqux' }} />);
-      //   // Even client doesn't have CRs because it sets .innerHTML which converts to LF.
-      //   expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\nbar\nbaz\nqux');
-      // });
     });
 
     describe('components that throw errors', function() {
