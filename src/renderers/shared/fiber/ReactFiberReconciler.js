@@ -34,6 +34,7 @@ if (__DEV__) {
   var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
   var getComponentName = require('getComponentName');
+  var didWarnAboutNestedUpdates = false;
 }
 
 var {
@@ -214,8 +215,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       if (
         ReactDebugCurrentFiber.phase === 'render' &&
-        ReactDebugCurrentFiber.current !== null
+        ReactDebugCurrentFiber.current !== null &&
+        !didWarnAboutNestedUpdates
       ) {
+        didWarnAboutNestedUpdates = true;
         warning(
           false,
           'Render methods should be a pure function of props and state; ' +
