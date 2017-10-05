@@ -31,6 +31,9 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
       reusableSVGContainer || document.createElement('div');
     reusableSVGContainer.innerHTML = '<svg>' + html + '</svg>';
     var svgNode = reusableSVGContainer.firstChild;
+    while (node.firstChild) {
+      node.removeChild(node.firstChild);
+    }
     while (svgNode.firstChild) {
       node.appendChild(svgNode.firstChild);
     }
