@@ -81,6 +81,16 @@ if (__DEV__) {
   // If we have a mismatch, it might be caused by that.
   // We won't be patching up in this case as that matches our past behavior.
   var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
+  var NORMALIZE_NULL_REGEX = /\u0000/g;
+
+  var normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
+    const markupString = typeof markup === 'string'
+      ? markup
+      : '' + (markup: any);
+    return markupString
+      .replace(NORMALIZE_NEWLINES_REGEX, '\n')
+      .replace(NORMALIZE_NULL_REGEX, '');
+  };
 
   var warnForTextDifference = function(
     serverText: string,
@@ -89,21 +99,17 @@ if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
-    if (typeof clientText === 'string') {
-      const normalizedClientText = clientText.replace(
-        NORMALIZE_NEWLINES_REGEX,
-        '\n',
-      );
-      if (serverText === normalizedClientText) {
-        return;
-      }
+    const normalizedClientText = normalizeMarkupForTextOrAttribute(clientText);
+    const normalizedServerText = normalizeMarkupForTextOrAttribute(serverText);
+    if (normalizedServerText === normalizedClientText) {
+      return;
     }
     didWarnInvalidHydration = true;
     warning(
       false,
       'Text content did not match. Server: "%s" Client: "%s"',
-      serverText,
-      clientText,
+      normalizedServerText,
+      normalizedClientText,
     );
   };
 
@@ -115,22 +121,22 @@ if (__DEV__) {
     if (didWarnInvalidHydration) {
       return;
     }
-    if (typeof clientValue === 'string') {
-      const normalizedClientValue = clientValue.replace(
-        NORMALIZE_NEWLINES_REGEX,
-        '\n',
-      );
-      if (serverValue === normalizedClientValue) {
-        return;
-      }
+    const normalizedClientValue = normalizeMarkupForTextOrAttribute(
+      clientValue,
+    );
+    const normalizedServerValue = normalizeMarkupForTextOrAttribute(
+      clientValue,
+    );
+    if (normalizedServerValue === normalizedClientValue) {
+      return;
     }
     didWarnInvalidHydration = true;
     warning(
       false,
       'Prop `%s` did not match. Server: %s Client: %s',
       propName,
-      JSON.stringify(serverValue),
-      JSON.stringify(clientValue),
+      JSON.stringify(normalizedServerValue),
+      JSON.stringify(normalizedClientValue),
     );
   };
 
