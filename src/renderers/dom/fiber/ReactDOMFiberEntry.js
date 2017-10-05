@@ -58,6 +58,7 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
+  var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   var lowPriorityWarning = require('lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
@@ -99,6 +100,7 @@ type Props = {
   autoFocus?: boolean,
   children?: mixed,
   hidden?: boolean,
+  suppressHydrationWarning?: boolean,
 };
 type Instance = Element;
 type TextInstance = Text;
@@ -527,10 +529,12 @@ var DOMRenderer = ReactFiberReconciler({
     parentContainer: Container,
     instance: Instance | TextInstance,
   ) {
-    if (instance.nodeType === 1) {
-      warnForDeletedHydratableElement(parentContainer, (instance: any));
-    } else {
-      warnForDeletedHydratableText(parentContainer, (instance: any));
+    if (__DEV__) {
+      if (instance.nodeType === 1) {
+        warnForDeletedHydratableElement(parentContainer, (instance: any));
+      } else {
+        warnForDeletedHydratableText(parentContainer, (instance: any));
+      }
     }
   },
 
@@ -540,10 +544,12 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance: Instance,
     instance: Instance | TextInstance,
   ) {
-    if (instance.nodeType === 1) {
-      warnForDeletedHydratableElement(parentInstance, (instance: any));
-    } else {
-      warnForDeletedHydratableText(parentInstance, (instance: any));
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      if (instance.nodeType === 1) {
+        warnForDeletedHydratableElement(parentInstance, (instance: any));
+      } else {
+        warnForDeletedHydratableText(parentInstance, (instance: any));
+      }
     }
   },
 
@@ -552,14 +558,18 @@ var DOMRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
   ) {
-    warnForInsertedHydratedElement(parentContainer, type, props);
+    if (__DEV__) {
+      warnForInsertedHydratedElement(parentContainer, type, props);
+    }
   },
 
   didNotFindHydratableContainerTextInstance(
     parentContainer: Container,
     text: string,
   ) {
-    warnForInsertedHydratedText(parentContainer, text);
+    if (__DEV__) {
+      warnForInsertedHydratedText(parentContainer, text);
+    }
   },
 
   didNotFindHydratableInstance(
@@ -569,7 +579,9 @@ var DOMRenderer = ReactFiberReconciler({
     type: string,
     props: Props,
   ) {
-    warnForInsertedHydratedElement(parentInstance, type, props);
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForInsertedHydratedElement(parentInstance, type, props);
+    }
   },
 
   didNotFindHydratableTextInstance(
@@ -578,7 +590,9 @@ var DOMRenderer = ReactFiberReconciler({
     parentInstance: Instance,
     text: string,
   ) {
-    warnForInsertedHydratedText(parentInstance, text);
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForInsertedHydratedText(parentInstance, text);
+    }
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
