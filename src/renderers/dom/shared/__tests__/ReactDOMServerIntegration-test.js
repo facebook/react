@@ -1502,7 +1502,6 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('carriage return', () => {
-
       // HTML parsing normalizes CR and CRLF to LF.
       // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
       // If we have a mismatch, it might be caused by that (and should not be reported).
@@ -1549,6 +1548,24 @@ describe('ReactDOMServerIntegration', () => {
             // TODO: verify that it doesn't cause any observable difference.
             expectNode(e.childNodes[0], TEXT_NODE_TYPE, 'foo\rbar');
             expectNode(e.childNodes[1], TEXT_NODE_TYPE, '\r\nbaz\nqux');
+          }
+        },
+      );
+
+      itRenders(
+        'an element with an attribute value with carriage returns',
+        async render => {
+          const e = await render(<a title={'foo\rbar\r\nbaz\nqux'} />);
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // Both CR and CRLF are replaced with LF.
+            expect(e.title).toBe('foo\nbar\nbaz\nqux');
+          } else {
+            // Client rendering leaves CRs as they are.
+            expect(e.title).toBe('foo\rbar\r\nbaz\nqux');
           }
         },
       );
