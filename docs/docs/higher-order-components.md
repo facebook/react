@@ -30,8 +30,8 @@ For example, say you have a `CommentList` component that subscribes to an extern
 
 ```js
 class CommentList extends React.Component {
-  constructor() {
-    super();
+  constructor(props) {
+    super(props);
     this.handleChange = this.handleChange.bind(this);
     this.state = {
       // "DataSource" is some global data source
