@@ -1117,6 +1117,79 @@ describe('ReactDOMServerIntegration', () => {
           expectTextNode(e.childNodes[1], 'bar');
         }
       });
+
+      itRenders(
+        'a component returning text node between two text nodes',
+        async render => {
+          const B = () => 'b';
+          const e = await render(<div>{'a'}<B />{'c'}</div>);
+          if (
+            render === serverRender ||
+            render === clientRenderOnServerString ||
+            render === streamRender
+          ) {
+            // In the server render output there's a comment between them.
+            expect(e.childNodes.length).toBe(5);
+            expectTextNode(e.childNodes[0], 'a');
+            expectTextNode(e.childNodes[2], 'b');
+            expectTextNode(e.childNodes[4], 'c');
+          } else {
+            expect(e.childNodes.length).toBe(3);
+            expectTextNode(e.childNodes[0], 'a');
+            expectTextNode(e.childNodes[1], 'b');
+            expectTextNode(e.childNodes[2], 'c');
+          }
+        },
+      );
+
+      itRenders('a tree with sibling host and text nodes', async render => {
+        class X extends React.Component {
+          render() {
+            return [null, [<Y key="1" />], false];
+          }
+        }
+
+        function Y() {
+          return [<Z key="1" />, ['c']];
+        }
+
+        function Z() {
+          return null;
+        }
+
+        const e = await render(
+          <div>
+            {[['a'], 'b']}
+            <div>
+              <X key="1" />
+              d
+            </div>
+            e
+          </div>,
+        );
+        if (
+          render === serverRender ||
+          render === clientRenderOnServerString ||
+          render === streamRender
+        ) {
+          // In the server render output there's comments between text nodes.
+          expect(e.childNodes.length).toBe(5);
+          expectTextNode(e.childNodes[0], 'a');
+          expectTextNode(e.childNodes[2], 'b');
+          expect(e.childNodes[3].childNodes.length).toBe(3);
+          expectTextNode(e.childNodes[3].childNodes[0], 'c');
+          expectTextNode(e.childNodes[3].childNodes[2], 'd');
+          expectTextNode(e.childNodes[4], 'e');
+        } else {
+          expect(e.childNodes.length).toBe(4);
+          expectTextNode(e.childNodes[0], 'a');
+          expectTextNode(e.childNodes[1], 'b');
+          expect(e.childNodes[2].childNodes.length).toBe(2);
+          expectTextNode(e.childNodes[2].childNodes[0], 'c');
+          expectTextNode(e.childNodes[2].childNodes[1], 'd');
+          expectTextNode(e.childNodes[3], 'e');
+        }
+      });
     });
 
     describe('number children', function() {

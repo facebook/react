@@ -475,8 +475,11 @@ class ReactDOMServerRenderer {
       }
       var frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
-        out += frame.footer;
-        this.previousWasTextNode = false;
+        var footer = frame.footer;
+        out += footer;
+        if (footer !== '') {
+          this.previousWasTextNode = false;
+        }
         this.stack.pop();
         if (frame.tag === 'select') {
           this.currentSelectValue = null;
@@ -827,6 +830,7 @@ class ReactDOMServerRenderer {
       frame.debugElementStack = [];
     }
     this.stack.push(frame);
+    this.previousWasTextNode = false;
     return out;
   }
 }
