@@ -15,6 +15,9 @@ export default class Page extends Component {
     );
     return (
       <div>
+        <p suppressHydrationWarning={true}>
+          A random number: {Math.random()}
+        </p>
         <p>
           {!this.state.active ? link : 'Thanks!'}
         </p>
