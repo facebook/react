@@ -695,4 +695,10 @@ describe('ReactDOMServer', () => {
         'HTML tags in React.',
     );
   });
+
+  it('uses lowercase tags in HTML output', () => {
+    expect(ReactDOMServer.renderToString(<div tabIndex="-1" />)).toContain(
+      'tabindex=',
+    );
+  });
 });
