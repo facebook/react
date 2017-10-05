@@ -1,7 +1,7 @@
 'use strict';
 
 if (process.env.NODE_ENV === 'production') {
-  throw Error('shallow renderer is not available in production mode.');
+  module.exports = require('./cjs/react-test-renderer-shallow.production.min.js');
 } else {
-  module.exports = require('./cjs/react-test-renderer-shallow.development');
+  module.exports = require('./cjs/react-test-renderer-shallow.development.js');
 }
