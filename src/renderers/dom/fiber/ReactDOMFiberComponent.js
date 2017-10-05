@@ -60,12 +60,15 @@ var HTML = '__html';
 var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
 var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
-function isServerTextDifferentFromClientText(
-  serverText: string,
+function isServerMarkupDifferentFromClient(
+  serverText: ?string,
   clientText: string,
 ): boolean {
   if (serverText === clientText) {
     return false;
+  }
+  if (serverText === null || typeof serverText === 'undefined') {
+    return true;
   }
   // HTML parsing normalizes CR and CRLF to LF.
   // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
@@ -974,7 +977,7 @@ var ReactDOMFiberComponent = {
         // TODO: Warn if there is more than a single textNode as a child.
         // TODO: Should we use domElement.firstChild.nodeValue to compare?
         if (typeof nextProp === 'string') {
-          const isDifferent = isServerTextDifferentFromClientText(
+          const isDifferent = isServerMarkupDifferentFromClient(
             domElement.textContent,
             nextProp,
           );
@@ -1028,7 +1031,11 @@ var ReactDOMFiberComponent = {
             nextProp,
           );
           serverValue = domElement.getAttribute('style');
-          if (expectedStyle !== serverValue) {
+          const isDifferent = isServerMarkupDifferentFromClient(
+            serverValue,
+            expectedStyle,
+          );
+          if (isDifferent) {
             warnForPropDifference(propKey, serverValue, expectedStyle);
           }
         } else if (isCustomComponentTag) {
@@ -1039,8 +1046,11 @@ var ReactDOMFiberComponent = {
             propKey,
             nextProp,
           );
-
-          if (nextProp !== serverValue) {
+          const isDifferent = isServerMarkupDifferentFromClient(
+            serverValue,
+            nextProp,
+          );
+          if (isDifferent) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         } else if (DOMProperty.shouldSetAttribute(propKey, nextProp)) {
@@ -1071,7 +1081,11 @@ var ReactDOMFiberComponent = {
             );
           }
 
-          if (nextProp !== serverValue) {
+          const isDifferent = isServerMarkupDifferentFromClient(
+            serverValue,
+            nextProp,
+          );
+          if (isDifferent) {
             warnForPropDifference(propKey, serverValue, nextProp);
           }
         }
@@ -1119,7 +1133,7 @@ var ReactDOMFiberComponent = {
   },
 
   diffHydratedText(textNode: Text, text: string): boolean {
-    const isDifferent = isServerTextDifferentFromClientText(
+    const isDifferent = isServerMarkupDifferentFromClient(
       textNode.nodeValue,
       text,
     );
