@@ -80,7 +80,7 @@ if (__DEV__) {
   // It also can turn \u0000 into \uFFFD inside attributes.
   // https://www.w3.org/TR/html5/single-page.html#preprocessing-the-input-stream
   // If we have a mismatch, it might be caused by that.
-  // We won't be patching up in this case as that matches our past behavior.
+  // We will still patch up in this case but not fire the warning.
   var NORMALIZE_NEWLINES_REGEX = /\r\n?/g;
   var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
