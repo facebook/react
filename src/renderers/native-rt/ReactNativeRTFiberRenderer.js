@@ -25,6 +25,26 @@ export type TextInstance = number;
 
 const {precacheFiberNode, updateFiberProps} = ReactNativeRTComponentTree;
 
+function processProps(instance: number, props: Props): Object {
+  const propsPayload = {};
+  for (var key in props) {
+    if (key === 'children') {
+      // Skip special case.
+      continue;
+    }
+    var value = props[key];
+    if (typeof value === 'function') {
+      value = {
+        style: 'rt-event',
+        event: key,
+        tag: instance,
+      };
+    }
+    propsPayload[key] = value;
+  }
+  return propsPayload;
+}
+
 const NativeRTRenderer = ReactFiberReconciler({
   appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
     RTManager.appendChild(parentInstance, child);
@@ -70,7 +90,7 @@ const NativeRTRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): void {
     updateFiberProps(instance, newProps);
-    RTManager.updateNode(instance, newProps);
+    RTManager.updateNode(instance, processProps(instance, newProps));
   },
 
   createInstance(
@@ -81,9 +101,9 @@ const NativeRTRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): Instance {
     const tag = ReactNativeRTTagHandles.allocateTag();
-    RTManager.createNode(tag, type, props);
     precacheFiberNode(internalInstanceHandle, tag);
     updateFiberProps(tag, props);
+    RTManager.createNode(tag, type, processProps(tag, props));
     return tag;
   },
 

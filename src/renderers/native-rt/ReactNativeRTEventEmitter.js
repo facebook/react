@@ -21,14 +21,12 @@ var ReactNativeRTEventEmitter = {
    * @param {object} nativeEventParam Object passed from native.
    */
   receiveEvent: function(
-    rootNodeID: number,
+    tag: number,
     topLevelType: string,
     nativeEventParam: Object,
   ) {
     var nativeEvent = nativeEventParam;
-    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(
-      rootNodeID,
-    );
+    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(tag);
     if (props == null) {
       return;
     }
