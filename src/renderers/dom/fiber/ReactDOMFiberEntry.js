@@ -57,8 +57,7 @@ var {
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
-let checkForRAF = () => {};
-
+var checkForRAF = () => {};
 if (__DEV__) {
   var lowPriorityWarning = require('lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
@@ -585,6 +584,7 @@ function renderSubtreeIntoContainer(
   forceHydrate: boolean,
   callback: ?Function,
 ) {
+  checkForRAF();
   invariant(
     isValidContainer(container),
     'Target container is not a DOM element.',
@@ -749,7 +749,6 @@ var ReactDOMFiber = {
     container: DOMContainer,
     callback: ?Function,
   ) {
-    checkForRAF();
     return renderSubtreeIntoContainer(
       null,
       element,
