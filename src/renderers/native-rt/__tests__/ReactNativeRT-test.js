@@ -51,5 +51,6 @@ describe('ReactNativeRT', () => {
     expect(RTManager.createNode.mock.calls.length).toBe(2);
     expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
     expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
+    expect(RTManager.updateNode.mock.calls.length).toBe(1);
   });
 });
