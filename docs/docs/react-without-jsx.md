@@ -4,11 +4,13 @@ title: React Without JSX
 permalink: docs/react-without-jsx.html
 ---
 
-JSX is not a requirement for using React. Using React without JSX is especially convenient when you don't want to set up compilation in your build environment.
+JSX is not a requirement for using React. React exposes an API for creating elements with functions instead of JSX. This is especially convenient if you want to use React without introducing compilation steps to your build process.
 
-Each JSX element is just syntactic sugar for calling `React.createElement(component, props, ...children)`. So, anything you can do with JSX can also be done with just plain JavaScript.
+### Using `React.createElement()`
 
-For example, this code written with JSX:
+Each JSX element is actually syntactic sugar for calling `React.createElement(component, props, ...children)`. Therefore, creating elements without JSX is possible by using `React.createElement()`.
+
+Consider the code below written with JSX:
 
 ```js
 class Hello extends React.Component {
@@ -23,7 +25,7 @@ ReactDOM.render(
 );
 ```
 
-can be compiled to this code that does not use JSX:
+It is then compiled to code that does not use JSX:
 
 ```js
 class Hello extends React.Component {
@@ -33,16 +35,30 @@ class Hello extends React.Component {
 }
 
 ReactDOM.render(
-  React.createElement(Hello, {toWhat: 'World'}, null),
+  React.createElement(Hello, { toWhat: 'World' }, null),
   document.getElementById('root')
 );
 ```
 
+`React.createElement()` takes three arguments arguments: a component, a `props` object, and any number of children as the final arguments.
+
+The component argument can take a number of forms:
+
+1. A string - `React.createElement("div", null, null)`
+2. A sub-class of `React.Component` - `React.createElement(Hello, null, null)`
+3. A plain stateless-functional componet - `React.createElement(HelloFunctionalComponent, null, null)`
+
+To learn more about the function signature and arguments, you can read [the API documentation.](/docs/react-api.html#createelement)
+
+### Examples 
+
 If you're curious to see more examples of how JSX is converted to JavaScript, you can try out [the online Babel compiler](https://babeljs.io/repl/#?babili=false&evaluate=true&lineWrap=false&presets=es2015%2Creact%2Cstage-0&code=function%20hello()%20%7B%0A%20%20return%20%3Cdiv%3EHello%20world!%3C%2Fdiv%3E%3B%0A%7D).
 
-The component can either be provided as a string, or as a subclass of `React.Component`, or a plain function for stateless components.
+If you want to use `React.createElement()` API without ES6, follow the [React Without ES6 Guide](/docs/react-without-es6.html) and use `React.createElement()` instead of JSX.
 
-If you get tired of typing `React.createElement` so much, one common pattern is to assign a shorthand:
+### Eliminating Boilerplate
+
+If writing `React.createElement()` often becomes tiring, a common pattern is to assign the function to a shorter variable and use it as shorthand. Using this shorthand allows for creating elements without JSX to be almost as convenient as creating elements with JSX.
 
 ```js
 const e = React.createElement;
@@ -53,7 +69,5 @@ ReactDOM.render(
 );
 ```
 
-If you use this shorthand form for `React.createElement`, it can be almost as convenient to use React without JSX.
-
-Alternatively, you can refer to community projects such as [`react-hyperscript`](https://github.com/mlmorg/react-hyperscript) and [`hyperscript-helpers`](https://github.com/ohanhi/hyperscript-helpers) which offer a terser syntax.
+Alternatively, you can refer to community projects such as [`react-hyperscript`](https://github.com/mlmorg/react-hyperscript) and [`hyperscript-helpers`](https://github.com/ohanhi/hyperscript-helpers) which offer a more terse syntax.
 
