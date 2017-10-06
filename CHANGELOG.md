@@ -18,6 +18,7 @@
 * Fix a crash rendering into shadow root. ([@gaearon](https://github.com/gaearon) in [#11037](https://github.com/facebook/react/pull/11037))
 * Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
+* Warn about nested updates no more than once. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11113](https://github.com/facebook/react/pull/11113))
 * Minor bundle size improvements. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
 
 ### React DOM Server
