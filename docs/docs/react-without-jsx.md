@@ -28,12 +28,12 @@ can be compiled to this code that does not use JSX:
 ```js
 class Hello extends React.Component {
   render() {
-    return React.createElement('div', null, `Hello ${this.props.toWhat}`);
+    return React.createElement('div', {}, `Hello ${this.props.toWhat}`);
   }
 }
 
 ReactDOM.render(
-  React.createElement(Hello, {toWhat: 'World'}, null),
+  React.createElement(Hello, {toWhat: 'World'}, []),
   document.getElementById('root')
 );
 ```
@@ -48,7 +48,7 @@ If you get tired of typing `React.createElement` so much, one common pattern is 
 const e = React.createElement;
 
 ReactDOM.render(
-  e('div', null, 'Hello World'),
+  e('div', {}, 'Hello World'),
   document.getElementById('root')
 );
 ```
