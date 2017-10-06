@@ -47,7 +47,7 @@ expect(result.props.children).toEqual([
 ]);
 ```
 
-Shallow testing currently has some limitations, namely not supporting refs.
+Shallow testing currently has some limitations, namely not supporting refs and not calling `componentDidMount()` and `componentDidUpdate()`.
 
 > Note:
 >
