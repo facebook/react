@@ -50,6 +50,7 @@ var {
   updateProperties,
   diffHydratedProperties,
   diffHydratedText,
+  warnForUnmatchedText,
   warnForDeletedHydratableElement,
   warnForDeletedHydratableText,
   warnForInsertedHydratedElement,
@@ -531,6 +532,7 @@ var DOMRenderer = ReactFiberReconciler({
     text: string,
   ) {
     if (__DEV__) {
+      warnForUnmatchedText(textInstance, text);
     }
   },
 
@@ -541,7 +543,8 @@ var DOMRenderer = ReactFiberReconciler({
     textInstance: TextInstance,
     text: string,
   ) {
-    if (__DEV__) {
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForUnmatchedText(textInstance, text);
     }
   },
 

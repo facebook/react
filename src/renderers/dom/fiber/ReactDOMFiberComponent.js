@@ -1140,12 +1140,13 @@ var ReactDOMFiberComponent = {
 
   diffHydratedText(textNode: Text, text: string): boolean {
     const isDifferent = textNode.nodeValue !== text;
-    if (__DEV__) {
-      if (isDifferent) {
-        warnForTextDifference(textNode.nodeValue, text);
-      }
-    }
     return isDifferent;
+  },
+
+  warnForUnmatchedText(textNode: Text, text: string) {
+    if (__DEV__) {
+      warnForTextDifference(textNode.nodeValue, text);
+    }
   },
 
   warnForDeletedHydratableElement(
