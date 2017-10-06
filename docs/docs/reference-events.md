@@ -43,13 +43,13 @@ As such, you cannot access the event in an asynchronous way.
 
 ```javascript
 function onClick(event) {
-  console.log(event); // => nullified object.
-  console.log(event.type); // => "click"
-  const eventType = event.type; // => "click"
+  console.log(event); 
+  console.log(event.type); // => "react-click"
+  const eventType = event.type; // => "react-click"
 
   setTimeout(function() {
     console.log(event.type); // => null
-    console.log(eventType); // => "click"
+    console.log(eventType); // => "react-click"
   }, 0);
 
   // Won't work. this.state.clickEvent will only contain null values.
