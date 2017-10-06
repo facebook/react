@@ -6,7 +6,23 @@ category: Reference
 permalink: docs/react-dom.html
 ---
 
-If you load React from a `<script>` tag, these top-level APIs are available on the `ReactDOM` global. If you use ES6 with npm, you can write `import ReactDOM from 'react-dom'`. If you use ES5 with npm, you can write `var ReactDOM = require('react-dom')`.
+If you load React from a `<script>` tag, these top-level APIs are available on the `ReactDOM` global:
+
+```js
+var ReactDOM = window.ReactDOM;
+```
+
+If you use ES6 with npm, you can write:
+
+```js
+import ReactDOM from 'react-dom'`;
+```
+
+If you use ES5 with npm, you can write:
+
+```js
+var ReactDOM = require('react-dom');
+```
 
 ## Overview
 
@@ -50,7 +66,7 @@ If the optional callback is provided, it will be executed after the component is
 >
 > `ReactDOM.render()` controls the contents of the container node you pass in. Any existing DOM elements inside are replaced when first called. Later calls use React’s DOM diffing algorithm for efficient updates.
 >
-> `ReactDOM.render()` does not modify the container node (only modifies the children of the container). It may be possible to insert a component to an existing DOM node without overwriting the existing children.
+> `ReactDOM.render()` does not modify the container node (only modifies the children of the container).
 >
 > `ReactDOM.render()` currently returns a reference to the root `ReactComponent` instance. However, using this return value is legacy
 > and should be avoided because future versions of React may render components asynchronously in some cases. If you need a reference to the root `ReactComponent` instance, the preferred solution is to attach a
