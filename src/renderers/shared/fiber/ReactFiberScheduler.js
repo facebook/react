@@ -109,6 +109,8 @@ if (__DEV__) {
     stopCommitLifeCyclesTimer,
   } = require('ReactDebugFiberPerf');
 
+  var didWarnAboutStateTransition = false;
+
   var warnAboutUpdateOnUnmounted = function(
     instance: React$ComponentType<any>,
   ) {
@@ -132,6 +134,10 @@ if (__DEV__) {
         );
         break;
       case 'render':
+        if (didWarnAboutStateTransition) {
+          return;
+        }
+        didWarnAboutStateTransition = true;
         warning(
           false,
           'Cannot update during an existing state transition (such as within ' +
