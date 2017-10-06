@@ -52,7 +52,6 @@ var {ReactCurrentOwner} = require('ReactGlobalSharedState');
 var getComponentName = require('getComponentName');
 
 var {createWorkInProgress} = require('ReactFiber');
-var {isRootBlocked} = require('ReactFiberRoot');
 var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
@@ -335,12 +334,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             'is likely caused by a bug in React. Please file an issue.',
         );
       } else {
-        earliestExpirationRoot.completedAt = Done;
         nextUnitOfWork = createWorkInProgress(
           earliestExpirationRoot.current,
           earliestExpirationTime,
         );
       }
+
+      earliestExpirationRoot.completedAt = Done;
+      earliestExpirationRoot.isBlocked = false;
+
       if (earliestExpirationRoot !== nextRenderedTree) {
         // We've switched trees. Reset the nested update counter.
         nestedUpdateCount = 0;
@@ -360,53 +362,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // TODO: Find a better name for this function. It also schedules completion
   // callbacks, if a root is blocked.
   function shouldWorkOnRoot(root: FiberRoot): ExpirationTime {
-    const completedAt = root.completedAt;
     const expirationTime = root.current.expirationTime;
-
     if (expirationTime === Done) {
       // There's no work in this tree.
       return Done;
     }
-
-    if (completedAt !== Done) {
-      // The root completed but was blocked from committing.
-      if (expirationTime < completedAt) {
-        // We have work that expires earlier than the completed root.
-        return expirationTime;
-      }
-
-      // If the expiration time of the pending work is equal to the time at
-      // which we completed the work-in-progress, it's possible additional
-      // work was scheduled that happens to fall within the same expiration
-      // bucket. We need to check the work-in-progress fiber.
-      if (expirationTime === completedAt) {
-        const workInProgress = root.current.alternate;
-        if (
-          workInProgress !== null &&
-          (workInProgress.expirationTime !== Done &&
-            workInProgress.expirationTime <= expirationTime)
-        ) {
-          // We have more work. Restart the completed tree.
-          root.completedAt = Done;
-          return expirationTime;
-        }
-      }
-
-      // There have been no higher priority updates since we completed the root.
-      // If it's still blocked, return Done, as if it has no more work. If it's
-      // no longer blocked, return the time at which it completed so that we
-      // can commit it.
-      if (isRootBlocked(root, completedAt)) {
-        // We usually process completion callbacks right after a root is
-        // completed. But this root already completed, and it's possible that
-        // we received new completion callbacks since then.
-        processCompletionCallbacks(root, completedAt);
-        return Done;
-      }
-
-      return completedAt;
+    if (root.isBlocked) {
+      // We usually process completion callbacks right after a root is
+      // completed. But this root already completed, and it's possible that
+      // we received new completion callbacks since then.
+      processCompletionCallbacks(root, root.completedAt);
+      return Done;
     }
-
     return expirationTime;
   }
 
@@ -816,16 +783,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress = returnFiber;
         continue;
       } else {
+        // We've reached the root. Mark it as complete.
         const root = workInProgress.stateNode;
-        // We've reached the root. Mark the root as complete. Depending on how
-        // much time we have left, we'll either commit it now or in the
-        // next frame.
-        if (isRootBlocked(root, nextRenderExpirationTime)) {
-          // The root is blocked from committing. Mark it as complete so we
-          // know we can commit it later without starting new work.
-          root.completedAt = nextRenderExpirationTime;
-        } else {
-          // The root is not blocked, so we can commit it now.
+        root.completedAt = nextRenderExpirationTime;
+        // If the root isn't blocked, it's ready to commit. If it is blocked,
+        // we'll come back to it later.
+        if (!root.isBlocked) {
           pendingCommit = workInProgress;
         }
         processCompletionCallbacks(root, nextRenderExpirationTime);
@@ -1508,25 +1471,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function scheduleRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-    if (expirationTime === Done) {
-      return;
-    }
-
-    if (!root.isScheduled) {
-      root.isScheduled = true;
-      if (lastScheduledRoot) {
-        // Schedule ourselves to the end.
-        lastScheduledRoot.nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      } else {
-        // We're the only work scheduled.
-        nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      }
-    }
-  }
-
   function scheduleUpdate(
     fiber: Fiber,
     partialState: mixed,
@@ -1548,6 +1492,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       isReplace,
       isForced,
       nextCallback: null,
+      isTopLevelUnmount: false,
       next: null,
     };
     insertUpdateIntoFiber(fiber, update, currentTime);
@@ -1593,19 +1538,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     let node = fiber;
-    let shouldContinue = true;
-    while (node !== null && shouldContinue) {
-      // Walk the parent path to the root and update each node's expiration
-      // time. Once we reach a node whose expiration matches (and whose
-      // alternate's expiration matches) we can exit safely knowing that the
-      // rest of the path is correct.
-      shouldContinue = false;
+    while (node !== null) {
       if (
         node.expirationTime === Done ||
         node.expirationTime > expirationTime
       ) {
-        // Expiration time did not match. Update and keep going.
-        shouldContinue = true;
         node.expirationTime = expirationTime;
       }
       if (node.alternate !== null) {
@@ -1613,15 +1550,33 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           node.alternate.expirationTime === Done ||
           node.alternate.expirationTime > expirationTime
         ) {
-          // Expiration time did not match. Update and keep going.
-          shouldContinue = true;
           node.alternate.expirationTime = expirationTime;
         }
       }
       if (node.return === null) {
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
-          scheduleRoot(root, expirationTime);
+
+          // Add the root to the work schedule.
+          if (expirationTime !== Done) {
+            root.isBlocked = false;
+            if (!root.isScheduled) {
+              root.isScheduled = true;
+              if (lastScheduledRoot) {
+                // Schedule ourselves to the end.
+                lastScheduledRoot.nextScheduledRoot = root;
+                lastScheduledRoot = root;
+              } else {
+                // We're the only work scheduled.
+                nextScheduledRoot = root;
+                lastScheduledRoot = root;
+              }
+            }
+          }
+
+          // If we're not current performing work, we need to either start
+          // working now (if the update is synchronous) or schedule a callback
+          // to perform work later.
           if (!isPerformingWork) {
             const priorityLevel = expirationTimeToPriorityLevel(
               mostRecentCurrentTime,
@@ -1771,6 +1726,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       'Cannot commit while already performing work.',
     );
     root.forceExpire = expirationTime;
+    root.isBlocked = false;
     try {
       performWork(TaskPriority, null);
     } finally {
