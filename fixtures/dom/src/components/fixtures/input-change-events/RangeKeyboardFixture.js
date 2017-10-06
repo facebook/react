@@ -30,7 +30,9 @@ class RangeKeyboardFixture extends React.Component {
 
   handleKeydown = e => {
     // only interesting in arrow key events
-    if (![37, 38, 39, 40].includes(e.keyCode)) return;
+    if ([37, 38, 39, 40].indexOf(e.keyCode) < 0) {
+      return;
+    }
 
     this.setState(({keydownCount}) => {
       return {
