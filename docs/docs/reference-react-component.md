@@ -273,8 +273,8 @@ The first argument is an `updater` function with the signature:
 `prevState` is a reference to the previous state. It should not be directly mutated. Instead, changes should be represented by building a new object based on the input from `prevState` and `props`. For instance, suppose we wanted to increment a value in state by `props.step`:
 
 ```javascript
-this.setState((prevState, props) => {
-  return {counter: prevState.counter + props.step};
+this.setState(function(prevState, props) {
+  return { counter: prevState.counter + props.step }
 });
 ```
 
@@ -308,8 +308,8 @@ Object.assign(
 Subsequent calls will override values from previous calls in the same cycle, so the quantity will only be incremented once. If the next state depends on the previous state, we recommend using the updater function form, instead:
 
 ```js
-this.setState((prevState) => {
-  return {counter: prevState.quantity + 1};
+this.setState(function(prevState) {
+  return { counter: prevState.quantity + 1 }
 });
 ```
 
