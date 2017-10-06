@@ -52,6 +52,8 @@
       title: Web Components
     - id: higher-order-components
       title: Higher-Order Components
+    - id: error-boundaries
+      title: Error Boundaries
     - id: integrating-with-other-libraries
       title: Integrating with Other Libraries
     - id: accessibility
