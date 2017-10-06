@@ -52,6 +52,8 @@
       title: Web Components
     - id: higher-order-components
       title: Higher-Order Components
+    - id: render-props
+      title: Render Props
     - id: integrating-with-other-libraries
       title: Integrating with Other Libraries
     - id: accessibility
