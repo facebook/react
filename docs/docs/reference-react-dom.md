@@ -44,7 +44,7 @@ Render a React element into the DOM in the supplied `container` and return a [re
 
 If the React element was previously rendered into `container`, this will perform an update on it and only mutate the DOM as necessary to reflect the latest React element.
 
-If the optional callback is provided, it will be executed after the component is rendered or updated.
+If the optional callback is provided, it will be executed after the component is rendered or updated. The optional callback doesn't accept any parameters, and `this` refers to the root component.
 
 > Note:
 >
