@@ -749,7 +749,7 @@ We collect DOM operations on children in a list so we can execute them in batch:
       // If we can't update an existing instance, we have to unmount it
       // and mount a new one instead of it.
       if (!canUpdate) {
-        var prevNode = prevChild.node;
+        var prevNode = prevChild.getHostNode();
         prevChild.unmount();
 
         var nextChild = instantiateComponent(nextChildren[i]);
