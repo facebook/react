@@ -79,3 +79,20 @@
       title: Test Renderer
     - id: javascript-environment-requirements
       title: JS Environment Requirements
+- title: FAQ
+  items:
+    - id: faq-ajax
+      title: AJAX and APIs
+    - id: faq-build
+      title: Babel, JSX, and Build Steps
+    - id: faq-functions
+      title: Passing Functions to Components
+    - id: faq-state
+      title: Component State
+    - id: faq-styling
+      title: Styling and CSS
+    - id: faq-structure
+      title: File Structure
+    - id: faq-internals
+      title: Virtual DOM and Internals
+
