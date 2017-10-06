@@ -54,11 +54,16 @@ class RangeKeyboardFixture extends React.Component {
 
     return (
       <Fixture>
-        <input
-          type="range"
-          ref={r => (this.input = r)}
-          onChange={this.handleChange}
-        />
+        <div>
+          <input
+            type="range"
+            ref={r => (this.input = r)}
+            onChange={this.handleChange}
+          />
+          <button onClick={() => this.input.focus()}>
+            Focus Knob
+          </button>
+        </div>
         {' '}
 
         <p style={{color}}>
