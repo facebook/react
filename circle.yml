@@ -13,7 +13,6 @@ machine:
 dependencies:
   pre:
     # This is equivalent to $TRAVIS_COMMIT_RANGE
-    # Need to figure out how to bail early if this is a "docs only" build
     - echo $CIRCLE_COMPARE_URL | cut -d/ -f7
     # install yarn if it's not already installed
     - |
@@ -21,14 +20,11 @@ dependencies:
         curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version $YARN_VERSION
       fi
   override:
-    - bundle install --gemfile=docs/Gemfile --deployment --path=vendor/bundle --jobs=3 --retry=3
     - yarn install
     - scripts/circleci/set_up_github_keys.sh
   post:
     # - npm ls --depth=0
   cache_directories:
-    - docs/vendor/bundle
-    - ~/react-gh-pages # docs checkout
     - ~/.yarn
     - ~/.yarn-cache
 
@@ -42,4 +38,3 @@ deployment:
     branch: /.*/
     commands:
       - ./scripts/circleci/upload_build.sh
-      - ./scripts/circleci/build_gh_pages.sh
