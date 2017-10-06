@@ -66,9 +66,11 @@ class NameForm extends React.Component {
 
 [Try it on CodePen.](https://codepen.io/gaearon/pen/VmmPgp?editors=0010)
 
-Since the `value` attribute is set on our form element, the displayed value will always be `this.state.value`, making the React state the source of truth. Since `handleChange` runs on every keystroke to update the React state, the displayed value will update as the user types.
+When the `value` attribute is set on our input element, the displayed value will always be `this.state.value`, making the React state the source of truth. Similarly to not setting the `value` attribute at all, setting it to `null` or `undefined` will make React assume the component is not controlled and may produce a warning. We should use an empty string to represent an empty value.
 
-With a controlled component, every state mutation will have an associated handler function. This makes it straightforward to modify or validate user input. For example, if we wanted to enforce that names are written with all uppercase letters, we could write `handleChange` as:
+With a controlled component, every state mutation must have an associated handler function. Unlike the HTML5 onchange event, the `onChange` attribute in React runs the handler function on every keystroke, so the display value will update as the user types. We have to use the `setState` function, because `this.state` can be directly assigned only in the component's constructor.
+
+This pattern makes it straightforward to modify or validate user input. For example, if we wanted to enforce all uppercase letters, we could write `handleChange` as:
 
 ```javascript{2}
 handleChange(event) {
