@@ -129,6 +129,23 @@ function isValidContainer(node) {
         node.nodeValue === ' react-mount-point-unstable ')));
 }
 
+let warnedForMissingCommentParent = false;
+function getParentForCommentContainer(comment: Node): Node | null {
+  if (__DEV__) {
+    if (comment.parentNode === null && !warnedForMissingCommentParent) {
+      warnedForMissingCommentParent = true;
+      warning(
+        false,
+        'A comment mount point <!-- react-mount-point-unstable --> was ' +
+          'from its container element. This is not supported and React will ' +
+          'not work properly. Please make sure it stays in its parent.',
+      );
+    }
+  }
+  // $FlowFixMe I solemnly swear .parentNode returns Node | null, not ?Node.
+  return comment.parentNode;
+}
+
 function getReactRootElementInContainer(container: any) {
   if (!container) {
     return null;
@@ -174,10 +191,17 @@ var DOMRenderer = ReactFiberReconciler({
       }
       default: {
         const container: any = nodeType === COMMENT_NODE
-          ? rootContainerInstance.parentNode
+          ? getParentForCommentContainer(rootContainerInstance)
           : rootContainerInstance;
-        const ownNamespace = container.namespaceURI || null;
-        type = container.tagName;
+        let ownNamespace;
+        if (container !== null) {
+          ownNamespace = container.namespaceURI || null;
+          type = container.tagName;
+        } else {
+          // Error case when getParentForCommentContainer returns null
+          ownNamespace = null;
+          type = '#broken-fragment';
+        }
         namespace = getChildNamespace(ownNamespace, type);
         break;
       }
@@ -393,7 +417,10 @@ var DOMRenderer = ReactFiberReconciler({
     child: Instance | TextInstance,
   ): void {
     if (container.nodeType === COMMENT_NODE) {
-      (container.parentNode: any).insertBefore(child, container);
+      const parent = getParentForCommentContainer(container);
+      if (parent !== null) {
+        parent.insertBefore(child, container);
+      }
     } else {
       container.appendChild(child);
     }
@@ -413,7 +440,10 @@ var DOMRenderer = ReactFiberReconciler({
     beforeChild: Instance | TextInstance,
   ): void {
     if (container.nodeType === COMMENT_NODE) {
-      (container.parentNode: any).insertBefore(child, beforeChild);
+      const parent = getParentForCommentContainer(container);
+      if (parent !== null) {
+        parent.insertBefore(child, beforeChild);
+      }
     } else {
       container.insertBefore(child, beforeChild);
     }
@@ -428,7 +458,10 @@ var DOMRenderer = ReactFiberReconciler({
     child: Instance | TextInstance,
   ): void {
     if (container.nodeType === COMMENT_NODE) {
-      (container.parentNode: any).removeChild(child);
+      const parent = getParentForCommentContainer(container);
+      if (parent !== null) {
+        parent.removeChild(child);
+      }
     } else {
       container.removeChild(child);
     }
