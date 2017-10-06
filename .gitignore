@@ -9,14 +9,6 @@ build/
 remote-repo/
 coverage/
 .module-cache
-*.gem
-docs/.bundle
-docs/code
-docs/_site
-docs/.sass-cache
-docs/js/*
-docs/downloads/*.zip
-docs/vendor/bundle
 fixtures/dom/public/react-dom.js
 fixtures/dom/public/react.js
 test/the-files-to-test.generated.js
