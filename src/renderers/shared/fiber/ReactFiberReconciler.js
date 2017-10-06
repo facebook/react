@@ -355,8 +355,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     if (isPrerender) {
       // Block the root from committing at this expiration time.
-      if (root.blockers === null) {
-        root.blockers = createUpdateQueue();
+      if (root.topLevelBlockers === null) {
+        root.topLevelBlockers = createUpdateQueue();
       }
       const block = {
         priorityLevel: null,
@@ -368,7 +368,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         isTopLevelUnmount: false,
         next: null,
       };
-      insertUpdateIntoQueue(root.blockers, block, currentTime);
+      insertUpdateIntoQueue(root.topLevelBlockers, block, currentTime);
     }
 
     scheduleWork(current, expirationTime);
@@ -382,11 +382,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   WorkNode.prototype.commit = function() {
     const root = this._reactRootContainer;
     const expirationTime = this._expirationTime;
-    const blockers = root.blockers;
-    if (blockers === null) {
+    const topLevelBlockers = root.topLevelBlockers;
+    if (topLevelBlockers === null) {
       return;
     }
-    processUpdateQueue(blockers, null, null, null, expirationTime);
+    processUpdateQueue(topLevelBlockers, null, null, null, expirationTime);
     expireWork(root, expirationTime);
   };
   WorkNode.prototype.then = function(callback) {

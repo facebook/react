@@ -25,11 +25,14 @@ export type FiberRoot = {
   current: Fiber,
   // Determines if this root has already been added to the schedule for work.
   isScheduled: boolean,
+  // A queue that represents times at which the root is blocked by a
+  // top-level update.
+  topLevelBlockers: UpdateQueue<null> | null,
   // The time at which this root completed.
   completedAt: ExpirationTime,
-  // A queue that represents times at which this root is blocked
+  // If this root completed, isBlocked indicates whether it's blocked
   // from committing.
-  blockers: UpdateQueue<null> | null,
+  isBlocked: boolean,
   // A queue of callbacks that fire once their corresponding expiration time
   // has completed. Only fired once.
   completionCallbacks: UpdateQueue<null> | null,
@@ -45,16 +48,12 @@ export type FiberRoot = {
   hydrate: boolean,
 };
 
-exports.isRootBlocked = function(
-  root: FiberRoot,
-  expirationTime: ExpirationTime,
-) {
-  const blockers = root.blockers;
-  if (blockers === null) {
-    return false;
+exports.topLevelBlockedAt = function(root: FiberRoot) {
+  const topLevelBlockers = root.topLevelBlockers;
+  if (topLevelBlockers === null) {
+    return NoWork;
   }
-  const blockedAt = getUpdateQueueExpirationTime(blockers);
-  return blockedAt !== NoWork && blockedAt <= expirationTime;
+  return getUpdateQueueExpirationTime(topLevelBlockers);
 };
 
 exports.createFiberRoot = function(containerInfo: any): FiberRoot {
@@ -66,8 +65,9 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     containerInfo: containerInfo,
     isScheduled: false,
     completedAt: NoWork,
-    blockers: null,
+    isBlocked: false,
     completionCallbacks: null,
+    topLevelBlockers: null,
     forceExpire: null,
     nextScheduledRoot: null,
     context: null,

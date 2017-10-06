@@ -18,6 +18,7 @@ import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
 
+var {topLevelBlockedAt} = require('ReactFiberRoot');
 var {reconcileChildFibers} = require('ReactChildFiber');
 var {
   popContextProvider,
@@ -40,7 +41,7 @@ var {
   Fragment,
 } = ReactTypeOfWork;
 var {Placement, Ref, Update} = ReactTypeOfSideEffect;
-var {Never} = ReactFiberExpirationTime;
+var {NoWork, Never} = ReactFiberExpirationTime;
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -219,6 +220,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // TODO: Delete this when we delete isMounted and findDOMNode.
           workInProgress.effectTag &= ~Placement;
         }
+
+        // Check if the root is blocked by a top-level update.
+        const blockedAt = topLevelBlockedAt(fiberRoot);
+        fiberRoot.isBlocked =
+          blockedAt !== NoWork && blockedAt <= renderExpirationTime;
         return null;
       }
       case HostComponent: {
