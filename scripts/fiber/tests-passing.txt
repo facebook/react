@@ -723,6 +723,7 @@ src/renderers/dom/shared/__tests__/DOMPropertyOperations-test.js
 * should set values as namespace attributes if necessary
 * should set values as boolean properties
 * should convert attribute values to string first
+* should set values as boolean attributes
 * should not remove empty attributes for special properties
 * should remove for falsey boolean properties
 * should remove when setting custom attr to null

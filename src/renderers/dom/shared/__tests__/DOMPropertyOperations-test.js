@@ -74,6 +74,13 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.getAttribute('class')).toBe('css-class');
     });
 
+    it('should set values as boolean attributes', () => {
+      DOMPropertyOperations.setValueForProperty(stubNode, 'data-foo', true);
+      expect(stubNode.getAttribute('data-foo')).toBe('');
+      DOMPropertyOperations.setValueForProperty(stubNode, 'data-foo', false);
+      expect(stubNode.getAttribute('data-foo')).toBe(null);
+    });
+
     it('should not remove empty attributes for special properties', () => {
       var container = document.createElement('div');
       ReactDOM.render(<input value="" />, container);

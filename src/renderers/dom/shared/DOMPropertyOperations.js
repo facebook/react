@@ -208,6 +208,10 @@ var DOMPropertyOperations = {
     }
     if (value == null) {
       node.removeAttribute(name);
+    } else if (value === true) {
+      node.setAttribute(name, '');
+    } else if (value === false) {
+      node.removeAttribute(name);
     } else {
       node.setAttribute(name, '' + value);
     }
