@@ -76,6 +76,66 @@ If your React component's `render()` function renders the same result given the 
 >
 > Furthermore, `React.PureComponent`'s `shouldComponentUpdate()` skips prop updates for the whole component subtree. Make sure all the children components are also "pure".
 
+For example:
+
+```javascript
+class CounterButton extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {count: 1, clicked: false};
+  }
+
+  render() {
+    return (
+      <div>
+        <button
+          onClick={() => this.setState(state => ({count: state.count + 1}))}>
+          Count: {this.state.count}
+        </button>
+        <button
+          onClick={() => this.setState(state => ({clicked: true}))}>
+          Clicked: {this.state.clicked ? 'yes' : 'not yet'}
+        </button>
+      </div>
+    );
+  }
+}
+```
+
+Everytime you click on the `Count` button you will be rendering the button again, which makes sense since you are updating the count with each click.
+
+But If you click on the `Clicked` button you will **also** be rendering the component every time even if it just change the state once. In order to avoid this you need to implement the `shouldComponentUpdate` function or use `PureComponent` like here:
+
+
+```javascript
+class CounterButton extends PureComponent {
+  constructor(props) {
+    super(props);
+    this.state = {count: 1, clicked: false};
+  }
+
+  render() {
+    return (
+      <div>
+        <button
+          onClick={() => this.setState(state => ({count: state.count + 1}))}>
+          Count: {this.state.count}
+        </button>
+        <button
+          onClick={() => this.setState(state => ({clicked: true}))}>
+          Clicked: {this.state.clicked ? 'yes' : 'not yet'}
+        </button>
+      </div>
+    );
+  }
+}
+```
+
+In this example the component will be rendered everytime we click on the `Count` button (because we are changing the state) and **just** the first time we click the `Clicked` button (because we are really changing the state once). That's because the shallow comparison between the current and next state.
+
+You can read more about `PureComponent` [here](https://facebook.github.io/react/docs/optimizing-performance.html)
+
+
 * * *
 
 ### `createElement()`
