@@ -32,13 +32,7 @@ import type {ReactNodeList} from 'ReactTypes';
  */
 require('InitializeCore');
 
-var RCTEventEmitter = require('RCTEventEmitter');
-var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
-
-/**
- * Register the event emitter with the native bridge
- */
-RCTEventEmitter.register(ReactNativeEventEmitter);
+require('ReactNativeRTEventEmitter');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeRTFiberRenderer.batchedUpdates,

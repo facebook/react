@@ -118,3 +118,10 @@ declare module 'RTManager' {
 
   declare function completeUpdates() : void;
 }
+
+declare module 'BatchedBridge' {
+  declare function registerCallableModule(
+    name : string,
+    module : Object,
+  ) : void;
+}
