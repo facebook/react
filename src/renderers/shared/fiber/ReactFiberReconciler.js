@@ -139,6 +139,18 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     text: string,
     internalInstanceHandle: OpaqueHandle,
   ) => boolean,
+  didNotMatchHydratedContainerTextInstance?: (
+    parentContainer: C,
+    textInstance: TI,
+    text: string,
+  ) => void,
+  didNotMatchHydratedTextInstance?: (
+    parentType: T,
+    parentProps: P,
+    parentInstance: I,
+    textInstance: TI,
+    text: string,
+  ) => void,
   didNotHydrateContainerInstance?: (
     parentContainer: C,
     instance: I | TI,

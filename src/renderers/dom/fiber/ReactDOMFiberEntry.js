@@ -525,6 +525,26 @@ var DOMRenderer = ReactFiberReconciler({
     return diffHydratedText(textInstance, text);
   },
 
+  didNotMatchHydratedContainerTextInstance(
+    parentContainer: Container,
+    textInstance: TextInstance,
+    text: string,
+  ) {
+    if (__DEV__) {
+    }
+  },
+
+  didNotMatchHydratedTextInstance(
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
+    textInstance: TextInstance,
+    text: string,
+  ) {
+    if (__DEV__) {
+    }
+  },
+
   didNotHydrateContainerInstance(
     parentContainer: Container,
     instance: Instance | TextInstance,

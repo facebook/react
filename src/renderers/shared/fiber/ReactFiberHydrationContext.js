@@ -44,6 +44,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getFirstHydratableChild,
     hydrateInstance,
     hydrateTextInstance,
+    didNotMatchHydratedContainerTextInstance,
+    didNotMatchHydratedTextInstance,
     didNotHydrateContainerInstance,
     didNotHydrateInstance,
     // TODO: These are currently unused, see below.
@@ -61,6 +63,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       getFirstHydratableChild &&
       hydrateInstance &&
       hydrateTextInstance &&
+      didNotMatchHydratedContainerTextInstance &&
+      didNotMatchHydratedTextInstance &&
       didNotHydrateContainerInstance &&
       didNotHydrateInstance &&
       // didNotFindHydratableContainerInstance &&
@@ -283,11 +287,41 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
     const textInstance: TI = fiber.stateNode;
-    const shouldUpdate = hydrateTextInstance(
-      textInstance,
-      fiber.memoizedProps,
-      fiber,
-    );
+    const textContent: string = fiber.memoizedProps;
+    const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
+    if (__DEV__) {
+      if (shouldUpdate) {
+        // We assume that prepareToHydrateHostTextInstance is called in a context where the
+        // hydration parent is the parent host component of this host text.
+        const returnFiber = hydrationParentFiber;
+        if (returnFiber !== null) {
+          switch (returnFiber.tag) {
+            case HostRoot: {
+              const parentContainer = returnFiber.stateNode.containerInfo;
+              didNotMatchHydratedContainerTextInstance(
+                parentContainer,
+                textInstance,
+                textContent,
+              );
+              break;
+            }
+            case HostComponent: {
+              const parentType = returnFiber.type;
+              const parentProps = returnFiber.memoizedProps;
+              const parentInstance = returnFiber.stateNode;
+              didNotMatchHydratedTextInstance(
+                parentType,
+                parentProps,
+                parentInstance,
+                textInstance,
+                textContent,
+              );
+              break;
+            }
+          }
+        }
+      }
+    }
     return shouldUpdate;
   }
 
