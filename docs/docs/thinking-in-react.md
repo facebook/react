@@ -45,7 +45,7 @@ You'll see here that we have five components in our simple app. We've italicized
 
   1. **`FilterableProductTable` (orange):** contains the entirety of the example
   2. **`SearchBar` (blue):** receives all *user input*
-  3. **`ProductTable` (green):** displays and filters the *data collection* based on *user input*
+  3. **`ProductTable` (green):** displays the *data collection* based on *user input*
   4. **`ProductCategoryRow` (turquoise):** displays a heading for each *category*
   5. **`ProductRow` (red):** displays a row for each *product*
 
@@ -106,8 +106,8 @@ So finally, our state is:
 
 ## Step 4: Identify Where Your State Should Live
 
-<p data-height="600" data-theme-id="0" data-slug-hash="qPrNQZ" data-default-tab="js" data-user="lacker" data-embed-version="2" class="codepen">See the Pen <a href="https://codepen.io/gaearon/pen/qPrNQZ">Thinking In React: Step 4</a> on <a href="http://codepen.io">CodePen</a>.</p>
-<script async src="//assets.codepen.io/assets/embed/ei.js"></script>
+<p data-height="600" data-theme-id="0" data-slug-hash="QqgJjK" data-default-tab="js" data-user="danielsbird" data-embed-version="2" class="codepen">See the Pen <a href="https://codepen.io/danielsbird/pen/QqgJjK/">Thinking In React: Step 4</a> on <a href="https://codepen.io">CodePen</a>.</p>
+<script async src="https://production-assets.codepen.io/assets/embed/ei.js"></script>
 
 OK, so we've identified what the minimal set of app state is. Next, we need to identify which component mutates, or *owns*, this state.
 
@@ -122,18 +122,17 @@ For each piece of state in your application:
 
 Let's run through this strategy for our application:
 
-  * `ProductTable` needs to filter the product list based on state and `SearchBar` needs to display the search text and checked state.
+  * `ProductTable` needs to display the filtered product list and `SearchBar` needs to display the search text and checked state.
   * The common owner component is `FilterableProductTable`.
   * It conceptually makes sense for the filter text and checked value to live in `FilterableProductTable`
 
-Cool, so we've decided that our state lives in `FilterableProductTable`. First, add an instance property `this.state = {filterText: '', inStockOnly: false}` to `FilterableProductTable`'s `constructor` to reflect the initial state of your application. Then, pass `filterText` and `inStockOnly` to `ProductTable` and `SearchBar` as a prop. Finally, use these props to filter the rows in `ProductTable` and set the values of the form fields in `SearchBar`.
+Cool, so we've decided that our state lives in `FilterableProductTable`. First, add an instance property `this.state = {filterText: '', inStockOnly: false}` to `FilterableProductTable`'s `constructor` to reflect the initial state of your application. Next, instead of passing `this.props.products` to ProductTable, pass only the products that match the search text and checkbox value. Then, pass `filterText` and `inStockOnly` to `SearchBar` as a prop. Finally, use these props to set the values of the form fields in `SearchBar`.
 
 You can start seeing how your application will behave: set `filterText` to `"ball"` and refresh your app. You'll see that the data table is updated correctly.
 
 ## Step 5: Add Inverse Data Flow
 
-<p data-height="600" data-theme-id="0" data-slug-hash="LzWZvb" data-default-tab="js,result" data-user="rohan10" data-embed-version="2" data-pen-title="Thinking In React: Step 5" class="codepen">See the Pen <a href="https://codepen.io/gaearon/pen/LzWZvb">Thinking In React: Step 5</a> on <a href="http://codepen.io">CodePen</a>.</p>
-<script async src="https://production-assets.codepen.io/assets/embed/ei.js"></script>
+<p data-height="600" data-theme-id="0" data-slug-hash="QqgJNG" data-default-tab="js,result" data-user="danielsbird" data-embed-version="2" data-pen-title="Thinking In React: Step 5" class="codepen">See the Pen <a href="https://codepen.io/danielsbird/pen/QqgJNG/">Thinking In React: Step 5</a> on <a href="https://codepen.io">CodePen</a>.</p>
 
 So far, we've built an app that renders correctly as a function of props and state flowing down the hierarchy. Now it's time to support data flowing the other way: the form components deep in the hierarchy need to update the state in `FilterableProductTable`.
 
