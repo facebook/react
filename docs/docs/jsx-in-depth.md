@@ -247,6 +247,28 @@ function App2() {
 
 Spread attributes can be useful when you are building generic containers. However, they can also make your code messy by making it easy to pass a lot of irrelevant props to components that don't care about them. We recommend that you use this syntax sparingly.
 
+### ES6 Object Shorthand
+
+If you want to filter the props that you want to pass, you can do it by using [ES6 object shorthand](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Object_initializer#New_notations_in_ECMAScript_2015) in combination with [Object Spread Operator](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Spread_operator) and [Object Destructuring Assignment](https://developer.mozilla.org/en/docs/Web/JavaScript/Reference/Operators/Destructuring_assignment):
+
+```js{4}
+render() {
+  const {onClick, value} = this.props;
+  return (
+    <MyComponent {...{onClick, value}} />
+  );
+}
+```
+This is roughly equivalent to a code that looks like this:
+```js{4}
+render() {
+  return (
+    <MyComponent onClick={this.props.onClick} value={this.props.value} />
+  );
+}
+```
+So you can extract only the required props for `MyComponent`.
+
 ## Children in JSX
 
 In JSX expressions that contain both an opening tag and a closing tag, the content between those tags is passed as a special prop: `props.children`. There are several different ways to pass children:
