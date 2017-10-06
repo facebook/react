@@ -542,5 +542,36 @@ describe('ReactComponent', () => {
       expect(container.innerHTML).toBe('Hello');
       expectDev(console.error.calls.count()).toBe(0);
     });
+
+    it('deduplicates function type warnings based on component type', () => {
+      spyOn(console, 'error');
+      function Foo() {
+        return (
+          <div>
+            {Foo}{Foo}
+            <span>{Foo}{Foo}</span>
+          </div>
+        );
+      }
+      var container = document.createElement('div');
+      ReactDOM.render(<Foo />, container);
+
+      expectDev(console.error.calls.count()).toBe(2);
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'you return a Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.\n' +
+        '    in div (at **)\n' +
+        '    in Foo (at **)',
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: Functions are not valid as a React child. This may happen if ' +
+        'you return a Component instead of <Component /> from render. ' +
+        'Or maybe you meant to call this function rather than return it.\n' +
+        '    in span (at **)\n' +
+        '    in div (at **)\n' +
+        '    in Foo (at **)',
+      );
+    });
   });
 });
