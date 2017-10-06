@@ -54,14 +54,14 @@ const NativeRTRenderer = ReactFiberReconciler({
     parentInstance: Container,
     child: Instance | TextInstance,
   ): void {
-    RTManager.appendChild(parentInstance, child);
+    RTManager.appendChildToContext(parentInstance, child);
   },
 
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    RTManager.appendChildToDetachedParent(parentInstance, child);
+    RTManager.appendChild(parentInstance, child);
   },
 
   commitTextUpdate(
