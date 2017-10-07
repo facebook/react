@@ -1142,7 +1142,7 @@ describe('ReactDOMFiber', () => {
     expect(iframeContainer.appendChild).toHaveBeenCalledTimes(1);
   });
 
-  it('should mount into a document fragment', () => {
+  fit('should mount into a document fragment', () => {
     var fragment = document.createDocumentFragment();
     ReactDOM.render(<div>foo</div>, fragment);
     expect(container.innerHTML).toBe('');

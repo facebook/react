@@ -12,7 +12,7 @@
 
 import type {ReactCoroutine} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
-import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
@@ -25,7 +25,8 @@ var {
 } = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactPriorityLevel = require('ReactPriorityLevel');
+var ReactFiberExpirationTime = require('ReactFiberExpirationTime');
+var ReactFiberGarbageCollection = require('ReactFiberGarbageCollection');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -39,8 +40,15 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
-var {OffscreenPriority} = ReactPriorityLevel;
+var {
+  Placement,
+  Ref,
+  Update,
+  PerformedWork,
+  PreparedWork,
+} = ReactTypeOfSideEffect;
+var {Never} = ReactFiberExpirationTime;
+var {markForCleanUp} = ReactFiberGarbageCollection;
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -113,6 +121,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function moveCoroutineToHandlerPhase(
     current: Fiber | null,
     workInProgress: Fiber,
+    renderExpirationTime: ExpirationTime,
   ) {
     var coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
     invariant(
@@ -139,13 +148,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     var nextChildren = fn(props, yields);
 
     var currentFirstChild = current !== null ? current.child : null;
-    // Inherit the priority of the returnFiber.
-    const priority = workInProgress.pendingWorkPriority;
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       currentFirstChild,
       nextChildren,
-      priority,
+      renderExpirationTime,
     );
     return workInProgress.child;
   }
@@ -181,15 +188,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function completeWork(
     current: Fiber | null,
     workInProgress: Fiber,
-    renderPriority: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ): Fiber | null {
     // Get the latest props.
     let newProps = workInProgress.pendingProps;
     if (newProps === null) {
       newProps = workInProgress.memoizedProps;
     } else if (
-      workInProgress.pendingWorkPriority !== OffscreenPriority ||
-      renderPriority === OffscreenPriority
+      workInProgress.expirationTime !== Never ||
+      renderExpirationTime === Never
     ) {
       // Reset the pending props, unless this was a down-prioritization.
       workInProgress.pendingProps = null;
@@ -199,7 +206,33 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case FunctionalComponent:
         return null;
       case ClassComponent: {
-        // We are leaving this subtree, so pop context if any.
+        if (
+          workInProgress.effectTag & PerformedWork &&
+          !(workInProgress.effectTag & PreparedWork)
+        ) {
+          // This fiber performed work. Call prepare lifecycles. Don't prepare
+          // the same work more than once.
+          const instance = workInProgress.stateNode;
+          if (current === null) {
+            // Prepare for mount.
+            // Mark for clean-up first, so that if the lifecycle throws, we
+            // still clean it up.
+            if (typeof instance.unstable_abortMount === 'function') {
+              markForCleanUp(workInProgress);
+            }
+            if (typeof instance.unstable_prepareMount === 'function') {
+              instance.unstable_prepareMount();
+            }
+          } else {
+            // Prepare for update.
+            if (typeof instance.unstable_abortUpdate === 'function') {
+              markForCleanUp(workInProgress);
+            }
+            if (typeof instance.unstable_prepareUpdate === 'function') {
+              instance.unstable_prepareUpdate();
+            }
+          }
+        }
         popContextProvider(workInProgress);
         return null;
       }
@@ -358,7 +391,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       }
       case CoroutineComponent:
-        return moveCoroutineToHandlerPhase(current, workInProgress);
+        return moveCoroutineToHandlerPhase(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case CoroutineHandlerPhase:
         // Reset the tag to now be a first phase coroutine.
         workInProgress.tag = CoroutineComponent;

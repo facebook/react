@@ -20,7 +20,7 @@ import type {
 import type {TypeOfWork} from 'ReactTypeOfWork';
 import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
-import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
 var {
@@ -35,11 +35,13 @@ var {
   Fragment,
 } = require('ReactTypeOfWork');
 
-var {NoWork} = require('ReactPriorityLevel');
+var {Done} = require('ReactFiberExpirationTime');
 
 var {NoContext} = require('ReactTypeOfInternalContext');
 
 var {NoEffect} = require('ReactTypeOfSideEffect');
+
+var {dropTree} = require('ReactFiberGarbageCollection');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -109,7 +111,7 @@ export type Fiber = {|
   memoizedProps: any, // The props used to create the output.
 
   // A queue of state updates and callbacks.
-  updateQueue: UpdateQueue | null,
+  updateQueue: UpdateQueue<any> | null,
 
   // The state used to create the output
   memoizedState: any,
@@ -134,8 +136,9 @@ export type Fiber = {|
   firstEffect: Fiber | null,
   lastEffect: Fiber | null,
 
-  // This will be used to quickly determine if a subtree has no pending changes.
-  pendingWorkPriority: PriorityLevel,
+  // Represents a time in the future by which this work should be completed.
+  // This is also used to quickly determine if a subtree has no pending changes.
+  expirationTime: ExpirationTime,
 
   // This is a pooled version of a Fiber. Every fiber that gets updated will
   // eventually have a pair. There are cases when we can clean up pairs to save
@@ -189,7 +192,7 @@ function FiberNode(
   this.firstEffect = null;
   this.lastEffect = null;
 
-  this.pendingWorkPriority = NoWork;
+  this.expirationTime = Done;
 
   this.alternate = null;
 
@@ -233,7 +236,7 @@ function shouldConstruct(Component) {
 // This is used to create an alternate fiber to do work on.
 exports.createWorkInProgress = function(
   current: Fiber,
-  renderPriority: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   let workInProgress = current.alternate;
   if (workInProgress === null) {
@@ -268,9 +271,20 @@ exports.createWorkInProgress = function(
     workInProgress.nextEffect = null;
     workInProgress.firstEffect = null;
     workInProgress.lastEffect = null;
+    if (
+      workInProgress.child !== null &&
+      (current === null || current.child !== workInProgress.child)
+    ) {
+      // We're dropping a work-in-progress child. If it contains completed
+      // work, we need to garbage collect it.
+      // TODO: We don't have to do this work immediately. Schedule a callback
+      // to do it later. Requires some refactoring so we have access to
+      // the scheduler.
+      dropTree(workInProgress.child);
+    }
   }
 
-  workInProgress.pendingWorkPriority = renderPriority;
+  workInProgress.expirationTime = expirationTime;
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
@@ -296,7 +310,7 @@ exports.createHostRootFiber = function(): Fiber {
 exports.createFiberFromElement = function(
   element: ReactElement,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   let owner = null;
   if (__DEV__) {
@@ -310,7 +324,7 @@ exports.createFiberFromElement = function(
     owner,
   );
   fiber.pendingProps = element.props;
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
 
   if (__DEV__) {
     fiber._debugSource = element._source;
@@ -323,24 +337,24 @@ exports.createFiberFromElement = function(
 exports.createFiberFromFragment = function(
   elements: ReactFragment,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   // TODO: Consider supporting keyed fragments. Technically, we accidentally
   // support that in the existing React.
   const fiber = createFiber(Fragment, null, internalContextTag);
   fiber.pendingProps = elements;
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
   return fiber;
 };
 
 exports.createFiberFromText = function(
   content: string,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   const fiber = createFiber(HostText, null, internalContextTag);
   fiber.pendingProps = content;
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
   return fiber;
 };
 
@@ -411,7 +425,7 @@ exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
 exports.createFiberFromCoroutine = function(
   coroutine: ReactCoroutine,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   const fiber = createFiber(
     CoroutineComponent,
@@ -420,37 +434,31 @@ exports.createFiberFromCoroutine = function(
   );
   fiber.type = coroutine.handler;
   fiber.pendingProps = coroutine;
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
   return fiber;
 };
 
 exports.createFiberFromYield = function(
   yieldNode: ReactYield,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   const fiber = createFiber(YieldComponent, null, internalContextTag);
+  fiber.expirationTime = expirationTime;
   return fiber;
 };
 
 exports.createFiberFromPortal = function(
   portal: ReactPortal,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   const fiber = createFiber(HostPortal, portal.key, internalContextTag);
   fiber.pendingProps = portal.children || [];
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,
     implementation: portal.implementation,
   };
   return fiber;
-};
-
-exports.largerPriority = function(
-  p1: PriorityLevel,
-  p2: PriorityLevel,
-): PriorityLevel {
-  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
 };

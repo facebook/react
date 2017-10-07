@@ -22,7 +22,6 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
@@ -31,9 +30,10 @@ var {
 } = require('ReactErrorUtils');
 
 var {
+  PreparedWork,
+  NeedsCleanUp,
   Placement,
   Update,
-  Callback,
   ContentReset,
 } = require('ReactTypeOfSideEffect');
 
@@ -73,6 +73,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
+    instance.props = current.memoizedProps;
+    instance.state = current.memoizedState;
     if (__DEV__) {
       invokeGuardedCallback(
         null,
@@ -87,8 +89,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     } else {
       try {
-        instance.props = current.memoizedProps;
-        instance.state = current.memoizedState;
         instance.componentWillUnmount();
       } catch (unmountError) {
         captureError(current, unmountError);
@@ -488,11 +488,40 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function commitCallbacks(updateQueue, context) {
+    let callbackNode = updateQueue.firstCallback;
+    // Reset the callback list before calling them in case something throws.
+    updateQueue.firstCallback = updateQueue.lastCallback = null;
+
+    while (callbackNode !== null) {
+      const callback = callbackNode.callback;
+      // Remove this callback from the update object in case it's still part
+      // of the queue, so that we don't call it again.
+      callbackNode.callback = null;
+      invariant(
+        typeof callback === 'function',
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: %s',
+        callback,
+      );
+      callback.call(context);
+      const nextCallback = callbackNode.nextCallback;
+      callbackNode.nextCallback = null;
+      callbackNode = nextCallback;
+    }
+  }
+
   function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
+          // Clear the PreparedWork tag. This is necessary to avoid a "previous
+          // current" problem, where a committed fiber is confused for a work-
+          // in-progress. If we didn't clear this flag, an abort lifecycle
+          // could be mistakenly fired.
+          // TODO: We should fix the "previous current" problem for real.
+          finishedWork.effectTag &= ~(PreparedWork | NeedsCleanUp);
           if (current === null) {
             if (__DEV__) {
               startPhaseTimer(finishedWork, 'componentDidMount');
@@ -517,19 +546,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             }
           }
         }
-        if (
-          finishedWork.effectTag & Callback &&
-          finishedWork.updateQueue !== null
-        ) {
-          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          commitCallbacks(updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, updateQueue, instance);
+          const instance = finishedWork.child !== null
+            ? finishedWork.child.stateNode
+            : null;
+          commitCallbacks(updateQueue, instance);
         }
         return;
       }
