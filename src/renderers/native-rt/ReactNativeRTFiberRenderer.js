@@ -46,7 +46,8 @@ function processProps(instance: number, props: Props): Object {
 }
 
 function arePropsEqual(oldProps: Props, newProps: Props): boolean {
-  for (var key in newProps) {
+  var key;
+  for (key in newProps) {
     if (key === 'children') {
       // Skip special case.
       continue;
@@ -55,7 +56,7 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
       return false;
     }
   }
-  for (var key in oldProps) {
+  for (key in oldProps) {
     if (key === 'children') {
       // Skip special case.
       continue;
