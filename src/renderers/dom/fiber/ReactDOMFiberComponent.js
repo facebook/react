@@ -53,6 +53,7 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
+var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
 var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
@@ -273,7 +274,10 @@ function setInitialDOMProperties(
       } else if (typeof nextProp === 'number') {
         setTextContent(domElement, '' + nextProp);
       }
-    } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+    } else if (
+      propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+      propKey === SUPPRESS_HYDRATION_WARNING
+    ) {
       // Noop
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp != null) {
@@ -664,7 +668,10 @@ var ReactDOMFiberComponent = {
         propKey === CHILDREN
       ) {
         // Noop. This is handled by the clear text mechanism.
-      } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+      } else if (
+        propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+        propKey === SUPPRESS_HYDRATION_WARNING
+      ) {
         // Noop
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // This is a special case. If any listener updates we need to ensure
@@ -750,7 +757,10 @@ var ReactDOMFiberComponent = {
         ) {
           (updatePayload = updatePayload || []).push(propKey, '' + nextProp);
         }
-      } else if (propKey === SUPPRESS_CONTENT_EDITABLE_WARNING) {
+      } else if (
+        propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+        propKey === SUPPRESS_HYDRATION_WARNING
+      ) {
         // Noop
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         if (nextProp != null) {
@@ -828,6 +838,8 @@ var ReactDOMFiberComponent = {
     rootContainerElement: Element | Document,
   ): null | Array<mixed> {
     if (__DEV__) {
+      var suppressHydrationWarning =
+        rawProps[SUPPRESS_HYDRATION_WARNING] === true;
       var isCustomComponentTag = isCustomComponent(tag, rawProps);
       validatePropertiesInDevelopment(tag, rawProps);
       if (isCustomComponentTag && !didWarnShadyDOM && domElement.shadyRoot) {
@@ -986,14 +998,14 @@ var ReactDOMFiberComponent = {
         // TODO: Should we use domElement.firstChild.nodeValue to compare?
         if (typeof nextProp === 'string') {
           if (domElement.textContent !== nextProp) {
-            if (__DEV__) {
+            if (__DEV__ && !suppressHydrationWarning) {
               warnForTextDifference(domElement.textContent, nextProp);
             }
             updatePayload = [CHILDREN, nextProp];
           }
         } else if (typeof nextProp === 'number') {
           if (domElement.textContent !== '' + nextProp) {
-            if (__DEV__) {
+            if (__DEV__ && !suppressHydrationWarning) {
               warnForTextDifference(domElement.textContent, nextProp);
             }
             updatePayload = [CHILDREN, '' + nextProp];
@@ -1010,8 +1022,11 @@ var ReactDOMFiberComponent = {
         // Validate that the properties correspond to their expected values.
         var serverValue;
         var propertyInfo;
-        if (
+        if (suppressHydrationWarning) {
+          // Don't bother comparing. We're ignoring all these warnings.
+        } else if (
           propKey === SUPPRESS_CONTENT_EDITABLE_WARNING ||
+          propKey === SUPPRESS_HYDRATION_WARNING ||
           // Controlled attributes are not validated
           // TODO: Only ignore them on controlled tags.
           propKey === 'value' ||
@@ -1085,7 +1100,7 @@ var ReactDOMFiberComponent = {
 
     if (__DEV__) {
       // $FlowFixMe - Should be inferred as not undefined.
-      if (extraAttributeNames.size > 0) {
+      if (extraAttributeNames.size > 0 && !suppressHydrationWarning) {
         // $FlowFixMe - Should be inferred as not undefined.
         warnForExtraAttributes(extraAttributeNames);
       }
@@ -1125,12 +1140,13 @@ var ReactDOMFiberComponent = {
 
   diffHydratedText(textNode: Text, text: string): boolean {
     const isDifferent = textNode.nodeValue !== text;
-    if (__DEV__) {
-      if (isDifferent) {
-        warnForTextDifference(textNode.nodeValue, text);
-      }
-    }
     return isDifferent;
+  },
+
+  warnForUnmatchedText(textNode: Text, text: string) {
+    if (__DEV__) {
+      warnForTextDifference(textNode.nodeValue, text);
+    }
   },
 
   warnForDeletedHydratableElement(

@@ -251,6 +251,7 @@ var RESERVED_PROPS = {
   children: null,
   dangerouslySetInnerHTML: null,
   suppressContentEditableWarning: null,
+  suppressHydrationWarning: null,
 };
 
 function createOpenTagMarkup(

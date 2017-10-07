@@ -725,6 +725,16 @@ describe('ReactDOMServerIntegration', () => {
         );
         expect(e.getAttribute('dangerouslySetInnerHTML')).toBe(null);
       });
+
+      itRenders('no suppressContentEditableWarning attribute', async render => {
+        const e = await render(<div suppressContentEditableWarning={true} />);
+        expect(e.getAttribute('suppressContentEditableWarning')).toBe(null);
+      });
+
+      itRenders('no suppressHydrationWarning attribute', async render => {
+        const e = await render(<span suppressHydrationWarning={true} />);
+        expect(e.getAttribute('suppressHydrationWarning')).toBe(null);
+      });
     });
 
     describe('inline styles', function() {
@@ -2623,6 +2633,36 @@ describe('ReactDOMServerIntegration', () => {
 
       it('should error reconnecting different attribute values', () =>
         expectMarkupMismatch(<div id="foo" />, <div id="bar" />));
+
+      it('can explicitly ignore errors reconnecting different element types of children', () =>
+        expectMarkupMatch(
+          <div><div /></div>,
+          <div suppressHydrationWarning={true}><span /></div>,
+        ));
+
+      it('can explicitly ignore errors reconnecting missing attributes', () =>
+        expectMarkupMatch(
+          <div id="foo" />,
+          <div suppressHydrationWarning={true} />,
+        ));
+
+      it('can explicitly ignore errors reconnecting added attributes', () =>
+        expectMarkupMatch(
+          <div />,
+          <div id="foo" suppressHydrationWarning={true} />,
+        ));
+
+      it('can explicitly ignore errors reconnecting different attribute values', () =>
+        expectMarkupMatch(
+          <div id="foo" />,
+          <div id="bar" suppressHydrationWarning={true} />,
+        ));
+
+      it('can not deeply ignore errors reconnecting different attribute values', () =>
+        expectMarkupMismatch(
+          <div><div id="foo" /></div>,
+          <div suppressHydrationWarning={true}><div id="bar" /></div>,
+        ));
     });
 
     describe('inline styles', function() {
@@ -2661,6 +2701,18 @@ describe('ReactDOMServerIntegration', () => {
           <div style={{width: '1px', fontSize: '2px'}} />,
           <div style={{fontSize: '2px', width: '1px'}} />,
         ));
+
+      it('can explicitly ignore errors reconnecting added style values', () =>
+        expectMarkupMatch(
+          <div style={{}} />,
+          <div style={{width: '1px'}} suppressHydrationWarning={true} />,
+        ));
+
+      it('can explicitly ignore reconnecting different style values', () =>
+        expectMarkupMatch(
+          <div style={{width: '1px'}} />,
+          <div style={{width: '2px'}} suppressHydrationWarning={true} />,
+        ));
     });
 
     describe('text nodes', function() {
@@ -2680,6 +2732,18 @@ describe('ReactDOMServerIntegration', () => {
         expectMarkupMismatch(
           <div>{'Text1'}{'Text2'}</div>,
           <div>{'Text1'}{'Text3'}</div>,
+        ));
+
+      it('can explicitly ignore reconnecting different text', () =>
+        expectMarkupMatch(
+          <div>Text</div>,
+          <div suppressHydrationWarning={true}>Other Text</div>,
+        ));
+
+      it('can explicitly ignore reconnecting different text in two code blocks', () =>
+        expectMarkupMatch(
+          <div suppressHydrationWarning={true}>{'Text1'}{'Text2'}</div>,
+          <div suppressHydrationWarning={true}>{'Text1'}{'Text3'}</div>,
         ));
     });
 
@@ -2731,6 +2795,30 @@ describe('ReactDOMServerIntegration', () => {
 
       it('can distinguish an empty component from an empty text component', () =>
         expectMarkupMatch(<div><EmptyComponent /></div>, <div>{''}</div>));
+
+      it('can explicitly ignore reconnecting more children', () =>
+        expectMarkupMatch(
+          <div><div /></div>,
+          <div suppressHydrationWarning={true}><div /><div /></div>,
+        ));
+
+      it('can explicitly ignore reconnecting fewer children', () =>
+        expectMarkupMatch(
+          <div><div /><div /></div>,
+          <div suppressHydrationWarning={true}><div /></div>,
+        ));
+
+      it('can explicitly ignore reconnecting reordered children', () =>
+        expectMarkupMatch(
+          <div suppressHydrationWarning={true}><div /><span /></div>,
+          <div suppressHydrationWarning={true}><span /><div /></div>,
+        ));
+
+      it('can not deeply ignore reconnecting reordered children', () =>
+        expectMarkupMismatch(
+          <div suppressHydrationWarning={true}><div><div /><span /></div></div>,
+          <div suppressHydrationWarning={true}><div><span /><div /></div></div>,
+        ));
     });
 
     // Markup Mismatches: misc
@@ -2738,6 +2826,15 @@ describe('ReactDOMServerIntegration', () => {
       expectMarkupMismatch(
         <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
         <div dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}} />,
+      ));
+
+    it('can explicitly ignore reconnecting a div with different dangerouslySetInnerHTML', () =>
+      expectMarkupMatch(
+        <div dangerouslySetInnerHTML={{__html: "<span id='child1'/>"}} />,
+        <div
+          dangerouslySetInnerHTML={{__html: "<span id='child2'/>"}}
+          suppressHydrationWarning={true}
+        />,
       ));
   });
 });

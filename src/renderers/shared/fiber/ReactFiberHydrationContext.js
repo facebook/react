@@ -44,7 +44,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     getFirstHydratableChild,
     hydrateInstance,
     hydrateTextInstance,
+    didNotMatchHydratedContainerTextInstance,
+    didNotMatchHydratedTextInstance,
+    didNotHydrateContainerInstance,
     didNotHydrateInstance,
+    // TODO: These are currently unused, see below.
+    // didNotFindHydratableContainerInstance,
+    // didNotFindHydratableContainerTextInstance,
     didNotFindHydratableInstance,
     didNotFindHydratableTextInstance,
   } = config;
@@ -57,7 +63,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       getFirstHydratableChild &&
       hydrateInstance &&
       hydrateTextInstance &&
+      didNotMatchHydratedContainerTextInstance &&
+      didNotMatchHydratedTextInstance &&
+      didNotHydrateContainerInstance &&
       didNotHydrateInstance &&
+      // didNotFindHydratableContainerInstance &&
+      //  didNotFindHydratableContainerTextInstance &&
       didNotFindHydratableInstance &&
       didNotFindHydratableTextInstance)
   ) {
@@ -105,10 +116,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (__DEV__) {
       switch (returnFiber.tag) {
         case HostRoot:
-          didNotHydrateInstance(returnFiber.stateNode.containerInfo, instance);
+          didNotHydrateContainerInstance(
+            returnFiber.stateNode.containerInfo,
+            instance,
+          );
           break;
         case HostComponent:
-          didNotHydrateInstance(returnFiber.stateNode, instance);
+          didNotHydrateInstance(
+            returnFiber.type,
+            returnFiber.memoizedProps,
+            returnFiber.stateNode,
+            instance,
+          );
           break;
       }
     }
@@ -134,31 +153,56 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function insertNonHydratedInstance(returnFiber: Fiber, fiber: Fiber) {
     fiber.effectTag |= Placement;
     if (__DEV__) {
-      var parentInstance;
       switch (returnFiber.tag) {
         // TODO: Currently we don't warn for insertions into the root because
         // we always insert into the root in the non-hydrating case. We just
         // delete the existing content. Reenable this once we have a better
         // strategy for determining if we're hydrating or not.
-        // case HostRoot:
-        //   parentInstance = returnFiber.stateNode.containerInfo;
+        // case HostRoot: {
+        //   const parentContainer = returnFiber.stateNode.containerInfo;
+        //   switch (fiber.tag) {
+        //     case HostComponent:
+        //       const type = fiber.type;
+        //       const props = fiber.pendingProps;
+        //       didNotFindHydratableContainerInstance(parentContainer, type, props);
+        //       break;
+        //     case HostText:
+        //       const text = fiber.pendingProps;
+        //       didNotFindHydratableContainerTextInstance(parentContainer, text);
+        //       break;
+        //   }
         //   break;
-        case HostComponent:
-          parentInstance = returnFiber.stateNode;
+        // }
+        case HostComponent: {
+          const parentType = returnFiber.type;
+          const parentProps = returnFiber.memoizedProps;
+          const parentInstance = returnFiber.stateNode;
+          switch (fiber.tag) {
+            case HostComponent:
+              const type = fiber.type;
+              const props = fiber.pendingProps;
+              didNotFindHydratableInstance(
+                parentType,
+                parentProps,
+                parentInstance,
+                type,
+                props,
+              );
+              break;
+            case HostText:
+              const text = fiber.pendingProps;
+              didNotFindHydratableTextInstance(
+                parentType,
+                parentProps,
+                parentInstance,
+                text,
+              );
+              break;
+          }
           break;
+        }
         default:
           return;
-      }
-      switch (fiber.tag) {
-        case HostComponent:
-          const type = fiber.type;
-          const props = fiber.pendingProps;
-          didNotFindHydratableInstance(parentInstance, type, props);
-          break;
-        case HostText:
-          const text = fiber.pendingProps;
-          didNotFindHydratableTextInstance(parentInstance, text);
-          break;
       }
     }
   }
@@ -243,11 +287,41 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function prepareToHydrateHostTextInstance(fiber: Fiber): boolean {
     const textInstance: TI = fiber.stateNode;
-    const shouldUpdate = hydrateTextInstance(
-      textInstance,
-      fiber.memoizedProps,
-      fiber,
-    );
+    const textContent: string = fiber.memoizedProps;
+    const shouldUpdate = hydrateTextInstance(textInstance, textContent, fiber);
+    if (__DEV__) {
+      if (shouldUpdate) {
+        // We assume that prepareToHydrateHostTextInstance is called in a context where the
+        // hydration parent is the parent host component of this host text.
+        const returnFiber = hydrationParentFiber;
+        if (returnFiber !== null) {
+          switch (returnFiber.tag) {
+            case HostRoot: {
+              const parentContainer = returnFiber.stateNode.containerInfo;
+              didNotMatchHydratedContainerTextInstance(
+                parentContainer,
+                textInstance,
+                textContent,
+              );
+              break;
+            }
+            case HostComponent: {
+              const parentType = returnFiber.type;
+              const parentProps = returnFiber.memoizedProps;
+              const parentInstance = returnFiber.stateNode;
+              didNotMatchHydratedTextInstance(
+                parentType,
+                parentProps,
+                parentInstance,
+                textInstance,
+                textContent,
+              );
+              break;
+            }
+          }
+        }
+      }
+    }
     return shouldUpdate;
   }
 
