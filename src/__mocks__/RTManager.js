@@ -11,11 +11,11 @@
 
 var RCTRTManager = {
   createNode: jest.fn(function createView(tag, classType, props) {}),
-  appendChildToDetachedParent: jest.fn(function appendChildToDetachedParent(
-    parentTag,
+  beginUpdates: jest.fn(function beginUpdates() {}),
+  appendChildToContext: jest.fn(function appendChildToContext(
+    contextTag,
     childTag,
   ) {}),
-  beginUpdates: jest.fn(function beginUpdates() {}),
   appendChild: jest.fn(function appendChild(parentTag, childTag) {}),
   prependChild: jest.fn(function prependChild(childTag, beforeTag) {}),
   deleteChild: jest.fn(function deleteChild(childTag) {}),

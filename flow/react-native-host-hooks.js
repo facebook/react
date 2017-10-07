@@ -93,13 +93,13 @@ declare module 'RTManager' {
     classType : string,
     props : ?Object,
   ) : void;
-  declare function appendChildToDetachedParent(
-    parentTag : number,
-    childTag : number,
-  ) : void;
 
   declare function beginUpdates() : void;
 
+  declare function appendChildToContext(
+    contextTag : number,
+    childTag : number,
+  ) : void;
   declare function appendChild(
     parentTag : number,
     childTag : number,
@@ -117,4 +117,11 @@ declare module 'RTManager' {
   ) : void;
 
   declare function completeUpdates() : void;
+}
+
+declare module 'BatchedBridge' {
+  declare function registerCallableModule(
+    name : string,
+    module : Object,
+  ) : void;
 }

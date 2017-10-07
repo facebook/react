@@ -25,7 +25,8 @@ describe('ReactNativeRT', () => {
   it('should be able to create and render a native component', () => {
     ReactNativeRT.render(<rt-box foo="test" />, 1);
     expect(RTManager.createNode).toBeCalled();
-    expect(RTManager.appendChild).toBeCalled();
+    expect(RTManager.appendChildToContext).toBeCalled();
+    expect(RTManager.appendChild).not.toBeCalled();
     expect(RTManager.updateNode).not.toBeCalled();
   });
 
@@ -34,13 +35,22 @@ describe('ReactNativeRT', () => {
 
     expect(RTManager.createNode.mock.calls.length).toBe(1);
     expect(RTManager.createNode).toBeCalledWith(1, 'rt-box', {foo: 'foo'});
-    expect(RTManager.appendChild.mock.calls.length).toBe(1);
+    expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
+    expect(RTManager.appendChild).not.toBeCalled();
     expect(RTManager.updateNode).not.toBeCalled();
 
     ReactNativeRT.render(<rt-box foo="bar" />, 11);
 
     expect(RTManager.createNode.mock.calls.length).toBe(1);
-    expect(RTManager.appendChild.mock.calls.length).toBe(1);
+    expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
+    expect(RTManager.appendChild).not.toBeCalled();
     expect(RTManager.updateNode).toBeCalledWith(1, {foo: 'bar'});
+
+    ReactNativeRT.render(<rt-box foo="bar"><rt-box /></rt-box>, 11);
+
+    expect(RTManager.createNode.mock.calls.length).toBe(2);
+    expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
+    expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);
+    expect(RTManager.updateNode.mock.calls.length).toBe(1);
   });
 });

@@ -302,7 +302,7 @@ const bundles = [
       'ExceptionsManager',
       'InitializeCore',
       'Platform',
-      'RCTEventEmitter',
+      'BatchedBridge',
       'RTManager',
       'prop-types/checkPropTypes',
     ],

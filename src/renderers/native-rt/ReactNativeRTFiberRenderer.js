@@ -45,6 +45,29 @@ function processProps(instance: number, props: Props): Object {
   return propsPayload;
 }
 
+function arePropsEqual(oldProps: Props, newProps: Props): boolean {
+  var key;
+  for (key in newProps) {
+    if (key === 'children') {
+      // Skip special case.
+      continue;
+    }
+    if (newProps[key] !== oldProps[key]) {
+      return false;
+    }
+  }
+  for (key in oldProps) {
+    if (key === 'children') {
+      // Skip special case.
+      continue;
+    }
+    if (!(key in newProps)) {
+      return false;
+    }
+  }
+  return true;
+}
+
 const NativeRTRenderer = ReactFiberReconciler({
   appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
     RTManager.appendChild(parentInstance, child);
@@ -54,14 +77,14 @@ const NativeRTRenderer = ReactFiberReconciler({
     parentInstance: Container,
     child: Instance | TextInstance,
   ): void {
-    RTManager.appendChild(parentInstance, child);
+    RTManager.appendChildToContext(parentInstance, child);
   },
 
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    RTManager.appendChildToDetachedParent(parentInstance, child);
+    RTManager.appendChild(parentInstance, child);
   },
 
   commitTextUpdate(
@@ -90,7 +113,7 @@ const NativeRTRenderer = ReactFiberReconciler({
     internalInstanceHandle: Object,
   ): void {
     updateFiberProps(instance, newProps);
-    RTManager.updateNode(instance, processProps(instance, newProps));
+    RTManager.updateNode(instance, updatePayload);
   },
 
   createInstance(
@@ -165,7 +188,10 @@ const NativeRTRenderer = ReactFiberReconciler({
     rootContainerInstance: Container,
     hostContext: {},
   ): null | Object {
-    return emptyObject;
+    if (arePropsEqual(oldProps, newProps)) {
+      return null;
+    }
+    return processProps(instance, newProps);
   },
 
   removeChild(parentInstance: Instance, child: Instance | TextInstance): void {

@@ -11,6 +11,7 @@
 
 var ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
 var ReactGenericBatching = require('ReactGenericBatching');
+var BatchedBridge = require('BatchedBridge');
 
 var ReactNativeRTEventEmitter = {
   /**
@@ -40,4 +41,7 @@ var ReactNativeRTEventEmitter = {
   },
 };
 
-module.exports = ReactNativeRTEventEmitter;
+BatchedBridge.registerCallableModule(
+  'RTEventEmitter',
+  ReactNativeRTEventEmitter,
+);
