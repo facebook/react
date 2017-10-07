@@ -72,7 +72,7 @@ var {
 } = require('ReactFiberExpirationTime');
 
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-var {Complete} = require('ReactTypeOfCompletion');
+var {Incomplete, Complete, Blocked} = require('ReactTypeOfCompletion');
 
 var {
   PerformedWork,
@@ -334,6 +334,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           'Expected a completed root to have a work-in-progress. This error ' +
             'is likely caused by a bug in React. Please file an issue.',
         );
+        nextUnitOfWork.completionTag = Incomplete;
       } else {
         nextUnitOfWork = createWorkInProgress(
           earliestExpirationRoot.current,
@@ -804,7 +805,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         root.completedAt = nextRenderExpirationTime;
         // If the root isn't blocked, it's ready to commit. If it is blocked,
         // we'll come back to it later.
-        if (!root.isBlocked) {
+        const isBlocked = workInProgress.completionTag & Blocked;
+        root.isBlocked = isBlocked;
+        if (!isBlocked) {
           pendingCommit = workInProgress;
         }
         processCompletionCallbacks(root, nextRenderExpirationTime);

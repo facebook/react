@@ -25,6 +25,7 @@ var {
   popTopLevelContextObject,
 } = require('ReactFiberContext');
 var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfCompletion = require('ReactTypeOfCompletion');
 var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
 var ReactFiberExpirationTime = require('ReactFiberExpirationTime');
 var {
@@ -40,6 +41,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
+var {Blocked} = ReactTypeOfCompletion;
 var {Placement, Ref, Update} = ReactTypeOfSideEffect;
 var {Done, Never} = ReactFiberExpirationTime;
 
@@ -223,8 +225,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
         // Check if the root is blocked by a top-level update.
         const blockedAt = topLevelBlockedAt(fiberRoot);
-        fiberRoot.isBlocked =
-          blockedAt !== Done && blockedAt <= renderExpirationTime;
+        if (blockedAt !== Done && blockedAt <= renderExpirationTime) {
+          workInProgress.completionTag |= Blocked;
+        }
         return null;
       }
       case HostComponent: {
