@@ -12,7 +12,10 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-var didWarnValueNull = false;
+var didWarnValueNull = {
+  default: false,
+  multiple: false,
+};
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -23,17 +26,25 @@ function validateProperties(type, props) {
   if (type !== 'input' && type !== 'textarea' && type !== 'select') {
     return;
   }
-  if (props != null && props.value === null && !didWarnValueNull) {
+
+  var isMultipleSelect = type === 'select' && props.multiple === true;
+  var errorType = isMultipleSelect ? 'multiple' : 'default';
+  var isFirstError = !didWarnValueNull[errorType];
+
+  if (props != null && props.value === null && isFirstError) {
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
-        'Consider using the empty string to clear the component or `undefined` ' +
+        'Consider using an empty %s to clear the component or `undefined` ' +
         'for uncontrolled components.%s',
       type,
+      errorType === 'multiple'
+        ? 'array when `multiple` is set to `true`'
+        : 'string',
       getStackAddendum(),
     );
 
-    didWarnValueNull = true;
+    didWarnValueNull[errorType] = true;
   }
 }
 
