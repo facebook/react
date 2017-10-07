@@ -72,6 +72,7 @@ var {
 } = require('ReactFiberExpirationTime');
 
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
+var {Complete} = require('ReactTypeOfCompletion');
 
 var {
   PerformedWork,
@@ -672,33 +673,46 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetNextUnitOfWork();
   }
 
-  function resetExpirationTime(
+  function bubbleFromChildren(
+    current: Fiber | null,
     workInProgress: Fiber,
     renderTime: ExpirationTime,
   ) {
     if (renderTime !== Never && workInProgress.expirationTime === Never) {
       // The children of this component are hidden. Don't bubble their
       // expiration times.
+      // TODO: Does this apply to the completion tag as well? I think so.
+      workInProgress.completionTag = Complete;
       return;
     }
 
     // Check for pending updates.
     let newExpirationTime = getUpdateExpirationTime(workInProgress);
+    let newCompletionTag = workInProgress.completionTag | Complete;
 
     // TODO: Coroutines need to visit stateNode
 
-    // Bubble up the earliest expiration time.
     let child = workInProgress.child;
+    let childrenAreWorkInProgress = current === null || current.child !== child;
     while (child !== null) {
+      // Bubble up the earliest expiration time.
       if (
         child.expirationTime !== Done &&
         (newExpirationTime === Done || newExpirationTime > child.expirationTime)
       ) {
         newExpirationTime = child.expirationTime;
       }
+
+      // If these are work-in-progress children (we didn't reuse the current
+      // children), bubble up their completion tags.
+      // TODO: Coroutines complete twice. Bubble from correct set.
+      if (childrenAreWorkInProgress) {
+        newCompletionTag |= child.completionTag;
+      }
       child = child.sibling;
     }
     workInProgress.expirationTime = newExpirationTime;
+    workInProgress.completionTag = newCompletionTag;
   }
 
   function completeUnitOfWork(workInProgress: Fiber): Fiber | null {
@@ -723,7 +737,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       const returnFiber = workInProgress.return;
       const siblingFiber = workInProgress.sibling;
 
-      resetExpirationTime(workInProgress, nextRenderExpirationTime);
+      bubbleFromChildren(current, workInProgress, nextRenderExpirationTime);
 
       if (next !== null) {
         if (__DEV__) {

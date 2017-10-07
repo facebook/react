@@ -18,6 +18,7 @@ import type {
   ReactYield,
 } from 'ReactTypes';
 import type {TypeOfWork} from 'ReactTypeOfWork';
+import type {TypeOfCompletion} from 'ReactTypeOfCompletion';
 import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
 import type {PriorityLevel} from 'ReactPriorityLevel';
@@ -39,6 +40,8 @@ var {
 var {NoWork} = require('ReactPriorityLevel');
 
 var {Done} = require('ReactFiberExpirationTime');
+
+var {Incomplete} = require('ReactTypeOfCompletion');
 
 var {NoContext} = require('ReactTypeOfInternalContext');
 
@@ -117,6 +120,12 @@ export type Fiber = {|
   // The state used to create the output
   memoizedState: any,
 
+  // Bitfield for properties related to the completion of the fiber and
+  // its subtree.
+  // TODO: Consider merging this with the effect tag by placing its fields
+  // in the first range of bits.
+  completionTag: TypeOfCompletion,
+
   // Bitfield that describes properties about the fiber and its subtree. E.g.
   // the AsyncUpdates flag indicates whether the subtree should be async-by-
   // default. When a fiber is created, it inherits the internalContextTag of its
@@ -184,6 +193,7 @@ function FiberNode(
   this.updateQueue = null;
   this.memoizedState = null;
 
+  this.completionTag = Incomplete;
   this.internalContextTag = internalContextTag;
 
   // Effects
@@ -267,6 +277,8 @@ exports.createWorkInProgress = function(
     // We already have an alternate.
     // Reset the effect tag.
     workInProgress.effectTag = NoEffect;
+    // Reset the completion tag.
+    workInProgress.completionTag = Incomplete;
 
     // The effect list is no longer valid.
     workInProgress.nextEffect = null;
