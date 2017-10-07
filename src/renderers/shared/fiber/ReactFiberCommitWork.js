@@ -22,7 +22,6 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
@@ -30,12 +29,7 @@ var {
   clearCaughtError,
 } = require('ReactErrorUtils');
 
-var {
-  Placement,
-  Update,
-  Callback,
-  ContentReset,
-} = require('ReactTypeOfSideEffect');
+var {Placement, Update, ContentReset} = require('ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -488,6 +482,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function commitCallbacks(updateQueue, context) {
+    let callbackNode = updateQueue.firstCallback;
+    // Reset the callback list before calling them in case something throws.
+    updateQueue.firstCallback = updateQueue.lastCallback = null;
+
+    while (callbackNode !== null) {
+      const callback = callbackNode.callback;
+      // Remove this callback from the update object in case it's still part
+      // of the queue, so that we don't call it again.
+      callbackNode.callback = null;
+      invariant(
+        typeof callback === 'function',
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: %s',
+        callback,
+      );
+      callback.call(context);
+      const nextCallback = callbackNode.nextCallback;
+      callbackNode.nextCallback = null;
+      callbackNode = nextCallback;
+    }
+  }
+
   function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
@@ -517,19 +534,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             }
           }
         }
-        if (
-          finishedWork.effectTag & Callback &&
-          finishedWork.updateQueue !== null
-        ) {
-          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          commitCallbacks(updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, updateQueue, instance);
+          const instance = finishedWork.child !== null
+            ? finishedWork.child.stateNode
+            : null;
+          commitCallbacks(updateQueue, instance);
         }
         return;
       }

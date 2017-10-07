@@ -227,6 +227,11 @@ const NativeRTRenderer = ReactFiberReconciler({
   },
 
   useSyncScheduling: true,
+
+  now(): number {
+    // TODO: Enable expiration by implementing this method.
+    return 0;
+  },
 });
 
 module.exports = NativeRTRenderer;

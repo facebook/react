@@ -16,7 +16,7 @@ import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
-import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {
   mountChildFibersInPlace,
@@ -47,7 +47,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {NoWork, OffscreenPriority} = require('ReactPriorityLevel');
+var {Done, Never} = require('ReactFiberExpirationTime');
 var {
   PerformedWork,
   Placement,
@@ -71,8 +71,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
+  scheduleUpdate: (
+    fiber: Fiber,
+    partialState: mixed,
+    callback: (() => mixed) | null,
+    isReplace: boolean,
+    isForced: boolean,
+  ) => void,
 ) {
   const {
     shouldSetTextContent,
@@ -94,28 +99,23 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     mountClassInstance,
     // resumeMountClassInstance,
     updateClassInstance,
-  } = ReactFiberClassComponent(
-    scheduleUpdate,
-    getPriorityContext,
-    memoizeProps,
-    memoizeState,
-  );
+  } = ReactFiberClassComponent(scheduleUpdate, memoizeProps, memoizeState);
 
+  // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
   function reconcileChildren(current, workInProgress, nextChildren) {
-    const priorityLevel = workInProgress.pendingWorkPriority;
-    reconcileChildrenAtPriority(
+    reconcileChildrenAtExpirationTime(
       current,
       workInProgress,
       nextChildren,
-      priorityLevel,
+      workInProgress.expirationTime,
     );
   }
 
-  function reconcileChildrenAtPriority(
+  function reconcileChildrenAtExpirationTime(
     current,
     workInProgress,
     nextChildren,
-    priorityLevel,
+    renderExpirationTime,
   ) {
     if (current === null) {
       // If this is a fresh new component that hasn't been rendered yet, we
@@ -126,7 +126,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress,
         workInProgress.child,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
     } else if (current.child === workInProgress.child) {
       // If the current child is the same as the work in progress, it means that
@@ -139,7 +139,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress,
         workInProgress.child,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
     } else {
       // If, on the other hand, it is already using a clone, that means we've
@@ -149,7 +149,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress,
         workInProgress.child,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
     }
   }
@@ -223,7 +223,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function updateClassComponent(
     current: Fiber | null,
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ) {
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
@@ -235,18 +235,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (!workInProgress.stateNode) {
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress, workInProgress.pendingProps);
-        mountClassInstance(workInProgress, priorityLevel);
+        mountClassInstance(workInProgress, renderExpirationTime);
         shouldUpdate = true;
       } else {
         invariant(false, 'Resuming work not yet implemented.');
         // In a resume, we'll already have an instance we can reuse.
-        // shouldUpdate = resumeMountClassInstance(workInProgress, priorityLevel);
+        // shouldUpdate = resumeMountClassInstance(workInProgress, renderExpirationTime);
       }
     } else {
       shouldUpdate = updateClassInstance(
         current,
         workInProgress,
-        priorityLevel,
+        renderExpirationTime,
       );
     }
     return finishClassComponent(
@@ -318,8 +318,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     pushHostContainer(workInProgress, root.containerInfo);
   }
 
-  function updateHostRoot(current, workInProgress, priorityLevel) {
+  function updateHostRoot(current, workInProgress, renderExpirationTime) {
+    const root = (workInProgress.stateNode: FiberRoot);
     pushHostRootContext(workInProgress);
+    if (root.completedAt === renderExpirationTime) {
+      // The root is already complete. Bail out and commit.
+      // TODO: This is a limited version of resuming that only applies to
+      // the root, to account for the pathological case where a completed
+      // root must be completely restarted before it can commit. Once we
+      // implement resuming for real, this special branch shouldn't
+      // be neccessary.
+      return null;
+    }
+
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
@@ -328,18 +339,18 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress,
         updateQueue,
         null,
-        prevState,
         null,
-        priorityLevel,
+        renderExpirationTime,
       );
       if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
-        // no work matching this priority.
+        // no work that expires at this time.
         resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
-      const element = state.element;
+      const element = state !== null ? state.element : null;
       if (
+        root.hydrate &&
         (current === null || current.child === null) &&
         enterHydrationState(workInProgress)
       ) {
@@ -361,7 +372,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           workInProgress,
           workInProgress.child,
           element,
-          priorityLevel,
+          renderExpirationTime,
         );
       } else {
         // Otherwise reset hydration state in case we aborted and resumed another
@@ -377,7 +388,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return bailoutOnAlreadyFinishedWork(current, workInProgress);
   }
 
-  function updateHostComponent(current, workInProgress, renderPriority) {
+  function updateHostComponent(current, workInProgress, renderExpirationTime) {
     pushHostContext(workInProgress);
 
     if (current === null) {
@@ -423,13 +434,13 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Check the host config to see if the children are offscreen/hidden.
     if (
-      renderPriority !== OffscreenPriority &&
+      renderExpirationTime !== Never &&
       !useSyncScheduling &&
       shouldDeprioritizeSubtree(type, nextProps)
     ) {
       // Down-prioritize the children.
-      workInProgress.pendingWorkPriority = OffscreenPriority;
-      // Bailout and come back to this fiber later at OffscreenPriority.
+      workInProgress.expirationTime = Never;
+      // Bailout and come back to this fiber later.
       return null;
     }
 
@@ -452,7 +463,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return null;
   }
 
-  function mountIndeterminateComponent(current, workInProgress, priorityLevel) {
+  function mountIndeterminateComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
     invariant(
       current === null,
       'An indeterminate component should never have mounted. This error is ' +
@@ -487,7 +502,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // We will invalidate the child context in finishClassComponent() right after rendering.
       const hasContext = pushContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
-      mountClassInstance(workInProgress, priorityLevel);
+      mountClassInstance(workInProgress, renderExpirationTime);
       return finishClassComponent(current, workInProgress, true, hasContext);
     } else {
       // Proceed under the assumption that this is a functional component
@@ -532,7 +547,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function updateCoroutineComponent(current, workInProgress) {
+  function updateCoroutineComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
     var nextCoroutine = (workInProgress.pendingProps: null | ReactCoroutine);
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -556,30 +575,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     const nextChildren = nextCoroutine.children;
-    const priorityLevel = workInProgress.pendingWorkPriority;
 
-    // The following is a fork of reconcileChildrenAtPriority but using
+    // The following is a fork of reconcileChildrenAtExpirationTime but using
     // stateNode to store the child.
     if (current === null) {
       workInProgress.stateNode = mountChildFibersInPlace(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
     } else if (current.child === workInProgress.child) {
       workInProgress.stateNode = reconcileChildFibers(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
     } else {
       workInProgress.stateNode = reconcileChildFibersInPlace(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
     }
 
@@ -589,9 +607,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     return workInProgress.stateNode;
   }
 
-  function updatePortalComponent(current, workInProgress) {
+  function updatePortalComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
     pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
-    const priorityLevel = workInProgress.pendingWorkPriority;
     let nextChildren = workInProgress.pendingProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -621,7 +642,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress,
         workInProgress.child,
         nextChildren,
-        priorityLevel,
+        renderExpirationTime,
       );
       memoizeProps(workInProgress, nextChildren);
     } else {
@@ -716,11 +737,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function beginWork(
     current: Fiber | null,
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ): Fiber | null {
     if (
-      workInProgress.pendingWorkPriority === NoWork ||
-      workInProgress.pendingWorkPriority > priorityLevel
+      workInProgress.expirationTime === Done ||
+      workInProgress.expirationTime > renderExpirationTime
     ) {
       return bailoutOnLowPriority(current, workInProgress);
     }
@@ -730,16 +751,24 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return mountIndeterminateComponent(
           current,
           workInProgress,
-          priorityLevel,
+          renderExpirationTime,
         );
       case FunctionalComponent:
         return updateFunctionalComponent(current, workInProgress);
       case ClassComponent:
-        return updateClassComponent(current, workInProgress, priorityLevel);
+        return updateClassComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case HostRoot:
-        return updateHostRoot(current, workInProgress, priorityLevel);
+        return updateHostRoot(current, workInProgress, renderExpirationTime);
       case HostComponent:
-        return updateHostComponent(current, workInProgress, priorityLevel);
+        return updateHostComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case HostText:
         return updateHostText(current, workInProgress);
       case CoroutineHandlerPhase:
@@ -747,13 +776,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress.tag = CoroutineComponent;
       // Intentionally fall through since this is now the same.
       case CoroutineComponent:
-        return updateCoroutineComponent(current, workInProgress);
+        return updateCoroutineComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case YieldComponent:
         // A yield component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
       case HostPortal:
-        return updatePortalComponent(current, workInProgress);
+        return updatePortalComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case Fragment:
         return updateFragment(current, workInProgress);
       default:
@@ -768,7 +805,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function beginFailedWork(
     current: Fiber | null,
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ) {
     // Push context providers here to avoid a push/pop context mismatch.
     switch (workInProgress.tag) {
@@ -801,8 +838,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (
-      workInProgress.pendingWorkPriority === NoWork ||
-      workInProgress.pendingWorkPriority > priorityLevel
+      workInProgress.expirationTime === Done ||
+      workInProgress.expirationTime > renderExpirationTime
     ) {
       return bailoutOnLowPriority(current, workInProgress);
     }
@@ -814,11 +851,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     // Unmount the current children as if the component rendered null
     const nextChildren = null;
-    reconcileChildrenAtPriority(
+    reconcileChildrenAtExpirationTime(
       current,
       workInProgress,
       nextChildren,
-      priorityLevel,
+      renderExpirationTime,
     );
 
     if (workInProgress.tag === ClassComponent) {
