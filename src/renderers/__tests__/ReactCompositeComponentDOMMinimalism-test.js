@@ -33,21 +33,13 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
 
     LowerLevelComposite = class extends React.Component {
       render() {
-        return (
-          <div>
-            {this.props.children}
-          </div>
-        );
+        return <div>{this.props.children}</div>;
       }
     };
 
     MyCompositeComponent = class extends React.Component {
       render() {
-        return (
-          <LowerLevelComposite>
-            {this.props.children}
-          </LowerLevelComposite>
-        );
+        return <LowerLevelComposite>{this.props.children}</LowerLevelComposite>;
       }
     };
 
@@ -59,10 +51,14 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
   });
 
   it('should not render extra nodes for non-interpolated text', () => {
+    var instance = <MyCompositeComponent>A string child</MyCompositeComponent>;
+    instance = ReactTestUtils.renderIntoDocument(instance);
+    expectSingleChildlessDiv(instance);
+  });
+
+  it('should not render extra nodes for non-interpolated text', () => {
     var instance = (
-      <MyCompositeComponent>
-        A string child
-      </MyCompositeComponent>
+      <MyCompositeComponent>{'Interpolated String Child'}</MyCompositeComponent>
     );
     instance = ReactTestUtils.renderIntoDocument(instance);
     expectSingleChildlessDiv(instance);
@@ -71,19 +67,7 @@ describe('ReactCompositeComponentDOMMinimalism', () => {
   it('should not render extra nodes for non-interpolated text', () => {
     var instance = (
       <MyCompositeComponent>
-        {'Interpolated String Child'}
-      </MyCompositeComponent>
-    );
-    instance = ReactTestUtils.renderIntoDocument(instance);
-    expectSingleChildlessDiv(instance);
-  });
-
-  it('should not render extra nodes for non-interpolated text', () => {
-    var instance = (
-      <MyCompositeComponent>
-        <ul>
-          This text causes no children in ul, just innerHTML
-        </ul>
+        <ul>This text causes no children in ul, just innerHTML</ul>
       </MyCompositeComponent>
     );
     instance = ReactTestUtils.renderIntoDocument(instance);

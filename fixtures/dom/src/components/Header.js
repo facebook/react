@@ -71,7 +71,9 @@ class Header extends React.Component {
                 value={this.state.version}
                 onChange={this.handleVersionChange}>
                 {this.state.versions.map(version => (
-                  <option key={version} value={version}>{version}</option>
+                  <option key={version} value={version}>
+                    {version}
+                  </option>
                 ))}
               </select>
             </label>

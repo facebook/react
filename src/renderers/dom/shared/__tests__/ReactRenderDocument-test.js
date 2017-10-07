@@ -44,9 +44,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {'Hello ' + this.props.hello}
-              </body>
+              <body>{'Hello ' + this.props.hello}</body>
             </html>
           );
         }
@@ -75,9 +73,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -104,9 +100,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -119,9 +113,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Goodbye world
-              </body>
+              <body>Goodbye world</body>
             </html>
           );
         }
@@ -149,9 +141,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -186,9 +176,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -225,9 +213,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -247,9 +233,7 @@ describe('rendering React components at document', () => {
           <head>
             <title>Hello World</title>
           </head>
-          <body>
-            Hello world
-          </body>
+          <body>Hello world</body>
         </html>
       );
 
@@ -271,9 +255,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {'Hello ' + this.props.hello}
-              </body>
+              <body>{'Hello ' + this.props.hello}</body>
             </html>
           );
         }
@@ -300,9 +282,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -326,9 +306,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -341,9 +319,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Goodbye world
-              </body>
+              <body>Goodbye world</body>
             </html>
           );
         }
@@ -370,9 +346,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -408,9 +382,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -441,9 +413,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -464,9 +434,7 @@ describe('rendering React components at document', () => {
           <head>
             <title>Hello World</title>
           </head>
-          <body>
-            Hello world
-          </body>
+          <body>Hello world</body>
         </html>
       );
 

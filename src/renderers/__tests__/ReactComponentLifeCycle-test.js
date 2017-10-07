@@ -369,11 +369,7 @@ describe('ReactComponentLifeCycle', () => {
         }
         // you would *NEVER* do anything like this in real code!
         this.state.hasRenderCompleted = true;
-        return (
-          <div ref="theDiv">
-            I am the inner DIV
-          </div>
-        );
+        return <div ref="theDiv">I am the inner DIV</div>;
       }
 
       componentWillUnmount() {
@@ -532,7 +528,11 @@ describe('ReactComponentLifeCycle', () => {
       componentDidUpdate = logger('outer componentDidUpdate');
       componentWillUnmount = logger('outer componentWillUnmount');
       render() {
-        return <div><Inner x={this.props.x} /></div>;
+        return (
+          <div>
+            <Inner x={this.props.x} />
+          </div>
+        );
       }
     }
 

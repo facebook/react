@@ -94,7 +94,9 @@ describe('ReactDOMSelect', () => {
 
     // Changing `defaultValue` should do nothing.
     ReactDOM.render(
-      <select multiple={true} defaultValue={['monkey']}>{options}</select>,
+      <select multiple={true} defaultValue={['monkey']}>
+        {options}
+      </select>,
       container,
     );
 
@@ -120,7 +122,9 @@ describe('ReactDOMSelect', () => {
 
     // Changing the `value` prop should change the selected option.
     ReactDOM.render(
-      <select value="gorilla" onChange={noop}>{options}</select>,
+      <select value="gorilla" onChange={noop}>
+        {options}
+      </select>,
       container,
     );
     expect(node.value).toEqual('gorilla');
@@ -159,7 +163,9 @@ describe('ReactDOMSelect', () => {
 
     // Changing the `value` prop should change the selected option.
     ReactDOM.render(
-      <select value="gorilla" onChange={noop}>{options}</select>,
+      <select value="gorilla" onChange={noop}>
+        {options}
+      </select>,
       container,
     );
     expect(node.value).toEqual('gorilla');
@@ -407,7 +413,9 @@ describe('ReactDOMSelect', () => {
     var node = ReactDOM.findDOMNode(stub);
 
     ReactDOM.render(
-      <select value="gorilla" onChange={noop}>{options}</select>,
+      <select value="gorilla" onChange={noop}>
+        {options}
+      </select>,
       container,
     );
 
@@ -469,9 +477,15 @@ describe('ReactDOMSelect', () => {
 
     var select = ReactDOM.render(
       <select multiple={true} defaultValue={['giraffe']}>
-        <option key="monkey" value="monkey">A monkey!</option>
-        <option key="giraffe" value="giraffe">A giraffe!</option>
-        <option key="gorilla" value="gorilla">A gorilla!</option>
+        <option key="monkey" value="monkey">
+          A monkey!
+        </option>
+        <option key="giraffe" value="giraffe">
+          A giraffe!
+        </option>
+        <option key="gorilla" value="gorilla">
+          A gorilla!
+        </option>
       </select>,
       container,
     );
@@ -483,8 +497,12 @@ describe('ReactDOMSelect', () => {
 
     ReactDOM.render(
       <select multiple={true} defaultValue={['giraffe']}>
-        <option key="monkey" value="monkey">A monkey!</option>
-        <option key="gorilla" value="gorilla">A gorilla!</option>
+        <option key="monkey" value="monkey">
+          A monkey!
+        </option>
+        <option key="gorilla" value="gorilla">
+          A gorilla!
+        </option>
       </select>,
       container,
     );
@@ -494,9 +512,15 @@ describe('ReactDOMSelect', () => {
 
     ReactDOM.render(
       <select multiple={true} defaultValue={['giraffe']}>
-        <option key="monkey" value="monkey">A monkey!</option>
-        <option key="giraffe" value="giraffe">A giraffe!</option>
-        <option key="gorilla" value="gorilla">A gorilla!</option>
+        <option key="monkey" value="monkey">
+          A monkey!
+        </option>
+        <option key="giraffe" value="giraffe">
+          A giraffe!
+        </option>
+        <option key="gorilla" value="gorilla">
+          A gorilla!
+        </option>
       </select>,
       container,
     );
@@ -510,7 +534,9 @@ describe('ReactDOMSelect', () => {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null}><option value="test" /></select>,
+      <select value={null}>
+        <option value="test" />
+      </select>,
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `select` should not be null. ' +
@@ -519,7 +545,9 @@ describe('ReactDOMSelect', () => {
     );
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null}><option value="test" /></select>,
+      <select value={null}>
+        <option value="test" />
+      </select>,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });

@@ -347,7 +347,11 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     itRenders('a self-closing tag as a child', async render => {
-      const e = await render(<div><br /></div>);
+      const e = await render(
+        <div>
+          <br />
+        </div>,
+      );
       expect(e.childNodes.length).toBe(1);
       expect(e.firstChild.tagName).toBe('BR');
     });
@@ -966,7 +970,11 @@ describe('ReactDOMServerIntegration', () => {
       );
 
       itRenders('SVG tags with dashes in them', async render => {
-        const e = await render(<svg><font-face accentHeight={10} /></svg>);
+        const e = await render(
+          <svg>
+            <font-face accentHeight={10} />
+          </svg>,
+        );
         expect(e.firstChild.hasAttribute('accentHeight')).toBe(false);
         expect(e.firstChild.getAttribute('accent-height')).toBe('10');
       });
@@ -1025,7 +1033,13 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a div with multiple empty text children', async render => {
-        const e = await render(<div>{''}{''}{''}</div>);
+        const e = await render(
+          <div>
+            {''}
+            {''}
+            {''}
+          </div>,
+        );
         if (render === serverRender || render === streamRender) {
           // For plain server markup result we should have no text nodes if
           // they're all empty.
@@ -1040,7 +1054,7 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a div with multiple whitespace children', async render => {
-        const e = await render(<div>{' '}{' '}{' '}</div>);
+        const e = await render(<div>   </div>);
         if (
           render === serverRender ||
           render === clientRenderOnServerString ||
@@ -1061,7 +1075,11 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a div with text sibling to a node', async render => {
-        const e = await render(<div>Text<span>More Text</span></div>);
+        const e = await render(
+          <div>
+            Text<span>More Text</span>
+          </div>,
+        );
         let spanNode;
         expect(e.childNodes.length).toBe(2);
         spanNode = e.childNodes[1];
@@ -1111,7 +1129,12 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('an element with two text children', async render => {
-        const e = await render(<div>{'foo'}{'bar'}</div>);
+        const e = await render(
+          <div>
+            {'foo'}
+            {'bar'}
+          </div>,
+        );
         if (
           render === serverRender ||
           render === clientRenderOnServerString ||
@@ -1132,7 +1155,13 @@ describe('ReactDOMServerIntegration', () => {
         'a component returning text node between two text nodes',
         async render => {
           const B = () => 'b';
-          const e = await render(<div>{'a'}<B />{'c'}</div>);
+          const e = await render(
+            <div>
+              {'a'}
+              <B />
+              {'c'}
+            </div>,
+          );
           if (
             render === serverRender ||
             render === clientRenderOnServerString ||
@@ -1215,7 +1244,12 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('an element with number and text children', async render => {
-        const e = await render(<div>{'foo'}{40}</div>);
+        const e = await render(
+          <div>
+            {'foo'}
+            {40}
+          </div>,
+        );
         // with Fiber, there are just two text nodes.
         if (
           render === serverRender ||
@@ -1252,7 +1286,11 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('a null component children as empty', async render => {
         const NullComponent = () => null;
-        const e = await render(<div><NullComponent /></div>);
+        const e = await render(
+          <div>
+            <NullComponent />
+          </div>,
+        );
         expect(e.childNodes.length).toBe(0);
       });
 
@@ -1269,13 +1307,26 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('null and false children together as blank', async render => {
-        const e = await render(<div>{false}{null}foo{null}{false}</div>);
+        const e = await render(
+          <div>
+            {false}
+            {null}foo{null}
+            {false}
+          </div>,
+        );
         expect(e.childNodes.length).toBe(1);
         expectTextNode(e.childNodes[0], 'foo');
       });
 
       itRenders('only null and false children as blank', async render => {
-        const e = await render(<div>{false}{null}{null}{false}</div>);
+        const e = await render(
+          <div>
+            {false}
+            {null}
+            {null}
+            {false}
+          </div>,
+        );
         expect(e.childNodes.length).toBe(0);
       });
     });
@@ -1300,7 +1351,9 @@ describe('ReactDOMServerIntegration', () => {
         'svg child element with a namespace attribute',
         async render => {
           let e = await render(
-            <svg><image xlinkHref="http://i.imgur.com/w7GCRPb.png" /></svg>,
+            <svg>
+              <image xlinkHref="http://i.imgur.com/w7GCRPb.png" />
+            </svg>,
           );
           e = e.firstChild;
           expect(e.childNodes.length).toBe(0);
@@ -1314,7 +1367,9 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('svg child element with a badly cased alias', async render => {
         let e = await render(
-          <svg><image xlinkhref="http://i.imgur.com/w7GCRPb.png" /></svg>,
+          <svg>
+            <image xlinkhref="http://i.imgur.com/w7GCRPb.png" />
+          </svg>,
           1,
         );
         e = e.firstChild;
@@ -1451,10 +1506,12 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(
           <Component>
             <Component>
-              <Component /><Component />
+              <Component />
+              <Component />
             </Component>
             <Component>
-              <Component /><Component />
+              <Component />
+              <Component />
             </Component>
           </Component>,
         );
@@ -1473,7 +1530,11 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a div with a child', async render => {
-        const e = await render(<div id="parent"><div id="child" /></div>);
+        const e = await render(
+          <div id="parent">
+            <div id="child" />
+          </div>,
+        );
         expect(e.id).toBe('parent');
         expect(e.childNodes.length).toBe(1);
         expect(e.childNodes[0].id).toBe('child');
@@ -1482,7 +1543,10 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('a div with multiple children', async render => {
         const e = await render(
-          <div id="parent"><div id="child1" /><div id="child2" /></div>,
+          <div id="parent">
+            <div id="child1" />
+            <div id="child2" />
+          </div>,
         );
         expect(e.id).toBe('parent');
         expect(e.childNodes.length).toBe(2);
@@ -1496,7 +1560,9 @@ describe('ReactDOMServerIntegration', () => {
         'a div with multiple children separated by whitespace',
         async render => {
           const e = await render(
-            <div id="parent"><div id="child1" /> <div id="child2" /></div>,
+            <div id="parent">
+              <div id="child1" /> <div id="child2" />
+            </div>,
           );
           expect(e.id).toBe('parent');
           let child1, child2, textNode;
@@ -1566,7 +1632,10 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('>,<, and & as multiple children', async render => {
         const e = await render(
-          <div>{'<span>Text1&quot;</span>'}{'<span>Text2&quot;</span>'}</div>,
+          <div>
+            {'<span>Text1&quot;</span>'}
+            {'<span>Text2&quot;</span>'}
+          </div>,
         );
         if (
           render === serverRender ||
@@ -1616,7 +1685,12 @@ describe('ReactDOMServerIntegration', () => {
       itRenders(
         'an element with two text children with special characters',
         async render => {
-          const e = await render(<div>{'foo\rbar'}{'\r\nbaz\nqux\u0000'}</div>);
+          const e = await render(
+            <div>
+              {'foo\rbar'}
+              {'\r\nbaz\nqux\u0000'}
+            </div>,
+          );
           if (render === serverRender || render === streamRender) {
             // We have three nodes because there is a comment between them.
             expect(e.childNodes.length).toBe(3);
@@ -1910,9 +1984,15 @@ describe('ReactDOMServerIntegration', () => {
       var options;
       beforeEach(function() {
         options = [
-          <option key={1} value="foo" id="foo">Foo</option>,
-          <option key={2} value="bar" id="bar">Bar</option>,
-          <option key={3} value="baz" id="baz">Baz</option>,
+          <option key={1} value="foo" id="foo">
+            Foo
+          </option>,
+          <option key={2} value="bar" id="bar">
+            Bar
+          </option>,
+          <option key={3} value="baz" id="baz">
+            Baz
+          </option>,
         ];
       });
 
@@ -1937,14 +2017,18 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('a select with a value and an onChange', async render => {
         const e = await render(
-          <select value="bar" onChange={() => {}}>{options}</select>,
+          <select value="bar" onChange={() => {}}>
+            {options}
+          </select>,
         );
         expectSelectValue(e, 'bar');
       });
 
       itRenders('a select with a value and readOnly', async render => {
         const e = await render(
-          <select value="bar" readOnly={true}>{options}</select>,
+          <select value="bar" readOnly={true}>
+            {options}
+          </select>,
         );
         expectSelectValue(e, 'bar');
       });
@@ -2095,8 +2179,12 @@ describe('ReactDOMServerIntegration', () => {
               <select
                 value={this.state.value}
                 onChange={this.handleChange.bind(this)}>
-                <option key="1" value="Hello">Hello</option>
-                <option key="2" value="Goodbye">Goodbye</option>
+                <option key="1" value="Hello">
+                  Hello
+                </option>
+                <option key="2" value="Goodbye">
+                  Goodbye
+                </option>
               </select>
             );
           }
@@ -2239,32 +2327,30 @@ describe('ReactDOMServerIntegration', () => {
 
         // skipping this test because React 15 does the wrong thing. it blows
         // away the user's typing in the textarea.
-        xit(
-          'should not blow away user-entered text on successful reconnect to an uncontrolled textarea',
-          () =>
-            testUserInteractionBeforeClientRender(
-              <textarea defaultValue="Hello" />,
-            ),
-        );
+        xit('should not blow away user-entered text on successful reconnect to an uncontrolled textarea', () =>
+          testUserInteractionBeforeClientRender(
+            <textarea defaultValue="Hello" />,
+          ));
 
         // skipping this test because React 15 does the wrong thing. it blows
         // away the user's typing in the textarea.
-        xit(
-          'should not blow away user-entered text on successful reconnect to a controlled textarea',
-          async () => {
-            let changeCount = 0;
-            await testUserInteractionBeforeClientRender(
-              <ControlledTextArea onChange={() => changeCount++} />,
-            );
-            expect(changeCount).toBe(0);
-          },
-        );
+        xit('should not blow away user-entered text on successful reconnect to a controlled textarea', async () => {
+          let changeCount = 0;
+          await testUserInteractionBeforeClientRender(
+            <ControlledTextArea onChange={() => changeCount++} />,
+          );
+          expect(changeCount).toBe(0);
+        });
 
         it('should not blow away user-selected value on successful reconnect to an uncontrolled select', () =>
           testUserInteractionBeforeClientRender(
             <select defaultValue="Hello">
-              <option key="1" value="Hello">Hello</option>
-              <option key="2" value="Goodbye">Goodbye</option>
+              <option key="1" value="Hello">
+                Hello
+              </option>
+              <option key="2" value="Goodbye">
+                Goodbye
+              </option>
             </select>,
           ));
 
@@ -2305,7 +2391,9 @@ describe('ReactDOMServerIntegration', () => {
       ClassChildWithContext.contextTypes = {text: PropTypes.string};
 
       const e = await render(
-        <PurpleContext><ClassChildWithContext /></PurpleContext>,
+        <PurpleContext>
+          <ClassChildWithContext />
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -2317,7 +2405,9 @@ describe('ReactDOMServerIntegration', () => {
       StatelessChildWithContext.contextTypes = {text: PropTypes.string};
 
       const e = await render(
-        <PurpleContext><StatelessChildWithContext /></PurpleContext>,
+        <PurpleContext>
+          <StatelessChildWithContext />
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('purple');
     });
@@ -2331,7 +2421,9 @@ describe('ReactDOMServerIntegration', () => {
       }
 
       const e = await render(
-        <PurpleContext><ClassChildWithoutContext /></PurpleContext>,
+        <PurpleContext>
+          <ClassChildWithoutContext />
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('');
     });
@@ -2343,7 +2435,9 @@ describe('ReactDOMServerIntegration', () => {
       }
 
       const e = await render(
-        <PurpleContext><StatelessChildWithoutContext /></PurpleContext>,
+        <PurpleContext>
+          <StatelessChildWithoutContext />
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('');
     });
@@ -2358,7 +2452,9 @@ describe('ReactDOMServerIntegration', () => {
       ClassChildWithWrongContext.contextTypes = {foo: PropTypes.string};
 
       const e = await render(
-        <PurpleContext><ClassChildWithWrongContext /></PurpleContext>,
+        <PurpleContext>
+          <ClassChildWithWrongContext />
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('');
     });
@@ -2373,7 +2469,9 @@ describe('ReactDOMServerIntegration', () => {
       };
 
       const e = await render(
-        <PurpleContext><StatelessChildWithWrongContext /></PurpleContext>,
+        <PurpleContext>
+          <StatelessChildWithWrongContext />
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('');
     });
@@ -2386,7 +2484,11 @@ describe('ReactDOMServerIntegration', () => {
 
       const Child = props => <Grandchild />;
 
-      const e = await render(<PurpleContext><Child /></PurpleContext>);
+      const e = await render(
+        <PurpleContext>
+          <Child />
+        </PurpleContext>,
+      );
       expect(e.textContent).toBe('purple');
     });
 
@@ -2397,7 +2499,11 @@ describe('ReactDOMServerIntegration', () => {
       Grandchild.contextTypes = {text: PropTypes.string};
 
       const e = await render(
-        <PurpleContext><RedContext><Grandchild /></RedContext></PurpleContext>,
+        <PurpleContext>
+          <RedContext>
+            <Grandchild />
+          </RedContext>
+        </PurpleContext>,
       );
       expect(e.textContent).toBe('red');
     });
@@ -2636,8 +2742,12 @@ describe('ReactDOMServerIntegration', () => {
 
       it('can explicitly ignore errors reconnecting different element types of children', () =>
         expectMarkupMatch(
-          <div><div /></div>,
-          <div suppressHydrationWarning={true}><span /></div>,
+          <div>
+            <div />
+          </div>,
+          <div suppressHydrationWarning={true}>
+            <span />
+          </div>,
         ));
 
       it('can explicitly ignore errors reconnecting missing attributes', () =>
@@ -2660,8 +2770,12 @@ describe('ReactDOMServerIntegration', () => {
 
       it('can not deeply ignore errors reconnecting different attribute values', () =>
         expectMarkupMismatch(
-          <div><div id="foo" /></div>,
-          <div suppressHydrationWarning={true}><div id="bar" /></div>,
+          <div>
+            <div id="foo" />
+          </div>,
+          <div suppressHydrationWarning={true}>
+            <div id="bar" />
+          </div>,
         ));
     });
 
@@ -2730,8 +2844,14 @@ describe('ReactDOMServerIntegration', () => {
 
       it('should error reconnecting different text in two code blocks', () =>
         expectMarkupMismatch(
-          <div>{'Text1'}{'Text2'}</div>,
-          <div>{'Text1'}{'Text3'}</div>,
+          <div>
+            {'Text1'}
+            {'Text2'}
+          </div>,
+          <div>
+            {'Text1'}
+            {'Text3'}
+          </div>,
         ));
 
       it('can explicitly ignore reconnecting different text', () =>
@@ -2742,33 +2862,74 @@ describe('ReactDOMServerIntegration', () => {
 
       it('can explicitly ignore reconnecting different text in two code blocks', () =>
         expectMarkupMatch(
-          <div suppressHydrationWarning={true}>{'Text1'}{'Text2'}</div>,
-          <div suppressHydrationWarning={true}>{'Text1'}{'Text3'}</div>,
+          <div suppressHydrationWarning={true}>
+            {'Text1'}
+            {'Text2'}
+          </div>,
+          <div suppressHydrationWarning={true}>
+            {'Text1'}
+            {'Text3'}
+          </div>,
         ));
     });
 
     describe('element trees and children', function() {
       it('should error reconnecting missing children', () =>
-        expectMarkupMismatch(<div><div /></div>, <div />));
+        expectMarkupMismatch(
+          <div>
+            <div />
+          </div>,
+          <div />,
+        ));
 
       it('should error reconnecting added children', () =>
-        expectMarkupMismatch(<div />, <div><div /></div>));
+        expectMarkupMismatch(
+          <div />,
+          <div>
+            <div />
+          </div>,
+        ));
 
       it('should error reconnecting more children', () =>
-        expectMarkupMismatch(<div><div /></div>, <div><div /><div /></div>));
+        expectMarkupMismatch(
+          <div>
+            <div />
+          </div>,
+          <div>
+            <div />
+            <div />
+          </div>,
+        ));
 
       it('should error reconnecting fewer children', () =>
-        expectMarkupMismatch(<div><div /><div /></div>, <div><div /></div>));
+        expectMarkupMismatch(
+          <div>
+            <div />
+            <div />
+          </div>,
+          <div>
+            <div />
+          </div>,
+        ));
 
       it('should error reconnecting reordered children', () =>
         expectMarkupMismatch(
-          <div><div /><span /></div>,
-          <div><span /><div /></div>,
+          <div>
+            <div />
+            <span />
+          </div>,
+          <div>
+            <span />
+            <div />
+          </div>,
         ));
 
       it('should error reconnecting a div with children separated by whitespace on the client', () =>
         expectMarkupMismatch(
-          <div id="parent"><div id="child1" /><div id="child2" /></div>,
+          <div id="parent">
+            <div id="child1" />
+            <div id="child2" />
+          </div>,
           // prettier-ignore
           <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
         ));
@@ -2777,47 +2938,87 @@ describe('ReactDOMServerIntegration', () => {
         expectMarkupMismatch(
           // prettier-ignore
           <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
-          <div id="parent"><div id="child1" /><div id="child2" /></div>,
+          <div id="parent">
+            <div id="child1" />
+            <div id="child2" />
+          </div>,
         ));
 
       it('should error reconnecting a div with children separated by different whitespace', () =>
         expectMarkupMismatch(
-          <div id="parent"><div id="child1" /> <div id="child2" /></div>,
+          <div id="parent">
+            <div id="child1" /> <div id="child2" />
+          </div>,
           // prettier-ignore
           <div id="parent"><div id="child1" />      <div id="child2" /></div>, // eslint-disable-line no-multi-spaces
         ));
 
       it('can distinguish an empty component from a dom node', () =>
         expectMarkupMismatch(
-          <div><span /></div>,
-          <div><EmptyComponent /></div>,
+          <div>
+            <span />
+          </div>,
+          <div>
+            <EmptyComponent />
+          </div>,
         ));
 
       it('can distinguish an empty component from an empty text component', () =>
-        expectMarkupMatch(<div><EmptyComponent /></div>, <div>{''}</div>));
+        expectMarkupMatch(
+          <div>
+            <EmptyComponent />
+          </div>,
+          <div>{''}</div>,
+        ));
 
       it('can explicitly ignore reconnecting more children', () =>
         expectMarkupMatch(
-          <div><div /></div>,
-          <div suppressHydrationWarning={true}><div /><div /></div>,
+          <div>
+            <div />
+          </div>,
+          <div suppressHydrationWarning={true}>
+            <div />
+            <div />
+          </div>,
         ));
 
       it('can explicitly ignore reconnecting fewer children', () =>
         expectMarkupMatch(
-          <div><div /><div /></div>,
-          <div suppressHydrationWarning={true}><div /></div>,
+          <div>
+            <div />
+            <div />
+          </div>,
+          <div suppressHydrationWarning={true}>
+            <div />
+          </div>,
         ));
 
       it('can explicitly ignore reconnecting reordered children', () =>
         expectMarkupMatch(
-          <div suppressHydrationWarning={true}><div /><span /></div>,
-          <div suppressHydrationWarning={true}><span /><div /></div>,
+          <div suppressHydrationWarning={true}>
+            <div />
+            <span />
+          </div>,
+          <div suppressHydrationWarning={true}>
+            <span />
+            <div />
+          </div>,
         ));
 
       it('can not deeply ignore reconnecting reordered children', () =>
         expectMarkupMismatch(
-          <div suppressHydrationWarning={true}><div><div /><span /></div></div>,
-          <div suppressHydrationWarning={true}><div><span /><div /></div></div>,
+          <div suppressHydrationWarning={true}>
+            <div>
+              <div />
+              <span />
+            </div>
+          </div>,
+          <div suppressHydrationWarning={true}>
+            <div>
+              <span />
+              <div />
+            </div>
+          </div>,
         ));
     });
 

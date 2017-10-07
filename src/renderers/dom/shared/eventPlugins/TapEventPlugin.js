@@ -28,7 +28,7 @@ var isEndish = EventPluginUtils.isEndish;
 type TouchPropertyKey = 'clientX' | 'clientY' | 'pageX' | 'pageY';
 
 declare class _Touch extends Touch {
-  [key: TouchPropertyKey]: number,
+  [key: TouchPropertyKey]: number;
 }
 
 type AxisCoordinateData = {

@@ -13,7 +13,9 @@ var {HostComponent, HostText} = require('ReactTypeOfWork');
 
 var invariant = require('fbjs/lib/invariant');
 
-var randomKey = Math.random().toString(36).slice(2);
+var randomKey = Math.random()
+  .toString(36)
+  .slice(2);
 var internalInstanceKey = '__reactInternalInstance$' + randomKey;
 var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
 

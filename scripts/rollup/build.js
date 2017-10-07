@@ -259,12 +259,13 @@ function uglifyConfig(configs) {
         return !removeComments;
       },
     },
-    mangleProperties: mangle && manglePropertiesOnProd
-      ? {
-          ignore_quoted: true,
-          regex: mangleRegex,
-        }
-      : false,
+    mangleProperties:
+      mangle && manglePropertiesOnProd
+        ? {
+            ignore_quoted: true,
+            regex: mangleRegex,
+          }
+        : false,
     mangle: mangle
       ? {
           toplevel: true,
@@ -441,9 +442,10 @@ function createBundle(bundle, bundleType) {
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
-    entry: bundleType === FB_DEV || bundleType === FB_PROD
-      ? bundle.fbEntry
-      : bundle.entry,
+    entry:
+      bundleType === FB_DEV || bundleType === FB_PROD
+        ? bundle.fbEntry
+        : bundle.entry,
     external: Modules.getExternalModules(
       bundle.externals,
       bundleType,

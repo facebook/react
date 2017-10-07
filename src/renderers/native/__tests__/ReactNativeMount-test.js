@@ -150,9 +150,7 @@ describe('ReactNative', () => {
       render() {
         var chars = this.props.chars.split('');
         return (
-          <View>
-            {chars.map(text => <View key={text} title={text} />)}
-          </View>
+          <View>{chars.map(text => <View key={text} title={text} />)}</View>
         );
       }
     }

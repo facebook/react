@@ -68,21 +68,25 @@ if (!ExecutionEnvironment.canUseDOM) {
   var activeFrameTime = 33;
 
   var frameDeadlineObject = {
-    timeRemaining: typeof performance === 'object' &&
-      typeof performance.now === 'function'
-      ? function() {
-          // We assume that if we have a performance timer that the rAF callback
-          // gets a performance timer value. Not sure if this is always true.
-          return frameDeadline - performance.now();
-        }
-      : function() {
-          // As a fallback we use Date.now.
-          return frameDeadline - Date.now();
-        },
+    timeRemaining:
+      typeof performance === 'object' && typeof performance.now === 'function'
+        ? function() {
+            // We assume that if we have a performance timer that the rAF callback
+            // gets a performance timer value. Not sure if this is always true.
+            return frameDeadline - performance.now();
+          }
+        : function() {
+            // As a fallback we use Date.now.
+            return frameDeadline - Date.now();
+          },
   };
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey = '__reactIdleCallback$' + Math.random().toString(36).slice(2);
+  var messageKey =
+    '__reactIdleCallback$' +
+    Math.random()
+      .toString(36)
+      .slice(2);
   var idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
@@ -117,9 +121,8 @@ if (!ExecutionEnvironment.canUseDOM) {
       // running on 120hz display or 90hz VR display.
       // Take the max of the two in case one of them was an anomaly due to
       // missed frame deadlines.
-      activeFrameTime = nextFrameTime < previousFrameTime
-        ? previousFrameTime
-        : nextFrameTime;
+      activeFrameTime =
+        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
     } else {
       previousFrameTime = nextFrameTime;
     }

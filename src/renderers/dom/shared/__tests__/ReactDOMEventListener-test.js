@@ -194,7 +194,11 @@ describe('ReactDOMEventListener', () => {
 
       render() {
         var inner = <div ref="inner">Inner</div>;
-        return <div><div id="outer">{inner}</div></div>;
+        return (
+          <div>
+            <div id="outer">{inner}</div>
+          </div>
+        );
       }
     }
 

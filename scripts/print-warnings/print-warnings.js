@@ -75,7 +75,11 @@ const sourcePaths = Bundles.bundles
 
 gs(sourcePaths).pipe(
   through.obj(transform, cb => {
-    process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');
+    process.stdout.write(
+      Array.from(warnings)
+        .sort()
+        .join('\n') + '\n'
+    );
     cb();
   })
 );

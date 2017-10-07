@@ -65,15 +65,16 @@ var _touchConfig = function(
 ) {
   var allTouchObjects = allTouchHandles.map(touch);
   var changedTouchObjects = subsequence(allTouchObjects, changedIndices);
-  var activeTouchObjects = topType === 'topTouchStart'
-    ? allTouchObjects
-    : topType === 'topTouchMove'
+  var activeTouchObjects =
+    topType === 'topTouchStart'
+      ? allTouchObjects
+      : topType === 'topTouchMove'
         ? allTouchObjects
         : topType === 'topTouchEnd'
+          ? antiSubsequence(allTouchObjects, changedIndices)
+          : topType === 'topTouchCancel'
             ? antiSubsequence(allTouchObjects, changedIndices)
-            : topType === 'topTouchCancel'
-                ? antiSubsequence(allTouchObjects, changedIndices)
-                : null;
+            : null;
 
   return {
     nativeEvent: touchEvent(
@@ -234,19 +235,24 @@ var registerTestHandlers = function(eventTestConfig, readableIDToID) {
     for (var readableID in eventTypeTestConfig) {
       var nodeConfig = eventTypeTestConfig[readableID];
       var id = readableIDToID[readableID];
-      var handler = nodeConfig.order === NA
-        ? neverFire.bind(null, readableID, registrationName)
-        : // We partially apply readableID and nodeConfig, as they change in the
-          // parent closure across iterations.
-          function(rID, config, e) {
-            expect(
-              rID + '->' + registrationName + ' index:' + runs.dispatchCount++,
-            ).toBe(rID + '->' + registrationName + ' index:' + config.order);
-            if (config.assertEvent) {
-              config.assertEvent(e);
-            }
-            return config.returnVal;
-          }.bind(null, readableID, nodeConfig);
+      var handler =
+        nodeConfig.order === NA
+          ? neverFire.bind(null, readableID, registrationName)
+          : // We partially apply readableID and nodeConfig, as they change in the
+            // parent closure across iterations.
+            function(rID, config, e) {
+              expect(
+                rID +
+                  '->' +
+                  registrationName +
+                  ' index:' +
+                  runs.dispatchCount++,
+              ).toBe(rID + '->' + registrationName + ' index:' + config.order);
+              if (config.assertEvent) {
+                config.assertEvent(e);
+              }
+              return config.returnVal;
+            }.bind(null, readableID, nodeConfig);
       putListener(getInstanceFromNode(id), registrationName, handler);
     }
   };

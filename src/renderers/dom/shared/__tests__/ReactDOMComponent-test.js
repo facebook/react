@@ -577,22 +577,40 @@ describe('ReactDOMComponent', () => {
     it('should transition from innerHTML to children in nested el', () => {
       var container = document.createElement('div');
       ReactDOM.render(
-        <div><div dangerouslySetInnerHTML={{__html: 'bonjour'}} /></div>,
+        <div>
+          <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+        </div>,
         container,
       );
 
       expect(container.textContent).toEqual('bonjour');
-      ReactDOM.render(<div><div><span>adieu</span></div></div>, container);
+      ReactDOM.render(
+        <div>
+          <div>
+            <span>adieu</span>
+          </div>
+        </div>,
+        container,
+      );
       expect(container.textContent).toEqual('adieu');
     });
 
     it('should transition from children to innerHTML in nested el', () => {
       var container = document.createElement('div');
-      ReactDOM.render(<div><div><span>adieu</span></div></div>, container);
+      ReactDOM.render(
+        <div>
+          <div>
+            <span>adieu</span>
+          </div>
+        </div>,
+        container,
+      );
 
       expect(container.textContent).toEqual('adieu');
       ReactDOM.render(
-        <div><div dangerouslySetInnerHTML={{__html: 'bonjour'}} /></div>,
+        <div>
+          <div dangerouslySetInnerHTML={{__html: 'bonjour'}} />
+        </div>,
         container,
       );
       expect(container.textContent).toEqual('bonjour');
@@ -741,10 +759,12 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(
         <div>
           <div key="one">
-            <div key="A">A</div><div key="B">B</div>
+            <div key="A">A</div>
+            <div key="B">B</div>
           </div>
           <div key="two">
-            <div key="C">C</div><div key="D">D</div>
+            <div key="C">C</div>
+            <div key="D">D</div>
           </div>
         </div>,
         container,
@@ -753,10 +773,12 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(
         <div>
           <div key="one">
-            <div key="B">B</div><div key="A">A</div>
+            <div key="B">B</div>
+            <div key="A">A</div>
           </div>
           <div key="two">
-            <div key="D">D</div><div key="C">C</div>
+            <div key="D">D</div>
+            <div key="C">C</div>
           </div>
         </div>,
         container,
@@ -1059,13 +1081,20 @@ describe('ReactDOMComponent', () => {
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(
-        <menu><menuitem /></menu>,
+        <menu>
+          <menuitem />
+        </menu>,
       );
 
       expect(returnedValue).toContain('</menuitem>');
 
       expect(function() {
-        ReactDOM.render(<menu><menuitem>children</menuitem></menu>, container);
+        ReactDOM.render(
+          <menu>
+            <menuitem>children</menuitem>
+          </menu>,
+          container,
+        );
       }).toThrowError(
         'menuitem is a void element tag and must neither have `children` nor use ' +
           '`dangerouslySetInnerHTML`.',
@@ -1271,7 +1300,12 @@ describe('ReactDOMComponent', () => {
 
     it('should warn about contentEditable and children', () => {
       spyOn(console, 'error');
-      ReactDOM.render(<div contentEditable={true}><div /></div>, container);
+      ReactDOM.render(
+        <div contentEditable={true}>
+          <div />
+        </div>,
+        container,
+      );
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain('contentEditable');
     });
@@ -1340,7 +1374,12 @@ describe('ReactDOMComponent', () => {
       }
 
       var container = document.createElement('div');
-      ReactDOM.render(<div><Inner /></div>, container);
+      ReactDOM.render(
+        <div>
+          <Inner />
+        </div>,
+        container,
+      );
       ReactDOM.unmountComponentAtNode(container);
     });
   });
@@ -1374,7 +1413,12 @@ describe('ReactDOMComponent', () => {
   describe('nesting validation', () => {
     it('warns on invalid nesting', () => {
       spyOn(console, 'error');
-      ReactTestUtils.renderIntoDocument(<div><tr /><tr /></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <tr />
+          <tr />
+        </div>,
+      );
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
@@ -1388,7 +1432,12 @@ describe('ReactDOMComponent', () => {
     it('warns on invalid nesting at root', () => {
       spyOn(console, 'error');
       var p = document.createElement('p');
-      ReactDOM.render(<span><p /></span>, p);
+      ReactDOM.render(
+        <span>
+          <p />
+        </span>,
+        p,
+      );
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
@@ -1411,7 +1460,11 @@ describe('ReactDOMComponent', () => {
 
       class Foo extends React.Component {
         render() {
-          return <table><Row /> </table>;
+          return (
+            <table>
+              <Row />{' '}
+            </table>
+          );
         }
       }
 
@@ -1468,7 +1521,11 @@ describe('ReactDOMComponent', () => {
       }
 
       function Viz1() {
-        return <table><FancyRow /></table>;
+        return (
+          <table>
+            <FancyRow />
+          </table>
+        );
       }
       function App1() {
         return <Viz1 />;
@@ -1486,7 +1543,11 @@ describe('ReactDOMComponent', () => {
       );
 
       function Viz2() {
-        return <FancyTable><FancyRow /></FancyTable>;
+        return (
+          <FancyTable>
+            <FancyRow />
+          </FancyTable>
+        );
       }
       function App2() {
         return <Viz2 />;
@@ -1505,7 +1566,11 @@ describe('ReactDOMComponent', () => {
           '\n    in Viz2 (at **)',
       );
 
-      ReactTestUtils.renderIntoDocument(<FancyTable><FancyRow /></FancyTable>);
+      ReactTestUtils.renderIntoDocument(
+        <FancyTable>
+          <FancyRow />
+        </FancyTable>,
+      );
       expectDev(console.error.calls.count()).toBe(3);
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(2)[0]),
@@ -1518,7 +1583,11 @@ describe('ReactDOMComponent', () => {
           '\n    in FancyTable (at **)',
       );
 
-      ReactTestUtils.renderIntoDocument(<table><FancyRow /></table>);
+      ReactTestUtils.renderIntoDocument(
+        <table>
+          <FancyRow />
+        </table>,
+      );
       expectDev(console.error.calls.count()).toBe(4);
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(3)[0]),
@@ -1529,7 +1598,11 @@ describe('ReactDOMComponent', () => {
           '\n    in table (at **)',
       );
 
-      ReactTestUtils.renderIntoDocument(<FancyTable><tr /></FancyTable>);
+      ReactTestUtils.renderIntoDocument(
+        <FancyTable>
+          <tr />
+        </FancyTable>,
+      );
       expectDev(console.error.calls.count()).toBe(5);
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(4)[0]),
@@ -1546,7 +1619,13 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      ReactTestUtils.renderIntoDocument(<Link><div><Link /></div></Link>);
+      ReactTestUtils.renderIntoDocument(
+        <Link>
+          <div>
+            <Link />
+          </div>
+        </Link>,
+      );
       expectDev(console.error.calls.count()).toBe(6);
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(5)[0]),
@@ -1759,8 +1838,8 @@ describe('ReactDOMComponent', () => {
       var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {
-      };
+      matches =
+        console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {};
       var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,
@@ -1774,7 +1853,14 @@ describe('ReactDOMComponent', () => {
 
       class Parent extends React.Component {
         render() {
-          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
+          return (
+            <div>
+              <Child1 />
+              <Child2 />
+              <Child3 />
+              <Child4 />
+            </div>
+          );
         }
       }
 
@@ -1825,7 +1911,14 @@ describe('ReactDOMComponent', () => {
 
       class Parent extends React.Component {
         render() {
-          return <div><Child1 /><Child2 /><Child3 /><Child4 /></div>;
+          return (
+            <div>
+              <Child1 />
+              <Child2 />
+              <Child3 />
+              <Child4 />
+            </div>
+          );
         }
       }
 
@@ -1968,7 +2061,9 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(
-        <svg><text arabic-form="initial" /></svg>,
+        <svg>
+          <text arabic-form="initial" />
+        </svg>,
       );
       var text = el.querySelector('text');
 
@@ -2246,7 +2341,9 @@ describe('ReactDOMComponent', () => {
     it('the font-face element is not a custom element', function() {
       spyOn(console, 'error');
       var el = ReactTestUtils.renderIntoDocument(
-        <svg><font-face x-height={false} /></svg>,
+        <svg>
+          <font-face x-height={false} />
+        </svg>,
       );
 
       expect(el.querySelector('font-face').hasAttribute('x-height')).toBe(
@@ -2262,7 +2359,9 @@ describe('ReactDOMComponent', () => {
     it('the font-face element does not allow unknown boolean values', function() {
       spyOn(console, 'error');
       var el = ReactTestUtils.renderIntoDocument(
-        <svg><font-face whatever={false} /></svg>,
+        <svg>
+          <font-face whatever={false} />
+        </svg>,
       );
 
       expect(el.querySelector('font-face').hasAttribute('whatever')).toBe(

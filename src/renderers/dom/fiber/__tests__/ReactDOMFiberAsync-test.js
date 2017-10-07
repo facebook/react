@@ -35,13 +35,17 @@ describe('ReactDOMFiberAsync', () => {
 
     it('renders synchronously', () => {
       ReactDOM.render(
-        <AsyncComponent><div>Hi</div></AsyncComponent>,
+        <AsyncComponent>
+          <div>Hi</div>
+        </AsyncComponent>,
         container,
       );
       expect(container.textContent).toEqual('Hi');
 
       ReactDOM.render(
-        <AsyncComponent><div>Bye</div></AsyncComponent>,
+        <AsyncComponent>
+          <div>Bye</div>
+        </AsyncComponent>,
         container,
       );
       expect(container.textContent).toEqual('Bye');
@@ -59,7 +63,9 @@ describe('ReactDOMFiberAsync', () => {
 
     it('AsyncComponent at the root makes the entire tree async', () => {
       ReactDOM.render(
-        <AsyncComponent><div>Hi</div></AsyncComponent>,
+        <AsyncComponent>
+          <div>Hi</div>
+        </AsyncComponent>,
         container,
       );
       expect(container.textContent).toEqual('');
@@ -67,7 +73,9 @@ describe('ReactDOMFiberAsync', () => {
       expect(container.textContent).toEqual('Hi');
 
       ReactDOM.render(
-        <AsyncComponent><div>Bye</div></AsyncComponent>,
+        <AsyncComponent>
+          <div>Bye</div>
+        </AsyncComponent>,
         container,
       );
       expect(container.textContent).toEqual('Hi');
@@ -86,7 +94,9 @@ describe('ReactDOMFiberAsync', () => {
       }
 
       ReactDOM.render(
-        <AsyncComponent><Component /></AsyncComponent>,
+        <AsyncComponent>
+          <Component />
+        </AsyncComponent>,
         container,
       );
       expect(container.textContent).toEqual('');
@@ -109,7 +119,12 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      ReactDOM.render(<div><Component /></div>, container);
+      ReactDOM.render(
+        <div>
+          <Component />
+        </div>,
+        container,
+      );
       jest.runAllTimers();
 
       instance.setState({step: 1});
@@ -134,7 +149,12 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      ReactDOM.render(<div><Component /></div>, container);
+      ReactDOM.render(
+        <div>
+          <Component />
+        </div>,
+        container,
+      );
       jest.runAllTimers();
 
       instance.setState({step: 1});

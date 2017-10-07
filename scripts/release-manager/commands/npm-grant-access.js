@@ -27,11 +27,15 @@ module.exports = function(vorpal, app) {
 
           if (packagesNeedingAccess.length) {
             this.log(
-              `${chalk.yellow('PENDING')} Granting access to ${packagesNeedingAccess}`
+              `${chalk.yellow(
+                'PENDING'
+              )} Granting access to ${packagesNeedingAccess}`
             );
             npmUtils.grantAccess(app, answers.username, packagesNeedingAccess);
             this.log(
-              `${chalk.green('OK')} Access has been granted to ${answers.username}.`
+              `${chalk.green(
+                'OK'
+              )} Access has been granted to ${answers.username}.`
             );
             resolve();
           } else {

@@ -483,7 +483,9 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
         render() {
           return (
             <div>
-              <Child ref="child" foo="foo value">children value</Child>
+              <Child ref="child" foo="foo value">
+                children value
+              </Child>
             </div>
           );
         }

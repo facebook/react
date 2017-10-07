@@ -46,7 +46,12 @@ describe('ReactNativeRT', () => {
     expect(RTManager.appendChild).not.toBeCalled();
     expect(RTManager.updateNode).toBeCalledWith(1, {foo: 'bar'});
 
-    ReactNativeRT.render(<rt-box foo="bar"><rt-box /></rt-box>, 11);
+    ReactNativeRT.render(
+      <rt-box foo="bar">
+        <rt-box />
+      </rt-box>,
+      11,
+    );
 
     expect(RTManager.createNode.mock.calls.length).toBe(2);
     expect(RTManager.appendChildToContext.mock.calls.length).toBe(1);

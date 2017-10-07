@@ -20,10 +20,10 @@ module.exports = function(
     (name || 'Unknown') +
     (source
       ? ' (at ' +
-          source.fileName.replace(/^.*[\\\/]/, '') +
-          ':' +
-          source.lineNumber +
-          ')'
+        source.fileName.replace(/^.*[\\\/]/, '') +
+        ':' +
+        source.lineNumber +
+        ')'
       : ownerName ? ' (created by ' + ownerName + ')' : '')
   );
 };

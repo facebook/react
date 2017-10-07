@@ -27,7 +27,11 @@ describe('ReactTestUtils', () => {
   it('can scryRenderedDOMComponentsWithClass with TextComponent', () => {
     class Wrapper extends React.Component {
       render() {
-        return <div>Hello <span>Jim</span></div>;
+        return (
+          <div>
+            Hello <span>Jim</span>
+          </div>
+        );
       }
     }
 
@@ -42,7 +46,11 @@ describe('ReactTestUtils', () => {
   it('can scryRenderedDOMComponentsWithClass with className contains \\n', () => {
     class Wrapper extends React.Component {
       render() {
-        return <div>Hello <span className={'x\ny'}>Jim</span></div>;
+        return (
+          <div>
+            Hello <span className={'x\ny'}>Jim</span>
+          </div>
+        );
       }
     }
 
@@ -57,7 +65,11 @@ describe('ReactTestUtils', () => {
   it('can scryRenderedDOMComponentsWithClass with multiple classes', () => {
     class Wrapper extends React.Component {
       render() {
-        return <div>Hello <span className={'x y z'}>Jim</span></div>;
+        return (
+          <div>
+            Hello <span className={'x y z'}>Jim</span>
+          </div>
+        );
       }
     }
 
@@ -161,9 +173,7 @@ describe('ReactTestUtils', () => {
             <head ref="head">
               <title>hello</title>
             </head>
-            <body ref="body">
-              hello, world
-            </body>
+            <body ref="body">hello, world</body>
           </html>
         );
       }
@@ -182,7 +192,11 @@ describe('ReactTestUtils', () => {
   });
 
   it('can scry with stateless components involved', () => {
-    const Stateless = () => <div><hr /></div>;
+    const Stateless = () => (
+      <div>
+        <hr />
+      </div>
+    );
 
     class SomeComponent extends React.Component {
       render() {
@@ -262,11 +276,7 @@ describe('ReactTestUtils', () => {
     it('should throw when attempting to use a React element', () => {
       class SomeComponent extends React.Component {
         render() {
-          return (
-            <div onClick={this.props.handleClick}>
-              hello, world.
-            </div>
-          );
+          return <div onClick={this.props.handleClick}>hello, world.</div>;
         }
       }
 
@@ -287,11 +297,7 @@ describe('ReactTestUtils', () => {
     it('should throw when attempting to use a component instance', () => {
       class SomeComponent extends React.Component {
         render() {
-          return (
-            <div onClick={this.props.handleClick}>
-              hello, world.
-            </div>
-          );
+          return <div onClick={this.props.handleClick}>hello, world.</div>;
         }
       }
 
@@ -354,7 +360,11 @@ describe('ReactTestUtils', () => {
 
       class MyComponent extends React.Component {
         render() {
-          return <div><input type="text" onChange={onChange} /></div>;
+          return (
+            <div>
+              <input type="text" onChange={onChange} />
+            </div>
+          );
         }
       }
 
