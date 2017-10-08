@@ -71,7 +71,7 @@ describe('ReactExpiration', () => {
     // Advance time. This should be enough to flush both updates to A, but not
     // the update to B. If only the first update to A flushes, but not the
     // second, then it wasn't coalesced properly.
-    ReactNoop.expire(500);
+    ReactNoop.expire(600);
     ReactNoop.flushExpired();
     expect(ReactNoop.getChildren()).toEqual([span(2), span(0)]);
 

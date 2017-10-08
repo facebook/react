@@ -12,7 +12,7 @@
 
 import type {PriorityLevel} from 'ReactPriorityLevel';
 const {
-  NoWork,
+  NoWork: NoWorkPriority,
   SynchronousPriority,
   TaskPriority,
   HighPriority,
@@ -25,26 +25,27 @@ const invariant = require('fbjs/lib/invariant');
 // TODO: Use an opaque type once ESLint et al support the syntax
 export type ExpirationTime = number;
 
-const Done = 0;
+const NoWork = 0;
 const Sync = 1;
 const Task = 2;
-const Never = Number.MAX_SAFE_INTEGER;
+const Never = Math.pow(2, 31) - 1; // Max int32
 
 const UNIT_SIZE = 10;
 const MAGIC_NUMBER_OFFSET = 10;
 
-exports.Done = Done;
+exports.NoWork = NoWork;
 exports.Never = Never;
 
 // 1 unit of expiration time represents 10ms.
 function msToExpirationTime(ms: number): ExpirationTime {
-  // Always add an offset so that we don't clash with the magic number for Done.
-  return Math.round(ms / UNIT_SIZE) + MAGIC_NUMBER_OFFSET;
+  // Always add an offset so that we don't clash with the magic number for NoWork.
+  return ((ms / UNIT_SIZE) | 0) + MAGIC_NUMBER_OFFSET;
 }
 exports.msToExpirationTime = msToExpirationTime;
 
 function ceiling(num: number, precision: number): number {
-  return Math.ceil(Math.ceil(num * precision) / precision);
+  // return Math.ceil(Math.ceil(num * precision) / precision);
+  return (((((num * precision) | 0) + 1) | 0) + 1) / precision;
 }
 
 function bucket(
@@ -69,7 +70,7 @@ function priorityToExpirationTime(
 ): ExpirationTime {
   switch (priorityLevel) {
     case NoWork:
-      return Done;
+      return NoWorkPriority;
     case SynchronousPriority:
       return Sync;
     case TaskPriority:
@@ -103,7 +104,7 @@ function expirationTimeToPriorityLevel(
 ): PriorityLevel {
   // First check for magic values
   switch (expirationTime) {
-    case Done:
+    case NoWorkPriority:
       return NoWork;
     case Sync:
       return SynchronousPriority;
