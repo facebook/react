@@ -16,7 +16,7 @@ import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
 
-const {Done} = require('ReactFiberExpirationTime');
+const {NoWork} = require('ReactFiberExpirationTime');
 
 const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 
@@ -364,12 +364,12 @@ exports.addForceUpdate = addForceUpdate;
 function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   const updateQueue = fiber.updateQueue;
   if (updateQueue === null) {
-    return Done;
+    return NoWork;
   }
   if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
-    return Done;
+    return NoWork;
   }
-  return updateQueue.first !== null ? updateQueue.first.expirationTime : Done;
+  return updateQueue.first !== null ? updateQueue.first.expirationTime : NoWork;
 }
 exports.getUpdateExpirationTime = getUpdateExpirationTime;
 

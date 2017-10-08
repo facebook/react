@@ -48,7 +48,7 @@ var {
   YieldComponent,
   Fragment,
 } = ReactTypeOfWork;
-var {Done, Never} = require('ReactFiberExpirationTime');
+var {NoWork, Never} = require('ReactFiberExpirationTime');
 var {
   PerformedWork,
   Placement,
@@ -330,7 +330,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostRoot(current, workInProgress, renderExpirationTime) {
-    const root = (workInProgress.stateNode: FiberRoot);
     pushHostRootContext(workInProgress);
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
@@ -741,7 +740,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
     if (
-      workInProgress.expirationTime === Done ||
+      workInProgress.expirationTime === NoWork ||
       workInProgress.expirationTime > renderExpirationTime
     ) {
       return bailoutOnLowPriority(current, workInProgress);
@@ -839,7 +838,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (
-      workInProgress.expirationTime === Done ||
+      workInProgress.expirationTime === NoWork ||
       workInProgress.expirationTime > renderExpirationTime
     ) {
       return bailoutOnLowPriority(current, workInProgress);

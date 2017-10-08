@@ -36,9 +36,9 @@ var {
   Fragment,
 } = require('ReactTypeOfWork');
 
-var {NoWork} = require('ReactPriorityLevel');
+var {NoWork: NoWorkPriority} = require('ReactPriorityLevel');
 
-var {Done} = require('ReactFiberExpirationTime');
+var {NoWork} = require('ReactFiberExpirationTime');
 
 var {NoContext} = require('ReactTypeOfInternalContext');
 
@@ -193,7 +193,7 @@ function FiberNode(
   this.firstEffect = null;
   this.lastEffect = null;
 
-  this.expirationTime = Done;
+  this.expirationTime = NoWork;
 
   this.alternate = null;
 
@@ -457,5 +457,5 @@ exports.largerPriority = function(
   p1: PriorityLevel,
   p2: PriorityLevel,
 ): PriorityLevel {
-  return p1 !== NoWork && (p2 === NoWork || p2 > p1) ? p1 : p2;
+  return p1 !== NoWorkPriority && (p2 === NoWorkPriority || p2 > p1) ? p1 : p2;
 };

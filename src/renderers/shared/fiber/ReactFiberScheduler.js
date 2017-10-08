@@ -64,7 +64,6 @@ var {
 } = require('ReactPriorityLevel');
 
 var {
-  Done,
   Never,
   msToExpirationTime,
   priorityToExpirationTime,
@@ -200,7 +199,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   } = config;
 
   // Represents the current time in ms.
-  let mostRecentCurrentTime: ExpirationTime = msToExpirationTime(now());
+  const startTime = now();
+  let mostRecentCurrentTime: ExpirationTime = msToExpirationTime(0);
 
   // The priority level to use when scheduling an update. We use NoWork to
   // represent the default priority.
@@ -222,7 +222,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork: Fiber | null = null;
   // The time at which we're currently rendering work.
-  let nextRenderExpirationTime: ExpirationTime = Done;
+  let nextRenderExpirationTime: ExpirationTime = NoWork;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
@@ -269,7 +269,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Clear out roots with no more work on them, or if they have uncaught errors
     while (
       nextScheduledRoot !== null &&
-      nextScheduledRoot.current.expirationTime === Done
+      nextScheduledRoot.current.expirationTime === NoWork
     ) {
       // Unschedule this root.
       nextScheduledRoot.isScheduled = false;
@@ -281,7 +281,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (nextScheduledRoot === lastScheduledRoot) {
         nextScheduledRoot = null;
         lastScheduledRoot = null;
-        nextRenderExpirationTime = Done;
+        nextRenderExpirationTime = NoWork;
         return null;
       }
       // Continue with the next root.
@@ -291,11 +291,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     let root = nextScheduledRoot;
     let earliestExpirationRoot = null;
-    let earliestExpirationTime = Done;
+    let earliestExpirationTime = NoWork;
     while (root !== null) {
       if (
-        root.current.expirationTime !== Done &&
-        (earliestExpirationTime === Done ||
+        root.current.expirationTime !== NoWork &&
+        (earliestExpirationTime === NoWork ||
           earliestExpirationTime > root.current.expirationTime)
       ) {
         earliestExpirationTime = root.current.expirationTime;
@@ -325,7 +325,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       return;
     }
 
-    nextRenderExpirationTime = Done;
+    nextRenderExpirationTime = NoWork;
     nextUnitOfWork = null;
     nextRenderedTree = null;
     return;
@@ -614,8 +614,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let child = workInProgress.child;
     while (child !== null) {
       if (
-        child.expirationTime !== Done &&
-        (newExpirationTime === Done || newExpirationTime > child.expirationTime)
+        child.expirationTime !== NoWork &&
+        (newExpirationTime === NoWork ||
+          newExpirationTime > child.expirationTime)
       ) {
         newExpirationTime = child.expirationTime;
       }
@@ -803,7 +804,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     if (
       capturedErrors !== null &&
       capturedErrors.size > 0 &&
-      nextRenderExpirationTime !== Done &&
+      nextRenderExpirationTime !== NoWork &&
       nextRenderExpirationTime <= mostRecentCurrentTime
     ) {
       while (nextUnitOfWork !== null) {
@@ -824,7 +825,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           if (
             capturedErrors === null ||
             capturedErrors.size === 0 ||
-            nextRenderExpirationTime === Done ||
+            nextRenderExpirationTime === NoWork ||
             nextRenderExpirationTime > mostRecentCurrentTime
           ) {
             // There are no more unhandled errors. We can exit this special
@@ -850,7 +851,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
 
     if (
-      nextRenderExpirationTime === Done ||
+      nextRenderExpirationTime === NoWork ||
       nextRenderExpirationTime > minExpirationTime
     ) {
       return;
@@ -873,7 +874,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             handleCommitPhaseErrors();
             // The render time may have changed. Check again.
             if (
-              nextRenderExpirationTime === Done ||
+              nextRenderExpirationTime === NoWork ||
               nextRenderExpirationTime > minExpirationTime ||
               nextRenderExpirationTime > mostRecentCurrentTime
             ) {
@@ -905,7 +906,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
                 handleCommitPhaseErrors();
                 // The render time may have changed. Check again.
                 if (
-                  nextRenderExpirationTime === Done ||
+                  nextRenderExpirationTime === NoWork ||
                   nextRenderExpirationTime > minExpirationTime ||
                   nextRenderExpirationTime <= mostRecentCurrentTime
                 ) {
@@ -1385,7 +1386,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function scheduleRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-    if (expirationTime === Done) {
+    if (expirationTime === NoWork) {
       return;
     }
 
@@ -1450,7 +1451,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // rest of the path is correct.
       shouldContinue = false;
       if (
-        node.expirationTime === Done ||
+        node.expirationTime === NoWork ||
         node.expirationTime > expirationTime
       ) {
         // Expiration time did not match. Update and keep going.
@@ -1459,7 +1460,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
       if (node.alternate !== null) {
         if (
-          node.alternate.expirationTime === Done ||
+          node.alternate.expirationTime === NoWork ||
           node.alternate.expirationTime > expirationTime
         ) {
           // Expiration time did not match. Update and keep going.
@@ -1572,7 +1573,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function recalculateCurrentTime(): ExpirationTime {
-    mostRecentCurrentTime = msToExpirationTime(now());
+    // Subtract initial time so it fits inside 32bits
+    const ms = now() - startTime;
+    mostRecentCurrentTime = msToExpirationTime(ms);
     return mostRecentCurrentTime;
   }
 
