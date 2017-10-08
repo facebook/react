@@ -465,14 +465,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     var value;
 
-    const classWithRenderNotExtended = !workInProgress.type.prototype.render;
-    invariant(
-      classWithRenderNotExtended,
-      'Using a class with a render method as a function, ' +
-      'did you forget to extend React.Component?'
-    );
-
     if (__DEV__) {
+      warning(
+        !(workInProgress.type.prototype && workInProgress.type.prototype.render),
+        'Warning: Using a class with a render method as a function, ' +
+          'did you forget to extend React.Component?',
+      );
       ReactCurrentOwner.current = workInProgress;
       value = fn(props, context);
     } else {
