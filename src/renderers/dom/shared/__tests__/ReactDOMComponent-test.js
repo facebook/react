@@ -198,6 +198,13 @@ describe('ReactDOMComponent', () => {
       );
     });
 
+    it('should not warn if property `on` is passed on a custom component', () => {
+      spyOn(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<amp-image on="tap" />, container);
+      expectDev(console.error.calls.count()).toBe(0);
+    });
+
     it('should warn for unknown function event handlers', () => {
       spyOn(console, 'error');
       var container = document.createElement('div');
