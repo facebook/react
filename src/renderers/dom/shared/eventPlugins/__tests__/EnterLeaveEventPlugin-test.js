@@ -13,13 +13,14 @@ var EnterLeaveEventPlugin;
 var React;
 var ReactDOM;
 var ReactDOMComponentTree;
-
+var ReactTestUtils;
 describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactTestUtils = require('react-dom/test-utils');
     // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('ReactDOMComponentTree');
     EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
@@ -57,5 +58,33 @@ describe('EnterLeaveEventPlugin', () => {
     expect(leave.relatedTarget).toBe(div);
     expect(enter.target).toBe(div);
     expect(enter.relatedTarget).toBe(iframe.contentWindow);
+  });
+
+  it('should emit mouseout and mouseenter events when cursor moves from disabled button', () => {
+    var disabledButton;
+    var notDisabledButton;
+    ReactTestUtils.renderIntoDocument(
+      <div>
+        <button ref={node => (notDisabledButton = node)} />
+        <button ref={node => (disabledButton = node)} disabled={true} />
+      </div>,
+    );
+    var extracted = EnterLeaveEventPlugin.extractEvents(
+      'topMouseOver',
+      ReactDOMComponentTree.getInstanceFromNode(notDisabledButton),
+      {
+        target: notDisabledButton,
+        relatedTarget: disabledButton,
+      },
+      notDisabledButton,
+    );
+
+    expect(extracted.length).toBe(2);
+
+    var leave = extracted[0];
+    var enter = extracted[1];
+
+    expect(leave.type).toBe('mouseleave');
+    expect(enter.type).toBe('mouseenter');
   });
 });
