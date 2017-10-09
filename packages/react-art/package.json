@@ -25,7 +25,7 @@
     "prop-types": "^15.6.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-beta.5"
+    "react": "^16.0.0"
   },
   "files": [
     "LICENSE",
