@@ -206,7 +206,7 @@ var DOMProperty = {
     if (
       (name[0] === 'o' || name[0] === 'O') &&
       (name[1] === 'n' || name[1] === 'N') &&
-      name.toLowerCase() !== 'on'
+      name.length > 2
     ) {
       return false;
     }
