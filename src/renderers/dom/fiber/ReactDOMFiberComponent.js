@@ -179,6 +179,19 @@ if (__DEV__) {
           parent.tagName,
         );
     testElement.innerHTML = html;
+
+    if (parent.tagName === 'NOSCRIPT') {
+      // <noscript> content is parsed as text, but only if the browser parses it
+      // together with <noscript> tag itself. So we have to wrap it once more.
+      var wrapperElement = document.createElement('div');
+      wrapperElement.innerHTML = '<noscript>' + html + '</noscript>';
+      var noscriptElement = wrapperElement.firstElementChild;
+      // Make Flow happy (but it'll always be there).
+      if (noscriptElement !== null && typeof noscriptElement !== 'undefined') {
+        return noscriptElement.innerHTML;
+      }
+    }
+
     return testElement.innerHTML;
   };
 }
