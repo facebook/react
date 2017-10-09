@@ -110,18 +110,38 @@ function traverseTwoPhase(inst, fn, arg) {
  * "entered" or "left" that element.
  */
 function traverseEnterLeave(from, to, fn, argFrom, argTo) {
-  var common = from && to ? getLowestCommonAncestor(from, to) : null;
-  var pathFrom = [];
-  while (from && from !== common) {
+  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+  const pathFrom = [];
+  while (true) {
+    if (!from) {
+      break;
+    }
+    if (from === common) {
+      break;
+    }
+    const alternate = from.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
     pathFrom.push(from);
     from = getParent(from);
   }
-  var pathTo = [];
-  while (to && to !== common) {
+  const pathTo = [];
+  while (true) {
+    if (!to) {
+      break;
+    }
+    if (to === common) {
+      break;
+    }
+    const alternate = to.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
     pathTo.push(to);
     to = getParent(to);
   }
-  var i;
+  let i;
   for (i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], 'bubbled', argFrom);
   }
