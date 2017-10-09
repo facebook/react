@@ -450,6 +450,52 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>doovy</div>);
   });
 
+  it('can setState in componentWillMount repeatedly when shallow rendering', () => {
+    class SimpleComponent extends React.Component {
+      state = {
+        separator: '-',
+      };
+
+      componentWillMount() {
+        this.setState({groovy: 'doovy'});
+        this.setState({doovy: 'groovy'});
+      }
+
+      render() {
+        const {groovy, doovy, separator} = this.state;
+
+        return <div>{`${groovy}${separator}${doovy}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>doovy-groovy</div>);
+  });
+
+  it('can setState in componentWillMount with an updater function repeatedly when shallow rendering', () => {
+    class SimpleComponent extends React.Component {
+      state = {
+        separator: '-',
+      };
+
+      componentWillMount() {
+        this.setState(state => ({groovy: 'doovy'}));
+        this.setState(state => ({doovy: state.groovy}));
+      }
+
+      render() {
+        const {groovy, doovy, separator} = this.state;
+
+        return <div>{`${groovy}${separator}${doovy}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    const result = shallowRenderer.render(<SimpleComponent />);
+    expect(result).toEqual(<div>doovy-doovy</div>);
+  });
+
   it('can setState in componentWillReceiveProps when shallow rendering', () => {
     class SimpleComponent extends React.Component {
       state = {count: 0};
