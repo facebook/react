@@ -991,6 +991,11 @@ describe('ReactDOMServerIntegration', () => {
       );
       expect(e.getAttribute('onunknownevent')).toBe(null);
     });
+
+    itRenders('custom attribute named `on`', async render => {
+      const e = await render(<div on="tap:do-something" />);
+      expect(e.getAttribute('on')).toEqual('tap:do-something');
+    });
   });
 
   describe('elements and children', function() {
