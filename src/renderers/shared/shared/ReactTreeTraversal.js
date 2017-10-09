@@ -119,6 +119,10 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
     if (from === common) {
       break;
     }
+    const alternate = from.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
     pathFrom.push(from);
     from = getParent(from);
   }
@@ -128,6 +132,10 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
       break;
     }
     if (to === common) {
+      break;
+    }
+    const alternate = to.alternate;
+    if (alternate !== null && alternate === common) {
       break;
     }
     pathTo.push(to);
