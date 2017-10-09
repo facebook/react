@@ -112,12 +112,24 @@ function traverseTwoPhase(inst, fn, arg) {
 function traverseEnterLeave(from, to, fn, argFrom, argTo) {
   var common = from && to ? getLowestCommonAncestor(from, to) : null;
   var pathFrom = [];
-  while (from && from !== common) {
+  while (true) {
+    if (!from) {
+      break;
+    }
+    if (from === common) {
+      break;
+    }
     pathFrom.push(from);
     from = getParent(from);
   }
   var pathTo = [];
-  while (to && to !== common) {
+  while (true) {
+    if (!to) {
+      break;
+    }
+    if (to === common) {
+      break;
+    }
     pathTo.push(to);
     to = getParent(to);
   }
