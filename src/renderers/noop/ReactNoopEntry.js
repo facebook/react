@@ -24,6 +24,7 @@ var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
+var invariant = require('fbjs/lib/invariant');
 
 var expect = require('jest-matchers');
 
@@ -82,6 +83,8 @@ function removeChild(
   }
   parentInstance.children.splice(index, 1);
 }
+
+let elapsedTimeInMs = 0;
 
 var NoopRenderer = ReactFiberReconciler({
   getRootHostContext() {
@@ -201,6 +204,10 @@ var NoopRenderer = ReactFiberReconciler({
   prepareForCommit(): void {},
 
   resetAfterCommit(): void {},
+
+  now(): number {
+    return elapsedTimeInMs;
+  },
 });
 
 var rootContainers = new Map();
@@ -277,6 +284,27 @@ var ReactNoop = {
     }
   },
 
+  createRoot(rootID: string) {
+    rootID = typeof rootID === 'string' ? rootID : DEFAULT_ROOT_ID;
+    invariant(
+      !roots.has(rootID),
+      'Root with id %s already exists. Choose a different id.',
+      rootID,
+    );
+    const container = {rootID: rootID, children: []};
+    rootContainers.set(rootID, container);
+    const root = NoopRenderer.createContainer(container);
+    roots.set(rootID, root);
+    return {
+      prerender(children: any) {
+        return NoopRenderer.updateRoot(children, root, null);
+      },
+      getChildren() {
+        return ReactNoop.getChildren(rootID);
+      },
+    };
+  },
+
   findInstance(
     componentOrElement: Element | ?React$Component<any, any>,
   ): null | Instance | TextInstance {
@@ -336,6 +364,14 @@ var ReactNoop = {
     expect(actual).toEqual(expected);
   },
 
+  expire(ms: number): void {
+    elapsedTimeInMs += ms;
+  },
+
+  flushExpired(): Array<mixed> {
+    return ReactNoop.flushUnitsOfWork(0);
+  },
+
   yield(value: mixed) {
     if (yieldedValues === null) {
       yieldedValues = [value];
@@ -389,7 +425,7 @@ var ReactNoop = {
       logHostInstances(container.children, depth + 1);
     }
 
-    function logUpdateQueue(updateQueue: UpdateQueue, depth) {
+    function logUpdateQueue(updateQueue: UpdateQueue<mixed>, depth) {
       log('  '.repeat(depth + 1) + 'QUEUED UPDATES');
       const firstUpdate = updateQueue.first;
       if (!firstUpdate) {
@@ -400,7 +436,7 @@ var ReactNoop = {
         '  '.repeat(depth + 1) + '~',
         firstUpdate && firstUpdate.partialState,
         firstUpdate.callback ? 'with callback' : '',
-        '[' + firstUpdate.priorityLevel + ']',
+        '[' + firstUpdate.expirationTime + ']',
       );
       var next;
       while ((next = firstUpdate.next)) {
@@ -408,7 +444,7 @@ var ReactNoop = {
           '  '.repeat(depth + 1) + '~',
           next.partialState,
           next.callback ? 'with callback' : '',
-          '[' + firstUpdate.priorityLevel + ']',
+          '[' + firstUpdate.expirationTime + ']',
         );
       }
     }
@@ -418,7 +454,7 @@ var ReactNoop = {
         '  '.repeat(depth) +
           '- ' +
           (fiber.type ? fiber.type.name || fiber.type : '[root]'),
-        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']',
+        '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']',
       );
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);

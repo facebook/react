@@ -532,6 +532,8 @@ const ARTRenderer = ReactFiberReconciler({
     );
   },
 
+  now: ReactDOMFrameScheduling.now,
+
   useSyncScheduling: true,
 });
 

@@ -11,7 +11,7 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
-import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {Update} = require('ReactTypeOfSideEffect');
 
@@ -24,12 +24,7 @@ var {
   getUnmaskedContext,
   isContextConsumer,
 } = require('ReactFiberContext');
-var {
-  addUpdate,
-  addReplaceUpdate,
-  addForceUpdate,
-  beginUpdateQueue,
-} = require('ReactFiberUpdateQueue');
+var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
 var {hasContextChanged} = require('ReactFiberContext');
 var {isMounted} = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -77,8 +72,13 @@ if (__DEV__) {
 }
 
 module.exports = function(
-  scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
+  scheduleUpdate: (
+    fiber: Fiber,
+    partialState: mixed,
+    callback: (() => mixed) | null,
+    isReplace: boolean,
+    isForced: boolean,
+  ) => void,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
@@ -87,33 +87,27 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(fiber, partialState, callback, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
+      scheduleUpdate(fiber, partialState, callback, false, false);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(fiber, state, callback, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
+      scheduleUpdate(fiber, state, callback, true, false);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(fiber, callback, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
+      scheduleUpdate(fiber, null, callback, false, true);
     },
   };
 
@@ -383,7 +377,7 @@ module.exports = function(
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ): void {
     const current = workInProgress.alternate;
 
@@ -430,7 +424,7 @@ module.exports = function(
           instance,
           state,
           props,
-          priorityLevel,
+          renderExpirationTime,
         );
       }
     }
@@ -548,7 +542,7 @@ module.exports = function(
   function updateClassInstance(
     current: Fiber,
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ): boolean {
     const instance = workInProgress.stateNode;
     resetInputPointers(workInProgress, instance);
@@ -597,7 +591,7 @@ module.exports = function(
         instance,
         oldState,
         newProps,
-        priorityLevel,
+        renderExpirationTime,
       );
     } else {
       newState = oldState;
