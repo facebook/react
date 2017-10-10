@@ -234,6 +234,7 @@ function shouldConstruct(Component) {
 exports.createWorkInProgress = function(
   current: Fiber,
   renderPriority: PriorityLevel,
+  pendingProps: any,
 ): Fiber {
   let workInProgress = current.alternate;
   if (workInProgress === null) {
@@ -278,7 +279,7 @@ exports.createWorkInProgress = function(
   workInProgress.updateQueue = current.updateQueue;
 
   // pendingProps is set by the parent during reconciliation.
-  // TODO: Pass this as an argument.
+  workInProgress.pendingProps = pendingProps;
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
