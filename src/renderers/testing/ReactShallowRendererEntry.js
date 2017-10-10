@@ -205,12 +205,14 @@ class Updater {
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
+    const currentState = this._renderer._newState || publicInstance.state;
+
     if (typeof partialState === 'function') {
-      partialState = partialState(publicInstance.state, publicInstance.props);
+      partialState = partialState(currentState, publicInstance.props);
     }
 
     this._renderer._newState = {
-      ...publicInstance.state,
+      ...currentState,
       ...partialState,
     };
 
