@@ -30,6 +30,7 @@
 
 ### React Test Renderer and Test Utils
 
+* Fix multiple `setState()` calls in `componentWillMount()` in shallow renderer. ([@Hypnosphi](https://github.com/Hypnosphi) in [#11167](https://github.com/facebook/react/pull/11167))
 * Add back support for running in production mode. ([@gaearon](https://github.com/gaearon) in [#11112](https://github.com/facebook/react/pull/11112))
 
 </details>
