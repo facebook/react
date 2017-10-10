@@ -24,17 +24,25 @@ describe('setInnerHTML', () => {
   });
 
   describe('when the node does not have an innerHTML property', () => {
-    // Disabled. JSDOM doesn't seem to remove nodes when using appendChild to
-    // move existing nodes.
-    xit('sets innerHTML on it', () => {
+    var node;
+    var nodeProxy;
+    beforeEach(() => {
       // Create a mock node that looks like an SVG in IE (without innerHTML)
-      var node = {
-        namespaceURI: Namespaces.svg,
-        appendChild: jasmine.createSpy(),
-      };
+      node = document.createElementNS(Namespaces.svg, 'svg');
 
+      nodeProxy = new Proxy(node, {
+        has: (target, prop) => {
+          return prop === 'innerHTML' ? false : prop in target;
+        },
+      });
+
+      spyOn(node, 'appendChild').and.callThrough();
+      spyOn(node, 'removeChild').and.callThrough();
+    });
+
+    it('sets innerHTML on it', () => {
       var html = '<circle></circle><rect></rect>';
-      setInnerHTML(node, html);
+      setInnerHTML(nodeProxy, html);
 
       expect(node.appendChild.calls.argsFor(0)[0].outerHTML).toBe(
         '<circle></circle>',
@@ -42,6 +50,19 @@ describe('setInnerHTML', () => {
       expect(node.appendChild.calls.argsFor(1)[0].outerHTML).toBe(
         '<rect></rect>',
       );
+    });
+
+    it('clears previous children', () => {
+      var firstHtml = '<rect></rect>';
+      var secondHtml = '<circle></circle>';
+      setInnerHTML(nodeProxy, firstHtml);
+
+      setInnerHTML(nodeProxy, secondHtml);
+
+      expect(node.removeChild.calls.argsFor(0)[0].outerHTML).toBe(
+        '<rect></rect>',
+      );
+      expect(node.innerHTML).toBe('<circle></circle>');
     });
   });
 });
