@@ -164,17 +164,16 @@ if (__DEV__) {
     );
   };
 
-  var testDocument;
   // Parse the HTML and read it back to normalize the HTML string so that it
   // can be used for comparison.
   var normalizeHTML = function(parent: Element, html: string) {
-    if (!testDocument) {
-      // The title argument is required in IE11 so we pass an empty string.
-      testDocument = document.implementation.createHTMLDocument('');
-    }
+    // We could have created a separate document here to avoid
+    // re-initializing custom elements if they exist. But this breaks
+    // how <noscript> is being handled. So we use the same document.
+    // See the discussion in https://github.com/facebook/react/pull/11157.
     var testElement = parent.namespaceURI === HTML_NAMESPACE
-      ? testDocument.createElement(parent.tagName)
-      : testDocument.createElementNS(
+      ? parent.ownerDocument.createElement(parent.tagName)
+      : parent.ownerDocument.createElementNS(
           (parent.namespaceURI: any),
           parent.tagName,
         );
