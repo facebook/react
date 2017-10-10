@@ -29,8 +29,7 @@ var UIEventInterface = {
       return target;
     }
 
-    var doc = target.ownerDocument;
-    return doc.defaultView;
+    return target.ownerDocument.defaultView;
   },
   detail: function(event) {
     return event.detail || 0;
