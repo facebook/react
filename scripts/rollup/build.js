@@ -20,6 +20,7 @@ const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
 const syncReactDom = require('./sync').syncReactDom;
 const syncReactNative = require('./sync').syncReactNative;
+const syncReactNativeRT = require('./sync').syncReactNativeRT;
 const Packaging = require('./packaging');
 const Header = require('./header');
 const closure = require('rollup-plugin-closure-compiler-js');
@@ -168,7 +169,12 @@ function handleRollupWarnings(warning) {
 function updateBundleConfig(config, filename, format, bundleType, hasteName) {
   return Object.assign({}, config, {
     banner: getBanner(bundleType, hasteName, filename),
-    dest: Packaging.getPackageDestination(config, bundleType, filename),
+    dest: Packaging.getPackageDestination(
+      config,
+      bundleType,
+      filename,
+      hasteName
+    ),
     footer: getFooter(bundleType),
     format,
     interop: false,
@@ -503,6 +509,7 @@ rimraf('build', () => {
   const tasks = [
     Packaging.createFacebookWWWBuild,
     Packaging.createReactNativeBuild,
+    Packaging.createReactNativeRTBuild,
   ];
   for (const bundle of Bundles.bundles) {
     tasks.push(
@@ -519,6 +526,9 @@ rimraf('build', () => {
   if (syncFbsource) {
     tasks.push(() =>
       syncReactNative(join('build', 'react-native'), syncFbsource)
+    );
+    tasks.push(() =>
+      syncReactNativeRT(join('build', 'react-native-rt'), syncFbsource)
     );
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));

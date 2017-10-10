@@ -7,6 +7,7 @@ const resolvePath = require('./utils').resolvePath;
 const DEFAULT_FB_SOURCE_PATH = '~/fbsource/';
 const DEFAULT_WWW_PATH = '~/www/';
 const RELATIVE_RN_PATH = 'xplat/js/react-native-github/Libraries/Renderer/';
+const RELATIVE_RN_RT_PATH = 'xplat/js/RKJSModules/Libraries/RT/downstream/';
 const RELATIVE_WWW_PATH = 'html/shared/react/';
 
 function doSync(buildPath, destPath) {
@@ -46,7 +47,22 @@ function syncReactNative(buildPath, fbSourcePath) {
   return doSync(buildPath, destPath);
 }
 
+function syncReactNativeRT(buildPath, fbSourcePath) {
+  fbSourcePath = typeof fbSourcePath === 'string'
+    ? fbSourcePath
+    : DEFAULT_FB_SOURCE_PATH;
+
+  if (fbSourcePath.charAt(fbSourcePath.length - 1) !== '/') {
+    fbSourcePath += '/';
+  }
+
+  const destPath = resolvePath(fbSourcePath + RELATIVE_RN_RT_PATH);
+
+  return doSync(buildPath, destPath);
+}
+
 module.exports = {
   syncReactDom,
   syncReactNative,
+  syncReactNativeRT,
 };
