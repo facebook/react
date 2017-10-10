@@ -58,12 +58,29 @@ var {
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
+var checkForRAF = () => {};
 if (__DEV__) {
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   var lowPriorityWarning = require('lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
   var validateDOMNesting = require('validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
+  var checkedRaf = false;
+
+  checkForRAF = () => {
+    if (
+      !checkedRaf &&
+      ExecutionEnvironment.canUseDOM &&
+      typeof requestAnimationFrame !== 'function'
+    ) {
+      warning(
+        false,
+        'React depends on requestAnimationFrame. Make sure that you load a ' +
+          'polyfill in older browsers. http://fb.me/react-polyfills',
+      );
+    }
+    checkedRaf = true;
+  };
 
   if (
     typeof Map !== 'function' ||
@@ -636,6 +653,7 @@ function renderSubtreeIntoContainer(
   forceHydrate: boolean,
   callback: ?Function,
 ) {
+  checkForRAF();
   invariant(
     isValidContainer(container),
     'Target container is not a DOM element.',
