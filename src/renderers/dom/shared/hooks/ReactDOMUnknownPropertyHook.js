@@ -70,7 +70,7 @@ if (__DEV__) {
       return true;
     }
 
-    if (lowerCasedName.indexOf('on') === 0) {
+    if (lowerCasedName.indexOf('on') === 0 && lowerCasedName.length > 2) {
       warning(
         false,
         'Unknown event handler property `%s`. It will be ignored.%s',

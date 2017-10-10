@@ -205,7 +205,8 @@ var DOMProperty = {
     }
     if (
       (name[0] === 'o' || name[0] === 'O') &&
-      (name[1] === 'n' || name[1] === 'N')
+      (name[1] === 'n' || name[1] === 'N') &&
+      name.length > 2
     ) {
       return false;
     }
