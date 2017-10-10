@@ -446,7 +446,7 @@ var DOMRenderer = ReactFiberReconciler({
   ): boolean {
     return (
       instance.nodeType === ELEMENT_NODE &&
-      type === instance.nodeName.toLowerCase()
+      type.toLowerCase() === instance.nodeName.toLowerCase()
     );
   },
 
