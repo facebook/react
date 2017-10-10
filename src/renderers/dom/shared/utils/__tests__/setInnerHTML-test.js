@@ -34,16 +34,6 @@ describe('setInnerHTML', () => {
         has: (target, prop) => {
           return prop === 'innerHTML' ? false : prop in target;
         },
-        get: (target, prop) => {
-          if (prop === 'appendChild') {
-            return function(child) {
-              child.parentElement.removeChild(child);
-              return target.appendChild(child);
-            };
-          } else {
-            return target[prop];
-          }
-        },
       });
 
       spyOn(node, 'appendChild').and.callThrough();
