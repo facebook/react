@@ -358,6 +358,19 @@ describe('ReactDOMServer', () => {
         'Objects are not valid as a React child (found: object with keys {x})',
       );
     });
+
+    it('should not throw on <iframe /> with style attribute', () => {
+      expect(
+        () => ReactDOMServer.renderToString(<iframe style="border:none;" />)
+      ).not.toThrow();
+
+      expect(
+        ReactDOMServer.renderToString(<iframe style="border:none;" />),
+      ).toBe(
+        '<iframe src"border:none;"></iframe>',
+      );
+    });
+
   });
 
   describe('renderToStaticMarkup', () => {
