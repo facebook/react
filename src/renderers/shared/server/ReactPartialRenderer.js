@@ -18,6 +18,7 @@ var DOMMarkupOperations = require('DOMMarkupOperations');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var assertValidProps = require('assertValidProps');
 var dangerousStyleValue = require('dangerousStyleValue');
 var emptyObject = require('fbjs/lib/emptyObject');
@@ -780,7 +781,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, () => null);
+    assertValidProps(tag, props, emptyFunction.thatReturnsNull);
 
     var out = createOpenTagMarkup(
       element.type,
