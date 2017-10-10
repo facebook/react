@@ -1344,6 +1344,14 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
+      itRenders('svg element with a mixed case name', async render => {
+        let e = await render(<svg><filter><feMorphology /></filter></svg>);
+        e = e.firstChild.firstChild;
+        expect(e.childNodes.length).toBe(0);
+        expect(e.tagName).toBe('feMorphology');
+        expect(e.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      });
+
       itRenders('a math element', async render => {
         const e = await render(<math />);
         expect(e.childNodes.length).toBe(0);
