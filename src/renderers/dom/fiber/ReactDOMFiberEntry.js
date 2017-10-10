@@ -437,6 +437,8 @@ var DOMRenderer = ReactFiberReconciler({
     }
   },
 
+  now: ReactDOMFrameScheduling.now,
+
   canHydrateInstance(
     instance: Instance | TextInstance,
     type: string,

@@ -83,6 +83,8 @@ function removeChild(
   parentInstance.children.splice(index, 1);
 }
 
+let elapsedTimeInMs = 0;
+
 var NoopRenderer = ReactFiberReconciler({
   getRootHostContext() {
     if (failInBeginPhase) {
@@ -201,6 +203,10 @@ var NoopRenderer = ReactFiberReconciler({
   prepareForCommit(): void {},
 
   resetAfterCommit(): void {},
+
+  now(): number {
+    return elapsedTimeInMs;
+  },
 });
 
 var rootContainers = new Map();
@@ -336,6 +342,14 @@ var ReactNoop = {
     expect(actual).toEqual(expected);
   },
 
+  expire(ms: number): void {
+    elapsedTimeInMs += ms;
+  },
+
+  flushExpired(): Array<mixed> {
+    return ReactNoop.flushUnitsOfWork(0);
+  },
+
   yield(value: mixed) {
     if (yieldedValues === null) {
       yieldedValues = [value];
@@ -400,7 +414,7 @@ var ReactNoop = {
         '  '.repeat(depth + 1) + '~',
         firstUpdate && firstUpdate.partialState,
         firstUpdate.callback ? 'with callback' : '',
-        '[' + firstUpdate.priorityLevel + ']',
+        '[' + firstUpdate.expirationTime + ']',
       );
       var next;
       while ((next = firstUpdate.next)) {
@@ -408,7 +422,7 @@ var ReactNoop = {
           '  '.repeat(depth + 1) + '~',
           next.partialState,
           next.callback ? 'with callback' : '',
-          '[' + firstUpdate.priorityLevel + ']',
+          '[' + firstUpdate.expirationTime + ']',
         );
       }
     }
@@ -418,7 +432,7 @@ var ReactNoop = {
         '  '.repeat(depth) +
           '- ' +
           (fiber.type ? fiber.type.name || fiber.type : '[root]'),
-        '[' + fiber.pendingWorkPriority + (fiber.pendingProps ? '*' : '') + ']',
+        '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']',
       );
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);

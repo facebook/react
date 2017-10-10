@@ -12,6 +12,7 @@
 
 import type {Fiber} from 'ReactFiber';
 import type {PriorityLevel} from 'ReactPriorityLevel';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {Update} = require('ReactTypeOfSideEffect');
 
@@ -77,10 +78,18 @@ if (__DEV__) {
 }
 
 module.exports = function(
-  scheduleUpdate: (fiber: Fiber, priorityLevel: PriorityLevel) => void,
-  getPriorityContext: (fiber: Fiber, forceAsync: boolean) => PriorityLevel,
+  scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
+  getPriorityContext: (
+    fiber: Fiber,
+    forceAsync: boolean,
+  ) => PriorityLevel | null,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
+  recalculateCurrentTime: () => ExpirationTime,
+  getExpirationTimeForPriority: (
+    currentTime: ExpirationTime,
+    priorityLevel: PriorityLevel | null,
+  ) => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
@@ -88,32 +97,67 @@ module.exports = function(
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext(fiber, false);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = getExpirationTimeForPriority(
+        currentTime,
+        priorityLevel,
+      );
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(fiber, partialState, callback, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
+      addUpdate(
+        fiber,
+        partialState,
+        callback,
+        priorityLevel,
+        expirationTime,
+        currentTime,
+      );
+      scheduleUpdate(fiber, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext(fiber, false);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = getExpirationTimeForPriority(
+        currentTime,
+        priorityLevel,
+      );
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(fiber, state, callback, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
+      addReplaceUpdate(
+        fiber,
+        state,
+        callback,
+        priorityLevel,
+        expirationTime,
+        currentTime,
+      );
+      scheduleUpdate(fiber, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
       const priorityLevel = getPriorityContext(fiber, false);
+      const currentTime = recalculateCurrentTime();
+      const expirationTime = getExpirationTimeForPriority(
+        currentTime,
+        priorityLevel,
+      );
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(fiber, callback, priorityLevel);
-      scheduleUpdate(fiber, priorityLevel);
+      addForceUpdate(
+        fiber,
+        callback,
+        priorityLevel,
+        expirationTime,
+        currentTime,
+      );
+      scheduleUpdate(fiber, expirationTime);
     },
   };
 
@@ -383,7 +427,7 @@ module.exports = function(
   // Invokes the mount life-cycles on a previously never rendered instance.
   function mountClassInstance(
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ): void {
     const current = workInProgress.alternate;
 
@@ -430,7 +474,7 @@ module.exports = function(
           instance,
           state,
           props,
-          priorityLevel,
+          renderExpirationTime,
         );
       }
     }
@@ -548,7 +592,7 @@ module.exports = function(
   function updateClassInstance(
     current: Fiber,
     workInProgress: Fiber,
-    priorityLevel: PriorityLevel,
+    renderExpirationTime: ExpirationTime,
   ): boolean {
     const instance = workInProgress.stateNode;
     resetInputPointers(workInProgress, instance);
@@ -597,7 +641,7 @@ module.exports = function(
         instance,
         oldState,
         newProps,
-        priorityLevel,
+        renderExpirationTime,
       );
     } else {
       newState = oldState;
