@@ -20,7 +20,6 @@ import type {
 import type {TypeOfWork} from 'ReactTypeOfWork';
 import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
@@ -35,8 +34,6 @@ var {
   YieldComponent,
   Fragment,
 } = require('ReactTypeOfWork');
-
-var {NoWork: NoWorkPriority} = require('ReactPriorityLevel');
 
 var {NoWork} = require('ReactFiberExpirationTime');
 
@@ -451,11 +448,4 @@ exports.createFiberFromPortal = function(
     implementation: portal.implementation,
   };
   return fiber;
-};
-
-exports.largerPriority = function(
-  p1: PriorityLevel,
-  p2: PriorityLevel,
-): PriorityLevel {
-  return p1 !== NoWorkPriority && (p2 === NoWorkPriority || p2 > p1) ? p1 : p2;
 };

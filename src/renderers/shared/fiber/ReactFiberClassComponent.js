@@ -11,7 +11,6 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {Update} = require('ReactTypeOfSideEffect');
@@ -79,84 +78,41 @@ if (__DEV__) {
 
 module.exports = function(
   scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  getPriorityContext: (
-    fiber: Fiber,
-    forceAsync: boolean,
-  ) => PriorityLevel | null,
+  getExpirationTime: (fiber: Fiber, forceAsync: boolean) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
-  recalculateCurrentTime: () => ExpirationTime,
-  getExpirationTimeForPriority: (
-    currentTime: ExpirationTime,
-    priorityLevel: PriorityLevel | null,
-  ) => ExpirationTime,
 ) {
   // Class component state updater
   const updater = {
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = getExpirationTimeForPriority(
-        currentTime,
-        priorityLevel,
-      );
+      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(
-        fiber,
-        partialState,
-        callback,
-        priorityLevel,
-        expirationTime,
-        currentTime,
-      );
+      addUpdate(fiber, partialState, callback, expirationTime);
       scheduleUpdate(fiber, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = getExpirationTimeForPriority(
-        currentTime,
-        priorityLevel,
-      );
+      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(
-        fiber,
-        state,
-        callback,
-        priorityLevel,
-        expirationTime,
-        currentTime,
-      );
+      addReplaceUpdate(fiber, state, callback, expirationTime);
       scheduleUpdate(fiber, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const priorityLevel = getPriorityContext(fiber, false);
-      const currentTime = recalculateCurrentTime();
-      const expirationTime = getExpirationTimeForPriority(
-        currentTime,
-        priorityLevel,
-      );
+      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(
-        fiber,
-        callback,
-        priorityLevel,
-        expirationTime,
-        currentTime,
-      );
+      addForceUpdate(fiber, callback, expirationTime);
       scheduleUpdate(fiber, expirationTime);
     },
   };

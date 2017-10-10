@@ -10,18 +10,6 @@
 
 'use strict';
 
-import type {PriorityLevel} from 'ReactPriorityLevel';
-const {
-  NoWork: NoWorkPriority,
-  SynchronousPriority,
-  TaskPriority,
-  HighPriority,
-  LowPriority,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
-
-const invariant = require('fbjs/lib/invariant');
-
 // TODO: Use an opaque type once ESLint et al support the syntax
 export type ExpirationTime = number;
 
@@ -33,6 +21,8 @@ const Never = 2147483647; // Max int32: Math.pow(2, 31) - 1
 const UNIT_SIZE = 10;
 const MAGIC_NUMBER_OFFSET = 3;
 
+exports.Sync = Sync;
+exports.Task = Task;
 exports.NoWork = NoWork;
 exports.Never = Never;
 
@@ -58,66 +48,32 @@ function bucket(
   );
 }
 
-// Given the current clock time and a priority level, returns an expiration time
-// that represents a point in the future by which some work should complete.
-// The lower the priority, the further out the expiration time. We use rounding
-// to batch like updates together. The further out the expiration time, the
-// more we want to batch, so we use a larger precision when rounding.
-function priorityToExpirationTime(
-  currentTime: ExpirationTime,
-  priorityLevel: PriorityLevel,
-): ExpirationTime {
-  switch (priorityLevel) {
-    case NoWork:
-      return NoWorkPriority;
-    case SynchronousPriority:
-      return Sync;
-    case TaskPriority:
-      return Task;
-    case HighPriority: {
-      // Should complete within ~100ms. 120ms max.
-      return bucket(currentTime, 100, 20);
-    }
-    case LowPriority: {
-      // Should complete within ~1000ms. 1200ms max.
-      return bucket(currentTime, 1000, 200);
-    }
-    case OffscreenPriority:
-      return Never;
-    default:
-      invariant(
-        false,
-        'Switch statement should be exhuastive. ' +
-          'This error is likely caused by a bug in React. Please file an issue.',
-      );
-  }
+// Given the current clock time, returns an expiration time. We use rounding
+// to batch like updates together.
+function asyncExpirationTime(currentTime: ExpirationTime) {
+  // Should complete within ~1000ms. 1200ms max.
+  return bucket(currentTime, 1000, 200);
 }
-exports.priorityToExpirationTime = priorityToExpirationTime;
+exports.asyncExpirationTime = asyncExpirationTime;
 
 // Given the current clock time and an expiration time, returns the
-// corresponding priority level. The more time has advanced, the higher the
-// priority level.
-function expirationTimeToPriorityLevel(
+// relative expiration time. Possible values include NoWork, Sync, Task, and
+// Never. All other values represent an async expiration time.
+function relativeExpirationTime(
   currentTime: ExpirationTime,
   expirationTime: ExpirationTime,
-): PriorityLevel {
-  // First check for magic values
+): ExpirationTime {
   switch (expirationTime) {
-    case NoWorkPriority:
-      return NoWork;
+    case NoWork:
     case Sync:
-      return SynchronousPriority;
     case Task:
-      return TaskPriority;
     case Never:
-      return OffscreenPriority;
-    default:
-      break;
+      return expirationTime;
   }
-  if (expirationTime <= currentTime) {
-    return TaskPriority;
+  const delta = expirationTime - currentTime;
+  if (delta <= 0) {
+    return Task;
   }
-  // TODO: We don't currently distinguish between high and low priority.
-  return LowPriority;
+  return msToExpirationTime(delta);
 }
-exports.expirationTimeToPriorityLevel = expirationTimeToPriorityLevel;
+exports.relativeExpirationTime = relativeExpirationTime;

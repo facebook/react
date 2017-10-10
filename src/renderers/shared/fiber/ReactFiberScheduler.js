@@ -13,7 +13,6 @@
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig, Deadline} from 'ReactFiberReconciler';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
@@ -56,18 +55,12 @@ var {onCommitRoot} = require('ReactFiberDevToolsHook');
 
 var {
   NoWork,
-  SynchronousPriority,
-  TaskPriority,
-  HighPriority,
-  LowPriority,
-  OffscreenPriority,
-} = require('ReactPriorityLevel');
-
-var {
+  Task,
+  Sync,
   Never,
   msToExpirationTime,
-  priorityToExpirationTime,
-  expirationTimeToPriorityLevel,
+  asyncExpirationTime,
+  relativeExpirationTime,
 } = require('ReactFiberExpirationTime');
 
 var {AsyncUpdates} = require('ReactTypeOfInternalContext');
@@ -173,9 +166,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hostContext,
     hydrationContext,
     scheduleUpdate,
-    getPriorityContext,
-    recalculateCurrentTime,
-    getExpirationTimeForPriority,
+    getExpirationTime,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -202,9 +193,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   const startTime = now();
   let mostRecentCurrentTime: ExpirationTime = msToExpirationTime(0);
 
-  // The priority level to use when scheduling an update. We use NoWork to
-  // represent the default priority.
-  let priorityContext: PriorityLevel = NoWork;
+  // Represents the expiration time that incoming updates should use. (If this
+  // is NoWork, use the default strategy: async updates in async mode, sync
+  // updates in sync mode.)
+  let expirationContext: ExpirationTime = NoWork;
 
   // Keeps track of whether we're currently in a work loop.
   let isPerformingWork: boolean = false;
@@ -788,7 +780,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function performDeferredWork(deadline: Deadline) {
-    performWork(OffscreenPriority, deadline);
+    performWork(Never, deadline);
   }
 
   function handleCommitPhaseErrors() {
@@ -843,21 +835,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     minExpirationTime: ExpirationTime,
     deadline: Deadline | null,
   ) {
-    if (pendingCommit !== null) {
-      commitAllWork(pendingCommit);
-      handleCommitPhaseErrors();
-    } else if (nextUnitOfWork === null) {
-      resetNextUnitOfWork();
-    }
-
-    if (
-      nextRenderExpirationTime === NoWork ||
-      nextRenderExpirationTime > minExpirationTime
-    ) {
-      return;
-    }
-
     loop: do {
+      if (pendingCommit !== null) {
+        commitAllWork(pendingCommit);
+        handleCommitPhaseErrors();
+      } else if (nextUnitOfWork === null) {
+        resetNextUnitOfWork();
+      }
+
+      if (
+        nextRenderExpirationTime === NoWork ||
+        nextRenderExpirationTime > minExpirationTime
+      ) {
+        return;
+      }
+
       if (nextRenderExpirationTime <= mostRecentCurrentTime) {
         // Flush all expired work.
         while (nextUnitOfWork !== null) {
@@ -926,21 +918,21 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // There might be work left. Depending on the priority, we should
       // either perform it now or schedule a callback to perform it later.
       const currentTime = recalculateCurrentTime();
-      switch (expirationTimeToPriorityLevel(
-        currentTime,
-        nextRenderExpirationTime,
-      )) {
-        case SynchronousPriority:
-        case TaskPriority:
+      switch (relativeExpirationTime(currentTime, nextRenderExpirationTime)) {
+        case NoWork:
+          // No work left. We can exit.
+          break loop;
+        case Sync:
+        case Task:
           // We have remaining synchronous or task work. Keep performing it,
           // regardless of whether we're inside a callback.
           if (nextRenderExpirationTime <= minExpirationTime) {
+            // Sometimes minExpirationTime is Sync, which means we should skip
+            // task work.
             continue loop;
           }
           break loop;
-        case HighPriority:
-        case LowPriority:
-        case OffscreenPriority:
+        default:
           // We have remaining async work.
           if (deadline === null) {
             // We're not inside a callback. Exit and perform the work during
@@ -957,15 +949,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
           // We've run out of time. Exit.
           break loop;
-        case NoWork:
-          // No work left. We can exit.
-          break loop;
-        default:
-          invariant(
-            false,
-            'Switch statement should be exhuastive. ' +
-              'This error is likely caused by a bug in React. Please file an issue.',
-          );
       }
     } while (true);
   }
@@ -993,7 +976,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function performWork(
-    minPriorityLevel: PriorityLevel,
+    minExpirationTime: ExpirationTime,
     deadline: Deadline | null,
   ) {
     if (__DEV__) {
@@ -1006,19 +989,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'by a bug in React. Please file an issue.',
     );
     isPerformingWork = true;
-
-    // Updates that occur during the commit phase should have task priority
-    // by default. (Render phase updates are special; getPriorityContext
-    // accounts for their behavior.)
-    const previousPriorityContext = priorityContext;
-    priorityContext = TaskPriority;
-
-    // Read the current time from the host environment.
-    const currentTime = recalculateCurrentTime();
-    const minExpirationTime = getExpirationTimeForPriority(
-      currentTime,
-      minPriorityLevel,
-    );
 
     nestedUpdateCount = 0;
 
@@ -1118,8 +1088,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       scheduleDeferredCallback(performDeferredWork);
       isCallbackScheduled = true;
     }
-
-    priorityContext = previousPriorityContext;
 
     const errorToThrow = firstUncaughtError;
 
@@ -1473,23 +1441,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           const root: FiberRoot = (node.stateNode: any);
           scheduleRoot(root, expirationTime);
           if (!isPerformingWork) {
-            const priorityLevel = expirationTimeToPriorityLevel(
-              mostRecentCurrentTime,
-              expirationTime,
-            );
-            switch (priorityLevel) {
-              case SynchronousPriority:
+            switch (expirationTime) {
+              case Sync:
                 if (isUnbatchingUpdates) {
                   // We're inside unbatchedUpdates, which is inside either
                   // batchedUpdates or a lifecycle. We should only flush
                   // synchronous work, not task work.
-                  performWork(SynchronousPriority, null);
+                  performWork(Sync, null);
                 } else {
                   // Flush both synchronous and task work.
-                  performWork(TaskPriority, null);
+                  performWork(Task, null);
                 }
                 break;
-              case TaskPriority:
+              case Task:
                 invariant(
                   isBatchingUpdates,
                   'Task updates can only be scheduled as a nested update or ' +
@@ -1518,58 +1482,50 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function getPriorityContext(
+  function getExpirationTime(
     fiber: Fiber,
     forceAsync: boolean,
-  ): PriorityLevel | null {
-    if (isPerformingWork && !isCommitting) {
-      // Updates during the render phase should expire at the same time as
-      // the work that is being rendered. Return null to indicate.
-      return null;
-    }
-
-    let priorityLevel = priorityContext;
-    if (priorityLevel === NoWork) {
-      if (
-        !useSyncScheduling ||
-        fiber.internalContextTag & AsyncUpdates ||
-        forceAsync
-      ) {
-        priorityLevel = LowPriority;
+  ): ExpirationTime {
+    let expirationTime;
+    if (expirationContext !== NoWork) {
+      // An explicit expiration context was set;
+      expirationTime = expirationContext;
+    } else if (isPerformingWork) {
+      if (isCommitting) {
+        // Updates that occur during the commit phase should have task priority
+        // by default.
+        expirationTime = Task;
       } else {
-        priorityLevel = SynchronousPriority;
+        // Updates during the render phase should expire at the same time as
+        // the work that is being rendered.
+        expirationTime = nextRenderExpirationTime;
+      }
+    } else {
+      // No explicit expiration context was set, and we're not currently
+      // performing work. Calculate a new expiration time.
+      if (
+        useSyncScheduling &&
+        !(fiber.internalContextTag & AsyncUpdates) &&
+        !forceAsync
+      ) {
+        // This is a sync update
+        expirationTime = Sync;
+      } else {
+        // This is an async update
+        const currentTime = recalculateCurrentTime();
+        expirationTime = asyncExpirationTime(currentTime);
       }
     }
 
-    // If we're in a batch, or if we're already performing work, downgrade sync
-    // priority to task priority
-    if (
-      priorityLevel === SynchronousPriority &&
-      (isPerformingWork || isBatchingUpdates)
-    ) {
-      return TaskPriority;
+    if (expirationTime === Sync && (isCommitting || isBatchingUpdates)) {
+      // If we're in a batch, or in the commit phase, downgrade sync to task
+      return Task;
     }
-    return priorityLevel;
-  }
-
-  function getExpirationTimeForPriority(
-    currentTime: ExpirationTime,
-    priorityLevel: PriorityLevel | null,
-  ): ExpirationTime {
-    if (priorityLevel === null) {
-      // A priorityLevel of null indicates that this update should expire at
-      // the same time as whatever is currently being rendered.
-      return nextRenderExpirationTime;
-    }
-    return priorityToExpirationTime(currentTime, priorityLevel);
+    return expirationTime;
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
-    const taskTime = getExpirationTimeForPriority(
-      mostRecentCurrentTime,
-      TaskPriority,
-    );
-    scheduleUpdateImpl(fiber, taskTime, true);
+    scheduleUpdateImpl(fiber, Task, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
@@ -1589,7 +1545,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If we're not already inside a batch, we need to flush any task work
       // that was created by the user-provided function.
       if (!isPerformingWork && !isBatchingUpdates) {
-        performWork(TaskPriority, null);
+        performWork(Task, null);
       }
     }
   }
@@ -1610,39 +1566,38 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function flushSync<A>(batch: () => A): A {
     const previousIsBatchingUpdates = isBatchingUpdates;
-    const previousPriorityContext = priorityContext;
+    const previousExpirationContext = expirationContext;
     isBatchingUpdates = true;
-    priorityContext = SynchronousPriority;
+    expirationContext = Sync;
     try {
       return batch();
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
-      priorityContext = previousPriorityContext;
+      expirationContext = previousExpirationContext;
 
       invariant(
         !isPerformingWork,
         'flushSync was called from inside a lifecycle method. It cannot be ' +
           'called when React is already rendering.',
       );
-      performWork(TaskPriority, null);
+      performWork(Task, null);
     }
   }
 
   function deferredUpdates<A>(fn: () => A): A {
-    const previousPriorityContext = priorityContext;
-    priorityContext = LowPriority;
+    const previousExpirationContext = expirationContext;
+    const currentTime = recalculateCurrentTime();
+    expirationContext = asyncExpirationTime(currentTime);
     try {
       return fn();
     } finally {
-      priorityContext = previousPriorityContext;
+      expirationContext = previousExpirationContext;
     }
   }
 
   return {
     scheduleUpdate: scheduleUpdate,
-    getPriorityContext: getPriorityContext,
-    recalculateCurrentTime: recalculateCurrentTime,
-    getExpirationTimeForPriority: getExpirationTimeForPriority,
+    getExpirationTime: getExpirationTime,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,
