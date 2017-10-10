@@ -780,7 +780,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props);
+    assertValidProps(tag, props, () => null);
 
     var out = createOpenTagMarkup(
       element.type,
