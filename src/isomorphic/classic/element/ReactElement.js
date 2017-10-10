@@ -242,9 +242,10 @@ ReactElement.createElement = function(type, config, children) {
         typeof props.$$typeof === 'undefined' ||
         props.$$typeof !== REACT_ELEMENT_TYPE
       ) {
-        var displayName = typeof type === 'function'
-          ? type.displayName || type.name || 'Unknown'
-          : type;
+        var displayName =
+          typeof type === 'function'
+            ? type.displayName || type.name || 'Unknown'
+            : type;
         if (key) {
           defineKeyPropWarningGetter(props, displayName);
         }

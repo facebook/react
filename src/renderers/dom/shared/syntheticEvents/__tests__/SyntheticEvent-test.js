@@ -146,32 +146,29 @@ describe('SyntheticEvent', () => {
   // TODO: reenable this test. We are currently silencing these warnings when
   // using TestUtils.Simulate to avoid spurious warnings that result from the
   // way we simulate events.
-  xit(
-    'should properly log warnings when events simulated with rendered components',
-    () => {
-      spyOn(console, 'error');
-      var event;
-      var element = document.createElement('div');
-      function assignEvent(e) {
-        event = e;
-      }
-      var instance = ReactDOM.render(<div onClick={assignEvent} />, element);
-      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance));
-      expectDev(console.error.calls.count()).toBe(0);
+  xit('should properly log warnings when events simulated with rendered components', () => {
+    spyOn(console, 'error');
+    var event;
+    var element = document.createElement('div');
+    function assignEvent(e) {
+      event = e;
+    }
+    var instance = ReactDOM.render(<div onClick={assignEvent} />, element);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance));
+    expectDev(console.error.calls.count()).toBe(0);
 
-      // access a property to cause the warning
-      event.nativeEvent; // eslint-disable-line no-unused-expressions
+    // access a property to cause the warning
+    event.nativeEvent; // eslint-disable-line no-unused-expressions
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: This synthetic event is reused for performance reasons. If ' +
-          "you're seeing this, you're accessing the property `nativeEvent` on a " +
-          'released/nullified synthetic event. This is set to null. If you must ' +
-          'keep the original synthetic event around, use event.persist(). ' +
-          'See https://fb.me/react-event-pooling for more information.',
-      );
-    },
-  );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+        "you're seeing this, you're accessing the property `nativeEvent` on a " +
+        'released/nullified synthetic event. This is set to null. If you must ' +
+        'keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
+    );
+  });
 
   it('should warn if Proxy is supported and the synthetic event is added a property', () => {
     spyOn(console, 'error');

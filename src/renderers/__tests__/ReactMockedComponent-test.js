@@ -53,7 +53,11 @@ describe('ReactMockedComponent', () => {
       };
 
       render() {
-        return <div><AutoMockedComponent prop={this.state.foo} /></div>;
+        return (
+          <div>
+            <AutoMockedComponent prop={this.state.foo} />
+          </div>
+        );
       }
     }
 
@@ -86,7 +90,11 @@ describe('ReactMockedComponent', () => {
       };
 
       render() {
-        return <div><MockedComponent prop={this.state.foo} /></div>;
+        return (
+          <div>
+            <MockedComponent prop={this.state.foo} />
+          </div>
+        );
       }
     }
 

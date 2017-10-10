@@ -84,12 +84,10 @@ var EnterLeaveEventPlugin = {
       return null;
     }
 
-    var fromNode = from == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(from);
-    var toNode = to == null
-      ? win
-      : ReactDOMComponentTree.getNodeFromInstance(to);
+    var fromNode =
+      from == null ? win : ReactDOMComponentTree.getNodeFromInstance(from);
+    var toNode =
+      to == null ? win : ReactDOMComponentTree.getNodeFromInstance(to);
 
     var leave = SyntheticMouseEvent.getPooled(
       eventTypes.mouseLeave,

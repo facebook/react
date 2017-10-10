@@ -86,9 +86,8 @@ if (__DEV__) {
   var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
   var normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
-    const markupString = typeof markup === 'string'
-      ? markup
-      : '' + (markup: any);
+    const markupString =
+      typeof markup === 'string' ? markup : '' + (markup: any);
     return markupString
       .replace(NORMALIZE_NEWLINES_REGEX, '\n')
       .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
@@ -172,12 +171,13 @@ if (__DEV__) {
       // The title argument is required in IE11 so we pass an empty string.
       testDocument = document.implementation.createHTMLDocument('');
     }
-    var testElement = parent.namespaceURI === HTML_NAMESPACE
-      ? testDocument.createElement(parent.tagName)
-      : testDocument.createElementNS(
-          (parent.namespaceURI: any),
-          parent.tagName,
-        );
+    var testElement =
+      parent.namespaceURI === HTML_NAMESPACE
+        ? testDocument.createElement(parent.tagName)
+        : testDocument.createElementNS(
+            (parent.namespaceURI: any),
+            parent.tagName,
+          );
     testElement.innerHTML = html;
     return testElement.innerHTML;
   };

@@ -136,9 +136,8 @@ var ReactDOMInput = {
     var defaultValue = props.defaultValue;
     var node = ((element: any): InputWithWrapperState);
     node._wrapperState = {
-      initialChecked: props.checked != null
-        ? props.checked
-        : props.defaultChecked,
+      initialChecked:
+        props.checked != null ? props.checked : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       controlled: isControlled(props),
     };

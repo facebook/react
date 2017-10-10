@@ -324,9 +324,10 @@ if (__DEV__) {
       if (!supportsUserTiming) {
         return;
       }
-      const warning = commitCountInCurrentWorkLoop > 1
-        ? 'There were cascading updates'
-        : null;
+      const warning =
+        commitCountInCurrentWorkLoop > 1
+          ? 'There were cascading updates'
+          : null;
       commitCountInCurrentWorkLoop = 0;
       // Pause any measurements until the next loop.
       pauseTimers();

@@ -85,7 +85,11 @@ describe('ReactDOMComponentTree', () => {
     }
 
     function renderAndQuery(sel) {
-      var root = renderMarkupIntoDocument(<section><Component /></section>);
+      var root = renderMarkupIntoDocument(
+        <section>
+          <Component />
+        </section>,
+      );
       return sel ? root.querySelector(sel) : root;
     }
 

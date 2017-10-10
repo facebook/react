@@ -234,9 +234,8 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
 
   // Find the insertion position in the first queue.
   const insertAfter1 = findInsertionPosition(queue1, update);
-  const insertBefore1 = insertAfter1 !== null
-    ? insertAfter1.next
-    : queue1.first;
+  const insertBefore1 =
+    insertAfter1 !== null ? insertAfter1.next : queue1.first;
 
   if (queue2 === null) {
     // If there's no alternate queue, there's nothing else to do but insert.
@@ -246,9 +245,8 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
 
   // If there is an alternate queue, find the insertion position.
   const insertAfter2 = findInsertionPosition(queue2, update);
-  const insertBefore2 = insertAfter2 !== null
-    ? insertAfter2.next
-    : queue2.first;
+  const insertBefore2 =
+    insertAfter2 !== null ? insertAfter2.next : queue2.first;
 
   // Now we can insert into the first queue. This must come after finding both
   // insertion positions because it mutates the list.

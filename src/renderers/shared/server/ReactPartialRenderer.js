@@ -386,9 +386,10 @@ function resolve(child, context) {
           var dontMutate = true;
           for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
             var partial = oldQueue[i];
-            var partialState = typeof partial === 'function'
-              ? partial.call(inst, nextState, child.props, publicContext)
-              : partial;
+            var partialState =
+              typeof partial === 'function'
+                ? partial.call(inst, nextState, child.props, publicContext)
+                : partial;
             if (partialState) {
               if (dontMutate) {
                 dontMutate = false;
@@ -732,9 +733,8 @@ class ReactDOMServerRenderer {
           didWarnDefaultSelectValue = true;
         }
       }
-      this.currentSelectValue = props.value != null
-        ? props.value
-        : props.defaultValue;
+      this.currentSelectValue =
+        props.value != null ? props.value : props.defaultValue;
       props = Object.assign({}, props, {
         value: undefined,
       });

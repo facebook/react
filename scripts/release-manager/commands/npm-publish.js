@@ -28,7 +28,8 @@ module.exports = function(vorpal, app) {
         this.prompt([
           {
             type: 'confirm',
-            message: 'Did you run `grunt build` or `grunt release` and bump the version number?',
+            message:
+              'Did you run `grunt build` or `grunt release` and bump the version number?',
             default: false,
             name: 'checklist',
           },

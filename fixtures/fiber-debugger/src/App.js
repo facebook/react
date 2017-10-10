@@ -160,14 +160,15 @@ class App extends Component {
 
     return (
       <div style={{height: '100%'}}>
-        {fibers &&
+        {fibers && (
           <Draggable>
             <Fibers
               fibers={fibers}
               show={this.state.show}
               graphSettings={this.state.graphSettings}
             />
-          </Draggable>}
+          </Draggable>
+        )}
         <div
           style={{
             width: '100%',
@@ -190,14 +191,8 @@ class App extends Component {
                 this.setState({currentStep: Number(e.target.value)})}
             />
             <p>
-              Step
-              {' '}
-              {currentStep}
-              :
-              {' '}
-              {friendlyAction}
-              {' '}
-              (
+              Step {currentStep}
+              : {friendlyAction} (
               <a style={{color: 'gray'}} onClick={this.handleEdit} href="#">
                 Edit
               </a>

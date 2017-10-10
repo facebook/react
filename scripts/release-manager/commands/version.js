@@ -158,7 +158,8 @@ module.exports = function(vorpal, app) {
           {
             name: 'tag',
             type: 'confirm',
-            message: 'Tag the version commit (not necessary for non-stable releases)?',
+            message:
+              'Tag the version commit (not necessary for non-stable releases)?',
             default: true,
             when: res => res.commit,
           },

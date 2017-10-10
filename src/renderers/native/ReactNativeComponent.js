@@ -40,8 +40,10 @@ import type {
  *
  * @abstract
  */
-class ReactNativeComponent<DefaultProps, Props, State>
-  extends React.Component<Props, State> {
+class ReactNativeComponent<DefaultProps, Props, State> extends React.Component<
+  Props,
+  State,
+> {
   static defaultProps: $Abstract<DefaultProps>;
   props: Props;
   state: $Abstract<State>;

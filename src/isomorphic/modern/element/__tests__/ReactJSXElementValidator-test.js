@@ -164,7 +164,12 @@ describe('ReactJSXElementValidator', () => {
   it('does not warn when the element is directly as children', () => {
     spyOn(console, 'error');
 
-    void <Component><Component /><Component /></Component>;
+    void (
+      <Component>
+        <Component />
+        <Component />
+      </Component>
+    );
 
     expectDev(console.error.calls.count()).toBe(0);
   });
