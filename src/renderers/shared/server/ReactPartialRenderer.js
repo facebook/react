@@ -18,9 +18,9 @@ var DOMMarkupOperations = require('DOMMarkupOperations');
 var React = require('react');
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
 var assertValidProps = require('assertValidProps');
 var dangerousStyleValue = require('dangerousStyleValue');
+var emptyFunction = require('fbjs/lib/emptyFunction');
 var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
 var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
@@ -30,6 +30,7 @@ var omittedCloseTags = require('omittedCloseTags');
 var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
+var emptyFunctionThatReturnsNull = emptyFunction.thatReturnsNull;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -781,7 +782,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, emptyFunction.thatReturnsNull);
+    assertValidProps(tag, props, emptyFunctionThatReturnsNull);
 
     var out = createOpenTagMarkup(
       element.type,
