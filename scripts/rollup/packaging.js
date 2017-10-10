@@ -28,6 +28,11 @@ const reactNativeSrcDependencies = [
   'src/renderers/native/ReactNativeTypes.js',
 ];
 
+// these files need to be copied to the react-native-rt build
+const reactNativeRTSrcDependencies = [
+  'src/renderers/native-rt/ReactNativeRTTypes.js',
+];
+
 function getPackageName(name) {
   if (name.indexOf('/') !== -1) {
     return name.split('/')[0];
@@ -55,6 +60,25 @@ function createReactNativeBuild() {
     }
     return Promise.all(promises);
   });
+}
+
+function createReactNativeRTBuild() {
+  // create the react-native-rt folder for FB bundles
+  fs.mkdirSync(join('build', 'react-native-rt'));
+  // create the react-native-rt shims folder for FB shims
+  fs.mkdirSync(join('build', 'react-native-rt', 'shims'));
+
+  const to = join('build', 'react-native-rt', 'shims');
+
+  let promises = [];
+  // we also need to copy over some specific files from src
+  // defined in reactNativeRTSrcDependencies
+  for (const srcDependency of reactNativeRTSrcDependencies) {
+    promises.push(
+      asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
+    );
+  }
+  return Promise.all(promises);
 }
 
 function createFacebookWWWBuild() {
@@ -143,7 +167,7 @@ function createNodePackage(bundleType, packageName, filename) {
   return Promise.resolve();
 }
 
-function getPackageDestination(config, bundleType, filename) {
+function getPackageDestination(config, bundleType, filename, hasteName) {
   let dest = config.destDir + filename;
 
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
@@ -151,7 +175,11 @@ function getPackageDestination(config, bundleType, filename) {
   } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
     dest = `${config.destDir}dist/${filename}`;
   } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
-    dest = `${config.destDir}react-native/${filename}`;
+    if (hasteName === 'ReactNativeRTFiber') {
+      dest = `${config.destDir}react-native-rt/${filename}`;
+    } else {
+      dest = `${config.destDir}react-native/${filename}`;
+    }
   }
   return dest;
 }
@@ -162,4 +190,5 @@ module.exports = {
   getPackageName,
   createFacebookWWWBuild,
   createReactNativeBuild,
+  createReactNativeRTBuild,
 };
