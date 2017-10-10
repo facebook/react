@@ -243,6 +243,7 @@ function trapClickOnNonInteractiveElement(node: HTMLElement) {
 }
 
 function setInitialDOMProperties(
+  tag: string,
   domElement: Element,
   rootContainerElement: Element | Document,
   nextProps: Object,
@@ -270,7 +271,14 @@ function setInitialDOMProperties(
       }
     } else if (propKey === CHILDREN) {
       if (typeof nextProp === 'string') {
-        setTextContent(domElement, nextProp);
+        // Avoid setting initial textContent when the text is empty. In IE11 setting
+        // textContent on a <textarea> will cause the placeholder to not
+        // show within the <textarea> until it has been focused and blurred again.
+        // https://github.com/facebook/react/issues/6731#issuecomment-254874553
+        var canSetTextContent = tag !== 'textarea' || nextProp !== '';
+        if (canSetTextContent) {
+          setTextContent(domElement, nextProp);
+        }
       } else if (typeof nextProp === 'number') {
         setTextContent(domElement, '' + nextProp);
       }
@@ -550,6 +558,7 @@ var ReactDOMFiberComponent = {
     assertValidProps(tag, props, getCurrentFiberOwnerName);
 
     setInitialDOMProperties(
+      tag,
       domElement,
       rootContainerElement,
       props,
