@@ -363,8 +363,8 @@ describe('ReactDOMServer', () => {
       expect(() =>
         ReactDOMServer.renderToString(<iframe style="border:none;" />),
       ).toThrowError(
-        "The `style` prop expects a mapping from style properties to values, not " +
-        "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
+        'The `style` prop expects a mapping from style properties to values, not ' +
+          "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
       );
     });
   });
