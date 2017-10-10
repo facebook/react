@@ -76,6 +76,7 @@ function updateOptions(
   node: HTMLSelectElement,
   multiple: boolean,
   propValue: any,
+  setDefaultSelected: boolean,
 ) {
   type IndexableHTMLOptionsCollection = HTMLOptionsCollection & {
     [key: number]: HTMLOptionElement,
@@ -94,6 +95,9 @@ function updateOptions(
       if (options[i].selected !== selected) {
         options[i].selected = selected;
       }
+      if (selected && setDefaultSelected) {
+        options[i].defaultSelected = true;
+      }
     }
   } else {
     // Do not set `select.value` as exact behavior isn't consistent across all
@@ -103,6 +107,9 @@ function updateOptions(
     for (let i = 0; i < options.length; i++) {
       if (options[i].value === selectedValue) {
         options[i].selected = true;
+        if (setDefaultSelected) {
+          options[i].defaultSelected = true;
+        }
         return;
       }
       if (defaultSelected === null && !options[i].disabled) {
@@ -173,9 +180,9 @@ var ReactDOMSelect = {
     node.multiple = !!props.multiple;
     var value = props.value;
     if (value != null) {
-      updateOptions(node, !!props.multiple, value);
+      updateOptions(node, !!props.multiple, value, false);
     } else if (props.defaultValue != null) {
-      updateOptions(node, !!props.multiple, props.defaultValue);
+      updateOptions(node, !!props.multiple, props.defaultValue, true);
     }
   },
 
@@ -190,14 +197,14 @@ var ReactDOMSelect = {
 
     var value = props.value;
     if (value != null) {
-      updateOptions(node, !!props.multiple, value);
+      updateOptions(node, !!props.multiple, value, false);
     } else if (wasMultiple !== !!props.multiple) {
       // For simplicity, reapply `defaultValue` if `multiple` is toggled.
       if (props.defaultValue != null) {
-        updateOptions(node, !!props.multiple, props.defaultValue);
+        updateOptions(node, !!props.multiple, props.defaultValue, true);
       } else {
         // Revert the select back to its default unselected state.
-        updateOptions(node, !!props.multiple, props.multiple ? [] : '');
+        updateOptions(node, !!props.multiple, props.multiple ? [] : '', false);
       }
     }
   },
@@ -207,7 +214,7 @@ var ReactDOMSelect = {
     var value = props.value;
 
     if (value != null) {
-      updateOptions(node, !!props.multiple, value);
+      updateOptions(node, !!props.multiple, value, false);
     }
   },
 };
