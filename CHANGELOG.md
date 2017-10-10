@@ -18,6 +18,7 @@
 * Fix `tabIndex` not getting applied to SVG elements. ([@gaearon](http://github.com/gaearon) in [#11034](https://github.com/facebook/react/pull/11034))
 * Fix SVG children not getting cleaned up on `dangerouslySetInnerHTML` in IE. ([@OriR](https://github.com/OriR) in [#11108](https://github.com/facebook/react/pull/11108))
 * Fix false positive text mismatch warning caused by newline normalization. ([@gaearon](http://github.com/gaearon) in [#11119](https://github.com/facebook/react/pull/11119))
+* Fix `form.reset()` to respect `defaultValue` on uncontrolled `<select>`. ([@aweary](https://github.com/aweary) in [#11057](https://github.com/facebook/react/pull/11057))
 * Fix a crash rendering into shadow root. ([@gaearon](https://github.com/gaearon) in [#11037](https://github.com/facebook/react/pull/11037))
 * Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
