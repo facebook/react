@@ -11,15 +11,18 @@
 
 ### React DOM
 
+* Allow `on` as a custom attribute for AMP. ([@nuc](https://github.com/nuc) in [#11153](https://github.com/facebook/react/pull/11153))
+* Fix `onMouseEnter` and `onMouseLeave` firing on wrong elements. ([@gaearon](https://github.com/gaearon) in [#11164](https://github.com/facebook/react/pull/11164))
 * Fix `null` showing up in a warning instead of the component stack. ([@gaearon](https://github.com/gaearon) in [#10915](https://github.com/facebook/react/pull/10915))
 * Fix IE11 crash in development mode. ([@leidegre](https://github.com/leidegre) in [#10921](https://github.com/facebook/react/pull/10921))
 * Fix `tabIndex` not getting applied to SVG elements. ([@gaearon](http://github.com/gaearon) in [#11034](https://github.com/facebook/react/pull/11034))
+* Fix SVG children not getting cleaned up on `dangerouslySetInnerHTML` in IE. ([@OriR](https://github.com/OriR) in [#11108](https://github.com/facebook/react/pull/11108))
 * Fix false positive text mismatch warning caused by newline normalization. ([@gaearon](http://github.com/gaearon) in [#11119](https://github.com/facebook/react/pull/11119))
 * Fix a crash rendering into shadow root. ([@gaearon](https://github.com/gaearon) in [#11037](https://github.com/facebook/react/pull/11037))
 * Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
 * Warn about nested updates no more than once. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11113](https://github.com/facebook/react/pull/11113))
-* Minor bundle size improvements. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
+* Removing unused code. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
 
 ### React DOM Server
 
