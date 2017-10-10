@@ -360,13 +360,12 @@ describe('ReactDOMServer', () => {
     });
 
     it('should throw prop mapping error for an <iframe /> with invalid props', () => {
-      expect(
-        () => ReactDOMServer.renderToString(<iframe style="border:none;" />)
+      expect(() =>
+        ReactDOMServer.renderToString(<iframe style="border:none;" />),
       ).toThrowError(
-        'The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + \'em\'}} when using JSX.'
-      )
+        "The `style` prop expects a mapping from style properties to values, not a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
+      );
     });
-
   });
 
   describe('renderToStaticMarkup', () => {
