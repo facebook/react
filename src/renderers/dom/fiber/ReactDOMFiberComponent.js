@@ -54,6 +54,7 @@ var registrationNameModules = EventPluginRegistry.registrationNameModules;
 var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';
 var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+var AUTOFOCUS = 'autoFocus';
 var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
@@ -286,6 +287,9 @@ function setInitialDOMProperties(
       propKey === SUPPRESS_HYDRATION_WARNING
     ) {
       // Noop
+    } else if (propKey === AUTOFOCUS) {
+      // We polyfill it separately on the client during commit.
+      // We blacklist it here rather than in the property list because we emit it in SSR.
     } else if (registrationNameModules.hasOwnProperty(propKey)) {
       if (nextProp != null) {
         if (__DEV__ && typeof nextProp !== 'function') {
@@ -681,6 +685,8 @@ var ReactDOMFiberComponent = {
         propKey === SUPPRESS_HYDRATION_WARNING
       ) {
         // Noop
+      } else if (propKey === AUTOFOCUS) {
+        // Noop. It doesn't work on updates anyway.
       } else if (registrationNameModules.hasOwnProperty(propKey)) {
         // This is a special case. If any listener updates we need to ensure
         // that the "current" fiber pointer gets updated so we need a commit
