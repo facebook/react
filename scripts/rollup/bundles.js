@@ -20,6 +20,16 @@ const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
+const moduleTypes = {
+  ISOMORPHIC: 'ISOMORPHIC',
+  RENDERER: 'RENDERER',
+  RECONCILER: 'RECONCILER',
+};
+
+const ISOMORPHIC = moduleTypes.ISOMORPHIC;
+const RENDERER = moduleTypes.RENDERER;
+const RECONCILER = moduleTypes.RECONCILER;
+
 const babelOptsReact = {
   exclude: 'node_modules/**',
   presets: [],
@@ -51,7 +61,7 @@ const bundles = [
     ],
     fbEntry: 'src/isomorphic/ReactEntry',
     hasteName: 'React',
-    isRenderer: false,
+    moduleType: ISOMORPHIC,
     label: 'core',
     manglePropertiesOnProd: false,
     name: 'react',
@@ -79,7 +89,7 @@ const bundles = [
     externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/fb/ReactDOMFiberFBEntry',
     hasteName: 'ReactDOMFiber',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'dom-fiber',
     manglePropertiesOnProd: false,
     name: 'react-dom',
@@ -112,7 +122,7 @@ const bundles = [
     ],
     fbEntry: 'src/renderers/dom/test/ReactTestUtilsEntry',
     hasteName: 'ReactTestUtils',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
@@ -147,7 +157,7 @@ const bundles = [
     ],
     fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
     hasteName: 'ReactDOMUnstableNativeDependencies',
-    isRenderer: false,
+    moduleType: RENDERER,
     label: 'dom-unstable-native-dependencies',
     manglePropertiesOnProd: false,
     name: 'react-dom/unstable-native-dependencies',
@@ -176,7 +186,7 @@ const bundles = [
     externals: ['prop-types', 'prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/dom/ReactDOMServerBrowserEntry',
     hasteName: 'ReactDOMServer',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'dom-server-browser',
     manglePropertiesOnProd: false,
     name: 'react-dom/server.browser',
@@ -201,7 +211,7 @@ const bundles = [
     },
     entry: 'src/renderers/dom/ReactDOMServerNodeEntry',
     externals: ['prop-types', 'prop-types/checkPropTypes', 'stream'],
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'dom-server-server-node',
     manglePropertiesOnProd: false,
     name: 'react-dom/server.node',
@@ -237,7 +247,7 @@ const bundles = [
     ],
     fbEntry: 'src/renderers/art/ReactARTFiberEntry',
     hasteName: 'ReactARTFiber',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'art-fiber',
     manglePropertiesOnProd: false,
     name: 'react-art',
@@ -274,7 +284,7 @@ const bundles = [
       'prop-types/checkPropTypes',
     ],
     hasteName: 'ReactNativeFiber',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'native-fiber',
     manglePropertiesOnProd: false,
     name: 'react-native-renderer',
@@ -335,7 +345,7 @@ const bundles = [
     externals: ['prop-types/checkPropTypes'],
     fbEntry: 'src/renderers/testing/ReactTestRendererFiberEntry',
     hasteName: 'ReactTestRendererFiber',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'test-fiber',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer',
@@ -364,7 +374,7 @@ const bundles = [
     ],
     fbEntry: 'src/renderers/testing/ReactShallowRendererEntry',
     hasteName: 'ReactShallowRenderer',
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'shallow-renderer',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer/shallow',
@@ -389,12 +399,38 @@ const bundles = [
     },
     entry: 'src/renderers/noop/ReactNoopEntry',
     externals: ['prop-types/checkPropTypes', 'jest-matchers'],
-    isRenderer: true,
+    moduleType: RENDERER,
     label: 'noop-fiber',
     manglePropertiesOnProd: false,
     name: 'react-noop-renderer',
     paths: [
       'src/renderers/noop/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+  },
+
+  /******* React Reconciler *******/
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    config: {
+      destDir: 'build/',
+      globals: {
+        react: 'React',
+      },
+      moduleName: 'ReactReconciler',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/shared/fiber/ReactFiberReconciler',
+    externals: ['react', 'prop-types/checkPropTypes'],
+    moduleType: RECONCILER,
+    label: 'react-reconciler',
+    manglePropertiesOnProd: false,
+    name: 'react-reconciler',
+    paths: [
       'src/renderers/shared/**/*.js',
 
       'src/ReactVersion.js',
@@ -423,5 +459,6 @@ deepFreeze(bundles);
 
 module.exports = {
   bundleTypes,
+  moduleTypes,
   bundles,
 };
