@@ -157,7 +157,7 @@ const bundles = [
     ],
     fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
     hasteName: 'ReactDOMUnstableNativeDependencies',
-    moduleType: ISOMORPHIC,
+    moduleType: RENDERER,
     label: 'dom-unstable-native-dependencies',
     manglePropertiesOnProd: false,
     name: 'react-dom/unstable-native-dependencies',
