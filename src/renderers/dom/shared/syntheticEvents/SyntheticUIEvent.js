@@ -11,9 +11,9 @@
 
 var SyntheticEvent = require('SyntheticEvent');
 
-/**		
- * @interface UIEvent		
- * @see http://www.w3.org/TR/DOM-Level-3-Events/		
+/**
+ * @interface UIEvent
+ * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
 var UIEventInterface = {
   view: null,
