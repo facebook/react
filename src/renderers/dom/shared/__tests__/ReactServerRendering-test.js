@@ -351,6 +351,26 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
+    // We have a polyfill for autoFocus on the client, but we intentionally don't
+    // want it to call focus() when hydrating because this can mess up existing
+    // focus before the JS has loaded.
+    it('should emit autofocus on the server but not focus() when hydrating', () => {
+      var element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(
+        <input autoFocus={true} />,
+      );
+      expect(element.firstChild.autofocus).toBe(true);
+
+      // It should not be called on mount.
+      element.firstChild.focus = jest.fn();
+      ReactDOM.hydrate(<input autoFocus={true} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+
+      // Or during an update.
+      ReactDOM.render(<input autoFocus={true} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+    });
+
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
