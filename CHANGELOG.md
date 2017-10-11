@@ -30,6 +30,7 @@
 
 * Fix markup generation when components return strings. ([@gaearon](http://github.com/gaearon) in [#11109](https://github.com/facebook/react/pull/11109))
 * Fix obscure error message when passing an invalid style value. ([@iamdustan](https://github.com/iamdustan) in [#11173](https://github.com/facebook/react/pull/11173))
+* Include the `autoFocus` attribute into SSR markup. ([@gaearon](http://github.com/gaearon) in [#11192](https://github.com/facebook/react/pull/11192))
 
 ### React Test Renderer and Test Utils
 
