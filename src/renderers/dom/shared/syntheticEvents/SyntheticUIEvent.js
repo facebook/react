@@ -12,19 +12,6 @@
 var SyntheticEvent = require('SyntheticEvent');
 
 /**
- * @interface UIEvent
- * @see http://www.w3.org/TR/DOM-Level-3-Events/
- */
-var UIEventInterface = {
-  view: function(event) {
-    return event.view;
-  },
-  detail: function(event) {
-    return event.detail || 0;
-  },
-};
-
-/**
  * @param {object} dispatchConfig Configuration used to dispatch this event.
  * @param {string} dispatchMarker Marker identifying the event target.
  * @param {object} nativeEvent Native browser event.
@@ -44,7 +31,5 @@ function SyntheticUIEvent(
     nativeEventTarget,
   );
 }
-
-SyntheticEvent.augmentClass(SyntheticUIEvent, UIEventInterface);
 
 module.exports = SyntheticUIEvent;
