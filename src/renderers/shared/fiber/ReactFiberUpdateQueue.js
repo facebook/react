@@ -11,7 +11,6 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
@@ -33,7 +32,6 @@ type PartialState<State, Props> =
 type Callback = mixed;
 
 export type Update = {
-  priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
   partialState: PartialState<any, any>,
   callback: Callback | null,
@@ -82,7 +80,6 @@ function createUpdateQueue(): UpdateQueue {
 
 function cloneUpdate(update: Update): Update {
   return {
-    priorityLevel: update.priorityLevel,
     expirationTime: update.expirationTime,
     partialState: update.partialState,
     callback: update.callback,
@@ -93,31 +90,14 @@ function cloneUpdate(update: Update): Update {
   };
 }
 
-const COALESCENCE_THRESHOLD: ExpirationTime = 10;
-
 function insertUpdateIntoQueue(
   queue: UpdateQueue,
   update: Update,
   insertAfter: Update | null,
   insertBefore: Update | null,
-  currentTime: ExpirationTime,
 ) {
   if (insertAfter !== null) {
     insertAfter.next = update;
-    // If we receive multiple updates to the same fiber at the same priority
-    // level, we coalesce them by assigning the same expiration time, so that
-    // they all flush at the same time. Because this causes an interruption, it
-    // could lead to starvation, so we stop coalescing once the time until the
-    // expiration time reaches a certain threshold.
-    if (
-      insertAfter !== null &&
-      insertAfter.priorityLevel === update.priorityLevel
-    ) {
-      const coalescedTime = insertAfter.expirationTime;
-      if (coalescedTime - currentTime > COALESCENCE_THRESHOLD) {
-        update.expirationTime = coalescedTime;
-      }
-    }
   } else {
     // This is the first item in the queue.
     update.next = queue.first;
@@ -207,11 +187,7 @@ function ensureUpdateQueues(fiber: Fiber) {
 // we shouldn't make a copy.
 //
 // If the update is cloned, it returns the cloned update.
-function insertUpdate(
-  fiber: Fiber,
-  update: Update,
-  currentTime: ExpirationTime,
-): Update | null {
+function insertUpdate(fiber: Fiber, update: Update): Update | null {
   // We'll have at least one and at most two distinct update queues.
   ensureUpdateQueues(fiber);
   const queue1 = _queue1;
@@ -238,13 +214,7 @@ function insertUpdate(
 
   if (queue2 === null) {
     // If there's no alternate queue, there's nothing else to do but insert.
-    insertUpdateIntoQueue(
-      queue1,
-      update,
-      insertAfter1,
-      insertBefore1,
-      currentTime,
-    );
+    insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
     return null;
   }
 
@@ -256,13 +226,7 @@ function insertUpdate(
 
   // Now we can insert into the first queue. This must come after finding both
   // insertion positions because it mutates the list.
-  insertUpdateIntoQueue(
-    queue1,
-    update,
-    insertAfter1,
-    insertBefore1,
-    currentTime,
-  );
+  insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
 
   // See if the insertion positions are equal. Be careful to only compare
   // non-null values.
@@ -285,13 +249,7 @@ function insertUpdate(
     // The insertion positions are different, so we need to clone the update and
     // insert the clone into the alternate queue.
     const update2 = cloneUpdate(update);
-    insertUpdateIntoQueue(
-      queue2,
-      update2,
-      insertAfter2,
-      insertBefore2,
-      currentTime,
-    );
+    insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
     return update2;
   }
 }
@@ -300,12 +258,9 @@ function addUpdate(
   fiber: Fiber,
   partialState: PartialState<any, any> | null,
   callback: mixed,
-  priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
-  currentTime: ExpirationTime,
 ): void {
   const update = {
-    priorityLevel,
     expirationTime,
     partialState,
     callback,
@@ -314,7 +269,7 @@ function addUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, currentTime);
+  insertUpdate(fiber, update);
 }
 exports.addUpdate = addUpdate;
 
@@ -322,12 +277,9 @@ function addReplaceUpdate(
   fiber: Fiber,
   state: any | null,
   callback: Callback | null,
-  priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
-  currentTime: ExpirationTime,
 ): void {
   const update = {
-    priorityLevel,
     expirationTime,
     partialState: state,
     callback,
@@ -336,19 +288,16 @@ function addReplaceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, currentTime);
+  insertUpdate(fiber, update);
 }
 exports.addReplaceUpdate = addReplaceUpdate;
 
 function addForceUpdate(
   fiber: Fiber,
   callback: Callback | null,
-  priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
-  currentTime: ExpirationTime,
 ): void {
   const update = {
-    priorityLevel,
     expirationTime,
     partialState: null,
     callback,
@@ -357,7 +306,7 @@ function addForceUpdate(
     isTopLevelUnmount: false,
     next: null,
   };
-  insertUpdate(fiber, update, currentTime);
+  insertUpdate(fiber, update);
 }
 exports.addForceUpdate = addForceUpdate;
 
@@ -377,14 +326,11 @@ function addTopLevelUpdate(
   fiber: Fiber,
   partialState: PartialState<any, any>,
   callback: Callback | null,
-  priorityLevel: PriorityLevel | null,
   expirationTime: ExpirationTime,
-  currentTime: ExpirationTime,
 ): void {
   const isTopLevelUnmount = partialState.element === null;
 
   const update = {
-    priorityLevel,
     expirationTime,
     partialState,
     callback,
@@ -393,7 +339,7 @@ function addTopLevelUpdate(
     isTopLevelUnmount,
     next: null,
   };
-  const update2 = insertUpdate(fiber, update, currentTime);
+  const update2 = insertUpdate(fiber, update);
 
   if (isTopLevelUnmount) {
     // TODO: Redesign the top-level mount/update/unmount API to avoid this

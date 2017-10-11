@@ -16,7 +16,6 @@ import type {HostContext} from 'ReactFiberHostContext';
 import type {HydrationContext} from 'ReactFiberHydrationContext';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {HostConfig} from 'ReactFiberReconciler';
-import type {PriorityLevel} from 'ReactPriorityLevel';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var {
@@ -73,15 +72,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
   scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  getPriorityContext: (
-    fiber: Fiber,
-    forceAsync: boolean,
-  ) => PriorityLevel | null,
-  recalculateCurrentTime: () => ExpirationTime,
-  getExpirationTimeForPriority: (
-    currentTime: ExpirationTime,
-    priorityLevel: PriorityLevel | null,
-  ) => ExpirationTime,
+  getExpirationTime: (fiber: Fiber, forceAsync: boolean) => ExpirationTime,
 ) {
   const {
     shouldSetTextContent,
@@ -105,11 +96,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     updateClassInstance,
   } = ReactFiberClassComponent(
     scheduleUpdate,
-    getPriorityContext,
+    getExpirationTime,
     memoizeProps,
     memoizeState,
-    recalculateCurrentTime,
-    getExpirationTimeForPriority,
   );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
