@@ -107,7 +107,7 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('does not warns for fragments of multiple elements', () => {
+  it('does not warns for fragments of multiple elements without keys', () => {
     spyOn(console, 'error');
 
     void (

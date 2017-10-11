@@ -13,14 +13,29 @@
 const React = require('react');
 const ReactNoop = require('react-noop-renderer');
 
-const element = (
-  <React.Fragment>
-    hello <span>world</span>
-  </React.Fragment>
-);
-
 describe('ReactFragment', () => {
-  it('should render via noop renderer', () => {
+  it('should render a single child via noop renderer', () => {
+    const element = (
+      <React.Fragment>
+        <span>foo</span>
+      </React.Fragment>
+    );
+
+    ReactNoop.render(element);
+    ReactNoop.flush();
+
+    expect(ReactNoop.getChildren()).toEqual([
+      {type: 'span', children: [], prop: undefined},
+    ]);
+  });
+
+  it('should render multiple children via noop renderer', () => {
+    const element = (
+      <React.Fragment>
+        hello <span>world</span>
+      </React.Fragment>
+    );
+
     ReactNoop.render(element);
     ReactNoop.flush();
 
