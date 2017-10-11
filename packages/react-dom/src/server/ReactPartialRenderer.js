@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactPartialRenderer
+ * @flow
  */
 
 'use strict';
@@ -159,7 +160,7 @@ function createMarkupForStyles(styles) {
 }
 
 function warnNoop(
-  publicInstance: ReactComponent<any, any, any>,
+  publicInstance: React.Component<any, any, any>,
   callerName: string,
 ) {
   if (__DEV__) {
@@ -319,6 +320,7 @@ function validateRenderResult(child, type) {
 
 function resolve(child, context) {
   while (React.isValidElement(child)) {
+    child = (child: React.Element);
     if (__DEV__) {
       pushElementToDebugStack(child);
     }
@@ -442,10 +444,25 @@ function resolve(child, context) {
   return {child, context};
 }
 
+type Frame = {
+  domNamespace: string,
+  children: any,
+  childIndex: number,
+  context: Object,
+  footer: string,
+  debugElementStack: Array<any>,
+};
+
 class ReactDOMServerRenderer {
-  constructor(element, makeStaticMarkup) {
+  stack: Array<Frame>;
+  exhausted: boolean;
+  currentSelectValue: null;
+  previousWasTextNode: boolean;
+  makeStaticMarkup: boolean;
+
+  constructor(element: React.Element | Array<React.Element>, makeStaticMarkup: boolean) {
     var children = React.isValidElement(element) ? [element] : toArray(element);
-    var topFrame = {
+    var topFrame: Frame = ({
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
       domNamespace: Namespaces.html,
@@ -453,7 +470,7 @@ class ReactDOMServerRenderer {
       childIndex: 0,
       context: emptyObject,
       footer: '',
-    };
+    }: any);
     if (__DEV__) {
       topFrame.debugElementStack = [];
     }
@@ -464,7 +481,7 @@ class ReactDOMServerRenderer {
     this.makeStaticMarkup = makeStaticMarkup;
   }
 
-  read(bytes) {
+  read(bytes: number) {
     if (this.exhausted) {
       return null;
     }
@@ -501,7 +518,11 @@ class ReactDOMServerRenderer {
     return out;
   }
 
-  render(child, context, parentNamespace) {
+  render(
+    child: string | number | React.Element,
+    context: Object,
+    parentNamespace: string
+  ) {
     if (typeof child === 'string' || typeof child === 'number') {
       var text = '' + child;
       if (text === '') {
@@ -524,13 +545,13 @@ class ReactDOMServerRenderer {
           return this.renderDOM(child, context, parentNamespace);
         } else {
           var children = toArray(child);
-          var frame = {
+          var frame: Frame = ({
             domNamespace: parentNamespace,
             children,
             childIndex: 0,
             context: context,
             footer: '',
-          };
+          }: Object);
           if (__DEV__) {
             frame.debugElementStack = [];
           }
@@ -541,7 +562,11 @@ class ReactDOMServerRenderer {
     }
   }
 
-  renderDOM(element, context, parentNamespace) {
+  renderDOM(
+    element: React.Element,
+    context: Object,
+    parentNamespace: string
+  ) {
     var tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
@@ -819,14 +844,14 @@ class ReactDOMServerRenderer {
     } else {
       children = toArray(props.children);
     }
-    var frame = {
+    var frame: Frame = ({
       domNamespace: getChildNamespace(parentNamespace, element.type),
       tag,
       children,
       childIndex: 0,
       context: context,
       footer: footer,
-    };
+    }: any);
     if (__DEV__) {
       frame.debugElementStack = [];
     }
