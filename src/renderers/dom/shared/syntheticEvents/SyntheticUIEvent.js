@@ -11,6 +11,11 @@
 
 var SyntheticEvent = require('SyntheticEvent');
 
+var UIEventInterface = {
+  view: null,
+  detail: null,
+};
+
 /**
  * @param {object} dispatchConfig Configuration used to dispatch this event.
  * @param {string} dispatchMarker Marker identifying the event target.
@@ -31,5 +36,7 @@ function SyntheticUIEvent(
     nativeEventTarget,
   );
 }
+
+SyntheticEvent.augmentClass(SyntheticUIEvent, UIEventInterface);
 
 module.exports = SyntheticUIEvent;
