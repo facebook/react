@@ -101,34 +101,42 @@ if (__DEV__) {
   } = require('./ReactDebugFiberPerf');
 
   var didWarnAboutStateTransition = false;
+  var didWarnSetStateChildContext = false;
+  var didWarnStateUpdateForUnmountedComponent = {};
 
-  var warnAboutUpdateOnUnmounted = function(
-    instance: React$ComponentType<any>,
-  ) {
-    const ctor = instance.constructor;
+  var warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
+    const componentName = getComponentName(fiber) || 'ReactClass';
+    if (didWarnStateUpdateForUnmountedComponent[componentName]) {
+      return;
+    }
+
     warning(
       false,
-      'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        '%s component.',
-      (ctor && (ctor.displayName || ctor.name)) || 'ReactClass',
+      'Can only update a mounted or mounting ' +
+        'component. This usually means you called setState, replaceState, ' +
+        'or forceUpdate on an unmounted component. This is a no-op.\n\nPlease ' +
+        'check the code for the %s component.',
+      componentName,
     );
+    didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
 
   var warnAboutInvalidUpdates = function(instance: React$ComponentType<any>) {
     switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
+        if (didWarnSetStateChildContext) {
+          return;
+        }
         warning(
           false,
           'setState(...): Cannot call setState() inside getChildContext()',
         );
+        didWarnSetStateChildContext = true;
         break;
       case 'render':
         if (didWarnAboutStateTransition) {
           return;
         }
-        didWarnAboutStateTransition = true;
         warning(
           false,
           'Cannot update during an existing state transition (such as within ' +
@@ -136,6 +144,7 @@ if (__DEV__) {
             'be a pure function of props and state; constructor side-effects are ' +
             'an anti-pattern, but can be moved to `componentWillMount`.',
         );
+        didWarnAboutStateTransition = true;
         break;
     }
   };
@@ -1229,7 +1238,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         } else {
           if (__DEV__) {
             if (!isErrorRecovery && fiber.tag === ClassComponent) {
-              warnAboutUpdateOnUnmounted(fiber.stateNode);
+              warnAboutUpdateOnUnmounted(fiber);
             }
           }
           return;

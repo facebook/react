@@ -72,6 +72,7 @@ if (__DEV__) {
   var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
+  var didWarnAboutNoopUpdateForComponent = {};
   var setCurrentDebugStack = function(stack: Array<Frame>) {
     var frame: Frame = stack[stack.length - 1];
     currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
@@ -175,6 +176,13 @@ function warnNoop(
 ) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
+    const componentName =
+      (constructor && getComponentName(constructor)) || 'ReactClass';
+    const warningKey = `${callerName}_${componentName}`;
+    if (didWarnAboutNoopUpdateForComponent[warningKey]) {
+      return;
+    }
+
     warning(
       false,
       '%s(...): Can only update a mounting component. ' +
@@ -182,8 +190,9 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && getComponentName(constructor)) || 'ReactClass',
+      componentName,
     );
+    didWarnAboutNoopUpdateForComponent[warningKey] = true;
   }
 }
 
