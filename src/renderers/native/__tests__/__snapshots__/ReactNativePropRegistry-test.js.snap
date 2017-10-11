@@ -1,0 +1,3 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReactNativePropRegistry register should freeze the input object in __DEV__ mode 1`] = `"Cannot assign to read only property 'a' of object '#<Object>'"`;

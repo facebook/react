@@ -32,10 +32,23 @@ class ReactNativePropRegistry {
 
     var object = objects[id];
     if (!object) {
-      console.warn('Invalid style with id `' + id + '`. Skipping ...');
+      if (id > 1 && id <= uniqueID) {
+        // We cannot directly test for unregistered objects because keeping a permanent registry of them
+        // would leak memory, however we do know that ids above 1 and below uniqueID were once registered
+        console.warn(
+          'Style with id `' + id + '` has been unregistered. Skipping ...',
+        );
+      } else {
+        console.warn('Invalid style with id `' + id + '`. Skipping ...');
+      }
       return emptyObject;
     }
     return object;
+  }
+
+  static unregister(id: number): void {
+    // delete is used instead of setting to null so we don't slowly leak memory by keeping keys
+    delete objects[id];
   }
 }
 
