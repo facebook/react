@@ -11,8 +11,6 @@
 
 var SyntheticEvent = require('SyntheticEvent');
 
-var getEventTarget = require('getEventTarget');
-
 /**
  * @interface UIEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
