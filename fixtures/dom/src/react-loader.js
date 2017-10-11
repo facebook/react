@@ -42,8 +42,18 @@ export default function loadReact() {
   let version = query.version || 'local';
 
   if (version !== 'local') {
-    REACT_PATH = 'https://unpkg.com/react@' + version + '/dist/react.js';
-    DOM_PATH = 'https://unpkg.com/react-dom@' + version + '/dist/react-dom.js';
+    if (parseInt(version, 10) >= 16) {
+      REACT_PATH =
+        'https://unpkg.com/react@' + version + '/umd/react.development.js';
+      DOM_PATH =
+        'https://unpkg.com/react-dom@' +
+        version +
+        '/umd/react-dom.development.js';
+    } else {
+      REACT_PATH = 'https://unpkg.com/react@' + version + '/dist/react.js';
+      DOM_PATH =
+        'https://unpkg.com/react-dom@' + version + '/dist/react-dom.js';
+    }
   }
 
   const needsReactDOM = version === 'local' || parseFloat(version, 10) > 0.13;
