@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "dependencies": {
-    "react": "^16.0.0-",
+    "react": "^16.0.0",
     "react-reconciler": "file:../../build/packages/react-reconciler"
   },
   "scripts": {
