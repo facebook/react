@@ -13,6 +13,7 @@ var invariant = require('fbjs/lib/invariant');
 var voidElementTags = require('voidElementTags');
 
 if (__DEV__) {
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
 }
 
@@ -68,7 +69,8 @@ function assertValidProps(
       'A component is `contentEditable` and contains `children` managed by ' +
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
-        'probably not intentional.',
+        'probably not intentional.%s',
+      getCurrentFiberStackAddendum() || '',
     );
   }
   invariant(
