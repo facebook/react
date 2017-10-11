@@ -161,9 +161,7 @@ asyncComponentPrototype.render = function() {
   return this.props.children;
 };
 
-function ReactFragment(props) {
-  return props.children;
-}
+const ReactFragment = '#fragment';
 
 module.exports = {
   Component: ReactComponent,

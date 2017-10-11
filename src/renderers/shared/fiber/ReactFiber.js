@@ -305,8 +305,7 @@ exports.createFiberFromElement = function(
   }
 
   const fiber = createFiberFromElementType(
-    element.type,
-    element.key,
+    element,
     internalContextTag,
     owner,
   );
@@ -346,18 +345,26 @@ exports.createFiberFromText = function(
 };
 
 function createFiberFromElementType(
-  type: mixed,
-  key: null | string,
+  element: ReactElement,
   internalContextTag: TypeOfInternalContext,
   debugOwner: null | Fiber,
 ): Fiber {
   let fiber;
+  const {type, key} = element;
   if (typeof type === 'function') {
     fiber = shouldConstruct(type)
       ? createFiber(ClassComponent, key, internalContextTag)
       : createFiber(IndeterminateComponent, key, internalContextTag);
     fiber.type = type;
   } else if (typeof type === 'string') {
+    // special case for fragments, we create the fiber and return early
+    if (type === '#fragment') {
+      fiber = createFiber(Fragment, null, internalContextTag);
+      if (element.props.children && element.props.children.length) {
+        fiber.pendingProps = element.props.children;
+      }
+      return fiber;
+    }
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
   } else if (
@@ -398,6 +405,7 @@ function createFiberFromElementType(
       info,
     );
   }
+  fiber.pendingProps = element.props;
   return fiber;
 }
 
