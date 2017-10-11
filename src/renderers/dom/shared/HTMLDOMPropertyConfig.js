@@ -26,6 +26,7 @@ var HTMLDOMPropertyConfig = {
   // name warnings.
   Properties: {
     allowFullScreen: HAS_BOOLEAN_VALUE,
+    autoFocus: HAS_STRING_BOOLEAN_VALUE,
     // specifies target context for links with `preload` type
     async: HAS_BOOLEAN_VALUE,
     // autoFocus is polyfilled/normalized by AutoFocusUtils
