@@ -2,12 +2,9 @@
   "name": "react-fixtures",
   "version": "0.1.0",
   "private": true,
-  "dependencies": {
-    "react": "^16.0.0",
-    "react-reconciler": "file:../../build/packages/react-reconciler"
-  },
   "scripts": {
-    "start": "../../node_modules/.bin/babel-node ./index",
-    "test": "../../node_modules/.bin/babel-node ./index"
+    "test:dev": "NODE_PATH=../../build/packages ../../node_modules/.bin/babel-node ./index",
+    "test:prod": "NODE_PATH=../../build/packages NODE_ENV=production ../../node_modules/.bin/babel-node ./index",
+    "test": "npm run test:dev && npm run test:prod"
   }
 }

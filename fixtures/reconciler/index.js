@@ -249,16 +249,6 @@ var Noop = {
     NoopRenderer.updateContainer(element, root, null, callback);
   },
 
-  unmountRootWithID(rootID: string) {
-    const root = roots.get(rootID);
-    if (root) {
-      NoopRenderer.updateContainer(null, root, null, () => {
-        roots.delete(rootID);
-        rootContainers.delete(rootID);
-      });
-    }
-  },
-
   flush(): Array<mixed> {
     return Noop.flushUnitsOfWork(Infinity);
   },
@@ -280,9 +270,23 @@ var Noop = {
   flushSync: NoopRenderer.flushSync,
 };
 
-class Comp extends React.Component {
+type TestProps = {|
+  active: boolean,
+|};
+type TestState = {|
+  counter: number,
+|};
+
+let instance = null;
+class Test extends React.Component<TestProps, TestState> {
+  state = {counter: 0};
+  increment() {
+    this.setState(({counter}) => ({
+      counter: counter + 1,
+    }));
+  }
   render() {
-    return this.props.active ? 'Active Comp' : 'Deactive Comp';
+    return [this.props.active ? 'Active' : 'Inactive', this.state.counter];
   }
 }
 const Children = props => props.children;
@@ -292,13 +296,13 @@ Noop.render(
     <Children>
       Hello world
       <span>{'Number '}{42}</span>
-      <Comp active />
+      <Test active={true} ref={t => (instance = t)} />
     </Children>
   </main>
 );
 Noop.flush();
-const actual = Noop.getChildren();
-const expected = [
+const actual1 = Noop.getChildren();
+const expected1 = [
   {
     type: 'main',
     children: [
@@ -309,18 +313,54 @@ const expected = [
         children: [{text: 'Number '}, {text: '42'}],
         prop: undefined,
       },
-      {text: 'Active Comp'},
+      {text: 'Active'},
+      {text: '0'},
     ],
     prop: undefined,
   },
 ];
 assert.deepEqual(
-  actual,
-  expected,
+  actual1,
+  expected1,
   'Error. Noop.getChildren() returned unexpected value.\nExpected:\  ' +
-    JSON.stringify(expected, null, 2) +
+    JSON.stringify(expected1, null, 2) +
     '\n\nActual:\n  ' +
-    JSON.stringify(actual, null, 2)
+    JSON.stringify(actual1, null, 2)
 );
 
-console.log('Reconciler package is Ok!');
+if (instance === null) {
+  throw new Error('Expected instance to exist.');
+}
+
+instance.increment();
+Noop.flush();
+const actual2 = Noop.getChildren();
+const expected2 = [
+  {
+    type: 'main',
+    children: [
+      {type: 'div', children: [], prop: undefined},
+      {text: 'Hello world'},
+      {
+        type: 'span',
+        children: [{text: 'Number '}, {text: '42'}],
+        prop: undefined,
+      },
+      {text: 'Active'},
+      {text: '1'},
+    ],
+    prop: undefined,
+  },
+];
+assert.deepEqual(
+  actual2,
+  expected2,
+  'Error. Noop.getChildren() returned unexpected value.\nExpected:\  ' +
+    JSON.stringify(expected2, null, 2) +
+    '\n\nActual:\n  ' +
+    JSON.stringify(actual2, null, 2)
+);
+
+const beginGreen = '\u001b[32m';
+const endGreen = '\u001b[39m';
+console.log(beginGreen + 'Reconciler package is OK!' + endGreen);
