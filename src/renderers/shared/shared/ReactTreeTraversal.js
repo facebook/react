@@ -141,11 +141,10 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
     pathTo.push(to);
     to = getParent(to);
   }
-  let i;
-  for (i = 0; i < pathFrom.length; i++) {
+  for (let i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], 'bubbled', argFrom);
   }
-  for (i = pathTo.length; i-- > 0; ) {
+  for (let i = pathTo.length; i-- > 0; ) {
     fn(pathTo[i], 'captured', argTo);
   }
 }
