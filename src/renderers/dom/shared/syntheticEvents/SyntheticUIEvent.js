@@ -19,17 +19,7 @@ var getEventTarget = require('getEventTarget');
  */
 var UIEventInterface = {
   view: function(event) {
-    if (event.view) {
-      return event.view;
-    }
-
-    var target = getEventTarget(event);
-    if (target.window === target) {
-      // target is a window object
-      return target;
-    }
-
-    return target.ownerDocument.defaultView;
+    return event.view;
   },
   detail: function(event) {
     return event.detail || 0;
