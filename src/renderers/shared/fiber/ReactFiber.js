@@ -360,9 +360,7 @@ function createFiberFromElementType(
     // special case for fragments, we create the fiber and return early
     if (type === '#fragment') {
       fiber = createFiber(Fragment, null, internalContextTag);
-      if (element.props.children && element.props.children.length) {
-        fiber.pendingProps = element.props.children;
-      }
+      fiber.pendingProps = element.props.children;
       return fiber;
     }
     fiber = createFiber(HostComponent, key, internalContextTag);
