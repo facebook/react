@@ -14,10 +14,6 @@ import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {ReactNodeList} from 'ReactTypes';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-
-var {insertUpdateIntoFiber} = require('ReactFiberUpdateQueue');
-
 var {
   findCurrentUnmaskedContext,
   isContextProvider,
@@ -265,8 +261,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {getPublicInstance} = config;
 
   var {
-    scheduleWork,
-    getExpirationTime,
+    scheduleUpdate,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -296,17 +291,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    // Check if the top-level element is an async wrapper component. If so, treat
-    // updates to the root as async. This is a bit weird but lets us avoid a separate
-    // `renderAsync` API.
-    const forceAsync =
-      ReactFeatureFlags.enableAsyncSubtreeAPI &&
-      element != null &&
-      element.type != null &&
-      element.type.prototype != null &&
-      (element.type.prototype: any).unstable_isAsyncReactComponent === true;
-    const expirationTime = getExpirationTime(current, forceAsync);
-    const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
       warning(
@@ -316,17 +300,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback,
       );
     }
-    const update = {
-      expirationTime,
-      partialState: nextState,
-      callback,
-      isReplace: false,
-      isForced: false,
-      nextCallback: null,
-      next: null,
-    };
-    insertUpdateIntoFiber(current, update);
-    scheduleWork(current, expirationTime);
+    const state = {element};
+    scheduleUpdate(current, state, callback, false, false);
   }
 
   return {

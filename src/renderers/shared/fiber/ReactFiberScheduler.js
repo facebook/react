@@ -30,6 +30,7 @@ export type HandleErrorInfo = {
   componentStack: string,
 };
 
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var {popContextProvider} = require('ReactFiberContext');
 const {reset} = require('ReactFiberStack');
 var {
@@ -1382,7 +1383,60 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     isReplace: boolean,
     isForced: boolean,
   ) {
-    const expirationTime = getExpirationTime(fiber, false);
+    let expirationTime;
+    if (expirationContext !== NoWork) {
+      // An explicit expiration context was set;
+      expirationTime = expirationContext;
+    } else if (isPerformingWork) {
+      if (isCommitting) {
+        // Updates that occur during the commit phase should have sync priority
+        // by default.
+        expirationTime = Sync;
+      } else {
+        // Updates during the render phase should expire at the same time as
+        // the work that is being rendered.
+        expirationTime = nextRenderExpirationTime;
+      }
+    } else {
+      // No explicit expiration context was set, and we're not currently
+      // performing work. Calculate a new expiration time.
+
+      let forceAsync = false;
+      if (fiber.tag === HostRoot) {
+        // Check if the top-level element is an async wrapper component. If so,
+        // treat updates to the root as async. This is a bit weird but lets us
+        // avoid a separate `renderAsync` API.
+        const element = (partialState: any).element;
+        forceAsync =
+          ReactFeatureFlags.enableAsyncSubtreeAPI &&
+          element != null &&
+          element.type != null &&
+          element.type.prototype != null &&
+          (element.type.prototype: any).unstable_isAsyncReactComponent === true;
+      }
+
+      if (
+        useSyncScheduling &&
+        !(fiber.internalContextTag & AsyncUpdates) &&
+        !forceAsync
+      ) {
+        // This is a sync update
+        expirationTime = Sync;
+      } else {
+        // This is an async update
+        const currentTime = recalculateCurrentTime();
+        expirationTime = asyncExpirationTime(currentTime);
+      }
+    }
+
+    if (
+      expirationTime === Sync &&
+      (isBatchingUpdates || (isUnbatchingUpdates && isCommitting))
+    ) {
+      // If we're in a batch, downgrade sync to task.
+      expirationTime = Task;
+    }
+
     const update = {
       expirationTime,
       partialState,
@@ -1507,51 +1561,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function getExpirationTime(
-    fiber: Fiber,
-    forceAsync: boolean,
-  ): ExpirationTime {
-    let expirationTime;
-    if (expirationContext !== NoWork) {
-      // An explicit expiration context was set;
-      expirationTime = expirationContext;
-    } else if (isPerformingWork) {
-      if (isCommitting) {
-        // Updates that occur during the commit phase should have task priority
-        // by default.
-        expirationTime = Sync;
-      } else {
-        // Updates during the render phase should expire at the same time as
-        // the work that is being rendered.
-        expirationTime = nextRenderExpirationTime;
-      }
-    } else {
-      // No explicit expiration context was set, and we're not currently
-      // performing work. Calculate a new expiration time.
-      if (
-        useSyncScheduling &&
-        !(fiber.internalContextTag & AsyncUpdates) &&
-        !forceAsync
-      ) {
-        // This is a sync update
-        expirationTime = Sync;
-      } else {
-        // This is an async update
-        const currentTime = recalculateCurrentTime();
-        expirationTime = asyncExpirationTime(currentTime);
-      }
-    }
-
-    if (
-      expirationTime === Sync &&
-      (isBatchingUpdates || (isUnbatchingUpdates && isCommitting))
-    ) {
-      // If we're in a batch, or in the commit phase, downgrade sync to task
-      return Task;
-    }
-    return expirationTime;
-  }
-
   function scheduleErrorRecovery(fiber: Fiber) {
     scheduleWorkImpl(fiber, Task, true);
   }
@@ -1624,8 +1633,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    scheduleWork: scheduleWork,
-    getExpirationTime: getExpirationTime,
+    scheduleUpdate: scheduleUpdate,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,
