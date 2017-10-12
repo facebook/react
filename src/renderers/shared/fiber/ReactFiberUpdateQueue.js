@@ -19,7 +19,6 @@ const {NoWork} = require('ReactFiberExpirationTime');
 
 const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 
-const invariant = require('fbjs/lib/invariant');
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
@@ -90,7 +89,7 @@ function cloneUpdate(update: Update): Update {
   };
 }
 
-function insertUpdateIntoQueue(
+function insertUpdateIntoPosition(
   queue: UpdateQueue,
   update: Update,
   insertAfter: Update | null,
@@ -187,7 +186,7 @@ function ensureUpdateQueues(fiber: Fiber) {
 // we shouldn't make a copy.
 //
 // If the update is cloned, it returns the cloned update.
-function insertUpdate(fiber: Fiber, update: Update): Update | null {
+function insertUpdateIntoFiber(fiber: Fiber, update: Update): Update | null {
   // We'll have at least one and at most two distinct update queues.
   ensureUpdateQueues(fiber);
   const queue1 = _queue1;
@@ -214,7 +213,7 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
 
   if (queue2 === null) {
     // If there's no alternate queue, there's nothing else to do but insert.
-    insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
+    insertUpdateIntoPosition(queue1, update, insertAfter1, insertBefore1);
     return null;
   }
 
@@ -226,7 +225,7 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
 
   // Now we can insert into the first queue. This must come after finding both
   // insertion positions because it mutates the list.
-  insertUpdateIntoQueue(queue1, update, insertAfter1, insertBefore1);
+  insertUpdateIntoPosition(queue1, update, insertAfter1, insertBefore1);
 
   // See if the insertion positions are equal. Be careful to only compare
   // non-null values.
@@ -249,66 +248,11 @@ function insertUpdate(fiber: Fiber, update: Update): Update | null {
     // The insertion positions are different, so we need to clone the update and
     // insert the clone into the alternate queue.
     const update2 = cloneUpdate(update);
-    insertUpdateIntoQueue(queue2, update2, insertAfter2, insertBefore2);
+    insertUpdateIntoPosition(queue2, update2, insertAfter2, insertBefore2);
     return update2;
   }
 }
-
-function addUpdate(
-  fiber: Fiber,
-  partialState: PartialState<any, any> | null,
-  callback: mixed,
-  expirationTime: ExpirationTime,
-): void {
-  const update = {
-    expirationTime,
-    partialState,
-    callback,
-    isReplace: false,
-    isForced: false,
-    isTopLevelUnmount: false,
-    next: null,
-  };
-  insertUpdate(fiber, update);
-}
-exports.addUpdate = addUpdate;
-
-function addReplaceUpdate(
-  fiber: Fiber,
-  state: any | null,
-  callback: Callback | null,
-  expirationTime: ExpirationTime,
-): void {
-  const update = {
-    expirationTime,
-    partialState: state,
-    callback,
-    isReplace: true,
-    isForced: false,
-    isTopLevelUnmount: false,
-    next: null,
-  };
-  insertUpdate(fiber, update);
-}
-exports.addReplaceUpdate = addReplaceUpdate;
-
-function addForceUpdate(
-  fiber: Fiber,
-  callback: Callback | null,
-  expirationTime: ExpirationTime,
-): void {
-  const update = {
-    expirationTime,
-    partialState: null,
-    callback,
-    isReplace: false,
-    isForced: true,
-    isTopLevelUnmount: false,
-    next: null,
-  };
-  insertUpdate(fiber, update);
-}
-exports.addForceUpdate = addForceUpdate;
+exports.insertUpdateIntoFiber = insertUpdateIntoFiber;
 
 function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   const updateQueue = fiber.updateQueue;
@@ -321,45 +265,6 @@ function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   return updateQueue.first !== null ? updateQueue.first.expirationTime : NoWork;
 }
 exports.getUpdateExpirationTime = getUpdateExpirationTime;
-
-function addTopLevelUpdate(
-  fiber: Fiber,
-  partialState: PartialState<any, any>,
-  callback: Callback | null,
-  expirationTime: ExpirationTime,
-): void {
-  const isTopLevelUnmount = partialState.element === null;
-
-  const update = {
-    expirationTime,
-    partialState,
-    callback,
-    isReplace: false,
-    isForced: false,
-    isTopLevelUnmount,
-    next: null,
-  };
-  const update2 = insertUpdate(fiber, update);
-
-  if (isTopLevelUnmount) {
-    // TODO: Redesign the top-level mount/update/unmount API to avoid this
-    // special case.
-    const queue1 = _queue1;
-    const queue2 = _queue2;
-
-    // Drop all updates that are lower-priority, so that the tree is not
-    // remounted. We need to do this for both queues.
-    if (queue1 !== null && update.next !== null) {
-      update.next = null;
-      queue1.last = update;
-    }
-    if (queue2 !== null && update2 !== null && update2.next !== null) {
-      update2.next = null;
-      queue2.last = update;
-    }
-  }
-}
-exports.addTopLevelUpdate = addTopLevelUpdate;
 
 function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
@@ -443,18 +348,19 @@ function beginUpdateQueue(
     ) {
       callbackList = callbackList !== null ? callbackList : [];
       callbackList.push(update.callback);
-      workInProgress.effectTag |= CallbackEffect;
     }
     update = update.next;
   }
 
-  queue.callbackList = callbackList;
-  queue.hasForceUpdate = hasForceUpdate;
-
-  if (queue.first === null && callbackList === null && !hasForceUpdate) {
-    // The queue is empty and there are no callbacks. We can reset it.
+  if (callbackList !== null) {
+    workInProgress.effectTag |= CallbackEffect;
+  } else if (queue.first === null && !hasForceUpdate) {
+    // The queue is empty. We can reset it.
     workInProgress.updateQueue = null;
   }
+
+  queue.callbackList = callbackList;
+  queue.hasForceUpdate = hasForceUpdate;
 
   if (__DEV__) {
     // No longer processing.
@@ -464,29 +370,3 @@ function beginUpdateQueue(
   return state;
 }
 exports.beginUpdateQueue = beginUpdateQueue;
-
-function commitCallbacks(
-  finishedWork: Fiber,
-  queue: UpdateQueue,
-  context: mixed,
-) {
-  const callbackList = queue.callbackList;
-  if (callbackList === null) {
-    return;
-  }
-
-  // Set the list to null to make sure they don't get called more than once.
-  queue.callbackList = null;
-
-  for (let i = 0; i < callbackList.length; i++) {
-    const callback = callbackList[i];
-    invariant(
-      typeof callback === 'function',
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-        'received: %s',
-      callback,
-    );
-    callback.call(context);
-  }
-}
-exports.commitCallbacks = commitCallbacks;

@@ -22,7 +22,6 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
@@ -103,6 +102,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function commitCallbacks(callbackList, context) {
+    for (let i = 0; i < callbackList.length; i++) {
+      const callback = callbackList[i];
+      invariant(
+        typeof callback === 'function',
+        'Invalid argument passed as callback. Expected a function. Instead ' +
+          'received: %s',
+        callback,
+      );
+      callback.call(context);
+    }
+  }
+
   function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
     switch (finishedWork.tag) {
       case ClassComponent: {
@@ -136,15 +148,27 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           finishedWork.effectTag & Callback &&
           finishedWork.updateQueue !== null
         ) {
-          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+          const updateQueue = finishedWork.updateQueue;
+          if (updateQueue.callbackList !== null) {
+            // Set the list to null to make sure they don't get called more than once.
+            const callbackList = updateQueue.callbackList;
+            updateQueue.callbackList = null;
+            commitCallbacks(callbackList, instance);
+          }
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
-        if (updateQueue !== null) {
-          const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, updateQueue, instance);
+        if (updateQueue !== null && updateQueue.callbackList !== null) {
+          // Set the list to null to make sure they don't get called more
+          // than once.
+          const callbackList = updateQueue.callbackList;
+          updateQueue.callbackList = null;
+          const instance = finishedWork.child !== null
+            ? finishedWork.child.stateNode
+            : null;
+          commitCallbacks(callbackList, instance);
         }
         return;
       }

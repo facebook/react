@@ -16,7 +16,7 @@ import type {ReactNodeList} from 'ReactTypes';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
 
-var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
+var {insertUpdateIntoFiber} = require('ReactFiberUpdateQueue');
 
 var {
   findCurrentUnmaskedContext,
@@ -265,7 +265,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {getPublicInstance} = config;
 
   var {
-    scheduleUpdate,
+    scheduleWork,
     getExpirationTime,
     batchedUpdates,
     unbatchedUpdates,
@@ -316,8 +316,39 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback,
       );
     }
-    addTopLevelUpdate(current, nextState, callback, expirationTime);
-    scheduleUpdate(current, expirationTime);
+    const isTopLevelUnmount = nextState.element === null;
+    const update = {
+      expirationTime,
+      partialState: nextState,
+      callback,
+      isReplace: false,
+      isForced: false,
+      isTopLevelUnmount,
+      next: null,
+    };
+    const update2 = insertUpdateIntoFiber(current, update);
+
+    if (isTopLevelUnmount) {
+      // TODO: Redesign the top-level mount/update/unmount API to avoid this
+      // special case.
+      const queue1 = current.updateQueue;
+      const queue2 = current.alternate !== null
+        ? current.alternate.updateQueue
+        : null;
+
+      // Drop all updates that are lower-priority, so that the tree is not
+      // remounted. We need to do this for both queues.
+      if (queue1 !== null && update.next !== null) {
+        update.next = null;
+        queue1.last = update;
+      }
+      if (queue2 !== null && update2 !== null && update2.next !== null) {
+        update2.next = null;
+        queue2.last = update;
+      }
+    }
+
+    scheduleWork(current, expirationTime);
   }
 
   return {

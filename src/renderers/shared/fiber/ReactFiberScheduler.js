@@ -84,7 +84,10 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {getUpdateExpirationTime} = require('ReactFiberUpdateQueue');
+var {
+  getUpdateExpirationTime,
+  insertUpdateIntoFiber,
+} = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
 
@@ -166,7 +169,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hostContext,
     hydrationContext,
     scheduleUpdate,
-    getExpirationTime,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -1373,11 +1375,33 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function scheduleUpdate(fiber: Fiber, expirationTime: ExpirationTime) {
-    return scheduleUpdateImpl(fiber, expirationTime, false);
+  function scheduleUpdate(
+    fiber: Fiber,
+    partialState: mixed,
+    callback: (() => mixed) | null,
+    isReplace: boolean,
+    isForced: boolean,
+  ) {
+    const expirationTime = getExpirationTime(fiber, false);
+    const update = {
+      expirationTime,
+      partialState,
+      callback,
+      isReplace,
+      isForced,
+      nextCallback: null,
+      isTopLevelUnmount: false,
+      next: null,
+    };
+    insertUpdateIntoFiber(fiber, update);
+    scheduleWork(fiber, expirationTime);
   }
 
-  function scheduleUpdateImpl(
+  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
+    return scheduleWorkImpl(fiber, expirationTime, false);
+  }
+
+  function scheduleWorkImpl(
     fiber: Fiber,
     expirationTime: ExpirationTime,
     isErrorRecovery: boolean,
@@ -1529,7 +1553,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleUpdateImpl(fiber, Task, true);
+    scheduleWorkImpl(fiber, Task, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
@@ -1600,7 +1624,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    scheduleUpdate: scheduleUpdate,
+    scheduleWork: scheduleWork,
     getExpirationTime: getExpirationTime,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,

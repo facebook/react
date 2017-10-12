@@ -24,12 +24,7 @@ var {
   getUnmaskedContext,
   isContextConsumer,
 } = require('ReactFiberContext');
-var {
-  addUpdate,
-  addReplaceUpdate,
-  addForceUpdate,
-  beginUpdateQueue,
-} = require('ReactFiberUpdateQueue');
+var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
 var {hasContextChanged} = require('ReactFiberContext');
 var {isMounted} = require('ReactFiberTreeReflection');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -77,8 +72,13 @@ if (__DEV__) {
 }
 
 module.exports = function(
-  scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  getExpirationTime: (fiber: Fiber, forceAsync: boolean) => ExpirationTime,
+  scheduleUpdate: (
+    fiber: Fiber,
+    partialState: mixed,
+    callback: (() => mixed) | null,
+    isReplace: boolean,
+    isForced: boolean,
+  ) => void,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
@@ -87,33 +87,27 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(fiber, partialState, callback, expirationTime);
-      scheduleUpdate(fiber, expirationTime);
+      scheduleUpdate(fiber, partialState, callback, false, false);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(fiber, state, callback, expirationTime);
-      scheduleUpdate(fiber, expirationTime);
+      scheduleUpdate(fiber, state, callback, true, false);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(fiber, callback, expirationTime);
-      scheduleUpdate(fiber, expirationTime);
+      scheduleUpdate(fiber, null, callback, false, true);
     },
   };
 
