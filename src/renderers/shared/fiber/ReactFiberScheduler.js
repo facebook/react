@@ -1517,7 +1517,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    if (expirationTime === Sync && (isCommitting || isBatchingUpdates)) {
+    if (expirationTime === Sync && (isPerformingWork || isBatchingUpdates)) {
       // If we're in a batch, or in the commit phase, downgrade sync to task
       return Task;
     }
