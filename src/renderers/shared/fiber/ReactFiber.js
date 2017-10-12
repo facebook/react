@@ -356,15 +356,15 @@ function createFiberFromElementType(
       ? createFiber(ClassComponent, key, internalContextTag)
       : createFiber(IndeterminateComponent, key, internalContextTag);
     fiber.type = type;
-  } else if (typeof type === 'string') {
+    fiber.pendingProps = element.props;
+  } else if (typeof type === 'string' && type === '#fragment') {
     // special case for fragments, we create the fiber and return early
-    if (type === '#fragment') {
-      fiber = createFiber(Fragment, null, internalContextTag);
-      fiber.pendingProps = element.props.children;
-      return fiber;
-    }
+    fiber = createFiber(Fragment, null, internalContextTag);
+    fiber.pendingProps = element.props.children;
+  } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
+    fiber.pendingProps = element.props;
   } else if (
     typeof type === 'object' &&
     type !== null &&
@@ -377,6 +377,7 @@ function createFiberFromElementType(
     // we don't know if we can reuse that fiber or if we need to clone it.
     // There is probably a clever way to restructure this.
     fiber = ((type: any): Fiber);
+    fiber.pendingProps = element.props;
   } else {
     let info = '';
     if (__DEV__) {
@@ -390,7 +391,7 @@ function createFiberFromElementType(
           ' You likely forgot to export your component from the file ' +
           "it's defined in.";
       }
-      const ownerName = debugOwner ? getComponentName(debugOwner) : null;
+      const ownerName = owner ? getComponentName(owner) : null;
       if (ownerName) {
         info += '\n\nCheck the render method of `' + ownerName + '`.';
       }
@@ -402,12 +403,42 @@ function createFiberFromElementType(
       type == null ? type : typeof type,
       info,
     );
+    fiber.pendingProps = element.props;
   }
-  fiber.pendingProps = element.props;
-  return fiber;
-}
 
-exports.createFiberFromElementType = createFiberFromElementType;
+  fiber.pendingWorkPriority = priorityLevel;
+
+  if (__DEV__) {
+    fiber._debugSource = element._source;
+    fiber._debugOwner = element._owner;
+  }
+
+  return fiber;
+};
+
+exports.createFiberFromFragment = function(
+  elements: ReactFragment,
+  internalContextTag: TypeOfInternalContext,
+  priorityLevel: PriorityLevel,
+): Fiber {
+  // TODO: Consider supporting keyed fragments. Technically, we accidentally
+  // support that in the existing React.
+  const fiber = createFiber(Fragment, null, internalContextTag);
+  fiber.pendingProps = elements;
+  fiber.pendingWorkPriority = priorityLevel;
+  return fiber;
+};
+
+exports.createFiberFromText = function(
+  content: string,
+  internalContextTag: TypeOfInternalContext,
+  priorityLevel: PriorityLevel,
+): Fiber {
+  const fiber = createFiber(HostText, null, internalContextTag);
+  fiber.pendingProps = content;
+  fiber.pendingWorkPriority = priorityLevel;
+  return fiber;
+};
 
 exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
   const fiber = createFiber(HostComponent, null, NoContext);
