@@ -42,14 +42,23 @@ class TextInputFixtures extends React.Component {
           </p>
         </TestCase>
 
-        <TestCase title="Required Inputs" affectedBrowsers="Firefox" relatedIssues="8395">
+        <TestCase
+          title="Required Inputs"
+          affectedBrowsers="Firefox"
+          relatedIssues="8395">
           <TestCase.Steps>
             <li>View this test in Firefox</li>
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            <p>You should <b><i>not</i></b> see a red aura, indicating the input is invalid.</p>
-            <p>This aura looks roughly like: <input style={{boxShadow: '0 0 1px 1px red', marginLeft: 8 }} /></p>
+            You should
+            {' '}
+            <b><i>not</i></b>
+            {' '}
+            see a red aura, indicating the input is invalid.
+            <br />
+            This aura looks roughly like:
+            <input style={{boxShadow: '0 0 1px 1px red', marginLeft: 8}} />
           </TestCase.ExpectedResult>
 
           <Fixture>
