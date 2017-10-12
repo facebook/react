@@ -42,6 +42,37 @@ class TextInputFixtures extends React.Component {
           </p>
         </TestCase>
 
+        <TestCase title="Required Inputs" affectedBrowsers="Firefox" relatedIssues="8395">
+          <TestCase.Steps>
+            <li>View this test in Firefox</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            <p>You should <b><i>not</i></b> see a red aura, indicating the input is invalid.</p>
+            <p>This aura looks roughly like: <input style={{boxShadow: '0 0 1px 1px red', marginLeft: 8 }} /></p>
+          </TestCase.ExpectedResult>
+
+          <Fixture>
+            <form className="control-box">
+              <fieldset>
+                <legend>Text</legend>
+                <input required={true} />
+              </fieldset>
+              <fieldset>
+                <legend>Date</legend>
+                <input type="date" required={true} />
+              </fieldset>
+            </form>
+          </Fixture>
+
+          <p className="footnote">
+            Checking the date type is also important because of a
+            prior fix for iOS Safari that involved assigning over
+            value/defaultValue properties of the input to prevent a
+            display bug. This also triggered input validation.
+          </p>
+        </TestCase>
+
         <TestCase title="Cursor when editing email inputs">
           <TestCase.Steps>
             <li>Type "user@example.com"</li>

@@ -141,6 +141,7 @@ var ReactDOMInput = {
         : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       controlled: isControlled(props),
+      detached: false
     };
   },
 
@@ -218,6 +219,13 @@ var ReactDOMInput = {
       }
     } else {
       if (props.value == null && props.defaultValue != null) {
+        // Whenever setting defaultValue, ensure that the value
+        // property is detatched
+        if (node._wrapperState.detached === false) {
+          node.value = node.value
+          node._wrapperState.detached = true
+        }
+
         // In Chrome, assigning defaultValue to certain input types triggers input validation.
         // For number inputs, the display value loses trailing decimal points. For email inputs,
         // Chrome raises "The specified value <x> is not a valid email address".
@@ -246,9 +254,6 @@ var ReactDOMInput = {
     // provided.
 
     switch (props.type) {
-      case 'submit':
-      case 'reset':
-        break;
       case 'color':
       case 'date':
       case 'datetime':
@@ -258,11 +263,10 @@ var ReactDOMInput = {
       case 'week':
         // This fixes the no-show issue on iOS Safari and Android Chrome:
         // https://github.com/facebook/react/issues/7233
-        node.value = '';
-        node.value = node.defaultValue;
+        node.type = "text"
+        node.type = props.type
         break;
       default:
-        node.value = node.value;
         break;
     }
 
