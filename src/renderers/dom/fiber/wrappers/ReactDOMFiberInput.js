@@ -14,7 +14,8 @@ type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
     initialValue: ?string,
     initialChecked: ?boolean,
-    controlled?: boolean,
+    controlled: boolean,
+    detached: boolean
   },
 };
 
