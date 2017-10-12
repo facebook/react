@@ -42,7 +42,9 @@ export default function loadReact() {
   let version = query.version || 'local';
 
   if (version !== 'local') {
-    if (parseInt(version, 10) >= 16) {
+    // The file structure was updated in 16. This wasn't the case for alphas.
+    // Load the old module location for anything less than 16 RC
+    if (parseInt(version, 10) >= 16 && version.indexOf('alpha') < 0) {
       REACT_PATH =
         'https://unpkg.com/react@' + version + '/umd/react.development.js';
       DOM_PATH =
