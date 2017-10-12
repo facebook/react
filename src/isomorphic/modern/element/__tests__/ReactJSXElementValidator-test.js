@@ -11,7 +11,7 @@
 
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
-
+var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -51,7 +51,9 @@ describe('ReactJSXElementValidator', () => {
   it('warns for keys for arrays of elements in children position', () => {
     spyOn(console, 'error');
 
-    void <Component>{[<Component />, <Component />]}</Component>;
+    ReactTestUtils.renderIntoDocument(
+      <Component>{[<Component />, <Component />]}</Component>,
+    );
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -99,7 +101,7 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    void <Component>{iterable}</Component>;
+    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -110,12 +112,14 @@ describe('ReactJSXElementValidator', () => {
   it('does not warns for fragments of multiple elements without keys', () => {
     spyOn(console, 'error');
 
-    void (
-      <React.Fragment>
-        <span>1</span>
-        <span>2</span>
-      </React.Fragment>
-    );
+    if (ReactDOMFeatureFlags.useFiber) {
+      ReactTestUtils.renderIntoDocument(
+        <React.Fragment>
+          <span>1</span>
+          <span>2</span>
+        </React.Fragment>,
+      );
+    }
 
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -123,8 +127,8 @@ describe('ReactJSXElementValidator', () => {
   it('does not warns for arrays of elements with keys', () => {
     spyOn(console, 'error');
 
-    void (
-      <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>
+    ReactTestUtils.renderIntoDocument(
+      <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>,
     );
 
     expectDev(console.error.calls.count()).toBe(0);
@@ -148,7 +152,7 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    void <Component>{iterable}</Component>;
+    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
 
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -169,7 +173,7 @@ describe('ReactJSXElementValidator', () => {
     };
     iterable.entries = iterable['@@iterator'];
 
-    void <Component>{iterable}</Component>;
+    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
 
     expectDev(console.error.calls.count()).toBe(0);
   });
