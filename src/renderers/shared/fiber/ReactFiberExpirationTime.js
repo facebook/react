@@ -34,7 +34,7 @@ function msToExpirationTime(ms: number): ExpirationTime {
 exports.msToExpirationTime = msToExpirationTime;
 
 function ceiling(num: number, precision: number): number {
-  return (((((num * precision) | 0) + 1) / precision) | 0) + 1;
+  return (((num / precision) | 0) + 1) * precision;
 }
 
 function bucket(
