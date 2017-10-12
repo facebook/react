@@ -1,10 +1,10 @@
 # Manual Testing Fixtures
 
 This folder exists for **React contributors** only.  
-If you use React you don't need to worry about it.
+If you use React, you don't need to worry about it.
 
 These fixtures verify that the built React distributions are usable in different environments.  
-**They are not running automatically.** (At least not yet, feel free to contribute to automate them.)
+**They are not running automatically.** (At least not yet. Feel free to contribute to automate them.)
 
 Run them when you make changes to how we package React and ReactDOM.
 
@@ -28,7 +28,7 @@ cd ../..
 pushstate-server .
 ```
 
-(Too complicated? Send a PR to simplify this :-).
+(Too complicated? Send a PR to simplify this :-)).
 
 Then open the following URL in your browser:
 
