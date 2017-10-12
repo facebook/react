@@ -1130,7 +1130,7 @@ describe('ReactDOMComponent', () => {
         'Warning: A component is `contentEditable` and contains `children` ' +
           'managed by React. It is now your responsibility to guarantee that ' +
           'none of those nodes are unexpectedly modified or duplicated. This ' +
-          'is probably not intentional.\n    in div (at **)'
+          'is probably not intentional.\n    in div (at **)',
       );
     });
 
