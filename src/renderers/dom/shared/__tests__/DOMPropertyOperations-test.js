@@ -114,6 +114,12 @@ describe('DOMPropertyOperations', () => {
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
     });
 
+    it('should set the className to a custom component', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<amp className="just-a-class" />, container);
+      expect(container.firstChild.getAttribute('class')).toEqual('just-a-class');
+    });
+
     it('should set the className to a custom component with a dash on its name', () => {
       var container = document.createElement('div');
       ReactDOM.render(<amp-img className="just-a-class" />, container);
