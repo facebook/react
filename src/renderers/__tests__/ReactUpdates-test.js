@@ -1072,6 +1072,108 @@ describe('ReactUpdates', () => {
     expect(ops).toEqual(['Hello', '']);
   });
 
+  it(
+    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+      'should both flush in the immediately subsequent commit',
+    () => {
+      let ops = [];
+      class Foo extends React.Component {
+        state = {a: false, b: false};
+        componentWillUpdate(_, nextState) {
+          if (!nextState.a) {
+            this.setState({a: true});
+          }
+        }
+        componentDidUpdate() {
+          ops.push('Foo updated');
+          if (!this.state.b) {
+            this.setState({b: true});
+          }
+        }
+        render() {
+          ops.push(`a: ${this.state.a}, b: ${this.state.b}`);
+          return null;
+        }
+      }
+
+      const container = document.createElement('div');
+      // Mount
+      ReactDOM.render(<Foo />, container);
+      // Root update
+      ReactDOM.render(<Foo />, container);
+      expect(ops).toEqual([
+        // Mount
+        'a: false, b: false',
+        // Root update
+        'a: false, b: false',
+        'Foo updated',
+        // Subsequent update (both a and b should have flushed)
+        'a: true, b: true',
+        'Foo updated',
+        // There should not be any additional updates
+      ]);
+    },
+  );
+
+  it(
+    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+      '(on a sibling) should both flush in the immediately subsequent commit',
+    () => {
+      let ops = [];
+      class Foo extends React.Component {
+        state = {a: false};
+        componentWillUpdate(_, nextState) {
+          if (!nextState.a) {
+            this.setState({a: true});
+          }
+        }
+        componentDidUpdate() {
+          ops.push('Foo updated');
+        }
+        render() {
+          ops.push(`a: ${this.state.a}`);
+          return null;
+        }
+      }
+
+      class Bar extends React.Component {
+        state = {b: false};
+        componentDidUpdate() {
+          ops.push('Bar updated');
+          if (!this.state.b) {
+            this.setState({b: true});
+          }
+        }
+        render() {
+          ops.push(`b: ${this.state.b}`);
+          return null;
+        }
+      }
+
+      const container = document.createElement('div');
+      // Mount
+      ReactDOM.render(<div><Foo /><Bar /></div>, container);
+      // Root update
+      ReactDOM.render(<div><Foo /><Bar /></div>, container);
+      expect(ops).toEqual([
+        // Mount
+        'a: false',
+        'b: false',
+        // Root update
+        'a: false',
+        'b: false',
+        'Foo updated',
+        'Bar updated',
+        // Subsequent update (both a and b should have flushed)
+        'a: true',
+        'b: true',
+        'Foo updated',
+        'Bar updated',
+        // There should not be any additional updates
+      ]);
+    },
+  );
+
   it('does not re-render if state update is null', () => {
     let container = document.createElement('div');
 
