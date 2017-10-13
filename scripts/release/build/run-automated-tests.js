@@ -10,11 +10,13 @@ const runYarnTask = async (cwd, task, errorMessage) => {
   try {
     await exec(`yarn ${task}`, {cwd});
   } catch (error) {
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(errorMessage)}\n\n` +
-        error.stdout
+    throw Error(
+      chalk`
+      ${errorMessage}
+
+      {white ${error.stdout}}
+    `
     );
-    process.exit(1);
   }
 };
 

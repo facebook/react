@@ -11,6 +11,27 @@ const execRead = async (command, options) => {
   return stdout.trim();
 };
 
+const unexecutedCommands = [];
+
+const execUnlessDry = async (command, {cwd, dry}) => {
+  if (dry) {
+    unexecutedCommands.push(`${command} # {cwd: ${cwd}}`);
+  } else {
+    await exec(command, {cwd});
+  }
+};
+
+const getUnexecutedCommands = () => {
+  if (unexecutedCommands.length > 0) {
+    return chalk`
+      The following commands were not executed because of the {bold --dry} flag:
+      {gray ${unexecutedCommands.join('\n')}}
+    `;
+  } else {
+    return '';
+  }
+};
+
 const logPromise = async (promise, text, completedLabel = '') => {
   const {frames, interval} = dots;
 
@@ -41,5 +62,7 @@ const logPromise = async (promise, text, completedLabel = '') => {
 
 module.exports = {
   execRead,
+  execUnlessDry,
+  getUnexecutedCommands,
   logPromise,
 };

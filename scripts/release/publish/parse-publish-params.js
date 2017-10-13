@@ -20,7 +20,7 @@ module.exports = () => {
         raw: true,
       },
       {
-        content: 'Automated pre-release build script.',
+        content: 'Automated release publishing script.',
       },
       {
         header: 'Options',
@@ -31,15 +31,15 @@ module.exports = () => {
         content: [
           {
             desc: '1. A concise example.',
-            example: '$ ./build.js [bold]{-v} [underline]{16.0.0}',
+            example: '$ ./publish.js [bold]{-v} [underline]{16.0.0}',
           },
           {
-            desc: '2. Dry run build a release candidate (no git commits).',
-            example: '$ ./build.js [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
+            desc: '2. Dry run publish a release candidate.',
+            example: '$ ./publish.js [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
           },
           {
             desc: '3. Release from another checkout.',
-            example: '$ ./build.js [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
+            example: '$ ./publish.js [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
           },
         ],
       },

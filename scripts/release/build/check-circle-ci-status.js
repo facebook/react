@@ -20,20 +20,24 @@ const check = async ({cwd}) => {
   const gitRevision = await execRead('git rev-parse HEAD', {cwd});
 
   if (gitRevision !== ciRevision) {
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red('CircleCI is stale')}\n\n` +
-        `The latest Git revision is ${chalk.yellow(gitRevision)}.\n` +
-        `The most recent CircleCI revision is ${chalk.yellow(ciRevision)}.\n` +
-        'Please wait for CircleCI to catch up.'
+    throw Error(
+      chalk`
+      CircleCI is stale
+
+      {white The latest Git revision is {yellow.bold ${gitRevision}}}
+      {white The most recent CircleCI revision is {yellow.bold ${ciRevision}}}
+      {white Please wait for CircleCI to catch up.}
+    `
     );
-    process.exit(1);
   } else if (outcome !== 'success') {
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red('CircleCI failed')}\n\n` +
-        `The most recent CircleCI build has a status of ${chalk.red(outcome || status)}.\n` +
-        'Please retry this build in CircleCI if you believe this is an error.'
+    throw Error(
+      chalk`
+      CircleCI failed
+      
+      {white The most recent CircleCI build has a status of {red.bold ${outcome || status}}}
+      {white Please retry this build in CircleCI if you believe this is an error.}
+    `
     );
-    process.exit(1);
   }
 };
 

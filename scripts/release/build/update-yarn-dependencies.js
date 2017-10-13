@@ -5,7 +5,7 @@
 const chalk = require('chalk');
 const {exec} = require('child-process-promise');
 const {dependencies} = require('../config');
-const {execRead, logPromise} = require('../utils');
+const {execRead, execUnlessDry, logPromise} = require('../utils');
 
 const update = async ({cwd, dry, version}) => {
   await exec(`yarn upgrade ${dependencies.join(' ')}`, {cwd});
@@ -16,20 +16,20 @@ const update = async ({cwd, dry, version}) => {
   // If anything else has changed, it's an error.
   if (modifiedFiles) {
     if (modifiedFiles !== 'yarn.lock') {
-      console.log(
-        `${chalk.bgRed.white(' ERROR ')} ${chalk.red('Unexpected modifications')}\n\n` +
-          `The following files have been modified unexpectedly:\n` +
-          chalk.gray(modifiedFiles)
+      throw Error(
+        chalk`
+        Unexpected modifications
+
+        {white The following files have been modified unexpectedly:}
+        {gray ${modifiedFiles}}
+        `
       );
-      process.exit(1);
     }
 
-    if (!dry) {
-      await exec(
-        `git commit -am "Updating yarn.lock file for ${version} release"`,
-        {cwd}
-      );
-    }
+    await execUnlessDry(
+      `git commit -am "Updating yarn.lock file for ${version} release"`,
+      {cwd, dry}
+    );
   }
 };
 

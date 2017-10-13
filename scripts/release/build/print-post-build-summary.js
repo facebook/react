@@ -3,15 +3,21 @@
 'use strict';
 
 const chalk = require('chalk');
+const {getUnexecutedCommands} = require('../utils');
 
 const CHANGELOG_PATH =
   'https://github.com/facebook/react/edit/master/CHANGELOG.md';
 
-module.exports = () => {
+module.exports = params => {
+  const command =
+    `./publish.js -v ${params.version}` +
+    (params.path ? ` -p ${params.path}` : '') +
+    (params.dry ? ' --dry' : '');
+
   console.log(
     chalk`
-    {green.bold Release build successful!}
-
+    {green.bold Build successful!}
+    ${getUnexecutedCommands()}
     Next there are a couple of manual steps:
 
     {bold.underline Step 1: Update the CHANGELOG}
@@ -31,9 +37,8 @@ module.exports = () => {
     6. Open {blue.bold http://localhost:5000/fixtures/packaging}
     7. Verify every iframe shows {italic "Hello world!"}
 
-    After completing the above steps, resume the release process by running {yellow.bold ./publish.js}
-  `
-      .trim()
-      .replace(/\n +/g, '\n')
+    After completing the above steps, resume the release process by running:
+    {yellow.bold ${command}}
+  `.replace(/\n +/g, '\n')
   );
 };

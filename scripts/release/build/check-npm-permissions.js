@@ -23,17 +23,19 @@ module.exports = async () => {
 
   await logPromise(
     Promise.all(projects.map(checkProject)),
-    `Checking ${chalk.yellow(currentUser)}'s NPM permissions`
+    `Checking ${chalk.yellow.bold(currentUser)}'s NPM permissions`
   );
 
   if (failedProjects.length) {
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red('Insufficient NPM permissions')}\n\n` +
-        `NPM user ${chalk.yellow(currentUser)} is not an owner for: ` +
-        chalk.red(failedProjects.join(', ')) +
-        '\n' +
-        'Please contact a React team member to be added to the above project(s).'
+    throw Error(
+      chalk`
+      Insufficient NPM permissions
+
+      {white NPM user {yellow.bold ${currentUser}} is not an owner for:}
+      {red ${failedProjects.join(', ')}}
+
+      {white Please contact a React team member to be added to the above project(s).}
+      `
     );
-    process.exit(1);
   }
 };

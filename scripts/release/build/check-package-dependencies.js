@@ -29,8 +29,8 @@ const check = async ({cwd}) => {
 
       if (rootVersion !== projectVersion && projectVersion !== undefined) {
         invalidDependencies.push(
-          `${chalk.yellow(module)} is ${chalk.red(rootVersion)} in root but ` +
-            `${chalk.red(projectVersion)} in ${chalk.yellow(projectPackage.name)}`
+          `${module} is ${chalk.red.bold(rootVersion)} in root but ` +
+            `${chalk.red.bold(projectVersion)} in ${projectPackage.name}`
         );
       }
     });
@@ -39,15 +39,19 @@ const check = async ({cwd}) => {
   await Promise.all(dependencies.map(checkModule));
 
   if (invalidDependencies.length) {
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red('Dependency mismatch')}\n\n` +
-        `The following dependencies do not match between the root package and NPM dependencies:\n` +
-        invalidDependencies.join('\n')
+    throw Error(
+      chalk`
+      Dependency mismatch
+
+      {white The following dependencies do not match between the root package and NPM dependencies:}
+      ${invalidDependencies
+        .map(dependency => chalk.white(dependency))
+        .join('\n')}
+    `
     );
-    process.exit(1);
   }
 };
 
 module.exports = async ({cwd}) => {
-  logPromise(check({cwd}), 'Checking runtime dependencies');
+  return logPromise(check({cwd}), 'Checking runtime dependencies');
 };

@@ -8,7 +8,7 @@ const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
 const {projects} = require('../config');
-const {logPromise} = require('../utils');
+const {execUnlessDry, logPromise} = require('../utils');
 
 const update = async ({cwd, dry, version}) => {
   try {
@@ -41,17 +41,18 @@ const update = async ({cwd, dry, version}) => {
     // Version sanity check
     await exec('yarn version-check', {cwd});
 
-    if (!dry) {
-      await exec(
-        `git commit -am "Updating package versions for release ${version}"`,
-        {cwd}
-      );
-    }
-  } catch (error) {
-    console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red('Failed while updating package versions')}`
+    await execUnlessDry(
+      `git commit -am "Updating package versions for release ${version}"`,
+      {cwd, dry}
     );
-    process.exit(1);
+  } catch (error) {
+    throw Error(
+      chalk`
+      Failed while updating package versions
+
+      {white ${error.message}}
+    `
+    );
   }
 };
 

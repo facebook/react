@@ -13,18 +13,20 @@ const checkPackageDependencies = require('./build/check-package-dependencies');
 const checkUncommittedChanges = require('./build/check-uncommitted-changes');
 const installYarnDependencies = require('./build/install-yarn-dependencies');
 const parseBuildParameters = require('./build/parse-build-parameters');
-const printPrereleaseInstructions = require('./build/print-prerelease-instructions');
+const printPostBuildSummary = require('./build/print-post-build-summary');
 const runAutomatedTests = require('./build/run-automated-tests');
 const updateGit = require('./build/update-git');
 const updatePackageVersions = require('./build/update-package-versions');
 const updateYarnDependencies = require('./build/update-yarn-dependencies');
+const validateVersion = require('./build/validate-version');
 
 // Follows the steps outlined in github.com/facebook/react/issues/10620
 const run = async () => {
-  const params = parseBuildParameters();
-
   try {
+    const params = parseBuildParameters();
+
     await checkEnvironmentVariables(params);
+    await validateVersion(params);
     await checkUncommittedChanges(params);
     await checkNpmPermissions(params);
     await updateGit(params);
@@ -35,11 +37,16 @@ const run = async () => {
     await runAutomatedTests(params);
     await updatePackageVersions(params);
     await buildArtifacts(params);
-    await printPrereleaseInstructions();
+    await printPostBuildSummary(params);
   } catch (error) {
     logUpdate.clear();
 
-    console.log(`${chalk.bgRed.white(' ERROR ')} ${chalk.red(error.message)}`);
+    const message = error.message.trim().replace(/\n +/g, '\n');
+    const stack = error.stack.replace(error.message, '');
+
+    console.log(
+      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(stack)}`
+    );
 
     process.exit(1);
   }

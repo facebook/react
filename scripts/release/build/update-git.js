@@ -13,5 +13,8 @@ const update = async ({cwd}) => {
 };
 
 module.exports = async ({cwd}) => {
-  return logPromise(update({cwd}), `Updating checkout ${chalk.yellow(cwd)}`);
+  return logPromise(
+    update({cwd}),
+    `Updating checkout ${chalk.yellow.bold(cwd)}`
+  );
 };
