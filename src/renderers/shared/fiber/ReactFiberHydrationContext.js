@@ -36,42 +36,10 @@ export type HydrationContext<C, CX> = {
 module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
 ): HydrationContext<C, CX> {
-  const {
-    shouldSetTextContent,
-    canHydrateInstance,
-    canHydrateTextInstance,
-    getNextHydratableSibling,
-    getFirstHydratableChild,
-    hydrateInstance,
-    hydrateTextInstance,
-    didNotMatchHydratedContainerTextInstance,
-    didNotMatchHydratedTextInstance,
-    didNotHydrateContainerInstance,
-    didNotHydrateInstance,
-    // TODO: These are currently unused, see below.
-    // didNotFindHydratableContainerInstance,
-    // didNotFindHydratableContainerTextInstance,
-    didNotFindHydratableInstance,
-    didNotFindHydratableTextInstance,
-  } = config;
+  const {shouldSetTextContent, hydration} = config;
 
   // If this doesn't have hydration mode.
-  if (
-    !(canHydrateInstance &&
-      canHydrateTextInstance &&
-      getNextHydratableSibling &&
-      getFirstHydratableChild &&
-      hydrateInstance &&
-      hydrateTextInstance &&
-      didNotMatchHydratedContainerTextInstance &&
-      didNotMatchHydratedTextInstance &&
-      didNotHydrateContainerInstance &&
-      didNotHydrateInstance &&
-      // didNotFindHydratableContainerInstance &&
-      //  didNotFindHydratableContainerTextInstance &&
-      didNotFindHydratableInstance &&
-      didNotFindHydratableTextInstance)
-  ) {
+  if (!hydration) {
     return {
       enterHydrationState() {
         return false;
@@ -97,6 +65,24 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       },
     };
   }
+
+  const {
+    canHydrateInstance,
+    canHydrateTextInstance,
+    getNextHydratableSibling,
+    getFirstHydratableChild,
+    hydrateInstance,
+    hydrateTextInstance,
+    didNotMatchHydratedContainerTextInstance,
+    didNotMatchHydratedTextInstance,
+    didNotHydrateContainerInstance,
+    didNotHydrateInstance,
+    // TODO: These are currently unused, see below.
+    // didNotFindHydratableContainerInstance,
+    // didNotFindHydratableContainerTextInstance,
+    didNotFindHydratableInstance,
+    didNotFindHydratableTextInstance,
+  } = hydration;
 
   // The deepest Fiber on the stack involved in a hydration context.
   // This may have been an insertion or a hydration.
