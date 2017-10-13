@@ -22,6 +22,7 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
+var {commitCallbacks} = require('ReactFiberUpdateQueue');
 var {onCommitUnmount} = require('ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
@@ -94,29 +95,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           captureError(current, refError);
         }
       }
-    }
-  }
-
-  function commitCallbacks(updateQueue, context) {
-    let callbackNode = updateQueue.firstCallback;
-    // Reset the callback list before calling them in case something throws.
-    updateQueue.firstCallback = updateQueue.lastCallback = null;
-
-    while (callbackNode !== null) {
-      const callback = callbackNode.callback;
-      // Remove this callback from the update object in case it's still part
-      // of the queue, so that we don't call it again.
-      callbackNode.callback = null;
-      invariant(
-        typeof callback === 'function',
-        'Invalid argument passed as callback. Expected a function. Instead ' +
-          'received: %s',
-        callback,
-      );
-      callback.call(context);
-      const nextCallback = callbackNode.nextCallback;
-      callbackNode.nextCallback = null;
-      callbackNode = nextCallback;
     }
   }
 

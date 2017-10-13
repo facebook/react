@@ -19,6 +19,8 @@ const {NoWork} = require('ReactFiberExpirationTime');
 
 const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 
+const invariant = require('invariant');
+
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
@@ -37,7 +39,6 @@ export type Update<State> = {
   isReplace: boolean,
   isForced: boolean,
   next: Update<State> | null,
-  nextCallback: Update<State> | null,
 };
 
 // Singly linked-list of updates. When an update is scheduled, it is added to
@@ -61,8 +62,7 @@ export type UpdateQueue<State> = {
   expirationTime: ExpirationTime,
   first: Update<State> | null,
   last: Update<State> | null,
-  firstCallback: Update<State> | null,
-  lastCallback: Update<State> | null,
+  callbackList: Array<Update<State>> | null,
   hasForceUpdate: boolean,
 
   // Dev only
@@ -75,8 +75,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     expirationTime: NoWork,
     first: null,
     last: null,
-    firstCallback: null,
-    lastCallback: null,
+    callbackList: null,
     hasForceUpdate: false,
   };
   if (__DEV__) {
@@ -202,8 +201,7 @@ function beginUpdateQueue<State>(
       last: currentQueue.last,
       // These fields are no longer valid because they were already committed.
       // Reset them.
-      firstCallback: null,
-      lastCallback: null,
+      callbackList: null,
       hasForceUpdate: false,
     };
   }
@@ -279,17 +277,16 @@ function beginUpdateQueue<State>(
     }
     if (update.callback !== null) {
       // Append to list of callbacks.
-      if (queue.lastCallback === null) {
-        queue.lastCallback = queue.firstCallback = update;
-      } else {
-        queue.lastCallback.nextCallback = update;
-        queue.lastCallback = update;
+      let callbackList = queue.callbackList;
+      if (callbackList === null) {
+        callbackList = queue.callbackList = [];
       }
+      callbackList.push(update);
     }
     update = update.next;
   }
 
-  if (queue.lastCallback !== null) {
+  if (queue.callbackList !== null) {
     workInProgress.effectTag |= CallbackEffect;
   } else if (queue.first === null && !queue.hasForceUpdate) {
     // The queue is empty. We can reset it.
@@ -309,3 +306,27 @@ function beginUpdateQueue<State>(
   return state;
 }
 exports.beginUpdateQueue = beginUpdateQueue;
+
+function commitCallbacks<State>(queue: UpdateQueue<State>, context: any) {
+  const callbackList = queue.callbackList;
+  if (callbackList === null) {
+    return;
+  }
+  // Set the list to null to make sure they don't get called more than once.
+  queue.callbackList = null;
+  for (let i = 0; i < callbackList.length; i++) {
+    const update = callbackList[i];
+    const callback = update.callback;
+    // This update might be processed again. Clear the callback so it's only
+    // called once.
+    update.callback = null;
+    invariant(
+      typeof callback === 'function',
+      'Invalid argument passed as callback. Expected a function. Instead ' +
+        'received: %s',
+      callback,
+    );
+    callback.call(context);
+  }
+}
+exports.commitCallbacks = commitCallbacks;
