@@ -33,6 +33,11 @@ const reactNativeRTSrcDependencies = [
   'src/renderers/native-rt/ReactNativeRTTypes.js',
 ];
 
+// these files need to be copied to the react-native-cs build
+const reactNativeCSSrcDependencies = [
+  'src/renderers/native-cs/ReactNativeCSTypes.js',
+];
+
 function getPackageName(name) {
   if (name.indexOf('/') !== -1) {
     return name.split('/')[0];
@@ -74,6 +79,25 @@ function createReactNativeRTBuild() {
   // we also need to copy over some specific files from src
   // defined in reactNativeRTSrcDependencies
   for (const srcDependency of reactNativeRTSrcDependencies) {
+    promises.push(
+      asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
+    );
+  }
+  return Promise.all(promises);
+}
+
+function createReactNativeCSBuild() {
+  // create the react-native-cs folder for FB bundles
+  fs.mkdirSync(join('build', 'react-native-cs'));
+  // create the react-native-cs shims folder for FB shims
+  fs.mkdirSync(join('build', 'react-native-cs', 'shims'));
+
+  const to = join('build', 'react-native-cs', 'shims');
+
+  let promises = [];
+  // we also need to copy over some specific files from src
+  // defined in reactNativeCSSrcDependencies
+  for (const srcDependency of reactNativeCSSrcDependencies) {
     promises.push(
       asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
     );
@@ -191,4 +215,5 @@ module.exports = {
   createFacebookWWWBuild,
   createReactNativeBuild,
   createReactNativeRTBuild,
+  createReactNativeCSBuild,
 };

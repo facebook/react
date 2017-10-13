@@ -21,6 +21,7 @@ const Stats = require('./stats');
 const syncReactDom = require('./sync').syncReactDom;
 const syncReactNative = require('./sync').syncReactNative;
 const syncReactNativeRT = require('./sync').syncReactNativeRT;
+const syncReactNativeCS = require('./sync').syncReactNativeCS;
 const Packaging = require('./packaging');
 const Header = require('./header');
 const closure = require('rollup-plugin-closure-compiler-js');
@@ -571,6 +572,7 @@ rimraf('build', () => {
     Packaging.createFacebookWWWBuild,
     Packaging.createReactNativeBuild,
     Packaging.createReactNativeRTBuild,
+    Packaging.createReactNativeCSBuild,
   ];
   for (const bundle of Bundles.bundles) {
     tasks.push(
@@ -590,6 +592,9 @@ rimraf('build', () => {
     );
     tasks.push(() =>
       syncReactNativeRT(join('build', 'react-native-rt'), syncFbsource)
+    );
+    tasks.push(() =>
+      syncReactNativeCS(join('build', 'react-native-cs'), syncFbsource)
     );
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
