@@ -49,7 +49,7 @@ export type Deadline = {
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
 
-export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {|
+export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
   getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
@@ -99,10 +99,11 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {|
 
   useSyncScheduling?: boolean,
 
-  hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
+  +hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
 
-  mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
-|};
+  +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
+  +persistence?: PersistentUpdatesHostConfig<T, P, I, C, CX, PL>,
+};
 
 type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   commitUpdate(
@@ -131,6 +132,30 @@ type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   ): void,
   removeChild(parentInstance: I, child: I | TI): void,
   removeChildFromContainer(container: C, child: I | TI): void,
+};
+
+type PersistentUpdatesHostConfig<T, P, I, C, CX, PL> = {
+  cloneInstance(
+    instance: I,
+    updatePayload: PL,
+    type: T,
+    oldProps: P,
+    newProps: P,
+    internalInstanceHandle: OpaqueHandle,
+    keepChildren: boolean,
+  ): I,
+  tryToReuseInstance(
+    instance: I,
+    updatePayload: PL,
+    type: T,
+    oldProps: P,
+    newProps: P,
+    internalInstanceHandle: OpaqueHandle,
+    keepChildren: boolean,
+  ): I,
+
+  createRootInstance(rootContainerInstance: C, hostContext: CX): I,
+  commitRootInstance(rootInstance: I): void,
 };
 
 type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {

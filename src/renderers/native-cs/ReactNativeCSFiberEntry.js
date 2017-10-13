@@ -150,6 +150,39 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     // TODO: Enable expiration by implementing this method.
     return 0;
   },
+
+  persistence: {
+    cloneInstance(
+      instance: Instance,
+      updatePayload: Object,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+      keepChildren: boolean,
+    ): Instance {
+      return 0;
+    },
+    tryToReuseInstance(
+      instance: Instance,
+      updatePayload: Object,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+      keepChildren: boolean,
+    ): Instance {
+      return 0;
+    },
+
+    createRootInstance(
+      rootContainerInstance: Container,
+      hostContext: {},
+    ): Instance {
+      return 123;
+    },
+    commitRootInstance(rootInstance: Instance): void {},
+  },
 });
 
 const roots = new Map();
