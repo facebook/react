@@ -2,9 +2,10 @@
 
 'use strict';
 
+const chalk = require('chalk');
 const commandLineArgs = require('command-line-args');
 const commandLineUsage = require('command-line-usage');
-const logo = require('../logo');
+const figlet = require('figlet');
 
 module.exports = () => {
   const paramDefinitions = [
@@ -33,12 +34,13 @@ module.exports = () => {
   if (!params.version) {
     const usage = commandLineUsage([
       {
-        content: logo,
+        content: chalk
+          .hex('#61dafb')
+          .bold(figlet.textSync('react', {font: 'Graffiti'})),
         raw: true,
       },
       {
-        header: 'React Release Manager',
-        content: 'Automated release script.',
+        content: 'Automated pre-release build script.',
       },
       {
         header: 'Options',
@@ -49,15 +51,15 @@ module.exports = () => {
         content: [
           {
             desc: '1. A concise example.',
-            example: '$ ./release [bold]{-v} [underline]{16.0.0}',
+            example: '$ ./build.js [bold]{-v} [underline]{16.0.0}',
           },
           {
-            desc: '2. Dry run publishing a release candidate.',
-            example: '$ ./release [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
+            desc: '2. Dry run build a release candidate (no git commits).',
+            example: '$ ./build.js [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
           },
           {
             desc: '3. Release from another checkout.',
-            example: '$ ./release [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
+            example: '$ ./build.js [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
           },
         ],
       },
