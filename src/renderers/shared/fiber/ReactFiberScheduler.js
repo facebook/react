@@ -1494,7 +1494,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (isCommitting) {
         // Updates that occur during the commit phase should have task priority
         // by default.
-        expirationTime = Task;
+        expirationTime = Sync;
       } else {
         // Updates during the render phase should expire at the same time as
         // the work that is being rendered.
@@ -1517,7 +1517,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    if (expirationTime === Sync && (isCommitting || isBatchingUpdates)) {
+    if (
+      expirationTime === Sync &&
+      (isBatchingUpdates || (isUnbatchingUpdates && isCommitting))
+    ) {
       // If we're in a batch, or in the commit phase, downgrade sync to task
       return Task;
     }
