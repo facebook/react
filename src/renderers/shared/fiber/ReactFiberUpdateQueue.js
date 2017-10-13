@@ -222,10 +222,7 @@ function processUpdateQueue<State>(
   let didSkip = false;
   while (update !== null) {
     const updateExpirationTime = update.expirationTime;
-    if (
-      updateExpirationTime === NoWork ||
-      updateExpirationTime > renderExpirationTime
-    ) {
+    if (updateExpirationTime > renderExpirationTime) {
       // This update does not have sufficient priority. Skip it.
       const remainingExpirationTime = queue.expirationTime;
       if (
