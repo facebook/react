@@ -757,7 +757,39 @@ function createPortal(
   return ReactPortal.createPortal(children, container, null, key);
 }
 
+type ReactRootNode = {
+  render(children: ReactNodeList, callback: ?() => mixed): void,
+  unmount(callback: ?() => mixed): void,
+
+  _reactRootContainer: *,
+};
+
+type RootOptions = {
+  hydrate?: boolean,
+};
+
+function ReactRoot(container: Container, hydrate: boolean) {
+  const root = DOMRenderer.createContainer(container);
+  this._reactRootContainer = root;
+}
+ReactRoot.prototype.render = function(
+  children: ReactNodeList,
+  callback: ?() => mixed,
+): void {
+  const root = this._reactRootContainer;
+  DOMRenderer.updateContainer(children, root, null, callback);
+};
+ReactRoot.prototype.unmount = function(callback) {
+  const root = this._reactRootContainer;
+  DOMRenderer.updateContainer(null, root, null, callback);
+};
+
 var ReactDOMFiber = {
+  createRoot(container: DOMContainer, options?: RootOptions): ReactRootNode {
+    const hydrate = options != null && options.hydrate === true;
+    return new ReactRoot(container, hydrate);
+  },
+
   createPortal,
 
   findDOMNode(
