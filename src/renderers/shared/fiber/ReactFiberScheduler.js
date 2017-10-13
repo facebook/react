@@ -30,7 +30,6 @@ export type HandleErrorInfo = {
   componentStack: string,
 };
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
 var {popContextProvider} = require('ReactFiberContext');
 const {reset} = require('ReactFiberStack');
 var {
@@ -85,10 +84,7 @@ var {
   ClassComponent,
 } = require('ReactTypeOfWork');
 
-var {
-  getUpdateExpirationTime,
-  insertUpdateIntoFiber,
-} = require('ReactFiberUpdateQueue');
+var {getUpdateExpirationTime} = require('ReactFiberUpdateQueue');
 
 var {resetContext} = require('ReactFiberContext');
 
@@ -169,7 +165,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     config,
     hostContext,
     hydrationContext,
-    scheduleUpdate,
+    scheduleWork,
+    createUpdateExpirationForFiber,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -1376,13 +1373,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function scheduleUpdate(
-    fiber: Fiber,
-    partialState: mixed,
-    callback: (() => mixed) | null,
-    isReplace: boolean,
-    isForced: boolean,
-  ) {
+  function createUpdateExpirationForFiber(fiber: Fiber) {
     let expirationTime;
     if (expirationContext !== NoWork) {
       // An explicit expiration context was set;
@@ -1400,26 +1391,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     } else {
       // No explicit expiration context was set, and we're not currently
       // performing work. Calculate a new expiration time.
-
-      let forceAsync = false;
-      if (fiber.tag === HostRoot) {
-        // Check if the top-level element is an async wrapper component. If so,
-        // treat updates to the root as async. This is a bit weird but lets us
-        // avoid a separate `renderAsync` API.
-        const element = (partialState: any).element;
-        forceAsync =
-          ReactFeatureFlags.enableAsyncSubtreeAPI &&
-          element != null &&
-          element.type != null &&
-          element.type.prototype != null &&
-          (element.type.prototype: any).unstable_isAsyncReactComponent === true;
-      }
-
-      if (
-        useSyncScheduling &&
-        !(fiber.internalContextTag & AsyncUpdates) &&
-        !forceAsync
-      ) {
+      if (useSyncScheduling && !(fiber.internalContextTag & AsyncUpdates)) {
         // This is a sync update
         expirationTime = Sync;
       } else {
@@ -1436,19 +1408,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // If we're in a batch, downgrade sync to task.
       expirationTime = Task;
     }
-
-    const update = {
-      expirationTime,
-      partialState,
-      callback,
-      isReplace,
-      isForced,
-      nextCallback: null,
-      isTopLevelUnmount: false,
-      next: null,
-    };
-    insertUpdateIntoFiber(fiber, update);
-    scheduleWork(fiber, expirationTime);
+    return expirationTime;
   }
 
   function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
@@ -1633,7 +1593,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    scheduleUpdate: scheduleUpdate,
+    recalculateCurrentTime: recalculateCurrentTime,
+    createUpdateExpirationForFiber: createUpdateExpirationForFiber,
+    scheduleWork: scheduleWork,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,

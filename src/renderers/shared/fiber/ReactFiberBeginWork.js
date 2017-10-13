@@ -71,13 +71,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleUpdate: (
-    fiber: Fiber,
-    partialState: mixed,
-    callback: (() => mixed) | null,
-    isReplace: boolean,
-    isForced: boolean,
-  ) => void,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
+  createUpdateExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
   const {
     shouldSetTextContent,
@@ -99,7 +94,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     mountClassInstance,
     // resumeMountClassInstance,
     updateClassInstance,
-  } = ReactFiberClassComponent(scheduleUpdate, memoizeProps, memoizeState);
+  } = ReactFiberClassComponent(
+    scheduleWork,
+    createUpdateExpirationForFiber,
+    memoizeProps,
+    memoizeState,
+  );
 
   // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
   function reconcileChildren(current, workInProgress, nextChildren) {
