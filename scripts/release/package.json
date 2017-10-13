@@ -1,13 +1,9 @@
 {
-  "name": "release",
-  "version": "1.0.0",
-  "description": "TODO Document",
-  "main": "release.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "author": "",
-  "license": "ISC",
+  "name": "react-release-script",
+  "version": "0.0.0",
+  "private": true,
+  "scripts": {},
+  "license": "MIT",
   "dependencies": {
     "chalk": "^2.1.0",
     "child-process-promise": "^2.2.1",
