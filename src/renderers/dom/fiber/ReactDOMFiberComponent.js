@@ -298,11 +298,15 @@ function setInitialDOMProperties(
         ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (isCustomComponentTag) {
-      if ((DOMProperty.getPropertyInfo(propKey))) {
-        DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
-      } else {
-        DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
-      }
+      /* Suggested fix?
+       *
+       * if ((DOMProperty.getPropertyInfo(propKey))) {
+       *   DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
+       * } else {
+       *   DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
+       * }
+      */
+      DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (nextProp != null) {
       // If we're updating to null or undefined, we should remove the property
       // from the DOM node instead of inadvertently setting to a string. This
