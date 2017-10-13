@@ -24,7 +24,7 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
+var {processUpdateQueue} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -323,7 +323,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
-      const state = beginUpdateQueue(
+      const state = processUpdateQueue(
         current,
         workInProgress,
         updateQueue,
@@ -719,7 +719,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function memoizeState(workInProgress: Fiber, nextState: any) {
     workInProgress.memoizedState = nextState;
     // Don't reset the updateQueue, in case there are pending updates. Resetting
-    // is handled by beginUpdateQueue.
+    // is handled by processUpdateQueue.
   }
 
   function beginWork(

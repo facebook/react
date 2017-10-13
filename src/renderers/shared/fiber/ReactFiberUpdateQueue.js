@@ -183,7 +183,7 @@ function getStateFromUpdate(update, instance, prevState, props) {
   }
 }
 
-function beginUpdateQueue<State>(
+function processUpdateQueue<State>(
   current: Fiber | null,
   workInProgress: Fiber,
   queue: UpdateQueue<State>,
@@ -305,7 +305,7 @@ function beginUpdateQueue<State>(
 
   return state;
 }
-exports.beginUpdateQueue = beginUpdateQueue;
+exports.processUpdateQueue = processUpdateQueue;
 
 function commitCallbacks<State>(queue: UpdateQueue<State>, context: any) {
   const callbackList = queue.callbackList;
