@@ -317,34 +317,6 @@ var DOMRenderer = ReactFiberReconciler({
     );
   },
 
-  commitMount(
-    domElement: Instance,
-    type: string,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    ((domElement: any):
-      | HTMLButtonElement
-      | HTMLInputElement
-      | HTMLSelectElement
-      | HTMLTextAreaElement).focus();
-  },
-
-  commitUpdate(
-    domElement: Instance,
-    updatePayload: Array<mixed>,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    // Update the props handle so that we know which props are the ones with
-    // with current event handlers.
-    updateFiberProps(domElement, newProps);
-    // Apply the diff to the DOM node.
-    updateProperties(domElement, updatePayload, type, oldProps, newProps);
-  },
-
   shouldSetTextContent(type: string, props: Props): boolean {
     return (
       type === 'textarea' ||
@@ -354,10 +326,6 @@ var DOMRenderer = ReactFiberReconciler({
         props.dangerouslySetInnerHTML !== null &&
         typeof props.dangerouslySetInnerHTML.__html === 'string')
     );
-  },
-
-  resetTextContent(domElement: Instance): void {
-    domElement.textContent = '';
   },
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
@@ -379,65 +347,105 @@ var DOMRenderer = ReactFiberReconciler({
     return textNode;
   },
 
-  commitTextUpdate(
-    textInstance: TextInstance,
-    oldText: string,
-    newText: string,
-  ): void {
-    textInstance.nodeValue = newText;
-  },
-
-  appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
-    parentInstance.appendChild(child);
-  },
-
-  appendChildToContainer(
-    container: Container,
-    child: Instance | TextInstance,
-  ): void {
-    if (container.nodeType === COMMENT_NODE) {
-      (container.parentNode: any).insertBefore(child, container);
-    } else {
-      container.appendChild(child);
-    }
-  },
-
-  insertBefore(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    parentInstance.insertBefore(child, beforeChild);
-  },
-
-  insertInContainerBefore(
-    container: Container,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    if (container.nodeType === COMMENT_NODE) {
-      (container.parentNode: any).insertBefore(child, beforeChild);
-    } else {
-      container.insertBefore(child, beforeChild);
-    }
-  },
-
-  removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
-    parentInstance.removeChild(child);
-  },
-
-  removeChildFromContainer(
-    container: Container,
-    child: Instance | TextInstance,
-  ): void {
-    if (container.nodeType === COMMENT_NODE) {
-      (container.parentNode: any).removeChild(child);
-    } else {
-      container.removeChild(child);
-    }
-  },
-
   now: ReactDOMFrameScheduling.now,
+
+  mutation: {
+    commitMount(
+      domElement: Instance,
+      type: string,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      ((domElement: any):
+        | HTMLButtonElement
+        | HTMLInputElement
+        | HTMLSelectElement
+        | HTMLTextAreaElement).focus();
+    },
+
+    commitUpdate(
+      domElement: Instance,
+      updatePayload: Array<mixed>,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      // Update the props handle so that we know which props are the ones with
+      // with current event handlers.
+      updateFiberProps(domElement, newProps);
+      // Apply the diff to the DOM node.
+      updateProperties(domElement, updatePayload, type, oldProps, newProps);
+    },
+
+    resetTextContent(domElement: Instance): void {
+      domElement.textContent = '';
+    },
+
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      textInstance.nodeValue = newText;
+    },
+
+    appendChild(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+    ): void {
+      parentInstance.appendChild(child);
+    },
+
+    appendChildToContainer(
+      container: Container,
+      child: Instance | TextInstance,
+    ): void {
+      if (container.nodeType === COMMENT_NODE) {
+        (container.parentNode: any).insertBefore(child, container);
+      } else {
+        container.appendChild(child);
+      }
+    },
+
+    insertBefore(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+      beforeChild: Instance | TextInstance,
+    ): void {
+      parentInstance.insertBefore(child, beforeChild);
+    },
+
+    insertInContainerBefore(
+      container: Container,
+      child: Instance | TextInstance,
+      beforeChild: Instance | TextInstance,
+    ): void {
+      if (container.nodeType === COMMENT_NODE) {
+        (container.parentNode: any).insertBefore(child, beforeChild);
+      } else {
+        container.insertBefore(child, beforeChild);
+      }
+    },
+
+    removeChild(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+    ): void {
+      parentInstance.removeChild(child);
+    },
+
+    removeChildFromContainer(
+      container: Container,
+      child: Instance | TextInstance,
+    ): void {
+      if (container.nodeType === COMMENT_NODE) {
+        (container.parentNode: any).removeChild(child);
+      } else {
+        container.removeChild(child);
+      }
+    },
+  },
 
   hydration: {
     canHydrateInstance(

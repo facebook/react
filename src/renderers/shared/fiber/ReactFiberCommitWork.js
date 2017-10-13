@@ -47,19 +47,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
-  const {
-    commitMount,
-    commitUpdate,
-    resetTextContent,
-    commitTextUpdate,
-    appendChild,
-    appendChildToContainer,
-    insertBefore,
-    insertInContainerBefore,
-    removeChild,
-    removeChildFromContainer,
-    getPublicInstance,
-  } = config;
+  const {getPublicInstance} = config;
 
   if (__DEV__) {
     var callComponentWillUnmountWithTimerInDev = function(current, instance) {
@@ -114,6 +102,31 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
   }
+
+  if (!config.mutation) {
+    return {
+      commitResetTextContent(finishedWork: Fiber) {},
+      commitPlacement(finishedWork: Fiber) {},
+      commitDeletion(finishedWork: Fiber) {},
+      commitWork(current: Fiber | null, finishedWork: Fiber) {},
+      commitLifeCycles(current: Fiber | null, finishedWork: Fiber) {},
+      commitAttachRef(finishedWork: Fiber) {},
+      commitDetachRef(finishedWork: Fiber) {},
+    };
+  }
+
+  const {
+    commitMount,
+    commitUpdate,
+    resetTextContent,
+    commitTextUpdate,
+    appendChild,
+    appendChildToContainer,
+    insertBefore,
+    insertInContainerBefore,
+    removeChild,
+    removeChildFromContainer,
+  } = config.mutation;
 
   function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;
@@ -587,7 +600,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function commitResetTextContent(current: Fiber) {
+    resetTextContent(current.stateNode);
+  }
+
   return {
+    commitResetTextContent,
     commitPlacement,
     commitDeletion,
     commitWork,

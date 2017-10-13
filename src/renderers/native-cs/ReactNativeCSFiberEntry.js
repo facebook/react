@@ -20,7 +20,6 @@ import type {ReactNativeCSType} from 'ReactNativeCSTypes';
 const ReactFiberReconciler = require('ReactFiberReconciler');
 
 const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
 
 export type Container = number;
 export type Instance = number;
@@ -71,45 +70,9 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
 }
 
 const ReactNativeCSFiberRenderer = ReactFiberReconciler({
-  appendChild(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-  ): void {},
-
-  appendChildToContainer(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-  ): void {},
-
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
-  ): void {},
-
-  commitTextUpdate(
-    textInstance: TextInstance,
-    oldText: string,
-    newText: string,
-  ): void {
-    invariant(false, 'Text components are not yet supported.');
-  },
-
-  commitMount(
-    instance: Instance,
-    type: string,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    // Noop
-  },
-
-  commitUpdate(
-    instance: Instance,
-    updatePayload: Object,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    internalInstanceHandle: Object,
   ): void {},
 
   createInstance(
@@ -152,18 +115,6 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return instance;
   },
 
-  insertBefore(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {},
-
-  insertInContainerBefore(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {},
-
   prepareForCommit(): void {},
 
   prepareUpdate(
@@ -180,21 +131,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return processProps(instance, newProps);
   },
 
-  removeChild(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-  ): void {},
-
-  removeChildFromContainer(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-  ): void {},
-
   resetAfterCommit(): void {},
-
-  resetTextContent(instance: Instance): void {
-    // Noop
-  },
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return false;

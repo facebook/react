@@ -180,33 +180,8 @@ var TestRenderer = ReactFiberReconciler({
     return UPDATE_SIGNAL;
   },
 
-  commitUpdate(
-    instance: Instance,
-    updatePayload: {},
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    instance.type = type;
-    instance.props = newProps;
-  },
-
-  commitMount(
-    instance: Instance,
-    type: string,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    // noop
-  },
-
   shouldSetTextContent(type: string, props: Props): boolean {
     return false;
-  },
-
-  resetTextContent(testElement: Instance): void {
-    // noop
   },
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
@@ -225,21 +200,6 @@ var TestRenderer = ReactFiberReconciler({
     };
   },
 
-  commitTextUpdate(
-    textInstance: TextInstance,
-    oldText: string,
-    newText: string,
-  ): void {
-    textInstance.text = newText;
-  },
-
-  appendChild: appendChild,
-  appendChildToContainer: appendChild,
-  insertBefore: insertBefore,
-  insertInContainerBefore: insertBefore,
-  removeChild: removeChild,
-  removeChildFromContainer: removeChild,
-
   scheduleDeferredCallback(fn: Function): void {
     setTimeout(fn, 0, {timeRemaining: Infinity});
   },
@@ -251,6 +211,47 @@ var TestRenderer = ReactFiberReconciler({
   now(): number {
     // Test renderer does not use expiration
     return 0;
+  },
+
+  mutation: {
+    commitUpdate(
+      instance: Instance,
+      updatePayload: {},
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      instance.type = type;
+      instance.props = newProps;
+    },
+
+    commitMount(
+      instance: Instance,
+      type: string,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      // noop
+    },
+
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      textInstance.text = newText;
+    },
+    resetTextContent(testElement: Instance): void {
+      // noop
+    },
+
+    appendChild: appendChild,
+    appendChildToContainer: appendChild,
+    insertBefore: insertBefore,
+    insertInContainerBefore: insertBefore,
+    removeChild: removeChild,
+    removeChildFromContainer: removeChild,
   },
 });
 

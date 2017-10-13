@@ -69,51 +69,11 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
 }
 
 const NativeRTRenderer = ReactFiberReconciler({
-  appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
-    RTManager.appendChild(parentInstance, child);
-  },
-
-  appendChildToContainer(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-  ): void {
-    RTManager.appendChildToContext(parentInstance, child);
-  },
-
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
     RTManager.appendChild(parentInstance, child);
-  },
-
-  commitTextUpdate(
-    textInstance: TextInstance,
-    oldText: string,
-    newText: string,
-  ): void {
-    invariant(false, 'Text components are not yet supported.');
-  },
-
-  commitMount(
-    instance: Instance,
-    type: string,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    // Noop
-  },
-
-  commitUpdate(
-    instance: Instance,
-    updatePayload: Object,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    updateFiberProps(instance, newProps);
-    RTManager.updateNode(instance, updatePayload);
   },
 
   createInstance(
@@ -160,22 +120,6 @@ const NativeRTRenderer = ReactFiberReconciler({
     return instance;
   },
 
-  insertBefore(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    RTManager.prependChild(child, beforeChild);
-  },
-
-  insertInContainerBefore(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    RTManager.prependChild(child, beforeChild);
-  },
-
   prepareForCommit(): void {
     RTManager.beginUpdates();
   },
@@ -194,25 +138,8 @@ const NativeRTRenderer = ReactFiberReconciler({
     return processProps(instance, newProps);
   },
 
-  removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
-    // TODO: recursively uncache, by traversing fibers, this will currently leak
-    RTManager.deleteChild(child);
-  },
-
-  removeChildFromContainer(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-  ): void {
-    // TODO: recursively uncache, by traversing fibers, this will currently leak
-    RTManager.deleteChild(child);
-  },
-
   resetAfterCommit(): void {
     RTManager.completeUpdates();
-  },
-
-  resetTextContent(instance: Instance): void {
-    // Noop
   },
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
@@ -231,6 +158,87 @@ const NativeRTRenderer = ReactFiberReconciler({
   now(): number {
     // TODO: Enable expiration by implementing this method.
     return 0;
+  },
+
+  mutation: {
+    appendChild(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+    ): void {
+      RTManager.appendChild(parentInstance, child);
+    },
+
+    appendChildToContainer(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+    ): void {
+      RTManager.appendChildToContext(parentInstance, child);
+    },
+
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      invariant(false, 'Text components are not yet supported.');
+    },
+
+    commitMount(
+      instance: Instance,
+      type: string,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      // Noop
+    },
+
+    commitUpdate(
+      instance: Instance,
+      updatePayload: Object,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      updateFiberProps(instance, newProps);
+      RTManager.updateNode(instance, updatePayload);
+    },
+
+    insertBefore(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+      beforeChild: Instance | TextInstance,
+    ): void {
+      RTManager.prependChild(child, beforeChild);
+    },
+
+    insertInContainerBefore(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+      beforeChild: Instance | TextInstance,
+    ): void {
+      RTManager.prependChild(child, beforeChild);
+    },
+
+    removeChild(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+    ): void {
+      // TODO: recursively uncache, by traversing fibers, this will currently leak
+      RTManager.deleteChild(child);
+    },
+
+    removeChildFromContainer(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+    ): void {
+      // TODO: recursively uncache, by traversing fibers, this will currently leak
+      RTManager.deleteChild(child);
+    },
+
+    resetTextContent(instance: Instance): void {
+      // Noop
+    },
   },
 });
 

@@ -174,6 +174,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hydrationContext,
   );
   const {
+    commitResetTextContent,
     commitPlacement,
     commitDeletion,
     commitWork,
@@ -332,7 +333,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
       const effectTag = nextEffect.effectTag;
       if (effectTag & ContentReset) {
-        config.resetTextContent(nextEffect.stateNode);
+        commitResetTextContent(nextEffect);
       }
 
       if (effectTag & Ref) {

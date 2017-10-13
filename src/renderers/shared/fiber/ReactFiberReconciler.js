@@ -49,7 +49,7 @@ export type Deadline = {
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
 
-export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
+export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {|
   getRootHostContext(rootContainerInstance: C): CX,
   getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
@@ -79,7 +79,6 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   ): null | PL,
 
   shouldSetTextContent(type: T, props: P): boolean,
-  resetTextContent(instance: I): void,
   shouldDeprioritizeSubtree(type: T, props: P): boolean,
 
   createTextInstance(
@@ -102,6 +101,10 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
 
   hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
 
+  mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
+|};
+
+type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   commitUpdate(
     instance: I,
     updatePayload: PL,
@@ -117,6 +120,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     internalInstanceHandle: OpaqueHandle,
   ): void,
   commitTextUpdate(textInstance: TI, oldText: string, newText: string): void,
+  resetTextContent(instance: I): void,
   appendChild(parentInstance: I, child: I | TI): void,
   appendChildToContainer(container: C, child: I | TI): void,
   insertBefore(parentInstance: I, child: I | TI, beforeChild: I | TI): void,

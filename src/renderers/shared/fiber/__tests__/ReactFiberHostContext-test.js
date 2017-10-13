@@ -43,13 +43,15 @@ describe('ReactFiberHostContext', () => {
       appendInitialChild: function() {
         return null;
       },
-      appendChildToContainer: function() {
-        return null;
-      },
       now: function() {
         return 0;
       },
       useSyncScheduling: true,
+      mutation: {
+        appendChildToContainer: function() {
+          return null;
+        },
+      },
     });
 
     const container = Renderer.createContainer(/* root: */ null);
