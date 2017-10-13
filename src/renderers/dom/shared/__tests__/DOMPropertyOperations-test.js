@@ -113,6 +113,12 @@ describe('DOMPropertyOperations', () => {
       ReactDOM.render(<div hidden={false} />, container);
       expect(container.firstChild.hasAttribute('hidden')).toBe(false);
     });
+
+    it('should set the className to a custom component with a dash on its name', () => {
+      var container = document.createElement('div');
+      ReactDOM.render(<amp-img htmlFor="haha" className="just-a-class" />, container);
+      expect(container.firstChild.getAttribute('class')).toEqual('just-a-class');
+    });
   });
 
   describe('value mutation method', function() {
