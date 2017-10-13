@@ -180,7 +180,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
   }
-  
+
   function commitAttachRef(finishedWork: Fiber) {
     const ref = finishedWork.ref;
     if (ref !== null) {
@@ -202,11 +202,94 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  // User-originating errors (lifecycles and refs) should not interrupt
+  // deletion, so don't let them throw. Host-originating errors should
+  // interrupt deletion, so it's okay
+  function commitUnmount(current: Fiber): void {
+    if (typeof onCommitUnmount === 'function') {
+      onCommitUnmount(current);
+    }
+
+    switch (current.tag) {
+      case ClassComponent: {
+        safelyDetachRef(current);
+        const instance = current.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(current, instance);
+        }
+        return;
+      }
+      case HostComponent: {
+        safelyDetachRef(current);
+        return;
+      }
+      case CoroutineComponent: {
+        commitNestedUnmounts(current.stateNode);
+        return;
+      }
+      case HostPortal: {
+        // TODO: this is recursive.
+        // We are also not using this parent because
+        // the portal will get pushed immediately.
+        unmountHostComponents(current);
+        return;
+      }
+    }
+  }
+
+  function commitNestedUnmounts(root: Fiber): void {
+    // While we're inside a removed host node we don't want to call
+    // removeChild on the inner nodes because they're removed by the top
+    // call anyway. We also want to call componentWillUnmount on all
+    // composites before this host node is removed from the tree. Therefore
+    // we do an inner loop while we're still inside the host node.
+    let node: Fiber = root;
+    while (true) {
+      commitUnmount(node);
+      // Visit children because they may contain more composite or host nodes.
+      // Skip portals because commitUnmount() currently visits them recursively.
+      if (node.child !== null && node.tag !== HostPortal) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === root) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === root) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  }
+
+  function detachFiber(current: Fiber) {
+    // Cut off the return pointers to disconnect it from the tree. Ideally, we
+    // should clear the child pointer of the parent alternate to let this
+    // get GC:ed but we don't know which for sure which parent is the current
+    // one so we'll settle for GC:ing the subtree of this child. This child
+    // itself will be GC:ed when the parent updates the next time.
+    current.return = null;
+    current.child = null;
+    if (current.alternate) {
+      current.alternate.child = null;
+      current.alternate.return = null;
+    }
+  }
+
   if (!config.mutation) {
     return {
       commitResetTextContent(finishedWork: Fiber) {},
       commitPlacement(finishedWork: Fiber) {},
-      commitDeletion(finishedWork: Fiber) {},
+      commitDeletion(current: Fiber) {
+        // Detach refs and call componentWillUnmount() on the whole subtree.
+        commitNestedUnmounts(current);
+        detachFiber(current);
+      },
       commitWork(current: Fiber | null, finishedWork: Fiber) {},
       commitLifeCycles,
       commitAttachRef,
@@ -366,36 +449,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitNestedUnmounts(root: Fiber): void {
-    // While we're inside a removed host node we don't want to call
-    // removeChild on the inner nodes because they're removed by the top
-    // call anyway. We also want to call componentWillUnmount on all
-    // composites before this host node is removed from the tree. Therefore
-    // we do an inner loop while we're still inside the host node.
-    let node: Fiber = root;
-    while (true) {
-      commitUnmount(node);
-      // Visit children because they may contain more composite or host nodes.
-      // Skip portals because commitUnmount() currently visits them recursively.
-      if (node.child !== null && node.tag !== HostPortal) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      if (node === root) {
-        return;
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === root) {
-          return;
-        }
-        node = node.return;
-      }
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  }
-
   function unmountHostComponents(current): void {
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
@@ -487,53 +540,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
     unmountHostComponents(current);
-
-    // Cut off the return pointers to disconnect it from the tree. Ideally, we
-    // should clear the child pointer of the parent alternate to let this
-    // get GC:ed but we don't know which for sure which parent is the current
-    // one so we'll settle for GC:ing the subtree of this child. This child
-    // itself will be GC:ed when the parent updates the next time.
-    current.return = null;
-    current.child = null;
-    if (current.alternate) {
-      current.alternate.child = null;
-      current.alternate.return = null;
-    }
-  }
-
-  // User-originating errors (lifecycles and refs) should not interrupt
-  // deletion, so don't let them throw. Host-originating errors should
-  // interrupt deletion, so it's okay
-  function commitUnmount(current: Fiber): void {
-    if (typeof onCommitUnmount === 'function') {
-      onCommitUnmount(current);
-    }
-
-    switch (current.tag) {
-      case ClassComponent: {
-        safelyDetachRef(current);
-        const instance = current.stateNode;
-        if (typeof instance.componentWillUnmount === 'function') {
-          safelyCallComponentWillUnmount(current, instance);
-        }
-        return;
-      }
-      case HostComponent: {
-        safelyDetachRef(current);
-        return;
-      }
-      case CoroutineComponent: {
-        commitNestedUnmounts(current.stateNode);
-        return;
-      }
-      case HostPortal: {
-        // TODO: this is recursive.
-        // We are also not using this parent because
-        // the portal will get pushed immediately.
-        unmountHostComponents(current);
-        return;
-      }
-    }
+    detachFiber(current);
   }
 
   function commitWork(current: Fiber | null, finishedWork: Fiber): void {
