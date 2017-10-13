@@ -24,7 +24,6 @@ var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 var ReactInstanceMap = require('ReactInstanceMap');
 var {HostComponent} = require('ReactTypeOfWork');
-var {asyncExpirationTime} = require('ReactFiberExpirationTime');
 var {insertUpdateIntoFiber} = require('ReactFiberUpdateQueue');
 var emptyObject = require('fbjs/lib/emptyObject');
 
@@ -264,8 +263,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {getPublicInstance} = config;
 
   var {
-    createUpdateExpirationForFiber,
-    recalculateCurrentTime,
+    computeAsyncExpiration,
+    computeExpirationForFiber,
     scheduleWork,
     batchedUpdates,
     unbatchedUpdates,
@@ -317,10 +316,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       element.type.prototype != null &&
       (element.type.prototype: any).unstable_isAsyncReactComponent === true
     ) {
-      const currentTime = recalculateCurrentTime();
-      expirationTime = asyncExpirationTime(currentTime);
+      expirationTime = computeAsyncExpiration();
     } else {
-      expirationTime = createUpdateExpirationForFiber(current);
+      expirationTime = computeExpirationForFiber(current);
     }
 
     const update = {

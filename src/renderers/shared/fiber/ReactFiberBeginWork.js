@@ -72,7 +72,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  createUpdateExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
   const {
     shouldSetTextContent,
@@ -96,7 +96,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     updateClassInstance,
   } = ReactFiberClassComponent(
     scheduleWork,
-    createUpdateExpirationForFiber,
+    computeExpirationForFiber,
     memoizeProps,
     memoizeState,
   );

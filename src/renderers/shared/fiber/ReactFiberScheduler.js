@@ -59,7 +59,7 @@ var {
   Sync,
   Never,
   msToExpirationTime,
-  asyncExpirationTime,
+  computeExpirationBucket,
   relativeExpirationTime,
 } = require('ReactFiberExpirationTime');
 
@@ -166,7 +166,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     hostContext,
     hydrationContext,
     scheduleWork,
-    createUpdateExpirationForFiber,
+    computeExpirationForFiber,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -1373,7 +1373,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function createUpdateExpirationForFiber(fiber: Fiber) {
+  function computeAsyncExpiration() {
+    // Given the current clock time, returns an expiration time. We use rounding
+    // to batch like updates together.
+    // Should complete within ~1000ms. 1200ms max.
+    const currentTime = recalculateCurrentTime();
+    const expirationMs = 1000;
+    const bucketSizeMs = 200;
+    return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
+  }
+
+  function computeExpirationForFiber(fiber: Fiber) {
     let expirationTime;
     if (expirationContext !== NoWork) {
       // An explicit expiration context was set;
@@ -1396,8 +1406,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         expirationTime = Sync;
       } else {
         // This is an async update
-        const currentTime = recalculateCurrentTime();
-        expirationTime = asyncExpirationTime(currentTime);
+        expirationTime = computeAsyncExpiration();
       }
     }
 
@@ -1583,8 +1592,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function deferredUpdates<A>(fn: () => A): A {
     const previousExpirationContext = expirationContext;
-    const currentTime = recalculateCurrentTime();
-    expirationContext = asyncExpirationTime(currentTime);
+    expirationContext = computeAsyncExpiration();
     try {
       return fn();
     } finally {
@@ -1593,8 +1601,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    recalculateCurrentTime: recalculateCurrentTime,
-    createUpdateExpirationForFiber: createUpdateExpirationForFiber,
+    computeAsyncExpiration: computeAsyncExpiration,
+    computeExpirationForFiber: computeExpirationForFiber,
     scheduleWork: scheduleWork,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,

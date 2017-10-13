@@ -76,7 +76,7 @@ if (__DEV__) {
 
 module.exports = function(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  createUpdateExpirationForFiber: (fiber: Fiber) => ExpirationTime,
+  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
@@ -89,7 +89,7 @@ module.exports = function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      const expirationTime = createUpdateExpirationForFiber(fiber);
+      const expirationTime = computeExpirationForFiber(fiber);
       const update = {
         expirationTime,
         partialState,
@@ -108,7 +108,7 @@ module.exports = function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      const expirationTime = createUpdateExpirationForFiber(fiber);
+      const expirationTime = computeExpirationForFiber(fiber);
       const update = {
         expirationTime,
         partialState: state,
@@ -127,7 +127,7 @@ module.exports = function(
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      const expirationTime = createUpdateExpirationForFiber(fiber);
+      const expirationTime = computeExpirationForFiber(fiber);
       const update = {
         expirationTime,
         partialState: null,
