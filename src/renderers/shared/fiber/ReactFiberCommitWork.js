@@ -103,15 +103,114 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
+    switch (finishedWork.tag) {
+      case ClassComponent: {
+        const instance = finishedWork.stateNode;
+        if (finishedWork.effectTag & Update) {
+          if (current === null) {
+            if (__DEV__) {
+              startPhaseTimer(finishedWork, 'componentDidMount');
+            }
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
+            instance.componentDidMount();
+            if (__DEV__) {
+              stopPhaseTimer();
+            }
+          } else {
+            const prevProps = current.memoizedProps;
+            const prevState = current.memoizedState;
+            if (__DEV__) {
+              startPhaseTimer(finishedWork, 'componentDidUpdate');
+            }
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
+            instance.componentDidUpdate(prevProps, prevState);
+            if (__DEV__) {
+              stopPhaseTimer();
+            }
+          }
+        }
+        if (
+          finishedWork.effectTag & Callback &&
+          finishedWork.updateQueue !== null
+        ) {
+          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+        }
+        return;
+      }
+      case HostRoot: {
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          const instance = finishedWork.child && finishedWork.child.stateNode;
+          commitCallbacks(finishedWork, updateQueue, instance);
+        }
+        return;
+      }
+      case HostComponent: {
+        const instance: I = finishedWork.stateNode;
+
+        // Renderers may schedule work to be done after host components are mounted
+        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
+        // These effects should only be committed when components are first mounted,
+        // aka when there is no current/alternate.
+        if (current === null && finishedWork.effectTag & Update) {
+          const type = finishedWork.type;
+          const props = finishedWork.memoizedProps;
+          commitMount(instance, type, props, finishedWork);
+        }
+
+        return;
+      }
+      case HostText: {
+        // We have no life-cycles associated with text.
+        return;
+      }
+      case HostPortal: {
+        // We have no life-cycles associated with portals.
+        return;
+      }
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+  }
+  
+  function commitAttachRef(finishedWork: Fiber) {
+    const ref = finishedWork.ref;
+    if (ref !== null) {
+      const instance = finishedWork.stateNode;
+      switch (finishedWork.tag) {
+        case HostComponent:
+          ref(getPublicInstance(instance));
+          break;
+        default:
+          ref(instance);
+      }
+    }
+  }
+
+  function commitDetachRef(current: Fiber) {
+    const currentRef = current.ref;
+    if (currentRef !== null) {
+      currentRef(null);
+    }
+  }
+
   if (!config.mutation) {
     return {
       commitResetTextContent(finishedWork: Fiber) {},
       commitPlacement(finishedWork: Fiber) {},
       commitDeletion(finishedWork: Fiber) {},
       commitWork(current: Fiber | null, finishedWork: Fiber) {},
-      commitLifeCycles(current: Fiber | null, finishedWork: Fiber) {},
-      commitAttachRef(finishedWork: Fiber) {},
-      commitDetachRef(finishedWork: Fiber) {},
+      commitLifeCycles,
+      commitAttachRef,
+      commitDetachRef,
     };
   }
 
@@ -498,105 +597,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             'likely caused by a bug in React. Please file an issue.',
         );
       }
-    }
-  }
-
-  function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
-    switch (finishedWork.tag) {
-      case ClassComponent: {
-        const instance = finishedWork.stateNode;
-        if (finishedWork.effectTag & Update) {
-          if (current === null) {
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidMount');
-            }
-            instance.props = finishedWork.memoizedProps;
-            instance.state = finishedWork.memoizedState;
-            instance.componentDidMount();
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
-          } else {
-            const prevProps = current.memoizedProps;
-            const prevState = current.memoizedState;
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidUpdate');
-            }
-            instance.props = finishedWork.memoizedProps;
-            instance.state = finishedWork.memoizedState;
-            instance.componentDidUpdate(prevProps, prevState);
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
-          }
-        }
-        if (
-          finishedWork.effectTag & Callback &&
-          finishedWork.updateQueue !== null
-        ) {
-          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
-        }
-        return;
-      }
-      case HostRoot: {
-        const updateQueue = finishedWork.updateQueue;
-        if (updateQueue !== null) {
-          const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, updateQueue, instance);
-        }
-        return;
-      }
-      case HostComponent: {
-        const instance: I = finishedWork.stateNode;
-
-        // Renderers may schedule work to be done after host components are mounted
-        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
-        // These effects should only be committed when components are first mounted,
-        // aka when there is no current/alternate.
-        if (current === null && finishedWork.effectTag & Update) {
-          const type = finishedWork.type;
-          const props = finishedWork.memoizedProps;
-          commitMount(instance, type, props, finishedWork);
-        }
-
-        return;
-      }
-      case HostText: {
-        // We have no life-cycles associated with text.
-        return;
-      }
-      case HostPortal: {
-        // We have no life-cycles associated with portals.
-        return;
-      }
-      default: {
-        invariant(
-          false,
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    }
-  }
-
-  function commitAttachRef(finishedWork: Fiber) {
-    const ref = finishedWork.ref;
-    if (ref !== null) {
-      const instance = finishedWork.stateNode;
-      switch (finishedWork.tag) {
-        case HostComponent:
-          ref(getPublicInstance(instance));
-          break;
-        default:
-          ref(instance);
-      }
-    }
-  }
-
-  function commitDetachRef(current: Fiber) {
-    const currentRef = current.ref;
-    if (currentRef !== null) {
-      currentRef(null);
     }
   }
 
