@@ -328,14 +328,14 @@ describe('ReactMount', () => {
       invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
     });
 
-    it('renders at a comment node', () => {
-      function Char(props) {
-        return props.children;
-      }
-      function list(chars) {
-        return chars.split('').map(c => <Char key={c}>{c}</Char>);
-      }
+    function Char(props) {
+      return props.children;
+    }
+    function list(chars) {
+      return chars.split('').map(c => <Char key={c}>{c}</Char>);
+    }
 
+    it('renders at a comment node', () => {
       ReactDOM.render(list('aeiou'), mountPoint);
       expect(containerDiv.innerHTML).toBe(
         'Aaeiou<!-- react-mount-point-unstable -->B',
@@ -350,6 +350,29 @@ describe('ReactMount', () => {
       expect(containerDiv.innerHTML).toBe(
         'A<!-- react-mount-point-unstable -->B',
       );
+    });
+
+    it('crashes gracefully when you remove the container', () => {
+      ReactDOM.render(list('aeiou'), mountPoint);
+      expect(containerDiv.innerHTML).toBe(
+        'Aaeiou<!-- react-mount-point-unstable -->B',
+      );
+
+      // Remove the comment from its container.
+      containerDiv.removeChild(mountPoint);
+      expect(containerDiv.innerHTML).toBe('AaeiouB');
+
+      spyOn(console, 'error');
+      ReactDOM.render(list('yea'), mountPoint);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: A comment mount point <!-- react-mount-point-unstable --> ' +
+          'was from its container element. This is not supported and React ' +
+          'will not work properly. Please make sure it stays in its parent.',
+      );
+
+      // Mutations fail.
+      expect(containerDiv.innerHTML).toBe('AaeiouB');
     });
   });
 });
