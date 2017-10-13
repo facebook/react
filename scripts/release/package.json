@@ -1,0 +1,21 @@
+{
+  "name": "release",
+  "version": "1.0.0",
+  "description": "TODO Document",
+  "main": "release.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chalk": "^2.1.0",
+    "child-process-promise": "^2.2.1",
+    "cli-spinners": "^1.1.0",
+    "command-line-args": "^4.0.7",
+    "command-line-usage": "^4.0.1",
+    "fs-extra": "^4.0.2",
+    "log-update": "^2.1.0",
+    "request-promise-json": "^1.0.4"
+  }
+}
