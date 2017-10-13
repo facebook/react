@@ -17,9 +17,16 @@ const run = async ({cwd, dry, version}) => {
         cwd,
       });
     }
+
+    if (modifiedFiles.includes('scripts/rollup/results.json')) {
+      await exec('git add scripts/rollup/results.json', {cwd});
+      await exec(`git commit -m "Update bundle sizes for ${version} release"`, {
+        cwd,
+      });
+    }
   }
 };
 
 module.exports = async params => {
-  return logPromise(run(params), 'Updating error codes');
+  return logPromise(run(params), 'Building artifacts');
 };

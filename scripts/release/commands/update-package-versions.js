@@ -20,11 +20,10 @@ const update = async ({cwd, dry, version}) => {
 
     // Update ReactVersion source file
     const reactVersionPath = join(cwd, 'src/ReactVersion.js');
-    const reactVersion = readFileSync(reactVersionPath, 'utf8')
-      .replace(
-        /module\.exports = '[^']+';/,
-        `module.exports = '${version}';`
-      );
+    const reactVersion = readFileSync(reactVersionPath, 'utf8').replace(
+      /module\.exports = '[^']+';/,
+      `module.exports = '${version}';`
+    );
     writeFileSync(reactVersionPath, reactVersion);
 
     // Update renderer versions and peer dependencies
@@ -43,7 +42,10 @@ const update = async ({cwd, dry, version}) => {
     await exec('yarn version-check', {cwd});
 
     if (!dry) {
-      await exec(`git commit -am "Updating package versions for release ${version}"`, {cwd});
+      await exec(
+        `git commit -am "Updating package versions for release ${version}"`,
+        {cwd}
+      );
     }
   } catch (error) {
     console.log(

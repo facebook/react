@@ -5,6 +5,7 @@
 const chalk = require('chalk');
 const logUpdate = require('log-update');
 
+const buildArtifacts = require('./commands/build-artifacts');
 const checkCircleCiStatus = require('./commands/check-circle-ci-status');
 const checkEnvironmentVariables = require('./commands/check-environment-variables');
 const checkNpmPermissions = require('./commands/check-npm-permissions');
@@ -15,7 +16,6 @@ const parseParameters = require('./commands/parse-parameters');
 const printChangelogInstructions = require('./commands/print-changelog-instructions');
 const runAutomatedTests = require('./commands/run-automated-tests');
 const updateGit = require('./commands/update-git');
-const updateErrorCodes = require('./commands/update-error-codes');
 const updatePackageVersions = require('./commands/update-package-versions');
 const updateYarnDependencies = require('./commands/update-yarn-dependencies');
 
@@ -24,7 +24,6 @@ const run = async () => {
   const params = parseParameters();
 
   try {
-/* TODO
     await checkEnvironmentVariables(params);
     await checkUncommittedChanges(params);
     await checkNpmPermissions(params);
@@ -34,10 +33,8 @@ const run = async () => {
     await checkPackageDependencies(params);
     await updateYarnDependencies(params);
     await runAutomatedTests(params);
-    await updateErrorCodes(params);
     await updatePackageVersions(params);
-*/
-    // TODO 'yarn build' actual release artifacts (is this necessary after the error codes build step? or could we re-arrange and speed up?)
+    await buildArtifacts(params);
     await printChangelogInstructions();
     // TODO Print testing instructions
     // TODO Print publish instructions (and create separate publish.js script)
