@@ -77,6 +77,35 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     rootContainerInstance: C,
     hostContext: CX,
   ): null | PL,
+
+  shouldSetTextContent(type: T, props: P): boolean,
+  shouldDeprioritizeSubtree(type: T, props: P): boolean,
+
+  createTextInstance(
+    text: string,
+    rootContainerInstance: C,
+    hostContext: CX,
+    internalInstanceHandle: OpaqueHandle,
+  ): TI,
+
+  scheduleDeferredCallback(
+    callback: (deadline: Deadline) => void,
+  ): number | void,
+
+  prepareForCommit(): void,
+  resetAfterCommit(): void,
+
+  now(): number,
+
+  useSyncScheduling?: boolean,
+
+  +hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
+
+  +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
+  +persistence?: PersistentUpdatesHostConfig<T, P, I, C, CX, PL>,
+};
+
+type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   commitUpdate(
     instance: I,
     updatePayload: PL,
@@ -91,19 +120,8 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
     newProps: P,
     internalInstanceHandle: OpaqueHandle,
   ): void,
-
-  shouldSetTextContent(type: T, props: P): boolean,
-  resetTextContent(instance: I): void,
-  shouldDeprioritizeSubtree(type: T, props: P): boolean,
-
-  createTextInstance(
-    text: string,
-    rootContainerInstance: C,
-    hostContext: CX,
-    internalInstanceHandle: OpaqueHandle,
-  ): TI,
   commitTextUpdate(textInstance: TI, oldText: string, newText: string): void,
-
+  resetTextContent(instance: I): void,
   appendChild(parentInstance: I, child: I | TI): void,
   appendChildToContainer(container: C, child: I | TI): void,
   insertBefore(parentInstance: I, child: I | TI, beforeChild: I | TI): void,
@@ -114,80 +132,92 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   ): void,
   removeChild(parentInstance: I, child: I | TI): void,
   removeChildFromContainer(container: C, child: I | TI): void,
+};
 
-  scheduleDeferredCallback(
-    callback: (deadline: Deadline) => void,
-  ): number | void,
+type PersistentUpdatesHostConfig<T, P, I, C, CX, PL> = {
+  cloneInstance(
+    instance: I,
+    updatePayload: PL,
+    type: T,
+    oldProps: P,
+    newProps: P,
+    internalInstanceHandle: OpaqueHandle,
+    keepChildren: boolean,
+  ): I,
+  tryToReuseInstance(
+    instance: I,
+    updatePayload: PL,
+    type: T,
+    oldProps: P,
+    newProps: P,
+    internalInstanceHandle: OpaqueHandle,
+    keepChildren: boolean,
+  ): I,
 
-  prepareForCommit(): void,
-  resetAfterCommit(): void,
+  createRootInstance(rootContainerInstance: C, hostContext: CX): I,
+  commitRootInstance(rootInstance: I): void,
+};
 
-  now(): number,
-
+type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
   // Optional hydration
-  canHydrateInstance?: (instance: I | TI, type: T, props: P) => boolean,
-  canHydrateTextInstance?: (instance: I | TI, text: string) => boolean,
-  getNextHydratableSibling?: (instance: I | TI) => null | I | TI,
-  getFirstHydratableChild?: (parentInstance: I | C) => null | I | TI,
-  hydrateInstance?: (
+  canHydrateInstance(instance: I | TI, type: T, props: P): boolean,
+  canHydrateTextInstance(instance: I | TI, text: string): boolean,
+  getNextHydratableSibling(instance: I | TI): null | I | TI,
+  getFirstHydratableChild(parentInstance: I | C): null | I | TI,
+  hydrateInstance(
     instance: I,
     type: T,
     props: P,
     rootContainerInstance: C,
     hostContext: CX,
     internalInstanceHandle: OpaqueHandle,
-  ) => null | PL,
-  hydrateTextInstance?: (
+  ): null | PL,
+  hydrateTextInstance(
     textInstance: TI,
     text: string,
     internalInstanceHandle: OpaqueHandle,
-  ) => boolean,
-  didNotMatchHydratedContainerTextInstance?: (
+  ): boolean,
+  didNotMatchHydratedContainerTextInstance(
     parentContainer: C,
     textInstance: TI,
     text: string,
-  ) => void,
-  didNotMatchHydratedTextInstance?: (
+  ): void,
+  didNotMatchHydratedTextInstance(
     parentType: T,
     parentProps: P,
     parentInstance: I,
     textInstance: TI,
     text: string,
-  ) => void,
-  didNotHydrateContainerInstance?: (
-    parentContainer: C,
-    instance: I | TI,
-  ) => void,
-  didNotHydrateInstance?: (
+  ): void,
+  didNotHydrateContainerInstance(parentContainer: C, instance: I | TI): void,
+  didNotHydrateInstance(
     parentType: T,
     parentProps: P,
     parentInstance: I,
     instance: I | TI,
-  ) => void,
-  didNotFindHydratableContainerInstance?: (
+  ): void,
+  didNotFindHydratableContainerInstance(
     parentContainer: C,
     type: T,
     props: P,
-  ) => void,
-  didNotFindHydratableContainerTextInstance?: (
+  ): void,
+  didNotFindHydratableContainerTextInstance(
     parentContainer: C,
     text: string,
-  ) => void,
-  didNotFindHydratableInstance?: (
+  ): void,
+  didNotFindHydratableInstance(
     parentType: T,
     parentProps: P,
     parentInstance: I,
     type: T,
     props: P,
-  ) => void,
-  didNotFindHydratableTextInstance?: (
+  ): void,
+  didNotFindHydratableTextInstance(
     parentType: T,
     parentProps: P,
     parentInstance: I,
     text: string,
-  ) => void,
-
-  useSyncScheduling?: boolean,
+  ): void,
 };
 
 export type Reconciler<C, I, TI> = {

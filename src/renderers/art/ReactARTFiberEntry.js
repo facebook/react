@@ -388,20 +388,6 @@ class Text extends React.Component {
 /** ART Renderer */
 
 const ARTRenderer = ReactFiberReconciler({
-  appendChild(parentInstance, child) {
-    if (child.parentNode === parentInstance) {
-      child.eject();
-    }
-    child.inject(parentInstance);
-  },
-
-  appendChildToContainer(parentInstance, child) {
-    if (child.parentNode === parentInstance) {
-      child.eject();
-    }
-    child.inject(parentInstance);
-  },
-
   appendInitialChild(parentInstance, child) {
     if (typeof child === 'string') {
       // Noop for string children of Text (eg <Text>{'foo'}{'bar'}</Text>)
@@ -410,18 +396,6 @@ const ARTRenderer = ReactFiberReconciler({
     }
 
     child.inject(parentInstance);
-  },
-
-  commitTextUpdate(textInstance, oldText, newText) {
-    // Noop
-  },
-
-  commitMount(instance, type, newProps) {
-    // Noop
-  },
-
-  commitUpdate(instance, updatePayload, type, oldProps, newProps) {
-    instance._applyProps(instance, newProps, oldProps);
   },
 
   createInstance(type, props, internalInstanceHandle) {
@@ -470,38 +444,12 @@ const ARTRenderer = ReactFiberReconciler({
     return instance;
   },
 
-  insertBefore(parentInstance, child, beforeChild) {
-    invariant(
-      child !== beforeChild,
-      'ReactART: Can not insert node before itself',
-    );
-    child.injectBefore(beforeChild);
-  },
-
-  insertInContainerBefore(parentInstance, child, beforeChild) {
-    invariant(
-      child !== beforeChild,
-      'ReactART: Can not insert node before itself',
-    );
-    child.injectBefore(beforeChild);
-  },
-
   prepareForCommit() {
     // Noop
   },
 
   prepareUpdate(domElement, type, oldProps, newProps) {
     return UPDATE_SIGNAL;
-  },
-
-  removeChild(parentInstance, child) {
-    destroyEventListeners(child);
-    child.eject();
-  },
-
-  removeChildFromContainer(parentInstance, child) {
-    destroyEventListeners(child);
-    child.eject();
   },
 
   resetAfterCommit() {
@@ -535,6 +483,60 @@ const ARTRenderer = ReactFiberReconciler({
   now: ReactDOMFrameScheduling.now,
 
   useSyncScheduling: true,
+
+  mutation: {
+    appendChild(parentInstance, child) {
+      if (child.parentNode === parentInstance) {
+        child.eject();
+      }
+      child.inject(parentInstance);
+    },
+
+    appendChildToContainer(parentInstance, child) {
+      if (child.parentNode === parentInstance) {
+        child.eject();
+      }
+      child.inject(parentInstance);
+    },
+
+    insertBefore(parentInstance, child, beforeChild) {
+      invariant(
+        child !== beforeChild,
+        'ReactART: Can not insert node before itself',
+      );
+      child.injectBefore(beforeChild);
+    },
+
+    insertInContainerBefore(parentInstance, child, beforeChild) {
+      invariant(
+        child !== beforeChild,
+        'ReactART: Can not insert node before itself',
+      );
+      child.injectBefore(beforeChild);
+    },
+
+    removeChild(parentInstance, child) {
+      destroyEventListeners(child);
+      child.eject();
+    },
+
+    removeChildFromContainer(parentInstance, child) {
+      destroyEventListeners(child);
+      child.eject();
+    },
+
+    commitTextUpdate(textInstance, oldText, newText) {
+      // Noop
+    },
+
+    commitMount(instance, type, newProps) {
+      // Noop
+    },
+
+    commitUpdate(instance, updatePayload, type, oldProps, newProps) {
+      instance._applyProps(instance, newProps, oldProps);
+    },
+  },
 });
 
 /** API */

@@ -4,26 +4,27 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTFiberRenderer
+ * @providesModule ReactNativeCSFiberEntry
  * @flow
  */
 
 'use strict';
 
+const ReactGenericBatching = require('ReactGenericBatching');
+const ReactVersion = require('ReactVersion');
+
+const {injectInternals} = require('ReactFiberDevToolsHook');
+
+import type {ReactNativeCSType} from 'ReactNativeCSTypes';
+
 const ReactFiberReconciler = require('ReactFiberReconciler');
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactNativeRTTagHandles = require('ReactNativeRTTagHandles');
-const RTManager = require('RTManager');
 
 const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
 
 export type Container = number;
 export type Instance = number;
 export type Props = Object;
 export type TextInstance = number;
-
-const {precacheFiberNode, updateFiberProps} = ReactNativeRTComponentTree;
 
 function processProps(instance: number, props: Props): Object {
   const propsPayload = {};
@@ -68,13 +69,11 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
   return true;
 }
 
-const NativeRTRenderer = ReactFiberReconciler({
+const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
-  ): void {
-    RTManager.appendChild(parentInstance, child);
-  },
+  ): void {},
 
   createInstance(
     type: string,
@@ -83,11 +82,7 @@ const NativeRTRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): Instance {
-    const tag = ReactNativeRTTagHandles.allocateTag();
-    precacheFiberNode(internalInstanceHandle, tag);
-    updateFiberProps(tag, props);
-    RTManager.createNode(tag, type, processProps(tag, props));
-    return tag;
+    return 0;
   },
 
   createTextInstance(
@@ -96,7 +91,7 @@ const NativeRTRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): TextInstance {
-    invariant(false, 'Text components are not supported for now.');
+    return 0;
   },
 
   finalizeInitialChildren(
@@ -120,9 +115,7 @@ const NativeRTRenderer = ReactFiberReconciler({
     return instance;
   },
 
-  prepareForCommit(): void {
-    RTManager.beginUpdates();
-  },
+  prepareForCommit(): void {},
 
   prepareUpdate(
     instance: Instance,
@@ -138,9 +131,7 @@ const NativeRTRenderer = ReactFiberReconciler({
     return processProps(instance, newProps);
   },
 
-  resetAfterCommit(): void {
-    RTManager.completeUpdates();
-  },
+  resetAfterCommit(): void {},
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return false;
@@ -160,86 +151,78 @@ const NativeRTRenderer = ReactFiberReconciler({
     return 0;
   },
 
-  mutation: {
-    appendChild(
-      parentInstance: Instance,
-      child: Instance | TextInstance,
-    ): void {
-      RTManager.appendChild(parentInstance, child);
-    },
-
-    appendChildToContainer(
-      parentInstance: Container,
-      child: Instance | TextInstance,
-    ): void {
-      RTManager.appendChildToContext(parentInstance, child);
-    },
-
-    commitTextUpdate(
-      textInstance: TextInstance,
-      oldText: string,
-      newText: string,
-    ): void {
-      invariant(false, 'Text components are not yet supported.');
-    },
-
-    commitMount(
-      instance: Instance,
-      type: string,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      // Noop
-    },
-
-    commitUpdate(
+  persistence: {
+    cloneInstance(
       instance: Instance,
       updatePayload: Object,
       type: string,
       oldProps: Props,
       newProps: Props,
       internalInstanceHandle: Object,
-    ): void {
-      updateFiberProps(instance, newProps);
-      RTManager.updateNode(instance, updatePayload);
+      keepChildren: boolean,
+    ): Instance {
+      return 0;
+    },
+    tryToReuseInstance(
+      instance: Instance,
+      updatePayload: Object,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+      keepChildren: boolean,
+    ): Instance {
+      return 0;
     },
 
-    insertBefore(
-      parentInstance: Instance,
-      child: Instance | TextInstance,
-      beforeChild: Instance | TextInstance,
-    ): void {
-      RTManager.prependChild(child, beforeChild);
+    createRootInstance(
+      rootContainerInstance: Container,
+      hostContext: {},
+    ): Instance {
+      return 123;
     },
-
-    insertInContainerBefore(
-      parentInstance: Container,
-      child: Instance | TextInstance,
-      beforeChild: Instance | TextInstance,
-    ): void {
-      RTManager.prependChild(child, beforeChild);
-    },
-
-    removeChild(
-      parentInstance: Instance,
-      child: Instance | TextInstance,
-    ): void {
-      // TODO: recursively uncache, by traversing fibers, this will currently leak
-      RTManager.deleteChild(child);
-    },
-
-    removeChildFromContainer(
-      parentInstance: Container,
-      child: Instance | TextInstance,
-    ): void {
-      // TODO: recursively uncache, by traversing fibers, this will currently leak
-      RTManager.deleteChild(child);
-    },
-
-    resetTextContent(instance: Instance): void {
-      // Noop
-    },
+    commitRootInstance(rootInstance: Instance): void {},
   },
 });
 
-module.exports = NativeRTRenderer;
+const roots = new Map();
+
+const ReactNativeCSFiber: ReactNativeCSType = {
+  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
+    let root = roots.get(containerTag);
+
+    if (!root) {
+      // TODO (bvaughn): If we decide to keep the wrapper component,
+      // We could create a wrapper for containerTag as well to reduce special casing.
+      root = ReactNativeCSFiberRenderer.createContainer(containerTag);
+      roots.set(containerTag, root);
+    }
+    ReactNativeCSFiberRenderer.updateContainer(element, root, null, callback);
+
+    return ReactNativeCSFiberRenderer.getPublicRootInstance(root);
+  },
+
+  unmountComponentAtNode(containerTag: number) {
+    const root = roots.get(containerTag);
+    if (root) {
+      // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
+      ReactNativeCSFiberRenderer.updateContainer(null, root, null, () => {
+        roots.delete(containerTag);
+      });
+    }
+  },
+
+  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+
+  flushSync: ReactNativeCSFiberRenderer.flushSync,
+};
+
+injectInternals({
+  findHostInstanceByFiber: ReactNativeCSFiberRenderer.findHostInstance,
+  // This is an enum because we may add more (e.g. profiler build)
+  bundleType: __DEV__ ? 1 : 0,
+  version: ReactVersion,
+  rendererPackageName: 'react-native-cs',
+});
+
+module.exports = ReactNativeCSFiber;

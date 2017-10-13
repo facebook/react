@@ -137,27 +137,11 @@ var NoopRenderer = ReactFiberReconciler({
     return UPDATE_SIGNAL;
   },
 
-  commitMount(instance: Instance, type: string, newProps: Props): void {
-    // Noop
-  },
-
-  commitUpdate(
-    instance: Instance,
-    updatePayload: Object,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-  ): void {
-    instance.prop = newProps.prop;
-  },
-
   shouldSetTextContent(type: string, props: Props): boolean {
     return (
       typeof props.children === 'string' || typeof props.children === 'number'
     );
   },
-
-  resetTextContent(instance: Instance): void {},
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return !!props.hidden;
@@ -175,21 +159,6 @@ var NoopRenderer = ReactFiberReconciler({
     return inst;
   },
 
-  commitTextUpdate(
-    textInstance: TextInstance,
-    oldText: string,
-    newText: string,
-  ): void {
-    textInstance.text = newText;
-  },
-
-  appendChild: appendChild,
-  appendChildToContainer: appendChild,
-  insertBefore: insertBefore,
-  insertInContainerBefore: insertBefore,
-  removeChild: removeChild,
-  removeChildFromContainer: removeChild,
-
   scheduleDeferredCallback(callback) {
     if (scheduledCallback) {
       throw new Error(
@@ -206,6 +175,39 @@ var NoopRenderer = ReactFiberReconciler({
 
   now(): number {
     return elapsedTimeInMs;
+  },
+
+  mutation: {
+    commitMount(instance: Instance, type: string, newProps: Props): void {
+      // Noop
+    },
+
+    commitUpdate(
+      instance: Instance,
+      updatePayload: Object,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+    ): void {
+      instance.prop = newProps.prop;
+    },
+
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      textInstance.text = newText;
+    },
+
+    appendChild: appendChild,
+    appendChildToContainer: appendChild,
+    insertBefore: insertBefore,
+    insertInContainerBefore: insertBefore,
+    removeChild: removeChild,
+    removeChildFromContainer: removeChild,
+
+    resetTextContent(instance: Instance): void {},
   },
 });
 

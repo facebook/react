@@ -298,7 +298,7 @@ const bundles = [
     useFiber: true,
   },
 
-  /******* React Native *******/
+  /******* React Native RT *******/
   {
     babelOpts: babelOptsReact,
     bundleTypes: [RN_DEV, RN_PROD],
@@ -324,6 +324,32 @@ const bundles = [
     paths: [
       'src/renderers/native/**/*.js', // This is used since we reuse the error dialog code
       'src/renderers/native-rt/**/*.js',
+      'src/renderers/shared/**/*.js',
+
+      'src/ReactVersion.js',
+      'src/shared/**/*.js',
+    ],
+    useFiber: true,
+  },
+
+  /******* React Native CS *******/
+  {
+    babelOpts: babelOptsReact,
+    bundleTypes: [RN_DEV, RN_PROD],
+    config: {
+      destDir: 'build/',
+      moduleName: 'ReactNativeCSFiber',
+      sourceMap: false,
+    },
+    entry: 'src/renderers/native-cs/ReactNativeCSFiberEntry',
+    externals: ['prop-types/checkPropTypes'],
+    hasteName: 'ReactNativeCSFiber',
+    isRenderer: true,
+    label: 'native-cs-fiber',
+    manglePropertiesOnProd: false,
+    name: 'react-native-cs-renderer',
+    paths: [
+      'src/renderers/native-cs/**/*.js',
       'src/renderers/shared/**/*.js',
 
       'src/ReactVersion.js',

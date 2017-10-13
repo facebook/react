@@ -47,19 +47,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
-  const {
-    commitMount,
-    commitUpdate,
-    resetTextContent,
-    commitTextUpdate,
-    appendChild,
-    appendChildToContainer,
-    insertBefore,
-    insertInContainerBefore,
-    removeChild,
-    removeChildFromContainer,
-    getPublicInstance,
-  } = config;
+  const {getPublicInstance} = config;
 
   if (__DEV__) {
     var callComponentWillUnmountWithTimerInDev = function(current, instance) {
@@ -114,6 +102,213 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
   }
+
+  function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
+    switch (finishedWork.tag) {
+      case ClassComponent: {
+        const instance = finishedWork.stateNode;
+        if (finishedWork.effectTag & Update) {
+          if (current === null) {
+            if (__DEV__) {
+              startPhaseTimer(finishedWork, 'componentDidMount');
+            }
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
+            instance.componentDidMount();
+            if (__DEV__) {
+              stopPhaseTimer();
+            }
+          } else {
+            const prevProps = current.memoizedProps;
+            const prevState = current.memoizedState;
+            if (__DEV__) {
+              startPhaseTimer(finishedWork, 'componentDidUpdate');
+            }
+            instance.props = finishedWork.memoizedProps;
+            instance.state = finishedWork.memoizedState;
+            instance.componentDidUpdate(prevProps, prevState);
+            if (__DEV__) {
+              stopPhaseTimer();
+            }
+          }
+        }
+        if (
+          finishedWork.effectTag & Callback &&
+          finishedWork.updateQueue !== null
+        ) {
+          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+        }
+        return;
+      }
+      case HostRoot: {
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          const instance = finishedWork.child && finishedWork.child.stateNode;
+          commitCallbacks(finishedWork, updateQueue, instance);
+        }
+        return;
+      }
+      case HostComponent: {
+        const instance: I = finishedWork.stateNode;
+
+        // Renderers may schedule work to be done after host components are mounted
+        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
+        // These effects should only be committed when components are first mounted,
+        // aka when there is no current/alternate.
+        if (current === null && finishedWork.effectTag & Update) {
+          const type = finishedWork.type;
+          const props = finishedWork.memoizedProps;
+          commitMount(instance, type, props, finishedWork);
+        }
+
+        return;
+      }
+      case HostText: {
+        // We have no life-cycles associated with text.
+        return;
+      }
+      case HostPortal: {
+        // We have no life-cycles associated with portals.
+        return;
+      }
+      default: {
+        invariant(
+          false,
+          'This unit of work tag should not have side-effects. This error is ' +
+            'likely caused by a bug in React. Please file an issue.',
+        );
+      }
+    }
+  }
+
+  function commitAttachRef(finishedWork: Fiber) {
+    const ref = finishedWork.ref;
+    if (ref !== null) {
+      const instance = finishedWork.stateNode;
+      switch (finishedWork.tag) {
+        case HostComponent:
+          ref(getPublicInstance(instance));
+          break;
+        default:
+          ref(instance);
+      }
+    }
+  }
+
+  function commitDetachRef(current: Fiber) {
+    const currentRef = current.ref;
+    if (currentRef !== null) {
+      currentRef(null);
+    }
+  }
+
+  // User-originating errors (lifecycles and refs) should not interrupt
+  // deletion, so don't let them throw. Host-originating errors should
+  // interrupt deletion, so it's okay
+  function commitUnmount(current: Fiber): void {
+    if (typeof onCommitUnmount === 'function') {
+      onCommitUnmount(current);
+    }
+
+    switch (current.tag) {
+      case ClassComponent: {
+        safelyDetachRef(current);
+        const instance = current.stateNode;
+        if (typeof instance.componentWillUnmount === 'function') {
+          safelyCallComponentWillUnmount(current, instance);
+        }
+        return;
+      }
+      case HostComponent: {
+        safelyDetachRef(current);
+        return;
+      }
+      case CoroutineComponent: {
+        commitNestedUnmounts(current.stateNode);
+        return;
+      }
+      case HostPortal: {
+        // TODO: this is recursive.
+        // We are also not using this parent because
+        // the portal will get pushed immediately.
+        unmountHostComponents(current);
+        return;
+      }
+    }
+  }
+
+  function commitNestedUnmounts(root: Fiber): void {
+    // While we're inside a removed host node we don't want to call
+    // removeChild on the inner nodes because they're removed by the top
+    // call anyway. We also want to call componentWillUnmount on all
+    // composites before this host node is removed from the tree. Therefore
+    // we do an inner loop while we're still inside the host node.
+    let node: Fiber = root;
+    while (true) {
+      commitUnmount(node);
+      // Visit children because they may contain more composite or host nodes.
+      // Skip portals because commitUnmount() currently visits them recursively.
+      if (node.child !== null && node.tag !== HostPortal) {
+        node.child.return = node;
+        node = node.child;
+        continue;
+      }
+      if (node === root) {
+        return;
+      }
+      while (node.sibling === null) {
+        if (node.return === null || node.return === root) {
+          return;
+        }
+        node = node.return;
+      }
+      node.sibling.return = node.return;
+      node = node.sibling;
+    }
+  }
+
+  function detachFiber(current: Fiber) {
+    // Cut off the return pointers to disconnect it from the tree. Ideally, we
+    // should clear the child pointer of the parent alternate to let this
+    // get GC:ed but we don't know which for sure which parent is the current
+    // one so we'll settle for GC:ing the subtree of this child. This child
+    // itself will be GC:ed when the parent updates the next time.
+    current.return = null;
+    current.child = null;
+    if (current.alternate) {
+      current.alternate.child = null;
+      current.alternate.return = null;
+    }
+  }
+
+  if (!config.mutation) {
+    return {
+      commitResetTextContent(finishedWork: Fiber) {},
+      commitPlacement(finishedWork: Fiber) {},
+      commitDeletion(current: Fiber) {
+        // Detach refs and call componentWillUnmount() on the whole subtree.
+        commitNestedUnmounts(current);
+        detachFiber(current);
+      },
+      commitWork(current: Fiber | null, finishedWork: Fiber) {},
+      commitLifeCycles,
+      commitAttachRef,
+      commitDetachRef,
+    };
+  }
+
+  const {
+    commitMount,
+    commitUpdate,
+    resetTextContent,
+    commitTextUpdate,
+    appendChild,
+    appendChildToContainer,
+    insertBefore,
+    insertInContainerBefore,
+    removeChild,
+    removeChildFromContainer,
+  } = config.mutation;
 
   function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;
@@ -254,36 +449,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitNestedUnmounts(root: Fiber): void {
-    // While we're inside a removed host node we don't want to call
-    // removeChild on the inner nodes because they're removed by the top
-    // call anyway. We also want to call componentWillUnmount on all
-    // composites before this host node is removed from the tree. Therefore
-    // we do an inner loop while we're still inside the host node.
-    let node: Fiber = root;
-    while (true) {
-      commitUnmount(node);
-      // Visit children because they may contain more composite or host nodes.
-      // Skip portals because commitUnmount() currently visits them recursively.
-      if (node.child !== null && node.tag !== HostPortal) {
-        node.child.return = node;
-        node = node.child;
-        continue;
-      }
-      if (node === root) {
-        return;
-      }
-      while (node.sibling === null) {
-        if (node.return === null || node.return === root) {
-          return;
-        }
-        node = node.return;
-      }
-      node.sibling.return = node.return;
-      node = node.sibling;
-    }
-  }
-
   function unmountHostComponents(current): void {
     // We only have the top Fiber that was inserted but we need recurse down its
     // children to find all the terminal nodes.
@@ -375,53 +540,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Recursively delete all host nodes from the parent.
     // Detach refs and call componentWillUnmount() on the whole subtree.
     unmountHostComponents(current);
-
-    // Cut off the return pointers to disconnect it from the tree. Ideally, we
-    // should clear the child pointer of the parent alternate to let this
-    // get GC:ed but we don't know which for sure which parent is the current
-    // one so we'll settle for GC:ing the subtree of this child. This child
-    // itself will be GC:ed when the parent updates the next time.
-    current.return = null;
-    current.child = null;
-    if (current.alternate) {
-      current.alternate.child = null;
-      current.alternate.return = null;
-    }
-  }
-
-  // User-originating errors (lifecycles and refs) should not interrupt
-  // deletion, so don't let them throw. Host-originating errors should
-  // interrupt deletion, so it's okay
-  function commitUnmount(current: Fiber): void {
-    if (typeof onCommitUnmount === 'function') {
-      onCommitUnmount(current);
-    }
-
-    switch (current.tag) {
-      case ClassComponent: {
-        safelyDetachRef(current);
-        const instance = current.stateNode;
-        if (typeof instance.componentWillUnmount === 'function') {
-          safelyCallComponentWillUnmount(current, instance);
-        }
-        return;
-      }
-      case HostComponent: {
-        safelyDetachRef(current);
-        return;
-      }
-      case CoroutineComponent: {
-        commitNestedUnmounts(current.stateNode);
-        return;
-      }
-      case HostPortal: {
-        // TODO: this is recursive.
-        // We are also not using this parent because
-        // the portal will get pushed immediately.
-        unmountHostComponents(current);
-        return;
-      }
-    }
+    detachFiber(current);
   }
 
   function commitWork(current: Fiber | null, finishedWork: Fiber): void {
@@ -488,106 +607,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function commitLifeCycles(current: Fiber | null, finishedWork: Fiber): void {
-    switch (finishedWork.tag) {
-      case ClassComponent: {
-        const instance = finishedWork.stateNode;
-        if (finishedWork.effectTag & Update) {
-          if (current === null) {
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidMount');
-            }
-            instance.props = finishedWork.memoizedProps;
-            instance.state = finishedWork.memoizedState;
-            instance.componentDidMount();
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
-          } else {
-            const prevProps = current.memoizedProps;
-            const prevState = current.memoizedState;
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidUpdate');
-            }
-            instance.props = finishedWork.memoizedProps;
-            instance.state = finishedWork.memoizedState;
-            instance.componentDidUpdate(prevProps, prevState);
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
-          }
-        }
-        if (
-          finishedWork.effectTag & Callback &&
-          finishedWork.updateQueue !== null
-        ) {
-          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
-        }
-        return;
-      }
-      case HostRoot: {
-        const updateQueue = finishedWork.updateQueue;
-        if (updateQueue !== null) {
-          const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, updateQueue, instance);
-        }
-        return;
-      }
-      case HostComponent: {
-        const instance: I = finishedWork.stateNode;
-
-        // Renderers may schedule work to be done after host components are mounted
-        // (eg DOM renderer may schedule auto-focus for inputs and form controls).
-        // These effects should only be committed when components are first mounted,
-        // aka when there is no current/alternate.
-        if (current === null && finishedWork.effectTag & Update) {
-          const type = finishedWork.type;
-          const props = finishedWork.memoizedProps;
-          commitMount(instance, type, props, finishedWork);
-        }
-
-        return;
-      }
-      case HostText: {
-        // We have no life-cycles associated with text.
-        return;
-      }
-      case HostPortal: {
-        // We have no life-cycles associated with portals.
-        return;
-      }
-      default: {
-        invariant(
-          false,
-          'This unit of work tag should not have side-effects. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    }
-  }
-
-  function commitAttachRef(finishedWork: Fiber) {
-    const ref = finishedWork.ref;
-    if (ref !== null) {
-      const instance = finishedWork.stateNode;
-      switch (finishedWork.tag) {
-        case HostComponent:
-          ref(getPublicInstance(instance));
-          break;
-        default:
-          ref(instance);
-      }
-    }
-  }
-
-  function commitDetachRef(current: Fiber) {
-    const currentRef = current.ref;
-    if (currentRef !== null) {
-      currentRef(null);
-    }
+  function commitResetTextContent(current: Fiber) {
+    resetTextContent(current.stateNode);
   }
 
   return {
+    commitResetTextContent,
     commitPlacement,
     commitDeletion,
     commitWork,

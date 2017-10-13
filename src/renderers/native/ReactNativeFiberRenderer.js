@@ -51,104 +51,11 @@ function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
 }
 
 const NativeRenderer = ReactFiberReconciler({
-  appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
-    const childTag = typeof child === 'number' ? child : child._nativeTag;
-    const children = parentInstance._children;
-    const index = children.indexOf(child);
-
-    if (index >= 0) {
-      children.splice(index, 1);
-      children.push(child);
-
-      UIManager.manageChildren(
-        parentInstance._nativeTag, // containerTag
-        [index], // moveFromIndices
-        [children.length - 1], // moveToIndices
-        [], // addChildReactTags
-        [], // addAtIndices
-        [], // removeAtIndices
-      );
-    } else {
-      children.push(child);
-
-      UIManager.manageChildren(
-        parentInstance._nativeTag, // containerTag
-        [], // moveFromIndices
-        [], // moveToIndices
-        [childTag], // addChildReactTags
-        [children.length - 1], // addAtIndices
-        [], // removeAtIndices
-      );
-    }
-  },
-
-  appendChildToContainer(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-  ): void {
-    const childTag = typeof child === 'number' ? child : child._nativeTag;
-    UIManager.setChildren(
-      parentInstance, // containerTag
-      [childTag], // reactTags
-    );
-  },
-
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
     parentInstance._children.push(child);
-  },
-
-  commitTextUpdate(
-    textInstance: TextInstance,
-    oldText: string,
-    newText: string,
-  ): void {
-    UIManager.updateView(
-      textInstance, // reactTag
-      'RCTRawText', // viewName
-      {text: newText}, // props
-    );
-  },
-
-  commitMount(
-    instance: Instance,
-    type: string,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    // Noop
-  },
-
-  commitUpdate(
-    instance: Instance,
-    updatePayloadTODO: Object,
-    type: string,
-    oldProps: Props,
-    newProps: Props,
-    internalInstanceHandle: Object,
-  ): void {
-    const viewConfig = instance.viewConfig;
-
-    updateFiberProps(instance._nativeTag, newProps);
-
-    const updatePayload = ReactNativeAttributePayload.diff(
-      oldProps,
-      newProps,
-      viewConfig.validAttributes,
-    );
-
-    // Avoid the overhead of bridge calls if there's no update.
-    // This is an expensive no-op for Android, and causes an unnecessary
-    // view invalidation for certain components (eg RCTTextInput) on iOS.
-    if (updatePayload != null) {
-      UIManager.updateView(
-        instance._nativeTag, // reactTag
-        viewConfig.uiViewClassName, // viewName
-        updatePayload, // props
-      );
-    }
   },
 
   createInstance(
@@ -251,60 +158,6 @@ const NativeRenderer = ReactFiberReconciler({
     return instance;
   },
 
-  insertBefore(
-    parentInstance: Instance,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    const children = (parentInstance: any)._children;
-    const index = children.indexOf(child);
-
-    // Move existing child or add new child?
-    if (index >= 0) {
-      children.splice(index, 1);
-      const beforeChildIndex = children.indexOf(beforeChild);
-      children.splice(beforeChildIndex, 0, child);
-
-      UIManager.manageChildren(
-        (parentInstance: any)._nativeTag, // containerID
-        [index], // moveFromIndices
-        [beforeChildIndex], // moveToIndices
-        [], // addChildReactTags
-        [], // addAtIndices
-        [], // removeAtIndices
-      );
-    } else {
-      const beforeChildIndex = children.indexOf(beforeChild);
-      children.splice(beforeChildIndex, 0, child);
-
-      const childTag = typeof child === 'number' ? child : child._nativeTag;
-
-      UIManager.manageChildren(
-        (parentInstance: any)._nativeTag, // containerID
-        [], // moveFromIndices
-        [], // moveToIndices
-        [childTag], // addChildReactTags
-        [beforeChildIndex], // addAtIndices
-        [], // removeAtIndices
-      );
-    }
-  },
-
-  insertInContainerBefore(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-    beforeChild: Instance | TextInstance,
-  ): void {
-    // TODO (bvaughn): Remove this check when...
-    // We create a wrapper object for the container in ReactNative render()
-    // Or we refactor to remove wrapper objects entirely.
-    // For more info on pros/cons see PR #8560 description.
-    invariant(
-      typeof parentInstance !== 'number',
-      'Container does not support insertBefore operation',
-    );
-  },
-
   prepareForCommit(): void {
     // Noop
   },
@@ -320,43 +173,7 @@ const NativeRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
-    recursivelyUncacheFiberNode(child);
-    const children = parentInstance._children;
-    const index = children.indexOf(child);
-
-    children.splice(index, 1);
-
-    UIManager.manageChildren(
-      parentInstance._nativeTag, // containerID
-      [], // moveFromIndices
-      [], // moveToIndices
-      [], // addChildReactTags
-      [], // addAtIndices
-      [index], // removeAtIndices
-    );
-  },
-
-  removeChildFromContainer(
-    parentInstance: Container,
-    child: Instance | TextInstance,
-  ): void {
-    recursivelyUncacheFiberNode(child);
-    UIManager.manageChildren(
-      parentInstance, // containerID
-      [], // moveFromIndices
-      [], // moveToIndices
-      [], // addChildReactTags
-      [], // addAtIndices
-      [0], // removeAtIndices
-    );
-  },
-
   resetAfterCommit(): void {
-    // Noop
-  },
-
-  resetTextContent(instance: Instance): void {
     // Noop
   },
 
@@ -381,6 +198,197 @@ const NativeRenderer = ReactFiberReconciler({
   now(): number {
     // TODO: Enable expiration by implementing this method.
     return 0;
+  },
+
+  mutation: {
+    appendChild(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+    ): void {
+      const childTag = typeof child === 'number' ? child : child._nativeTag;
+      const children = parentInstance._children;
+      const index = children.indexOf(child);
+
+      if (index >= 0) {
+        children.splice(index, 1);
+        children.push(child);
+
+        UIManager.manageChildren(
+          parentInstance._nativeTag, // containerTag
+          [index], // moveFromIndices
+          [children.length - 1], // moveToIndices
+          [], // addChildReactTags
+          [], // addAtIndices
+          [], // removeAtIndices
+        );
+      } else {
+        children.push(child);
+
+        UIManager.manageChildren(
+          parentInstance._nativeTag, // containerTag
+          [], // moveFromIndices
+          [], // moveToIndices
+          [childTag], // addChildReactTags
+          [children.length - 1], // addAtIndices
+          [], // removeAtIndices
+        );
+      }
+    },
+
+    appendChildToContainer(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+    ): void {
+      const childTag = typeof child === 'number' ? child : child._nativeTag;
+      UIManager.setChildren(
+        parentInstance, // containerTag
+        [childTag], // reactTags
+      );
+    },
+
+    commitTextUpdate(
+      textInstance: TextInstance,
+      oldText: string,
+      newText: string,
+    ): void {
+      UIManager.updateView(
+        textInstance, // reactTag
+        'RCTRawText', // viewName
+        {text: newText}, // props
+      );
+    },
+
+    commitMount(
+      instance: Instance,
+      type: string,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      // Noop
+    },
+
+    commitUpdate(
+      instance: Instance,
+      updatePayloadTODO: Object,
+      type: string,
+      oldProps: Props,
+      newProps: Props,
+      internalInstanceHandle: Object,
+    ): void {
+      const viewConfig = instance.viewConfig;
+
+      updateFiberProps(instance._nativeTag, newProps);
+
+      const updatePayload = ReactNativeAttributePayload.diff(
+        oldProps,
+        newProps,
+        viewConfig.validAttributes,
+      );
+
+      // Avoid the overhead of bridge calls if there's no update.
+      // This is an expensive no-op for Android, and causes an unnecessary
+      // view invalidation for certain components (eg RCTTextInput) on iOS.
+      if (updatePayload != null) {
+        UIManager.updateView(
+          instance._nativeTag, // reactTag
+          viewConfig.uiViewClassName, // viewName
+          updatePayload, // props
+        );
+      }
+    },
+
+    insertBefore(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+      beforeChild: Instance | TextInstance,
+    ): void {
+      const children = (parentInstance: any)._children;
+      const index = children.indexOf(child);
+
+      // Move existing child or add new child?
+      if (index >= 0) {
+        children.splice(index, 1);
+        const beforeChildIndex = children.indexOf(beforeChild);
+        children.splice(beforeChildIndex, 0, child);
+
+        UIManager.manageChildren(
+          (parentInstance: any)._nativeTag, // containerID
+          [index], // moveFromIndices
+          [beforeChildIndex], // moveToIndices
+          [], // addChildReactTags
+          [], // addAtIndices
+          [], // removeAtIndices
+        );
+      } else {
+        const beforeChildIndex = children.indexOf(beforeChild);
+        children.splice(beforeChildIndex, 0, child);
+
+        const childTag = typeof child === 'number' ? child : child._nativeTag;
+
+        UIManager.manageChildren(
+          (parentInstance: any)._nativeTag, // containerID
+          [], // moveFromIndices
+          [], // moveToIndices
+          [childTag], // addChildReactTags
+          [beforeChildIndex], // addAtIndices
+          [], // removeAtIndices
+        );
+      }
+    },
+
+    insertInContainerBefore(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+      beforeChild: Instance | TextInstance,
+    ): void {
+      // TODO (bvaughn): Remove this check when...
+      // We create a wrapper object for the container in ReactNative render()
+      // Or we refactor to remove wrapper objects entirely.
+      // For more info on pros/cons see PR #8560 description.
+      invariant(
+        typeof parentInstance !== 'number',
+        'Container does not support insertBefore operation',
+      );
+    },
+
+    removeChild(
+      parentInstance: Instance,
+      child: Instance | TextInstance,
+    ): void {
+      recursivelyUncacheFiberNode(child);
+      const children = parentInstance._children;
+      const index = children.indexOf(child);
+
+      children.splice(index, 1);
+
+      UIManager.manageChildren(
+        parentInstance._nativeTag, // containerID
+        [], // moveFromIndices
+        [], // moveToIndices
+        [], // addChildReactTags
+        [], // addAtIndices
+        [index], // removeAtIndices
+      );
+    },
+
+    removeChildFromContainer(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+    ): void {
+      recursivelyUncacheFiberNode(child);
+      UIManager.manageChildren(
+        parentInstance, // containerID
+        [], // moveFromIndices
+        [], // moveToIndices
+        [], // addChildReactTags
+        [], // addAtIndices
+        [0], // removeAtIndices
+      );
+    },
+
+    resetTextContent(instance: Instance): void {
+      // Noop
+    },
   },
 });
 
