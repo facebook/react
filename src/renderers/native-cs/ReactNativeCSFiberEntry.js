@@ -194,7 +194,7 @@ const ReactNativeCSFiber: ReactNativeCSType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeCSFiberRenderer.createContainer(containerTag);
+      root = ReactNativeCSFiberRenderer.createContainer(containerTag, false);
       roots.set(containerTag, root);
     }
     ReactNativeCSFiberRenderer.updateContainer(element, root, null, callback);

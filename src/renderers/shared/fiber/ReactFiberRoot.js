@@ -26,9 +26,14 @@ export type FiberRoot = {
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
+  // Determines if we should attempt to hydrate on the initial mount
+  +hydrate: boolean,
 };
 
-exports.createFiberRoot = function(containerInfo: any): FiberRoot {
+exports.createFiberRoot = function(
+  containerInfo: any,
+  hydrate: boolean,
+): FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber();
@@ -39,6 +44,7 @@ exports.createFiberRoot = function(containerInfo: any): FiberRoot {
     nextScheduledRoot: null,
     context: null,
     pendingContext: null,
+    hydrate,
   };
   uninitializedFiber.stateNode = root;
   return root;

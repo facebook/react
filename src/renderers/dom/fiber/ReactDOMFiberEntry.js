@@ -732,7 +732,7 @@ function renderSubtreeIntoContainer(
         );
       }
     }
-    const newRoot = DOMRenderer.createContainer(container);
+    const newRoot = DOMRenderer.createContainer(container, shouldHydrate);
     root = container._reactRootContainer = newRoot;
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
@@ -769,7 +769,7 @@ type RootOptions = {
 };
 
 function ReactRoot(container: Container, hydrate: boolean) {
-  const root = DOMRenderer.createContainer(container);
+  const root = DOMRenderer.createContainer(container, hydrate);
   this._reactRootContainer = root;
 }
 ReactRoot.prototype.render = function(

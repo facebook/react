@@ -219,7 +219,7 @@ type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
 };
 
 export type Reconciler<C, I, TI> = {
-  createContainer(containerInfo: C): OpaqueRoot,
+  createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot,
   updateContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
@@ -335,8 +335,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    createContainer(containerInfo: C): OpaqueRoot {
-      return createFiberRoot(containerInfo);
+    createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot {
+      return createFiberRoot(containerInfo, hydrate);
     },
 
     updateContainer(

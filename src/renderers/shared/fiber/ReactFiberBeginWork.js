@@ -338,8 +338,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
+      const root: FiberRoot = workInProgress.stateNode;
       if (
         (current === null || current.child === null) &&
+        root.hydrate &&
         enterHydrationState(workInProgress)
       ) {
         // If we don't have any current children this might be the first pass.

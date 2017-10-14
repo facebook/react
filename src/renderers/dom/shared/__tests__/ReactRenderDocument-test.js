@@ -396,7 +396,7 @@ describe('rendering React components at document', () => {
       expect(container.textContent).toBe('parsnip');
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Did not expect server HTML to contain the text node "potato" in <div>.',
+        'Expected server HTML to contain a matching <div> in <div>.',
       );
     });
 

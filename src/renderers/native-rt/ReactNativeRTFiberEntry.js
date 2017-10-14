@@ -53,7 +53,7 @@ const ReactNativeRTFiber: ReactNativeRTType = {
     if (!root) {
       // TODO (bvaughn): If we decide to keep the wrapper component,
       // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeRTFiberRenderer.createContainer(containerTag);
+      root = ReactNativeRTFiberRenderer.createContainer(containerTag, false);
       roots.set(containerTag, root);
     }
     ReactNativeRTFiberRenderer.updateContainer(element, root, null, callback);
