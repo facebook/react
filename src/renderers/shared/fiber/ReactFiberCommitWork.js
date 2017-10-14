@@ -30,12 +30,7 @@ var {
   clearCaughtError,
 } = require('ReactErrorUtils');
 
-var {
-  Placement,
-  Update,
-  Callback,
-  ContentReset,
-} = require('ReactTypeOfSideEffect');
+var {Placement, Update, ContentReset} = require('ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -132,19 +127,19 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             }
           }
         }
-        if (
-          finishedWork.effectTag & Callback &&
-          finishedWork.updateQueue !== null
-        ) {
-          commitCallbacks(finishedWork, finishedWork.updateQueue, instance);
+        const updateQueue = finishedWork.updateQueue;
+        if (updateQueue !== null) {
+          commitCallbacks(updateQueue, instance);
         }
         return;
       }
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          const instance = finishedWork.child && finishedWork.child.stateNode;
-          commitCallbacks(finishedWork, updateQueue, instance);
+          const instance = finishedWork.child !== null
+            ? finishedWork.child.stateNode
+            : null;
+          commitCallbacks(updateQueue, instance);
         }
         return;
       }

@@ -59,7 +59,7 @@ var {
   Sync,
   Never,
   msToExpirationTime,
-  asyncExpirationTime,
+  computeExpirationBucket,
   relativeExpirationTime,
 } = require('ReactFiberExpirationTime');
 
@@ -165,8 +165,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     config,
     hostContext,
     hydrationContext,
-    scheduleUpdate,
-    getExpirationTime,
+    scheduleWork,
+    computeExpirationForFiber,
   );
   const {completeWork} = ReactFiberCompleteWork(
     config,
@@ -1373,11 +1373,58 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function scheduleUpdate(fiber: Fiber, expirationTime: ExpirationTime) {
-    return scheduleUpdateImpl(fiber, expirationTime, false);
+  function computeAsyncExpiration() {
+    // Given the current clock time, returns an expiration time. We use rounding
+    // to batch like updates together.
+    // Should complete within ~1000ms. 1200ms max.
+    const currentTime = recalculateCurrentTime();
+    const expirationMs = 1000;
+    const bucketSizeMs = 200;
+    return computeExpirationBucket(currentTime, expirationMs, bucketSizeMs);
   }
 
-  function scheduleUpdateImpl(
+  function computeExpirationForFiber(fiber: Fiber) {
+    let expirationTime;
+    if (expirationContext !== NoWork) {
+      // An explicit expiration context was set;
+      expirationTime = expirationContext;
+    } else if (isPerformingWork) {
+      if (isCommitting) {
+        // Updates that occur during the commit phase should have sync priority
+        // by default.
+        expirationTime = Sync;
+      } else {
+        // Updates during the render phase should expire at the same time as
+        // the work that is being rendered.
+        expirationTime = nextRenderExpirationTime;
+      }
+    } else {
+      // No explicit expiration context was set, and we're not currently
+      // performing work. Calculate a new expiration time.
+      if (useSyncScheduling && !(fiber.internalContextTag & AsyncUpdates)) {
+        // This is a sync update
+        expirationTime = Sync;
+      } else {
+        // This is an async update
+        expirationTime = computeAsyncExpiration();
+      }
+    }
+
+    if (
+      expirationTime === Sync &&
+      (isBatchingUpdates || (isUnbatchingUpdates && isCommitting))
+    ) {
+      // If we're in a batch, downgrade sync to task.
+      expirationTime = Task;
+    }
+    return expirationTime;
+  }
+
+  function scheduleWork(fiber: Fiber, expirationTime: ExpirationTime) {
+    return scheduleWorkImpl(fiber, expirationTime, false);
+  }
+
+  function scheduleWorkImpl(
     fiber: Fiber,
     expirationTime: ExpirationTime,
     isErrorRecovery: boolean,
@@ -1483,53 +1530,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function getExpirationTime(
-    fiber: Fiber,
-    forceAsync: boolean,
-  ): ExpirationTime {
-    let expirationTime;
-    if (expirationContext !== NoWork) {
-      // An explicit expiration context was set;
-      expirationTime = expirationContext;
-    } else if (isPerformingWork) {
-      if (isCommitting) {
-        // Updates that occur during the commit phase should have task priority
-        // by default.
-        expirationTime = Sync;
-      } else {
-        // Updates during the render phase should expire at the same time as
-        // the work that is being rendered.
-        expirationTime = nextRenderExpirationTime;
-      }
-    } else {
-      // No explicit expiration context was set, and we're not currently
-      // performing work. Calculate a new expiration time.
-      if (
-        useSyncScheduling &&
-        !(fiber.internalContextTag & AsyncUpdates) &&
-        !forceAsync
-      ) {
-        // This is a sync update
-        expirationTime = Sync;
-      } else {
-        // This is an async update
-        const currentTime = recalculateCurrentTime();
-        expirationTime = asyncExpirationTime(currentTime);
-      }
-    }
-
-    if (
-      expirationTime === Sync &&
-      (isBatchingUpdates || (isUnbatchingUpdates && isCommitting))
-    ) {
-      // If we're in a batch, or in the commit phase, downgrade sync to task
-      return Task;
-    }
-    return expirationTime;
-  }
-
   function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleUpdateImpl(fiber, Task, true);
+    scheduleWorkImpl(fiber, Task, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
@@ -1590,8 +1592,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
   function deferredUpdates<A>(fn: () => A): A {
     const previousExpirationContext = expirationContext;
-    const currentTime = recalculateCurrentTime();
-    expirationContext = asyncExpirationTime(currentTime);
+    expirationContext = computeAsyncExpiration();
     try {
       return fn();
     } finally {
@@ -1600,8 +1601,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   return {
-    scheduleUpdate: scheduleUpdate,
-    getExpirationTime: getExpirationTime,
+    computeAsyncExpiration: computeAsyncExpiration,
+    computeExpirationForFiber: computeExpirationForFiber,
+    scheduleWork: scheduleWork,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,

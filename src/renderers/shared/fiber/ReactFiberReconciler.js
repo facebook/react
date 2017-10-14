@@ -15,9 +15,6 @@ import type {FiberRoot} from 'ReactFiberRoot';
 import type {ReactNodeList} from 'ReactTypes';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
-
-var {addTopLevelUpdate} = require('ReactFiberUpdateQueue');
-
 var {
   findCurrentUnmaskedContext,
   isContextProvider,
@@ -27,6 +24,7 @@ var {createFiberRoot} = require('ReactFiberRoot');
 var ReactFiberScheduler = require('ReactFiberScheduler');
 var ReactInstanceMap = require('ReactInstanceMap');
 var {HostComponent} = require('ReactTypeOfWork');
+var {insertUpdateIntoFiber} = require('ReactFiberUpdateQueue');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 if (__DEV__) {
@@ -265,8 +263,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   var {getPublicInstance} = config;
 
   var {
-    scheduleUpdate,
-    getExpirationTime,
+    computeAsyncExpiration,
+    computeExpirationForFiber,
+    scheduleWork,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -296,17 +295,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       }
     }
 
-    // Check if the top-level element is an async wrapper component. If so, treat
-    // updates to the root as async. This is a bit weird but lets us avoid a separate
-    // `renderAsync` API.
-    const forceAsync =
-      ReactFeatureFlags.enableAsyncSubtreeAPI &&
-      element != null &&
-      element.type != null &&
-      element.type.prototype != null &&
-      (element.type.prototype: any).unstable_isAsyncReactComponent === true;
-    const expirationTime = getExpirationTime(current, forceAsync);
-    const nextState = {element};
     callback = callback === undefined ? null : callback;
     if (__DEV__) {
       warning(
@@ -316,8 +304,34 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         callback,
       );
     }
-    addTopLevelUpdate(current, nextState, callback, expirationTime);
-    scheduleUpdate(current, expirationTime);
+
+    let expirationTime;
+    // Check if the top-level element is an async wrapper component. If so,
+    // treat updates to the root as async. This is a bit weird but lets us
+    // avoid a separate `renderAsync` API.
+    if (
+      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      element != null &&
+      element.type != null &&
+      element.type.prototype != null &&
+      (element.type.prototype: any).unstable_isAsyncReactComponent === true
+    ) {
+      expirationTime = computeAsyncExpiration();
+    } else {
+      expirationTime = computeExpirationForFiber(current);
+    }
+
+    const update = {
+      expirationTime,
+      partialState: {element},
+      callback,
+      isReplace: false,
+      isForced: false,
+      nextCallback: null,
+      next: null,
+    };
+    insertUpdateIntoFiber(current, update);
+    scheduleWork(current, expirationTime);
   }
 
   return {

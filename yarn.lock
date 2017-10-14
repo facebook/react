@@ -2614,6 +2614,12 @@ istanbul-reports@^1.1.1:
   dependencies:
     handlebars "^4.0.3"
 
+jasmine-check@^1.0.0-rc.0:
+  version "1.0.0-rc.0"
+  resolved "https://registry.yarnpkg.com/jasmine-check/-/jasmine-check-1.0.0-rc.0.tgz#117728c150078ecf211986c5f164275b71e937a4"
+  dependencies:
+    testcheck "^1.0.0-rc"
+
 jest-changed-files@20.1.0-delta.1:
   version "20.1.0-delta.1"
   resolved "https://registry.yarnpkg.com/jest-changed-files/-/jest-changed-files-20.1.0-delta.1.tgz#912f8eff09c79b28fc7b66513f0ad505f1b378d5"
@@ -4315,6 +4321,10 @@ test-exclude@^4.0.3:
     object-assign "^4.1.0"
     read-pkg-up "^1.0.1"
     require-main-filename "^1.0.1"
+
+testcheck@^1.0.0-rc:
+  version "1.0.0-rc.2"
+  resolved "https://registry.yarnpkg.com/testcheck/-/testcheck-1.0.0-rc.2.tgz#11356a25b84575efe0b0857451e85b5fa74ee4e4"
 
 text-table@~0.2.0:
   version "0.2.0"

@@ -34,27 +34,20 @@ function msToExpirationTime(ms: number): ExpirationTime {
 exports.msToExpirationTime = msToExpirationTime;
 
 function ceiling(num: number, precision: number): number {
-  return (((((num * precision) | 0) + 1) / precision) | 0) + 1;
+  return (((num / precision) | 0) + 1) * precision;
 }
 
-function bucket(
+function computeExpirationBucket(
   currentTime: ExpirationTime,
   expirationInMs: number,
-  precisionInMs: number,
+  bucketSizeMs: number,
 ): ExpirationTime {
   return ceiling(
     currentTime + expirationInMs / UNIT_SIZE,
-    precisionInMs / UNIT_SIZE,
+    bucketSizeMs / UNIT_SIZE,
   );
 }
-
-// Given the current clock time, returns an expiration time. We use rounding
-// to batch like updates together.
-function asyncExpirationTime(currentTime: ExpirationTime) {
-  // Should complete within ~1000ms. 1200ms max.
-  return bucket(currentTime, 1000, 200);
-}
-exports.asyncExpirationTime = asyncExpirationTime;
+exports.computeExpirationBucket = computeExpirationBucket;
 
 // Given the current clock time and an expiration time, returns the
 // relative expiration time. Possible values include NoWork, Sync, Task, and

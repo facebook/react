@@ -154,19 +154,20 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
     // Schedule some more updates at different priorities{
-    instance.setState(createUpdate('f'));
+    instance.setState(createUpdate('d'));
     ReactNoop.flushSync(() => {
-      instance.setState(createUpdate('d'));
       instance.setState(createUpdate('e'));
+      instance.setState(createUpdate('f'));
     });
     instance.setState(createUpdate('g'));
 
     // The sync updates should have flushed, but not the async ones
-    expect(ReactNoop.getChildren()).toEqual([span('de')]);
+    expect(ReactNoop.getChildren()).toEqual([span('ef')]);
 
-    // Now flush the remaining work. Updates a, b, and c should be processed
-    // again, since they were interrupted last time.
-    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'f', 'g']);
+    // Now flush the remaining work. Even though e and f were already processed,
+    // they should be processed again, to ensure that the terminal state
+    // is deterministic.
+    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
     expect(ReactNoop.getChildren()).toEqual([span('abcdefg')]);
   });
 
@@ -202,23 +203,24 @@ describe('ReactIncrementalUpdates', () => {
     expect(ReactNoop.getChildren()).toEqual([span('')]);
 
     // Schedule some more updates at different priorities{
-    instance.setState(createUpdate('f'));
+    instance.setState(createUpdate('d'));
     ReactNoop.flushSync(() => {
-      instance.setState(createUpdate('d'));
+      instance.setState(createUpdate('e'));
       // No longer a public API, but we can test that it works internally by
       // reaching into the updater.
-      instance.updater.enqueueReplaceState(instance, createUpdate('e'));
+      instance.updater.enqueueReplaceState(instance, createUpdate('f'));
     });
     instance.setState(createUpdate('g'));
 
     // The sync updates should have flushed, but not the async ones. Update d
     // was dropped and replaced by e.
-    expect(ReactNoop.getChildren()).toEqual([span('e')]);
+    expect(ReactNoop.getChildren()).toEqual([span('f')]);
 
-    // Now flush the remaining work. Updates a, b, and c should be processed
-    // again, since they were interrupted last time.
-    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'f', 'g']);
-    expect(ReactNoop.getChildren()).toEqual([span('abcefg')]);
+    // Now flush the remaining work. Even though e and f were already processed,
+    // they should be processed again, to ensure that the terminal state
+    // is deterministic.
+    expect(ReactNoop.flush()).toEqual(['a', 'b', 'c', 'd', 'e', 'f', 'g']);
+    expect(ReactNoop.getChildren()).toEqual([span('fg')]);
   });
 
   it('passes accumulation of previous updates to replaceState updater function', () => {

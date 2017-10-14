@@ -24,7 +24,7 @@ var {
   reconcileChildFibersInPlace,
   cloneChildFibers,
 } = require('ReactChildFiber');
-var {beginUpdateQueue} = require('ReactFiberUpdateQueue');
+var {processUpdateQueue} = require('ReactFiberUpdateQueue');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   getMaskedContext,
@@ -71,8 +71,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
-  scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  getExpirationTime: (fiber: Fiber, forceAsync: boolean) => ExpirationTime,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
+  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
   const {
     shouldSetTextContent,
@@ -95,8 +95,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // resumeMountClassInstance,
     updateClassInstance,
   } = ReactFiberClassComponent(
-    scheduleUpdate,
-    getExpirationTime,
+    scheduleWork,
+    computeExpirationForFiber,
     memoizeProps,
     memoizeState,
   );
@@ -323,12 +323,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
       const prevState = workInProgress.memoizedState;
-      const state = beginUpdateQueue(
+      const state = processUpdateQueue(
         current,
         workInProgress,
         updateQueue,
         null,
-        prevState,
         null,
         renderExpirationTime,
       );
@@ -720,7 +719,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function memoizeState(workInProgress: Fiber, nextState: any) {
     workInProgress.memoizedState = nextState;
     // Don't reset the updateQueue, in case there are pending updates. Resetting
-    // is handled by beginUpdateQueue.
+    // is handled by processUpdateQueue.
   }
 
   function beginWork(

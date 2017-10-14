@@ -25,10 +25,8 @@ var {
   isContextConsumer,
 } = require('ReactFiberContext');
 var {
-  addUpdate,
-  addReplaceUpdate,
-  addForceUpdate,
-  beginUpdateQueue,
+  insertUpdateIntoFiber,
+  processUpdateQueue,
 } = require('ReactFiberUpdateQueue');
 var {hasContextChanged} = require('ReactFiberContext');
 var {isMounted} = require('ReactFiberTreeReflection');
@@ -77,8 +75,8 @@ if (__DEV__) {
 }
 
 module.exports = function(
-  scheduleUpdate: (fiber: Fiber, expirationTime: ExpirationTime) => void,
-  getExpirationTime: (fiber: Fiber, forceAsync: boolean) => ExpirationTime,
+  scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
+  computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
   memoizeState: (workInProgress: Fiber, state: any) => void,
 ) {
@@ -87,33 +85,60 @@ module.exports = function(
     isMounted,
     enqueueSetState(instance, partialState, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'setState');
       }
-      addUpdate(fiber, partialState, callback, expirationTime);
-      scheduleUpdate(fiber, expirationTime);
+      const expirationTime = computeExpirationForFiber(fiber);
+      const update = {
+        expirationTime,
+        partialState,
+        callback,
+        isReplace: false,
+        isForced: false,
+        nextCallback: null,
+        next: null,
+      };
+      insertUpdateIntoFiber(fiber, update);
+      scheduleWork(fiber, expirationTime);
     },
     enqueueReplaceState(instance, state, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'replaceState');
       }
-      addReplaceUpdate(fiber, state, callback, expirationTime);
-      scheduleUpdate(fiber, expirationTime);
+      const expirationTime = computeExpirationForFiber(fiber);
+      const update = {
+        expirationTime,
+        partialState: state,
+        callback,
+        isReplace: true,
+        isForced: false,
+        nextCallback: null,
+        next: null,
+      };
+      insertUpdateIntoFiber(fiber, update);
+      scheduleWork(fiber, expirationTime);
     },
     enqueueForceUpdate(instance, callback) {
       const fiber = ReactInstanceMap.get(instance);
-      const expirationTime = getExpirationTime(fiber, false);
       callback = callback === undefined ? null : callback;
       if (__DEV__) {
         warnOnInvalidCallback(callback, 'forceUpdate');
       }
-      addForceUpdate(fiber, callback, expirationTime);
-      scheduleUpdate(fiber, expirationTime);
+      const expirationTime = computeExpirationForFiber(fiber);
+      const update = {
+        expirationTime,
+        partialState: null,
+        callback,
+        isReplace: false,
+        isForced: true,
+        nextCallback: null,
+        next: null,
+      };
+      insertUpdateIntoFiber(fiber, update);
+      scheduleWork(fiber, expirationTime);
     },
   };
 
@@ -404,7 +429,7 @@ module.exports = function(
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
-    instance.state = state;
+    instance.state = workInProgress.memoizedState = state;
     instance.refs = emptyObject;
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
@@ -423,12 +448,11 @@ module.exports = function(
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null) {
-        instance.state = beginUpdateQueue(
+        instance.state = processUpdateQueue(
           current,
           workInProgress,
           updateQueue,
           instance,
-          state,
           props,
           renderExpirationTime,
         );
@@ -481,7 +505,7 @@ module.exports = function(
   //   // Process the update queue before calling shouldComponentUpdate
   //   const updateQueue = workInProgress.updateQueue;
   //   if (updateQueue !== null) {
-  //     newState = beginUpdateQueue(
+  //     newState = processUpdateQueue(
   //       workInProgress,
   //       updateQueue,
   //       instance,
@@ -524,7 +548,7 @@ module.exports = function(
   //     // componentWillMount may have called setState. Process the update queue.
   //     const newUpdateQueue = workInProgress.updateQueue;
   //     if (newUpdateQueue !== null) {
-  //       newState = beginUpdateQueue(
+  //       newState = processUpdateQueue(
   //         workInProgress,
   //         newUpdateQueue,
   //         instance,
@@ -590,12 +614,11 @@ module.exports = function(
     // TODO: Previous state can be null.
     let newState;
     if (workInProgress.updateQueue !== null) {
-      newState = beginUpdateQueue(
+      newState = processUpdateQueue(
         current,
         workInProgress,
         workInProgress.updateQueue,
         instance,
-        oldState,
         newProps,
         renderExpirationTime,
       );
