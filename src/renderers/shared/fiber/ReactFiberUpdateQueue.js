@@ -19,7 +19,7 @@ const {NoWork} = require('ReactFiberExpirationTime');
 
 const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
 
-const invariant = require('invariant');
+const invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -57,7 +57,7 @@ export type UpdateQueue<State> = {
   // unprocessed updates that came before it. In that case, we need to keep
   // track of the base state, which represents the base state of the first
   // unprocessed update, which is the same as the first update in the list.
-  baseState: State | null,
+  baseState: State,
   // For the same reason, we keep track of the remaining expiration time.
   expirationTime: ExpirationTime,
   first: Update<State> | null,
@@ -87,7 +87,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
 function insertUpdateIntoQueue<State>(
   queue: UpdateQueue<State>,
   update: Update<State>,
-) {
+): void {
   // Append the update to the end of the list.
   if (queue.last === null) {
     // Queue is empty
@@ -105,7 +105,10 @@ function insertUpdateIntoQueue<State>(
 }
 exports.insertUpdateIntoQueue = insertUpdateIntoQueue;
 
-function insertUpdateIntoFiber<State>(fiber: Fiber, update: Update<State>) {
+function insertUpdateIntoFiber<State>(
+  fiber: Fiber,
+  update: Update<State>,
+): void {
   // We'll have at least one and at most two distinct update queues.
   const alternateFiber = fiber.alternate;
   let queue1 = fiber.updateQueue;
@@ -190,7 +193,7 @@ function processUpdateQueue<State>(
   instance: any,
   props: any,
   renderExpirationTime: ExpirationTime,
-): any {
+): State {
   if (current !== null && current.updateQueue === queue) {
     // We need to create a work-in-progress queue, by cloning the current queue.
     const currentQueue = queue;

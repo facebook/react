@@ -337,7 +337,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         resetHydrationState();
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
-      const element = state !== null ? state.element : null;
+      const element = state.element;
       if (
         (current === null || current.child === null) &&
         enterHydrationState(workInProgress)
