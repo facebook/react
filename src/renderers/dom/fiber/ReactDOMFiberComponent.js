@@ -810,6 +810,21 @@ var ReactDOMFiberComponent = {
     lastRawProps: Object,
     nextRawProps: Object,
   ): void {
+    // TODO: Ensure that an update gets scheduled if any of the special props
+    // changed.
+    switch (tag) {
+      case 'input':
+        // Update the wrapper around inputs *after* updating props.
+        ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
+
+        // We also check that we haven't missed a value update, such as a
+        // Radio group shifting the checked value to another named radio input.
+        inputValueTracking.updateValueIfChanged((domElement: any));
+        break;
+      case 'textarea':
+        ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
+        break;
+    }
     var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
     var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
     // Apply the diff.
@@ -820,27 +835,10 @@ var ReactDOMFiberComponent = {
       isCustomComponentTag,
     );
 
-    // TODO: Ensure that an update gets scheduled if any of the special props
-    // changed.
-    switch (tag) {
-      case 'input':
-        // Update the wrapper around inputs *after* updating props. This has to
-        // happen after `updateDOMProperties`. Otherwise HTML5 input validations
-        // raise warnings and prevent the new value from being assigned.
-        ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
-
-        // We also check that we haven't missed a value update, such as a
-        // Radio group shifting the checked value to another named radio input.
-        inputValueTracking.updateValueIfChanged((domElement: any));
-        break;
-      case 'textarea':
-        ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
-        break;
-      case 'select':
-        // <select> value update needs to occur after <option> children
-        // reconciliation
-        ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
-        break;
+    if (tag === 'select') {
+      // <select> value update needs to occur after <option> children
+      // reconciliation
+      ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
     }
   },
 
