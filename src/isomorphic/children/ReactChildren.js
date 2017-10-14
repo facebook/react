@@ -105,15 +105,20 @@ function releaseTraverseContext(traverseContext) {
  * @param {!function} callback Callback to invoke with each child found.
  * @param {?*} traverseContext Used to pass information throughout the traversal
  * process.
- * @return {!number} The number of children in this subtree.
+ * @param {?function} testFunc When defined, it will return when a child that matches
+ * the `testFunc` is found. Null if not found.
+ * @return {!*} The number of children in this subtree. If `testFunc` is defined,
+ * it will return the found child or null instead.
  */
 function traverseAllChildrenImpl(
   children,
   nameSoFar,
   callback,
   traverseContext,
+  testFunc,
 ) {
   var type = typeof children;
+  var isFinding = typeof testFunc === 'function';
 
   if (type === 'undefined' || type === 'boolean') {
     // All of the above are perceived as null.
@@ -128,14 +133,18 @@ function traverseAllChildrenImpl(
     // some checks. React Fiber also inlines this logic for similar purposes.
     (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
   ) {
-    callback(
-      traverseContext,
-      children,
-      // If it's the only child, treat the name as if it was wrapped in an array
-      // so that it's consistent if the number of children grows.
-      nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
-    );
-    return 1;
+    if (isFinding) {
+      return testFunc(children) ? children : null;
+    } else {
+      callback(
+        traverseContext,
+        children,
+        // If it's the only child, treat the name as if it was wrapped in an array
+        // so that it's consistent if the number of children grows.
+        nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
+      );
+      return 1;
+    }
   }
 
   var child;
@@ -146,13 +155,19 @@ function traverseAllChildrenImpl(
   if (Array.isArray(children)) {
     for (var i = 0; i < children.length; i++) {
       child = children[i];
-      nextName = nextNamePrefix + getComponentKey(child, i);
-      subtreeCount += traverseAllChildrenImpl(
-        child,
-        nextName,
-        callback,
-        traverseContext,
-      );
+      if (isFinding) {
+        if (testFunc(child)) {
+          return child;
+        }
+      } else {
+        nextName = nextNamePrefix + getComponentKey(child, i);
+        subtreeCount += traverseAllChildrenImpl(
+          child,
+          nextName,
+          callback,
+          traverseContext,
+        );
+      }
     }
   } else {
     var iteratorFn =
@@ -178,13 +193,19 @@ function traverseAllChildrenImpl(
       var ii = 0;
       while (!(step = iterator.next()).done) {
         child = step.value;
-        nextName = nextNamePrefix + getComponentKey(child, ii++);
-        subtreeCount += traverseAllChildrenImpl(
-          child,
-          nextName,
-          callback,
-          traverseContext,
-        );
+        if (isFinding) {
+          if (testFunc(child)) {
+            return child;
+          }
+        } else {
+          nextName = nextNamePrefix + getComponentKey(child, ii++);
+          subtreeCount += traverseAllChildrenImpl(
+            child,
+            nextName,
+            callback,
+            traverseContext,
+          );
+        }
       }
     } else if (type === 'object') {
       var addendum = '';
@@ -204,6 +225,10 @@ function traverseAllChildrenImpl(
         addendum,
       );
     }
+  }
+
+  if (isFinding) {
+    return null;
   }
 
   return subtreeCount;
@@ -390,81 +415,7 @@ function toArray(children) {
  * @return {?*} the found child, or null if not found
  */
 function findChildren(children, testFunc) {
-  var type = typeof children;
-
-  if (type === 'undefined' || type === 'boolean') {
-    // All of the above are perceived as null.
-    children = null;
-  }
-
-  if (
-    children === null ||
-    type === 'string' ||
-    type === 'number' ||
-    // The following is inlined from ReactElement. This means we can optimize
-    // some checks. React Fiber also inlines this logic for similar purposes.
-    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
-  ) {
-    return testFunc(children) ? children : null;
-  }
-
-  var child;
-
-  if (Array.isArray(children)) {
-    for (var i = 0; i < children.length; i++) {
-      child = children[i];
-      if (testFunc(child)) {
-        return child;
-      }
-    }
-  } else {
-    var iteratorFn =
-      (ITERATOR_SYMBOL && children[ITERATOR_SYMBOL]) ||
-      children[FAUX_ITERATOR_SYMBOL];
-    if (typeof iteratorFn === 'function') {
-      if (__DEV__) {
-        // Warn about using Maps as children
-        if (iteratorFn === children.entries) {
-          warning(
-            didWarnAboutMaps,
-            'Using Maps as children is unsupported and will likely yield ' +
-              'unexpected results. Convert it to a sequence/iterable of keyed ' +
-              'ReactElements instead.%s',
-            getStackAddendum(),
-          );
-          didWarnAboutMaps = true;
-        }
-      }
-
-      var iterator = iteratorFn.call(children);
-      var step;
-      while (!(step = iterator.next()).done) {
-        child = step.value;
-        if (testFunc(child)) {
-          return child;
-        }
-      }
-    } else if (type === 'object') {
-      var addendum = '';
-      if (__DEV__) {
-        addendum =
-          ' If you meant to render a collection of children, use an array ' +
-          'instead.' +
-          getStackAddendum();
-      }
-      var childrenString = '' + children;
-      invariant(
-        false,
-        'Objects are not valid as a React child (found: %s).%s',
-        childrenString === '[object Object]'
-          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
-          : childrenString,
-        addendum,
-      );
-    }
-  }
-
-  return null;
+  return traverseAllChildrenImpl(children, '', null, null, testFunc);
 }
 
 var ReactChildren = {
