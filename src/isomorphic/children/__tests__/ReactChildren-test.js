@@ -922,4 +922,73 @@ describe('ReactChildren', () => {
       );
     });
   });
+
+  it('should find children', () => {
+    expect(
+      React.Children.find(undefined, () => {
+        return true;
+      }),
+    ).toEqual(null);
+    expect(
+      React.Children.find(null, () => {
+        return true;
+      }),
+    ).toEqual(null);
+
+    const child0 = <div id="123" />;
+
+    expect(React.Children.find(child0, elem => elem.props.id === '123')).toBe(
+      child0,
+    );
+    expect(React.Children.find(child0, elem => elem.props.id === '125')).toBe(
+      null,
+    );
+
+    const child1 = null;
+    const child2 = <div id="456" />;
+    const child3 = <div id="789" />;
+
+    var instance = (
+      <div>
+        {child0}
+        {child1}
+        {child2}
+        {child3}
+      </div>
+    );
+    var children = instance.props.children;
+
+    expect(
+      React.Children.find(children, elem => elem && elem.props.id === '123'),
+    ).toBe(child0);
+    expect(React.Children.find(children, elem => elem === null)).toBe(child1);
+    expect(
+      React.Children.find(children, elem => elem && elem.props.id === '456'),
+    ).toBe(child2);
+    expect(
+      React.Children.find(children, elem => elem && elem.props.id === '789'),
+    ).toBe(child3);
+
+    const cb0 = jasmine
+      .createSpy()
+      .and.callFake(elem => elem && elem.props.id === '123');
+    React.Children.find(children, cb0);
+    expect(cb0.calls.count()).toBe(1);
+
+    const cb1 = jasmine.createSpy().and.callFake(elem => elem === null);
+    React.Children.find(children, cb1);
+    expect(cb1.calls.count()).toBe(2);
+
+    const cb2 = jasmine
+      .createSpy()
+      .and.callFake(elem => elem && elem.props.id === '456');
+    React.Children.find(children, cb2);
+    expect(cb2.calls.count()).toBe(3);
+
+    const cb3 = jasmine
+      .createSpy()
+      .and.callFake(elem => elem && elem.props.id === '789');
+    React.Children.find(children, cb3);
+    expect(cb3.calls.count()).toBe(4);
+  });
 });

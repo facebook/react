@@ -381,11 +381,98 @@ function toArray(children) {
   return result;
 }
 
+/**
+ * Searches for the first child that matches the `testFunc`. Returns the child
+ * if found, null otherwise.
+ *
+ * @param {?*} children Children tree object.
+ * @param {!function} testFunc Invoked on each child, should return truthy if found
+ * @return {?*} the found child, or null if not found
+ */
+function findChildren(children, testFunc) {
+  var type = typeof children;
+
+  if (type === 'undefined' || type === 'boolean') {
+    // All of the above are perceived as null.
+    children = null;
+  }
+
+  if (
+    children === null ||
+    type === 'string' ||
+    type === 'number' ||
+    // The following is inlined from ReactElement. This means we can optimize
+    // some checks. React Fiber also inlines this logic for similar purposes.
+    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
+  ) {
+    return testFunc(children) ? children : null;
+  }
+
+  var child;
+
+  if (Array.isArray(children)) {
+    for (var i = 0; i < children.length; i++) {
+      child = children[i];
+      if (testFunc(child)) {
+        return child;
+      }
+    }
+  } else {
+    var iteratorFn =
+      (ITERATOR_SYMBOL && children[ITERATOR_SYMBOL]) ||
+      children[FAUX_ITERATOR_SYMBOL];
+    if (typeof iteratorFn === 'function') {
+      if (__DEV__) {
+        // Warn about using Maps as children
+        if (iteratorFn === children.entries) {
+          warning(
+            didWarnAboutMaps,
+            'Using Maps as children is unsupported and will likely yield ' +
+              'unexpected results. Convert it to a sequence/iterable of keyed ' +
+              'ReactElements instead.%s',
+            getStackAddendum(),
+          );
+          didWarnAboutMaps = true;
+        }
+      }
+
+      var iterator = iteratorFn.call(children);
+      var step;
+      while (!(step = iterator.next()).done) {
+        child = step.value;
+        if (testFunc(child)) {
+          return child;
+        }
+      }
+    } else if (type === 'object') {
+      var addendum = '';
+      if (__DEV__) {
+        addendum =
+          ' If you meant to render a collection of children, use an array ' +
+          'instead.' +
+          getStackAddendum();
+      }
+      var childrenString = '' + children;
+      invariant(
+        false,
+        'Objects are not valid as a React child (found: %s).%s',
+        childrenString === '[object Object]'
+          ? 'object with keys {' + Object.keys(children).join(', ') + '}'
+          : childrenString,
+        addendum,
+      );
+    }
+  }
+
+  return null;
+}
+
 var ReactChildren = {
   forEach: forEachChildren,
   map: mapChildren,
   count: countChildren,
   toArray: toArray,
+  find: findChildren,
 };
 
 module.exports = ReactChildren;
