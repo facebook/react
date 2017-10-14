@@ -269,7 +269,7 @@ var ReactNoop = {
     if (!root) {
       const container = {rootID: rootID, children: []};
       rootContainers.set(rootID, container);
-      root = NoopRenderer.createContainer(container);
+      root = NoopRenderer.createContainer(container, false);
       roots.set(rootID, root);
     }
     NoopRenderer.updateContainer(element, root, null, callback);

@@ -2638,6 +2638,12 @@ describe('ReactDOMServerIntegration', () => {
       it('should error reconnecting different element types', () =>
         expectMarkupMismatch(<div />, <span />));
 
+      it('should error reconnecting fewer root children', () =>
+        expectMarkupMismatch(<span key="a" />, [
+          <span key="a" />,
+          <span key="b" />,
+        ]));
+
       it('should error reconnecting missing attributes', () =>
         expectMarkupMismatch(<div id="foo" />, <div />));
 
