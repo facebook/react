@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactEventEmitterMixin
  */
@@ -19,21 +17,21 @@ function runEventQueueInBatch(events) {
 }
 
 var ReactEventEmitterMixin = {
-
   /**
    * Streams a fired top-level event to `EventPluginHub` where plugins have the
    * opportunity to create `ReactEvent`s to be dispatched.
    */
   handleTopLevel: function(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget) {
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  ) {
     var events = EventPluginHub.extractEvents(
       topLevelType,
       targetInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     runEventQueueInBatch(events);
   },

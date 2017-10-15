@@ -1,10 +1,8 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule findNodeHandle
  * @flow
@@ -12,13 +10,17 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
 var ReactInstanceMap = require('ReactInstanceMap');
-
+var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
+var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
 
-import type { ReactInstance } from 'ReactInstanceType';
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
+
+import type {Fiber} from 'ReactFiber';
 
 /**
  * ReactNative vs ReactWeb
@@ -50,25 +52,24 @@ import type { ReactInstance } from 'ReactInstanceType';
  * nodeHandle       N/A              rootNodeID             tag
  */
 
-let injectedFindNode;
-let injectedFindRootNodeID;
-
-function findNodeHandle(componentOrHandle: any): ?number {
+// TODO (bvaughn) Rename the findNodeHandle module to something more descriptive
+// eg findInternalHostInstance. This will reduce the likelihood of someone
+// accidentally deep-requiring this version.
+function findNodeHandle(componentOrHandle: any): any {
   if (__DEV__) {
-    // TODO: fix this unsafe cast to work with Fiber.
-    var owner = ((ReactCurrentOwner.current: any): ReactInstance | null);
-    if (owner !== null) {
+    var owner = ReactCurrentOwner.current;
+    if (owner !== null && owner.stateNode !== null) {
       warning(
-        owner._warnedAboutRefsInRender,
+        owner.stateNode._warnedAboutRefsInRender,
         '%s is accessing findNodeHandle inside its render(). ' +
-        'render() should be a pure function of props and state. It should ' +
-        'never access something that requires stale data from the previous ' +
-        'render, such as refs. Move this logic to componentDidMount and ' +
-        'componentDidUpdate instead.',
-        owner.getName() || 'A component'
+          'render() should be a pure function of props and state. It should ' +
+          'never access something that requires stale data from the previous ' +
+          'render, such as refs. Move this logic to componentDidMount and ' +
+          'componentDidUpdate instead.',
+        getComponentName(owner) || 'A component',
       );
 
-      owner._warnedAboutRefsInRender = true;
+      owner.stateNode._warnedAboutRefsInRender = true;
     }
   }
   if (componentOrHandle == null) {
@@ -83,49 +84,30 @@ function findNodeHandle(componentOrHandle: any): ?number {
 
   // TODO (balpert): Wrap iOS native components in a composite wrapper, then
   // ReactInstanceMap.get here will always succeed for mounted components
-  var internalInstance = ReactInstanceMap.get(component);
+  var internalInstance: Fiber = ReactInstanceMap.get(component);
   if (internalInstance) {
-    return injectedFindNode(internalInstance);
+    return ReactNativeFiberRenderer.findHostInstance(internalInstance);
   } else {
-    var rootNodeID = injectedFindRootNodeID(component);
-    if (rootNodeID) {
-      return rootNodeID;
+    if (component) {
+      return component;
     } else {
       invariant(
-        (
-          // Native
-          typeof component === 'object' &&
-          (
-            '_rootNodeID' in component || // TODO (bvaughn) Clean up once Stack is deprecated
-            '_nativeTag' in component
-          )
-        ) || (
+        // Native
+        (typeof component === 'object' && '_nativeTag' in component) ||
           // Composite
-          component.render != null &&
-          typeof component.render === 'function'
-        ),
+          (component.render != null && typeof component.render === 'function'),
         'findNodeHandle(...): Argument is not a component ' +
-        '(type: %s, keys: %s)',
+          '(type: %s, keys: %s)',
         typeof component,
-        Object.keys(component)
+        Object.keys(component),
       );
       invariant(
         false,
         'findNodeHandle(...): Unable to find node handle for unmounted ' +
-        'component.'
+          'component.',
       );
     }
   }
 }
-
-// Fiber and stack implementations differ; each must inject a strategy
-findNodeHandle.injection = {
-  injectFindNode(findNode) {
-    injectedFindNode = findNode;
-  },
-  injectFindRootNodeID(findRootNodeID) {
-    injectedFindRootNodeID = findRootNodeID;
-  },
-};
 
 module.exports = findNodeHandle;

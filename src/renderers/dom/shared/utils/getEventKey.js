@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule getEventKey
  */
@@ -18,18 +16,18 @@ var getEventCharCode = require('getEventCharCode');
  * @see https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent#Key_names
  */
 var normalizeKey = {
-  'Esc': 'Escape',
-  'Spacebar': ' ',
-  'Left': 'ArrowLeft',
-  'Up': 'ArrowUp',
-  'Right': 'ArrowRight',
-  'Down': 'ArrowDown',
-  'Del': 'Delete',
-  'Win': 'OS',
-  'Menu': 'ContextMenu',
-  'Apps': 'ContextMenu',
-  'Scroll': 'ScrollLock',
-  'MozPrintableKey': 'Unidentified',
+  Esc: 'Escape',
+  Spacebar: ' ',
+  Left: 'ArrowLeft',
+  Up: 'ArrowUp',
+  Right: 'ArrowRight',
+  Down: 'ArrowDown',
+  Del: 'Delete',
+  Win: 'OS',
+  Menu: 'ContextMenu',
+  Apps: 'ContextMenu',
+  Scroll: 'ScrollLock',
+  MozPrintableKey: 'Unidentified',
 };
 
 /**
@@ -59,8 +57,18 @@ var translateToKey = {
   40: 'ArrowDown',
   45: 'Insert',
   46: 'Delete',
-  112: 'F1', 113: 'F2', 114: 'F3', 115: 'F4', 116: 'F5', 117: 'F6',
-  118: 'F7', 119: 'F8', 120: 'F9', 121: 'F10', 122: 'F11', 123: 'F12',
+  112: 'F1',
+  113: 'F2',
+  114: 'F3',
+  115: 'F4',
+  116: 'F5',
+  117: 'F6',
+  118: 'F7',
+  119: 'F8',
+  120: 'F9',
+  121: 'F10',
+  122: 'F11',
+  123: 'F12',
   144: 'NumLock',
   145: 'ScrollLock',
   224: 'Meta',

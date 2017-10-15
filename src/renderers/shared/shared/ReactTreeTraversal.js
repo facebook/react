@@ -1,34 +1,27 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactTreeTraversal
  */
 
 'use strict';
 
-var { HostComponent } = require('ReactTypeOfWork');
+var {HostComponent} = require('ReactTypeOfWork');
 
 function getParent(inst) {
-  if (inst._hostParent !== undefined) {
-    return inst._hostParent;
-  }
-  if (typeof inst.tag === 'number') {
-    do {
-      inst = inst.return;
-      // TODO: If this is a HostRoot we might want to bail out.
-      // That is depending on if we want nested subtrees (layers) to bubble
-      // events to their parent. We could also go through parentNode on the
-      // host node but that wouldn't work for React Native and doesn't let us
-      // do the portal feature.
-    } while (inst && inst.tag !== HostComponent);
-    if (inst) {
-      return inst;
-    }
+  do {
+    inst = inst.return;
+    // TODO: If this is a HostRoot we might want to bail out.
+    // That is depending on if we want nested subtrees (layers) to bubble
+    // events to their parent. We could also go through parentNode on the
+    // host node but that wouldn't work for React Native and doesn't let us
+    // do the portal feature.
+  } while (inst && inst.tag !== HostComponent);
+  if (inst) {
+    return inst;
   }
   return null;
 }
@@ -101,7 +94,7 @@ function traverseTwoPhase(inst, fn, arg) {
     inst = getParent(inst);
   }
   var i;
-  for (i = path.length; i-- > 0;) {
+  for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }
   for (i = 0; i < path.length; i++) {
@@ -117,22 +110,41 @@ function traverseTwoPhase(inst, fn, arg) {
  * "entered" or "left" that element.
  */
 function traverseEnterLeave(from, to, fn, argFrom, argTo) {
-  var common = from && to ? getLowestCommonAncestor(from, to) : null;
-  var pathFrom = [];
-  while (from && from !== common) {
+  const common = from && to ? getLowestCommonAncestor(from, to) : null;
+  const pathFrom = [];
+  while (true) {
+    if (!from) {
+      break;
+    }
+    if (from === common) {
+      break;
+    }
+    const alternate = from.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
     pathFrom.push(from);
     from = getParent(from);
   }
-  var pathTo = [];
-  while (to && to !== common) {
+  const pathTo = [];
+  while (true) {
+    if (!to) {
+      break;
+    }
+    if (to === common) {
+      break;
+    }
+    const alternate = to.alternate;
+    if (alternate !== null && alternate === common) {
+      break;
+    }
     pathTo.push(to);
     to = getParent(to);
   }
-  var i;
-  for (i = 0; i < pathFrom.length; i++) {
+  for (let i = 0; i < pathFrom.length; i++) {
     fn(pathFrom[i], 'bubbled', argFrom);
   }
-  for (i = pathTo.length; i-- > 0;) {
+  for (let i = pathTo.length; i-- > 0; ) {
     fn(pathTo[i], 'captured', argTo);
   }
 }

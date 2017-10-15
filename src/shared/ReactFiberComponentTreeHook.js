@@ -1,10 +1,8 @@
 /**
- * Copyright 2016-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2016-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @flow
  * @providesModule ReactFiberComponentTreeHook
@@ -19,22 +17,12 @@ var {
   ClassComponent,
   HostComponent,
 } = ReactTypeOfWork;
+var describeComponentFrame = require('describeComponentFrame');
 var getComponentName = require('getComponentName');
 
-import type { Fiber } from 'ReactFiber';
+import type {Fiber} from 'ReactFiber';
 
-function describeComponentFrame(name, source: any, ownerName) {
-  return '\n    in ' + (name || 'Unknown') + (
-    source ?
-      ' (at ' + source.fileName.replace(/^.*[\\\/]/, '') + ':' +
-      source.lineNumber + ')' :
-    ownerName ?
-      ' (created by ' + ownerName + ')' :
-      ''
-  );
-}
-
-function describeFiber(fiber : Fiber) : string {
+function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
     case IndeterminateComponent:
     case FunctionalComponent:
@@ -56,7 +44,7 @@ function describeFiber(fiber : Fiber) : string {
 // This function can only be called with a work-in-progress fiber and
 // only during begin or complete phase. Do not call it under any other
 // circumstances.
-function getStackAddendumByWorkInProgressFiber(workInProgress : Fiber) : string {
+function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   var info = '';
   var node = workInProgress;
   do {
@@ -69,5 +57,4 @@ function getStackAddendumByWorkInProgressFiber(workInProgress : Fiber) : string 
 
 module.exports = {
   getStackAddendumByWorkInProgressFiber,
-  describeComponentFrame,
 };

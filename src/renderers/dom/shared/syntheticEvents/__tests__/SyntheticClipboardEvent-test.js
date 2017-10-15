@@ -1,10 +1,8 @@
 /**
- * Copyright 2016-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2016-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -17,6 +15,7 @@ describe('SyntheticClipboardEvent', () => {
   var createEvent;
 
   beforeEach(() => {
+    // TODO: can we express this test with only public API?
     SyntheticClipboardEvent = require('SyntheticClipboardEvent');
     createEvent = function(nativeEvent) {
       var target = require('getEventTarget')(nativeEvent);
@@ -29,12 +28,15 @@ describe('SyntheticClipboardEvent', () => {
       describe('when event has clipboardData', () => {
         it("returns event's clipboardData", () => {
           // Mock clipboardData since native implementation doesn't have a constructor
-          var clipboardData = jasmine.createSpyObj(
-            'clipboardData',
-            ['dropEffect', 'effectAllowed', 'files', 'items', 'types']
-          );
+          var clipboardData = {
+            dropEffect: null,
+            effectAllowed: null,
+            files: null,
+            items: null,
+            types: null,
+          };
           var clipboardEvent = createEvent({clipboardData: clipboardData});
-          
+
           expect(clipboardEvent.clipboardData).toBe(clipboardData);
         });
       });

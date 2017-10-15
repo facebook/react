@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -12,8 +10,7 @@
 'use strict';
 
 var React = require('react');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered
@@ -39,7 +36,7 @@ class ClickCounter extends React.Component {
           className="clickLogDiv"
           key={'clickLog' + i}
           ref={'clickLog' + i}
-        />
+        />,
       );
     }
     return (
@@ -88,8 +85,9 @@ class TestRefsComponent extends React.Component {
  * Render a TestRefsComponent and ensure that the main refs are wired up.
  */
 var renderTestRefsComponent = function() {
-  var testRefsComponent =
-      ReactTestUtils.renderIntoDocument(<TestRefsComponent />);
+  var testRefsComponent = ReactTestUtils.renderIntoDocument(
+    <TestRefsComponent />,
+  );
   expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
 
   var generalContainer = testRefsComponent.refs.myContainer;
@@ -101,10 +99,11 @@ var renderTestRefsComponent = function() {
   return testRefsComponent;
 };
 
-
 var expectClickLogsLengthToBe = function(instance, length) {
-  var clickLogs =
-    ReactTestUtils.scryRenderedDOMComponentsWithClass(instance, 'clickLogDiv');
+  var clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+    instance,
+    'clickLogDiv',
+  );
   expect(clickLogs.length).toBe(length);
   expect(Object.keys(instance.refs.myCounter.refs).length).toBe(length);
 };
@@ -113,7 +112,7 @@ describe('reactiverefs', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   /**
@@ -122,11 +121,10 @@ describe('reactiverefs', () => {
    */
   it('Should increase refs with an increase in divs', () => {
     var testRefsComponent = renderTestRefsComponent();
-    var clickIncrementer =
-      ReactTestUtils.findRenderedDOMComponentWithClass(
-        testRefsComponent,
-        'clickIncrementer'
-      );
+    var clickIncrementer = ReactTestUtils.findRenderedDOMComponentWithClass(
+      testRefsComponent,
+      'clickIncrementer',
+    );
 
     expectClickLogsLengthToBe(testRefsComponent, 1);
 
@@ -170,7 +168,7 @@ describe('ref swapping', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     RefHopsAround = class extends React.Component {
       state = {count: 0};
@@ -210,12 +208,18 @@ describe('ref swapping', () => {
   it('Allow refs to hop around children correctly', () => {
     var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
-    var firstDiv =
-      ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'first');
-    var secondDiv =
-      ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'second');
-    var thirdDiv =
-      ReactTestUtils.findRenderedDOMComponentWithClass(refHopsAround, 'third');
+    var firstDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+      refHopsAround,
+      'first',
+    );
+    var secondDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+      refHopsAround,
+      'second',
+    );
+    var thirdDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+      refHopsAround,
+      'third',
+    );
 
     expect(refHopsAround.refs.hopRef).toEqual(firstDiv);
     expect(refHopsAround.refs.divTwoRef).toEqual(secondDiv);
@@ -240,7 +244,6 @@ describe('ref swapping', () => {
     expect(refHopsAround.refs.divTwoRef).toEqual(secondDiv);
     expect(refHopsAround.refs.divThreeRef).toEqual(thirdDiv);
   });
-
 
   it('always has a value for this.refs', () => {
     class Component extends React.Component {
@@ -302,104 +305,131 @@ describe('ref swapping', () => {
   });
 });
 
-describe('string refs between fiber and stack', () => {
-  beforeEach(() => {
-    jest.resetModules();
-    React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
-  });
+describe('root level refs', () => {
+  it('attaches and detaches root refs', () => {
+    var ReactDOM = require('react-dom');
+    var inst = null;
 
-  it('attaches, detaches from fiber component with stack layer', () => {
-    spyOn(console, 'error');
-    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
-    const ReactDOM = require('react-dom');
-    const ReactDOMFiber = require('ReactDOMFiber');
-    const ReactInstanceMap = require('ReactInstanceMap');
-    let layerMounted = false;
-    class A extends React.Component {
-      render() {
-        return <div />;
-      }
-      componentDidMount() {
-        // ReactLayeredComponentMixin sets ReactCurrentOwner manually
-        ReactCurrentOwner.current = ReactInstanceMap.get(this);
-        const span = <span ref="span" />;
-        ReactCurrentOwner.current = null;
-
-        ReactDOM.unstable_renderSubtreeIntoContainer(
-          this,
-          span,
-          this._container = document.createElement('div'),
-          () => {
-            expect(this.refs.span.nodeName).toBe('SPAN');
-            layerMounted = true;
-          }
-        );
-      }
-      componentWillUnmount() {
-        ReactDOM.unmountComponentAtNode(this._container);
-      }
-    }
-    const container = document.createElement('div');
-    const a = ReactDOMFiber.render(<A />, container);
-    expect(a.refs.span).toBeTruthy();
-    ReactDOMFiber.unmountComponentAtNode(container);
-    expect(a.refs.span).toBe(undefined);
-    expect(layerMounted).toBe(true);
-    if (!ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: You are using React DOM Fiber which is an experimental ' +
-        'renderer. It is likely to have bugs, breaking changes and is ' +
-        'unsupported.'
-      );
-    }
-  });
-
-  it('attaches, detaches from stack component with fiber layer', () => {
-    spyOn(console, 'error');
-    const ReactCurrentOwner = require('react/lib/ReactCurrentOwner');
-    const ReactDOM = require('react-dom');
-    const ReactDOMFiber = require('ReactDOMFiber');
-    const ReactInstanceMap = require('ReactInstanceMap');
-    let layerMounted = false;
-    class A extends React.Component {
-      render() {
-        return <div />;
-      }
-      componentDidMount() {
-        // ReactLayeredComponentMixin sets ReactCurrentOwner manually
-        ReactCurrentOwner.current = ReactInstanceMap.get(this);
-        const span = <span ref="span" />;
-        ReactCurrentOwner.current = null;
-
-        ReactDOMFiber.unstable_renderSubtreeIntoContainer(
-          this,
-          span,
-          this._container = document.createElement('div'),
-          () => {
-            expect(this.refs.span.nodeName).toBe('SPAN');
-            layerMounted = true;
-          }
-        );
-      }
-      componentWillUnmount() {
-        ReactDOMFiber.unmountComponentAtNode(this._container);
-      }
-    }
-    const container = document.createElement('div');
-    const a = ReactDOM.render(<A />, container);
-    expect(a.refs.span).toBeTruthy();
+    // host node
+    var ref = jest.fn(value => (inst = value));
+    var container = document.createElement('div');
+    var result = ReactDOM.render(<div ref={ref} />, container);
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLDivElement);
+    expect(result).toBe(ref.mock.calls[0][0]);
     ReactDOM.unmountComponentAtNode(container);
-    expect(a.refs.span).toBe(undefined);
-    expect(layerMounted).toBe(true);
-    if (!ReactDOMFeatureFlags.useFiber) {
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: You are using React DOM Fiber which is an experimental ' +
-        'renderer. It is likely to have bugs, breaking changes and is ' +
-        'unsupported.'
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+
+    // composite
+    class Comp extends React.Component {
+      method() {
+        return true;
+      }
+      render() {
+        return <div>Comp</div>;
+      }
+    }
+
+    inst = null;
+    ref = jest.fn(value => (inst = value));
+    result = ReactDOM.render(<Comp ref={ref} />, container);
+
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(inst).toBeInstanceOf(Comp);
+    expect(result).toBe(inst);
+
+    // ensure we have the correct instance
+    expect(result.method()).toBe(true);
+    expect(inst.method()).toBe(true);
+
+    ReactDOM.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+
+    // fragment
+    inst = null;
+    ref = jest.fn(value => (inst = value));
+    var divInst = null;
+    var ref2 = jest.fn(value => (divInst = value));
+    result = ReactDOM.render(
+      [<Comp ref={ref} key="a" />, 5, <div ref={ref2} key="b">Hello</div>],
+      container,
+    );
+
+    // first call should be `Comp`
+    expect(ref).toHaveBeenCalledTimes(1);
+    expect(ref.mock.calls[0][0]).toBeInstanceOf(Comp);
+    expect(result).toBe(ref.mock.calls[0][0]);
+
+    expect(ref2).toHaveBeenCalledTimes(1);
+    expect(divInst).toBeInstanceOf(HTMLDivElement);
+    expect(result).not.toBe(divInst);
+
+    ReactDOM.unmountComponentAtNode(container);
+    expect(ref).toHaveBeenCalledTimes(2);
+    expect(ref.mock.calls[1][0]).toBe(null);
+    expect(ref2).toHaveBeenCalledTimes(2);
+    expect(ref2.mock.calls[1][0]).toBe(null);
+
+    // null
+    result = ReactDOM.render(null, container);
+    expect(result).toBe(null);
+
+    // primitives
+    result = ReactDOM.render(5, container);
+    expect(result).toBeInstanceOf(Text);
+  });
+});
+
+describe('creating element with ref in constructor', () => {
+  class RefTest extends React.Component {
+    constructor(props) {
+      super(props);
+      this.p = <p ref="p">Hello!</p>;
+    }
+
+    render() {
+      return <div>{this.p}</div>;
+    }
+  }
+
+  it('throws an error when __DEV__ = true', () => {
+    ReactTestUtils = require('react-dom/test-utils');
+
+    var originalDev = __DEV__;
+    __DEV__ = true;
+
+    try {
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toThrowError(
+        'Element ref was specified as a string (p) but no owner was ' +
+          'set. You may have multiple copies of React loaded. ' +
+          '(details: https://fb.me/react-refs-must-have-owner).',
       );
+    } finally {
+      __DEV__ = originalDev;
+    }
+  });
+
+  it('throws an error when __DEV__ = false', () => {
+    ReactTestUtils = require('react-dom/test-utils');
+
+    var originalDev = __DEV__;
+    __DEV__ = false;
+
+    try {
+      expect(function() {
+        ReactTestUtils.renderIntoDocument(<RefTest />);
+      }).toThrowError(
+        'Minified React error #149; visit ' +
+          'http://facebook.github.io/react/docs/error-decoder.html?invariant=149&args[]=p ' +
+          'for the full message or use the non-minified dev environment for full errors and additional ' +
+          'helpful warnings.',
+      );
+    } finally {
+      __DEV__ = originalDev;
     }
   });
 });

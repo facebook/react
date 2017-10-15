@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -34,7 +32,10 @@ ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
       code: 'String(obj)',
       errors: [
         {
-          message: 'Do not use the String constructor. To cast a value to a string, concat it with the empty string (unless it\'s a symbol, which has different semantics): \'\' + value',
+          message:
+            'Do not use the String constructor. ' +
+            'To cast a value to a string, concat it with the empty string ' +
+            '(unless it\'s a symbol, which has different semantics): \'\' + value',
         },
       ],
     },

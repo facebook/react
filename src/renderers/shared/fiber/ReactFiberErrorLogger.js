@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactFiberErrorLogger
  * @flow
@@ -12,45 +10,36 @@
 
 'use strict';
 
-import type { CapturedError } from 'ReactFiberScheduler';
+const invariant = require('fbjs/lib/invariant');
 
-function logCapturedError(capturedError : CapturedError) : void {
+import type {CapturedError} from 'ReactFiberScheduler';
+
+const defaultShowDialog = (capturedError: CapturedError) => true;
+
+let showDialog = defaultShowDialog;
+
+function logCapturedError(capturedError: CapturedError): void {
+  const logError = showDialog(capturedError);
+
+  // Allow injected showDialog() to prevent default console.error logging.
+  // This enables renderers like ReactNative to better manage redbox behavior.
+  if (logError === false) {
+    return;
+  }
+
+  const error = (capturedError.error: any);
   if (__DEV__) {
     const {
       componentName,
       componentStack,
-      error,
       errorBoundaryName,
       errorBoundaryFound,
       willRetry,
     } = capturedError;
 
-    const {
-      message,
-      name,
-      stack,
-    } = error;
-
-    const errorSummary = message
-      ? `${name}: ${message}`
-      : name;
-
     const componentNameMessage = componentName
-      ? `React caught an error thrown by ${componentName}.`
-      : 'React caught an error thrown by one of your components.';
-
-    // Error stack varies by browser, eg:
-    // Chrome prepends the Error name and type.
-    // Firefox, Safari, and IE don't indent the stack lines.
-    // Format it in a consistent way for error logging.
-    let formattedCallStack = stack.slice(0, errorSummary.length) === errorSummary
-      ? stack.slice(errorSummary.length)
-      : stack;
-    formattedCallStack = formattedCallStack
-      .trim()
-      .split('\n')
-      .map((line) => `\n    ${line.trim()}`)
-      .join();
+      ? `The above error occurred in the <${componentName}> component:`
+      : 'The above error occurred in one of your React components:';
 
     let errorBoundaryMessage;
     // errorBoundaryFound check is sufficient; errorBoundaryName check is to satisfy Flow.
@@ -61,30 +50,47 @@ function logCapturedError(capturedError : CapturedError) : void {
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
         errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName}. ` +
+          `This error was initially handled by the error boundary ${errorBoundaryName}.\n` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
-      // TODO Link to unstable_handleError() documentation once it exists.
       errorBoundaryMessage =
-        'Consider adding an error boundary to your tree to customize error handling behavior.';
+        'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
+        'You can learn more about error boundaries at https://fb.me/react-error-boundaries.';
     }
+    const combinedMessage =
+      `${componentNameMessage}${componentStack}\n\n` +
+      `${errorBoundaryMessage}`;
 
-    console.error(
-      `${componentNameMessage} You should fix this error in your code. ${errorBoundaryMessage}\n\n` +
-      `${errorSummary}\n\n` +
-      `The error is located at: ${componentStack}\n\n` +
-      `The error was thrown at: ${formattedCallStack}`
-    );
-  }
-
-  if (!__DEV__) {
-    const { error } = capturedError;
-    console.error(
-      `React caught an error thrown by one of your components.\n\n${error.stack}`
-    );
+    // In development, we provide our own message with just the component stack.
+    // We don't include the original error message and JS stack because the browser
+    // has already printed it. Even if the application swallows the error, it is still
+    // displayed by the browser thanks to the DEV-only fake event trick in ReactErrorUtils.
+    console.error(combinedMessage);
+  } else {
+    // In production, we print the error directly.
+    // This will include the message, the JS stack, and anything the browser wants to show.
+    // We pass the error object instead of custom message so that the browser displays the error natively.
+    console.error(error);
   }
 }
 
-exports.logCapturedError = logCapturedError;
+exports.injection = {
+  /**
+   * Display custom dialog for lifecycle errors.
+   * Return false to prevent default behavior of logging to console.error.
+   */
+  injectDialog(fn: (e: CapturedError) => boolean) {
+    invariant(
+      showDialog === defaultShowDialog,
+      'The custom dialog was already injected.',
+    );
+    invariant(
+      typeof fn === 'function',
+      'Injected showDialog() must be a function.',
+    );
+    showDialog = fn;
+  },
+};
 
+exports.logCapturedError = logCapturedError;

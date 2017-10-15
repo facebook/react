@@ -1,23 +1,26 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule SyntheticEvent
  */
 
+/* eslint valid-typeof: 0 */
+
 'use strict';
 
-var PooledClass = require('PooledClass');
-
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var warning = require('fbjs/lib/warning');
+var invariant = require('fbjs/lib/invariant');
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';
+var EVENT_POOL_SIZE = 10;
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var shouldBeReleasedProperties = [
   'dispatchConfig',
@@ -66,7 +69,12 @@ var EventInterface = {
  * @param {object} nativeEvent Native browser event.
  * @param {DOMEventTarget} nativeEventTarget Target node.
  */
-function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarget) {
+function SyntheticEvent(
+  dispatchConfig,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
   if (__DEV__) {
     // these have a getter/setter for warnings
     delete this.nativeEvent;
@@ -98,9 +106,9 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
     }
   }
 
-  var defaultPrevented = nativeEvent.defaultPrevented != null ?
-    nativeEvent.defaultPrevented :
-    nativeEvent.returnValue === false;
+  var defaultPrevented = nativeEvent.defaultPrevented != null
+    ? nativeEvent.defaultPrevented
+    : nativeEvent.returnValue === false;
   if (defaultPrevented) {
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
   } else {
@@ -111,7 +119,6 @@ function SyntheticEvent(dispatchConfig, targetInst, nativeEvent, nativeEventTarg
 }
 
 Object.assign(SyntheticEvent.prototype, {
-
   preventDefault: function() {
     this.defaultPrevented = true;
     var event = this.nativeEvent;
@@ -121,7 +128,7 @@ Object.assign(SyntheticEvent.prototype, {
 
     if (event.preventDefault) {
       event.preventDefault();
-    } else if (typeof event.returnValue !== 'unknown') { // eslint-disable-line valid-typeof
+    } else if (typeof event.returnValue !== 'unknown') {
       event.returnValue = false;
     }
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
@@ -135,7 +142,7 @@ Object.assign(SyntheticEvent.prototype, {
 
     if (event.stopPropagation) {
       event.stopPropagation();
-    } else if (typeof event.cancelBubble !== 'unknown') { // eslint-disable-line valid-typeof
+    } else if (typeof event.cancelBubble !== 'unknown') {
       // The ChangeEventPlugin registers a "propertychange" event for
       // IE. This event does not support bubbling or cancelling, and
       // any references to cancelBubble throw "Member not found".  A
@@ -170,7 +177,11 @@ Object.assign(SyntheticEvent.prototype, {
     var Interface = this.constructor.Interface;
     for (var propName in Interface) {
       if (__DEV__) {
-        Object.defineProperty(this, propName, getPooledWarningPropertyDefinition(propName, Interface[propName]));
+        Object.defineProperty(
+          this,
+          propName,
+          getPooledWarningPropertyDefinition(propName, Interface[propName]),
+        );
       } else {
         this[propName] = null;
       }
@@ -182,56 +193,24 @@ Object.assign(SyntheticEvent.prototype, {
       Object.defineProperty(
         this,
         'nativeEvent',
-        getPooledWarningPropertyDefinition('nativeEvent', null)
+        getPooledWarningPropertyDefinition('nativeEvent', null),
       );
       Object.defineProperty(
         this,
         'preventDefault',
-        getPooledWarningPropertyDefinition('preventDefault', emptyFunction)
+        getPooledWarningPropertyDefinition('preventDefault', emptyFunction),
       );
       Object.defineProperty(
         this,
         'stopPropagation',
-        getPooledWarningPropertyDefinition('stopPropagation', emptyFunction)
+        getPooledWarningPropertyDefinition('stopPropagation', emptyFunction),
       );
     }
   },
-
 });
 
 SyntheticEvent.Interface = EventInterface;
 
-if (__DEV__) {
-  if (isProxySupported) {
-    /*eslint-disable no-func-assign */
-    SyntheticEvent = new Proxy(SyntheticEvent, {
-      construct: function(target, args) {
-        return this.apply(target, Object.create(target.prototype), args);
-      },
-      apply: function(constructor, that, args) {
-        return new Proxy(constructor.apply(that, args), {
-          set: function(target, prop, value) {
-            if (prop !== 'isPersistent' &&
-                !target.constructor.Interface.hasOwnProperty(prop) &&
-                shouldBeReleasedProperties.indexOf(prop) === -1) {
-              warning(
-                didWarnForAddedNewProperty || target.isPersistent(),
-                'This synthetic event is reused for performance reasons. If you\'re ' +
-                'seeing this, you\'re adding a new property in the synthetic event object. ' +
-                'The property is never released. See ' +
-                'https://fb.me/react-event-pooling for more information.'
-              );
-              didWarnForAddedNewProperty = true;
-            }
-            target[prop] = value;
-            return true;
-          },
-        });
-      },
-    });
-    /*eslint-enable no-func-assign */
-  }
-}
 /**
  * Helper to reduce boilerplate when creating subclasses.
  *
@@ -251,19 +230,56 @@ SyntheticEvent.augmentClass = function(Class, Interface) {
 
   Class.Interface = Object.assign({}, Super.Interface, Interface);
   Class.augmentClass = Super.augmentClass;
-
-  PooledClass.addPoolingTo(Class, PooledClass.fourArgumentPooler);
+  addEventPoolingTo(Class);
 };
 
-PooledClass.addPoolingTo(SyntheticEvent, PooledClass.fourArgumentPooler);
+/** Proxying after everything set on SyntheticEvent
+  * to resolve Proxy issue on some WebKit browsers
+  * in which some Event properties are set to undefined (GH#10010)
+  */
+if (__DEV__) {
+  if (isProxySupported) {
+    /*eslint-disable no-func-assign */
+    SyntheticEvent = new Proxy(SyntheticEvent, {
+      construct: function(target, args) {
+        return this.apply(target, Object.create(target.prototype), args);
+      },
+      apply: function(constructor, that, args) {
+        return new Proxy(constructor.apply(that, args), {
+          set: function(target, prop, value) {
+            if (
+              prop !== 'isPersistent' &&
+              !target.constructor.Interface.hasOwnProperty(prop) &&
+              shouldBeReleasedProperties.indexOf(prop) === -1
+            ) {
+              warning(
+                didWarnForAddedNewProperty || target.isPersistent(),
+                "This synthetic event is reused for performance reasons. If you're " +
+                  "seeing this, you're adding a new property in the synthetic event object. " +
+                  'The property is never released. See ' +
+                  'https://fb.me/react-event-pooling for more information.',
+              );
+              didWarnForAddedNewProperty = true;
+            }
+            target[prop] = value;
+            return true;
+          },
+        });
+      },
+    });
+    /*eslint-enable no-func-assign */
+  }
+}
+
+addEventPoolingTo(SyntheticEvent);
 
 module.exports = SyntheticEvent;
 
 /**
   * Helper to nullify syntheticEvent instance properties when destructing
   *
-  * @param {object} SyntheticEvent
   * @param {String} propName
+  * @param {?object} getVal
   * @return {object} defineProperty object
   */
 function getPooledWarningPropertyDefinition(propName, getVal) {
@@ -282,7 +298,9 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
 
   function get() {
     var action = isFunction ? 'accessing the method' : 'accessing the property';
-    var result = isFunction ? 'This is a no-op function' : 'This is set to null';
+    var result = isFunction
+      ? 'This is a no-op function'
+      : 'This is set to null';
     warn(action, result);
     return getVal;
   }
@@ -291,13 +309,52 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
     var warningCondition = false;
     warning(
       warningCondition,
-      'This synthetic event is reused for performance reasons. If you\'re seeing this, ' +
-      'you\'re %s `%s` on a released/nullified synthetic event. %s. ' +
-      'If you must keep the original synthetic event around, use event.persist(). ' +
-      'See https://fb.me/react-event-pooling for more information.',
+      "This synthetic event is reused for performance reasons. If you're seeing this, " +
+        "you're %s `%s` on a released/nullified synthetic event. %s. " +
+        'If you must keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
       action,
       propName,
-      result
+      result,
     );
   }
+}
+
+function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
+  const EventConstructor = this;
+  if (EventConstructor.eventPool.length) {
+    const instance = EventConstructor.eventPool.pop();
+    EventConstructor.call(
+      instance,
+      dispatchConfig,
+      targetInst,
+      nativeEvent,
+      nativeInst,
+    );
+    return instance;
+  }
+  return new EventConstructor(
+    dispatchConfig,
+    targetInst,
+    nativeEvent,
+    nativeInst,
+  );
+}
+
+function releasePooledEvent(event) {
+  var EventConstructor = this;
+  invariant(
+    event instanceof EventConstructor,
+    'Trying to release an event instance  into a pool of a different type.',
+  );
+  event.destructor();
+  if (EventConstructor.eventPool.length < EVENT_POOL_SIZE) {
+    EventConstructor.eventPool.push(event);
+  }
+}
+
+function addEventPoolingTo(EventConstructor) {
+  EventConstructor.eventPool = [];
+  EventConstructor.getPooled = getPooledEvent;
+  EventConstructor.release = releasePooledEvent;
 }

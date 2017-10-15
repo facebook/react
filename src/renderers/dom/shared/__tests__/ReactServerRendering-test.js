@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -14,13 +12,10 @@
 var ExecutionEnvironment;
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactDOMServer;
-var ReactMarkupChecksum;
-var ReactReconcileTransaction;
 var ReactTestUtils;
+var PropTypes;
 
-var ID_ATTRIBUTE_NAME;
 var ROOT_ATTRIBUTE_NAME;
 
 describe('ReactDOMServer', () => {
@@ -28,52 +23,41 @@ describe('ReactDOMServer', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactMarkupChecksum = require('ReactMarkupChecksum');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactReconcileTransaction = require('ReactReconcileTransaction');
+    ReactTestUtils = require('react-dom/test-utils');
+    PropTypes = require('prop-types');
 
     ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
     ExecutionEnvironment.canUseDOM = false;
     ReactDOMServer = require('react-dom/server');
 
     var DOMProperty = require('DOMProperty');
-    ID_ATTRIBUTE_NAME = DOMProperty.ID_ATTRIBUTE_NAME;
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
   describe('renderToString', () => {
     it('should generate simple markup', () => {
-      var response = ReactDOMServer.renderToString(
-        <span>hello world</span>
+      var response = ReactDOMServer.renderToString(<span>hello world</span>);
+      expect(response).toMatch(
+        new RegExp(
+          '<span ' + ROOT_ATTRIBUTE_NAME + '=""' + '>hello world</span>',
+        ),
       );
-      expect(response).toMatch(new RegExp(
-        '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">hello world</span>'
-      ));
     });
 
     it('should generate simple markup for self-closing tags', () => {
-      var response = ReactDOMServer.renderToString(
-        <img />
+      var response = ReactDOMServer.renderToString(<img />);
+      expect(response).toMatch(
+        new RegExp('<img ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>'),
       );
-      expect(response).toMatch(new RegExp(
-        '<img ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      ));
     });
 
     it('should generate simple markup for attribute with `>` symbol', () => {
-      var response = ReactDOMServer.renderToString(
-        <img data-attr=">" />
+      var response = ReactDOMServer.renderToString(<img data-attr=">" />);
+      expect(response).toMatch(
+        new RegExp(
+          '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
+        ),
       );
-      expect(response).toMatch(new RegExp(
-        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+"/>'
-      ));
     });
 
     it('should generate comment markup for component returns null', () => {
@@ -84,7 +68,7 @@ describe('ReactDOMServer', () => {
       }
 
       var response = ReactDOMServer.renderToString(<NullComponent />);
-      expect(response).toBe('<!-- react-empty: 1 -->');
+      expect(response).toBe('');
     });
 
     // TODO: Test that listeners are not registered onto any document/container.
@@ -102,19 +86,20 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToString(
-        <Parent />
+      var response = ReactDOMServer.renderToString(<Parent />);
+      expect(response).toMatch(
+        new RegExp(
+          '<div ' +
+            ROOT_ATTRIBUTE_NAME +
+            '=""' +
+            '>' +
+            '<span' +
+            '>' +
+            'My name is <!-- -->child' +
+            '</span>' +
+            '</div>',
+        ),
       );
-      expect(response).toMatch(new RegExp(
-        '<div ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-          ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-          ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-          '<span ' + ID_ATTRIBUTE_NAME + '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->My name is <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->child<!-- /react-text -->' +
-          '</span>' +
-        '</div>'
-      ));
     });
 
     it('should only execute certain lifecycle methods', () => {
@@ -162,21 +147,23 @@ describe('ReactDOMServer', () => {
           }
         }
 
-        var response = ReactDOMServer.renderToString(
-          <TestComponent />
-        );
+        var response = ReactDOMServer.renderToString(<TestComponent />);
 
-        expect(response).toMatch(new RegExp(
-          '<span ' + ROOT_ATTRIBUTE_NAME + '="" ' +
-            ID_ATTRIBUTE_NAME + '="[^"]+" ' +
-            ReactMarkupChecksum.CHECKSUM_ATTR_NAME + '="[^"]+">' +
-            '<!-- react-text: [0-9]+ -->Component name: <!-- /react-text -->' +
-            '<!-- react-text: [0-9]+ -->TestComponent<!-- /react-text -->' +
-          '</span>'
-        ));
-        expect(lifecycle).toEqual(
-          ['getInitialState', 'componentWillMount', 'render']
+        expect(response).toMatch(
+          new RegExp(
+            '<span ' +
+              ROOT_ATTRIBUTE_NAME +
+              '=""' +
+              '>' +
+              'Component name: <!-- -->TestComponent' +
+              '</span>',
+          ),
         );
+        expect(lifecycle).toEqual([
+          'getInitialState',
+          'componentWillMount',
+          'render',
+        ]);
       }
 
       runTest();
@@ -186,7 +173,9 @@ describe('ReactDOMServer', () => {
       runTest();
     });
 
-    it('should have the correct mounting behavior', () => {
+    it('should have the correct mounting behavior (old hydrate API)', () => {
+      spyOn(console, 'warn');
+      spyOn(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -235,25 +224,20 @@ describe('ReactDOMServer', () => {
       expect(element.innerHTML).toEqual('');
 
       ExecutionEnvironment.canUseDOM = false;
-      lastMarkup = ReactDOMServer.renderToString(
-        <TestComponent name="x" />
-      );
+      lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
       ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup;
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
-
-      var expectedMarkup = lastMarkup;
-      if (ReactDOMFeatureFlags.useFiber) {
-        var reactMetaData = /\s+data-react[a-z-]+="[^"]*"/g;
-        var reactComments = /<!-- \/?react-text(: \d+)? -->/g;
-        expectedMarkup =
-          expectedMarkup
-          .replace(reactMetaData, '')
-          .replace(reactComments, '');
-      }
-      expect(element.innerHTML).toBe(expectedMarkup);
+      expectDev(console.warn.calls.count()).toBe(1);
+      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
+        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+          'will stop working in React v17. Replace the ReactDOM.render() call ' +
+          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+      );
+      console.warn.calls.reset();
+      expect(element.innerHTML).toBe(lastMarkup);
 
       // Ensure the events system works after mount into server markup
       expect(numClicks).toEqual(0);
@@ -266,8 +250,96 @@ describe('ReactDOMServer', () => {
       // Now simulate a situation where the app is not idempotent. React should
       // warn but do the right thing.
       element.innerHTML = lastMarkup;
-      spyOn(console, 'error');
       instance = ReactDOM.render(<TestComponent name="y" />, element);
+      expect(mountCount).toEqual(4);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Text content did not match. Server: "x" Client: "y"',
+      );
+      console.error.calls.reset();
+      expect(element.innerHTML.length > 0).toBe(true);
+      expect(element.innerHTML).not.toEqual(lastMarkup);
+
+      // Ensure the events system works after markup mismatch.
+      expect(numClicks).toEqual(1);
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+      expect(numClicks).toEqual(2);
+      expectDev(console.warn.calls.count()).toBe(0);
+      expectDev(console.error.calls.count()).toBe(0);
+    });
+
+    it('should have the correct mounting behavior (new hydrate API)', () => {
+      spyOn(console, 'error');
+      // This test is testing client-side behavior.
+      ExecutionEnvironment.canUseDOM = true;
+
+      var mountCount = 0;
+      var numClicks = 0;
+
+      class TestComponent extends React.Component {
+        componentDidMount() {
+          mountCount++;
+        }
+
+        click = () => {
+          numClicks++;
+        };
+
+        render() {
+          return (
+            <span ref="span" onClick={this.click}>
+              Name: {this.props.name}
+            </span>
+          );
+        }
+      }
+
+      var element = document.createElement('div');
+      ReactDOM.render(<TestComponent />, element);
+
+      var lastMarkup = element.innerHTML;
+
+      // Exercise the update path. Markup should not change,
+      // but some lifecycle methods should be run again.
+      ReactDOM.render(<TestComponent name="x" />, element);
+      expect(mountCount).toEqual(1);
+
+      // Unmount and remount. We should get another mount event and
+      // we should get different markup, as the IDs are unique each time.
+      ReactDOM.unmountComponentAtNode(element);
+      expect(element.innerHTML).toEqual('');
+      ReactDOM.render(<TestComponent name="x" />, element);
+      expect(mountCount).toEqual(2);
+      expect(element.innerHTML).not.toEqual(lastMarkup);
+
+      // Now kill the node and render it on top of server-rendered markup, as if
+      // we used server rendering. We should mount again, but the markup should
+      // be unchanged. We will append a sentinel at the end of innerHTML to be
+      // sure that innerHTML was not changed.
+      ReactDOM.unmountComponentAtNode(element);
+      expect(element.innerHTML).toEqual('');
+
+      ExecutionEnvironment.canUseDOM = false;
+      lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
+      ExecutionEnvironment.canUseDOM = true;
+      element.innerHTML = lastMarkup;
+
+      var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
+      expect(mountCount).toEqual(3);
+      expect(element.innerHTML).toBe(lastMarkup);
+
+      // Ensure the events system works after mount into server markup
+      expect(numClicks).toEqual(0);
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
+      expect(numClicks).toEqual(1);
+
+      ReactDOM.unmountComponentAtNode(element);
+      expect(element.innerHTML).toEqual('');
+
+      // Now simulate a situation where the app is not idempotent. React should
+      // warn but do the right thing.
+      element.innerHTML = lastMarkup;
+      instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
       expectDev(console.error.calls.count()).toBe(1);
       expect(element.innerHTML.length > 0).toBe(true);
@@ -279,14 +351,40 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(2);
     });
 
+    // We have a polyfill for autoFocus on the client, but we intentionally don't
+    // want it to call focus() when hydrating because this can mess up existing
+    // focus before the JS has loaded.
+    it('should emit autofocus on the server but not focus() when hydrating', () => {
+      var element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(
+        <input autoFocus={true} />,
+      );
+      expect(element.firstChild.autofocus).toBe(true);
+
+      // It should not be called on mount.
+      element.firstChild.focus = jest.fn();
+      ReactDOM.hydrate(<input autoFocus={true} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+
+      // Or during an update.
+      ReactDOM.render(<input autoFocus={true} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+    });
+
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToString.bind(
-          ReactDOMServer,
-          'not a component'
-        )
+        ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
       ).toThrowError(
-        'renderToString(): You must pass a valid ReactElement.'
+        'Objects are not valid as a React child (found: object with keys {x})',
+      );
+    });
+
+    it('should throw prop mapping error for an <iframe /> with invalid props', () => {
+      expect(() =>
+        ReactDOMServer.renderToString(<iframe style="border:none;" />),
+      ).toThrowError(
+        'The `style` prop expects a mapping from style properties to values, not ' +
+          "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
       );
     });
   });
@@ -305,9 +403,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(
-        <TestComponent />
-      );
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span><div>inner text</div></span>');
     });
@@ -319,11 +415,21 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(
-        <TestComponent />
-      );
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span>hello world</span>');
+    });
+
+    it('should not use comments for empty nodes', () => {
+      class TestComponent extends React.Component {
+        render() {
+          return null;
+        }
+      }
+
+      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+
+      expect(response).toBe('');
     });
 
     it('should only execute certain lifecycle methods', () => {
@@ -371,14 +477,14 @@ describe('ReactDOMServer', () => {
           }
         }
 
-        var response = ReactDOMServer.renderToStaticMarkup(
-          <TestComponent />
-        );
+        var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
         expect(response).toBe('<span>Component name: TestComponent</span>');
-        expect(lifecycle).toEqual(
-          ['getInitialState', 'componentWillMount', 'render']
-        );
+        expect(lifecycle).toEqual([
+          'getInitialState',
+          'componentWillMount',
+          'render',
+        ]);
       }
 
       runTest();
@@ -390,12 +496,9 @@ describe('ReactDOMServer', () => {
 
     it('should throw with silly args', () => {
       expect(
-        ReactDOMServer.renderToStaticMarkup.bind(
-          ReactDOMServer,
-          'not a component'
-        )
+        ReactDOMServer.renderToStaticMarkup.bind(ReactDOMServer, {x: 123}),
       ).toThrowError(
-        'renderToStaticMarkup(): You must pass a valid ReactElement.'
+        'Objects are not valid as a React child (found: object with keys {x})',
       );
     });
 
@@ -409,15 +512,81 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
+      var markup = ReactDOMServer.renderToString(<Component />);
+      expect(markup).toContain('hello, world');
+    });
 
-      ReactReconcileTransaction.prototype.perform = function() {
-        // We shouldn't ever be calling this on the server
-        throw new Error('Browser reconcile transaction should not be used');
-      };
+    it('allows setState in componentWillMount with custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+          this.state = {text: 'default state'};
+        }
+
+        componentWillMount() {
+          this.setState({text: 'hello, world'});
+        }
+
+        render() {
+          return <div>{this.state.text}</div>;
+        }
+      }
+      var markup = ReactDOMServer.renderToString(<Component />);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with props when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.props.text}</div>;
+        }
+      }
+
       var markup = ReactDOMServer.renderToString(
-        <Component />
+        <Component text="hello, world" />,
       );
-      expect(markup.indexOf('hello, world') >= 0).toBe(true);
+      expect(markup).toContain('hello, world');
+    });
+
+    it('renders with context when using custom constructor', () => {
+      class Component extends React.Component {
+        constructor() {
+          super();
+        }
+
+        render() {
+          return <div>{this.context.text}</div>;
+        }
+      }
+
+      Component.contextTypes = {
+        text: PropTypes.string.isRequired,
+      };
+
+      class ContextProvider extends React.Component {
+        getChildContext() {
+          return {
+            text: 'hello, world',
+          };
+        }
+
+        render() {
+          return this.props.children;
+        }
+      }
+
+      ContextProvider.childContextTypes = {
+        text: PropTypes.string,
+      };
+
+      var markup = ReactDOMServer.renderToString(
+        <ContextProvider><Component /></ContextProvider>,
+      );
+      expect(markup).toContain('hello, world');
     });
 
     it('renders components with different batching strategies', () => {
@@ -426,7 +595,7 @@ describe('ReactDOMServer', () => {
           const staticContent = ReactDOMServer.renderToStaticMarkup(
             <div>
               <img src="foo-bar.jpg" />
-            </div>
+            </div>,
           );
           return <div dangerouslySetInnerHTML={{__html: staticContent}} />;
         }
@@ -448,8 +617,8 @@ describe('ReactDOMServer', () => {
           <div>
             <StaticComponent />
             <Component />
-          </div>
-        )
+          </div>,
+        ),
       ).not.toThrow();
     });
   });
@@ -473,36 +642,10 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: setState(...): Can only update a mounting component.' +
-      ' This usually means you called setState() outside componentWillMount() on the server.' +
-      ' This is a no-op.\n\nPlease check the code for the Foo component.'
+        ' This usually means you called setState() outside componentWillMount() on the server.' +
+        ' This is a no-op.\n\nPlease check the code for the Foo component.',
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
-    expect(markup).toBe('<div>hello</div>');
-  });
-
-  it('warns with a no-op when an async replaceState is triggered', () => {
-    var Bar = React.createClass({
-      componentWillMount: function() {
-        this.replaceState({text: 'hello'});
-        setTimeout(() => {
-          this.replaceState({text: 'error'});
-        });
-      },
-      render: function() {
-        return <div onClick={() => {}}>{this.state.text}</div>;
-      },
-    });
-
-    spyOn(console, 'error');
-    ReactDOMServer.renderToString(<Bar />);
-    jest.runOnlyPendingTimers();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.mostRecent().args[0]).toBe(
-      'Warning: replaceState(...): Can only update a mounting component. ' +
-      'This usually means you called replaceState() outside componentWillMount() on the server. ' +
-      'This is a no-op.\n\nPlease check the code for the Bar component.'
-    );
-    var markup = ReactDOMServer.renderToStaticMarkup(<Bar />);
     expect(markup).toBe('<div>hello</div>');
   });
 
@@ -526,8 +669,8 @@ describe('ReactDOMServer', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: forceUpdate(...): Can only update a mounting component. ' +
-      'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
-      'This is a no-op.\n\nPlease check the code for the Baz component.'
+        'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
+        'This is a no-op.\n\nPlease check the code for the Baz component.',
     );
     var markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
@@ -545,8 +688,40 @@ describe('ReactDOMServer', () => {
           <span key={0} />
           <span key={1} />
           <span key={2} />
-        </Wrapper>
+        </Wrapper>,
       );
     }).toThrowError(/Cannot assign to read only property.*/);
+  });
+
+  it('warns about lowercase html but not in svg tags', () => {
+    spyOn(console, 'error');
+    function CompositeG(props) {
+      // Make sure namespace passes through composites
+      return <g>{props.children}</g>;
+    }
+    ReactDOMServer.renderToStaticMarkup(
+      <div>
+        <inPUT />
+        <svg>
+          <CompositeG>
+            <linearGradient />
+            <foreignObject>
+              {/* back to HTML */}
+              <iFrame />
+            </foreignObject>
+          </CompositeG>
+        </svg>
+      </div>,
+    );
+    expect(console.error.calls.count()).toBe(2);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    );
+    // linearGradient doesn't warn
+    expect(console.error.calls.argsFor(1)[0]).toBe(
+      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
+        'HTML tags in React.',
+    );
   });
 });

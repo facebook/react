@@ -1,10 +1,8 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactNativeInjection
  * @flow
@@ -29,32 +27,26 @@ var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
 var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
 var ResponderEventPlugin = require('ResponderEventPlugin');
 
-function inject() {
-  /**
-   * Register the event emitter with the native bridge
-   */
-  RCTEventEmitter.register(ReactNativeEventEmitter);
+/**
+ * Register the event emitter with the native bridge
+ */
+RCTEventEmitter.register(ReactNativeEventEmitter);
 
-  /**
-   * Inject module for resolving DOM hierarchy and plugin ordering.
-   */
-  EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
-  EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
+/**
+ * Inject module for resolving DOM hierarchy and plugin ordering.
+ */
+EventPluginHub.injection.injectEventPluginOrder(ReactNativeEventPluginOrder);
+EventPluginUtils.injection.injectComponentTree(ReactNativeComponentTree);
 
-  ResponderEventPlugin.injection.injectGlobalResponderHandler(
-    ReactNativeGlobalResponderHandler
-  );
+ResponderEventPlugin.injection.injectGlobalResponderHandler(
+  ReactNativeGlobalResponderHandler,
+);
 
-  /**
-   * Some important event plugins included by default (without having to require
-   * them).
-   */
-  EventPluginHub.injection.injectEventPluginsByName({
-    'ResponderEventPlugin': ResponderEventPlugin,
-    'ReactNativeBridgeEventPlugin': ReactNativeBridgeEventPlugin,
-  });
-}
-
-module.exports = {
-  inject: inject,
-};
+/**
+ * Some important event plugins included by default (without having to require
+ * them).
+ */
+EventPluginHub.injection.injectEventPluginsByName({
+  ResponderEventPlugin: ResponderEventPlugin,
+  ReactNativeBridgeEventPlugin: ReactNativeBridgeEventPlugin,
+});

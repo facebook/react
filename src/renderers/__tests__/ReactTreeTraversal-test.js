@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -12,8 +10,9 @@
 'use strict';
 
 var React = require('react');
+// TODO: can we express this test with only public API?
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 /**
  * Ensure that all callbacks are invoked, passing this unique argument.
@@ -94,10 +93,7 @@ describe('ReactTreeTraversal', () => {
     it('should traverse two phase at shallowest node', () => {
       var parent = renderParentIntoDocument();
       var target = getInst(parent.refs.P);
-      var expectedCalls = [
-        ['P', 'captured', ARG],
-        ['P', 'bubbled', ARG],
-      ];
+      var expectedCalls = [['P', 'captured', ARG], ['P', 'bubbled', ARG]];
       ReactTreeTraversal.traverseTwoPhase(target, callback, ARG);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
@@ -105,9 +101,7 @@ describe('ReactTreeTraversal', () => {
 
   describe('traverseEnterLeave', () => {
     it('should not traverse when enter/leaving outside DOM', () => {
-      ReactTreeTraversal.traverseEnterLeave(
-        null, null, callback, ARG, ARG2
-      );
+      ReactTreeTraversal.traverseEnterLeave(null, null, callback, ARG, ARG2);
       expect(mockFn).not.toHaveBeenCalled();
     });
 
@@ -115,9 +109,7 @@ describe('ReactTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV_1);
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn).not.toHaveBeenCalled();
     });
 
@@ -130,9 +122,7 @@ describe('ReactTreeTraversal', () => {
         // enter/leave shouldn't fire anything on the parent
         ['P_P1_C1__DIV_2', 'captured', ARG2],
       ];
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
@@ -140,12 +130,8 @@ describe('ReactTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var leave = getInst(parent.refs.P_P1_C1.refs.DIV_1);
       var enter = getInst(parent.refs.P_P1_C1.refs.DIV);
-      var expectedCalls = [
-        ['P_P1_C1__DIV_1', 'bubbled', ARG],
-      ];
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      var expectedCalls = [['P_P1_C1__DIV_1', 'bubbled', ARG]];
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
@@ -158,9 +144,7 @@ describe('ReactTreeTraversal', () => {
         ['P_P1', 'captured', ARG2],
         ['P_P1_C1__DIV', 'captured', ARG2],
       ];
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
@@ -168,12 +152,8 @@ describe('ReactTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var leave = null; // From the window or outside of the React sandbox.
       var enter = getInst(parent.refs.P);
-      var expectedCalls = [
-        ['P', 'captured', ARG2],
-      ];
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      var expectedCalls = [['P', 'captured', ARG2]];
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
@@ -186,9 +166,7 @@ describe('ReactTreeTraversal', () => {
         ['P_P1', 'bubbled', ARG],
         ['P', 'bubbled', ARG],
       ];
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
 
@@ -201,9 +179,7 @@ describe('ReactTreeTraversal', () => {
         ['P_P1', 'bubbled', ARG],
         ['P', 'bubbled', ARG],
       ];
-      ReactTreeTraversal.traverseEnterLeave(
-        leave, enter, callback, ARG, ARG2
-      );
+      ReactTreeTraversal.traverseEnterLeave(leave, enter, callback, ARG, ARG2);
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
   });
@@ -213,7 +189,8 @@ describe('ReactTreeTraversal', () => {
       var parent = renderParentIntoDocument();
       var ancestors = [
         // Common ancestor with self is self.
-        {one: parent.refs.P_P1_C1.refs.DIV_1,
+        {
+          one: parent.refs.P_P1_C1.refs.DIV_1,
           two: parent.refs.P_P1_C1.refs.DIV_1,
           com: parent.refs.P_P1_C1.refs.DIV_1,
         },
@@ -255,11 +232,10 @@ describe('ReactTreeTraversal', () => {
         var plan = ancestors[i];
         var firstCommon = ReactTreeTraversal.getLowestCommonAncestor(
           getInst(plan.one),
-          getInst(plan.two)
+          getInst(plan.two),
         );
         expect(firstCommon).toBe(getInst(plan.com));
       }
     });
   });
-
 });

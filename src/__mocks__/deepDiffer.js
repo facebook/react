@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-2015, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  */
 
 'use strict';
@@ -16,15 +14,15 @@ var deepDiffer = function(one: any, two: any): boolean {
     // Short circuit on identical object references instead of traversing them.
     return false;
   }
-  if ((typeof one === 'function') && (typeof two === 'function')) {
+  if (typeof one === 'function' && typeof two === 'function') {
     // We consider all functions equal
     return false;
   }
-  if ((typeof one !== 'object') || (one === null)) {
+  if (typeof one !== 'object' || one === null) {
     // Primitives can be directly compared
     return one !== two;
   }
-  if ((typeof two !== 'object') || (two === null)) {
+  if (typeof two !== 'object' || two === null) {
     // We know they are different because the previous case would have triggered
     // otherwise.
     return true;

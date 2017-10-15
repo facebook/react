@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule EventPluginHub
  */
@@ -50,8 +48,10 @@ var executeDispatchesAndReleaseTopLevel = function(e) {
 
 function isInteractive(tag) {
   return (
-    tag === 'button' || tag === 'input' ||
-    tag === 'select' || tag === 'textarea'
+    tag === 'button' ||
+    tag === 'input' ||
+    tag === 'select' ||
+    tag === 'textarea'
   );
 }
 
@@ -96,12 +96,10 @@ function shouldPreventMouseEvent(name, type, props) {
  * @public
  */
 var EventPluginHub = {
-
   /**
    * Methods for injecting dependencies.
    */
   injection: {
-
     /**
      * @param {array} InjectedEventPluginOrder
      * @public
@@ -112,7 +110,6 @@ var EventPluginHub = {
      * @param {object} injectedNamesToPlugins Map from names to plugin modules.
      */
     injectEventPluginsByName: EventPluginRegistry.injectEventPluginsByName,
-
   },
 
   /**
@@ -125,42 +122,25 @@ var EventPluginHub = {
 
     // TODO: shouldPreventMouseEvent is DOM-specific and definitely should not
     // live here; needs to be moved to a better place soon
-    if (typeof inst.tag === 'number') {
-      const stateNode = inst.stateNode;
-      if (!stateNode) {
-        // Work in progress (ex: onload events in incremental mode).
-        return null;
-      }
-      const props = EventPluginUtils.getFiberCurrentPropsFromNode(stateNode);
-      if (!props) {
-        // Work in progress.
-        return null;
-      }
-      listener = props[registrationName];
-      if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
-        return null;
-      }
-    } else {
-      if (typeof inst._currentElement === 'string') {
-        // Text node, let it bubble through.
-        return null;
-      }
-      if (!inst._rootNodeID) {
-        // If the instance is already unmounted, we have no listeners.
-        return null;
-      }
-      const props = inst._currentElement.props;
-      listener = props[registrationName];
-      if (shouldPreventMouseEvent(registrationName, inst._currentElement.type, props)) {
-        return null;
-      }
+    const stateNode = inst.stateNode;
+    if (!stateNode) {
+      // Work in progress (ex: onload events in incremental mode).
+      return null;
     }
-
+    const props = EventPluginUtils.getFiberCurrentPropsFromNode(stateNode);
+    if (!props) {
+      // Work in progress.
+      return null;
+    }
+    listener = props[registrationName];
+    if (shouldPreventMouseEvent(registrationName, inst.type, props)) {
+      return null;
+    }
     invariant(
       !listener || typeof listener === 'function',
-      'Expected %s listener to be a function, instead got type %s',
+      'Expected `%s` listener to be a function, instead got a value of `%s` type.',
       registrationName,
-      typeof listener
+      typeof listener,
     );
     return listener;
   },
@@ -173,10 +153,11 @@ var EventPluginHub = {
    * @internal
    */
   extractEvents: function(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget) {
+    topLevelType,
+    targetInst,
+    nativeEvent,
+    nativeEventTarget,
+  ) {
     var events;
     var plugins = EventPluginRegistry.plugins;
     for (var i = 0; i < plugins.length; i++) {
@@ -187,7 +168,7 @@ var EventPluginHub = {
           topLevelType,
           targetInst,
           nativeEvent,
-          nativeEventTarget
+          nativeEventTarget,
         );
         if (extractedEvents) {
           events = accumulateInto(events, extractedEvents);
@@ -223,23 +204,22 @@ var EventPluginHub = {
     if (simulated) {
       forEachAccumulated(
         processingEventQueue,
-        executeDispatchesAndReleaseSimulated
+        executeDispatchesAndReleaseSimulated,
       );
     } else {
       forEachAccumulated(
         processingEventQueue,
-        executeDispatchesAndReleaseTopLevel
+        executeDispatchesAndReleaseTopLevel,
       );
     }
     invariant(
       !eventQueue,
       'processEventQueue(): Additional events were enqueued while processing ' +
-      'an event queue. Support for this has not yet been implemented.'
+        'an event queue. Support for this has not yet been implemented.',
     );
     // This would be a good time to rethrow if any of the event handlers threw.
     ReactErrorUtils.rethrowCaughtError();
   },
-
 };
 
 module.exports = EventPluginHub;

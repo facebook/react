@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -26,23 +24,18 @@ describe('ReactClassEquivalence', () => {
     var result2 = runJest('ReactES6Class-test.js');
     compareResults(result1, result2);
   });
-
 });
 
 function runJest(testFile) {
   var cwd = process.cwd();
   var extension = process.platform === 'win32' ? '.cmd' : '';
   var jestBin = path.resolve('node_modules', '.bin', 'jest' + extension);
-  var setupFile = path.resolve(
-    'scripts',
-    'jest',
-    'setupSpecEquivalenceReporter.js'
-  );
-  var result = spawnSync(jestBin, [
-    testFile,
-    '--setupTestFrameworkScriptFile',
-    setupFile,
-  ], {cwd});
+  var result = spawnSync(jestBin, [testFile], {
+    cwd,
+    env: Object.assign({}, process.env, {
+      REACT_CLASS_EQUIVALENCE_TEST: 'true',
+    }),
+  });
 
   if (result.error) {
     throw result.error;
@@ -51,16 +44,16 @@ function runJest(testFile) {
   if (result.status !== 0) {
     throw new Error(
       'jest process exited with: ' +
-      result.status +
-      '\n' +
-      'stdout: ' +
-      result.stdout.toString() +
-      'stderr: ' +
-      result.stderr.toString()
+        result.status +
+        '\n' +
+        'stdout: ' +
+        result.stdout.toString() +
+        'stderr: ' +
+        result.stderr.toString(),
     );
   }
 
-  return result.stdout.toString();
+  return result.stdout.toString() + result.stderr.toString();
 }
 
 function compareResults(a, b) {

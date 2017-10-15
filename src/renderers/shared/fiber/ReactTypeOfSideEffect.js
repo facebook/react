@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactTypeOfSideEffect
  * @flow
@@ -12,16 +10,19 @@
 
 'use strict';
 
-export type TypeOfSideEffect = 0 | 1 | 2 | 3 | 4 | 8 | 16 | 32 | 64;
+export type TypeOfSideEffect = number;
 
 module.exports = {
-  NoEffect: 0,                                // 0b0000000
-  Placement: 1,                               // 0b0000001
-  Update: 2,                                  // 0b0000010
-  PlacementAndUpdate: 3,                      // 0b0000011
-  Deletion: 4,                                // 0b0000100
-  ContentReset: 8,                            // 0b0001000
-  Callback: 16,                               // 0b0010000
-  Err: 32,                                    // 0b0100000
-  Ref: 64,                                    // 0b1000000
+  // Don't change these two values:
+  NoEffect: 0, //           0b00000000
+  PerformedWork: 1, //      0b00000001
+  // You can change the rest (and add more).
+  Placement: 2, //          0b00000010
+  Update: 4, //             0b00000100
+  PlacementAndUpdate: 6, // 0b00000110
+  Deletion: 8, //           0b00001000
+  ContentReset: 16, //      0b00010000
+  Callback: 32, //          0b00100000
+  Err: 64, //               0b01000000
+  Ref: 128, //              0b10000000
 };

@@ -1,10 +1,8 @@
 /**
- * Copyright 2014-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2014-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -13,7 +11,6 @@
 
 var React;
 var ReactDOM;
-var ReactDOMFeatureFlags;
 var ReactTestUtils;
 var TogglingComponent;
 
@@ -25,8 +22,7 @@ describe('ReactEmptyComponent', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     log = jasmine.createSpy();
 
@@ -79,22 +75,18 @@ describe('ReactEmptyComponent', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Component />);
     }).toThrowError(
-      'Component.render(): A valid React element (or null) must be returned. You may ' +
-      'have returned undefined, an array or some other invalid object.'
+      'Component(...): Nothing was returned from render. This usually means a return statement is missing. ' +
+        'Or, to render nothing, return null.',
     );
   });
 
   it('should be able to switch between rendering null and a normal tag', () => {
-    var instance1 =
-      <TogglingComponent
-        firstComponent={null}
-        secondComponent={'div'}
-      />;
-    var instance2 =
-      <TogglingComponent
-        firstComponent={'div'}
-        secondComponent={null}
-      />;
+    var instance1 = (
+      <TogglingComponent firstComponent={null} secondComponent={'div'} />
+    );
+    var instance2 = (
+      <TogglingComponent firstComponent={'div'} secondComponent={null} />
+    );
 
     ReactTestUtils.renderIntoDocument(instance1);
     ReactTestUtils.renderIntoDocument(instance2);
@@ -107,18 +99,16 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should be able to switch in a list of children', () => {
-    var instance1 =
-      <TogglingComponent
-        firstComponent={null}
-        secondComponent={'div'}
-      />;
+    var instance1 = (
+      <TogglingComponent firstComponent={null} secondComponent={'div'} />
+    );
 
     ReactTestUtils.renderIntoDocument(
       <div>
         {instance1}
         {instance1}
         {instance1}
-      </div>
+      </div>,
     );
 
     expect(log.calls.count()).toBe(6);
@@ -130,36 +120,31 @@ describe('ReactEmptyComponent', () => {
     expect(log.calls.argsFor(5)[0].tagName).toBe('DIV');
   });
 
-  it('should distinguish between a script placeholder and an actual script tag',
-    () => {
-      var instance1 =
-        <TogglingComponent
-          firstComponent={null}
-          secondComponent={'script'}
-        />;
-      var instance2 =
-        <TogglingComponent
-          firstComponent={'script'}
-          secondComponent={null}
-        />;
+  it('should distinguish between a script placeholder and an actual script tag', () => {
+    var instance1 = (
+      <TogglingComponent firstComponent={null} secondComponent={'script'} />
+    );
+    var instance2 = (
+      <TogglingComponent firstComponent={'script'} secondComponent={null} />
+    );
 
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance1);
-      }).not.toThrow();
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(instance2);
-      }).not.toThrow();
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance1);
+    }).not.toThrow();
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(instance2);
+    }).not.toThrow();
 
-      expect(log.calls.count()).toBe(4);
-      expect(log.calls.argsFor(0)[0]).toBe(null);
-      expect(log.calls.argsFor(1)[0].tagName).toBe('SCRIPT');
-      expect(log.calls.argsFor(2)[0].tagName).toBe('SCRIPT');
-      expect(log.calls.argsFor(3)[0]).toBe(null);
-    }
-  );
+    expect(log.calls.count()).toBe(4);
+    expect(log.calls.argsFor(0)[0]).toBe(null);
+    expect(log.calls.argsFor(1)[0].tagName).toBe('SCRIPT');
+    expect(log.calls.argsFor(2)[0].tagName).toBe('SCRIPT');
+    expect(log.calls.argsFor(3)[0]).toBe(null);
+  });
 
-  it('should have findDOMNode return null when multiple layers of composite ' +
-    'components render to the same null placeholder',
+  it(
+    'should have findDOMNode return null when multiple layers of composite ' +
+      'components render to the same null placeholder',
     () => {
       class GrandChild extends React.Component {
         render() {
@@ -173,16 +158,12 @@ describe('ReactEmptyComponent', () => {
         }
       }
 
-      var instance1 =
-        <TogglingComponent
-          firstComponent={'div'}
-          secondComponent={Child}
-        />;
-      var instance2 =
-        <TogglingComponent
-          firstComponent={Child}
-          secondComponent={'div'}
-        />;
+      var instance1 = (
+        <TogglingComponent firstComponent={'div'} secondComponent={Child} />
+      );
+      var instance2 = (
+        <TogglingComponent firstComponent={Child} secondComponent={'div'} />
+      );
 
       expect(function() {
         ReactTestUtils.renderIntoDocument(instance1);
@@ -196,7 +177,7 @@ describe('ReactEmptyComponent', () => {
       expect(log.calls.argsFor(1)[0]).toBe(null);
       expect(log.calls.argsFor(2)[0]).toBe(null);
       expect(log.calls.argsFor(3)[0].tagName).toBe('DIV');
-    }
+    },
   );
 
   it('works when switching components', () => {
@@ -247,25 +228,9 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('can render null at the top level', () => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
     var div = document.createElement('div');
-
-    try {
-      if (ReactDOMFeatureFlags.useFiber) {
-        ReactDOM.render(null, div);
-        expect(div.innerHTML).toBe('');
-      } else {
-        // Stack does not implement this.
-        expect(function() {
-          ReactDOM.render(null, div);
-        }).toThrowError(
-          'ReactDOM.render(): Invalid component element.'
-        );
-      }
-    } finally {
-      ReactFeatureFlags.disableNewFiberFeatures = true;
-    }
+    ReactDOM.render(null, div);
+    expect(div.innerHTML).toBe('');
   });
 
   it('does not break when updating during mount', () => {
@@ -317,21 +282,11 @@ describe('ReactEmptyComponent', () => {
 
     ReactDOM.render(<Empty />, container);
     var noscript1 = container.firstChild;
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(noscript1).toBe(null);
-    } else {
-      expect(noscript1.nodeName).toBe('#comment');
-    }
+    expect(noscript1).toBe(null);
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
     var noscript2 = container.firstChild;
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(noscript1).toBe(null);
-    } else {
-      expect(noscript2.nodeName).toBe('#comment');
-    }
-
-    expect(noscript1).toBe(noscript2);
+    expect(noscript2).toBe(null);
   });
 });

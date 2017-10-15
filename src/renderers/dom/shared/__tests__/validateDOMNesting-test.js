@@ -1,10 +1,8 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -15,22 +13,107 @@ var validateDOMNesting;
 
 // https://html.spec.whatwg.org/multipage/syntax.html#special
 var specialTags = [
-  'address', 'applet', 'area', 'article', 'aside', 'base', 'basefont',
-  'bgsound', 'blockquote', 'body', 'br', 'button', 'caption', 'center', 'col',
-  'colgroup', 'dd', 'details', 'dir', 'div', 'dl', 'dt', 'embed', 'fieldset',
-  'figcaption', 'figure', 'footer', 'form', 'frame', 'frameset', 'h1', 'h2',
-  'h3', 'h4', 'h5', 'h6', 'head', 'header', 'hgroup', 'hr', 'html', 'iframe',
-  'img', 'input', 'isindex', 'li', 'link', 'listing', 'main', 'marquee', 'menu',
-  'menuitem', 'meta', 'nav', 'noembed', 'noframes', 'noscript', 'object', 'ol',
-  'p', 'param', 'plaintext', 'pre', 'script', 'section', 'select', 'source',
-  'style', 'summary', 'table', 'tbody', 'td', 'template', 'textarea', 'tfoot',
-  'th', 'thead', 'title', 'tr', 'track', 'ul', 'wbr', 'xmp',
+  'address',
+  'applet',
+  'area',
+  'article',
+  'aside',
+  'base',
+  'basefont',
+  'bgsound',
+  'blockquote',
+  'body',
+  'br',
+  'button',
+  'caption',
+  'center',
+  'col',
+  'colgroup',
+  'dd',
+  'details',
+  'dir',
+  'div',
+  'dl',
+  'dt',
+  'embed',
+  'fieldset',
+  'figcaption',
+  'figure',
+  'footer',
+  'form',
+  'frame',
+  'frameset',
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'head',
+  'header',
+  'hgroup',
+  'hr',
+  'html',
+  'iframe',
+  'img',
+  'input',
+  'isindex',
+  'li',
+  'link',
+  'listing',
+  'main',
+  'marquee',
+  'menu',
+  'menuitem',
+  'meta',
+  'nav',
+  'noembed',
+  'noframes',
+  'noscript',
+  'object',
+  'ol',
+  'p',
+  'param',
+  'plaintext',
+  'pre',
+  'script',
+  'section',
+  'select',
+  'source',
+  'style',
+  'summary',
+  'table',
+  'tbody',
+  'td',
+  'template',
+  'textarea',
+  'tfoot',
+  'th',
+  'thead',
+  'title',
+  'tr',
+  'track',
+  'ul',
+  'wbr',
+  'xmp',
 ];
 
 // https://html.spec.whatwg.org/multipage/syntax.html#formatting
 var formattingTags = [
-  'a', 'b', 'big', 'code', 'em', 'font', 'i', 'nobr', 's', 'small', 'strike',
-  'strong', 'tt', 'u',
+  'a',
+  'b',
+  'big',
+  'code',
+  'em',
+  'font',
+  'i',
+  'nobr',
+  's',
+  'small',
+  'strike',
+  'strong',
+  'tt',
+  'u',
 ];
 
 function isTagStackValid(stack) {
@@ -39,8 +122,11 @@ function isTagStackValid(stack) {
     if (!validateDOMNesting.isTagValidInContext(stack[i], ancestorInfo)) {
       return false;
     }
-    ancestorInfo =
-      validateDOMNesting.updatedAncestorInfo(ancestorInfo, stack[i], null);
+    ancestorInfo = validateDOMNesting.updatedAncestorInfo(
+      ancestorInfo,
+      stack[i],
+      null,
+    );
   }
   return true;
 }
@@ -49,6 +135,7 @@ describe('ReactContextValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
+    // TODO: can we express this test with only public API?
     validateDOMNesting = require('validateDOMNesting');
   });
 

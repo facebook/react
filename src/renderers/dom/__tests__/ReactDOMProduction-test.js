@@ -1,20 +1,17 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
 'use strict';
 
 describe('ReactDOMProduction', () => {
-  var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-
   var React;
   var ReactDOM;
+  var ReactDOMServer;
   var oldProcess;
 
   beforeEach(() => {
@@ -31,6 +28,7 @@ describe('ReactDOMProduction', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
   });
 
   afterEach(() => {
@@ -64,33 +62,59 @@ describe('ReactDOMProduction', () => {
 
     var container = document.createElement('div');
     var inst = ReactDOM.render(
-      <div className="blue">
+      <div className="blue" style={{fontFamily: 'Helvetica'}}>
         <Component key={1}>A</Component>
         <Component key={2}>B</Component>
         <Component key={3}>C</Component>
       </div>,
-      container
+      container,
     );
 
     expect(container.firstChild).toBe(inst);
     expect(inst.className).toBe('blue');
+    expect(inst.style.fontFamily).toBe('Helvetica');
     expect(inst.textContent).toBe('ABC');
 
     ReactDOM.render(
-      <div className="red">
+      <div className="red" style={{fontFamily: 'Comic Sans MS'}}>
         <Component key={2}>B</Component>
         <Component key={1}>A</Component>
         <Component key={3}>C</Component>
       </div>,
-      container
+      container,
     );
 
     expect(inst.className).toBe('red');
+    expect(inst.style.fontFamily).toBe('Comic Sans MS');
     expect(inst.textContent).toBe('BAC');
 
     ReactDOM.unmountComponentAtNode(container);
 
     expect(container.childNodes.length).toBe(0);
+  });
+
+  it('should handle a simple flow (ssr)', () => {
+    class Component extends React.Component {
+      render() {
+        return <span>{this.props.children}</span>;
+      }
+    }
+
+    var container = document.createElement('div');
+    var markup = ReactDOMServer.renderToString(
+      <div className="blue" style={{fontFamily: 'Helvetica'}}>
+        <Component key={1}>A</Component>
+        <Component key={2}>B</Component>
+        <Component key={3}>C</Component>
+      </div>,
+      container,
+    );
+    container.innerHTML = markup;
+    var inst = container.firstChild;
+
+    expect(inst.className).toBe('blue');
+    expect(inst.style.fontFamily).toBe('Helvetica');
+    expect(inst.textContent).toBe('ABC');
   });
 
   it('should call lifecycle methods', () => {
@@ -126,10 +150,7 @@ describe('ReactDOMProduction', () => {
     }
 
     var container = document.createElement('div');
-    var inst = ReactDOM.render(
-      <Component x={1} />,
-      container
-    );
+    var inst = ReactDOM.render(<Component x={1} />, container);
     expect(log).toEqual([
       ['componentWillMount'],
       ['render'],
@@ -147,15 +168,10 @@ describe('ReactDOMProduction', () => {
     log = [];
 
     inst.setState({y: 2});
-    expect(log).toEqual([
-      ['shouldComponentUpdate', {x: 1}, {y: 2}],
-    ]);
+    expect(log).toEqual([['shouldComponentUpdate', {x: 1}, {y: 2}]]);
     log = [];
 
-    ReactDOM.render(
-      <Component x={2} />,
-      container
-    );
+    ReactDOM.render(<Component x={2} />, container);
     expect(log).toEqual([
       ['componentWillReceiveProps', {x: 2}],
       ['shouldComponentUpdate', {x: 2}, {y: 2}],
@@ -165,10 +181,7 @@ describe('ReactDOMProduction', () => {
     ]);
     log = [];
 
-    ReactDOM.render(
-      <Component x={2} />,
-      container
-    );
+    ReactDOM.render(<Component x={2} />, container);
     expect(log).toEqual([
       ['componentWillReceiveProps', {x: 2}],
       ['shouldComponentUpdate', {x: 2}, {y: 2}],
@@ -176,12 +189,11 @@ describe('ReactDOMProduction', () => {
     log = [];
 
     ReactDOM.unmountComponentAtNode(container);
-    expect(log).toEqual([
-      ['componentWillUnmount'],
-    ]);
+    expect(log).toEqual([['componentWillUnmount']]);
   });
 
   it('should throw with an error code in production', () => {
+    const errorCode = 152;
     expect(function() {
       class Component extends React.Component {
         render() {
@@ -192,10 +204,10 @@ describe('ReactDOMProduction', () => {
       var container = document.createElement('div');
       ReactDOM.render(<Component />, container);
     }).toThrowError(
-      'Minified React error #109; visit ' +
-      'http://facebook.github.io/react/docs/error-decoder.html?invariant=109&args[]=Component' +
-      ' for the full message or use the non-minified dev environment' +
-      ' for full errors and additional helpful warnings.'
+      `Minified React error #${errorCode}; visit ` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=Component` +
+        ' for the full message or use the non-minified dev environment' +
+        ' for full errors and additional helpful warnings.',
     );
   });
 
@@ -221,60 +233,55 @@ describe('ReactDOMProduction', () => {
     }
   });
 
-  if (ReactDOMFeatureFlags.useFiber) {
-    // This test is originally from ReactDOMFiber-test but we replicate it here
-    // to avoid production-only regressions because of host context differences
-    // in dev and prod.
-    it('should keep track of namespace across portals in production', () => {
-      var svgEls, htmlEls;
-      var expectSVG = {ref: el => svgEls.push(el)};
-      var expectHTML = {ref: el => htmlEls.push(el)};
-      var usePortal = function(tree) {
-        return ReactDOM.unstable_createPortal(
-          tree,
-          document.createElement('div')
-        );
-      };
-      var assertNamespacesMatch = function(tree) {
-        var container = document.createElement('div');
-        svgEls = [];
-        htmlEls = [];
-        ReactDOM.render(tree, container);
-        svgEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
-        });
-        htmlEls.forEach(el => {
-          expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
-        });
-        ReactDOM.unmountComponentAtNode(container);
-        expect(container.innerHTML).toBe('');
-      };
+  // This test is originally from ReactDOMFiber-test but we replicate it here
+  // to avoid production-only regressions because of host context differences
+  // in dev and prod.
+  it('should keep track of namespace across portals in production', () => {
+    var svgEls, htmlEls;
+    var expectSVG = {ref: el => svgEls.push(el)};
+    var expectHTML = {ref: el => htmlEls.push(el)};
+    var usePortal = function(tree) {
+      return ReactDOM.createPortal(tree, document.createElement('div'));
+    };
+    var assertNamespacesMatch = function(tree) {
+      var container = document.createElement('div');
+      svgEls = [];
+      htmlEls = [];
+      ReactDOM.render(tree, container);
+      svgEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      });
+      htmlEls.forEach(el => {
+        expect(el.namespaceURI).toBe('http://www.w3.org/1999/xhtml');
+      });
+      ReactDOM.unmountComponentAtNode(container);
+      expect(container.innerHTML).toBe('');
+    };
 
-      assertNamespacesMatch(
-        <div {...expectHTML}>
-          <svg {...expectSVG}>
-            <foreignObject {...expectSVG}>
-              <p {...expectHTML} />
-              {usePortal(
+    assertNamespacesMatch(
+      <div {...expectHTML}>
+        <svg {...expectSVG}>
+          <foreignObject {...expectSVG}>
+            <p {...expectHTML} />
+            {usePortal(
+              <svg {...expectSVG}>
+                <image {...expectSVG} />
                 <svg {...expectSVG}>
                   <image {...expectSVG} />
-                  <svg {...expectSVG}>
-                    <image {...expectSVG} />
-                    <foreignObject {...expectSVG}>
-                      <p {...expectHTML} />
-                    </foreignObject>
-                    {usePortal(<p {...expectHTML} />)}
-                  </svg>
-                  <image {...expectSVG} />
+                  <foreignObject {...expectSVG}>
+                    <p {...expectHTML} />
+                  </foreignObject>
+                  {usePortal(<p {...expectHTML} />)}
                 </svg>
-              )}
-              <p {...expectHTML} />
-            </foreignObject>
-            <image {...expectSVG} />
-          </svg>
-          <p {...expectHTML} />
-        </div>
-      );
-    });
-  }
+                <image {...expectSVG} />
+              </svg>,
+            )}
+            <p {...expectHTML} />
+          </foreignObject>
+          <image {...expectSVG} />
+        </svg>
+        <p {...expectHTML} />
+      </div>,
+    );
+  });
 });

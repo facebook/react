@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -14,14 +12,12 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 
 describe('ReactUpdates', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should batch state when updating state twice', () => {
@@ -391,30 +387,23 @@ describe('ReactUpdates', () => {
       },
     };
 
-    var Box = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class Box extends React.Component {
+      render() {
         return <div ref="boxDiv">{this.props.children}</div>;
-      },
-    });
+      }
+    }
+    Object.assign(Box.prototype, UpdateLoggingMixin);
 
-    var Child = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class Child extends React.Component {
+      render() {
         return <span ref="span">child</span>;
-      },
-    });
+      }
+    }
+    Object.assign(Child.prototype, UpdateLoggingMixin);
 
-    var Switcher = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      getInitialState: function() {
-        return {tabKey: 'hello'};
-      },
-
-      render: function() {
+    class Switcher extends React.Component {
+      state = {tabKey: 'hello'};
+      render() {
         var child = this.props.children;
 
         return (
@@ -428,20 +417,20 @@ describe('ReactUpdates', () => {
             </div>
           </Box>
         );
-      },
-    });
+      }
+    }
+    Object.assign(Switcher.prototype, UpdateLoggingMixin);
 
-    var App = React.createClass({
-      mixins: [UpdateLoggingMixin],
-
-      render: function() {
+    class App extends React.Component {
+      render() {
         return (
           <Switcher ref="switcher">
             <Child key="hello" ref="child" />
           </Switcher>
         );
-      },
-    });
+      }
+    }
+    Object.assign(App.prototype, UpdateLoggingMixin);
 
     var root = <App />;
     root = ReactTestUtils.renderIntoDocument(root);
@@ -487,21 +476,21 @@ describe('ReactUpdates', () => {
       [root.refs.switcher.refs.box, root.refs.switcher],
       // Owner-child relationships have inverse will and did
       ['Switcher', 'Box'],
-      ['Box', 'Switcher']
+      ['Box', 'Switcher'],
     );
 
     testUpdates(
       [root.refs.child, root.refs.switcher.refs.box],
       // Not owner-child so reconcile independently
       ['Box', 'Child'],
-      ['Box', 'Child']
+      ['Box', 'Child'],
     );
 
     testUpdates(
       [root.refs.child, root.refs.switcher],
       // Switcher owns Box and Child, Box does not own Child
       ['Switcher', 'Box', 'Child'],
-      ['Box', 'Switcher', 'Child']
+      ['Box', 'Switcher', 'Child'],
     );
   });
 
@@ -528,12 +517,7 @@ describe('ReactUpdates', () => {
       render() {
         var portal = null;
         // If we're using Fiber, we use Portals instead to achieve this.
-        if (ReactDOMFeatureFlags.useFiber) {
-          portal = ReactDOM.unstable_createPortal(
-            <B ref={n => b = n} />,
-            bContainer
-          );
-        }
+        portal = ReactDOM.createPortal(<B ref={n => (b = n)} />, bContainer);
         return <div>A{this.state.x}{portal}</div>;
       }
     }
@@ -547,10 +531,6 @@ describe('ReactUpdates', () => {
     }
 
     a = ReactTestUtils.renderIntoDocument(<A />);
-    if (!ReactDOMFeatureFlags.useFiber) {
-      ReactDOM.render(<B ref={n => b = n} />, bContainer);
-    }
-
     ReactDOM.unstable_batchedUpdates(function() {
       a.setState({x: 1});
       b.setState({x: 1});
@@ -607,31 +587,31 @@ describe('ReactUpdates', () => {
     /* eslint-disable indent */
     expect(updates).toEqual([
       'Outer-render-0',
-        'Inner-render-0-0',
+      'Inner-render-0-0',
 
       'Outer-setState-1',
-        'Outer-render-1',
-          'Inner-render-1-0',
-          'Inner-didUpdate-1-0',
-        'Outer-didUpdate-1',
-           // Happens in a batch, so don't re-render yet
-          'Inner-setState-1',
-        'Outer-callback-1',
+      'Outer-render-1',
+      'Inner-render-1-0',
+      'Inner-didUpdate-1-0',
+      'Outer-didUpdate-1',
+      // Happens in a batch, so don't re-render yet
+      'Inner-setState-1',
+      'Outer-callback-1',
 
-        // Happens in a batch
-        'Outer-setState-2',
+      // Happens in a batch
+      'Outer-setState-2',
 
-        // Flush batched updates all at once
-        'Outer-render-2',
-          'Inner-render-2-1',
-          'Inner-didUpdate-2-1',
-          'Inner-callback-1',
-        'Outer-didUpdate-2',
-          'Inner-setState-2',
-        'Outer-callback-2',
-          'Inner-render-2-2',
-          'Inner-didUpdate-2-2',
-          'Inner-callback-2',
+      // Flush batched updates all at once
+      'Outer-render-2',
+      'Inner-render-2-1',
+      'Inner-didUpdate-2-1',
+      'Inner-callback-1',
+      'Outer-didUpdate-2',
+      'Inner-setState-2',
+      'Outer-callback-2',
+      'Inner-render-2-2',
+      'Inner-didUpdate-2-2',
+      'Inner-callback-2',
     ]);
     /* eslint-enable indent */
   });
@@ -654,7 +634,7 @@ describe('ReactUpdates', () => {
               depth={this.props.depth + 1}
               count={this.props.count}
             />,
-            ReactDOM.findDOMNode(this)
+            ReactDOM.findDOMNode(this),
           );
         }
       }
@@ -761,7 +741,7 @@ describe('ReactUpdates', () => {
         <div>
           <A />
           <B />
-        </div>
+        </div>,
       );
     });
 
@@ -832,40 +812,6 @@ describe('ReactUpdates', () => {
     expect(renderCount).toBe(1);
   });
 
-  it('marks top-level updates', () => {
-    var ReactFeatureFlags = require('ReactFeatureFlags');
-
-    class Foo extends React.Component {
-      render() {
-        return <Bar />;
-      }
-    }
-
-    class Bar extends React.Component {
-      render() {
-        return <div />;
-      }
-    }
-
-    var container = document.createElement('div');
-    ReactDOM.render(<Foo />, container);
-
-    try {
-      ReactFeatureFlags.logTopLevelRenders = true;
-      spyOn(console, 'time');
-      spyOn(console, 'timeEnd');
-
-      ReactDOM.render(<Foo />, container);
-
-      expect(console.time.calls.count()).toBe(1);
-      expect(console.time.calls.argsFor(0)[0]).toBe('React update: Foo');
-      expect(console.timeEnd.calls.count()).toBe(1);
-      expect(console.timeEnd.calls.argsFor(0)[0]).toBe('React update: Foo');
-    } finally {
-      ReactFeatureFlags.logTopLevelRenders = false;
-    }
-  });
-
   it('throws in setState if the update callback is not a function', () => {
     spyOn(console, 'error');
 
@@ -886,75 +832,29 @@ describe('ReactUpdates', () => {
 
     expect(() => component.setState({}, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.setState({}, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.setState({}, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'setState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
-    );
-    expect(console.error.calls.count()).toBe(3);
-  });
-
-  it('throws in replaceState if the update callback is not a function', () => {
-    spyOn(console, 'error');
-
-    function Foo() {
-      this.a = 1;
-      this.b = 2;
-    }
-    var A = React.createClass({
-      getInitialState: function() {
-        return {};
-      },
-      render: function() {
-        return <div />;
-      },
-    });
-    var component = ReactTestUtils.renderIntoDocument(<A />);
-
-    expect(() => component.replaceState({}, 'no')).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
-    );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
-    );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.replaceState({}, {foo: 'bar'})).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
-    );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
-    );
-    component = ReactTestUtils.renderIntoDocument(<A />);
-    expect(() => component.replaceState({}, new Foo())).toThrowError(
-      'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
-    );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'replaceState(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -979,29 +879,29 @@ describe('ReactUpdates', () => {
 
     expect(() => component.forceUpdate('no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.forceUpdate({foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.forceUpdate(new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -1065,10 +965,10 @@ describe('ReactUpdates', () => {
     class App extends React.Component {
       constructor(props) {
         super(props);
-        this.state = { showChild: true };
+        this.state = {showChild: true};
       }
       componentDidMount() {
-        this.setState({ showChild: false });
+        this.setState({showChild: false});
       }
       render() {
         return (
@@ -1096,7 +996,7 @@ describe('ReactUpdates', () => {
         callbacks.push(this.onChange);
       }
       componentWillUnmount() {
-        callbacks = callbacks.filter((c) => c !== this.onChange);
+        callbacks = callbacks.filter(c => c !== this.onChange);
       }
       render() {
         return <div key={Math.random()} onClick={function() {}} />;
@@ -1142,13 +1042,13 @@ describe('ReactUpdates', () => {
     function render() {
       ReactDOM.render(
         <Editor
-          onChange={(newProps) => {
+          onChange={newProps => {
             props = {...props, ...newProps};
             render();
           }}
           {...props}
         />,
-        container
+        container,
       );
     }
 
@@ -1171,6 +1071,108 @@ describe('ReactUpdates', () => {
     });
     expect(ops).toEqual(['Hello', '']);
   });
+
+  it(
+    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+      'should both flush in the immediately subsequent commit',
+    () => {
+      let ops = [];
+      class Foo extends React.Component {
+        state = {a: false, b: false};
+        componentWillUpdate(_, nextState) {
+          if (!nextState.a) {
+            this.setState({a: true});
+          }
+        }
+        componentDidUpdate() {
+          ops.push('Foo updated');
+          if (!this.state.b) {
+            this.setState({b: true});
+          }
+        }
+        render() {
+          ops.push(`a: ${this.state.a}, b: ${this.state.b}`);
+          return null;
+        }
+      }
+
+      const container = document.createElement('div');
+      // Mount
+      ReactDOM.render(<Foo />, container);
+      // Root update
+      ReactDOM.render(<Foo />, container);
+      expect(ops).toEqual([
+        // Mount
+        'a: false, b: false',
+        // Root update
+        'a: false, b: false',
+        'Foo updated',
+        // Subsequent update (both a and b should have flushed)
+        'a: true, b: true',
+        'Foo updated',
+        // There should not be any additional updates
+      ]);
+    },
+  );
+
+  it(
+    'in sync mode, updates in componentWillUpdate and componentDidUpdate ' +
+      '(on a sibling) should both flush in the immediately subsequent commit',
+    () => {
+      let ops = [];
+      class Foo extends React.Component {
+        state = {a: false};
+        componentWillUpdate(_, nextState) {
+          if (!nextState.a) {
+            this.setState({a: true});
+          }
+        }
+        componentDidUpdate() {
+          ops.push('Foo updated');
+        }
+        render() {
+          ops.push(`a: ${this.state.a}`);
+          return null;
+        }
+      }
+
+      class Bar extends React.Component {
+        state = {b: false};
+        componentDidUpdate() {
+          ops.push('Bar updated');
+          if (!this.state.b) {
+            this.setState({b: true});
+          }
+        }
+        render() {
+          ops.push(`b: ${this.state.b}`);
+          return null;
+        }
+      }
+
+      const container = document.createElement('div');
+      // Mount
+      ReactDOM.render(<div><Foo /><Bar /></div>, container);
+      // Root update
+      ReactDOM.render(<div><Foo /><Bar /></div>, container);
+      expect(ops).toEqual([
+        // Mount
+        'a: false',
+        'b: false',
+        // Root update
+        'a: false',
+        'b: false',
+        'Foo updated',
+        'Bar updated',
+        // Subsequent update (both a and b should have flushed)
+        'a: true',
+        'b: true',
+        'Foo updated',
+        'Bar updated',
+        // There should not be any additional updates
+      ]);
+    },
+  );
 
   it('does not re-render if state update is null', () => {
     let container = document.createElement('div');
@@ -1224,5 +1226,79 @@ describe('ReactUpdates', () => {
     // Update
     ReactDOM.render(<Foo />, container);
     expect(ops).toEqual(['Foo', 'Bar', 'Baz']);
+  });
+
+  it('can render ridiculously large number of roots without triggering infinite update loop error', () => {
+    class Foo extends React.Component {
+      componentDidMount() {
+        const limit = 1200;
+        for (let i = 0; i < limit; i++) {
+          if (i < limit - 1) {
+            ReactDOM.render(<div />, document.createElement('div'));
+          } else {
+            ReactDOM.render(<div />, document.createElement('div'), () => {
+              // The "nested update limit" error isn't thrown until setState
+              this.setState({});
+            });
+          }
+        }
+      }
+      render() {
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+  });
+
+  it('does not fall into an infinite update loop', () => {
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      componentDidMount() {
+        this.setState({step: 1});
+      }
+      componentWillUpdate() {
+        this.setState({step: 2});
+      }
+      render() {
+        return <div>Hello {this.props.name}{this.state.step}</div>;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
+  });
+
+  it('does not fall into an infinite error loop', () => {
+    function BadRender() {
+      throw new Error('error');
+    }
+
+    class ErrorBoundary extends React.Component {
+      componentDidCatch() {
+        this.props.parent.remount();
+      }
+      render() {
+        return <BadRender />;
+      }
+    }
+
+    class NonTerminating extends React.Component {
+      state = {step: 0};
+      remount() {
+        this.setState(state => ({step: state.step + 1}));
+      }
+      render() {
+        return <ErrorBoundary key={this.state.step} parent={this} />;
+      }
+    }
+
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.render(<NonTerminating />, container);
+    }).toThrow('Maximum');
   });
 });

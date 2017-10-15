@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactDOMFiberTextarea
  * @flow
@@ -15,14 +13,17 @@
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
     initialValue: string,
-  }
+  },
 };
 
 var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var { getCurrentFiberOwnerName } = require('ReactDebugCurrentFiber');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+}
 
 var didWarnValDefaultVal = false;
 
@@ -42,18 +43,19 @@ var didWarnValDefaultVal = false;
  * `defaultValue` if specified, or the children content (deprecated).
  */
 var ReactDOMTextarea = {
-  getHostProps: function(element : Element, props : Object) {
-    var node = ((element : any) : TextAreaWithWrapperState);
+  getHostProps: function(element: Element, props: Object) {
+    var node = ((element: any): TextAreaWithWrapperState);
     invariant(
       props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.'
+      '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
     );
 
     // Always set children to the same thing. In IE9, the selection range will
     // get reset if `textContent` is mutated.  We could add a check in setTextContent
     // to only set the value if/when the value differs from the node value (which would
-    // completely solve this IE9 bug), but Sebastian+Ben seemed to like this solution.
-    // The value can be a boolean or object so that's why it's forced to be a string.
+    // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
+    // solution. The value can be a boolean or object so that's why it's forced
+    // to be a string.
     var hostProps = Object.assign({}, props, {
       value: undefined,
       defaultValue: undefined,
@@ -63,13 +65,13 @@ var ReactDOMTextarea = {
     return hostProps;
   },
 
-  mountWrapper: function(element : Element, props : Object) {
-    var node = ((element : any) : TextAreaWithWrapperState);
+  initWrapperState: function(element: Element, props: Object) {
+    var node = ((element: any): TextAreaWithWrapperState);
     if (__DEV__) {
       ReactControlledValuePropTypes.checkPropTypes(
         'textarea',
         props,
-        getCurrentFiberOwnerName()
+        getCurrentFiberStackAddendum,
       );
       if (
         props.value !== undefined &&
@@ -79,15 +81,14 @@ var ReactDOMTextarea = {
         warning(
           false,
           'Textarea elements must be either controlled or uncontrolled ' +
-          '(specify either the value prop, or the defaultValue prop, but not ' +
-          'both). Decide between using a controlled or uncontrolled textarea ' +
-          'and remove one of these props. More info: ' +
-          'https://fb.me/react-controlled-components'
+            '(specify either the value prop, or the defaultValue prop, but not ' +
+            'both). Decide between using a controlled or uncontrolled textarea ' +
+            'and remove one of these props. More info: ' +
+            'https://fb.me/react-controlled-components',
         );
         didWarnValDefaultVal = true;
       }
     }
-
 
     var value = props.value;
     var initialValue = value;
@@ -102,17 +103,17 @@ var ReactDOMTextarea = {
           warning(
             false,
             'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.'
+              'children on <textarea>.',
           );
         }
         invariant(
           defaultValue == null,
-          'If you supply `defaultValue` on a <textarea>, do not pass children.'
+          'If you supply `defaultValue` on a <textarea>, do not pass children.',
         );
         if (Array.isArray(children)) {
           invariant(
             children.length <= 1,
-            '<textarea> can only have at most one child.'
+            '<textarea> can only have at most one child.',
           );
           children = children[0];
         }
@@ -130,8 +131,8 @@ var ReactDOMTextarea = {
     };
   },
 
-  updateWrapper: function(element : Element, props : Object) {
-    var node = ((element : any) : TextAreaWithWrapperState);
+  updateWrapper: function(element: Element, props: Object) {
+    var node = ((element: any): TextAreaWithWrapperState);
     var value = props.value;
     if (value != null) {
       // Cast `value` to a string to ensure the value is set correctly. While
@@ -151,8 +152,8 @@ var ReactDOMTextarea = {
     }
   },
 
-  postMountWrapper: function(element : Element, props : Object) {
-    var node = ((element : any) : TextAreaWithWrapperState);
+  postMountWrapper: function(element: Element, props: Object) {
+    var node = ((element: any): TextAreaWithWrapperState);
     // This is in postMount because we need access to the DOM node, which is not
     // available until after the component has mounted.
     var textContent = node.textContent;
@@ -166,11 +167,10 @@ var ReactDOMTextarea = {
     }
   },
 
-  restoreControlledState: function(element : Element, props : Object) {
+  restoreControlledState: function(element: Element, props: Object) {
     // DOM component is still mounted; update
     ReactDOMTextarea.updateWrapper(element, props);
   },
-
 };
 
 module.exports = ReactDOMTextarea;

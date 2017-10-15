@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -17,6 +15,7 @@ describe('FallbackCompositionState', () => {
   var TEXT = 'Hello world';
 
   beforeEach(() => {
+    // TODO: can we express this test with only public API?
     FallbackCompositionState = require('FallbackCompositionState');
   });
 
@@ -42,24 +41,24 @@ describe('FallbackCompositionState', () => {
 
   function assertExtractedData(modifiedValue, expectedData) {
     var input = getInput();
-    var composition = FallbackCompositionState.getPooled(input);
+    FallbackCompositionState.initialize(input);
     input.value = modifiedValue;
-    expect(composition.getData()).toBe(expectedData);
-    FallbackCompositionState.release(composition);
+    expect(FallbackCompositionState.getData()).toBe(expectedData);
+    FallbackCompositionState.reset();
   }
 
   it('extracts value via `getText()`', () => {
-    var composition = FallbackCompositionState.getPooled(getInput());
-    expect(composition.getText()).toBe(TEXT);
-    FallbackCompositionState.release(composition);
+    FallbackCompositionState.initialize(getInput());
+    expect(FallbackCompositionState.getText()).toBe(TEXT);
+    FallbackCompositionState.reset();
 
-    composition = FallbackCompositionState.getPooled(getTextarea());
-    expect(composition.getText()).toBe(TEXT);
-    FallbackCompositionState.release(composition);
+    FallbackCompositionState.initialize(getTextarea());
+    expect(FallbackCompositionState.getText()).toBe(TEXT);
+    FallbackCompositionState.reset();
 
-    composition = FallbackCompositionState.getPooled(getContentEditable());
-    expect(composition.getText()).toBe(TEXT);
-    FallbackCompositionState.release(composition);
+    FallbackCompositionState.initialize(getContentEditable());
+    expect(FallbackCompositionState.getText()).toBe(TEXT);
+    FallbackCompositionState.reset();
   });
 
   describe('Extract fallback data inserted at collapsed cursor', () => {

@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -13,7 +11,6 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -21,23 +18,18 @@ describe('ReactTopLevelFragment', function() {
   beforeEach(function() {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
+    ReactNoop = require('react-noop-renderer');
   });
 
   it('should render a simple fragment at the top of a component', function() {
-
     function Fragment() {
       return [<div key="a">Hello</div>, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
-
   });
 
   it('should preserve state when switching from a single child', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -47,9 +39,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? <Stateful key="a" /> :
-        [<Stateful key="a" />, <div key="b">World</div>];
+    function Fragment({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : [<Stateful key="a" />, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -64,11 +57,9 @@ describe('ReactTopLevelFragment', function() {
     var instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
-
   });
 
   it('should not preserve state when switching to a nested array', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -78,9 +69,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? <Stateful key="a" /> :
-        [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+    function Fragment({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -95,11 +87,9 @@ describe('ReactTopLevelFragment', function() {
     var instanceB = instance;
 
     expect(instanceB).not.toBe(instanceA);
-
   });
 
   it('preserves state if an implicit key slot switches from/to null', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -109,9 +99,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? [null, <Stateful />] :
-        [<div>Hello</div>, <Stateful />];
+    function Fragment({condition}) {
+      return condition
+        ? [null, <Stateful key="a" />]
+        : [<div key="b">Hello</div>, <Stateful key="a" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -133,11 +124,9 @@ describe('ReactTopLevelFragment', function() {
     var instanceC = instance;
 
     expect(instanceC === instanceA).toBe(true);
-
   });
 
   it('should preserve state in a reorder', function() {
-
     var instance = null;
 
     class Stateful extends React.Component {
@@ -147,9 +136,10 @@ describe('ReactTopLevelFragment', function() {
       }
     }
 
-    function Fragment({ condition }) {
-      return condition ? [[<div key="b">World</div>, <Stateful key="a" />]] :
-        [[<Stateful key="a" />, <div key="b">World</div>], <div />];
+    function Fragment({condition}) {
+      return condition
+        ? [[<div key="b">World</div>, <Stateful key="a" />]]
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -164,7 +154,5 @@ describe('ReactTopLevelFragment', function() {
     var instanceB = instance;
 
     expect(instanceB).toBe(instanceA);
-
   });
-
 });

@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -43,10 +41,11 @@ describe('ReactMount', () => {
   it('should warn when unmounting a non-container root node', () => {
     var mainContainerDiv = document.createElement('div');
 
-    var component =
+    var component = (
       <div>
         <div />
-      </div>;
+      </div>
+    );
     ReactDOM.render(component, mainContainerDiv);
 
     // Test that unmounting at a root node gives a helpful warning
@@ -55,22 +54,23 @@ describe('ReactMount', () => {
     ReactDOM.unmountComponentAtNode(rootDiv);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
-      'unmount was rendered by React and is not a top-level container. You ' +
-      'may have accidentally passed in a React root node instead of its ' +
-      'container.'
+      "Warning: unmountComponentAtNode(): The node you're attempting to " +
+        'unmount was rendered by React and is not a top-level container. You ' +
+        'may have accidentally passed in a React root node instead of its ' +
+        'container.',
     );
   });
 
   it('should warn when unmounting a non-container, non-root node', () => {
     var mainContainerDiv = document.createElement('div');
 
-    var component =
+    var component = (
       <div>
         <div>
           <div />
         </div>
-      </div>;
+      </div>
+    );
     ReactDOM.render(component, mainContainerDiv);
 
     // Test that unmounting at a non-root node gives a different warning
@@ -79,10 +79,10 @@ describe('ReactMount', () => {
     ReactDOM.unmountComponentAtNode(nonRootDiv);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: unmountComponentAtNode(): The node you\'re attempting to ' +
-      'unmount was rendered by React and is not a top-level container. ' +
-      'Instead, have the parent component update its state and rerender in ' +
-      'order to remove this component.'
+      "Warning: unmountComponentAtNode(): The node you're attempting to " +
+        'unmount was rendered by React and is not a top-level container. ' +
+        'Instead, have the parent component update its state and rerender in ' +
+        'order to remove this component.',
     );
   });
 });

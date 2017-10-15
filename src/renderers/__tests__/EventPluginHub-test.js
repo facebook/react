@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -20,27 +18,29 @@ describe('EventPluginHub', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should prevent non-function listeners, at dispatch', () => {
+    spyOn(console, 'error');
     var node = ReactTestUtils.renderIntoDocument(
-      <div onClick="not a function" />
+      <div onClick="not a function" />,
     );
     expect(function() {
       ReactTestUtils.SimulateNative.click(node);
     }).toThrowError(
-      'Expected onClick listener to be a function, instead got type string'
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
     );
   });
 
   it('should not prevent null listeners, at dispatch', () => {
-    var node = ReactTestUtils.renderIntoDocument(
-      <div onClick={null} />
-    );
+    var node = ReactTestUtils.renderIntoDocument(<div onClick={null} />);
     expect(function() {
       ReactTestUtils.SimulateNative.click(node);
     }).not.toThrow();
   });
-
 });

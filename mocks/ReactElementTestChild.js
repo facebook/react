@@ -1,22 +1,20 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactElementTestChild
  */
 
 'use strict';
 
-var React = require('React');
+var React = require('ReactEntry');
 
-var Child = React.createClass({
-  render: function() {
+class Child extends React.Component {
+  render() {
     return React.createElement('div');
-  },
-});
+  }
+}
 
 module.exports = Child;

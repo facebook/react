@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -23,17 +21,17 @@ describe('refs-destruction', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
 
     TestComponent = class extends React.Component {
       render() {
         return (
           <div>
-            {this.props.destroy ? null :
-              <div ref="theInnerDiv">
-                Lets try to destroy this.
-              </div>
-            }
+            {this.props.destroy
+              ? null
+              : <div ref="theInnerDiv">
+                  Lets try to destroy this.
+                </div>}
           </div>
         );
       }
@@ -43,36 +41,34 @@ describe('refs-destruction', () => {
   it('should remove refs when destroying the parent', () => {
     var container = document.createElement('div');
     var testInstance = ReactDOM.render(<TestComponent />, container);
-    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
-      .toBe(true);
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
+      true,
+    );
     expect(
-      Object.keys(testInstance.refs || {})
-        .filter(key => testInstance.refs[key])
-        .length
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(1);
     ReactDOM.unmountComponentAtNode(container);
     expect(
-      Object.keys(testInstance.refs || {})
-        .filter(key => testInstance.refs[key])
-        .length
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(0);
   });
 
   it('should remove refs when destroying the child', () => {
     var container = document.createElement('div');
     var testInstance = ReactDOM.render(<TestComponent />, container);
-    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv))
-      .toBe(true);
+    expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
+      true,
+    );
     expect(
-      Object.keys(testInstance.refs || {})
-        .filter(key => testInstance.refs[key])
-        .length
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(1);
     ReactDOM.render(<TestComponent destroy={true} />, container);
     expect(
-      Object.keys(testInstance.refs || {})
-        .filter(key => testInstance.refs[key])
-        .length
+      Object.keys(testInstance.refs || {}).filter(key => testInstance.refs[key])
+        .length,
     ).toEqual(0);
   });
 
@@ -106,9 +102,11 @@ describe('refs-destruction', () => {
 
     class AppModal extends React.Component {
       render() {
-        return (<Modal>
-          <a ref="ref" />
-        </Modal>);
+        return (
+          <Modal>
+            <a ref="ref" />
+          </Modal>
+        );
       }
     }
 

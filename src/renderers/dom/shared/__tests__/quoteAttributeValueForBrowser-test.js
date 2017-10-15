@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -12,7 +10,7 @@
 'use strict';
 
 describe('quoteAttributeValueForBrowser', () => {
-
+  // TODO: can we express this test with only public API?
   var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
 
   it('should escape boolean to string', () => {
@@ -35,14 +33,15 @@ describe('quoteAttributeValueForBrowser', () => {
   });
 
   it('should escape string', () => {
-    var escaped = quoteAttributeValueForBrowser('<script type=\'\' src=""></script>');
+    var escaped = quoteAttributeValueForBrowser(
+      '<script type=\'\' src=""></script>',
+    );
     expect(escaped).not.toContain('<');
     expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain('\'');
-    expect(escaped.substr(1, -1)).not.toContain('\"');
+    expect(escaped).not.toContain("'");
+    expect(escaped.substr(1, -1)).not.toContain('"');
 
     escaped = quoteAttributeValueForBrowser('&');
     expect(escaped).toBe('"&amp;"');
   });
-
 });

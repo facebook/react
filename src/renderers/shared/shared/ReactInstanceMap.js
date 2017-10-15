@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactInstanceMap
  */
@@ -20,28 +18,26 @@
 
 // TODO: Replace this with ES6: var ReactInstanceMap = new Map();
 var ReactInstanceMap = {
-
   /**
    * This API should be called `delete` but we'd have to make sure to always
    * transform these to strings for IE support. When this transform is fully
    * supported we can rename it.
    */
   remove: function(key) {
-    key._reactInternalInstance = undefined;
+    key._reactInternalFiber = undefined;
   },
 
   get: function(key) {
-    return key._reactInternalInstance;
+    return key._reactInternalFiber;
   },
 
   has: function(key) {
-    return key._reactInternalInstance !== undefined;
+    return key._reactInternalFiber !== undefined;
   },
 
   set: function(key, value) {
-    key._reactInternalInstance = value;
+    key._reactInternalFiber = value;
   },
-
 };
 
 module.exports = ReactInstanceMap;

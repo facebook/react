@@ -1,10 +1,8 @@
 /**
- * Copyright 2014-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2014-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactElement
  */
@@ -12,12 +10,17 @@
 'use strict';
 
 var ReactCurrentOwner = require('ReactCurrentOwner');
-
-var warning = require('fbjs/lib/warning');
-var canDefineProperty = require('canDefineProperty');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
-var REACT_ELEMENT_TYPE = require('ReactElementSymbol');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
+
+// The Symbol used to tag the ReactElement type. If there is no native Symbol
+// nor polyfill, then a plain number is used for performance.
+var REACT_ELEMENT_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
+  0xeac7;
 
 var RESERVED_PROPS = {
   key: true,
@@ -59,10 +62,10 @@ function defineKeyPropWarningGetter(props, displayName) {
       warning(
         false,
         '%s: `key` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
-        displayName
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
       );
     }
   };
@@ -80,10 +83,10 @@ function defineRefPropWarningGetter(props, displayName) {
       warning(
         false,
         '%s: `ref` is not a prop. Trying to access it will result ' +
-        'in `undefined` being returned. If you need to access the same ' +
-        'value within the child component, you should pass it as a different ' +
-        'prop. (https://fb.me/react-special-props)',
-        displayName
+          'in `undefined` being returned. If you need to access the same ' +
+          'value within the child component, you should pass it as a different ' +
+          'prop. (https://fb.me/react-special-props)',
+        displayName,
       );
     }
   };
@@ -140,33 +143,27 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
     // the validation flag non-enumerable (where possible, which should
     // include every environment we run tests in), so the test framework
     // ignores it.
-    if (canDefineProperty) {
-      Object.defineProperty(element._store, 'validated', {
-        configurable: false,
-        enumerable: false,
-        writable: true,
-        value: false,
-      });
-      // self and source are DEV only properties.
-      Object.defineProperty(element, '_self', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: self,
-      });
-      // Two elements created in two different places should be considered
-      // equal for testing purposes and therefore we hide it from enumeration.
-      Object.defineProperty(element, '_source', {
-        configurable: false,
-        enumerable: false,
-        writable: false,
-        value: source,
-      });
-    } else {
-      element._store.validated = false;
-      element._self = self;
-      element._source = source;
-    }
+    Object.defineProperty(element._store, 'validated', {
+      configurable: false,
+      enumerable: false,
+      writable: true,
+      value: false,
+    });
+    // self and source are DEV only properties.
+    Object.defineProperty(element, '_self', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: self,
+    });
+    // Two elements created in two different places should be considered
+    // equal for testing purposes and therefore we hide it from enumeration.
+    Object.defineProperty(element, '_source', {
+      configurable: false,
+      enumerable: false,
+      writable: false,
+      value: source,
+    });
     if (Object.freeze) {
       Object.freeze(element.props);
       Object.freeze(element);
@@ -178,7 +175,7 @@ var ReactElement = function(type, key, ref, self, source, owner, props) {
 
 /**
  * Create and return a new ReactElement of the given type.
- * See https://facebook.github.io/react/docs/react-api.html#createelement
+ * See https://reactjs.org/docs/react-api.html#createelement
  */
 ReactElement.createElement = function(type, config, children) {
   var propName;
@@ -203,8 +200,10 @@ ReactElement.createElement = function(type, config, children) {
     source = config.__source === undefined ? null : config.__source;
     // Remaining properties are added to a new props object
     for (propName in config) {
-      if (hasOwnProperty.call(config, propName) &&
-          !RESERVED_PROPS.hasOwnProperty(propName)) {
+      if (
+        hasOwnProperty.call(config, propName) &&
+        !RESERVED_PROPS.hasOwnProperty(propName)
+      ) {
         props[propName] = config[propName];
       }
     }
@@ -239,11 +238,13 @@ ReactElement.createElement = function(type, config, children) {
   }
   if (__DEV__) {
     if (key || ref) {
-      if (typeof props.$$typeof === 'undefined' ||
-          props.$$typeof !== REACT_ELEMENT_TYPE) {
-        var displayName = typeof type === 'function' ?
-          (type.displayName || type.name || 'Unknown') :
-          type;
+      if (
+        typeof props.$$typeof === 'undefined' ||
+        props.$$typeof !== REACT_ELEMENT_TYPE
+      ) {
+        var displayName = typeof type === 'function'
+          ? type.displayName || type.name || 'Unknown'
+          : type;
         if (key) {
           defineKeyPropWarningGetter(props, displayName);
         }
@@ -260,13 +261,13 @@ ReactElement.createElement = function(type, config, children) {
     self,
     source,
     ReactCurrentOwner.current,
-    props
+    props,
   );
 };
 
 /**
  * Return a function that produces ReactElements of a given type.
- * See https://facebook.github.io/react/docs/react-api.html#createfactory
+ * See https://reactjs.org/docs/react-api.html#createfactory
  */
 ReactElement.createFactory = function(type) {
   var factory = ReactElement.createElement.bind(null, type);
@@ -287,7 +288,7 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
     oldElement._self,
     oldElement._source,
     oldElement._owner,
-    oldElement.props
+    oldElement.props,
   );
 
   return newElement;
@@ -295,7 +296,7 @@ ReactElement.cloneAndReplaceKey = function(oldElement, newKey) {
 
 /**
  * Clone and return a new ReactElement using element as the starting point.
- * See https://facebook.github.io/react/docs/react-api.html#cloneelement
+ * See https://reactjs.org/docs/react-api.html#cloneelement
  */
 ReactElement.cloneElement = function(element, config, children) {
   var propName;
@@ -332,8 +333,10 @@ ReactElement.cloneElement = function(element, config, children) {
       defaultProps = element.type.defaultProps;
     }
     for (propName in config) {
-      if (hasOwnProperty.call(config, propName) &&
-          !RESERVED_PROPS.hasOwnProperty(propName)) {
+      if (
+        hasOwnProperty.call(config, propName) &&
+        !RESERVED_PROPS.hasOwnProperty(propName)
+      ) {
         if (config[propName] === undefined && defaultProps !== undefined) {
           // Resolve default props
           props[propName] = defaultProps[propName];
@@ -357,20 +360,12 @@ ReactElement.cloneElement = function(element, config, children) {
     props.children = childArray;
   }
 
-  return ReactElement(
-    element.type,
-    key,
-    ref,
-    self,
-    source,
-    owner,
-    props
-  );
+  return ReactElement(element.type, key, ref, self, source, owner, props);
 };
 
 /**
  * Verifies the object is a ReactElement.
- * See https://facebook.github.io/react/docs/react-api.html#isvalidelement
+ * See https://reactjs.org/docs/react-api.html#isvalidelement
  * @param {?object} object
  * @return {boolean} True if `object` is a valid component.
  * @final

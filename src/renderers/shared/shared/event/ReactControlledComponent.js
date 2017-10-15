@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactControlledComponent
  */
@@ -38,29 +36,20 @@ function restoreStateOfTarget(target) {
     // Unmounted
     return;
   }
-  if (typeof internalInstance.tag === 'number') {
-    invariant(
-      fiberHostComponent &&
-      typeof fiberHostComponent.restoreControlledState === 'function',
-      'Fiber needs to be injected to handle a fiber target for controlled ' +
-      'events.'
-    );
-    const props = EventPluginUtils.getFiberCurrentPropsFromNode(
-      internalInstance.stateNode
-    );
-    fiberHostComponent.restoreControlledState(
-      internalInstance.stateNode,
-      internalInstance.type,
-      props
-    );
-    return;
-  }
   invariant(
-    typeof internalInstance.restoreControlledState === 'function',
-    'The internal instance must be a React host component.'
+    fiberHostComponent &&
+      typeof fiberHostComponent.restoreControlledState === 'function',
+    'Fiber needs to be injected to handle a fiber target for controlled ' +
+      'events. This error is likely caused by a bug in React. Please file an issue.',
   );
-  // If it is not a Fiber, we can just use dynamic dispatch.
-  internalInstance.restoreControlledState();
+  const props = EventPluginUtils.getFiberCurrentPropsFromNode(
+    internalInstance.stateNode,
+  );
+  fiberHostComponent.restoreControlledState(
+    internalInstance.stateNode,
+    internalInstance.type,
+    props,
+  );
 }
 
 var ReactControlledComponent = {

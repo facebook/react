@@ -1,18 +1,20 @@
 const React = window.React;
 
-const RangeInputs = React.createClass({
-  getInitialState() {
-    return { value: 0.5 };
-  },
-  onChange(event) {
-    this.setState({ value: event.target.value });
-  },
+class RangeInputs extends React.Component {
+  state = {value: 0.5};
+  onChange = event => {
+    this.setState({value: event.target.value});
+  };
   render() {
     return (
       <form>
         <fieldset>
           <legend>Controlled</legend>
-          <input type="range" value={this.state.value} onChange={this.onChange} />
+          <input
+            type="range"
+            value={this.state.value}
+            onChange={this.onChange}
+          />
           <span className="hint">Value: {this.state.value}</span>
         </fieldset>
 
@@ -22,7 +24,7 @@ const RangeInputs = React.createClass({
         </fieldset>
       </form>
     );
-  },
-});
+  }
+}
 
 export default RangeInputs;

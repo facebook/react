@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule SimpleEventPlugin
  * @flow
@@ -26,18 +24,18 @@ var SyntheticUIEvent = require('SyntheticUIEvent');
 var SyntheticWheelEvent = require('SyntheticWheelEvent');
 
 var getEventCharCode = require('getEventCharCode');
-var invariant = require('fbjs/lib/invariant');
 
-import type {TopLevelTypes} from 'EventConstants';
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
+
+import type {TopLevelTypes} from 'BrowserEventConstants';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
 } from 'ReactSyntheticEventType';
-import type {ReactInstance} from 'ReactInstanceType';
-import type {
-  EventTypes,
-  PluginModule,
-} from 'PluginModuleType';
+import type {Fiber} from 'ReactFiber';
+import type {EventTypes, PluginModule} from 'PluginModuleType';
 
 /**
  * Turns
@@ -141,13 +139,47 @@ var topLevelEventsToDispatchConfig: {[key: TopLevelTypes]: DispatchConfig} = {};
   topLevelEventsToDispatchConfig[topEvent] = type;
 });
 
-var SimpleEventPlugin: PluginModule<MouseEvent> = {
+// Only used in DEV for exhaustiveness validation.
+var knownHTMLTopLevelTypes = [
+  'topAbort',
+  'topCancel',
+  'topCanPlay',
+  'topCanPlayThrough',
+  'topClose',
+  'topDurationChange',
+  'topEmptied',
+  'topEncrypted',
+  'topEnded',
+  'topError',
+  'topInput',
+  'topInvalid',
+  'topLoad',
+  'topLoadedData',
+  'topLoadedMetadata',
+  'topLoadStart',
+  'topPause',
+  'topPlay',
+  'topPlaying',
+  'topProgress',
+  'topRateChange',
+  'topReset',
+  'topSeeked',
+  'topSeeking',
+  'topStalled',
+  'topSubmit',
+  'topSuspend',
+  'topTimeUpdate',
+  'topToggle',
+  'topVolumeChange',
+  'topWaiting',
+];
 
+var SimpleEventPlugin: PluginModule<MouseEvent> = {
   eventTypes: eventTypes,
 
   extractEvents: function(
     topLevelType: TopLevelTypes,
-    targetInst: ReactInstance,
+    targetInst: Fiber,
     nativeEvent: MouseEvent,
     nativeEventTarget: EventTarget,
   ): null | ReactSyntheticEvent {
@@ -157,41 +189,6 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
     }
     var EventConstructor;
     switch (topLevelType) {
-      case 'topAbort':
-      case 'topCancel':
-      case 'topCanPlay':
-      case 'topCanPlayThrough':
-      case 'topClose':
-      case 'topDurationChange':
-      case 'topEmptied':
-      case 'topEncrypted':
-      case 'topEnded':
-      case 'topError':
-      case 'topInput':
-      case 'topInvalid':
-      case 'topLoad':
-      case 'topLoadedData':
-      case 'topLoadedMetadata':
-      case 'topLoadStart':
-      case 'topPause':
-      case 'topPlay':
-      case 'topPlaying':
-      case 'topProgress':
-      case 'topRateChange':
-      case 'topReset':
-      case 'topSeeked':
-      case 'topSeeking':
-      case 'topStalled':
-      case 'topSubmit':
-      case 'topSuspend':
-      case 'topTimeUpdate':
-      case 'topToggle':
-      case 'topVolumeChange':
-      case 'topWaiting':
-        // HTML Events
-        // @see http://www.w3.org/TR/html5/index.html#events-0
-        EventConstructor = SyntheticEvent;
-        break;
       case 'topKeyPress':
         // Firefox creates a keypress event for function keys too. This removes
         // the unwanted keypress events. Enter is however both printable and
@@ -199,7 +196,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         if (getEventCharCode(nativeEvent) === 0) {
           return null;
         }
-        /* falls through */
+      /* falls through */
       case 'topKeyDown':
       case 'topKeyUp':
         EventConstructor = SyntheticKeyboardEvent;
@@ -214,13 +211,13 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
         if (nativeEvent.button === 2) {
           return null;
         }
-        /* falls through */
+      /* falls through */
       case 'topDoubleClick':
       case 'topMouseDown':
       case 'topMouseMove':
       case 'topMouseUp':
-        // TODO: Disabled elements should not respond to mouse events
-        /* falls through */
+      // TODO: Disabled elements should not respond to mouse events
+      /* falls through */
       case 'topMouseOut':
       case 'topMouseOver':
       case 'topContextMenu':
@@ -261,22 +258,31 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       case 'topPaste':
         EventConstructor = SyntheticClipboardEvent;
         break;
+      default:
+        if (__DEV__) {
+          if (knownHTMLTopLevelTypes.indexOf(topLevelType) === -1) {
+            warning(
+              false,
+              'SimpleEventPlugin: Unhandled event type, `%s`. This warning ' +
+                'is likely caused by a bug in React. Please file an issue.',
+              topLevelType,
+            );
+          }
+        }
+        // HTML Events
+        // @see http://www.w3.org/TR/html5/index.html#events-0
+        EventConstructor = SyntheticEvent;
+        break;
     }
-    invariant(
-      EventConstructor,
-      'SimpleEventPlugin: Unhandled event type, `%s`.',
-      topLevelType
-    );
     var event = EventConstructor.getPooled(
       dispatchConfig,
       targetInst,
       nativeEvent,
-      nativeEventTarget
+      nativeEventTarget,
     );
     EventPropagators.accumulateTwoPhaseDispatches(event);
     return event;
   },
-
 };
 
 module.exports = SimpleEventPlugin;

@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -13,7 +11,6 @@
 
 var React;
 var ReactNoop;
-var ReactFeatureFlags;
 
 // This is a new feature in Fiber so I put it in its own test file. It could
 // probably move to one of the other test files once it is official.
@@ -21,9 +18,7 @@ describe('ReactTopLevelText', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoop');
-    ReactFeatureFlags = require('ReactFeatureFlags');
-    ReactFeatureFlags.disableNewFiberFeatures = false;
+    ReactNoop = require('react-noop-renderer');
   });
 
   it('should render a component returning strings directly from render', () => {
@@ -39,5 +34,4 @@ describe('ReactTopLevelText', () => {
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([{text: '10'}]);
   });
-
 });

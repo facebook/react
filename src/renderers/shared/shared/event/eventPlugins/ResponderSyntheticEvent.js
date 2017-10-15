@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ResponderSyntheticEvent
  */
@@ -30,8 +28,19 @@ var ResponderEventInterface = {
  * @param {object} nativeEvent Native event.
  * @extends {SyntheticEvent}
  */
-function ResponderSyntheticEvent(dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget) {
-  return SyntheticEvent.call(this, dispatchConfig, dispatchMarker, nativeEvent, nativeEventTarget);
+function ResponderSyntheticEvent(
+  dispatchConfig,
+  dispatchMarker,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  return SyntheticEvent.call(
+    this,
+    dispatchConfig,
+    dispatchMarker,
+    nativeEvent,
+    nativeEventTarget,
+  );
 }
 
 SyntheticEvent.augmentClass(ResponderSyntheticEvent, ResponderEventInterface);

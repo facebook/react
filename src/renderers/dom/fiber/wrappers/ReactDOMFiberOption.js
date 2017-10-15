@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactDOMFiberOption
  * @flow
@@ -14,7 +12,9 @@
 
 var React = require('react');
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 function flattenChildren(children) {
   var content = '';
@@ -39,25 +39,25 @@ function flattenChildren(children) {
  * Implements an <option> host component that warns when `selected` is set.
  */
 var ReactDOMOption = {
-  mountWrapper: function(element : Element, props : Object) {
+  validateProps: function(element: Element, props: Object) {
     // TODO (yungsters): Remove support for `selected` in <option>.
     if (__DEV__) {
       warning(
         props.selected == null,
         'Use the `defaultValue` or `value` props on <select> instead of ' +
-        'setting `selected` on <option>.'
+          'setting `selected` on <option>.',
       );
     }
   },
 
-  postMountWrapper: function(element : Element, props : Object) {
+  postMountWrapper: function(element: Element, props: Object) {
     // value="" should make a value attribute (#6219)
     if (props.value != null) {
       element.setAttribute('value', props.value);
     }
   },
 
-  getHostProps: function(element : Element, props : Object) {
+  getHostProps: function(element: Element, props: Object) {
     var hostProps = Object.assign({children: undefined}, props);
 
     var content = flattenChildren(props.children);
@@ -68,7 +68,6 @@ var ReactDOMOption = {
 
     return hostProps;
   },
-
 };
 
 module.exports = ReactDOMOption;

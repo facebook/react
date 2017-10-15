@@ -1,17 +1,17 @@
 /**
- * Copyright 2015-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2015-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactNoopUpdateQueue
  */
 
 'use strict';
 
-var warning = require('fbjs/lib/warning');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
@@ -19,11 +19,12 @@ function warnNoop(publicInstance, callerName) {
     warning(
       false,
       '%s(...): Can only update a mounted or mounting component. ' +
-      'This usually means you called %s() on an unmounted component. ' +
-      'This is a no-op.\n\nPlease check the code for the %s component.',
+        'This usually means you called %s() on an unmounted component. ' +
+        'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      constructor && (constructor.displayName || constructor.name) || 'ReactClass'
+      (constructor && (constructor.displayName || constructor.name)) ||
+        'ReactClass',
     );
   }
 }
@@ -32,7 +33,6 @@ function warnNoop(publicInstance, callerName) {
  * This is the abstract API for an update queue.
  */
 var ReactNoopUpdateQueue = {
-
   /**
    * Checks whether or not this composite component is mounted.
    * @param {ReactClass} publicInstance The instance we want to test.
@@ -56,7 +56,7 @@ var ReactNoopUpdateQueue = {
    *
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {?function} callback Called after component is updated.
-   * @param {?string} Name of the calling function in the public API.
+   * @param {?string} callerName name of the calling function in the public API.
    * @internal
    */
   enqueueForceUpdate: function(publicInstance, callback, callerName) {
@@ -73,10 +73,15 @@ var ReactNoopUpdateQueue = {
    * @param {ReactClass} publicInstance The instance that should rerender.
    * @param {object} completeState Next state.
    * @param {?function} callback Called after component is updated.
-   * @param {?string} Name of the calling function in the public API.
+   * @param {?string} callerName name of the calling function in the public API.
    * @internal
    */
-  enqueueReplaceState: function(publicInstance, completeState, callback, callerName) {
+  enqueueReplaceState: function(
+    publicInstance,
+    completeState,
+    callback,
+    callerName,
+  ) {
     warnNoop(publicInstance, 'replaceState');
   },
 
@@ -92,7 +97,12 @@ var ReactNoopUpdateQueue = {
    * @param {?string} Name of the calling function in the public API.
    * @internal
    */
-  enqueueSetState: function(publicInstance, partialState, callback, callerName) {
+  enqueueSetState: function(
+    publicInstance,
+    partialState,
+    callback,
+    callerName,
+  ) {
     warnNoop(publicInstance, 'setState');
   },
 };

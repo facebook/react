@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule adler32
  * @flow
@@ -28,18 +26,17 @@ function adler32(data: string): number {
   while (i < m) {
     var n = Math.min(i + 4096, m);
     for (; i < n; i += 4) {
-      b += (
+      b +=
         (a += data.charCodeAt(i)) +
         (a += data.charCodeAt(i + 1)) +
         (a += data.charCodeAt(i + 2)) +
-        (a += data.charCodeAt(i + 3))
-      );
+        (a += data.charCodeAt(i + 3));
     }
     a %= MOD;
     b %= MOD;
   }
   for (; i < l; i++) {
-    b += (a += data.charCodeAt(i));
+    b += a += data.charCodeAt(i);
   }
   a %= MOD;
   b %= MOD;

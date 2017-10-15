@@ -1,78 +1,83 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactControlledValuePropTypes
  */
 
 'use strict';
 
-var React = require('react');
-var ReactPropTypesSecret = require('ReactPropTypesSecret');
-
-var warning = require('fbjs/lib/warning');
-
-var hasReadOnlyValue = {
-  'button': true,
-  'checkbox': true,
-  'image': true,
-  'hidden': true,
-  'radio': true,
-  'reset': true,
-  'submit': true,
+var ReactControlledValuePropTypes = {
+  checkPropTypes: null,
 };
 
-var propTypes = {
-  value: function(props, propName, componentName) {
-    if (!props[propName] ||
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+  var emptyFunction = require('fbjs/lib/emptyFunction');
+  var PropTypes = require('prop-types');
+  var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
+
+  ReactControlledValuePropTypes.checkPropTypes = emptyFunction;
+  var hasReadOnlyValue = {
+    button: true,
+    checkbox: true,
+    image: true,
+    hidden: true,
+    radio: true,
+    reset: true,
+    submit: true,
+  };
+
+  var propTypes = {
+    value: function(props, propName, componentName) {
+      if (
+        !props[propName] ||
         hasReadOnlyValue[props.type] ||
         props.onChange ||
         props.readOnly ||
-        props.disabled) {
-      return null;
-    }
-    return new Error(
-      'You provided a `value` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultValue`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
-    );
-  },
-  checked: function(props, propName, componentName) {
-    if (!props[propName] ||
+        props.disabled
+      ) {
+        return null;
+      }
+      return new Error(
+        'You provided a `value` prop to a form field without an ' +
+          '`onChange` handler. This will render a read-only field. If ' +
+          'the field should be mutable use `defaultValue`. Otherwise, ' +
+          'set either `onChange` or `readOnly`.',
+      );
+    },
+    checked: function(props, propName, componentName) {
+      if (
+        !props[propName] ||
         props.onChange ||
         props.readOnly ||
-        props.disabled) {
-      return null;
-    }
-    return new Error(
-      'You provided a `checked` prop to a form field without an ' +
-      '`onChange` handler. This will render a read-only field. If ' +
-      'the field should be mutable use `defaultChecked`. Otherwise, ' +
-      'set either `onChange` or `readOnly`.'
-    );
-  },
-  onChange: React.PropTypes.func,
-};
+        props.disabled
+      ) {
+        return null;
+      }
+      return new Error(
+        'You provided a `checked` prop to a form field without an ' +
+          '`onChange` handler. This will render a read-only field. If ' +
+          'the field should be mutable use `defaultChecked`. Otherwise, ' +
+          'set either `onChange` or `readOnly`.',
+      );
+    },
+    onChange: PropTypes.func,
+  };
 
-var loggedTypeFailures = {};
-function getDeclarationErrorAddendum(ownerName) {
-  if (ownerName) {
-    return '\n\nCheck the render method of `' + ownerName + '`.';
-  }
-  return '';
-}
+  var loggedTypeFailures = {};
 
-/**
- * Provide a linked `value` attribute for controlled forms. You should not use
- * this outside of the ReactDOM controlled form components.
- */
-var ReactControlledValuePropTypes = {
-  checkPropTypes: function(tagName, props, ownerName) {
+  /**
+   * Provide a linked `value` attribute for controlled forms. You should not use
+   * this outside of the ReactDOM controlled form components.
+   */
+  ReactControlledValuePropTypes.checkPropTypes = function(
+    tagName,
+    props,
+    getStack,
+  ) {
     for (var propName in propTypes) {
       if (propTypes.hasOwnProperty(propName)) {
         var error = propTypes[propName](
@@ -89,11 +94,10 @@ var ReactControlledValuePropTypes = {
         // same error.
         loggedTypeFailures[error.message] = true;
 
-        var addendum = getDeclarationErrorAddendum(ownerName);
-        warning(false, 'Failed form propType: %s%s', error.message, addendum);
+        warning(false, 'Failed form propType: %s%s', error.message, getStack());
       }
     }
-  },
-};
+  };
+}
 
 module.exports = ReactControlledValuePropTypes;

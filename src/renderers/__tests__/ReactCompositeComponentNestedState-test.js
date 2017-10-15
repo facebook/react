@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -16,18 +14,17 @@ var ReactDOM;
 var ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', () => {
-
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should provide up to date values for props', () => {
     class ParentComponent extends React.Component {
       state = {color: 'blue'};
 
-      handleColor = (color) => {
+      handleColor = color => {
         this.props.logger('parent-handleColor', this.state.color);
         this.setState({color: color}, function() {
           this.props.logger('parent-after-setState', this.state.color);
@@ -56,13 +53,24 @@ describe('ReactCompositeComponentNestedState-state', () => {
       handleHue = (shade, color) => {
         this.props.logger('handleHue', this.state.hue, this.props.color);
         this.props.onSelectColor(color);
-        this.setState(function(state, props) {
-          this.props.logger('setState-this', this.state.hue, this.props.color);
-          this.props.logger('setState-args', state.hue, props.color);
-          return {hue: shade + ' ' + props.color};
-        }, function() {
-          this.props.logger('after-setState', this.state.hue, this.props.color);
-        });
+        this.setState(
+          function(state, props) {
+            this.props.logger(
+              'setState-this',
+              this.state.hue,
+              this.props.color,
+            );
+            this.props.logger('setState-args', state.hue, props.color);
+            return {hue: shade + ' ' + props.color};
+          },
+          function() {
+            this.props.logger(
+              'after-setState',
+              this.state.hue,
+              this.props.color,
+            );
+          },
+        );
       };
 
       render() {
@@ -91,15 +99,10 @@ describe('ReactCompositeComponentNestedState-state', () => {
 
     var logger = jest.fn();
 
-    void ReactDOM.render(
-      <ParentComponent logger={logger} />,
-      container
-    );
+    void ReactDOM.render(<ParentComponent logger={logger} />, container);
 
     // click "light green"
-    ReactTestUtils.Simulate.click(
-      container.childNodes[0].childNodes[3]
-    );
+    ReactTestUtils.Simulate.click(container.childNodes[0].childNodes[3]);
 
     expect(logger.mock.calls).toEqual([
       ['parent-render', 'blue'],

@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -23,15 +21,16 @@ describe('SelectEventPlugin', () => {
       topLevelEvent,
       ReactDOMComponentTree.getInstanceFromNode(node),
       {target: node},
-      node
+      node,
     );
   }
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactTestUtils = require('react-dom/test-utils');
+    // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('ReactDOMComponentTree');
-    ReactTestUtils = require('ReactTestUtils');
     SelectEventPlugin = require('SelectEventPlugin');
   });
 
@@ -50,11 +49,7 @@ describe('SelectEventPlugin', () => {
     // environment so we need to ensure it gets set for this test to be valid.
     var fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
-    ReactTestUtils.simulateNativeEventOnNode(
-      'topFocus',
-      node,
-      fakeNativeEvent
-    );
+    ReactTestUtils.simulateNativeEventOnNode('topFocus', node, fakeNativeEvent);
 
     var mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
@@ -73,7 +68,7 @@ describe('SelectEventPlugin', () => {
     var cb = jest.fn();
 
     var rendered = ReactTestUtils.renderIntoDocument(
-      <WithSelect onSelect={cb} />
+      <WithSelect onSelect={cb} />,
     );
     var node = ReactDOM.findDOMNode(rendered);
 

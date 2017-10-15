@@ -1,10 +1,8 @@
 /**
- * Copyright 2014-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2014-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule accumulateInto
  * @flow
@@ -27,10 +25,13 @@ var invariant = require('fbjs/lib/invariant');
  * @return {*|array<*>} An accumulation of items.
  */
 
-function accumulateInto<T>(current: ?(T | Array<T>), next: T | Array<T>): T | Array<T> {
+function accumulateInto<T>(
+  current: ?(T | Array<T>),
+  next: T | Array<T>,
+): T | Array<T> {
   invariant(
     next != null,
-    'accumulateInto(...): Accumulated items must not be null or undefined.'
+    'accumulateInto(...): Accumulated items must not be null or undefined.',
   );
 
   if (current == null) {

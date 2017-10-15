@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -64,6 +62,7 @@ describe('ReactPureComponent', () => {
   });
 
   it('can override shouldComponentUpdate', () => {
+    spyOn(console, 'error');
     var renders = 0;
     class Component extends React.PureComponent {
       render() {
@@ -77,6 +76,13 @@ describe('ReactPureComponent', () => {
     var container = document.createElement('div');
     ReactDOM.render(<Component />, container);
     ReactDOM.render(<Component />, container);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ' +
+        'Component has a method called shouldComponentUpdate(). ' +
+        'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+        'Please extend React.Component if shouldComponentUpdate is used.',
+    );
     expect(renders).toBe(2);
   });
 
@@ -94,4 +100,26 @@ describe('ReactPureComponent', () => {
     expect(renders).toBe(1);
   });
 
+  it('should warn when shouldComponentUpdate is defined on React.PureComponent', () => {
+    spyOn(console, 'error');
+
+    class PureComponent extends React.PureComponent {
+      shouldComponentUpdate() {
+        return true;
+      }
+      render() {
+        return <div />;
+      }
+    }
+    var container = document.createElement('div');
+    ReactDOM.render(<PureComponent />, container);
+
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: ' +
+        'PureComponent has a method called shouldComponentUpdate(). ' +
+        'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+        'Please extend React.Component if shouldComponentUpdate is used.',
+    );
+  });
 });

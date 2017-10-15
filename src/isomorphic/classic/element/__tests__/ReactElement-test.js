@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -14,7 +12,6 @@
 var React;
 var ReactDOM;
 var ReactTestUtils;
-var ReactDOMFeatureFlags;
 
 describe('ReactElement', () => {
   var ComponentClass;
@@ -30,15 +27,14 @@ describe('ReactElement', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
-    ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
+    ReactTestUtils = require('react-dom/test-utils');
     // NOTE: We're explicitly not using JSX here. This is intended to test
     // classic JS without JSX.
-    ComponentClass = React.createClass({
-      render: function() {
+    ComponentClass = class extends React.Component {
+      render() {
         return React.createElement('div');
-      },
-    });
+      }
+    };
   });
 
   afterEach(() => {
@@ -59,37 +55,7 @@ describe('ReactElement', () => {
     expect(element.props).toEqual({});
   });
 
-  it('should warn when `key` is being accessed on createClass element', () => {
-    spyOn(console, 'error');
-    var container = document.createElement('div');
-    var Child = React.createClass({
-      render: function() {
-        return <div> {this.props.key} </div>;
-      },
-    });
-    var Parent = React.createClass({
-      render: function() {
-        return (
-          <div>
-            <Child key="0" />
-            <Child key="1" />
-            <Child key="2" />
-          </div>
-        );
-      },
-    });
-    expectDev(console.error.calls.count()).toBe(0);
-    ReactDOM.render(<Parent />, container);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child: `key` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://fb.me/react-special-props)'
-    );
-  });
-
-  it('should warn when `key` is being accessed on ES class element', () => {
+  it('should warn when `key` is being accessed on composite element', () => {
     spyOn(console, 'error');
     var container = document.createElement('div');
     class Child extends React.Component {
@@ -97,8 +63,8 @@ describe('ReactElement', () => {
         return <div> {this.props.key} </div>;
       }
     }
-    var Parent = React.createClass({
-      render: function() {
+    class Parent extends React.Component {
+      render() {
         return (
           <div>
             <Child key="0" />
@@ -106,16 +72,16 @@ describe('ReactElement', () => {
             <Child key="2" />
           </div>
         );
-      },
-    });
-    expectDev(console.error.calls.count()).toBe(0);
+      }
+    }
+    expect(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `key` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://fb.me/react-special-props)'
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
     );
   });
 
@@ -127,37 +93,37 @@ describe('ReactElement', () => {
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'div: `key` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://fb.me/react-special-props)'
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
     );
   });
 
   it('should warn when `ref` is being accessed', () => {
     spyOn(console, 'error');
     var container = document.createElement('div');
-    var Child = React.createClass({
-      render: function() {
+    class Child extends React.Component {
+      render() {
         return <div> {this.props.ref} </div>;
-      },
-    });
-    var Parent = React.createClass({
-      render: function() {
+      }
+    }
+    class Parent extends React.Component {
+      render() {
         return (
           <div>
             <Child ref="childElement" />
           </div>
         );
-      },
-    });
-    expectDev(console.error.calls.count()).toBe(0);
+      }
+    }
+    expect(console.error.calls.count()).toBe(0);
     ReactDOM.render(<Parent />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'Child: `ref` is not a prop. Trying to access it will result ' +
-      'in `undefined` being returned. If you need to access the same ' +
-      'value within the child component, you should pass it as a different ' +
-      'prop. (https://fb.me/react-special-props)'
+        'in `undefined` being returned. If you need to access the same ' +
+        'value within the child component, you should pass it as a different ' +
+        'prop. (https://fb.me/react-special-props)',
     );
   });
 
@@ -173,7 +139,7 @@ describe('ReactElement', () => {
 
   it('returns an immutable element', () => {
     var element = React.createFactory(ComponentClass)();
-    expect(() => element.type = 'div').toThrow();
+    expect(() => (element.type = 'div')).toThrow();
   });
 
   it('does not reuse the original config object', () => {
@@ -257,30 +223,28 @@ describe('ReactElement', () => {
     var Component = React.createFactory(ComponentClass);
     var element;
 
-    var Wrapper = React.createClass({
-      render: function() {
+    class Wrapper extends React.Component {
+      render() {
         element = Component();
         return element;
-      },
-    });
+      }
+    }
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Wrapper)
+      React.createElement(Wrapper),
     );
-
-    if (ReactDOMFeatureFlags.useFiber) {
-      expect(element._owner.stateNode).toBe(instance);
-    } else {
-      expect(element._owner.getPublicInstance()).toBe(instance);
-    }
+    expect(element._owner.stateNode).toBe(instance);
   });
 
   it('merges an additional argument onto the children prop', () => {
     spyOn(console, 'error');
     var a = 1;
-    var element = React.createFactory(ComponentClass)({
-      children: 'text',
-    }, a);
+    var element = React.createFactory(ComponentClass)(
+      {
+        children: 'text',
+      },
+      a,
+    );
     expect(element.props.children).toBe(a);
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -296,9 +260,12 @@ describe('ReactElement', () => {
 
   it('overrides children if null is provided as an argument', () => {
     spyOn(console, 'error');
-    var element = React.createFactory(ComponentClass)({
-      children: 'text',
-    }, null);
+    var element = React.createFactory(ComponentClass)(
+      {
+        children: 'text',
+      },
+      null,
+    );
     expect(element.props.children).toBe(null);
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -318,19 +285,12 @@ describe('ReactElement', () => {
   it('allows static methods to be called using the type property', () => {
     spyOn(console, 'error');
 
-    var StaticMethodComponentClass = React.createClass({
-      statics: {
-        someStaticMethod: function() {
-          return 'someReturnValue';
-        },
-      },
-      getInitialState: function() {
-        return {valueToReturn: 'hi'};
-      },
-      render: function() {
+    class StaticMethodComponentClass extends React.Component {
+      render() {
         return React.createElement('div');
-      },
-    });
+      }
+    }
+    StaticMethodComponentClass.someStaticMethod = () => 'someReturnValue';
 
     var element = React.createElement(StaticMethodComponentClass);
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
@@ -340,42 +300,25 @@ describe('ReactElement', () => {
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
   it('identifies valid elements', () => {
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return React.createElement('div');
-      },
-    });
+      }
+    }
 
-    expect(React.isValidElement(React.createElement('div')))
-      .toEqual(true);
-    expect(React.isValidElement(React.createElement(Component)))
-      .toEqual(true);
+    expect(React.isValidElement(React.createElement('div'))).toEqual(true);
+    expect(React.isValidElement(React.createElement(Component))).toEqual(true);
 
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.DOM.div)).toEqual(false);
+    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
+    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
     var jsonElement = JSON.stringify(React.createElement('div'));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(true);
-  });
-
-  it('allows the use of PropTypes validators in statics', () => {
-    // TODO: This test was added to cover a special case where we proxied
-    // methods. However, we don't do that any more so this test can probably
-    // be removed. Leaving it in classic as a safety precaution.
-    var Component = React.createClass({
-      render: () => null,
-      statics: {
-        specialType: React.PropTypes.shape({monkey: React.PropTypes.any}),
-      },
-    });
-
-    expect(typeof Component.specialType).toBe('function');
-    expect(typeof Component.specialType.isRequired).toBe('function');
   });
 
   // NOTE: We're explicitly not using JSX here. This is intended to test
@@ -389,19 +332,17 @@ describe('ReactElement', () => {
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
   it('should use default prop value when removing a prop', () => {
-    var Component = React.createClass({
-      getDefaultProps: function() {
-        return {fruit: 'persimmon'};
-      },
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return React.createElement('span');
-      },
-    });
+      }
+    }
+    Component.defaultProps = {fruit: 'persimmon'};
 
     var container = document.createElement('div');
     var instance = ReactDOM.render(
       React.createElement(Component, {fruit: 'mango'}),
-      container
+      container,
     );
     expect(instance.props.fruit).toBe('mango');
 
@@ -412,29 +353,27 @@ describe('ReactElement', () => {
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
   it('should normalize props with default values', () => {
-    var Component = React.createClass({
-      getDefaultProps: function() {
-        return {prop: 'testKey'};
-      },
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return React.createElement('span', null, this.props.prop);
-      },
-    });
+      }
+    }
+    Component.defaultProps = {prop: 'testKey'};
 
     var instance = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component)
+      React.createElement(Component),
     );
     expect(instance.props.prop).toBe('testKey');
 
     var inst2 = ReactTestUtils.renderIntoDocument(
-      React.createElement(Component, {prop: null})
+      React.createElement(Component, {prop: null}),
     );
     expect(inst2.props.prop).toBe(null);
   });
 
   it('throws when changing a prop (in dev) after element creation', () => {
-    var Outer = React.createClass({
-      render: function() {
+    class Outer extends React.Component {
+      render() {
         var el = <div className="moo" />;
 
         expect(function() {
@@ -443,17 +382,16 @@ describe('ReactElement', () => {
         expect(el.props.className).toBe('moo');
 
         return el;
-      },
-    });
+      }
+    }
     var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
     expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
   });
 
   it('throws when adding a prop (in dev) after element creation', () => {
     var container = document.createElement('div');
-    var Outer = React.createClass({
-      getDefaultProps: () => ({sound: 'meow'}),
-      render: function() {
+    class Outer extends React.Component {
+      render() {
         var el = <div>{this.props.sound}</div>;
 
         expect(function() {
@@ -463,8 +401,9 @@ describe('ReactElement', () => {
         expect(el.props.className).toBe(undefined);
 
         return el;
-      },
-    });
+      }
+    }
+    Outer.defaultProps = {sound: 'meow'};
     var outer = ReactDOM.render(<Outer />, container);
     expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
     expect(ReactDOM.findDOMNode(outer).className).toBe('');
@@ -472,11 +411,11 @@ describe('ReactElement', () => {
 
   it('does not warn for NaN props', () => {
     spyOn(console, 'error');
-    var Test = React.createClass({
-      render: function() {
+    class Test extends React.Component {
+      render() {
         return <div />;
-      },
-    });
+      }
+    }
     var test = ReactTestUtils.renderIntoDocument(<Test value={+undefined} />);
     expect(test.props.value).toBeNaN();
     expectDev(console.error.calls.count()).toBe(0);
@@ -504,29 +443,26 @@ describe('ReactElement', () => {
 
     React = require('react');
 
-    var Component = React.createClass({
-      render: function() {
+    class Component extends React.Component {
+      render() {
         return React.createElement('div');
-      },
-    });
+      }
+    }
 
-    expect(React.isValidElement(React.createElement('div')))
-      .toEqual(true);
-    expect(React.isValidElement(React.createElement(Component)))
-      .toEqual(true);
+    expect(React.isValidElement(React.createElement('div'))).toEqual(true);
+    expect(React.isValidElement(React.createElement(Component))).toEqual(true);
 
     expect(React.isValidElement(null)).toEqual(false);
     expect(React.isValidElement(true)).toEqual(false);
     expect(React.isValidElement({})).toEqual(false);
     expect(React.isValidElement('string')).toEqual(false);
-    expect(React.isValidElement(React.DOM.div)).toEqual(false);
+    expect(React.isValidElement(React.createFactory('div'))).toEqual(false);
     expect(React.isValidElement(Component)).toEqual(false);
-    expect(React.isValidElement({ type: 'div', props: {} })).toEqual(false);
+    expect(React.isValidElement({type: 'div', props: {}})).toEqual(false);
 
     var jsonElement = JSON.stringify(React.createElement('div'));
     expect(React.isValidElement(JSON.parse(jsonElement))).toBe(false);
   });
-
 });
 
 describe('comparing jsx vs .createFactory() vs .createElement()', () => {
@@ -536,28 +472,30 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
     Child = jest.genMockFromModule('ReactElementTestChild');
   });
-
 
   describe('when using jsx only', () => {
     var Parent, instance;
     beforeEach(() => {
-      Parent = React.createClass({
-        render: function() {
+      Parent = class extends React.Component {
+        render() {
           return (
             <div>
               <Child ref="child" foo="foo value">children value</Child>
             </div>
           );
-        },
-      });
+        }
+      };
       instance = ReactTestUtils.renderIntoDocument(<Parent />);
     });
 
     it('should scry children but cannot', () => {
-      var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
+      var children = ReactTestUtils.scryRenderedComponentsWithType(
+        instance,
+        Child,
+      );
       expect(children.length).toBe(1);
     });
 
@@ -566,7 +504,10 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     });
 
     it('can capture Child instantiation calls', () => {
-      expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
+      expect(Child.mock.calls[0][0]).toEqual({
+        foo: 'foo value',
+        children: 'children value',
+      });
     });
   });
 
@@ -574,17 +515,24 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     var factory, instance;
     beforeEach(() => {
       var childFactory = React.createFactory(Child);
-      var Parent = React.createClass({
-        render: function() {
-          return React.DOM.div({}, childFactory({ ref: 'child', foo: 'foo value' }, 'children value'));
-        },
-      });
+      class Parent extends React.Component {
+        render() {
+          return React.createElement(
+            'div',
+            {},
+            childFactory({ref: 'child', foo: 'foo value'}, 'children value'),
+          );
+        }
+      }
       factory = React.createFactory(Parent);
       instance = ReactTestUtils.renderIntoDocument(factory());
     });
 
     it('can properly scry children', () => {
-      var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
+      var children = ReactTestUtils.scryRenderedComponentsWithType(
+        instance,
+        Child,
+      );
       expect(children.length).toBe(1);
     });
 
@@ -593,24 +541,38 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     });
 
     it('can capture Child instantiation calls', () => {
-      expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
+      expect(Child.mock.calls[0][0]).toEqual({
+        foo: 'foo value',
+        children: 'children value',
+      });
     });
   });
 
   describe('when using parent that uses .createElement()', () => {
     var factory, instance;
     beforeEach(() => {
-      var Parent = React.createClass({
-        render: function() {
-          return React.DOM.div({}, React.createElement(Child, { ref: 'child', foo: 'foo value' }, 'children value'));
-        },
-      });
+      class Parent extends React.Component {
+        render() {
+          return React.createElement(
+            'div',
+            {},
+            React.createElement(
+              Child,
+              {ref: 'child', foo: 'foo value'},
+              'children value',
+            ),
+          );
+        }
+      }
       factory = React.createFactory(Parent);
       instance = ReactTestUtils.renderIntoDocument(factory());
     });
 
     it('should scry children but cannot', () => {
-      var children = ReactTestUtils.scryRenderedComponentsWithType(instance, Child);
+      var children = ReactTestUtils.scryRenderedComponentsWithType(
+        instance,
+        Child,
+      );
       expect(children.length).toBe(1);
     });
 
@@ -619,8 +581,10 @@ describe('comparing jsx vs .createFactory() vs .createElement()', () => {
     });
 
     it('can capture Child instantiation calls', () => {
-      expect(Child.mock.calls[0][0]).toEqual({ foo: 'foo value', children: 'children value' });
+      expect(Child.mock.calls[0][0]).toEqual({
+        foo: 'foo value',
+        children: 'children value',
+      });
     });
   });
-
 });

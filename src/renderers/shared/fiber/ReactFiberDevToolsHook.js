@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactFiberDevToolsHook
  * @flow
@@ -12,59 +10,79 @@
 
 'use strict';
 
-var warning = require('fbjs/lib/warning');
+import type {Fiber} from 'ReactFiber';
+import type {FiberRoot} from 'ReactFiberRoot';
 
-import type { Fiber } from 'ReactFiber';
-import type { FiberRoot } from 'ReactFiberRoot';
+declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__ : Object | void;
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
-let rendererID = null;
-let injectInternals = null;
-let onCommitRoot = null;
-let onCommitUnmount = null;
-if (
-  typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ !== 'undefined' &&
-  __REACT_DEVTOOLS_GLOBAL_HOOK__.supportsFiber
-) {
-  let {
-    inject,
-    onCommitFiberRoot,
-    onCommitFiberUnmount,
-  } = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+let onCommitFiberRoot = null;
+let onCommitFiberUnmount = null;
+let hasLoggedError = false;
 
-  injectInternals = function(internals : Object) {
-    warning(rendererID == null, 'Cannot inject into DevTools twice.');
-    rendererID = inject(internals);
-  };
-
-  onCommitRoot = function(root : FiberRoot) {
-    if (rendererID == null) {
-      return;
-    }
+function catchErrors(fn) {
+  return function(arg) {
     try {
-      onCommitFiberRoot(rendererID, root);
+      return fn(arg);
     } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      if (__DEV__) {
+      if (__DEV__ && !hasLoggedError) {
+        hasLoggedError = true;
         warning(false, 'React DevTools encountered an error: %s', err);
       }
     }
   };
+}
 
-  onCommitUnmount = function(fiber : Fiber) {
-    if (rendererID == null) {
-      return;
+function injectInternals(internals: Object): boolean {
+  if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
+    // No DevTools
+    return false;
+  }
+  const hook = __REACT_DEVTOOLS_GLOBAL_HOOK__;
+  if (!hook.supportsFiber) {
+    if (__DEV__) {
+      warning(
+        false,
+        'The installed version of React DevTools is too old and will not work ' +
+          'with the current version of React. Please update React DevTools. ' +
+          'https://fb.me/react-devtools',
+      );
     }
-    try {
-      onCommitFiberUnmount(rendererID, fiber);
-    } catch (err) {
-      // Catch all errors because it is unsafe to throw in the commit phase.
-      if (__DEV__) {
-        warning(false, 'React DevTools encountered an error: %s', err);
-      }
+    // DevTools exists, even though it doesn't support Fiber.
+    return true;
+  }
+  try {
+    const rendererID = hook.inject(internals);
+    // We have successfully injected, so now it is safe to set up hooks.
+    onCommitFiberRoot = catchErrors(root =>
+      hook.onCommitFiberRoot(rendererID, root),
+    );
+    onCommitFiberUnmount = catchErrors(fiber =>
+      hook.onCommitFiberUnmount(rendererID, fiber),
+    );
+  } catch (err) {
+    // Catch all errors because it is unsafe to throw during initialization.
+    if (__DEV__) {
+      warning(false, 'React DevTools encountered an error: %s.', err);
     }
-  };
+  }
+  // DevTools exists
+  return true;
+}
+
+function onCommitRoot(root: FiberRoot) {
+  if (typeof onCommitFiberRoot === 'function') {
+    onCommitFiberRoot(root);
+  }
+}
+
+function onCommitUnmount(fiber: Fiber) {
+  if (typeof onCommitFiberUnmount === 'function') {
+    onCommitFiberUnmount(fiber);
+  }
 }
 
 exports.injectInternals = injectInternals;

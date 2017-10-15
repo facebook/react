@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -13,8 +11,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 // Helpers
 var testAllPermutations = function(testCases) {
@@ -50,43 +47,16 @@ var expectChildren = function(container, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    var openingCommentNode;
-    var closingCommentNode;
     var mountIndex = 0;
 
     for (var i = 0; i < children.length; i++) {
       var child = children[i];
 
       if (typeof child === 'string') {
-        if (ReactDOMFeatureFlags.useFiber) {
-          textNode = outerNode.childNodes[mountIndex];
-          expect(textNode.nodeType).toBe(3);
-          expect(textNode.data).toBe('' + child);
-          mountIndex++;
-        } else {
-          openingCommentNode = outerNode.childNodes[mountIndex];
-
-          expect(openingCommentNode.nodeType).toBe(8);
-          expect(openingCommentNode.nodeValue).toMatch(/ react-text: [0-9]+ /);
-
-          if (child === '') {
-            textNode = null;
-            closingCommentNode = openingCommentNode.nextSibling;
-            mountIndex += 2;
-          } else {
-            textNode = openingCommentNode.nextSibling;
-            closingCommentNode = textNode.nextSibling;
-            mountIndex += 3;
-          }
-
-          if (textNode) {
-            expect(textNode.nodeType).toBe(3);
-            expect(textNode.data).toBe('' + child);
-          }
-
-          expect(closingCommentNode.nodeType).toBe(8);
-          expect(closingCommentNode.nodeValue).toBe(' /react-text ');
-        }
+        textNode = outerNode.childNodes[mountIndex];
+        expect(textNode.nodeType).toBe(3);
+        expect(textNode.data).toBe('' + child);
+        mountIndex++;
       } else {
         var elementDOMNode = outerNode.childNodes[mountIndex];
         expect(elementDOMNode.tagName).toBe('DIV');
@@ -96,7 +66,6 @@ var expectChildren = function(container, children) {
   }
 };
 
-
 /**
  * ReactMultiChild DOM integration test. In ReactDOM components, we make sure
  * that single children that are strings are treated as "content" which is much
@@ -105,6 +74,7 @@ var expectChildren = function(container, children) {
 describe('ReactMultiChildText', () => {
   it('should correctly handle all possible children for render and update', () => {
     spyOn(console, 'error');
+    // prettier-ignore
     testAllPermutations([
       // basic values
       undefined, [],
@@ -191,16 +161,20 @@ describe('ReactMultiChildText', () => {
       [true, <div>{1.2}{''}{<div />}{'foo'}</div>, true, 1.2], [<div />, '1.2'],
       ['', 'foo', <div>{true}{<div />}{1.2}{''}</div>, 'foo'], ['', 'foo', <div />, 'foo'],
     ]);
-    expectDev(console.error.calls.count()).toBe(1);
+
+    expectDev(console.error.calls.count()).toBe(2);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.'
+      'Warning: Each child in an array or iterator should have a unique "key" prop.',
+    );
+    expectDev(console.error.calls.argsFor(1)[0]).toContain(
+      'Warning: Each child in an array or iterator should have a unique "key" prop.',
     );
   });
 
   it('should throw if rendering both HTML and children', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>
+        <div dangerouslySetInnerHTML={{__html: 'abcdef'}}>ghjkl</div>,
       );
     }).toThrow();
   });

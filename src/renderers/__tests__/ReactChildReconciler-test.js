@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -26,7 +24,7 @@ describe('ReactChildReconciler', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   function createIterable(array) {
@@ -60,7 +58,10 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.'
+      'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
     );
   });
 
@@ -88,14 +89,18 @@ describe('ReactChildReconciler', () => {
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
       'Encountered two children with the same key, `1`. ' +
-      'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
+        'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
       '    in div (at **)\n' +
-      '    in Component (at **)\n' +
-      '    in Parent (at **)\n' +
-      '    in GrandParent (at **)'
+        '    in Component (at **)\n' +
+        '    in Parent (at **)\n' +
+        '    in GrandParent (at **)',
     );
   });
 
@@ -112,7 +117,10 @@ describe('ReactChildReconciler', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Child keys must be unique; when two children share a key, only the first child will be used.'
+      'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
     );
   });
 
@@ -140,14 +148,18 @@ describe('ReactChildReconciler', () => {
     ReactTestUtils.renderIntoDocument(<GrandParent />);
 
     expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
       'Encountered two children with the same key, `1`. ' +
-      'Child keys must be unique; when two children share a key, ' +
-      'only the first child will be used.\n' +
+        'Keys should be unique so that components maintain their identity ' +
+        'across updates. Non-unique keys may cause children to be ' +
+        'duplicated and/or omitted — the behavior is unsupported and ' +
+        'could change in a future version.',
       '    in div (at **)\n' +
-      '    in Component (at **)\n' +
-      '    in Parent (at **)\n' +
-      '    in GrandParent (at **)'
+        '    in Component (at **)\n' +
+        '    in Parent (at **)\n' +
+        '    in GrandParent (at **)',
     );
   });
 });

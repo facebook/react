@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ResponderTouchHistoryStore
  * @flow
@@ -15,13 +13,12 @@
 const EventPluginUtils = require('EventPluginUtils');
 
 const invariant = require('fbjs/lib/invariant');
-const warning = require('fbjs/lib/warning');
 
-const {
-  isEndish,
-  isMoveish,
-  isStartish,
-} = EventPluginUtils;
+const {isEndish, isMoveish, isStartish} = EventPluginUtils;
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -105,13 +102,15 @@ function resetTouchRecord(touchRecord: TouchRecord, touch: Touch): void {
 
 function getTouchIdentifier({identifier}: Touch): number {
   invariant(identifier != null, 'Touch object is missing identifier.');
-  warning(
-    identifier <= MAX_TOUCH_BANK,
-    'Touch identifier %s is greater than maximum supported %s which causes ' +
-    'performance issues backfilling array locations for all of the indices.',
-    identifier,
-    MAX_TOUCH_BANK
-  );
+  if (__DEV__) {
+    warning(
+      identifier <= MAX_TOUCH_BANK,
+      'Touch identifier %s is greater than maximum supported %s which causes ' +
+        'performance issues backfilling array locations for all of the indices.',
+      identifier,
+      MAX_TOUCH_BANK,
+    );
+  }
   return identifier;
 }
 
@@ -139,11 +138,10 @@ function recordTouchMove(touch: Touch): void {
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
     console.error(
-      'Cannot record touch move without a touch start.\n' +
-      'Touch Move: %s\n',
+      'Cannot record touch move without a touch start.\n' + 'Touch Move: %s\n',
       'Touch Bank: %s',
       printTouch(touch),
-      printTouchBank()
+      printTouchBank(),
     );
   }
 }
@@ -161,11 +159,10 @@ function recordTouchEnd(touch: Touch): void {
     touchHistory.mostRecentTimeStamp = timestampForTouch(touch);
   } else {
     console.error(
-      'Cannot record touch end without a touch start.\n' +
-      'Touch End: %s\n',
+      'Cannot record touch end without a touch start.\n' + 'Touch End: %s\n',
       'Touch Bank: %s',
       printTouch(touch),
-      printTouchBank()
+      printTouchBank(),
     );
   }
 }
@@ -212,9 +209,8 @@ const ResponderTouchHistoryStore = {
         if (__DEV__) {
           const activeRecord = touchBank[touchHistory.indexOfSingleActiveTouch];
           warning(
-            activeRecord != null &&
-            activeRecord.touchActive,
-            'Cannot find single active touch.'
+            activeRecord != null && activeRecord.touchActive,
+            'Cannot find single active touch.',
           );
         }
       }
@@ -223,6 +219,5 @@ const ResponderTouchHistoryStore = {
 
   touchHistory,
 };
-
 
 module.exports = ResponderTouchHistoryStore;

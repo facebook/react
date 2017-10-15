@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -13,7 +11,7 @@
 
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactTestUtils = require('ReactTestUtils');
+var ReactTestUtils = require('react-dom/test-utils');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
@@ -53,7 +51,7 @@ describe('ReactDOM', () => {
 
   it('should allow children to be passed as an argument', () => {
     var argDiv = ReactTestUtils.renderIntoDocument(
-      React.DOM.div(null, 'child')
+      React.createElement('div', null, 'child'),
     );
     var argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
@@ -61,7 +59,7 @@ describe('ReactDOM', () => {
 
   it('should overwrite props.children with children argument', () => {
     var conflictDiv = ReactTestUtils.renderIntoDocument(
-      React.DOM.div({children: 'fakechild'}, 'child')
+      React.createElement('div', {children: 'fakechild'}, 'child'),
     );
     var conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
@@ -76,45 +74,38 @@ describe('ReactDOM', () => {
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
-      </div>
+      </div>,
     );
     // Warm the cache with theDog
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dogbeforedelete" />,
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     // Remove theDog - this should purge the cache
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     // Now, put theDog back. It's now a different DOM node.
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     // Change the className of theDog. It will use the same element
     myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="bigdog" />,
         <div key="theBird" className="bird" />,
-      </div>
+      </div>,
     );
     var root = ReactDOM.findDOMNode(myDiv);
     var dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
-  });
-
-  it('allow React.DOM factories to be called without warnings', () => {
-    spyOn(console, 'error');
-    var element = React.DOM.div();
-    expect(element.type).toBe('div');
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('throws in render() if the mount callback is not a function', () => {
@@ -136,27 +127,27 @@ describe('ReactDOM', () => {
     var myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'render(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'render(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'render(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -181,29 +172,29 @@ describe('ReactDOM', () => {
     ReactDOM.render(<A />, myDiv);
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: no',
+        'received: no',
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'render(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: no.'
+        'a function. Instead received: no.',
     );
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(1)[0]).toContain(
       'render(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
-      'received: [object Object]',
+        'received: [object Object]',
     );
     expectDev(console.error.calls.argsFor(2)[0]).toContain(
       'render(...): Expected the last optional `callback` argument to be ' +
-      'a function. Instead received: [object Object].'
+        'a function. Instead received: [object Object].',
     );
     expect(console.error.calls.count()).toBe(3);
   });
@@ -215,9 +206,9 @@ describe('ReactDOM', () => {
       render() {
         return (
           <div>
-            <input id="one" ref={(r) => input = input || r} />
+            <input id="one" ref={r => (input = input || r)} />
             {this.props.showTwo &&
-              <input id="two" ref={(r) => input2 = input2 || r} />}
+              <input id="two" ref={r => (input2 = input2 || r)} />}
           </div>
         );
       }
@@ -242,7 +233,7 @@ describe('ReactDOM', () => {
     // deterministically force without relying intensely on React DOM
     // implementation details)
     var div = container.firstChild;
-    ['appendChild', 'insertBefore'].forEach((name) => {
+    ['appendChild', 'insertBefore'].forEach(name => {
       var mutator = div[name];
       div[name] = function() {
         if (input) {
@@ -260,10 +251,7 @@ describe('ReactDOM', () => {
     // componentDidUpdate focuses input2 and that should make it down to here,
     // not get overwritten by focus restoration.
     expect(document.activeElement.id).toBe('two');
-    expect(log).toEqual([
-      'input2 inserted',
-      'input2 focused',
-    ]);
+    expect(log).toEqual(['input2 inserted', 'input2 focused']);
     document.body.removeChild(container);
   });
 
@@ -298,5 +286,55 @@ describe('ReactDOM', () => {
     } finally {
       HTMLElement.prototype.focus = originalFocus;
     }
+  });
+
+  it("shouldn't fire duplicate event handler while handling other nested dispatch", () => {
+    const actual = [];
+
+    function click(node) {
+      var fakeNativeEvent = function() {};
+      fakeNativeEvent.target = node;
+      fakeNativeEvent.path = [node, container];
+      ReactTestUtils.simulateNativeEventOnNode(
+        'topClick',
+        node,
+        fakeNativeEvent,
+      );
+    }
+
+    class Wrapper extends React.Component {
+      componentDidMount() {
+        click(this.ref1);
+      }
+
+      render() {
+        return (
+          <div>
+            <div
+              onClick={() => {
+                actual.push('1st node clicked');
+                click(this.ref2);
+              }}
+              ref={ref => (this.ref1 = ref)}
+            />
+            <div
+              onClick={ref => {
+                actual.push("2nd node clicked imperatively from 1st's handler");
+              }}
+              ref={ref => (this.ref2 = ref)}
+            />
+          </div>
+        );
+      }
+    }
+
+    var container = document.createElement('div');
+    ReactDOM.render(<Wrapper />, container);
+
+    const expected = [
+      '1st node clicked',
+      "2nd node clicked imperatively from 1st's handler",
+    ];
+    expect(actual).toEqual(expected);
   });
 });

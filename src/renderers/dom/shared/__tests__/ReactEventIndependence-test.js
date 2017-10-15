@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -21,7 +19,7 @@ describe('ReactEventIndependence', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('ReactTestUtils');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('does not crash with other react inside', () => {
@@ -32,7 +30,7 @@ describe('ReactEventIndependence', () => {
         dangerouslySetInnerHTML={{
           __html: '<button data-reactid=".z">click me</div>',
         }}
-      />
+      />,
     );
     ReactTestUtils.SimulateNative.click(div.firstChild);
     expect(clicks).toBe(1);
@@ -44,7 +42,7 @@ describe('ReactEventIndependence', () => {
     outer.setAttribute('data-reactid', '.z');
     var inner = ReactDOM.render(
       <button onClick={() => clicks++}>click me</button>,
-      outer
+      outer,
     );
     ReactTestUtils.SimulateNative.click(inner);
     expect(clicks).toBe(1);
@@ -55,7 +53,7 @@ describe('ReactEventIndependence', () => {
     var container = document.createElement('div');
     var button = ReactDOM.render(
       <button onClick={() => clicks++}>click me</button>,
-      container
+      container,
     );
 
     // Now we unmount the component, as if caused by a non-React event handler
@@ -66,5 +64,4 @@ describe('ReactEventIndependence', () => {
     // Since the tree is unmounted, we don't dispatch the click event.
     expect(clicks).toBe(0);
   });
-
 });

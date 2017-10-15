@@ -1,10 +1,8 @@
 /**
- * Copyright 2016-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2016-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * Based on the escape-html library, which is used under the MIT License below:
  *
@@ -74,7 +72,7 @@ function escapeHtml(string) {
         escape = '&amp;';
         break;
       case 39: // '
-        escape = '&#x27;';  // modified from escape-html; used to be '&#39'
+        escape = '&#x27;'; // modified from escape-html; used to be '&#39'
         break;
       case 60: // <
         escape = '&lt;';
@@ -94,12 +92,9 @@ function escapeHtml(string) {
     html += escape;
   }
 
-  return lastIndex !== index
-    ? html + str.substring(lastIndex, index)
-    : html;
+  return lastIndex !== index ? html + str.substring(lastIndex, index) : html;
 }
 // end code copied and modified from escape-html
-
 
 /**
  * Escapes text to prevent scripting attacks.

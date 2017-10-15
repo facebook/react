@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule ReactFiberRoot
  * @flow
@@ -12,9 +10,9 @@
 
 'use strict';
 
-import type { Fiber } from 'ReactFiber';
+import type {Fiber} from 'ReactFiber';
 
-const { createHostRootFiber } = require('ReactFiber');
+const {createHostRootFiber} = require('ReactFiber');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -28,9 +26,14 @@ export type FiberRoot = {
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
+  // Determines if we should attempt to hydrate on the initial mount
+  +hydrate: boolean,
 };
 
-exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
+exports.createFiberRoot = function(
+  containerInfo: any,
+  hydrate: boolean,
+): FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
   const uninitializedFiber = createHostRootFiber();
@@ -41,6 +44,7 @@ exports.createFiberRoot = function(containerInfo : any) : FiberRoot {
     nextScheduledRoot: null,
     context: null,
     pendingContext: null,
+    hydrate,
   };
   uninitializedFiber.stateNode = root;
   return root;

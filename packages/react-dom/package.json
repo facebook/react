@@ -1,34 +1,40 @@
 {
   "name": "react-dom",
-  "version": "16.0.0-alpha.3",
+  "version": "16.0.0",
   "description": "React package for working with the DOM.",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
     "react"
   ],
-  "license": "BSD-3-Clause",
+  "license": "MIT",
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "dependencies": {
-    "fbjs": "^0.8.9",
+    "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
-    "object-assign": "^4.1.0"
+    "object-assign": "^4.1.1",
+    "prop-types": "^15.6.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-alpha.3"
+    "react": "^16.0.0"
   },
   "files": [
     "LICENSE",
-    "PATENTS",
     "README.md",
-    "dist/",
-    "lib/",
     "index.js",
-    "server.js"
+    "server.js",
+    "server.browser.js",
+    "test-utils.js",
+    "unstable-native-dependencies.js",
+    "cjs/",
+    "umd/"
   ],
+  "browser": {
+    "./server.js": "./server.browser.js"
+  },
   "browserify": {
     "transform": [
       "loose-envify"

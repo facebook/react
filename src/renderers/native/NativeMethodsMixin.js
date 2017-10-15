@@ -1,57 +1,35 @@
 /**
  * Copyright (c) 2015-present, Facebook, Inc.
- * All rights reserved.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule NativeMethodsMixin
  * @flow
  */
 'use strict';
 
-var ReactNative = require('ReactNative');
-var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-var TextInputState = require('TextInputState');
-var UIManager = require('UIManager');
+const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+const TextInputState = require('TextInputState');
+const UIManager = require('UIManager');
 
-var invariant = require('fbjs/lib/invariant');
+const invariant = require('fbjs/lib/invariant');
+const findNodeHandle = require('findNodeHandle');
+const findNumericNodeHandle = require('findNumericNodeHandle');
 
-type MeasureOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-  pageX: number,
-  pageY: number
-) => void
+const {
+  mountSafeCallback,
+  throwOnStylesProp,
+  warnForStyleProps,
+} = require('NativeMethodsMixinUtils');
 
-type MeasureInWindowOnSuccessCallback = (
-  x: number,
-  y: number,
-  width: number,
-  height: number,
-) => void
-
-type MeasureLayoutOnSuccessCallback = (
-  left: number,
-  top: number,
-  width: number,
-  height: number
-) => void
-
-function warnForStyleProps(props, validAttributes) {
-  for (var key in validAttributes.style) {
-    if (!(validAttributes[key] || props[key] === undefined)) {
-      console.error(
-        'You are setting the style `{ ' + key + ': ... }` as a prop. You ' +
-        'should nest it in a style object. ' +
-        'E.g. `{ style: { ' + key + ': ... } }`'
-      );
-    }
-  }
-}
+import type {
+  MeasureInWindowOnSuccessCallback,
+  MeasureLayoutOnSuccessCallback,
+  MeasureOnSuccessCallback,
+  NativeMethodsMixinType,
+  ReactNativeBaseComponentViewConfig,
+} from 'ReactNativeTypes';
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native
@@ -64,8 +42,11 @@ function warnForStyleProps(props, validAttributes) {
  * generally include most components that you define in your own app. For more
  * information, see [Direct
  * Manipulation](docs/direct-manipulation.html).
+ *
+ * Note the Flow $Exact<> syntax is required to support mixins.
+ * React createClass mixins can only be used with exact types.
  */
-var NativeMethodsMixin = {
+const NativeMethodsMixin: $Exact<NativeMethodsMixinType> = {
   /**
    * Determines the location on screen, width, and height of the given view and
    * returns the values via an async callback. If successful, the callback will
@@ -85,8 +66,8 @@ var NativeMethodsMixin = {
    */
   measure: function(callback: MeasureOnSuccessCallback) {
     UIManager.measure(
-      ReactNative.findNodeHandle(this),
-      mountSafeCallback(this, callback)
+      findNumericNodeHandle(this),
+      mountSafeCallback(this, callback),
     );
   },
 
@@ -107,8 +88,8 @@ var NativeMethodsMixin = {
    */
   measureInWindow: function(callback: MeasureInWindowOnSuccessCallback) {
     UIManager.measureInWindow(
-      ReactNative.findNodeHandle(this),
-      mountSafeCallback(this, callback)
+      findNumericNodeHandle(this),
+      mountSafeCallback(this, callback),
     );
   },
 
@@ -118,18 +99,18 @@ var NativeMethodsMixin = {
    * are relative to the origin x, y of the ancestor view.
    *
    * As always, to obtain a native node handle for a component, you can use
-   * `ReactNative.findNodeHandle(component)`.
+   * `findNumericNodeHandle(component)`.
    */
   measureLayout: function(
     relativeToNativeNode: number,
     onSuccess: MeasureLayoutOnSuccessCallback,
-    onFail: () => void /* currently unused */
+    onFail: () => void /* currently unused */,
   ) {
     UIManager.measureLayout(
-      ReactNative.findNodeHandle(this),
+      findNumericNodeHandle(this),
       relativeToNativeNode,
       mountSafeCallback(this, onFail),
-      mountSafeCallback(this, onSuccess)
+      mountSafeCallback(this, onSuccess),
     );
   },
 
@@ -140,20 +121,49 @@ var NativeMethodsMixin = {
    * Manipulation](docs/direct-manipulation.html)).
    */
   setNativeProps: function(nativeProps: Object) {
-    if (__DEV__) {
-      warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
+    // Class components don't have viewConfig -> validateAttributes.
+    // Nor does it make sense to set native props on a non-native component.
+    // Instead, find the nearest host component and set props on it.
+    // Use findNodeHandle() rather than findNumericNodeHandle() because
+    // We want the instance/wrapper (not the native tag).
+    let maybeInstance;
+
+    // Fiber errors if findNodeHandle is called for an umounted component.
+    // Tests using ReactTestRenderer will trigger this case indirectly.
+    // Mimicking stack behavior, we should silently ignore this case.
+    // TODO Fix ReactTestRenderer so we can remove this try/catch.
+    try {
+      maybeInstance = findNodeHandle(this);
+    } catch (error) {}
+
+    // If there is no host component beneath this we should fail silently.
+    // This is not an error; it could mean a class component rendered null.
+    if (maybeInstance == null) {
+      return;
     }
 
-    var updatePayload = ReactNativeAttributePayload.create(
+    const viewConfig: ReactNativeBaseComponentViewConfig =
+      maybeInstance.viewConfig;
+
+    if (__DEV__) {
+      warnForStyleProps(nativeProps, viewConfig.validAttributes);
+    }
+
+    const updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
-      this.viewConfig.validAttributes
+      viewConfig.validAttributes,
     );
 
-    UIManager.updateView(
-      (ReactNative.findNodeHandle(this) : any),
-      this.viewConfig.uiViewClassName,
-      updatePayload
-    );
+    // Avoid the overhead of bridge calls if there's no update.
+    // This is an expensive no-op for Android, and causes an unnecessary
+    // view invalidation for certain components (eg RCTTextInput) on iOS.
+    if (updatePayload != null) {
+      UIManager.updateView(
+        maybeInstance._nativeTag,
+        viewConfig.uiViewClassName,
+        updatePayload,
+      );
+    }
   },
 
   /**
@@ -161,61 +171,32 @@ var NativeMethodsMixin = {
    * will depend on the platform and type of view.
    */
   focus: function() {
-    TextInputState.focusTextInput(ReactNative.findNodeHandle(this));
+    TextInputState.focusTextInput(findNumericNodeHandle(this));
   },
 
   /**
    * Removes focus from an input or view. This is the opposite of `focus()`.
    */
   blur: function() {
-    TextInputState.blurTextInput(ReactNative.findNodeHandle(this));
+    TextInputState.blurTextInput(findNumericNodeHandle(this));
   },
 };
 
-function throwOnStylesProp(component, props) {
-  if (props.styles !== undefined) {
-    var owner = component._owner || null;
-    var name = component.constructor.displayName;
-    var msg = '`styles` is not a supported property of `' + name + '`, did ' +
-      'you mean `style` (singular)?';
-    if (owner && owner.constructor && owner.constructor.displayName) {
-      msg += '\n\nCheck the `' + owner.constructor.displayName + '` parent ' +
-        ' component.';
-    }
-    throw new Error(msg);
-  }
-}
 if (__DEV__) {
   // hide this from Flow since we can't define these properties outside of
   // __DEV__ without actually implementing them (setting them to undefined
   // isn't allowed by ReactClass)
-  var NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
+  const NativeMethodsMixin_DEV = (NativeMethodsMixin: any);
   invariant(
     !NativeMethodsMixin_DEV.componentWillMount &&
-    !NativeMethodsMixin_DEV.componentWillReceiveProps,
-    'Do not override existing functions.'
+      !NativeMethodsMixin_DEV.componentWillReceiveProps,
+    'Do not override existing functions.',
   );
   NativeMethodsMixin_DEV.componentWillMount = function() {
     throwOnStylesProp(this, this.props);
   };
   NativeMethodsMixin_DEV.componentWillReceiveProps = function(newProps) {
     throwOnStylesProp(this, newProps);
-  };
-}
-
-/**
- * In the future, we should cleanup callbacks by cancelling them instead of
- * using this.
- */
-function mountSafeCallback(
-  context: ReactComponent<any, any, any>,
-  callback: ?Function
-): any {
-  return function() {
-    if (!callback || (typeof context.isMounted === 'function' && !context.isMounted())) {
-      return undefined;
-    }
-    return callback.apply(context, arguments);
   };
 }
 

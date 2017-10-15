@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule getTextContentAccessor
  */
@@ -25,9 +23,9 @@ function getTextContentAccessor() {
   if (!contentKey && ExecutionEnvironment.canUseDOM) {
     // Prefer textContent to innerText because many browsers support both but
     // SVG <text> elements don't support innerText even when <div> does.
-    contentKey = 'textContent' in document.documentElement ?
-      'textContent' :
-      'innerText';
+    contentKey = 'textContent' in document.documentElement
+      ? 'textContent'
+      : 'innerText';
   }
   return contentKey;
 }

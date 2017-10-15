@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @providesModule EventPluginUtils
  */
@@ -14,7 +12,10 @@
 var ReactErrorUtils = require('ReactErrorUtils');
 
 var invariant = require('fbjs/lib/invariant');
-var warning = require('fbjs/lib/warning');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 /**
  * Injected dependencies:
@@ -31,30 +32,29 @@ var injection = {
     if (__DEV__) {
       warning(
         Injected &&
-        Injected.getNodeFromInstance &&
-        Injected.getInstanceFromNode,
+          Injected.getNodeFromInstance &&
+          Injected.getInstanceFromNode,
         'EventPluginUtils.injection.injectComponentTree(...): Injected ' +
-        'module is missing getNodeFromInstance or getInstanceFromNode.'
+          'module is missing getNodeFromInstance or getInstanceFromNode.',
       );
     }
   },
 };
 
 function isEndish(topLevelType) {
-  return topLevelType === 'topMouseUp' ||
-         topLevelType === 'topTouchEnd' ||
-         topLevelType === 'topTouchCancel';
+  return (
+    topLevelType === 'topMouseUp' ||
+    topLevelType === 'topTouchEnd' ||
+    topLevelType === 'topTouchCancel'
+  );
 }
 
 function isMoveish(topLevelType) {
-  return topLevelType === 'topMouseMove' ||
-         topLevelType === 'topTouchMove';
+  return topLevelType === 'topMouseMove' || topLevelType === 'topTouchMove';
 }
 function isStartish(topLevelType) {
-  return topLevelType === 'topMouseDown' ||
-         topLevelType === 'topTouchStart';
+  return topLevelType === 'topMouseDown' || topLevelType === 'topTouchStart';
 }
-
 
 var validateEventDispatches;
 if (__DEV__) {
@@ -63,18 +63,18 @@ if (__DEV__) {
     var dispatchInstances = event._dispatchInstances;
 
     var listenersIsArr = Array.isArray(dispatchListeners);
-    var listenersLen = listenersIsArr ?
-      dispatchListeners.length :
-      dispatchListeners ? 1 : 0;
+    var listenersLen = listenersIsArr
+      ? dispatchListeners.length
+      : dispatchListeners ? 1 : 0;
 
     var instancesIsArr = Array.isArray(dispatchInstances);
-    var instancesLen = instancesIsArr ?
-      dispatchInstances.length :
-      dispatchInstances ? 1 : 0;
+    var instancesLen = instancesIsArr
+      ? dispatchInstances.length
+      : dispatchInstances ? 1 : 0;
 
     warning(
       instancesIsArr === listenersIsArr && instancesLen === listenersLen,
-      'EventPluginUtils: Invalid `event`.'
+      'EventPluginUtils: Invalid `event`.',
     );
   };
 }
@@ -89,7 +89,12 @@ if (__DEV__) {
 function executeDispatch(event, simulated, listener, inst) {
   var type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
-  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(type, listener, undefined, event);
+  ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
+    type,
+    listener,
+    undefined,
+    event,
+  );
   event.currentTarget = null;
 }
 
@@ -112,7 +117,7 @@ function executeDispatchesInOrder(event, simulated) {
         event,
         simulated,
         dispatchListeners[i],
-        dispatchInstances[i]
+        dispatchInstances[i],
       );
     }
   } else if (dispatchListeners) {
@@ -180,9 +185,11 @@ function executeDirectDispatch(event) {
   var dispatchInstance = event._dispatchInstances;
   invariant(
     !Array.isArray(dispatchListener),
-    'executeDirectDispatch(...): Invalid `event`.'
+    'executeDirectDispatch(...): Invalid `event`.',
   );
-  event.currentTarget = dispatchListener ? EventPluginUtils.getNodeFromInstance(dispatchInstance) : null;
+  event.currentTarget = dispatchListener
+    ? EventPluginUtils.getNodeFromInstance(dispatchInstance)
+    : null;
   var res = dispatchListener ? dispatchListener(event) : null;
   event.currentTarget = null;
   event._dispatchListeners = null;

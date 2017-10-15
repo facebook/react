@@ -1,3 +1,3 @@
 'use strict';
 
-module.exports = require('./lib/ReactNoop');
+module.exports = require('./cjs/react-noop-renderer.development.js');
