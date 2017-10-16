@@ -13,6 +13,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {FiberRoot} from 'ReactFiberRoot';
 import type {ReactNodeList} from 'ReactTypes';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var {
@@ -226,6 +227,14 @@ export type Reconciler<C, I, TI> = {
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
   ): void,
+  updateRoot(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
+    callback: ?Function,
+  ): ExpirationTime,
+  unblockRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
+  flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -266,6 +275,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    expireWork,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -275,8 +285,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   function scheduleTopLevelUpdate(
     current: Fiber,
     element: ReactNodeList,
+    isBlocked: boolean,
     callback: ?Function,
-  ) {
+  ): ExpirationTime {
     if (__DEV__) {
       if (
         ReactDebugCurrentFiber.phase === 'render' &&
@@ -323,15 +334,15 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
 
     const update = {
       expirationTime,
-      partialState: {element},
+      partialState: {element, isBlocked},
       callback,
       isReplace: false,
       isForced: false,
-      nextCallback: null,
       next: null,
     };
     insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
+    return expirationTime;
   }
 
   return {
@@ -367,7 +378,61 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         container.pendingContext = context;
       }
 
-      scheduleTopLevelUpdate(current, element, callback);
+      scheduleTopLevelUpdate(current, element, false, callback);
+    },
+
+    // Like updateContainer, but blocks the root from committing. Returns an
+    // expiration time.
+    // TODO: Can this be unified with updateContainer? Or is it incompatible
+    // with the existing semantics of ReactDOM.render?
+    updateRoot(
+      element: ReactNodeList,
+      container: OpaqueRoot,
+      parentComponent: ?React$Component<any, any>,
+      callback: ?Function,
+    ): ExpirationTime {
+      // TODO: If this is a nested container, this won't be the root.
+      const current = container.current;
+
+      if (__DEV__) {
+        if (ReactFiberInstrumentation.debugTool) {
+          if (current.alternate === null) {
+            ReactFiberInstrumentation.debugTool.onMountContainer(container);
+          } else if (element === null) {
+            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+          } else {
+            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+          }
+        }
+      }
+
+      const context = getContextForSubtree(parentComponent);
+      if (container.context === null) {
+        container.context = context;
+      } else {
+        container.pendingContext = context;
+      }
+
+      return scheduleTopLevelUpdate(current, element, true, callback);
+    },
+
+    unblockRoot(root: OpaqueRoot, expirationTime: ExpirationTime) {
+      const current = root.current;
+      const partialState = {isBlocked: false};
+      const update = {
+        expirationTime,
+        partialState,
+        callback: null,
+        isReplace: false,
+        isForced: false,
+        next: null,
+      };
+      insertUpdateIntoFiber(current, update);
+      scheduleWork(current, expirationTime);
+    },
+
+    flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime) {
+      expireWork(root, expirationTime);
     },
 
     batchedUpdates,

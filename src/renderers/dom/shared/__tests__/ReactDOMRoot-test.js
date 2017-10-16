@@ -68,4 +68,14 @@ describe('ReactDOMRoot', () => {
     root.render(<div><span>d</span><span>c</span></div>);
     expect(container.textContent).toEqual('abdc');
   });
+
+  it('can defer commit using prerender', () => {
+    const root = ReactDOM.createRoot(container);
+    const work = root.prerender(<div>Hi</div>);
+    // Hasn't updated yet
+    expect(container.textContent).toEqual('');
+    // Flush work
+    work.commit();
+    expect(container.textContent).toEqual('Hi');
+  });
 });

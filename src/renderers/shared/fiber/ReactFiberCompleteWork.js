@@ -48,6 +48,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
+  blockCurrentlyRenderingWork: () => void,
 ) {
   const {
     createInstance,
@@ -218,6 +219,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // This resets the hacky state to fix isMounted before committing.
           // TODO: Delete this when we delete isMounted and findDOMNode.
           workInProgress.effectTag &= ~Placement;
+        }
+
+        const memoizedState = workInProgress.memoizedState;
+        if (memoizedState !== null && memoizedState.isBlocked) {
+          // Root is blocked by a top-level update.
+          blockCurrentlyRenderingWork();
         }
         return null;
       }

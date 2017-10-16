@@ -11,6 +11,7 @@
 'use strict';
 
 import type {ReactNodeList} from 'ReactTypes';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 require('checkReact');
 var DOMNamespaces = require('DOMNamespaces');
@@ -757,8 +758,27 @@ function createPortal(
   return ReactPortal.createPortal(children, container, null, key);
 }
 
+type WorkNode = {
+  commit(): void,
+
+  _reactRootContainer: *,
+  _expirationTime: ExpirationTime,
+};
+
+function Work(root: *, expirationTime: ExpirationTime) {
+  this._reactRootContainer = root;
+  this._expirationTime = expirationTime;
+}
+Work.prototype.commit = function() {
+  const root = this._reactRootContainer;
+  const expirationTime = this._expirationTime;
+  DOMRenderer.unblockRoot(root, expirationTime);
+  DOMRenderer.flushRoot(root, expirationTime);
+};
+
 type ReactRootNode = {
   render(children: ReactNodeList, callback: ?() => mixed): void,
+  prerender(children: ReactNodeList): WorkNode,
   unmount(callback: ?() => mixed): void,
 
   _reactRootContainer: *,
@@ -778,6 +798,11 @@ ReactRoot.prototype.render = function(
 ): void {
   const root = this._reactRootContainer;
   DOMRenderer.updateContainer(children, root, null, callback);
+};
+ReactRoot.prototype.prerender = function(children: ReactNodeList): WorkNode {
+  const root = this._reactRootContainer;
+  const expirationTime = DOMRenderer.updateRoot(children, root, null, null);
+  return new Work(root, expirationTime);
 };
 ReactRoot.prototype.unmount = function(callback) {
   const root = this._reactRootContainer;
