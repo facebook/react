@@ -314,10 +314,26 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      nextUnitOfWork = createWorkInProgress(
-        earliestExpirationRoot.current,
-        earliestExpirationTime,
-      );
+      if (earliestExpirationRoot.completedAt === nextRenderExpirationTime) {
+        // If the root is already complete, reuse the existing work-in-progress.
+        // TODO: This is a limited version of resuming that only applies to
+        // the root, to account for the pathological case where a completed
+        // root must be completely restarted before it can commit. Once we
+        // implement resuming for real, this special branch shouldn't
+        // be neccessary.
+        nextUnitOfWork = earliestExpirationRoot.current.alternate;
+        invariant(
+          nextUnitOfWork !== null,
+          'Expected a completed root to have a work-in-progress. This error ' +
+            'is likely caused by a bug in React. Please file an issue.',
+        );
+      } else {
+        nextUnitOfWork = createWorkInProgress(
+          earliestExpirationRoot.current,
+          earliestExpirationTime,
+        );
+      }
+
       if (earliestExpirationRoot !== nextRenderedTree) {
         // We've switched trees. Reset the nested update counter.
         nestedUpdateCount = 0;
@@ -462,6 +478,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'related to the return field. This error is likely caused by a bug ' +
         'in React. Please file an issue.',
     );
+    root.completedAt = NoWork;
 
     if (nextRenderExpirationTime <= mostRecentCurrentTime) {
       // Keep track of the number of iterations to prevent an infinite
@@ -718,6 +735,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       } else {
         // We've reached the root.
         const root: FiberRoot = workInProgress.stateNode;
+        root.completedAt = nextRenderExpirationTime;
         if (nextCommitIsBlocked) {
           root.isBlocked = true;
         } else {

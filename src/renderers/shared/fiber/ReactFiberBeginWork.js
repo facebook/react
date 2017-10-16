@@ -319,6 +319,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function updateHostRoot(current, workInProgress, renderExpirationTime) {
+    const root: FiberRoot = workInProgress.stateNode;
     pushHostRootContext(workInProgress);
     const updateQueue = workInProgress.updateQueue;
     if (updateQueue !== null) {
@@ -331,6 +332,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         null,
         renderExpirationTime,
       );
+      memoizeState(workInProgress, state);
+      if (root.completedAt === renderExpirationTime) {
+        // The root is already complete. Bail out and commit.
+        // TODO: This is a limited version of resuming that only applies to
+        // the root, to account for the pathological case where a completed
+        // root must be completely restarted before it can commit. Once we
+        // implement resuming for real, this special branch shouldn't
+        // be neccessary.
+        return null;
+      }
       if (prevState === state) {
         // If the state is the same as before, that's a bailout because we had
         // no work that expires at this time.
@@ -338,7 +349,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       const element = state.element;
-      const root: FiberRoot = workInProgress.stateNode;
       if (
         (current === null || current.child === null) &&
         root.hydrate &&
@@ -370,7 +380,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         resetHydrationState();
         reconcileChildren(current, workInProgress, element);
       }
-      memoizeState(workInProgress, state);
       return workInProgress.child;
     }
     resetHydrationState();
