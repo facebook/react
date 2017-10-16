@@ -31,6 +31,7 @@ class ReactShallowRenderer {
     this._newState = null;
     this._rendered = null;
     this._rendering = false;
+    this._forcedUpdate = false;
     this._updater = new Updater(this);
   }
 
@@ -154,11 +155,13 @@ class ReactShallowRenderer {
 
     if (typeof this._instance.shouldComponentUpdate === 'function') {
       if (
+        this._forcedUpdate ||
         this._instance.shouldComponentUpdate(props, state, context) === false
       ) {
         this._instance.context = context;
         this._instance.props = props;
         this._instance.state = state;
+        this._forcedUpdate = false;
 
         return;
       }
@@ -188,6 +191,7 @@ class Updater {
   }
 
   enqueueForceUpdate(publicInstance, callback, callerName) {
+    this._renderer._forcedUpdate = true;
     this._renderer.render(this._renderer._element, this._renderer._context);
 
     if (typeof callback === 'function') {
