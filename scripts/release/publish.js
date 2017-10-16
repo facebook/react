@@ -5,12 +5,12 @@
 const chalk = require('chalk');
 const logUpdate = require('log-update');
 
-const checkBuildStatus = require('./publish/check-build-status');
-const commitChangelog = require('./publish/commit-changelog');
-const parsePublishParams = require('./publish/parse-publish-params');
-const printPostPublishSummary = require('./publish/print-post-publish-summary');
-const pushGitRemote = require('./publish/push-git-remote');
-const publishToNpm = require('./publish/publish-to-npm');
+const checkBuildStatus = require('./publish-commands/check-build-status');
+const commitChangelog = require('./publish-commands/commit-changelog');
+const parsePublishParams = require('./publish-commands/parse-publish-params');
+const printPostPublishSummary = require('./publish-commands/print-post-publish-summary');
+const pushGitRemote = require('./publish-commands/push-git-remote');
+const publishToNpm = require('./publish-commands/publish-to-npm');
 
 // Follows the steps outlined in github.com/facebook/react/issues/10620
 const run = async () => {

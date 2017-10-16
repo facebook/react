@@ -5,20 +5,20 @@
 const chalk = require('chalk');
 const logUpdate = require('log-update');
 
-const buildArtifacts = require('./build/build-artifacts');
-const checkCircleCiStatus = require('./build/check-circle-ci-status');
-const checkEnvironmentVariables = require('./build/check-environment-variables');
-const checkNpmPermissions = require('./build/check-npm-permissions');
-const checkPackageDependencies = require('./build/check-package-dependencies');
-const checkUncommittedChanges = require('./build/check-uncommitted-changes');
-const installYarnDependencies = require('./build/install-yarn-dependencies');
-const parseBuildParameters = require('./build/parse-build-parameters');
-const printPostBuildSummary = require('./build/print-post-build-summary');
-const runAutomatedTests = require('./build/run-automated-tests');
-const updateGit = require('./build/update-git');
-const updatePackageVersions = require('./build/update-package-versions');
-const updateYarnDependencies = require('./build/update-yarn-dependencies');
-const validateVersion = require('./build/validate-version');
+const buildArtifacts = require('./build-commands/build-artifacts');
+const checkCircleCiStatus = require('./build-commands/check-circle-ci-status');
+const checkEnvironmentVariables = require('./build-commands/check-environment-variables');
+const checkNpmPermissions = require('./build-commands/check-npm-permissions');
+const checkPackageDependencies = require('./build-commands/check-package-dependencies');
+const checkUncommittedChanges = require('./build-commands/check-uncommitted-changes');
+const installYarnDependencies = require('./build-commands/install-yarn-dependencies');
+const parseBuildParameters = require('./build-commands/parse-build-parameters');
+const printPostBuildSummary = require('./build-commands/print-post-build-summary');
+const runAutomatedTests = require('./build-commands/run-automated-tests');
+const updateGit = require('./build-commands/update-git');
+const updatePackageVersions = require('./build-commands/update-package-versions');
+const updateYarnDependencies = require('./build-commands/update-yarn-dependencies');
+const validateVersion = require('./build-commands/validate-version');
 
 // Follows the steps outlined in github.com/facebook/react/issues/10620
 const run = async () => {
