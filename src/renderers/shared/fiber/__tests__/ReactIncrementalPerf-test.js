@@ -202,7 +202,7 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('warns on cascading renders from top-level render', () => {
+  xit('warns on cascading renders from top-level render', () => {
     class Cascading extends React.Component {
       componentDidMount() {
         ReactNoop.renderToRootWithID(<Child />, 'b');

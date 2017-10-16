@@ -31,7 +31,7 @@ const UPDATE_SIGNAL = {};
 
 var scheduledCallback = null;
 
-type Container = {rootID: string, children: Array<Instance | TextInstance>};
+type Container = {children: Array<Instance | TextInstance>};
 type Props = {prop: any, hidden?: boolean};
 type Instance = {|
   type: string,
@@ -211,9 +211,8 @@ var NoopRenderer = ReactFiberReconciler({
   },
 });
 
-var rootContainers = new Map();
-var roots = new Map();
-var DEFAULT_ROOT_ID = '<default>';
+const rootContainer = {children: []};
+let fiberRoot = null;
 
 let yieldedValues = null;
 
@@ -246,43 +245,26 @@ function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
 }
 
 var ReactNoop = {
-  getChildren(rootID: string = DEFAULT_ROOT_ID) {
-    const container = rootContainers.get(rootID);
-    if (container) {
-      return container.children;
-    } else {
-      return null;
-    }
-  },
-
   // Shortcut for testing a single root
   render(element: React$Element<any>, callback: ?Function) {
-    ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
+    if (fiberRoot === null) {
+      fiberRoot = NoopRenderer.createContainer(rootContainer, false);
+    }
+    NoopRenderer.updateContainer(element, fiberRoot, null, callback);
   },
 
-  renderToRootWithID(
-    element: React$Element<any>,
-    rootID: string,
-    callback: ?Function,
-  ) {
-    let root = roots.get(rootID);
-    if (!root) {
-      const container = {rootID: rootID, children: []};
-      rootContainers.set(rootID, container);
-      root = NoopRenderer.createContainer(container, false);
-      roots.set(rootID, root);
+  unmount() {
+    if (fiberRoot !== null) {
+      NoopRenderer.updateContainer(null, fiberRoot, null, null);
+      fiberRoot = null;
     }
-    NoopRenderer.updateContainer(element, root, null, callback);
   },
 
-  unmountRootWithID(rootID: string) {
-    const root = roots.get(rootID);
-    if (root) {
-      NoopRenderer.updateContainer(null, root, null, () => {
-        roots.delete(rootID);
-        rootContainers.delete(rootID);
-      });
+  getChildren() {
+    if (fiberRoot === null) {
+      return null;
     }
+    return rootContainer.children;
   },
 
   findInstance(
@@ -373,10 +355,8 @@ var ReactNoop = {
   flushSync: NoopRenderer.flushSync,
 
   // Logs the current state of the tree.
-  dumpTree(rootID: string = DEFAULT_ROOT_ID) {
-    const root = roots.get(rootID);
-    const rootContainer = rootContainers.get(rootID);
-    if (!root || !rootContainer) {
+  dumpTree() {
+    if (!fiberRoot) {
       console.log('Nothing rendered yet.');
       return;
     }
@@ -401,7 +381,7 @@ var ReactNoop = {
       }
     }
     function logContainer(container: Container, depth) {
-      log('  '.repeat(depth) + '- [root#' + container.rootID + ']');
+      log('  '.repeat(depth) + '- [root]');
       logHostInstances(container.children, depth + 1);
     }
 
@@ -462,7 +442,7 @@ var ReactNoop = {
     log('HOST INSTANCES:');
     logContainer(rootContainer, 0);
     log('FIBERS:');
-    logFiber(root.current, 0);
+    logFiber(fiberRoot.current, 0);
 
     console.log(...bufferedLog);
   },
