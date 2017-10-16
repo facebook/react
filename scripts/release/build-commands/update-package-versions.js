@@ -7,6 +7,7 @@ const {exec} = require('child-process-promise');
 const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
+const semver = require('semver');
 const {projects} = require('../config');
 const {execUnlessDry, logPromise} = require('../utils');
 
@@ -30,7 +31,16 @@ const update = async ({cwd, dry, version}) => {
     const updateProjectPackage = async project => {
       const path = join(cwd, 'packages', project, 'package.json');
       const json = await readJson(path);
-      json.version = version;
+
+      // Unstable packages (eg version < 1.0) are treated differently.
+      // In order to simplify DX for the release engineer,
+      // These packages are auto-incremented by a minor version number.
+      if (semver.lt(json.version, '1.0.0')) {
+        json.version = `0.${semver.minor(json.version) + 1}.0`;
+      } else {
+        json.version = version;
+      }
+
       if (project !== 'react') {
         json.peerDependencies.react = `^${version}`;
       }
