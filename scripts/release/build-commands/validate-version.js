@@ -13,6 +13,8 @@ module.exports = async ({cwd, version}) => {
   const rootPackage = await readJson(join(cwd, 'package.json'));
 
   if (!semver.gt(version, rootPackage.version)) {
-    throw Error(chalk`Version {white ${rootPackage.version}} has already been published`);
+    throw Error(
+      chalk`Version {white ${rootPackage.version}} has already been published`
+    );
   }
 };
