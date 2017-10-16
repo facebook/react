@@ -5,7 +5,7 @@
 const chalk = require('chalk');
 
 module.exports = () => {
-  if (!process.env.CIRCLE_CI_API_TOKENN) {
+  if (!process.env.CIRCLE_CI_API_TOKEN) {
     throw Error(
       chalk`
       {red Missing CircleCI API token}
