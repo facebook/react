@@ -50,7 +50,7 @@
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-react": "^6.7.1",
-    "eslint-plugin-react-internal": "file:./eslint-rules",
+    "eslint-plugin-react-internal": "file:./scripts/eslint-rules",
     "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
@@ -110,8 +110,6 @@
   },
   "jest": {
     "modulePathIgnorePatterns": [
-      "/.module-cache/",
-      "<rootDir>/build/",
       "<rootDir>/scripts/rollup/shims/",
       "<rootDir>/scripts/bench/"
     ],
@@ -132,16 +130,12 @@
       "ts"
     ],
     "roots": [
-      "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
       "<rootDir>/scripts",
-      "<rootDir>/src",
-      "node_modules/fbjs"
+      "<rootDir>/src"
     ],
     "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/__mocks__/vendor/third_party/*.js",
-      "!src/test/*.js"
+      "src/**/*.js"
     ],
     "timers": "fake"
   }

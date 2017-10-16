@@ -40,11 +40,9 @@ module.exports = function(context) {
         return;
       }
       if (node.arguments.length < 2) {
-        context.report(
-          node,
-          '{{name}} takes at least two arguments',
-          {name: node.callee.name}
-        );
+        context.report(node, '{{name}} takes at least two arguments', {
+          name: node.callee.name,
+        });
         return;
       }
       var format = getLiteralString(node.arguments[1]);
@@ -60,7 +58,7 @@ module.exports = function(context) {
         context.report(
           node,
           'The {{name}} format should be able to uniquely identify this ' +
-          '{{name}}. Please, use a more descriptive format than: {{format}}',
+            '{{name}}. Please, use a more descriptive format than: {{format}}',
           {name: node.callee.name, format: format}
         );
         return;
@@ -71,7 +69,7 @@ module.exports = function(context) {
         context.report(
           node,
           'Expected {{expectedNArgs}} arguments in call to {{name}} based on ' +
-          'the number of "%s" substitutions, but got {{length}}',
+            'the number of "%s" substitutions, but got {{length}}',
           {
             expectedNArgs: expectedNArgs,
             name: node.callee.name,

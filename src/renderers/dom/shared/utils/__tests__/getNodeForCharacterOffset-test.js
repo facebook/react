@@ -9,8 +9,6 @@
 
 'use strict';
 
-var getTestDocument = require('getTestDocument');
-
 // TODO: can we express this test with only public API?
 var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
 
@@ -19,6 +17,17 @@ function createNode(html) {
   var node = (getTestDocument() || document).createElement('div');
   node.innerHTML = html;
   return node;
+}
+
+function getTestDocument(markup) {
+  var doc = document.implementation.createHTMLDocument('');
+  doc.open();
+  doc.write(
+    markup ||
+      '<!doctype html><html><meta charset=utf-8><title>test doc</title>',
+  );
+  doc.close();
+  return doc;
 }
 
 // Check getNodeForCharacterOffset return value matches expected result.
