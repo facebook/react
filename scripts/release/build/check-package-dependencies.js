@@ -21,7 +21,7 @@ const check = async ({cwd}) => {
 
   const invalidDependencies = [];
 
-  const checkModule = async module => {
+  const checkModule = module => {
     const rootVersion = rootPackage.devDependencies[module];
 
     projectPackages.forEach(projectPackage => {
