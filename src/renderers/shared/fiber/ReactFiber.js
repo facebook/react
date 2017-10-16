@@ -359,7 +359,7 @@ function createFiberFromElementType(
     fiber.pendingProps = element.props;
   } else if (typeof type === 'string' && type === '#fragment') {
     // special case for fragments, we create the fiber and return early
-    fiber = createFiber(Fragment, null, internalContextTag);
+    fiber = createFiber(Fragment, key, internalContextTag);
     fiber.pendingProps = element.props.children;
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key, internalContextTag);

@@ -10,10 +10,16 @@
  */
 'use strict';
 
-const React = require('react');
-const ReactNoop = require('react-noop-renderer');
+let React;
+let ReactNoop;
 
 describe('ReactFragment', () => {
+  beforeEach(function() {
+    jest.resetModules();
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+  });
+
   it('should render a single child via noop renderer', () => {
     const element = (
       <React.Fragment>
@@ -43,5 +49,51 @@ describe('ReactFragment', () => {
       {text: 'hello '},
       {type: 'span', children: [], prop: undefined},
     ]);
+  });
+
+  it('should preserve state of children', function() {
+    var instance = null;
+
+    class Stateful extends React.Component {
+      render() {
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition ? (
+        <React.Fragment>
+          <Stateful key="a" />
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <Stateful key="a" />
+          <div key="b">World</div>
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(
+      <div>
+        <Fragment />
+        <div />
+      </div>,
+    );
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    ReactNoop.render(
+      <div>
+        <Fragment condition={true} />
+        <div />
+      </div>,
+    );
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(instanceB).toBe(instanceA);
   });
 });

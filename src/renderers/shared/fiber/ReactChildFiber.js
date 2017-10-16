@@ -375,7 +375,22 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current === null || current.type !== element.type) {
+    if (
+      current !== null &&
+      current.tag === Fragment &&
+      element.type === '#fragment'
+    ) {
+      // Move based on index
+      const existing = useFiber(current, priority);
+      existing.ref = coerceRef(current, element);
+      existing.pendingProps = element.props.children;
+      existing.return = returnFiber;
+      if (__DEV__) {
+        existing._debugSource = element._source;
+        existing._debugOwner = element._owner;
+      }
+      return existing;
+    } else if (current === null || current.type !== element.type) {
       // Insert
       const created = createFiberFromElement(
         element,
@@ -1047,7 +1062,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++, (step = newChildren.next())
+      newIdx++, step = newChildren.next()
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1102,8 +1117,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
+<<<<<<< HEAD
       for (; !step.done; newIdx++, (step = newChildren.next())) {
         const newFiber = createChild(returnFiber, step.value, expirationTime);
+=======
+      for (; !step.done; newIdx++, step = newChildren.next()) {
+        const newFiber = createChild(returnFiber, step.value, priority);
+>>>>>>> Update reconciliation to special case fragments
         if (newFiber === null) {
           continue;
         }
@@ -1123,7 +1143,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, (step = newChildren.next())) {
+    for (; !step.done; newIdx++, step = newChildren.next()) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
@@ -1208,6 +1228,17 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           const existing = useFiber(child, expirationTime);
           existing.ref = coerceRef(child, element);
           existing.pendingProps = element.props;
+          existing.return = returnFiber;
+          if (__DEV__) {
+            existing._debugSource = element._source;
+            existing._debugOwner = element._owner;
+          }
+          return existing;
+        } else if (child.tag === Fragment && element.type === '#fragment') {
+          deleteRemainingChildren(returnFiber, child.sibling);
+          const existing = useFiber(child, priority);
+          existing.ref = coerceRef(child, element);
+          existing.pendingProps = element.props.children;
           existing.return = returnFiber;
           if (__DEV__) {
             existing._debugSource = element._source;
