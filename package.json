@@ -139,8 +139,7 @@
       "node_modules/fbjs"
     ],
     "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/__mocks__/vendor/third_party/*.js"
+      "src/**/*.js"
     ],
     "timers": "fake"
   }
