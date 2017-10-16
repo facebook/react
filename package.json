@@ -110,8 +110,6 @@
   },
   "jest": {
     "modulePathIgnorePatterns": [
-      "/.module-cache/",
-      "<rootDir>/build/",
       "<rootDir>/scripts/rollup/shims/",
       "<rootDir>/scripts/bench/"
     ],
@@ -135,8 +133,7 @@
       "<rootDir>/eslint-rules",
       "<rootDir>/mocks",
       "<rootDir>/scripts",
-      "<rootDir>/src",
-      "node_modules/fbjs"
+      "<rootDir>/src"
     ],
     "collectCoverageFrom": [
       "src/**/*.js"
