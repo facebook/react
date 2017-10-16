@@ -10,99 +10,38 @@
 'use strict';
 
 var React;
-var ReactTestUtils;
+var ReactDOM;
 
-var AutoMockedComponent;
 var MockedComponent;
 var ReactDOMServer;
 
 describe('ReactMockedComponent', () => {
   beforeEach(() => {
     React = require('react');
-    ReactTestUtils = require('react-dom/test-utils');
+    ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
 
-    AutoMockedComponent = jest.genMockFromModule(
-      'ReactMockedComponentTestComponent',
-    );
-    MockedComponent = jest.genMockFromModule(
-      'ReactMockedComponentTestComponent',
-    );
-
-    ReactTestUtils.mockComponent(MockedComponent);
-  });
-
-  it('should allow an implicitly mocked component to be rendered without warnings', () => {
-    spyOn(console, 'error');
-    ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
-    expectDev(console.error.calls.count()).toBe(0);
-  });
-
-  it('should allow an implicitly mocked component to be rendered without warnings (SSR)', () => {
-    spyOn(console, 'error');
-    ReactDOMServer.renderToString(<AutoMockedComponent />);
-    expectDev(console.error.calls.count()).toBe(0);
-  });
-
-  it('should allow an implicitly mocked component to be updated', () => {
-    class Wrapper extends React.Component {
-      state = {foo: 1};
-
-      update = () => {
-        this.setState({foo: 2});
-      };
-
+    MockedComponent = class extends React.Component {
       render() {
-        return <div><AutoMockedComponent prop={this.state.foo} /></div>;
+        throw new Error('Should not get here.');
       }
-    }
-
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
-
-    var found = ReactTestUtils.findRenderedComponentWithType(
-      instance,
-      AutoMockedComponent,
-    );
-    expect(typeof found).toBe('object');
-
-    instance.update();
+    };
+    // This is close enough to what a Jest mock would give us.
+    MockedComponent.prototype.render = jest.fn();
   });
 
-  it('has custom methods on the implicitly mocked component', () => {
-    var instance = ReactTestUtils.renderIntoDocument(<AutoMockedComponent />);
-    expect(typeof instance.hasCustomMethod).toBe('function');
+  it('should allow a mocked component to be rendered', () => {
+    var container = document.createElement('container');
+    ReactDOM.render(<MockedComponent />, container);
   });
 
-  it('should allow an explicitly mocked component to be rendered', () => {
-    ReactTestUtils.renderIntoDocument(<MockedComponent />);
+  it('should allow a mocked component to be updated', () => {
+    var container = document.createElement('container');
+    ReactDOM.render(<MockedComponent />, container);
+    ReactDOM.render(<MockedComponent />, container);
   });
 
-  it('should allow an explicitly mocked component to be updated', () => {
-    class Wrapper extends React.Component {
-      state = {foo: 1};
-
-      update = () => {
-        this.setState({foo: 2});
-      };
-
-      render() {
-        return <div><MockedComponent prop={this.state.foo} /></div>;
-      }
-    }
-
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
-
-    var found = ReactTestUtils.findRenderedComponentWithType(
-      instance,
-      MockedComponent,
-    );
-    expect(typeof found).toBe('object');
-
-    instance.update();
-  });
-
-  it('has custom methods on the explicitly mocked component', () => {
-    var instance = ReactTestUtils.renderIntoDocument(<MockedComponent />);
-    expect(typeof instance.hasCustomMethod).toBe('function');
+  it('should allow a mocked component to be rendered (SSR)', () => {
+    ReactDOMServer.renderToString(<MockedComponent />);
   });
 });

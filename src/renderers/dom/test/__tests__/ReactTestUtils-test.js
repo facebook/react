@@ -35,6 +35,23 @@ describe('ReactTestUtils', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
+  it('gives Jest mocks a passthrough implementation with mockComponent()', () => {
+    class MockedComponent extends React.Component {
+      render() {
+        throw new Error('Should not get here.');
+      }
+    }
+    // This is close enough to what a Jest mock would give us.
+    MockedComponent.prototype.render = jest.fn();
+
+    // Patch it up so it returns its children.
+    ReactTestUtils.mockComponent(MockedComponent);
+
+    var container = document.createElement('div');
+    ReactDOM.render(<MockedComponent>Hello</MockedComponent>, container);
+    expect(container.textContent).toBe('Hello');
+  });
+
   it('can scryRenderedComponentsWithType', () => {
     class Child extends React.Component {
       render() {
