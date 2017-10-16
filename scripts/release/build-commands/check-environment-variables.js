@@ -11,7 +11,7 @@ module.exports = () => {
       {red Missing CircleCI API token}
 
       {white The CircleCI API is used to check the status of the latest commit.}
-      {white This API requires a token which must be exposed via a {yellow.bold CIRCLE_CI_API_TOKEN} environment variable.}
+      {white This API requires a token which must be exposed via a {yellow.bold CIRCLE_CI_API_TOKEN} environment var.}
       {white In order to run this script you will need to create your own API token.}
       {white Instructions can be found at:}
 
