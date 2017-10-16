@@ -35,6 +35,29 @@ describe('ReactTestUtils', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
+  it('can scryRenderedComponentsWithType', () => {
+    class Child extends React.Component {
+      render() {
+        return null;
+      }
+    }
+    class Wrapper extends React.Component {
+      render() {
+        return (
+          <div>
+            <Child />
+          </div>
+        );
+      }
+    }
+    const renderedComponent = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    const scryResults = ReactTestUtils.scryRenderedComponentsWithType(
+      renderedComponent,
+      Child,
+    );
+    expect(scryResults.length).toBe(1);
+  });
+
   it('can scryRenderedDOMComponentsWithClass with TextComponent', () => {
     class Wrapper extends React.Component {
       render() {
