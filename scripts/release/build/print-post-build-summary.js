@@ -33,7 +33,7 @@ module.exports = params => {
     2. It should say {italic "Hello world!"}
     3. Next go to {yellow.bold fixtures/packaging} and run {bold node build-all.js}
     4. Install the "serve" module ({bold npm install -g serve})
-    5. Go to the repo root and {bold run serve -s .}
+    5. Go to the repo root and {bold serve -s .}
     6. Open {blue.bold http://localhost:5000/fixtures/packaging}
     7. Verify every iframe shows {italic "Hello world!"}
 
