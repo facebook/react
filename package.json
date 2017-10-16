@@ -140,8 +140,7 @@
     ],
     "collectCoverageFrom": [
       "src/**/*.js",
-      "!src/__mocks__/vendor/third_party/*.js",
-      "!src/test/*.js"
+      "!src/__mocks__/vendor/third_party/*.js"
     ],
     "timers": "fake"
   }

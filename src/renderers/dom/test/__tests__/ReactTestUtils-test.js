@@ -15,6 +15,17 @@ let ReactDOM;
 let ReactDOMServer;
 let ReactTestUtils;
 
+function getTestDocument(markup) {
+  var doc = document.implementation.createHTMLDocument('');
+  doc.open();
+  doc.write(
+    markup ||
+      '<!doctype html><html><meta charset=utf-8><title>test doc</title>',
+  );
+  doc.close();
+  return doc;
+}
+
 describe('ReactTestUtils', () => {
   beforeEach(() => {
     createRenderer = require('react-test-renderer/shallow').createRenderer;
@@ -131,8 +142,6 @@ describe('ReactTestUtils', () => {
   });
 
   it('should support injected wrapper components as DOM components', () => {
-    const getTestDocument = require('getTestDocument');
-
     const injectedDOMComponents = [
       'button',
       'form',

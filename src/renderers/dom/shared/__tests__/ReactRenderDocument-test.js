@@ -13,7 +13,16 @@ var React;
 var ReactDOM;
 var ReactDOMServer;
 
-var getTestDocument;
+function getTestDocument(markup) {
+  var doc = document.implementation.createHTMLDocument('');
+  doc.open();
+  doc.write(
+    markup ||
+      '<!doctype html><html><meta charset=utf-8><title>test doc</title>',
+  );
+  doc.close();
+  return doc;
+}
 
 describe('rendering React components at document', () => {
   beforeEach(() => {
@@ -22,7 +31,6 @@ describe('rendering React components at document', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    getTestDocument = require('getTestDocument');
   });
 
   describe('with old implicit hydration API', () => {
