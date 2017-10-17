@@ -8,9 +8,9 @@ const moduleTypes = require('./bundles').moduleTypes;
 const extractErrorCodes = require('../error-codes/extract-errors');
 
 const exclude = [
-  'src/**/__benchmarks__/**/*.js',
-  'src/**/__tests__/**/*.js',
-  'src/**/__mocks__/**/*.js',
+  '**/__benchmarks__/**/*.js',
+  '**/__tests__/**/*.js',
+  '**/__mocks__/**/*.js',
 ];
 
 const UMD_DEV = bundleTypes.UMD_DEV;
