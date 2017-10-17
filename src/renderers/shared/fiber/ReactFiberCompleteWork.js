@@ -55,6 +55,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     appendInitialChild,
     finalizeInitialChildren,
     prepareUpdate,
+    mutation,
+    persistence,
   } = config;
 
   const {
@@ -177,6 +179,157 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  let updateHostComponent;
+  let updateHostText;
+  if (mutation) {
+    // Mutation mode
+    updateHostComponent = function(
+      current: Fiber,
+      workInProgress: Fiber,
+      updatePayload: null | PL,
+      type: T,
+      oldProps: P,
+      newProps: P,
+      rootContainerInstance: C,
+    ) {
+      // TODO: Type this specific to this type of component.
+      workInProgress.updateQueue = (updatePayload: any);
+      // If the update payload indicates that there is a change or if there
+      // is a new ref we mark this as an update. All the work is done in commitWork.
+      if (updatePayload) {
+        markUpdate(workInProgress);
+      }
+    };
+    updateHostText = function(
+      current: Fiber,
+      workInProgress: Fiber,
+      oldText: string,
+      newText: string,
+    ) {
+      // If the text differs, mark it as an update. All the work in done in commitWork.
+      if (oldText !== newText) {
+        markUpdate(workInProgress);
+      }
+    };
+  } else if (persistence) {
+    // Persistent host tree mode
+    const {
+      cloneInstance,
+      cloneInstanceOrRecycle,
+      cloneContainer,
+      cloneContainerOrRecycle,
+      appendInititalChildToContainer,
+      completeContainer,
+    } = persistence;
+    updateHostComponent = function(
+      current: Fiber,
+      workInProgress: Fiber,
+      updatePayload: null | PL,
+      type: T,
+      oldProps: P,
+      newProps: P,
+      rootContainerInstance: C,
+    ) {
+      // If there are no effects associated with this node, then none of our children had any updates.
+      // This guarantees that we can reuse all of them.
+      const childrenUnchanged = workInProgress.firstEffect === null;
+      const currentInstance = current.stateNode;
+      if (childrenUnchanged && updatePayload === null) {
+        // No changes, just reuse the existing instance.
+        // Note that this might release a previous clone.
+        workInProgress.stateNode = currentInstance;
+      } else {
+        let recyclableInstance = workInProgress.stateNode;
+        let newInstance;
+        if (currentInstance === recyclableInstance) {
+          // We can't recycle the current, we'll need to clone.
+          newInstance = cloneInstance(
+            currentInstance,
+            updatePayload,
+            type,
+            oldProps,
+            newProps,
+            workInProgress,
+            childrenUnchanged,
+          );
+        } else {
+          newInstance = cloneInstanceOrRecycle(
+            currentInstance,
+            updatePayload,
+            type,
+            oldProps,
+            newProps,
+            workInProgress,
+            childrenUnchanged,
+            recyclableInstance,
+          );
+        }
+        if (
+          finalizeInitialChildren(
+            newInstance,
+            type,
+            newProps,
+            rootContainerInstance,
+          )
+        ) {
+          markUpdate(workInProgress);
+        }
+        workInProgress.stateNode = newInstance;
+        if (childrenUnchanged) {
+          // If there are no other effects in this tree, we need to flag this node as having one.
+          // Even though we're not going to use it for anything.
+          // Otherwise parents won't know that there are new children to propagate upwards.
+          markUpdate(workInProgress);
+        } else {
+          // If children might have changed, we have to add them all to the set.
+          appendAllChildren(newInstance, workInProgress);
+        }
+      }
+    };
+    updateHostText = function(
+      current: Fiber,
+      workInProgress: Fiber,
+      oldText: string,
+      newText: string,
+    ) {
+      if (oldText !== newText) {
+        // If the text content differs, we'll create a new text instance for it.
+        const rootContainerInstance = getRootHostContainer();
+        const currentHostContext = getHostContext();
+        workInProgress.stateNode = createTextInstance(
+          newText,
+          rootContainerInstance,
+          currentHostContext,
+          workInProgress,
+        );
+        // We'll have to mark it as having an effect, even though we won't use the effect for anything.
+        // This lets the parents know that at least one of their children has changed.
+        markUpdate(workInProgress);
+      }
+    };
+  } else {
+    // No host operations
+    updateHostComponent = function(
+      current: Fiber,
+      workInProgress: Fiber,
+      updatePayload: null | PL,
+      type: T,
+      oldProps: P,
+      newProps: P,
+      rootContainerInstance: C,
+    ) {
+      // Noop
+    };
+    updateHostText = function(
+      current: Fiber,
+      workInProgress: Fiber,
+      oldText: string,
+      newText: string,
+    ) {
+      // Noop
+    };
+  }
+
   function completeWork(
     current: Fiber | null,
     workInProgress: Fiber,
@@ -244,13 +397,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             currentHostContext,
           );
 
-          // TODO: Type this specific to this type of component.
-          workInProgress.updateQueue = (updatePayload: any);
-          // If the update payload indicates that there is a change or if there
-          // is a new ref we mark this as an update.
-          if (updatePayload) {
-            markUpdate(workInProgress);
-          }
+          updateHostComponent(
+            current,
+            workInProgress,
+            updatePayload,
+            type,
+            oldProps,
+            newProps,
+            rootContainerInstance,
+          );
+
           if (current.ref !== workInProgress.ref) {
             markRef(workInProgress);
           }
@@ -325,9 +481,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           const oldText = current.memoizedProps;
           // If we have an alternate, that means this is an update and we need
           // to schedule a side-effect to do the updates.
-          if (oldText !== newText) {
-            markUpdate(workInProgress);
-          }
+          updateHostText(current, workInProgress, oldText, newText);
         } else {
           if (typeof newText !== 'string') {
             invariant(
