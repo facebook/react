@@ -273,6 +273,43 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   if (!config.mutation) {
+    let commitContainer;
+    if (!config.persistence) {
+      commitContainer = function(finishedWork: Fiber) {
+        // Noop
+      };
+    } else {
+      const {replaceContainer} = config.persistence;
+      commitContainer = function(finishedWork: Fiber) {
+        switch (finishedWork.tag) {
+          case ClassComponent: {
+            return;
+          }
+          case HostComponent: {
+            return;
+          }
+          case HostRoot:
+          case HostPortal: {
+            const portalOrRoot: {containerInfo: C, pendingContainerInfo: C} =
+              finishedWork.stateNode;
+            const {containerInfo, pendingContainerInfo} = portalOrRoot;
+            replaceContainer(containerInfo, pendingContainerInfo);
+            // Swap out the current container.
+            portalOrRoot.containerInfo = pendingContainerInfo;
+            // The old one is now free to be recycled.
+            portalOrRoot.pendingContainerInfo = containerInfo;
+            return;
+          }
+          default: {
+            invariant(
+              false,
+              'This unit of work tag should not have side-effects. This error is ' +
+                'likely caused by a bug in React. Please file an issue.',
+            );
+          }
+        }
+      };
+    }
     return {
       commitResetTextContent(finishedWork: Fiber) {},
       commitPlacement(finishedWork: Fiber) {},
@@ -281,7 +318,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         commitNestedUnmounts(current);
         detachFiber(current);
       },
-      commitWork(current: Fiber | null, finishedWork: Fiber) {},
+      commitWork(current: Fiber | null, finishedWork: Fiber) {
+        commitContainer(finishedWork);
+      },
       commitLifeCycles,
       commitAttachRef,
       commitDetachRef,
