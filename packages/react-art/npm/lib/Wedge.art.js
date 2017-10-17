@@ -1,6 +1,18 @@
 'use strict';
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends =
+  Object.assign ||
+  function(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -40,12 +52,11 @@ var Path = ReactART.Path;
 var Wedge = createReactClass({
   displayName: 'Wedge',
 
-
   propTypes: {
     outerRadius: PropTypes.number.isRequired,
     startAngle: PropTypes.number.isRequired,
     endAngle: PropTypes.number.isRequired,
-    innerRadius: PropTypes.number
+    innerRadius: PropTypes.number,
   },
 
   circleRadians: Math.PI * 2,
@@ -84,7 +95,10 @@ var Wedge = createReactClass({
     path.move(0, or).arc(or * 2, 0, or).arc(-or * 2, 0, or);
 
     if (ir) {
-      path.move(or - ir, 0).counterArc(ir * 2, 0, ir).counterArc(-ir * 2, 0, ir);
+      path
+        .move(or - ir, 0)
+        .counterArc(ir * 2, 0, ir)
+        .counterArc(-ir * 2, 0, ir);
     }
 
     path.close();
@@ -144,9 +158,10 @@ var Wedge = createReactClass({
     // The arguments for path.arc and path.counterArc used below are:
     // (endX, endY, radiusX, radiusY, largeAngle)
 
-    path.move(or + or * ss, or - or * sc) // move to starting point
-    .arc(or * ds, or * -dc, or, or, large) // outer arc
-    .line(dr * es, dr * -ec); // width of arc or wedge
+    path
+      .move(or + or * ss, or - or * sc) // move to starting point
+      .arc(or * ds, or * -dc, or, or, large) // outer arc
+      .line(dr * es, dr * -ec); // width of arc or wedge
 
     if (ir) {
       path.counterArc(ir * -ds, ir * dc, ir, ir, large); // inner arc
@@ -178,9 +193,8 @@ var Wedge = createReactClass({
       path = this._createArcPath(startAngle, endAngle, or, ir);
     }
 
-    return React.createElement(Shape, _extends({}, this.props, { d: path }));
-  }
-
+    return React.createElement(Shape, _extends({}, this.props, {d: path}));
+  },
 });
 
 module.exports = Wedge;

@@ -1,6 +1,18 @@
 'use strict';
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends =
+  Object.assign ||
+  function(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -38,15 +50,19 @@ var Circle = createReactClass({
   displayName: 'Circle',
 
   propTypes: {
-    radius: PropTypes.number.isRequired
+    radius: PropTypes.number.isRequired,
   },
 
   render: function render() {
     var radius = this.props.radius;
 
-    var path = Path().moveTo(0, -radius).arc(0, radius * 2, radius).arc(0, radius * -2, radius).close();
-    return React.createElement(Shape, _extends({}, this.props, { d: path }));
-  }
+    var path = Path()
+      .moveTo(0, -radius)
+      .arc(0, radius * 2, radius)
+      .arc(0, radius * -2, radius)
+      .close();
+    return React.createElement(Shape, _extends({}, this.props, {d: path}));
+  },
 });
 
 module.exports = Circle;

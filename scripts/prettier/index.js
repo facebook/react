@@ -37,11 +37,9 @@ const config = {
       // Internal forwarding modules
       'packages/*/*.js',
       // Source files
-      'packages/*/src/**/*.js'
+      'packages/*/src/**/*.js',
     ],
-    ignore: [
-      '**/node_modules/**',
-    ],
+    ignore: ['**/node_modules/**'],
   },
   scripts: {
     patterns: [
@@ -49,12 +47,12 @@ const config = {
       'packages/*/npm/**/*.js',
       // Need to work on Node
       'scripts/**/*.js',
-      'fixtures/**/*.js'
+      'fixtures/**/*.js',
     ],
     ignore: [
       '**/node_modules/**',
       // Built files and React repo clone
-      'scripts/bench/benchmarks/**'
+      'scripts/bench/benchmarks/**',
     ],
     options: {
       'trailing-comma': 'es5',

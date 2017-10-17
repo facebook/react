@@ -1,6 +1,18 @@
 'use strict';
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+var _extends =
+  Object.assign ||
+  function(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
 
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
@@ -51,7 +63,7 @@ var Rectangle = createReactClass({
     radiusTopLeft: PropTypes.number,
     radiusTopRight: PropTypes.number,
     radiusBottomRight: PropTypes.number,
-    radiusBottomLeft: PropTypes.number
+    radiusBottomLeft: PropTypes.number,
   },
 
   render: function render() {
@@ -63,7 +75,9 @@ var Rectangle = createReactClass({
     // property
     var tl = this.props.radiusTopLeft ? this.props.radiusTopLeft : radius;
     var tr = this.props.radiusTopRight ? this.props.radiusTopRight : radius;
-    var br = this.props.radiusBottomRight ? this.props.radiusBottomRight : radius;
+    var br = this.props.radiusBottomRight
+      ? this.props.radiusBottomRight
+      : radius;
     var bl = this.props.radiusBottomLeft ? this.props.radiusBottomLeft : radius;
 
     var path = Path();
@@ -94,16 +108,20 @@ var Rectangle = createReactClass({
     // disable border radius if it doesn't fit within the specified
     // width/height
     if (tl + tr > width) {
-      tl = 0;tr = 0;
+      tl = 0;
+      tr = 0;
     }
     if (bl + br > width) {
-      bl = 0;br = 0;
+      bl = 0;
+      br = 0;
     }
     if (tl + bl > height) {
-      tl = 0;bl = 0;
+      tl = 0;
+      bl = 0;
     }
     if (tr + br > height) {
-      tr = 0;br = 0;
+      tr = 0;
+      br = 0;
     }
 
     path.move(0, tl);
@@ -128,9 +146,8 @@ var Rectangle = createReactClass({
     }
     path.line(0, -height + (bl + tl));
 
-    return React.createElement(Shape, _extends({}, this.props, { d: path }));
-  }
-
+    return React.createElement(Shape, _extends({}, this.props, {d: path}));
+  },
 });
 
 module.exports = Rectangle;
