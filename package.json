@@ -1,6 +1,9 @@
 {
   "private": true,
   "version": "16.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "devDependencies": {
     "art": "^0.10.1",
     "async": "^1.5.0",
