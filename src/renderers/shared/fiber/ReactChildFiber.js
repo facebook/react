@@ -387,7 +387,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       element.type === REACT_FRAGMENT_TYPE
     ) {
       // Move based on index
-      const existing = useFiber(current, priority);
+      const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
       existing.pendingProps = element.props.children;
       existing.return = returnFiber;
@@ -1123,13 +1123,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-<<<<<<< HEAD
       for (; !step.done; newIdx++, (step = newChildren.next())) {
         const newFiber = createChild(returnFiber, step.value, expirationTime);
-=======
-      for (; !step.done; newIdx++, step = newChildren.next()) {
-        const newFiber = createChild(returnFiber, step.value, priority);
->>>>>>> Update reconciliation to special case fragments
         if (newFiber === null) {
           continue;
         }
@@ -1240,12 +1235,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             existing._debugOwner = element._owner;
           }
           return existing;
-        } else if (
-          child.tag === Fragment &&
-          element.type === REACT_FRAGMENT_TYPE
-        ) {
+        } else if (child.tag === Fragment && element.type === REACT_FRAGMENT_TYPE) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, priority);
+          const existing = useFiber(child, expirationTime);
           existing.ref = coerceRef(child, element);
           existing.pendingProps = element.props.children;
           existing.return = returnFiber;
@@ -1409,21 +1401,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
               returnFiber.tag === ClassComponent ||
               returnFiber.tag === FunctionalComponent)
           ) {
-            if (Array.isArray(newChild.props.children)) {
-              return reconcileChildrenArray(
-                returnFiber,
-                currentFirstChild,
-                newChild.props.children,
-                priority,
-              );
-            } else {
-              return reconcileChildrenArray(
-                returnFiber,
-                currentFirstChild,
-                [newChild.props.children],
-                priority,
-              );
-            }
+            return reconcileChildrenArray(
+              returnFiber,
+              currentFirstChild,
+              Array.isArray(newChild.props.children) ? newChild.props.children : [newChild.props.children],
+              expirationTime,
+            );
           }
           return placeSingleChild(
             reconcileSingleElement(

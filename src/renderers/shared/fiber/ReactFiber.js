@@ -310,51 +310,6 @@ exports.createFiberFromElement = function(
     owner = element._owner;
   }
 
-  const fiber = createFiberFromElementType(
-    element,
-    internalContextTag,
-    owner,
-  );
-  fiber.pendingProps = element.props;
-  fiber.expirationTime = expirationTime;
-
-  if (__DEV__) {
-    fiber._debugSource = element._source;
-    fiber._debugOwner = element._owner;
-  }
-
-  return fiber;
-};
-
-exports.createFiberFromFragment = function(
-  elements: ReactFragment,
-  internalContextTag: TypeOfInternalContext,
-  expirationTime: ExpirationTime,
-): Fiber {
-  // TODO: Consider supporting keyed fragments. Technically, we accidentally
-  // support that in the existing React.
-  const fiber = createFiber(Fragment, null, internalContextTag);
-  fiber.pendingProps = elements;
-  fiber.expirationTime = expirationTime;
-  return fiber;
-};
-
-exports.createFiberFromText = function(
-  content: string,
-  internalContextTag: TypeOfInternalContext,
-  expirationTime: ExpirationTime,
-): Fiber {
-  const fiber = createFiber(HostText, null, internalContextTag);
-  fiber.pendingProps = content;
-  fiber.expirationTime = expirationTime;
-  return fiber;
-};
-
-function createFiberFromElementType(
-  element: ReactElement,
-  internalContextTag: TypeOfInternalContext,
-  debugOwner: null | Fiber,
-): Fiber {
   let fiber;
   const {type, key} = element;
   if (typeof type === 'function') {
@@ -411,12 +366,12 @@ function createFiberFromElementType(
     );
   }
 
-  fiber.pendingWorkPriority = priorityLevel;
-
   if (__DEV__) {
     fiber._debugSource = element._source;
     fiber._debugOwner = element._owner;
   }
+
+  fiber.expirationTime = expirationTime;
 
   return fiber;
 };
@@ -424,24 +379,24 @@ function createFiberFromElementType(
 exports.createFiberFromFragment = function(
   elements: ReactFragment,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   // TODO: Consider supporting keyed fragments. Technically, we accidentally
   // support that in the existing React.
   const fiber = createFiber(Fragment, null, internalContextTag);
   fiber.pendingProps = elements;
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
   return fiber;
 };
 
 exports.createFiberFromText = function(
   content: string,
   internalContextTag: TypeOfInternalContext,
-  priorityLevel: PriorityLevel,
+  expirationTime: ExpirationTime,
 ): Fiber {
   const fiber = createFiber(HostText, null, internalContextTag);
   fiber.pendingProps = content;
-  fiber.pendingWorkPriority = priorityLevel;
+  fiber.expirationTime = expirationTime;
   return fiber;
 };
 
