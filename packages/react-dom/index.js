@@ -1,4 +1,3 @@
 'use strict';
 
-// TODO: Move the source into packages
-module.exports = require('ReactDOMFiberEntry');
+module.exports = require('./src/ReactDOMFiberEntry');

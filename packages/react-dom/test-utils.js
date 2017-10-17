@@ -1,4 +1,3 @@
 'use strict';
 
-// TODO: Move the source into packages
-module.exports = require('ReactTestUtilsEntry');
+module.exports = require('./src/ReactTestUtilsEntry');

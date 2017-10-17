@@ -1,4 +1,3 @@
 'use strict';
 
-// TODO: Move the source into packages
-module.exports = require('ReactDOMServerNodeEntry');
+module.exports = require('./src/ReactDOMServerNodeEntry');
