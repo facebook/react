@@ -62,16 +62,14 @@ describe('ReactFragment', () => {
     }
 
     function Fragment({condition}) {
-      return condition ? (
-        <React.Fragment>
-          <Stateful key="a" />
-        </React.Fragment>
-      ) : (
-        <React.Fragment>
-          <Stateful key="a" />
-          <div key="b">World</div>
-        </React.Fragment>
-      );
+      return condition
+        ? <React.Fragment>
+            <Stateful key="a" />
+          </React.Fragment>
+        : <React.Fragment>
+            <Stateful key="a" />
+            <div key="b">World</div>
+          </React.Fragment>;
     }
 
     ReactNoop.render(
@@ -108,17 +106,15 @@ describe('ReactFragment', () => {
     }
 
     function Fragment({condition}) {
-      return condition ? (
-        <Stateful key="a" />
-      ) : (
-        <React.Fragment>
-          <React.Fragment>
-            <Stateful key="a" />
-            <div key="b">World</div>
-            <div key="c" />
-          </React.Fragment>
-        </React.Fragment>
-      );
+      return condition
+        ? <Stateful key="a" />
+        : <React.Fragment>
+            <React.Fragment>
+              <Stateful key="a" />
+              <div key="b">World</div>
+              <div key="c" />
+            </React.Fragment>
+          </React.Fragment>;
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -146,22 +142,20 @@ describe('ReactFragment', () => {
     }
 
     function Fragment({condition}) {
-      return condition ? (
-        <React.Fragment>
-          <React.Fragment>
-            <div key="b">World</div>
-            <Stateful key="a" />
+      return condition
+        ? <React.Fragment>
+            <React.Fragment>
+              <div key="b">World</div>
+              <Stateful key="a" />
+            </React.Fragment>
           </React.Fragment>
-        </React.Fragment>
-      ) : (
-        <React.Fragment>
-          <React.Fragment>
-            <Stateful key="a" />
-            <div key="b">World</div>
-          </React.Fragment>
-          <div key="c" />
-        </React.Fragment>
-      );
+        : <React.Fragment>
+            <React.Fragment>
+              <Stateful key="a" />
+              <div key="b">World</div>
+            </React.Fragment>
+            <div key="c" />
+          </React.Fragment>;
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();

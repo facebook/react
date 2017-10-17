@@ -1068,7 +1068,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++, step = newChildren.next()
+      newIdx++, (step = newChildren.next())
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1144,7 +1144,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, step = newChildren.next()) {
+    for (; !step.done; newIdx++, (step = newChildren.next())) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
@@ -1235,7 +1235,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             existing._debugOwner = element._owner;
           }
           return existing;
-        } else if (child.tag === Fragment && element.type === REACT_FRAGMENT_TYPE) {
+        } else if (
+          child.tag === Fragment &&
+          element.type === REACT_FRAGMENT_TYPE
+        ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, expirationTime);
           existing.ref = coerceRef(child, element);
@@ -1404,7 +1407,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             return reconcileChildrenArray(
               returnFiber,
               currentFirstChild,
-              Array.isArray(newChild.props.children) ? newChild.props.children : [newChild.props.children],
+              Array.isArray(newChild.props.children)
+                ? newChild.props.children
+                : [newChild.props.children],
               expirationTime,
             );
           }
