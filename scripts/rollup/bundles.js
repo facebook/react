@@ -65,10 +65,7 @@ const bundles = [
     label: 'core',
     manglePropertiesOnProd: false,
     name: 'react',
-    paths: [
-      'packages/react/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react/**/*.js', 'packages/shared/**/*.js'],
   },
 
   /******* React DOM *******/
@@ -153,10 +150,7 @@ const bundles = [
     label: 'dom-unstable-native-dependencies',
     manglePropertiesOnProd: false,
     name: 'react-dom/unstable-native-dependencies',
-    paths: [
-      'packages/react-dom/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
   },
 
   /******* React DOM Server *******/
@@ -430,10 +424,7 @@ const bundles = [
     label: 'react-reconciler',
     manglePropertiesOnProd: false,
     name: 'react-reconciler',
-    paths: [
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react-reconciler/**/*.js', 'packages/shared/**/*.js'],
   },
 ];
 
