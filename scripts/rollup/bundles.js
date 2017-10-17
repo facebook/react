@@ -118,7 +118,6 @@ const bundles = [
       'prop-types/checkPropTypes',
       'react',
       'react-dom',
-      'react-test-renderer', // TODO (bvaughn) Remove this dependency before 16.0.0
     ],
     fbEntry: 'src/renderers/dom/test/ReactTestUtilsEntry',
     hasteName: 'ReactTestUtils',
@@ -129,7 +128,6 @@ const bundles = [
     paths: [
       'src/renderers/dom/test/**/*.js',
       'src/renderers/shared/**/*.js',
-      'src/renderers/testing/**/*.js', // TODO (bvaughn) Remove this dependency before 16.0.0
 
       'src/ReactVersion.js',
       'src/shared/**/*.js',
