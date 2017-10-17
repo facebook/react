@@ -184,7 +184,7 @@ function getInternalModules() {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
   return {
-    reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+    reactProdInvariant: resolve('./packages/shared/src/utils/reactProdInvariant.js'),
   };
 }
 
