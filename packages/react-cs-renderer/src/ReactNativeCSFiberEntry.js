@@ -176,12 +176,11 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
       return 0;
     },
 
-    cloneContainer(container: Container, keepChildren: boolean): Container {
+    cloneContainer(container: Container): Container {
       return 0;
     },
     cloneContainerOrRecycle(
       container: Container,
-      keepChildren: boolean,
       recyclableContainer: Container,
     ): Container {
       return 0;
@@ -192,10 +191,9 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
       child: Instance | TextInstance,
     ): void {},
 
-    completeContainer(
-      oldContainer: Container,
-      newContainer: Container,
-    ): void {},
+    finalizeContainerChildren(container: Container): void {},
+
+    replaceContainer(oldContainer: Container, newContainer: Container): void {},
   },
 });
 
