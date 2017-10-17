@@ -1397,25 +1397,23 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           if (
             newChild.type === '#fragment' &&
             newChild.key === null &&
-            (
-              returnFiber.tag === HostRoot ||
+            (returnFiber.tag === HostRoot ||
               returnFiber.tag === ClassComponent ||
-              returnFiber.tag === FunctionalComponent
-            )
+              returnFiber.tag === FunctionalComponent)
           ) {
             if (Array.isArray(newChild.props.children)) {
               return reconcileChildrenArray(
                 returnFiber,
                 currentFirstChild,
                 newChild.props.children,
-                priority
+                priority,
               );
             } else {
               return reconcileChildrenArray(
                 returnFiber,
                 currentFirstChild,
                 [newChild.props.children],
-                priority
+                priority,
               );
             }
           }

@@ -96,4 +96,85 @@ describe('ReactFragment', () => {
 
     expect(instanceB).toBe(instanceA);
   });
+
+  it('should not preserve state when switching to a nested fragment', function() {
+    var instance = null;
+
+    class Stateful extends React.Component {
+      render() {
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition ? (
+        <Stateful key="a" />
+      ) : (
+        <React.Fragment>
+          <React.Fragment>
+            <Stateful key="a" />
+            <div key="b">World</div>
+            <div key="c" />
+          </React.Fragment>
+        </React.Fragment>
+      );
+    }
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    expect(instanceA).not.toBe(null);
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(instanceB).not.toBe(instanceA);
+  });
+
+  it('should preserve state in a reorder', function() {
+    var instance = null;
+
+    class Stateful extends React.Component {
+      render() {
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition ? (
+        <React.Fragment>
+          <React.Fragment>
+            <div key="b">World</div>
+            <Stateful key="a" />
+          </React.Fragment>
+        </React.Fragment>
+      ) : (
+        <React.Fragment>
+          <React.Fragment>
+            <Stateful key="a" />
+            <div key="b">World</div>
+          </React.Fragment>
+          <div key="c" />
+        </React.Fragment>
+      );
+    }
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    expect(instanceA).not.toBe(null);
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(instanceB).toBe(instanceA);
+  });
 });
