@@ -319,9 +319,8 @@ exports.createFiberFromElement = function(
     fiber.type = type;
     fiber.pendingProps = element.props;
   } else if (type === REACT_FRAGMENT_TYPE) {
-    // special case for fragments, we create the fiber and return early
-    fiber = createFiber(Fragment, key, internalContextTag);
-    fiber.pendingProps = element.props.children;
+    // special case for fragments; create the fiber and return early
+    return createFiberFromFragment(element.props.children, internalContextTag, expirationTime, key);
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
@@ -376,18 +375,19 @@ exports.createFiberFromElement = function(
   return fiber;
 };
 
-exports.createFiberFromFragment = function(
+function createFiberFromFragment(
   elements: ReactFragment,
   internalContextTag: TypeOfInternalContext,
   expirationTime: ExpirationTime,
+  key: String | null,
 ): Fiber {
-  // TODO: Consider supporting keyed fragments. Technically, we accidentally
-  // support that in the existing React.
-  const fiber = createFiber(Fragment, null, internalContextTag);
+  const fiber = createFiber(Fragment, key, internalContextTag);
   fiber.pendingProps = elements;
   fiber.expirationTime = expirationTime;
   return fiber;
 };
+
+exports.createFiberFromFragment = createFiberFromFragment;
 
 exports.createFiberFromText = function(
   content: string,

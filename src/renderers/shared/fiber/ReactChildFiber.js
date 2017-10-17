@@ -502,6 +502,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         fragment,
         returnFiber.internalContextTag,
         expirationTime,
+        null,
       );
       created.return = returnFiber;
       return created;
@@ -582,6 +583,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           newChild,
           returnFiber.internalContextTag,
           expirationTime,
+          null,
         );
         created.return = returnFiber;
         return created;
