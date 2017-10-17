@@ -30,8 +30,10 @@ function testDOMNodeStructure(domNode, expectedStructure) {
   expect(domNode).toBeDefined();
   expect(domNode.nodeName).toBe(expectedStructure.nodeName);
   for (var prop in expectedStructure) {
-    if (!expectedStructure.hasOwnProperty(prop)) continue;
-    if (prop != 'nodeName' && prop != 'children') {
+    if (!expectedStructure.hasOwnProperty(prop)) {
+      continue;
+    }
+    if (prop !== 'nodeName' && prop !== 'children') {
       if (expectedStructure[prop] === Missing) {
         expect(domNode.hasAttribute(prop)).toBe(false);
       } else {
