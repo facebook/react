@@ -33,16 +33,29 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: ['src/**/*.js', 'www/**/*.js'],
+    patterns: [
+      // Internal forwarding modules
+      'packages/*/*.js',
+      // Source files
+      'packages/*/src/**/*.js'
+    ],
     ignore: [
-      '**/third_party/**',
       '**/node_modules/**',
-      '**/jsfiddle-integration*.js',
     ],
   },
   scripts: {
-    patterns: ['scripts/**/*.js', 'fixtures/**/*.js'],
-    ignore: ['scripts/bench/benchmarks/**'],
+    patterns: [
+      // Forwarding modules that get published to npm (must be ES5)
+      'packages/*/npm/**/*.js',
+      // Need to work on Node
+      'scripts/**/*.js',
+      'fixtures/**/*.js'
+    ],
+    ignore: [
+      '**/node_modules/**',
+      // Built files and React repo clone
+      'scripts/bench/benchmarks/**'
+    ],
     options: {
       'trailing-comma': 'es5',
     },

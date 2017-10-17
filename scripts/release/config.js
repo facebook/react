@@ -2,6 +2,7 @@
 
 const dependencies = ['fbjs', 'object-assign', 'prop-types'];
 
+// TODO: enumerate all non-private package folders in packages/*?
 const projects = [
   'react',
   'react-art',
