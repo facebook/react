@@ -19,6 +19,12 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
+const REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xad9c;
+
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
   var lowPriorityWarning = require('lowPriorityWarning');
@@ -95,9 +101,10 @@ function getCurrentComponentErrorInfo(parentType) {
   var info = getDeclarationErrorAddendum();
 
   if (!info) {
-    var parentName = typeof parentType === 'string'
-      ? parentType
-      : parentType.displayName || parentType.name;
+    var parentName =
+      typeof parentType === 'string'
+        ? parentType
+        : parentType.displayName || parentType.name;
     if (parentName) {
       info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }
@@ -138,7 +145,9 @@ function validateExplicitKey(element, parentType) {
     element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
-    childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
+    childOwner = ` It was passed a child from ${getComponentName(
+      element._owner,
+    )}.`;
   }
 
   currentlyValidatingElement = element;
@@ -229,7 +238,10 @@ function validatePropTypes(element) {
 
 var ReactElementValidator = {
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function';
+    var validType =
+      typeof type === 'string' ||
+      typeof type === 'function' ||
+      type === REACT_FRAGMENT_TYPE;
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {

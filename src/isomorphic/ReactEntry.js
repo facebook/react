@@ -27,6 +27,12 @@ if (__DEV__) {
   cloneElement = ReactElementValidator.cloneElement;
 }
 
+const REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xad9c;
+
 var React = {
   Children: {
     map: ReactChildren.map,
@@ -39,7 +45,7 @@ var React = {
   Component: ReactBaseClasses.Component,
   PureComponent: ReactBaseClasses.PureComponent,
   unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
-  Fragment: '#fragment',
+  Fragment: REACT_FRAGMENT_TYPE,
 
   createElement: createElement,
   cloneElement: cloneElement,

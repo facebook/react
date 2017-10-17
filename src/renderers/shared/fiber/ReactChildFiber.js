@@ -103,6 +103,11 @@ const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 const REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
+const REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xad9c;
 
 function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   if (maybeIterable === null || typeof maybeIterable === 'undefined') {
@@ -379,7 +384,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (
       current !== null &&
       current.tag === Fragment &&
-      element.type === '#fragment'
+      element.type === REACT_FRAGMENT_TYPE
     ) {
       // Move based on index
       const existing = useFiber(current, priority);
@@ -1235,7 +1240,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             existing._debugOwner = element._owner;
           }
           return existing;
-        } else if (child.tag === Fragment && element.type === '#fragment') {
+        } else if (
+          child.tag === Fragment &&
+          element.type === REACT_FRAGMENT_TYPE
+        ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, priority);
           existing.ref = coerceRef(child, element);
@@ -1395,7 +1403,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         case REACT_ELEMENT_TYPE:
           // If newChild is a top-level unkeyed fragment, don't create a fiber
           if (
-            newChild.type === '#fragment' &&
+            newChild.type === REACT_FRAGMENT_TYPE &&
             newChild.key === null &&
             (returnFiber.tag === HostRoot ||
               returnFiber.tag === ClassComponent ||
