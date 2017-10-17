@@ -35,15 +35,4 @@ exports.createPortal = function(
   };
 };
 
-/**
- * Verifies the object is a portal object.
- */
-exports.isPortal = function(object: mixed): boolean {
-  return (
-    typeof object === 'object' &&
-    object !== null &&
-    object.$$typeof === REACT_PORTAL_TYPE
-  );
-};
-
 exports.REACT_PORTAL_TYPE = REACT_PORTAL_TYPE;
