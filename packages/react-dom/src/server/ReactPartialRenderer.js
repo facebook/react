@@ -460,7 +460,10 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
-  constructor(element: React.Element | Array<React.Element>, makeStaticMarkup: boolean) {
+  constructor(
+    element: React.Element | Array<React.Element>,
+    makeStaticMarkup: boolean,
+  ) {
     var children = React.isValidElement(element) ? [element] : toArray(element);
     var topFrame: Frame = ({
       // Assume all trees start in the HTML namespace (not totally true, but
@@ -521,7 +524,7 @@ class ReactDOMServerRenderer {
   render(
     child: string | number | React.Element,
     context: Object,
-    parentNamespace: string
+    parentNamespace: string,
   ) {
     if (typeof child === 'string' || typeof child === 'number') {
       var text = '' + child;
@@ -562,11 +565,7 @@ class ReactDOMServerRenderer {
     }
   }
 
-  renderDOM(
-    element: React.Element,
-    context: Object,
-    parentNamespace: string
-  ) {
+  renderDOM(element: React.Element, context: Object, parentNamespace: string) {
     var tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
