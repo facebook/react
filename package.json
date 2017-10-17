@@ -133,11 +133,10 @@
     ],
     "roots": [
       "<rootDir>/packages",
-      "<rootDir>/scripts",
-      "<rootDir>/src"
+      "<rootDir>/scripts"
     ],
     "collectCoverageFrom": [
-      "src/**/*.js"
+      "packages/**/*.js"
     ],
     "timers": "fake"
   }
