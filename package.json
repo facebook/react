@@ -115,6 +115,9 @@
     "transform": {
       ".*": "./scripts/jest/preprocessor.js"
     },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!react)"
+    ],
     "setupFiles": [
       "./scripts/jest/setup.js",
       "./scripts/jest/environment.js"
