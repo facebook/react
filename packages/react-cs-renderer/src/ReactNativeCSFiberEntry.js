@@ -160,26 +160,12 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
       newProps: Props,
       internalInstanceHandle: Object,
       keepChildren: boolean,
-    ): Instance {
-      return 0;
-    },
-    cloneInstanceOrRecycle(
-      instance: Instance,
-      updatePayload: null | Object,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-      keepChildren: boolean,
       recyclableInstance: null | Instance,
     ): Instance {
       return 0;
     },
 
-    cloneContainer(container: Container): Container {
-      return 0;
-    },
-    cloneContainerOrRecycle(
+    cloneContainer(
       container: Container,
       recyclableContainer: Container,
     ): Container {
