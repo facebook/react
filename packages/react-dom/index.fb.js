@@ -7,6 +7,7 @@
 
 'use strict';
 
+// TODO: Move the source into packages
 var ReactDOMFiber = require('ReactDOMFiberEntry');
 
 Object.assign(
