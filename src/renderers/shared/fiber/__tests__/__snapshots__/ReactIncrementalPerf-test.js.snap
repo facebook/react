@@ -237,8 +237,8 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
   ⚛ Parent [mount]
     ⚛ Child [mount]
   ⚛ (Committing Changes)
-    ⚛ (Committing Host Effects: 3 Total)
-    ⚛ (Calling Lifecycle Methods: 1 Total)
+    ⚛ (Committing Host Effects: 2 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
 "
 `;
 
