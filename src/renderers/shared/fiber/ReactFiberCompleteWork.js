@@ -219,9 +219,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     // Persistent host tree mode
     const {
       cloneInstance,
-      cloneInstanceOrRecycle,
       cloneContainer,
-      cloneContainerOrRecycle,
       appendInititalChildToContainer,
       finalizeContainerChildren,
     } = persistence;
@@ -269,16 +267,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // Note that this might release a previous clone.
         portalOrRoot.pendingContainerInfo = currentContainer;
       } else {
-        let newContainer;
-        if (currentContainer === recyclableContainer) {
-          // We can't recycle the current, we'll need to clone.
-          newContainer = cloneContainer(currentContainer);
-        } else {
-          newContainer = cloneContainerOrRecycle(
-            currentContainer,
-            recyclableContainer,
-          );
-        }
+        let newContainer = cloneContainer(
+          currentContainer,
+          recyclableContainer,
+        );
         if (finalizeContainerChildren(newContainer)) {
           markUpdate(workInProgress);
         }
@@ -308,30 +300,16 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress.stateNode = currentInstance;
       } else {
         let recyclableInstance = workInProgress.stateNode;
-        let newInstance;
-        if (currentInstance === recyclableInstance) {
-          // We can't recycle the current, we'll need to clone.
-          newInstance = cloneInstance(
-            currentInstance,
-            updatePayload,
-            type,
-            oldProps,
-            newProps,
-            workInProgress,
-            childrenUnchanged,
-          );
-        } else {
-          newInstance = cloneInstanceOrRecycle(
-            currentInstance,
-            updatePayload,
-            type,
-            oldProps,
-            newProps,
-            workInProgress,
-            childrenUnchanged,
-            recyclableInstance,
-          );
-        }
+        let newInstance = cloneInstance(
+          currentInstance,
+          updatePayload,
+          type,
+          oldProps,
+          newProps,
+          workInProgress,
+          childrenUnchanged,
+          recyclableInstance,
+        );
         if (
           finalizeInitialChildren(
             newInstance,

@@ -141,20 +141,10 @@ type PersistentUpdatesHostConfig<T, P, I, TI, C, PL> = {
     newProps: P,
     internalInstanceHandle: OpaqueHandle,
     keepChildren: boolean,
-  ): I,
-  cloneInstanceOrRecycle(
-    instance: I,
-    updatePayload: null | PL,
-    type: T,
-    oldProps: P,
-    newProps: P,
-    internalInstanceHandle: OpaqueHandle,
-    keepChildren: boolean,
     recyclableInstance: I,
   ): I,
 
-  cloneContainer(container: C): C,
-  cloneContainerOrRecycle(container: C, recyclableContainer: C): C,
+  cloneContainer(container: C, recyclableContainer: C): C,
 
   appendInititalChildToContainer(container: C, child: I | TI): void,
   finalizeContainerChildren(container: C): void,
