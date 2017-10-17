@@ -1,3 +1,4 @@
 'use strict';
 
-module.exports = require('./cjs/react-noop-renderer.development.js');
+// TODO: Move the source into packages
+module.exports = require('ReactNoopEntry');

@@ -129,6 +129,7 @@
       "ts"
     ],
     "roots": [
+      "<rootDir>/packages",
       "<rootDir>/scripts",
       "<rootDir>/src"
     ],
