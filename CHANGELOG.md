@@ -8,6 +8,7 @@
 ### All Packages
 
 * Fix an accidental extra global variable in the UMD builds. ([@gaearon](https://github.com/gaearon) in [#10935](https://github.com/facebook/react/pull/10935))
+* Deprecate use of Bower for accessing React packages. We will no longer be using Bower. ([@bvaughn](https://github.com/bvaughn) in [#11223](https://github.com/facebook/react/pull/11223))
 
 ### React DOM
 
