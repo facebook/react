@@ -130,7 +130,6 @@
       "ts"
     ],
     "roots": [
-      "<rootDir>/mocks",
       "<rootDir>/scripts",
       "<rootDir>/src"
     ],
