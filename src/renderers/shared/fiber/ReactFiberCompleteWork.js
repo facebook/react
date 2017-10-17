@@ -219,7 +219,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       cloneContainer,
       cloneContainerOrRecycle,
       appendInititalChildToContainer,
-      completeContainer,
+      finalizeContainerChildren,
     } = persistence;
     updateHostComponent = function(
       current: Fiber,

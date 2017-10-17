@@ -153,16 +153,13 @@ type PersistentUpdatesHostConfig<T, P, I, TI, C, PL> = {
     recyclableInstance: I,
   ): I,
 
-  cloneContainer(container: C, keepChildren: boolean): C,
-  cloneContainerOrRecycle(
-    container: C,
-    keepChildren: boolean,
-    recyclableContainer: C,
-  ): C,
+  cloneContainer(container: C): C,
+  cloneContainerOrRecycle(container: C, recyclableContainer: C): C,
 
   appendInititalChildToContainer(container: C, child: I | TI): void,
+  finalizeContainerChildren(container: C): void,
 
-  completeContainer(oldContainer: C, newContainer: C): void,
+  replaceContainer(oldContainer: C, newContainer: C): void,
 };
 
 type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
