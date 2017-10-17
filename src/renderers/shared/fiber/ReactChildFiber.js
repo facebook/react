@@ -383,20 +383,23 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     if (
       current !== null &&
-      current.tag === Fragment &&
-      element.type === REACT_FRAGMENT_TYPE
+      (current.type === element.type ||
+      (current.tag === Fragment && element.type === REACT_FRAGMENT_TYPE))
     ) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
-      existing.pendingProps = element.props.children;
+      existing.pendingProps = current.tag === Fragment &&
+        element.type === REACT_FRAGMENT_TYPE
+        ? element.props.children
+        : element.props;
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
         existing._debugOwner = element._owner;
       }
       return existing;
-    } else if (current === null || current.type !== element.type) {
+    } else {
       // Insert
       const created = createFiberFromElement(
         element,
@@ -406,17 +409,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       created.ref = coerceRef(current, element);
       created.return = returnFiber;
       return created;
-    } else {
-      // Move based on index
-      const existing = useFiber(current, expirationTime);
-      existing.ref = coerceRef(current, element);
-      existing.pendingProps = element.props;
-      existing.return = returnFiber;
-      if (__DEV__) {
-        existing._debugSource = element._source;
-        existing._debugOwner = element._owner;
-      }
-      return existing;
     }
   }
 
