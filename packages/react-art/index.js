@@ -1,4 +1,4 @@
 'use strict';
 
 // TODO: Move the source into packages
-module.exports = require('ReactARTFiberEntry');
+module.exports = require('./src/ReactARTFiberEntry');
