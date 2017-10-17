@@ -135,25 +135,30 @@ type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
 type PersistentUpdatesHostConfig<T, P, I, TI, C, PL> = {
   cloneInstance(
     instance: I,
-    updatePayload: PL,
+    updatePayload: null | PL,
     type: T,
     oldProps: P,
     newProps: P,
     internalInstanceHandle: OpaqueHandle,
     keepChildren: boolean,
   ): I,
-  tryToReuseInstance(
+  cloneInstanceOrRecycle(
     instance: I,
-    updatePayload: PL,
+    updatePayload: null | PL,
     type: T,
     oldProps: P,
     newProps: P,
     internalInstanceHandle: OpaqueHandle,
     keepChildren: boolean,
+    recyclableInstance: I,
   ): I,
 
   cloneContainer(container: C, keepChildren: boolean): C,
-  tryToReuseContainer(container: C, keepChildren: boolean): C,
+  cloneContainerOrRecycle(
+    container: C,
+    keepChildren: boolean,
+    recyclableContainer: C,
+  ): C,
 
   appendInititalChildToContainer(container: C, child: I | TI): void,
 
