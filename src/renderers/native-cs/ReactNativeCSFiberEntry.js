@@ -154,7 +154,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   persistence: {
     cloneInstance(
       instance: Instance,
-      updatePayload: Object,
+      updatePayload: null | Object,
       type: string,
       oldProps: Props,
       newProps: Props,
@@ -163,14 +163,15 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     ): Instance {
       return 0;
     },
-    tryToReuseInstance(
+    cloneInstanceOrRecycle(
       instance: Instance,
-      updatePayload: Object,
+      updatePayload: null | Object,
       type: string,
       oldProps: Props,
       newProps: Props,
       internalInstanceHandle: Object,
       keepChildren: boolean,
+      recyclableInstance: null | Instance,
     ): Instance {
       return 0;
     },
@@ -178,9 +179,10 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     cloneContainer(container: Container, keepChildren: boolean): Container {
       return 0;
     },
-    tryToReuseContainer(
+    cloneContainerOrRecycle(
       container: Container,
       keepChildren: boolean,
+      recyclableContainer: Container,
     ): Container {
       return 0;
     },
