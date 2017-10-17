@@ -162,10 +162,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // We have no life-cycles associated with text.
         return;
       }
-      case HostPortal: {
-        // We have no life-cycles associated with portals.
-        return;
-      }
       default: {
         invariant(
           false,
@@ -587,9 +583,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return;
       }
       case HostRoot: {
-        return;
-      }
-      case HostPortal: {
         return;
       }
       default: {

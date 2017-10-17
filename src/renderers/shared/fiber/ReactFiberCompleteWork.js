@@ -372,8 +372,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       case Fragment:
         return null;
       case HostPortal:
-        // TODO: Only mark this as an update if we have any pending callbacks.
-        markUpdate(workInProgress);
         popHostContainer(workInProgress);
         return null;
       // Error cases
