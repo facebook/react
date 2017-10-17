@@ -179,10 +179,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
+  let updateHostContainer;
   let updateHostComponent;
   let updateHostText;
   if (mutation) {
     // Mutation mode
+    updateHostContainer = function(workInProgress: Fiber) {
+      // Noop
+    };
     updateHostComponent = function(
       current: Fiber,
       workInProgress: Fiber,
@@ -221,6 +225,70 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       appendInititalChildToContainer,
       finalizeContainerChildren,
     } = persistence;
+
+    // An unfortunate fork of appendAllChildren because we have two different parent types.
+    const appendAllChildrenToContainer = function(
+      container: C,
+      workInProgress: Fiber,
+    ) {
+      // We only have the top Fiber that was created but we need recurse down its
+      // children to find all the terminal nodes.
+      let node = workInProgress.child;
+      while (node !== null) {
+        if (node.tag === HostComponent || node.tag === HostText) {
+          appendInititalChildToContainer(container, node.stateNode);
+        } else if (node.tag === HostPortal) {
+          // If we have a portal child, then we don't want to traverse
+          // down its children. Instead, we'll get insertions from each child in
+          // the portal directly.
+        } else if (node.child !== null) {
+          node = node.child;
+          continue;
+        }
+        if (node === workInProgress) {
+          return;
+        }
+        while (node.sibling === null) {
+          if (node.return === null || node.return === workInProgress) {
+            return;
+          }
+          node = node.return;
+        }
+        node = node.sibling;
+      }
+    };
+    updateHostContainer = function(workInProgress: Fiber) {
+      const portalOrRoot: {containerInfo: C, pendingContainerInfo: C} =
+        workInProgress.stateNode;
+      const currentContainer = portalOrRoot.containerInfo;
+      const recyclableContainer = portalOrRoot.pendingContainerInfo;
+
+      const childrenUnchanged = workInProgress.firstEffect === null;
+      if (childrenUnchanged) {
+        // No changes, just reuse the existing instance.
+        // Note that this might release a previous clone.
+        portalOrRoot.pendingContainerInfo = currentContainer;
+      } else {
+        let newContainer;
+        if (currentContainer === recyclableContainer) {
+          // We can't recycle the current, we'll need to clone.
+          newContainer = cloneContainer(currentContainer);
+        } else {
+          newContainer = cloneContainerOrRecycle(
+            currentContainer,
+            recyclableContainer,
+          );
+        }
+        if (finalizeContainerChildren(newContainer)) {
+          markUpdate(workInProgress);
+        }
+        portalOrRoot.pendingContainerInfo = newContainer;
+        // If children might have changed, we have to add them all to the set.
+        appendAllChildrenToContainer(newContainer, workInProgress);
+        // Schedule an update on the container to swap out the container.
+        markUpdate(workInProgress);
+      }
+    };
     updateHostComponent = function(
       current: Fiber,
       workInProgress: Fiber,
@@ -309,6 +377,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     };
   } else {
     // No host operations
+    updateHostContainer = function(workInProgress: Fiber) {
+      // Noop
+    };
     updateHostComponent = function(
       current: Fiber,
       workInProgress: Fiber,
@@ -372,6 +443,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // TODO: Delete this when we delete isMounted and findDOMNode.
           workInProgress.effectTag &= ~Placement;
         }
+        updateHostContainer(workInProgress);
         return null;
       }
       case HostComponent: {
@@ -527,6 +599,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         return null;
       case HostPortal:
         popHostContainer(workInProgress);
+        updateHostContainer(workInProgress);
         return null;
       // Error cases
       case IndeterminateComponent:
