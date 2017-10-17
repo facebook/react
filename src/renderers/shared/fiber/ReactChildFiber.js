@@ -86,7 +86,6 @@ const isArray = Array.isArray;
 const {
   FunctionalComponent,
   ClassComponent,
-  HostRoot,
   HostText,
   HostPortal,
   CoroutineComponent,
@@ -1388,13 +1387,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          // If newChild is a top-level unkeyed fragment, don't create a fiber
           if (
             newChild.type === REACT_FRAGMENT_TYPE &&
-            newChild.key === null &&
-            (returnFiber.tag === HostRoot ||
-              returnFiber.tag === ClassComponent ||
-              returnFiber.tag === FunctionalComponent)
+            newChild.key === null
           ) {
             return reconcileChildrenArray(
               returnFiber,
