@@ -1,5 +1,4 @@
 {
-  "name": "react-build",
   "private": true,
   "version": "16.0.0",
   "devDependencies": {
@@ -93,9 +92,6 @@
   "devEngines": {
     "node": "4.x || 5.x || 6.x || 7.x || 8.x",
     "npm": "2.x || 3.x || 4.x || 5.x"
-  },
-  "commonerConfig": {
-    "version": 7
   },
   "scripts": {
     "build": "npm run version-check && node scripts/rollup/build.js",
