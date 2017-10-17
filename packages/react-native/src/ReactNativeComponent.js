@@ -44,7 +44,7 @@ class ReactNativeComponent<DefaultProps, Props, State>
   extends React.Component<Props, State> {
   static defaultProps: $Abstract<DefaultProps>;
   props: Props;
-  state: $Abstract<State>;
+  state: State;
 
   /**
    * Removes focus. This is the opposite of `focus()`.
