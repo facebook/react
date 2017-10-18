@@ -11,7 +11,6 @@
 
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -112,16 +111,31 @@ describe('ReactJSXElementValidator', () => {
   it('does not warns for fragments of multiple elements without keys', () => {
     spyOn(console, 'error');
 
-    if (ReactDOMFeatureFlags.useFiber) {
-      ReactTestUtils.renderIntoDocument(
-        <React.Fragment>
-          <span>1</span>
-          <span>2</span>
-        </React.Fragment>,
-      );
-    }
+    ReactTestUtils.renderIntoDocument(
+      <React.Fragment>
+        <span>1</span>
+        <span>2</span>
+      </React.Fragment>,
+    );
 
     expectDev(console.error.calls.count()).toBe(0);
+  });
+
+  it('warns for fragments of multiple elements with same key', () => {
+    spyOn(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(
+      <React.Fragment>
+        <span key="a">1</span>
+        <span key="a">2</span>
+        <span key="b">3</span>
+      </React.Fragment>,
+    );
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Encountered two children with the same key',
+    );
   });
 
   it('does not warns for arrays of elements with keys', () => {

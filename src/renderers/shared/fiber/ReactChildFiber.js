@@ -384,9 +384,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
-      // existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
-      //   ? element.props.children
-      //   : element.props;
       existing.pendingProps = element.props;
       existing.return = returnFiber;
       if (__DEV__) {
@@ -1426,8 +1423,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
               expirationTime,
             );
           }
-          // else if key is not null, reconcile wat SO CONFUSED
-          // AM I CREATING MORE FRAGMENT FIBERS I DON'T EVEN KNOW ANYMORE
 
           return placeSingleChild(
             reconcileSingleElement(

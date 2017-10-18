@@ -1,10 +1,8 @@
 /**
- * Copyright 2013-present, Facebook, Inc.
- * All rights reserved.
+ * Copyright (c) 2013-present, Facebook, Inc.
  *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
  *
  * @emails react-core
  */
@@ -20,6 +18,14 @@ describe('ReactFragment', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
+  function span(prop) {
+    return {type: 'span', children: [], prop};
+  }
+
+  function text(val) {
+    return {text: val};
+  }
+
   it('should render a single child via noop renderer', () => {
     const element = (
       <React.Fragment>
@@ -30,9 +36,7 @@ describe('ReactFragment', () => {
     ReactNoop.render(element);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([
-      {type: 'span', children: [], prop: undefined},
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([span()]);
   });
 
   it('should render multiple children via noop renderer', () => {
@@ -45,17 +49,16 @@ describe('ReactFragment', () => {
     ReactNoop.render(element);
     ReactNoop.flush();
 
-    expect(ReactNoop.getChildren()).toEqual([
-      {text: 'hello '},
-      {type: 'span', children: [], prop: undefined},
-    ]);
+    expect(ReactNoop.getChildren()).toEqual([text('hello '), span()]);
   });
 
-  it('should preserve state of children', function() {
+  it('should preserve state of children with 1 level nesting', function() {
     var instance = null;
+    var ops = [];
 
     class Stateful extends React.Component {
       render() {
+        ops.push('Stateful render');
         instance = this;
         return <div>Hello</div>;
       }
@@ -63,9 +66,7 @@ describe('ReactFragment', () => {
 
     function Fragment({condition}) {
       return condition
-        ? <React.Fragment>
-            <Stateful key="a" />
-          </React.Fragment>
+        ? <Stateful key="a" />
         : <React.Fragment>
             <Stateful key="a" />
             <div key="b">World</div>
@@ -92,14 +93,17 @@ describe('ReactFragment', () => {
 
     var instanceB = instance;
 
+    expect(ops).toEqual(['Stateful render', 'Stateful render']);
     expect(instanceB).toBe(instanceA);
   });
 
-  it('should not preserve state when switching to a nested fragment', function() {
+  it('should not preserve state of children with 2 levels nesting', function() {
     var instance = null;
+    var ops = [];
 
     class Stateful extends React.Component {
       render() {
+        ops.push('Stateful render');
         instance = this;
         return <div>Hello</div>;
       }
@@ -128,14 +132,17 @@ describe('ReactFragment', () => {
 
     var instanceB = instance;
 
+    expect(ops).toEqual(['Stateful render', 'Stateful render']);
     expect(instanceB).not.toBe(instanceA);
   });
 
-  it('should preserve state in a reorder', function() {
+  it('should preserve state of children in a reorder', function() {
     var instance = null;
+    var ops = [];
 
     class Stateful extends React.Component {
       render() {
+        ops.push('Stateful render');
         instance = this;
         return <div>Hello</div>;
       }
@@ -169,6 +176,81 @@ describe('ReactFragment', () => {
 
     var instanceB = instance;
 
+    expect(ops).toEqual(['Stateful render', 'Stateful render']);
     expect(instanceB).toBe(instanceA);
+  });
+
+  it('should preserve state of children when the keys are same', function() {
+    var instance = null;
+    var ops = [];
+
+    class Stateful extends React.Component {
+      render() {
+        ops.push('Stateful render');
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition
+        ? <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        : <React.Fragment key="a">
+            <Stateful />
+            <span>World</span>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(ops).toEqual(['Stateful render', 'Stateful render']);
+    expect(instanceB).toBe(instanceA);
+  });
+
+  it('should not preserve state of children when the keys are different', function() {
+    var instance = null;
+    var ops = [];
+
+    class Stateful extends React.Component {
+      render() {
+        ops.push('Stateful render');
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition
+        ? <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        : <React.Fragment key="b">
+            <Stateful />
+            <span>World</span>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(ops).toEqual(['Stateful render', 'Stateful render']);
+    expect(instanceB).not.toBe(instanceA);
   });
 });
