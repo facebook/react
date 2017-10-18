@@ -124,7 +124,6 @@ function ignoreFBModules() {
   return [
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
-    'ReactDOMFeatureFlags',
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
     'ReactCurrentOwner',
@@ -297,13 +296,27 @@ function getAliases(paths, bundleType, moduleType, extractErrors) {
   );
 }
 
-function getDefaultReplaceModules(bundleType, bundleModulesToStub) {
+function replaceFeatureFlags(featureFlags) {
+  if (!featureFlags) {
+    return {};
+  }
+  return {
+    "'ReactFeatureFlags'": `'${resolve(featureFlags)}'`,
+  };
+}
+
+function getDefaultReplaceModules(
+  bundleType,
+  bundleModulesToStub,
+  featureFlags
+) {
   return Object.assign(
     {},
     replaceFbjsModuleAliases(bundleType),
     replaceDevOnlyStubbedModules(bundleType),
     replaceLegacyModuleAliases(bundleType),
-    replaceBundleStubModules(bundleModulesToStub)
+    replaceBundleStubModules(bundleModulesToStub),
+    replaceFeatureFlags(featureFlags)
   );
 }
 

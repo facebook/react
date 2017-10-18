@@ -10,8 +10,20 @@
 
 'use strict';
 
-var ReactFeatureFlags = {
+export type FeatureFlags = {|
+  enableAsyncSubtreeAPI: boolean,
+  enableAsyncSchedulingByDefaultInReactDOM: boolean,
+|};
+
+var ReactFeatureFlags: FeatureFlags = {
   enableAsyncSubtreeAPI: true,
+  enableAsyncSchedulingByDefaultInReactDOM: false,
 };
+
+if (__DEV__) {
+  if (Object.freeze) {
+    Object.freeze(ReactFeatureFlags);
+  }
+}
 
 module.exports = ReactFeatureFlags;

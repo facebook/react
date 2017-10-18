@@ -372,7 +372,8 @@ function getPlugins(
   hasteName,
   moduleType,
   manglePropertiesOnProd,
-  modulesToStub
+  modulesToStub,
+  featureFlags
 ) {
   const plugins = [
     babel(updateBabelConfig(babelOpts, bundleType)),
@@ -383,7 +384,8 @@ function getPlugins(
 
   const replaceModules = Modules.getDefaultReplaceModules(
     bundleType,
-    modulesToStub
+    modulesToStub,
+    featureFlags
   );
 
   // We have to do this check because Rollup breaks on empty object.
@@ -525,7 +527,8 @@ function createBundle(bundle, bundleType) {
       bundle.hasteName,
       bundle.moduleType,
       bundle.manglePropertiesOnProd,
-      bundle.modulesToStub
+      bundle.modulesToStub,
+      bundle.featureFlags
     ),
   })
     .then(result =>
