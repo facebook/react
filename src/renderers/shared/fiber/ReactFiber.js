@@ -320,7 +320,12 @@ exports.createFiberFromElement = function(
     fiber.pendingProps = element.props;
   } else if (type === REACT_FRAGMENT_TYPE) {
     // special case for fragments; create the fiber and return early
-    return createFiberFromFragment(element.props.children, internalContextTag, expirationTime, key);
+    return createFiberFromFragment(
+      element.props.children,
+      internalContextTag,
+      expirationTime,
+      key,
+    );
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
@@ -379,13 +384,14 @@ function createFiberFromFragment(
   elements: ReactFragment,
   internalContextTag: TypeOfInternalContext,
   expirationTime: ExpirationTime,
-  key: String | null,
+  key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, key, internalContextTag);
+  fiber.type = REACT_FRAGMENT_TYPE;
   fiber.pendingProps = elements;
   fiber.expirationTime = expirationTime;
   return fiber;
-};
+}
 
 exports.createFiberFromFragment = createFiberFromFragment;
 

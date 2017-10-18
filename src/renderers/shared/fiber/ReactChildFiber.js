@@ -380,16 +380,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (
-      current !== null &&
-      (current.type === element.type ||
-      (current.tag === Fragment && element.type === REACT_FRAGMENT_TYPE))
-    ) {
+    if (current !== null && current.type === element.type) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
-      existing.pendingProps = current.tag === Fragment &&
-        element.type === REACT_FRAGMENT_TYPE
+      existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
         ? element.props.children
         : element.props;
       existing.return = returnFiber;
@@ -1221,21 +1216,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, expirationTime);
           existing.ref = coerceRef(child, element);
-          existing.pendingProps = element.props;
-          existing.return = returnFiber;
-          if (__DEV__) {
-            existing._debugSource = element._source;
-            existing._debugOwner = element._owner;
-          }
-          return existing;
-        } else if (
-          child.tag === Fragment &&
-          element.type === REACT_FRAGMENT_TYPE
-        ) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, expirationTime);
-          existing.ref = coerceRef(child, element);
-          existing.pendingProps = element.props.children;
+          existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
+            ? element.props.children
+            : element.props;
           existing.return = returnFiber;
           if (__DEV__) {
             existing._debugSource = element._source;
@@ -1389,10 +1372,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          if (
-            newChild.type === REACT_FRAGMENT_TYPE &&
-            newChild.key === null
-          ) {
+          if (newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null) {
             return reconcileChildrenArray(
               returnFiber,
               currentFirstChild,
