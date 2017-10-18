@@ -372,7 +372,6 @@ function getPlugins(
   hasteName,
   moduleType,
   manglePropertiesOnProd,
-  useFiber,
   modulesToStub
 ) {
   const plugins = [
@@ -526,7 +525,6 @@ function createBundle(bundle, bundleType) {
       bundle.hasteName,
       bundle.moduleType,
       bundle.manglePropertiesOnProd,
-      bundle.useFiber,
       bundle.modulesToStub
     ),
   })

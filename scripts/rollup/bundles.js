@@ -293,7 +293,6 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    useFiber: true,
   },
 
   /******* React Native RT *******/
@@ -327,7 +326,6 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    useFiber: true,
   },
 
   /******* React Native CS *******/
@@ -353,7 +351,6 @@ const bundles = [
       'src/ReactVersion.js',
       'src/shared/**/*.js',
     ],
-    useFiber: true,
   },
 
   /******* React Test Renderer *******/
