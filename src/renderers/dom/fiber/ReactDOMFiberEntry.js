@@ -175,12 +175,21 @@ var DOMRenderer = ReactFiberReconciler({
         namespace = root ? root.namespaceURI : getChildNamespace(null, '');
         break;
       }
-      default: {
-        const container: any = nodeType === COMMENT_NODE
-          ? rootContainerInstance.parentNode
-          : rootContainerInstance;
+      case COMMENT_NODE: {
+        invariant(
+          rootContainerInstance.parentNode !== null,
+          'The commentNode which you are rendering into must have a parent.',
+        );
+        const container: any =
+          rootContainerInstance.parentNode || rootContainerInstance;
         const ownNamespace = container.namespaceURI || null;
         type = container.tagName;
+        namespace = getChildNamespace(ownNamespace, type);
+        break;
+      }
+      default: {
+        const ownNamespace = rootContainerInstance.namespaceURI || null;
+        type = rootContainerInstance.tagName;
         namespace = getChildNamespace(ownNamespace, type);
         break;
       }
