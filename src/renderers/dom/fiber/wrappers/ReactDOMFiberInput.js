@@ -14,7 +14,8 @@ type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
     initialValue: ?string,
     initialChecked: ?boolean,
-    controlled?: boolean,
+    controlled: boolean,
+    detached: boolean,
   },
 };
 
@@ -141,6 +142,7 @@ var ReactDOMInput = {
         : props.defaultChecked,
       initialValue: props.value != null ? props.value : defaultValue,
       controlled: isControlled(props),
+      detached: false,
     };
   },
 
@@ -218,6 +220,13 @@ var ReactDOMInput = {
       }
     } else {
       if (props.value == null && props.defaultValue != null) {
+        // Whenever setting defaultValue, ensure that the value
+        // property is detatched
+        if (node._wrapperState.detached === false) {
+          node.value = node.value;
+          node._wrapperState.detached = true;
+        }
+
         // In Chrome, assigning defaultValue to certain input types triggers input validation.
         // For number inputs, the display value loses trailing decimal points. For email inputs,
         // Chrome raises "The specified value <x> is not a valid email address".
@@ -239,16 +248,7 @@ var ReactDOMInput = {
   postMountWrapper: function(element: Element, props: Object) {
     var node = ((element: any): InputWithWrapperState);
 
-    // Detach value from defaultValue. We won't do anything if we're working on
-    // submit or reset inputs as those values & defaultValues are linked. They
-    // are not resetable nodes so this operation doesn't matter and actually
-    // removes browser-default values (eg "Submit Query") when no value is
-    // provided.
-
     switch (props.type) {
-      case 'submit':
-      case 'reset':
-        break;
       case 'color':
       case 'date':
       case 'datetime':
@@ -258,11 +258,13 @@ var ReactDOMInput = {
       case 'week':
         // This fixes the no-show issue on iOS Safari and Android Chrome:
         // https://github.com/facebook/react/issues/7233
-        node.value = '';
-        node.value = node.defaultValue;
+        //
+        // Important: use setAttribute instead of node.type = "x" to avoid
+        // an exception in IE10/11 due to an unrecognized input type
+        node.setAttribute('type', 'text');
+        node.setAttribute('type', props.type);
         break;
       default:
-        node.value = node.value;
         break;
     }
 

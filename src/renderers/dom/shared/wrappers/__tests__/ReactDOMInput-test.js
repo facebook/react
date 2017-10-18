@@ -1190,7 +1190,6 @@ describe('ReactDOMInput', () => {
       'set min',
       'set max',
       'set value',
-      'set value',
       'set checked',
       'set checked',
     ]);
@@ -1232,11 +1231,6 @@ describe('ReactDOMInput', () => {
     spyOn(document, 'createElement').and.callFake(function(type) {
       var el = originalCreateElement.apply(this, arguments);
       if (type === 'input') {
-        Object.defineProperty(el, 'value', {
-          set: function(val) {
-            log.push(`node.value = ${strify(val)}`);
-          },
-        });
         spyOn(el, 'setAttribute').and.callFake(function(name, val) {
           log.push(`node.setAttribute(${strify(name)}, ${strify(val)})`);
         });
@@ -1250,8 +1244,8 @@ describe('ReactDOMInput', () => {
     expect(log).toEqual([
       'node.setAttribute("type", "date")',
       'node.setAttribute("value", "1980-01-01")',
-      'node.value = ""',
-      'node.value = ""',
+      'node.setAttribute("type", "text")',
+      'node.setAttribute("type", "date")',
       'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
