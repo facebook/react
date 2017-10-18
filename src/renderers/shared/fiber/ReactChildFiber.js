@@ -1412,7 +1412,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          // is this right?
           if (newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null) {
             return reconcileChildrenArray(
               returnFiber,

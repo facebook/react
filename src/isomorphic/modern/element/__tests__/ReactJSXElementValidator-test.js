@@ -108,17 +108,13 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('does not warns for fragments of multiple elements without keys', () => {
-    spyOn(console, 'error');
-
+  it('does not warn for fragments of multiple elements without keys', () => {
     ReactTestUtils.renderIntoDocument(
       <React.Fragment>
         <span>1</span>
         <span>2</span>
       </React.Fragment>,
     );
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('warns for fragments of multiple elements with same key', () => {
@@ -134,11 +130,11 @@ describe('ReactJSXElementValidator', () => {
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Encountered two children with the same key',
+      'Encountered two children with the same key, `a`.',
     );
   });
 
-  it('does not warns for arrays of elements with keys', () => {
+  it('does not warn for arrays of elements with keys', () => {
     spyOn(console, 'error');
 
     ReactTestUtils.renderIntoDocument(
@@ -148,7 +144,7 @@ describe('ReactJSXElementValidator', () => {
     expectDev(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warns for iterable elements with keys', () => {
+  it('does not warn for iterable elements with keys', () => {
     spyOn(console, 'error');
 
     var iterable = {
@@ -193,24 +189,16 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('does not warn when the element is directly as children', () => {
-    spyOn(console, 'error');
-
-    void (
+    ReactTestUtils.renderIntoDocument(
       <Component>
         <Component />
         <Component />
-      </Component>
+      </Component>,
     );
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the child array contains non-elements', () => {
-    spyOn(console, 'error');
-
     void <Component>{[{}, {}]}</Component>;
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should give context for PropType errors in nested components.', () => {
