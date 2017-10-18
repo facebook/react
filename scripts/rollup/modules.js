@@ -124,7 +124,6 @@ function ignoreFBModules() {
   return [
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
-    'ReactDOMFeatureFlags',
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
     'ReactCurrentOwner',

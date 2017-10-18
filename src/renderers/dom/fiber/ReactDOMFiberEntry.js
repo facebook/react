@@ -17,8 +17,8 @@ var DOMNamespaces = require('DOMNamespaces');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactControlledComponent = require('ReactControlledComponent');
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMFeatureFlags = require('ReactDOMFeatureFlags');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactGenericBatching = require('ReactGenericBatching');
@@ -632,7 +632,7 @@ var DOMRenderer = ReactFiberReconciler({
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
-  useSyncScheduling: !ReactDOMFeatureFlags.fiberAsyncScheduling,
+  useSyncScheduling: !ReactFeatureFlags.enableAsyncSchedulingByDefaultInReactDOM,
 });
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(

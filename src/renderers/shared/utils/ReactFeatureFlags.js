@@ -12,6 +12,13 @@
 
 var ReactFeatureFlags = {
   enableAsyncSubtreeAPI: true,
+  enableAsyncSchedulingByDefaultInReactDOM: false,
 };
+
+if (__DEV__) {
+  if (Object.freeze) {
+    Object.freeze(ReactFeatureFlags);
+  }
+}
 
 module.exports = ReactFeatureFlags;
