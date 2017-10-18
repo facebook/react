@@ -67,6 +67,13 @@ var HTMLDOMPropertyConfig = {
     spellCheck: HAS_STRING_BOOLEAN_VALUE,
     // Style must be explicitly set in the attribute list. React components
     // expect a style object
+    src: 0,
+    srcDoc: 0,
+    srcLang: 0,
+    srcSet: 0,
+    srcObject: MUST_USE_PROPERTY,
+    start: HAS_NUMERIC_VALUE,
+    step: 0,
     style: 0,
     // Keep it in the whitelist because it is case-sensitive for SVG.
     tabIndex: 0,
