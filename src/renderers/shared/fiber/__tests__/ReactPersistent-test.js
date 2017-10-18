@@ -187,5 +187,15 @@ describe('ReactPersistent', () => {
     expect(newPortalChildren[0].children[0]).toBe(
       originalPortalChildren[0].children[0],
     );
+
+    // Deleting the Portal, should clear its children
+    render(<Parent />);
+    ReactNoop.flush();
+
+    var clearedPortalChildren = ReactNoop.getChildren(portalID);
+    expect(clearedPortalChildren).toEqual([]);
+
+    // The original is unchanged.
+    expect(newPortalChildren).toEqual([div(span(), 'Hello ', 'World')]);
   });
 });

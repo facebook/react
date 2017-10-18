@@ -228,6 +228,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // the portal will get pushed immediately.
         if (config.mutation) {
           unmountHostComponents(current);
+        } else if (config.persistence) {
+          emptyPortalContainer(current);
         }
         return;
       }
@@ -289,7 +291,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // Noop
       };
     } else {
-      const {replaceContainer} = config.persistence;
+      const {replaceContainer, cloneContainer} = config.persistence;
+      var emptyPortalContainer = function(current: Fiber) {
+        const portal: {containerInfo: C, pendingContainerInfo: C} =
+          current.stateNode;
+        const {containerInfo, pendingContainerInfo} = portal;
+        const emptyContainer = cloneContainer(
+          containerInfo,
+          pendingContainerInfo,
+        );
+        replaceContainer(containerInfo, emptyContainer);
+      };
       commitContainer = function(finishedWork: Fiber) {
         switch (finishedWork.tag) {
           case ClassComponent: {
