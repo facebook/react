@@ -37,6 +37,9 @@ var eventTypes = {
       'topKeyDown',
       'topKeyUp',
       'topSelectionChange',
+      'topCompositionStart',
+      'topCompositionUpdate',
+      'topCompositionEnd',
     ],
   },
 };
@@ -59,6 +62,11 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
  */
 var activeElement = null;
 var activeElementInst = null;
+
+/**
+ * For composition events
+ */
+var lastTopLevelType = null;
 
 /**
  * SECTION: handle `change` event
@@ -220,7 +228,18 @@ function getTargetInstForClickEvent(topLevelType, targetInst) {
 }
 
 function getTargetInstForInputOrChangeEvent(topLevelType, targetInst) {
-  if (topLevelType === 'topInput' || topLevelType === 'topChange') {
+  if (inComposition(topLevelType)) {
+    return;
+  } else if (
+    topLevelType === 'topInput' && lastTopLevelType === 'topCompositionEnd'
+  ) {
+    return getInstIfValueChanged(targetInst);
+  } else if (
+    topLevelType === 'topKeyUp' && lastTopLevelType === 'topCompositionEnd'
+  ) {
+    // Chrome fires 'compositionEnd' event after 'input' event.
+    return getInstIfValueChanged(targetInst);
+  } else if (topLevelType === 'topInput' || topLevelType === 'topChange') {
     return getInstIfValueChanged(targetInst);
   }
 }
@@ -243,6 +262,16 @@ function handleControlledInputBlur(inst, node) {
   if (node.getAttribute('value') !== value) {
     node.setAttribute('value', value);
   }
+}
+
+var isComposing = false;
+function inComposition(topLevelType) {
+  if (topLevelType === 'topCompositionStart') {
+    isComposing = true;
+  } else if (topLevelType === 'topCompositionEnd') {
+    isComposing = false;
+  }
+  return isComposing;
 }
 
 /**
@@ -286,6 +315,7 @@ var ChangeEventPlugin = {
 
     if (getTargetInstFunc) {
       var inst = getTargetInstFunc(topLevelType, targetInst);
+      lastTopLevelType = topLevelType;
       if (inst) {
         var event = createAndAccumulateChangeEvent(
           inst,

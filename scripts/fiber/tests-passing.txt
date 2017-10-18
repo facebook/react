@@ -1861,6 +1861,13 @@ src/renderers/dom/shared/eventPlugins/__tests__/ChangeEventPlugin-test.js
 * should deduplicate input value change events
 * should listen for both change and input events when supported
 * should only fire events when the value changes for range inputs
+* should only fire change once on Chrome
+* should only fire change once on Chrome under 53
+* should only fire change once on Firefox
+* should only fire change once on IE9
+* should only fire change once on IE10
+* should only fire change once on IE11
+* should only fire change once on Edge
 
 src/renderers/dom/shared/eventPlugins/__tests__/EnterLeaveEventPlugin-test.js
 * should set relatedTarget properly in iframe

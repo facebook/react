@@ -219,4 +219,179 @@ describe('ChangeEventPlugin', () => {
     ReactTestUtils.SimulateNative.change(input);
     expect(called).toBe(2);
   });
+
+  describe('composition events', () => {
+    function simulateEvent(inst, event) {
+      ReactTestUtils.SimulateNative[event](inst);
+    }
+
+    function TestCompositionEvent(Scenario) {
+      var called = 0;
+      var value = null;
+
+      function cb(e) {
+        called += 1;
+        value = e.target.value;
+      }
+
+      var input = ReactTestUtils.renderIntoDocument(
+        <input type="text" onChange={cb} />,
+      );
+
+      Scenario.forEach(el => {
+        el.run.apply(null, [input].concat(el.args));
+      });
+
+      expect(called).toBe(1);
+      expect(value).toBe('你');
+    }
+
+    var Scenario = {
+      ChromeUnder53: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['textInput']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+      ],
+      Chrome: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['textInput']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['keyUp']},
+      ],
+      Firefox: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+      ],
+      IE9: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['keyUp']},
+      ],
+      IE10: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+      ],
+      IE11: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['compositionUpdate']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['input']},
+        {run: simulateEvent, args: ['keyUp']},
+      ],
+      Edge: [
+        {run: setUntrackedValue, args: ['n']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionStart']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['ni']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['keyUp']},
+        {run: setUntrackedValue, args: ['你']},
+        {run: simulateEvent, args: ['keyDown']},
+        {run: simulateEvent, args: ['compositionEnd']},
+        {run: simulateEvent, args: ['input']},
+      ],
+    };
+
+    it('should only fire change once on Chrome', () => {
+      TestCompositionEvent(Scenario.Chrome);
+    });
+
+    it('should only fire change once on Chrome under 53', () => {
+      TestCompositionEvent(Scenario.ChromeUnder53);
+    });
+
+    it('should only fire change once on Firefox', () => {
+      TestCompositionEvent(Scenario.Firefox);
+    });
+
+    it('should only fire change once on IE9', () => {
+      TestCompositionEvent(Scenario.IE9);
+    });
+
+    it('should only fire change once on IE10', () => {
+      TestCompositionEvent(Scenario.IE10);
+    });
+
+    it('should only fire change once on IE11', () => {
+      TestCompositionEvent(Scenario.IE11);
+    });
+
+    it('should only fire change once on Edge', () => {
+      TestCompositionEvent(Scenario.Edge);
+    });
+  });
 });
