@@ -233,5 +233,12 @@
   "231": "Expected `%s` listener to be a function, instead got a value of `%s` type.",
   "232": "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.createPortal).",
   "233": "Unsupported top level event type \"%s\" dispatched",
-  "234": "Event cannot be both direct and bubbling: %s"
+  "234": "Event cannot be both direct and bubbling: %s",
+  "235": "Persistent reconciler is disabled.",
+  "236": "Noop reconciler is disabled.",
+  "237": "Mutating reconciler is disabled.",
+  "238": "Task updates can only be scheduled as a nested update or inside batchedUpdates. This error is likely caused by a bug in React. Please file an issue.",
+  "239": "Measure not implemented yet",
+  "240": "Text components are not supported for now.",
+  "241": "Text components are not yet supported."
 }
