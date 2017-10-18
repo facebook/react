@@ -101,4 +101,27 @@ describe('ReactPersistent', () => {
     // Reused node should have reference equality
     expect(newChildren[0].children[0]).toBe(originalChildren[0].children[0]);
   });
+
+  it('can update child text nodes', () => {
+    function Foo(props) {
+      return (
+        <div>
+          {props.text}
+          <span />
+        </div>
+      );
+    }
+
+    render(<Foo text="Hello" />);
+    ReactNoop.flush();
+    var originalChildren = getChildren();
+    expect(originalChildren).toEqual([div('Hello', span())]);
+
+    render(<Foo text="World" />);
+    ReactNoop.flush();
+    var newChildren = getChildren();
+    expect(newChildren).toEqual([div('World', span())]);
+
+    expect(originalChildren).toEqual([div('Hello', span())]);
+  });
 });
