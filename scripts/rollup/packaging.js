@@ -19,23 +19,23 @@ const RN_PROD = Bundles.bundleTypes.RN_PROD;
 const facebookWWW = 'facebook-www';
 // these files need to be copied to the facebook-www build
 const facebookWWWSrcDependencies = [
-  'src/renderers/dom/shared/eventPlugins/TapEventPlugin.js',
+  'packages/react-dom/src/shared/eventPlugins/TapEventPlugin.js',
 ];
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
-  'src/renderers/shared/fiber/isomorphic/ReactTypes.js',
-  'src/renderers/native/ReactNativeTypes.js',
+  'packages/react-reconciler/src/isomorphic/ReactTypes.js',
+  'packages/react-native-renderer/src/ReactNativeTypes.js',
 ];
 
-// these files need to be copied to the react-native-rt build
+// these files need to be copied to the react-rt build
 const reactNativeRTSrcDependencies = [
-  'src/renderers/native-rt/ReactNativeRTTypes.js',
+  'packages/react-rt-renderer/src/ReactNativeRTTypes.js',
 ];
 
-// these files need to be copied to the react-native-cs build
+// these files need to be copied to the react-cs build
 const reactNativeCSSrcDependencies = [
-  'src/renderers/native-cs/ReactNativeCSTypes.js',
+  'packages/react-cs-renderer/src/ReactNativeCSTypes.js',
 ];
 
 function getPackageName(name) {
@@ -68,12 +68,12 @@ function createReactNativeBuild() {
 }
 
 function createReactNativeRTBuild() {
-  // create the react-native-rt folder for FB bundles
-  fs.mkdirSync(join('build', 'react-native-rt'));
-  // create the react-native-rt shims folder for FB shims
-  fs.mkdirSync(join('build', 'react-native-rt', 'shims'));
+  // create the react-rt folder for FB bundles
+  fs.mkdirSync(join('build', 'react-rt'));
+  // create the react-rt shims folder for FB shims
+  fs.mkdirSync(join('build', 'react-rt', 'shims'));
 
-  const to = join('build', 'react-native-rt', 'shims');
+  const to = join('build', 'react-rt', 'shims');
 
   let promises = [];
   // we also need to copy over some specific files from src
@@ -87,12 +87,12 @@ function createReactNativeRTBuild() {
 }
 
 function createReactNativeCSBuild() {
-  // create the react-native-cs folder for FB bundles
-  fs.mkdirSync(join('build', 'react-native-cs'));
-  // create the react-native-cs shims folder for FB shims
-  fs.mkdirSync(join('build', 'react-native-cs', 'shims'));
+  // create the react-cs folder for FB bundles
+  fs.mkdirSync(join('build', 'react-cs'));
+  // create the react-cs shims folder for FB shims
+  fs.mkdirSync(join('build', 'react-cs', 'shims'));
 
-  const to = join('build', 'react-native-cs', 'shims');
+  const to = join('build', 'react-cs', 'shims');
 
   let promises = [];
   // we also need to copy over some specific files from src
@@ -170,15 +170,24 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
 function copyNodePackageTemplate(packageName) {
   const from = resolve(`./packages/${packageName}`);
   const to = resolve(`./build/packages/${packageName}`);
-
-  // if the package directory already exists, we skip copying to it
-  if (!fs.existsSync(to) && fs.existsSync(from)) {
-    return asyncCopyTo(from, to).then(() =>
-      asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`)
-    );
-  } else {
+  const npmFrom = resolve(`${from}/npm`);
+  if (!fs.existsSync(npmFrom)) {
+    // The package is not meant for npm consumption.
     return Promise.resolve();
   }
+  if (fs.existsSync(to)) {
+    // We already created this package (e.g. due to another entry point).
+    return Promise.resolve();
+  }
+  // TODO: verify that all copied files are either in the "files"
+  // whitelist or implicitly published by npm.
+  return asyncCopyTo(npmFrom, to).then(() =>
+    Promise.all([
+      asyncCopyTo(resolve(`${from}/package.json`), `${to}/package.json`),
+      asyncCopyTo(resolve(`${from}/README.md`), `${to}/README.md`),
+      asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`),
+    ])
+  );
 }
 
 function createNodePackage(bundleType, packageName, filename) {
@@ -200,9 +209,9 @@ function getPackageDestination(config, bundleType, filename, hasteName) {
     dest = `${config.destDir}dist/${filename}`;
   } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
     if (hasteName === 'ReactNativeRTFiber') {
-      dest = `${config.destDir}react-native-rt/${filename}`;
+      dest = `${config.destDir}react-rt/${filename}`;
     } else if (hasteName === 'ReactNativeCSFiber') {
-      dest = `${config.destDir}react-native-cs/${filename}`;
+      dest = `${config.destDir}react-cs/${filename}`;
     } else {
       dest = `${config.destDir}react-native/${filename}`;
     }

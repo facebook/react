@@ -8,9 +8,9 @@ const moduleTypes = require('./bundles').moduleTypes;
 const extractErrorCodes = require('../error-codes/extract-errors');
 
 const exclude = [
-  'src/**/__benchmarks__/**/*.js',
-  'src/**/__tests__/**/*.js',
-  'src/**/__mocks__/**/*.js',
+  '**/__benchmarks__/**/*.js',
+  '**/__tests__/**/*.js',
+  '**/__mocks__/**/*.js',
 ];
 
 const UMD_DEV = bundleTypes.UMD_DEV;
@@ -184,7 +184,9 @@ function getInternalModules() {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
   return {
-    reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+    reactProdInvariant: resolve(
+      './packages/shared/src/utils/reactProdInvariant.js'
+    ),
   };
 }
 

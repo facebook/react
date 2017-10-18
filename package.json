@@ -1,6 +1,9 @@
 {
   "private": true,
   "version": "16.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "devDependencies": {
     "art": "^0.10.1",
     "async": "^1.5.0",
@@ -112,6 +115,9 @@
     "transform": {
       ".*": "./scripts/jest/preprocessor.js"
     },
+    "transformIgnorePatterns": [
+      "/node_modules/(?!react)"
+    ],
     "setupFiles": [
       "./scripts/jest/setup.js",
       "./scripts/jest/environment.js"
@@ -126,11 +132,11 @@
       "ts"
     ],
     "roots": [
-      "<rootDir>/scripts",
-      "<rootDir>/src"
+      "<rootDir>/packages",
+      "<rootDir>/scripts"
     ],
     "collectCoverageFrom": [
-      "src/**/*.js"
+      "packages/**/*.js"
     ],
     "timers": "fake"
   }
