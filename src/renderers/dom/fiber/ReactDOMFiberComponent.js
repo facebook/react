@@ -298,6 +298,14 @@ function setInitialDOMProperties(
         ensureListeningTo(rootContainerElement, propKey);
       }
     } else if (isCustomComponentTag) {
+      /* Suggested fix?
+       *
+       * if ((DOMProperty.getPropertyInfo(propKey))) {
+       *   DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
+       * } else {
+       *   DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
+       * }
+      */
       DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (nextProp != null) {
       // If we're updating to null or undefined, we should remove the property
