@@ -172,6 +172,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     config,
     hostContext,
     hydrationContext,
+    blockCurrentlyRenderingRoot,
   );
   const {
     commitResetTextContent,
@@ -216,6 +217,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   let nextUnitOfWork: Fiber | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = NoWork;
+  // The root that we're currently working on.
+  let nextRenderedTree: FiberRoot | null = null;
+  // Whether the root we're currently working on is blocked from committing.
+  let nextCommitIsBlocked: boolean = false;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
@@ -248,7 +253,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   // Use these to prevent an infinite loop of nested updates
   const NESTED_UPDATE_LIMIT = 1000;
   let nestedUpdateCount: number = 0;
-  let nextRenderedTree: FiberRoot | null = null;
 
   function resetContextStack() {
     // Reset the stack
@@ -286,13 +290,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let earliestExpirationRoot = null;
     let earliestExpirationTime = NoWork;
     while (root !== null) {
-      if (
-        root.current.expirationTime !== NoWork &&
-        (earliestExpirationTime === NoWork ||
-          earliestExpirationTime > root.current.expirationTime)
-      ) {
-        earliestExpirationTime = root.current.expirationTime;
-        earliestExpirationRoot = root;
+      if (root.isBlocked) {
+        // TODO: Process completion callbacks
+      } else {
+        if (
+          root.current.expirationTime !== NoWork &&
+          (earliestExpirationTime === NoWork ||
+            earliestExpirationTime > root.current.expirationTime)
+        ) {
+          earliestExpirationTime = root.current.expirationTime;
+          earliestExpirationRoot = root;
+        }
       }
       // We didn't find anything to do in this root, so let's try the next one.
       root = root.nextScheduledRoot;
@@ -306,22 +314,44 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       // unfortunately this is it.
       resetContextStack();
 
-      nextUnitOfWork = createWorkInProgress(
-        earliestExpirationRoot.current,
-        earliestExpirationTime,
-      );
+      if (earliestExpirationRoot.completedAt === nextRenderExpirationTime) {
+        // If the root is already complete, reuse the existing work-in-progress.
+        // TODO: This is a limited version of resuming that only applies to
+        // the root, to account for the pathological case where a completed
+        // root must be completely restarted before it can commit. Once we
+        // implement resuming for real, this special branch shouldn't
+        // be neccessary.
+        nextUnitOfWork = earliestExpirationRoot.current.alternate;
+        invariant(
+          nextUnitOfWork !== null,
+          'Expected a completed root to have a work-in-progress. This error ' +
+            'is likely caused by a bug in React. Please file an issue.',
+        );
+      } else {
+        nextUnitOfWork = createWorkInProgress(
+          earliestExpirationRoot.current,
+          earliestExpirationTime,
+        );
+      }
+
       if (earliestExpirationRoot !== nextRenderedTree) {
         // We've switched trees. Reset the nested update counter.
         nestedUpdateCount = 0;
         nextRenderedTree = earliestExpirationRoot;
       }
+      nextCommitIsBlocked = false;
       return;
     }
 
     nextRenderExpirationTime = NoWork;
     nextUnitOfWork = null;
     nextRenderedTree = null;
+    nextCommitIsBlocked = false;
     return;
+  }
+
+  function blockCurrentlyRenderingRoot() {
+    nextCommitIsBlocked = true;
   }
 
   function commitAllHostEffects() {
@@ -448,6 +478,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         'related to the return field. This error is likely caused by a bug ' +
         'in React. Please file an issue.',
     );
+    root.completedAt = NoWork;
 
     if (nextRenderExpirationTime <= mostRecentCurrentTime) {
       // Keep track of the number of iterations to prevent an infinite
@@ -702,10 +733,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         workInProgress = returnFiber;
         continue;
       } else {
-        // We've reached the root. Mark the root as pending commit. Depending
-        // on how much time we have left, we'll either commit it now or in
-        // the next frame.
-        pendingCommit = workInProgress;
+        // We've reached the root.
+        const root: FiberRoot = workInProgress.stateNode;
+        root.completedAt = nextRenderExpirationTime;
+        if (nextCommitIsBlocked) {
+          root.isBlocked = true;
+        } else {
+          pendingCommit = workInProgress;
+        }
         return null;
       }
     }
@@ -808,13 +843,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         }
         if (nextUnitOfWork === null) {
-          invariant(
-            pendingCommit !== null,
-            'Should have a pending commit. This error is likely caused by ' +
-              'a bug in React. Please file an issue.',
-          );
-          // We just completed a root. Commit it now.
-          commitAllWork(pendingCommit);
+          if (pendingCommit !== null) {
+            // We just completed a root. Commit it now.
+            commitAllWork(pendingCommit);
+          }
           if (
             capturedErrors === null ||
             capturedErrors.size === 0 ||
@@ -856,15 +888,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         while (nextUnitOfWork !== null) {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
           if (nextUnitOfWork === null) {
-            invariant(
-              pendingCommit !== null,
-              'Should have a pending commit. This error is likely caused by ' +
-                'a bug in React. Please file an issue.',
-            );
-            // We just completed a root. Commit it now.
-            commitAllWork(pendingCommit);
-            // Clear any errors that were scheduled during the commit phase.
-            handleCommitPhaseErrors();
+            if (pendingCommit !== null) {
+              // We just completed a root. Commit it now.
+              commitAllWork(pendingCommit);
+              // Clear any errors that were scheduled during the commit phase.
+              handleCommitPhaseErrors();
+            }
             // The render time may have changed. Check again.
             if (
               nextRenderExpirationTime === NoWork ||
@@ -886,28 +915,26 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
             // omit either of the checks in the following condition, but we need
             // both to satisfy Flow.
             if (nextUnitOfWork === null) {
-              invariant(
-                pendingCommit !== null,
-                'Should have a pending commit. This error is likely caused by ' +
-                  'a bug in React. Please file an issue.',
-              );
-              // We just completed a root. If we have time, commit it now.
-              // Otherwise, we'll commit it in the next frame.
-              if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-                commitAllWork(pendingCommit);
-                // Clear any errors that were scheduled during the commit phase.
-                handleCommitPhaseErrors();
-                // The render time may have changed. Check again.
-                if (
-                  nextRenderExpirationTime === NoWork ||
-                  nextRenderExpirationTime > minExpirationTime ||
-                  nextRenderExpirationTime <= mostRecentCurrentTime
-                ) {
-                  // We've completed all the async work.
-                  break;
+              if (pendingCommit !== null) {
+                // We just completed a root. If we have time, commit it now.
+                // Otherwise, we'll commit it in the next frame.
+                if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+                  commitAllWork(pendingCommit);
+                  // Clear any errors that were scheduled during the
+                  // commit phase.
+                  handleCommitPhaseErrors();
+                } else {
+                  deadlineHasExpired = true;
                 }
-              } else {
-                deadlineHasExpired = true;
+              }
+              // The render time may have changed. Check again.
+              if (
+                nextRenderExpirationTime === NoWork ||
+                nextRenderExpirationTime > minExpirationTime ||
+                nextRenderExpirationTime <= mostRecentCurrentTime
+              ) {
+                // We've completed all the async work.
+                break;
               }
             }
           } else {
@@ -1354,25 +1381,6 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  function scheduleRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-    if (expirationTime === NoWork) {
-      return;
-    }
-
-    if (!root.isScheduled) {
-      root.isScheduled = true;
-      if (lastScheduledRoot) {
-        // Schedule ourselves to the end.
-        lastScheduledRoot.nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      } else {
-        // We're the only work scheduled.
-        nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      }
-    }
-  }
-
   function computeAsyncExpiration() {
     // Given the current clock time, returns an expiration time. We use rounding
     // to batch like updates together.
@@ -1461,17 +1469,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     let node = fiber;
     let shouldContinue = true;
     while (node !== null && shouldContinue) {
-      // Walk the parent path to the root and update each node's expiration
-      // time. Once we reach a node whose expiration matches (and whose
-      // alternate's expiration matches) we can exit safely knowing that the
-      // rest of the path is correct.
-      shouldContinue = false;
+      // Walk the parent path to the root and update each node's
+      // expiration time.
       if (
         node.expirationTime === NoWork ||
         node.expirationTime > expirationTime
       ) {
-        // Expiration time did not match. Update and keep going.
-        shouldContinue = true;
         node.expirationTime = expirationTime;
       }
       if (node.alternate !== null) {
@@ -1479,15 +1482,29 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           node.alternate.expirationTime === NoWork ||
           node.alternate.expirationTime > expirationTime
         ) {
-          // Expiration time did not match. Update and keep going.
-          shouldContinue = true;
           node.alternate.expirationTime = expirationTime;
         }
       }
       if (node.return === null) {
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
-          scheduleRoot(root, expirationTime);
+
+          // Set this to false in case the root has been unblocked.
+          root.isBlocked = false;
+
+          if (!root.isScheduled) {
+            root.isScheduled = true;
+            if (lastScheduledRoot) {
+              // Schedule ourselves to the end.
+              lastScheduledRoot.nextScheduledRoot = root;
+              lastScheduledRoot = root;
+            } else {
+              // We're the only work scheduled.
+              nextScheduledRoot = root;
+              lastScheduledRoot = root;
+            }
+          }
+
           if (!isPerformingWork) {
             switch (expirationTime) {
               case Sync:
@@ -1535,10 +1552,35 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   }
 
   function recalculateCurrentTime(): ExpirationTime {
+    if (nextRenderedTree !== null) {
+      // Check if the current root is being force expired.
+      const forceExpire = nextRenderedTree.forceExpire;
+      if (forceExpire !== NoWork) {
+        // Override the current time with the `forceExpire` time. This has the
+        // effect of expiring all work up to and including that time.
+        mostRecentCurrentTime = forceExpire;
+        return forceExpire;
+      }
+    }
     // Subtract initial time so it fits inside 32bits
     const ms = now() - startTime;
     mostRecentCurrentTime = msToExpirationTime(ms);
     return mostRecentCurrentTime;
+  }
+
+  function expireWork(root: FiberRoot, expirationTime: ExpirationTime): void {
+    invariant(
+      !isPerformingWork,
+      'Cannot commit while already performing work.',
+    );
+    root.forceExpire = expirationTime;
+    root.isBlocked = false;
+    try {
+      performWork(expirationTime, null);
+    } finally {
+      root.forceExpire = NoWork;
+      recalculateCurrentTime();
+    }
   }
 
   function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
@@ -1604,6 +1646,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     computeAsyncExpiration: computeAsyncExpiration,
     computeExpirationForFiber: computeExpirationForFiber,
     scheduleWork: scheduleWork,
+    expireWork: expireWork,
     batchedUpdates: batchedUpdates,
     unbatchedUpdates: unbatchedUpdates,
     flushSync: flushSync,

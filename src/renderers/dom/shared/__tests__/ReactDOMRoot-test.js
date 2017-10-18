@@ -68,4 +68,34 @@ describe('ReactDOMRoot', () => {
     root.render(<div><span>d</span><span>c</span></div>);
     expect(container.textContent).toEqual('abdc');
   });
+
+  it('can defer commit using prerender', () => {
+    const root = ReactDOM.createRoot(container);
+    const work = root.prerender(<div>Hi</div>);
+    // Hasn't updated yet
+    expect(container.textContent).toEqual('');
+    // Flush work
+    work.commit();
+    expect(container.textContent).toEqual('Hi');
+  });
+
+  it("does not restart a blocked root that wasn't updated", () => {
+    let ops = [];
+    function Foo(props) {
+      ops.push('Foo');
+      return props.children;
+    }
+    const root = ReactDOM.createRoot(container);
+    const work = root.prerender(<Foo>Hi</Foo>);
+    expect(ops).toEqual(['Foo']);
+    // Hasn't updated yet
+    expect(container.textContent).toEqual('');
+
+    ops = [];
+
+    // Flush work. Shouldn't re-render Foo.
+    work.commit();
+    expect(ops).toEqual([]);
+    expect(container.textContent).toEqual('Hi');
+  });
 });

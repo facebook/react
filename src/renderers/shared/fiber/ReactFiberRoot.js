@@ -11,8 +11,10 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {createHostRootFiber} = require('ReactFiber');
+const {NoWork} = require('ReactFiberExpirationTime');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -21,6 +23,12 @@ export type FiberRoot = {
   current: Fiber,
   // Determines if this root has already been added to the schedule for work.
   isScheduled: boolean,
+  // Determines if this root was blocked from committing.
+  isBlocked: boolean,
+  // The time at which this root completed.
+  // TODO: Remove once we add back resuming.
+  completedAt: ExpirationTime,
+  forceExpire: ExpirationTime,
   // The work schedule is a linked list.
   nextScheduledRoot: FiberRoot | null,
   // Top context object, used by renderSubtreeIntoContainer
@@ -41,6 +49,9 @@ exports.createFiberRoot = function(
     current: uninitializedFiber,
     containerInfo: containerInfo,
     isScheduled: false,
+    isBlocked: false,
+    completedAt: NoWork,
+    forceExpire: NoWork,
     nextScheduledRoot: null,
     context: null,
     pendingContext: null,
