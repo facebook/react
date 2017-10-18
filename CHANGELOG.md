@@ -5,6 +5,10 @@
     Click to see more.
   </summary>
 
+### Discontinuing Bower Releases
+
+Starting with 16.1.0, we will no longer be publishing new releases on Bower. You can continue using Bower for old releases, or point your Bower configs to the [React UMD builds hosted on unpkg](https://reactjs.org/docs/installation.html#using-a-cdn) that mirror npm releases and will continue to be updated.
+
 ### All Packages
 
 * Fix an accidental extra global variable in the UMD builds. ([@gaearon](https://github.com/gaearon) in [#10935](https://github.com/facebook/react/pull/10935))
