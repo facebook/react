@@ -1174,6 +1174,33 @@ describe('ReactUpdates', () => {
     },
   );
 
+  it('uses correct base state for setState inside render phase', () => {
+    spyOn(console, 'error');
+
+    let ops = [];
+
+    class Foo extends React.Component {
+      state = {step: 0};
+      render() {
+        const memoizedStep = this.state.step;
+        this.setState(baseState => {
+          const baseStep = baseState.step;
+          ops.push(`base: ${baseStep}, memoized: ${memoizedStep}`);
+          return baseStep === 0 ? {step: 1} : null;
+        });
+        return null;
+      }
+    }
+
+    const container = document.createElement('div');
+    ReactDOM.render(<Foo />, container);
+    expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
+    expect(console.error.calls.count()).toBe(1);
+    expect(console.error.calls.argsFor(0)[0]).toContain(
+      'Cannot update during an existing state transition',
+    );
+  });
+
   it('does not re-render if state update is null', () => {
     let container = document.createElement('div');
 

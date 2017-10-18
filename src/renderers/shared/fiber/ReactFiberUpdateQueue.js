@@ -113,16 +113,18 @@ function insertUpdateIntoFiber<State>(
   const alternateFiber = fiber.alternate;
   let queue1 = fiber.updateQueue;
   if (queue1 === null) {
-    queue1 = fiber.updateQueue = createUpdateQueue(fiber.memoizedState);
+    // TODO: We don't know what the base state will be until we begin work.
+    // It depends on which fiber is the next current. Initialize with an empty
+    // base state, then set to the memoizedState when rendering. Not super
+    // happy with this approach.
+    queue1 = fiber.updateQueue = createUpdateQueue(null);
   }
 
   let queue2;
   if (alternateFiber !== null) {
     queue2 = alternateFiber.updateQueue;
     if (queue2 === null) {
-      queue2 = alternateFiber.updateQueue = createUpdateQueue(
-        alternateFiber.memoizedState,
-      );
+      queue2 = alternateFiber.updateQueue = createUpdateQueue(null);
     }
   } else {
     queue2 = null;
@@ -198,12 +200,7 @@ function processUpdateQueue<State>(
     // We need to create a work-in-progress queue, by cloning the current queue.
     const currentQueue = queue;
     queue = workInProgress.updateQueue = {
-      // If we hit this clone path, the work-in-progress update queue is
-      // conceptually empty. Which means its base state is the same as its
-      // memoized state. This usually the same as the current queue's base
-      // state, but could be different if setState was called during a child's
-      // render phase.
-      baseState: workInProgress.memoizedState,
+      baseState: currentQueue.baseState,
       expirationTime: currentQueue.expirationTime,
       first: currentQueue.first,
       last: currentQueue.last,
@@ -224,7 +221,13 @@ function processUpdateQueue<State>(
   // increase this accordingly.
   queue.expirationTime = NoWork;
 
-  let state = queue.baseState;
+  // TODO: We don't know what the base state will be until we begin work.
+  // It depends on which fiber is the next current. Initialize with an empty
+  // base state, then set to the memoizedState when rendering. Not super
+  // happy with this approach.
+  let state = queue.baseState === null
+    ? workInProgress.memoizedState
+    : queue.baseState;
   let dontMutatePrevState = true;
   let update = queue.first;
   let didSkip = false;
