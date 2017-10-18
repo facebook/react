@@ -384,9 +384,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
-      existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
-        ? element.props.children
-        : element.props;
+      // existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
+      //   ? element.props.children
+      //   : element.props;
+      existing.pendingProps = element.props;
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
@@ -490,6 +491,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     current: Fiber | null,
     fragment: Iterable<*>,
     expirationTime: ExpirationTime,
+    key: null | string,
   ): Fiber {
     if (current === null || current.tag !== Fragment) {
       // Insert
@@ -497,7 +499,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         fragment,
         returnFiber.internalContextTag,
         expirationTime,
-        null,
+        key,
       );
       created.return = returnFiber;
       return created;
@@ -531,6 +533,18 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
+          if (newChild.type === REACT_FRAGMENT_TYPE) {
+            const created = createFiberFromFragment(
+              isArray(newChild.props.children)
+                ? newChild.props.children
+                : [newChild.props.children],
+              returnFiber.internalContextTag,
+              expirationTime,
+              newChild.key,
+            );
+            created.return = returnFiber;
+            return created;
+          }
           const created = createFiberFromElement(
             newChild,
             returnFiber.internalContextTag,
@@ -625,6 +639,17 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
           if (newChild.key === key) {
+            if (newChild.type === REACT_FRAGMENT_TYPE) {
+              return updateFragment(
+                returnFiber,
+                oldFiber,
+                isArray(newChild.props.children)
+                  ? newChild.props.children
+                  : [newChild.props.children],
+                expirationTime,
+                key,
+              );
+            }
             return updateElement(
               returnFiber,
               oldFiber,
@@ -680,7 +705,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         if (key !== null) {
           return null;
         }
-        return updateFragment(returnFiber, oldFiber, newChild, expirationTime);
+        return updateFragment(
+          returnFiber,
+          oldFiber,
+          newChild,
+          expirationTime,
+          null,
+        );
       }
 
       throwOnInvalidObjectType(returnFiber, newChild);
@@ -721,6 +752,17 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
+          if (newChild.type === REACT_FRAGMENT_TYPE) {
+            return updateFragment(
+              returnFiber,
+              matchedFiber,
+              isArray(newChild.props.children)
+                ? newChild.props.children
+                : [newChild.props.children],
+              expirationTime,
+              newChild.key,
+            );
+          }
           return updateElement(
             returnFiber,
             matchedFiber,
@@ -775,6 +817,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           matchedFiber,
           newChild,
           expirationTime,
+          null,
         );
       }
 
@@ -1372,16 +1415,20 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
+          // is this right?
           if (newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null) {
             return reconcileChildrenArray(
               returnFiber,
               currentFirstChild,
-              Array.isArray(newChild.props.children)
+              isArray(newChild.props.children)
                 ? newChild.props.children
                 : [newChild.props.children],
               expirationTime,
             );
           }
+          // else if key is not null, reconcile wat SO CONFUSED
+          // AM I CREATING MORE FRAGMENT FIBERS I DON'T EVEN KNOW ANYMORE
+
           return placeSingleChild(
             reconcileSingleElement(
               returnFiber,

@@ -318,18 +318,19 @@ exports.createFiberFromElement = function(
       : createFiber(IndeterminateComponent, key, internalContextTag);
     fiber.type = type;
     fiber.pendingProps = element.props;
-  } else if (type === REACT_FRAGMENT_TYPE) {
-    // special case for fragments; create the fiber and return early
-    return createFiberFromFragment(
-      element.props.children,
-      internalContextTag,
-      expirationTime,
-      key,
-    );
   } else if (typeof type === 'string') {
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
     fiber.pendingProps = element.props;
+  } else if (type === REACT_FRAGMENT_TYPE) {
+    fiber = createFiberFromFragment(
+      Array.isArray(element.props.children)
+        ? element.props.children
+        : [element.props.children],
+      internalContextTag,
+      expirationTime,
+      key,
+    );
   } else if (
     typeof type === 'object' &&
     type !== null &&
