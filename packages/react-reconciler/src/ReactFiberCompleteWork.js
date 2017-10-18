@@ -242,8 +242,8 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // down its children. Instead, we'll get insertions from each child in
           // the portal directly.
         } else if (node.child !== null) {
-          node = node.child;
           node.child.return = node;
+          node = node.child;
           continue;
         }
         if (node === workInProgress) {
