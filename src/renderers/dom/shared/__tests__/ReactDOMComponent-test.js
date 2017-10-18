@@ -1126,7 +1126,12 @@ describe('ReactDOMComponent', () => {
       spyOn(console, 'error');
       mountComponent({contentEditable: true, children: ''});
       expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('contentEditable');
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: A component is `contentEditable` and contains `children` ' +
+          'managed by React. It is now your responsibility to guarantee that ' +
+          'none of those nodes are unexpectedly modified or duplicated. This ' +
+          'is probably not intentional.\n    in div (at **)',
+      );
     });
 
     it('should respect suppressContentEditableWarning', () => {
