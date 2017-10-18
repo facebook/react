@@ -201,6 +201,8 @@ function getPackageDestination(config, bundleType, filename, hasteName) {
   } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
     if (hasteName === 'ReactNativeRTFiber') {
       dest = `${config.destDir}react-native-rt/${filename}`;
+    } else if (hasteName === 'ReactNativeCSFiber') {
+      dest = `${config.destDir}react-native-cs/${filename}`;
     } else {
       dest = `${config.destDir}react-native/${filename}`;
     }
