@@ -91,7 +91,7 @@ injectInternals({
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
-  rendererPackageName: 'react-native-rt',
+  rendererPackageName: 'react-rt-renderer',
 });
 
 module.exports = ReactNativeRTFiber;

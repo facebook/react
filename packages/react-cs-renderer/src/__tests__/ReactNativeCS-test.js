@@ -17,7 +17,7 @@ describe('ReactNativeCS', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactNativeCS = require('ReactNativeCSFiberEntry');
+    ReactNativeCS = require('react-cs-renderer');
   });
 
   it('should be able to create and render a native component', () => {

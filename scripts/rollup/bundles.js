@@ -250,7 +250,7 @@ const bundles = [
       moduleName: 'ReactNativeFiber',
       sourceMap: false,
     },
-    entry: 'packages/react-native/index.js',
+    entry: 'packages/react-native-renderer/index.js',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
@@ -270,7 +270,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-native-renderer',
     paths: [
-      'packages/react-native/**/*.js',
+      'packages/react-native-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
@@ -285,7 +285,7 @@ const bundles = [
       moduleName: 'ReactNativeRTFiber',
       sourceMap: false,
     },
-    entry: 'packages/react-native-rt/index.js',
+    entry: 'packages/react-rt-renderer/index.js',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
@@ -300,8 +300,8 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-native-rt-renderer',
     paths: [
-      'packages/react-native/**/*.js', // This is used since we reuse the error dialog code
-      'packages/react-native-rt/**/*.js',
+      'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
+      'packages/react-rt-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
@@ -316,7 +316,7 @@ const bundles = [
       moduleName: 'ReactNativeCSFiber',
       sourceMap: false,
     },
-    entry: 'packages/react-native-cs/index.js',
+    entry: 'packages/react-cs-renderer/index.js',
     externals: ['prop-types/checkPropTypes'],
     hasteName: 'ReactNativeCSFiber',
     isRenderer: true,
@@ -324,8 +324,8 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-native-cs-renderer',
     paths: [
-      'packages/react-native/**/*.js', // This is used since we reuse the error dialog code
-      'packages/react-native-cs/**/*.js',
+      'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
+      'packages/react-cs-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],

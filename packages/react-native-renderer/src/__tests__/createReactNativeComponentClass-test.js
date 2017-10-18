@@ -19,7 +19,7 @@ describe('createReactNativeComponentClass', () => {
 
     createReactNativeComponentClass = require('createReactNativeComponentClass');
     React = require('react');
-    ReactNative = require('react-native');
+    ReactNative = require('react-native-renderer');
   });
 
   it('should register viewConfigs', () => {

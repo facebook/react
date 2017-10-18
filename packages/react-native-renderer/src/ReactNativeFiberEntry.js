@@ -133,7 +133,7 @@ injectInternals({
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
-  rendererPackageName: 'react-native',
+  rendererPackageName: 'react-native-renderer',
 });
 
 module.exports = ReactNativeFiber;

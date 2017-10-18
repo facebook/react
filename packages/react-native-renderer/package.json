@@ -1,5 +1,5 @@
 {
-  "name": "react-native",
+  "name": "react-native-renderer",
   "version": "16.0.0",
   "private": true,
   "repository": "facebook/react",

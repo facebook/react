@@ -25,17 +25,17 @@ const facebookWWWSrcDependencies = [
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
   'packages/react-reconciler/src/isomorphic/ReactTypes.js',
-  'packages/react-native/src/ReactNativeTypes.js',
+  'packages/react-native-renderer/src/ReactNativeTypes.js',
 ];
 
-// these files need to be copied to the react-native-rt build
+// these files need to be copied to the react-rt build
 const reactNativeRTSrcDependencies = [
-  'packages/react-native-rt/src/ReactNativeRTTypes.js',
+  'packages/react-rt-renderer/src/ReactNativeRTTypes.js',
 ];
 
-// these files need to be copied to the react-native-cs build
+// these files need to be copied to the react-cs build
 const reactNativeCSSrcDependencies = [
-  'packages/react-native-cs/src/ReactNativeCSTypes.js',
+  'packages/react-cs-renderer/src/ReactNativeCSTypes.js',
 ];
 
 function getPackageName(name) {
@@ -68,12 +68,12 @@ function createReactNativeBuild() {
 }
 
 function createReactNativeRTBuild() {
-  // create the react-native-rt folder for FB bundles
-  fs.mkdirSync(join('build', 'react-native-rt'));
-  // create the react-native-rt shims folder for FB shims
-  fs.mkdirSync(join('build', 'react-native-rt', 'shims'));
+  // create the react-rt folder for FB bundles
+  fs.mkdirSync(join('build', 'react-rt'));
+  // create the react-rt shims folder for FB shims
+  fs.mkdirSync(join('build', 'react-rt', 'shims'));
 
-  const to = join('build', 'react-native-rt', 'shims');
+  const to = join('build', 'react-rt', 'shims');
 
   let promises = [];
   // we also need to copy over some specific files from src
@@ -87,12 +87,12 @@ function createReactNativeRTBuild() {
 }
 
 function createReactNativeCSBuild() {
-  // create the react-native-cs folder for FB bundles
-  fs.mkdirSync(join('build', 'react-native-cs'));
-  // create the react-native-cs shims folder for FB shims
-  fs.mkdirSync(join('build', 'react-native-cs', 'shims'));
+  // create the react-cs folder for FB bundles
+  fs.mkdirSync(join('build', 'react-cs'));
+  // create the react-cs shims folder for FB shims
+  fs.mkdirSync(join('build', 'react-cs', 'shims'));
 
-  const to = join('build', 'react-native-cs', 'shims');
+  const to = join('build', 'react-cs', 'shims');
 
   let promises = [];
   // we also need to copy over some specific files from src
@@ -209,9 +209,9 @@ function getPackageDestination(config, bundleType, filename, hasteName) {
     dest = `${config.destDir}dist/${filename}`;
   } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
     if (hasteName === 'ReactNativeRTFiber') {
-      dest = `${config.destDir}react-native-rt/${filename}`;
+      dest = `${config.destDir}react-rt/${filename}`;
     } else if (hasteName === 'ReactNativeCSFiber') {
-      dest = `${config.destDir}react-native-cs/${filename}`;
+      dest = `${config.destDir}react-cs/${filename}`;
     } else {
       dest = `${config.destDir}react-native/${filename}`;
     }

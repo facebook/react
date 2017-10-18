@@ -18,7 +18,7 @@ describe('ReactNativeRT', () => {
     jest.resetModules();
 
     React = require('react');
-    ReactNativeRT = require('ReactNativeRTFiberEntry');
+    ReactNativeRT = require('react-rt-renderer');
     RTManager = require('RTManager');
   });
 
