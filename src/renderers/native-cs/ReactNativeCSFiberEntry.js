@@ -154,34 +154,32 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   persistence: {
     cloneInstance(
       instance: Instance,
-      updatePayload: Object,
+      updatePayload: null | Object,
       type: string,
       oldProps: Props,
       newProps: Props,
       internalInstanceHandle: Object,
       keepChildren: boolean,
-    ): Instance {
-      return 0;
-    },
-    tryToReuseInstance(
-      instance: Instance,
-      updatePayload: Object,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-      keepChildren: boolean,
+      recyclableInstance: null | Instance,
     ): Instance {
       return 0;
     },
 
-    createRootInstance(
-      rootContainerInstance: Container,
-      hostContext: {},
-    ): Instance {
-      return 123;
+    cloneContainer(
+      container: Container,
+      recyclableContainer: Container,
+    ): Container {
+      return 0;
     },
-    commitRootInstance(rootInstance: Instance): void {},
+
+    appendInititalChildToContainer(
+      container: Container,
+      child: Instance | TextInstance,
+    ): void {},
+
+    finalizeContainerChildren(container: Container): void {},
+
+    replaceContainer(oldContainer: Container, newContainer: Container): void {},
   },
 });
 

@@ -100,7 +100,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   +hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
 
   +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
-  +persistence?: PersistentUpdatesHostConfig<T, P, I, C, CX, PL>,
+  +persistence?: PersistentUpdatesHostConfig<T, P, I, TI, C, PL>,
 };
 
 type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
@@ -132,28 +132,24 @@ type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   removeChildFromContainer(container: C, child: I | TI): void,
 };
 
-type PersistentUpdatesHostConfig<T, P, I, C, CX, PL> = {
+type PersistentUpdatesHostConfig<T, P, I, TI, C, PL> = {
   cloneInstance(
     instance: I,
-    updatePayload: PL,
+    updatePayload: null | PL,
     type: T,
     oldProps: P,
     newProps: P,
     internalInstanceHandle: OpaqueHandle,
     keepChildren: boolean,
-  ): I,
-  tryToReuseInstance(
-    instance: I,
-    updatePayload: PL,
-    type: T,
-    oldProps: P,
-    newProps: P,
-    internalInstanceHandle: OpaqueHandle,
-    keepChildren: boolean,
+    recyclableInstance: I,
   ): I,
 
-  createRootInstance(rootContainerInstance: C, hostContext: CX): I,
-  commitRootInstance(rootInstance: I): void,
+  cloneContainer(container: C, recyclableContainer: C): C,
+
+  appendInititalChildToContainer(container: C, child: I | TI): void,
+  finalizeContainerChildren(container: C): void,
+
+  replaceContainer(oldContainer: C, newContainer: C): void,
 };
 
 type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
