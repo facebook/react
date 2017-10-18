@@ -162,6 +162,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // We have no life-cycles associated with text.
         return;
       }
+      case HostPortal: {
+        // We have no life-cycles associated with portals.
+        return;
+      }
       default: {
         invariant(
           false,
@@ -222,7 +226,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        unmountHostComponents(current);
+        if (config.mutation) {
+          unmountHostComponents(current);
+        }
         return;
       }
     }
@@ -239,7 +245,11 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       commitUnmount(node);
       // Visit children because they may contain more composite or host nodes.
       // Skip portals because commitUnmount() currently visits them recursively.
-      if (node.child !== null && node.tag !== HostPortal) {
+      if (
+        node.child !== null &&
+        // Drill down into portals only if we use mutation since that branch is recursive
+        (!config.mutation || node.tag !== HostPortal)
+      ) {
         node.child.return = node;
         node = node.child;
         continue;

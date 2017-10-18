@@ -11,12 +11,14 @@
 
 var React;
 var ReactNoop;
+let ReactPortal;
 
 describe('ReactPersistent', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    ReactPortal = require('ReactPortal');
   });
 
   const DEFAULT_ROOT_ID = 'persistent-test';
@@ -123,5 +125,49 @@ describe('ReactPersistent', () => {
     expect(newChildren).toEqual([div('World', span())]);
 
     expect(originalChildren).toEqual([div('Hello', span())]);
+  });
+
+  it('supports portals', () => {
+    function Parent(props) {
+      return <div>{props.children}</div>;
+    }
+
+    function Child(props) {
+      return <div>{props.children}</div>;
+    }
+    const portalID = 'persistent-portal-test';
+    const portalContainer = {rootID: portalID, children: []};
+    render(
+      <Parent>
+        {ReactPortal.createPortal(<Child />, portalContainer, null)}
+      </Parent>,
+    );
+    ReactNoop.flush();
+
+    expect(portalContainer.children).toEqual([]);
+
+    var originalChildren = getChildren();
+    expect(originalChildren).toEqual([div()]);
+    var originalPortalChildren = ReactNoop.getChildren(portalID);
+    expect(originalPortalChildren).toEqual([div()]);
+
+    render(
+      <Parent>
+        {ReactPortal.createPortal(
+          <Child>Hello {'World'}</Child>,
+          portalContainer,
+          null,
+        )}
+      </Parent>,
+    );
+    ReactNoop.flush();
+
+    var newChildren = getChildren();
+    expect(newChildren).toEqual([div()]);
+    var newPortalChildren = ReactNoop.getChildren(portalID);
+    expect(newPortalChildren).toEqual([div('Hello ', 'World')]);
+
+    expect(originalChildren).toEqual([div()]);
+    expect(originalPortalChildren).toEqual([div()]);
   });
 });
