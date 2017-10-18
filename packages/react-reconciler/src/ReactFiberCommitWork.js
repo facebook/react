@@ -288,6 +288,9 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           case HostComponent: {
             return;
           }
+          case HostText: {
+            return;
+          }
           case HostRoot:
           case HostPortal: {
             const portalOrRoot: {containerInfo: C, pendingContainerInfo: C} =
