@@ -13,11 +13,20 @@
 export type FeatureFlags = {|
   enableAsyncSubtreeAPI: boolean,
   enableAsyncSchedulingByDefaultInReactDOM: boolean,
+  enableMutatingReconciler: boolean,
+  enableNoopReconciler: boolean,
+  enablePersistentReconciler: boolean,
 |};
 
 var ReactFeatureFlags: FeatureFlags = {
   enableAsyncSubtreeAPI: true,
   enableAsyncSchedulingByDefaultInReactDOM: false,
+  // Mutating mode (React DOM, React ART, React Native):
+  enableMutatingReconciler: true,
+  // Experimental noop mode (currently unused):
+  enableNoopReconciler: false,
+  // Experimental persistent mode (CS):
+  enablePersistentReconciler: false,
 };
 
 if (__DEV__) {

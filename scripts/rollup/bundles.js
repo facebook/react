@@ -344,6 +344,7 @@ const bundles = [
     label: 'native-cs-fiber',
     manglePropertiesOnProd: false,
     name: 'react-native-cs-renderer',
+    featureFlags: 'src/renderers/native-cs/ReactNativeCSFeatureFlags',
     paths: [
       'src/renderers/native-cs/**/*.js',
       'src/renderers/shared/**/*.js',
