@@ -287,7 +287,11 @@ function createOpenTagMarkup(
         );
       }
     } else {
-      markup = DOMMarkupOperations.createMarkupForProperty(propKey, propValue);
+      markup = DOMMarkupOperations.createMarkupForProperty(
+        propKey,
+        propValue,
+        namespace,
+      );
     }
     if (markup) {
       ret += ' ' + markup;
