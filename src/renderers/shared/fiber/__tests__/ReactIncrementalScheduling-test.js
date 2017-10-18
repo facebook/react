@@ -31,17 +31,20 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([span('1')]);
   });
 
-  it('searches for work on other roots once the current root completes', () => {
-    ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
-    ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
-    ReactNoop.renderToRootWithID(<span prop="c:1" />, 'c');
+  xit(
+    'searches for work on other roots once the current root completes',
+    () => {
+      ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
+      ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
+      ReactNoop.renderToRootWithID(<span prop="c:1" />, 'c');
 
-    ReactNoop.flush();
+      ReactNoop.flush();
 
-    expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
-    expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
-    expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
-  });
+      expect(ReactNoop.getChildren('a')).toEqual([span('a:1')]);
+      expect(ReactNoop.getChildren('b')).toEqual([span('b:1')]);
+      expect(ReactNoop.getChildren('c')).toEqual([span('c:1')]);
+    },
+  );
 
   it('schedules top-level updates in order of priority', () => {
     // Initial render.
@@ -81,7 +84,7 @@ describe('ReactIncrementalScheduling', () => {
     expect(ReactNoop.getChildren()).toEqual([span(5)]);
   });
 
-  it('works on deferred roots in the order they were scheduled', () => {
+  xit('works on deferred roots in the order they were scheduled', () => {
     ReactNoop.renderToRootWithID(<span prop="a:1" />, 'a');
     ReactNoop.renderToRootWithID(<span prop="b:1" />, 'b');
     ReactNoop.renderToRootWithID(<span prop="c:1" />, 'c');
