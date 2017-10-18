@@ -227,8 +227,18 @@ ReactElement.createElement = function(type, config, children) {
     props.children = childArray;
   }
 
+  var typeDisplayName = typeof type === 'function'
+    ? type.displayName || type.name || 'Unknown'
+    : type;
+
   // Resolve default props
   if (type && type.defaultProps) {
+    warning(
+      typeof type.defaultProps !== 'function',
+      'Expected `%s` in `%s` to be a class property or static getter but instead it is function.',
+      type.defaultProps.name,
+      typeDisplayName,
+    );
     var defaultProps = type.defaultProps;
     for (propName in defaultProps) {
       if (props[propName] === undefined) {
@@ -242,14 +252,11 @@ ReactElement.createElement = function(type, config, children) {
         typeof props.$$typeof === 'undefined' ||
         props.$$typeof !== REACT_ELEMENT_TYPE
       ) {
-        var displayName = typeof type === 'function'
-          ? type.displayName || type.name || 'Unknown'
-          : type;
         if (key) {
-          defineKeyPropWarningGetter(props, displayName);
+          defineKeyPropWarningGetter(props, typeDisplayName);
         }
         if (ref) {
-          defineRefPropWarningGetter(props, displayName);
+          defineRefPropWarningGetter(props, typeDisplayName);
         }
       }
     }
