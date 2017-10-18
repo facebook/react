@@ -132,8 +132,21 @@ describe('ReactPersistent', () => {
       return <div>{props.children}</div>;
     }
 
+    function BailoutSpan() {
+      return <span />;
+    }
+
+    class BailoutTest extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        return <BailoutSpan />;
+      }
+    }
+
     function Child(props) {
-      return <div>{props.children}</div>;
+      return <div><BailoutTest />{props.children}</div>;
     }
     const portalID = 'persistent-portal-test';
     const portalContainer = {rootID: portalID, children: []};
@@ -149,7 +162,7 @@ describe('ReactPersistent', () => {
     var originalChildren = getChildren();
     expect(originalChildren).toEqual([div()]);
     var originalPortalChildren = ReactNoop.getChildren(portalID);
-    expect(originalPortalChildren).toEqual([div()]);
+    expect(originalPortalChildren).toEqual([div(span())]);
 
     render(
       <Parent>
@@ -165,9 +178,14 @@ describe('ReactPersistent', () => {
     var newChildren = getChildren();
     expect(newChildren).toEqual([div()]);
     var newPortalChildren = ReactNoop.getChildren(portalID);
-    expect(newPortalChildren).toEqual([div('Hello ', 'World')]);
+    expect(newPortalChildren).toEqual([div(span(), 'Hello ', 'World')]);
 
     expect(originalChildren).toEqual([div()]);
-    expect(originalPortalChildren).toEqual([div()]);
+    expect(originalPortalChildren).toEqual([div(span())]);
+
+    // Reused portal children should have reference equality
+    expect(newPortalChildren[0].children[0]).toBe(
+      originalPortalChildren[0].children[0],
+    );
   });
 });
