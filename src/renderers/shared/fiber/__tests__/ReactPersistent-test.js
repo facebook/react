@@ -64,4 +64,41 @@ describe('ReactPersistent', () => {
 
     expect(originalChildren).toEqual([div(span())]);
   });
+
+  it('can reuse child nodes between updates', () => {
+    function Baz(props) {
+      return <span prop={props.text} />;
+    }
+    class Bar extends React.Component {
+      shouldComponentUpdate(newProps) {
+        return false;
+      }
+      render() {
+        return <Baz text={this.props.text} />;
+      }
+    }
+    function Foo(props) {
+      return (
+        <div>
+          <Bar text={props.text} />
+          {props.text === 'World' ? <Bar text={props.text} /> : null}
+        </div>
+      );
+    }
+
+    render(<Foo text="Hello" />);
+    ReactNoop.flush();
+    var originalChildren = getChildren();
+    expect(originalChildren).toEqual([div(span('Hello'))]);
+
+    render(<Foo text="World" />);
+    ReactNoop.flush();
+    var newChildren = getChildren();
+    expect(newChildren).toEqual([div(span('Hello'), span('World'))]);
+
+    expect(originalChildren).toEqual([div(span('Hello'))]);
+
+    // Reused node should have reference equality
+    expect(newChildren[0].children[0]).toBe(originalChildren[0].children[0]);
+  });
 });
