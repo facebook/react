@@ -10,7 +10,12 @@
 
 'use strict';
 
-var ReactFeatureFlags = {
+export type FeatureFlags = {|
+  enableAsyncSubtreeAPI: boolean,
+  enableAsyncSchedulingByDefaultInReactDOM: boolean,
+|};
+
+var ReactFeatureFlags: FeatureFlags = {
   enableAsyncSubtreeAPI: true,
   enableAsyncSchedulingByDefaultInReactDOM: false,
 };

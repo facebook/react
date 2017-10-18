@@ -296,13 +296,27 @@ function getAliases(paths, bundleType, moduleType, extractErrors) {
   );
 }
 
-function getDefaultReplaceModules(bundleType, bundleModulesToStub) {
+function replaceFeatureFlags(featureFlags) {
+  if (!featureFlags) {
+    return {};
+  }
+  return {
+    "'ReactFeatureFlags'": `'${resolve(featureFlags)}'`,
+  };
+}
+
+function getDefaultReplaceModules(
+  bundleType,
+  bundleModulesToStub,
+  featureFlags
+) {
   return Object.assign(
     {},
     replaceFbjsModuleAliases(bundleType),
     replaceDevOnlyStubbedModules(bundleType),
     replaceLegacyModuleAliases(bundleType),
-    replaceBundleStubModules(bundleModulesToStub)
+    replaceBundleStubModules(bundleModulesToStub),
+    replaceFeatureFlags(featureFlags)
   );
 }
 
