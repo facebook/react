@@ -33,6 +33,7 @@ var React = {
     forEach: ReactChildren.forEach,
     count: ReactChildren.count,
     toArray: ReactChildren.toArray,
+    find: ReactChildren.find,
     only: onlyChild,
   },
 
