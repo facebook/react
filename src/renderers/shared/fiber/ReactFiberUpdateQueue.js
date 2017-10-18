@@ -64,6 +64,7 @@ export type UpdateQueue<State> = {
   last: Update<State> | null,
   callbackList: Array<Update<State>> | null,
   hasForceUpdate: boolean,
+  isInitialized: boolean,
 
   // Dev only
   isProcessing?: boolean,
@@ -77,6 +78,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
     last: null,
     callbackList: null,
     hasForceUpdate: false,
+    isInitialized: false,
   };
   if (__DEV__) {
     queue.isProcessing = false;
@@ -204,6 +206,7 @@ function processUpdateQueue<State>(
       expirationTime: currentQueue.expirationTime,
       first: currentQueue.first,
       last: currentQueue.last,
+      isInitialized: currentQueue.isInitialized,
       // These fields are no longer valid because they were already committed.
       // Reset them.
       callbackList: null,
@@ -225,9 +228,13 @@ function processUpdateQueue<State>(
   // It depends on which fiber is the next current. Initialize with an empty
   // base state, then set to the memoizedState when rendering. Not super
   // happy with this approach.
-  let state = queue.baseState === null
-    ? workInProgress.memoizedState
-    : queue.baseState;
+  let state;
+  if (queue.isInitialized) {
+    state = queue.baseState;
+  } else {
+    state = queue.baseState = workInProgress.memoizedState;
+    queue.isInitialized = true;
+  }
   let dontMutatePrevState = true;
   let update = queue.first;
   let didSkip = false;
