@@ -97,7 +97,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should display `value` of number 0', () => {
-    var stub = <textarea value={0} />;
+    var stub = <textarea value={0} onChange={emptyFunction} />;
     var node = renderTextarea(stub);
 
     expect(node.value).toBe('0');

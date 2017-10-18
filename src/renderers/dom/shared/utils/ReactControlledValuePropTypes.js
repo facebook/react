@@ -33,7 +33,7 @@ if (__DEV__) {
   var propTypes = {
     value: function(props, propName, componentName) {
       if (
-        !props[propName] ||
+        props[propName] == null ||
         hasReadOnlyValue[props.type] ||
         props.onChange ||
         props.readOnly ||
@@ -50,7 +50,7 @@ if (__DEV__) {
     },
     checked: function(props, propName, componentName) {
       if (
-        !props[propName] ||
+        props[propName] == null ||
         props.onChange ||
         props.readOnly ||
         props.disabled

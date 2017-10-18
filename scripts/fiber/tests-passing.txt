@@ -2015,6 +2015,9 @@ src/renderers/dom/shared/wrappers/__tests__/ReactDOMInput-test.js
 * should control radio buttons
 * should control radio buttons if the tree updates during render
 * should warn with value and no onChange handler and readOnly specified
+* should warn with an empty value and no onChange handler and readOnly specified
+* should warn with a value of number `0` and no onChange handler and readOnly specified
+* should warn with a value of `false` and no onChange handler and readOnly specified
 * should have a this value of undefined if bind is not used
 * should warn with checked and no onChange handler with readOnly specified
 * should update defaultValue to empty string

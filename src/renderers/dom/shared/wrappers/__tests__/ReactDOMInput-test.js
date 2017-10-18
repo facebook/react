@@ -776,6 +776,63 @@ describe('ReactDOMInput', () => {
     );
   });
 
+  it('should warn with an empty value and no onChange handler and readOnly specified', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value="" readOnly={true} />,
+    );
+    expectDev(console.error.calls.count()).toBe(0);
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value="" readOnly={false} />,
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Failed form propType: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.\n' +
+        '    in input (at **)',
+    );
+  });
+
+  it('should warn with a value of number `0` and no onChange handler and readOnly specified', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value={0} readOnly={true} />,
+    );
+    expectDev(console.error.calls.count()).toBe(0);
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value={0} readOnly={false} />,
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Failed form propType: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.\n' +
+        '    in input (at **)',
+    );
+  });
+
+  it('should warn with a value of `false` and no onChange handler and readOnly specified', () => {
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value={false} readOnly={true} />,
+    );
+    expectDev(console.error.calls.count()).toBe(0);
+
+    ReactTestUtils.renderIntoDocument(
+      <input type="text" value={false} readOnly={false} />,
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: Failed form propType: You provided a `value` prop to a form ' +
+        'field without an `onChange` handler. This will render a read-only ' +
+        'field. If the field should be mutable use `defaultValue`. ' +
+        'Otherwise, set either `onChange` or `readOnly`.\n' +
+        '    in input (at **)',
+    );
+  });
+
   it('should have a this value of undefined if bind is not used', () => {
     var unboundInputOnChange = function() {
       expect(this).toBe(undefined);
@@ -789,12 +846,12 @@ describe('ReactDOMInput', () => {
 
   it('should warn with checked and no onChange handler with readOnly specified', () => {
     ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" checked="false" readOnly={true} />,
+      <input type="checkbox" checked={false} readOnly={true} />,
     );
     expectDev(console.error.calls.count()).toBe(0);
 
     ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" checked="false" readOnly={false} />,
+      <input type="checkbox" checked={false} readOnly={false} />,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });
