@@ -81,10 +81,8 @@ var CSSPropertyOperations = {
       }
       if (isCustomProperty) {
         style.setProperty(styleName, styleValue);
-      } else if (styleValue) {
-        style[styleName] = styleValue;
       } else {
-        style[styleName] = '';
+        style[styleName] = styleValue;
       }
     }
   },
