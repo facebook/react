@@ -39,8 +39,8 @@ if (__DEV__) {
   var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
   const {getPublicInstance, mutation, persistence} = config;

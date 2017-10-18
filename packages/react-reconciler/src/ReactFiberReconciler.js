@@ -47,7 +47,7 @@ export type Deadline = {
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
 
-export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
+export type HostConfig<T, P, I, TI, PI, C, CC, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
   getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
@@ -100,7 +100,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   +hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
 
   +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
-  +persistence?: PersistentUpdatesHostConfig<T, P, I, TI, C, PL>,
+  +persistence?: PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL>,
 };
 
 type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
@@ -132,7 +132,7 @@ type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   removeChildFromContainer(container: C, child: I | TI): void,
 };
 
-type PersistentUpdatesHostConfig<T, P, I, TI, C, PL> = {
+type PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL> = {
   cloneInstance(
     instance: I,
     updatePayload: null | PL,
@@ -144,12 +144,12 @@ type PersistentUpdatesHostConfig<T, P, I, TI, C, PL> = {
     recyclableInstance: I,
   ): I,
 
-  cloneContainer(container: C, recyclableContainer: C): C,
+  createContainerChildSet(container: C): CC,
 
-  appendInititalChildToContainer(container: C, child: I | TI): void,
-  finalizeContainerChildren(container: C): void,
+  appendChildToContainerChildSet(childSet: CC, child: I | TI): void,
+  finalizeContainerChildren(container: C, newChildren: CC): void,
 
-  replaceContainer(oldContainer: C, newContainer: C): void,
+  replaceContainerChildren(container: C, newChildren: CC): void,
 };
 
 type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
@@ -253,8 +253,8 @@ function getContextForSubtree(
     : parentContext;
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
   var {getPublicInstance} = config;
 

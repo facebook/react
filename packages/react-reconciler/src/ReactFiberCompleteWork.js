@@ -45,8 +45,8 @@ var {Never} = ReactFiberExpirationTime;
 
 var invariant = require('fbjs/lib/invariant');
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
 ) {
