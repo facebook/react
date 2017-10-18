@@ -253,7 +253,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       // Skip portals because commitUnmount() currently visits them recursively.
       if (
         node.child !== null &&
-        // Drill down into portals only if we use mutation since that branch is recursive
+        // If we use mutation we drill down into portals using commitUnmount above.
+        // If we don't use mutation we drill down into portals here instead.
         (!mutation || node.tag !== HostPortal)
       ) {
         node.child.return = node;
