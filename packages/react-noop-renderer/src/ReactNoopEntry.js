@@ -242,27 +242,29 @@ var PersistentNoopRenderer = ReactFeatureFlags.enablePersistentReconciler
           return clone;
         },
 
-        cloneContainer(
+        createContainerChildSet(
           container: Container,
-          recyclableContainer: Container,
-        ): Container {
-          return {rootID: container.rootID, children: []};
+        ): Array<Instance | TextInstance> {
+          return [];
         },
 
-        appendInititalChildToContainer(
-          parentInstance: Container,
+        appendChildToContainerChildSet(
+          childSet: Array<Instance | TextInstance>,
           child: Instance | TextInstance,
-        ) {
-          parentInstance.children.push(child);
+        ): void {
+          childSet.push(child);
         },
 
-        finalizeContainerChildren(container: Container): void {},
+        finalizeContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {},
 
-        replaceContainer(
-          oldContainer: Container,
-          newContainer: Container,
+        replaceContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
         ): void {
-          rootContainers.set(oldContainer.rootID, newContainer);
+          container.children = newChildren;
         },
       },
     })

@@ -291,16 +291,13 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   if (!mutation) {
     let commitContainer;
     if (persistence) {
-      const {replaceContainer, cloneContainer} = persistence;
+      const {replaceContainerChildren, createContainerChildSet} = persistence;
       var emptyPortalContainer = function(current: Fiber) {
-        const portal: {containerInfo: C, pendingContainerInfo: C} =
+        const portal: {containerInfo: C, pendingChildren: CC} =
           current.stateNode;
-        const {containerInfo, pendingContainerInfo} = portal;
-        const emptyContainer = cloneContainer(
-          containerInfo,
-          pendingContainerInfo,
-        );
-        replaceContainer(containerInfo, emptyContainer);
+        const {containerInfo} = portal;
+        const emptyChildSet = createContainerChildSet(containerInfo);
+        replaceContainerChildren(containerInfo, emptyChildSet);
       };
       commitContainer = function(finishedWork: Fiber) {
         switch (finishedWork.tag) {
@@ -315,14 +312,10 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
           }
           case HostRoot:
           case HostPortal: {
-            const portalOrRoot: {containerInfo: C, pendingContainerInfo: C} =
+            const portalOrRoot: {containerInfo: C, pendingChildren: CC} =
               finishedWork.stateNode;
-            const {containerInfo, pendingContainerInfo} = portalOrRoot;
-            replaceContainer(containerInfo, pendingContainerInfo);
-            // Swap out the current container.
-            portalOrRoot.containerInfo = pendingContainerInfo;
-            // The old one is now free to be recycled.
-            portalOrRoot.pendingContainerInfo = containerInfo;
+            const {containerInfo, pendingChildren} = portalOrRoot;
+            replaceContainerChildren(containerInfo, pendingChildren);
             return;
           }
           default: {

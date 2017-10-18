@@ -227,14 +227,14 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       // Persistent host tree mode
       const {
         cloneInstance,
-        cloneContainer,
-        appendInititalChildToContainer,
+        createContainerChildSet,
+        appendChildToContainerChildSet,
         finalizeContainerChildren,
       } = persistence;
 
       // An unfortunate fork of appendAllChildren because we have two different parent types.
       const appendAllChildrenToContainer = function(
-        container: C,
+        containerChildSet: CC,
         workInProgress: Fiber,
       ) {
         // We only have the top Fiber that was created but we need recurse down its
@@ -242,7 +242,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         let node = workInProgress.child;
         while (node !== null) {
           if (node.tag === HostComponent || node.tag === HostText) {
-            appendInititalChildToContainer(container, node.stateNode);
+            appendChildToContainerChildSet(containerChildSet, node.stateNode);
           } else if (node.tag === HostPortal) {
             // If we have a portal child, then we don't want to traverse
             // down its children. Instead, we'll get insertions from each child in
@@ -266,27 +266,20 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         }
       };
       updateHostContainer = function(workInProgress: Fiber) {
-        const portalOrRoot: {containerInfo: C, pendingContainerInfo: C} =
+        const portalOrRoot: {containerInfo: C, pendingChildren: CC} =
           workInProgress.stateNode;
-        const currentContainer = portalOrRoot.containerInfo;
-        const recyclableContainer = portalOrRoot.pendingContainerInfo;
-
         const childrenUnchanged = workInProgress.firstEffect === null;
         if (childrenUnchanged) {
           // No changes, just reuse the existing instance.
-          // Note that this might release a previous clone.
-          portalOrRoot.pendingContainerInfo = currentContainer;
         } else {
-          let newContainer = cloneContainer(
-            currentContainer,
-            recyclableContainer,
-          );
-          if (finalizeContainerChildren(newContainer)) {
+          const container = portalOrRoot.containerInfo;
+          let newChildSet = createContainerChildSet(container);
+          if (finalizeContainerChildren(container, newChildSet)) {
             markUpdate(workInProgress);
           }
-          portalOrRoot.pendingContainerInfo = newContainer;
+          portalOrRoot.pendingChildren = newChildSet;
           // If children might have changed, we have to add them all to the set.
-          appendAllChildrenToContainer(newContainer, workInProgress);
+          appendAllChildrenToContainer(newChildSet, workInProgress);
           // Schedule an update on the container to swap out the container.
           markUpdate(workInProgress);
         }

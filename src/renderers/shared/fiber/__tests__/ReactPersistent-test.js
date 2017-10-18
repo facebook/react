@@ -154,8 +154,8 @@ describe('ReactPersistent', () => {
     function Child(props) {
       return <div><BailoutTest />{props.children}</div>;
     }
-    const portalID = 'persistent-portal-test';
-    const portalContainer = {rootID: portalID, children: []};
+    const portalContainer = {rootID: 'persistent-portal-test', children: []};
+    const emptyPortalChildSet = portalContainer.children;
     render(
       <Parent>
         {ReactPortal.createPortal(<Child />, portalContainer, null)}
@@ -163,11 +163,11 @@ describe('ReactPersistent', () => {
     );
     ReactNoop.flush();
 
-    expect(portalContainer.children).toEqual([]);
+    expect(emptyPortalChildSet).toEqual([]);
 
     var originalChildren = getChildren();
     expect(originalChildren).toEqual([div()]);
-    var originalPortalChildren = ReactNoop.getChildren(portalID);
+    var originalPortalChildren = portalContainer.children;
     expect(originalPortalChildren).toEqual([div(span())]);
 
     render(
@@ -183,7 +183,7 @@ describe('ReactPersistent', () => {
 
     var newChildren = getChildren();
     expect(newChildren).toEqual([div()]);
-    var newPortalChildren = ReactNoop.getChildren(portalID);
+    var newPortalChildren = portalContainer.children;
     expect(newPortalChildren).toEqual([div(span(), 'Hello ', 'World')]);
 
     expect(originalChildren).toEqual([div()]);
@@ -198,7 +198,7 @@ describe('ReactPersistent', () => {
     render(<Parent />);
     ReactNoop.flush();
 
-    var clearedPortalChildren = ReactNoop.getChildren(portalID);
+    var clearedPortalChildren = portalContainer.children;
     expect(clearedPortalChildren).toEqual([]);
 
     // The original is unchanged.

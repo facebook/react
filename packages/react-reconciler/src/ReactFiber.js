@@ -445,7 +445,7 @@ exports.createFiberFromPortal = function(
   fiber.expirationTime = expirationTime;
   fiber.stateNode = {
     containerInfo: portal.containerInfo,
-    pendingContainerInfo: portal.containerInfo, // Used by persistent updates
+    pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
   return fiber;
