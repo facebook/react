@@ -163,6 +163,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // down its children. Instead, we'll get insertions from each child in
         // the portal directly.
       } else if (node.child !== null) {
+        node.child.return = node;
         node = node.child;
         continue;
       }
@@ -175,6 +176,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         }
         node = node.return;
       }
+      node.sibling.return = node.return;
       node = node.sibling;
     }
   }
@@ -241,6 +243,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           // the portal directly.
         } else if (node.child !== null) {
           node = node.child;
+          node.child.return = node;
           continue;
         }
         if (node === workInProgress) {
@@ -252,6 +255,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
           node = node.return;
         }
+        node.sibling.return = node.return;
         node = node.sibling;
       }
     };

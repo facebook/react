@@ -247,7 +247,12 @@ var PersistentNoopRenderer = ReactFiberReconciler({
       return {rootID: container.rootID, children: []};
     },
 
-    appendInititalChildToContainer: appendChild,
+    appendInititalChildToContainer(
+      parentInstance: Container,
+      child: Instance | TextInstance,
+    ) {
+      parentInstance.children.push(child);
+    },
 
     finalizeContainerChildren(container: Container): void {},
 
