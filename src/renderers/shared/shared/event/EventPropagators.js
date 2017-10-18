@@ -50,6 +50,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
       listener,
     );
     event._dispatchInstances = accumulateInto(event._dispatchInstances, inst);
+    event._dispatchPhases = accumulateInto(event._dispatchPhases, phase);
   }
 }
 

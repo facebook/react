@@ -10,6 +10,7 @@
 'use strict';
 
 var ReactErrorUtils = require('ReactErrorUtils');
+var {eventPhases} = require('BrowserEventConstants');
 
 var invariant = require('fbjs/lib/invariant');
 
@@ -86,9 +87,14 @@ if (__DEV__) {
  * @param {function} listener Application-level callback
  * @param {*} inst Internal component instance
  */
-function executeDispatch(event, simulated, listener, inst) {
+function executeDispatch(event, simulated, listener, inst, phase) {
   var type = event.type || 'unknown-event';
   event.currentTarget = EventPluginUtils.getNodeFromInstance(inst);
+  if (phase) {
+    event.eventPhase = event._targetInst === inst
+      ? eventPhases.atTarget
+      : eventPhases[phase];
+  }
   ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
     type,
     listener,
@@ -96,6 +102,9 @@ function executeDispatch(event, simulated, listener, inst) {
     event,
   );
   event.currentTarget = null;
+  if (phase) {
+    event.eventPhase = null;
+  }
 }
 
 /**
@@ -104,6 +113,7 @@ function executeDispatch(event, simulated, listener, inst) {
 function executeDispatchesInOrder(event, simulated) {
   var dispatchListeners = event._dispatchListeners;
   var dispatchInstances = event._dispatchInstances;
+  var dispatchPhases = event._dispatchPhases;
   if (__DEV__) {
     validateEventDispatches(event);
   }
@@ -112,19 +122,28 @@ function executeDispatchesInOrder(event, simulated) {
       if (event.isPropagationStopped()) {
         break;
       }
-      // Listeners and Instances are two parallel arrays that are always in sync.
+      var phase = dispatchPhases ? dispatchPhases[i] : null;
+      // Listeners, Instances, and Phases are three parallel arrays that are always in sync.
       executeDispatch(
         event,
         simulated,
         dispatchListeners[i],
         dispatchInstances[i],
+        phase,
       );
     }
   } else if (dispatchListeners) {
-    executeDispatch(event, simulated, dispatchListeners, dispatchInstances);
+    executeDispatch(
+      event,
+      simulated,
+      dispatchListeners,
+      dispatchInstances,
+      dispatchPhases,
+    );
   }
   event._dispatchListeners = null;
   event._dispatchInstances = null;
+  event._dispatchPhases = null;
 }
 
 /**
@@ -165,6 +184,7 @@ function executeDispatchesInOrderStopAtTrue(event) {
   var ret = executeDispatchesInOrderStopAtTrueImpl(event);
   event._dispatchInstances = null;
   event._dispatchListeners = null;
+  event._dispatchPhases = null;
   return ret;
 }
 
@@ -194,6 +214,7 @@ function executeDirectDispatch(event) {
   event.currentTarget = null;
   event._dispatchListeners = null;
   event._dispatchInstances = null;
+  event._dispatchPhases = null;
   return res;
 }
 
