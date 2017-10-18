@@ -13,6 +13,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {HostConfig} from 'ReactFiberReconciler';
 
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   ClassComponent,
@@ -42,7 +43,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
-  const {getPublicInstance} = config;
+  const {getPublicInstance, mutation, persistence} = config;
 
   if (__DEV__) {
     var callComponentWillUnmountWithTimerInDev = function(current, instance) {
@@ -226,9 +227,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        if (config.mutation) {
+        if (ReactFeatureFlags.enableMutatingReconciler && mutation) {
           unmountHostComponents(current);
-        } else if (config.persistence) {
+        } else if (
+          ReactFeatureFlags.enablePersistentReconciler &&
+          persistence
+        ) {
           emptyPortalContainer(current);
         }
         return;
@@ -250,7 +254,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       if (
         node.child !== null &&
         // Drill down into portals only if we use mutation since that branch is recursive
-        (!config.mutation || node.tag !== HostPortal)
+        (!mutation || node.tag !== HostPortal)
       ) {
         node.child.return = node;
         node = node.child;
@@ -284,14 +288,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  if (!config.mutation) {
+  if (!mutation) {
     let commitContainer;
-    if (!config.persistence) {
-      commitContainer = function(finishedWork: Fiber) {
-        // Noop
-      };
-    } else {
-      const {replaceContainer, cloneContainer} = config.persistence;
+    if (persistence) {
+      const {replaceContainer, cloneContainer} = persistence;
       var emptyPortalContainer = function(current: Fiber) {
         const portal: {containerInfo: C, pendingContainerInfo: C} =
           current.stateNode;
@@ -334,24 +334,36 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
           }
         }
       };
+    } else {
+      commitContainer = function(finishedWork: Fiber) {
+        // Noop
+      };
     }
-    return {
-      commitResetTextContent(finishedWork: Fiber) {},
-      commitPlacement(finishedWork: Fiber) {},
-      commitDeletion(current: Fiber) {
-        // Detach refs and call componentWillUnmount() on the whole subtree.
-        commitNestedUnmounts(current);
-        detachFiber(current);
-      },
-      commitWork(current: Fiber | null, finishedWork: Fiber) {
-        commitContainer(finishedWork);
-      },
-      commitLifeCycles,
-      commitAttachRef,
-      commitDetachRef,
-    };
+    if (
+      ReactFeatureFlags.enablePersistentReconciler ||
+      ReactFeatureFlags.enableNoopReconciler
+    ) {
+      return {
+        commitResetTextContent(finishedWork: Fiber) {},
+        commitPlacement(finishedWork: Fiber) {},
+        commitDeletion(current: Fiber) {
+          // Detach refs and call componentWillUnmount() on the whole subtree.
+          commitNestedUnmounts(current);
+          detachFiber(current);
+        },
+        commitWork(current: Fiber | null, finishedWork: Fiber) {
+          commitContainer(finishedWork);
+        },
+        commitLifeCycles,
+        commitAttachRef,
+        commitDetachRef,
+      };
+    } else if (persistence) {
+      invariant(false, 'Persistent reconciler is disabled.');
+    } else {
+      invariant(false, 'Noop reconciler is disabled.');
+    }
   }
-
   const {
     commitMount,
     commitUpdate,
@@ -363,7 +375,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     insertInContainerBefore,
     removeChild,
     removeChildFromContainer,
-  } = config.mutation;
+  } = mutation;
 
   function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;
@@ -663,13 +675,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetTextContent(current.stateNode);
   }
 
-  return {
-    commitResetTextContent,
-    commitPlacement,
-    commitDeletion,
-    commitWork,
-    commitLifeCycles,
-    commitAttachRef,
-    commitDetachRef,
-  };
+  if (ReactFeatureFlags.enableMutatingReconciler) {
+    return {
+      commitResetTextContent,
+      commitPlacement,
+      commitDeletion,
+      commitWork,
+      commitLifeCycles,
+      commitAttachRef,
+      commitDetachRef,
+    };
+  } else {
+    invariant(false, 'Mutating reconciler is disabled.');
+  }
 };

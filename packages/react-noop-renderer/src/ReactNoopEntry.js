@@ -178,89 +178,105 @@ var SharedHostConfig = {
   },
 };
 
-var NoopRenderer = ReactFiberReconciler({
-  ...SharedHostConfig,
-  mutation: {
-    commitMount(instance: Instance, type: string, newProps: Props): void {
-      // Noop
-    },
-
-    commitUpdate(
-      instance: Instance,
-      updatePayload: Object,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-    ): void {
-      instance.prop = newProps.prop;
-    },
-
-    commitTextUpdate(
-      textInstance: TextInstance,
-      oldText: string,
-      newText: string,
-    ): void {
-      textInstance.text = newText;
-    },
-
-    appendChild: appendChild,
-    appendChildToContainer: appendChild,
-    insertBefore: insertBefore,
-    insertInContainerBefore: insertBefore,
-    removeChild: removeChild,
-    removeChildFromContainer: removeChild,
-
-    resetTextContent(instance: Instance): void {},
+var MutationHostConfig = {
+  commitMount(instance: Instance, type: string, newProps: Props): void {
+    // Noop
   },
-});
 
-var PersistentNoopRenderer = ReactFiberReconciler({
-  ...SharedHostConfig,
-  persistence: {
-    cloneInstance(
-      instance: Instance,
-      updatePayload: null | Object,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-      keepChildren: boolean,
-      recyclableInstance: null | Instance,
-    ): Instance {
-      const clone = {
-        id: instance.id,
-        type: type,
-        children: keepChildren ? instance.children : [],
-        prop: newProps.prop,
-      };
-      Object.defineProperty(clone, 'id', {
-        value: clone.id,
-        enumerable: false,
-      });
-      return clone;
-    },
-
-    cloneContainer(
-      container: Container,
-      recyclableContainer: Container,
-    ): Container {
-      return {rootID: container.rootID, children: []};
-    },
-
-    appendInititalChildToContainer(
-      parentInstance: Container,
-      child: Instance | TextInstance,
-    ) {
-      parentInstance.children.push(child);
-    },
-
-    finalizeContainerChildren(container: Container): void {},
-
-    replaceContainer(oldContainer: Container, newContainer: Container): void {
-      rootContainers.set(oldContainer.rootID, newContainer);
-    },
+  commitUpdate(
+    instance: Instance,
+    updatePayload: Object,
+    type: string,
+    oldProps: Props,
+    newProps: Props,
+  ): void {
+    instance.prop = newProps.prop;
   },
-});
+
+  commitTextUpdate(
+    textInstance: TextInstance,
+    oldText: string,
+    newText: string,
+  ): void {
+    textInstance.text = newText;
+  },
+
+  appendChild: appendChild,
+  appendChildToContainer: appendChild,
+  insertBefore: insertBefore,
+  insertInContainerBefore: insertBefore,
+  removeChild: removeChild,
+  removeChildFromContainer: removeChild,
+
+  resetTextContent(instance: Instance): void {},
+};
+
+var PersistenceHostConfig = {
+  cloneInstance(
+    instance: Instance,
+    updatePayload: null | Object,
+    type: string,
+    oldProps: Props,
+    newProps: Props,
+    internalInstanceHandle: Object,
+    keepChildren: boolean,
+    recyclableInstance: null | Instance,
+  ): Instance {
+    const clone = {
+      id: instance.id,
+      type: type,
+      children: keepChildren ? instance.children : [],
+      prop: newProps.prop,
+    };
+    Object.defineProperty(clone, 'id', {
+      value: clone.id,
+      enumerable: false,
+    });
+    return clone;
+  },
+
+  cloneContainer(
+    container: Container,
+    recyclableContainer: Container,
+  ): Container {
+    return {rootID: container.rootID, children: []};
+  },
+
+  appendInititalChildToContainer(
+    parentInstance: Container,
+    child: Instance | TextInstance,
+  ) {
+    parentInstance.children.push(child);
+  },
+
+  finalizeContainerChildren(container: Container): void {},
+
+  replaceContainer(oldContainer: Container, newContainer: Container): void {
+    rootContainers.set(oldContainer.rootID, newContainer);
+  },
+};
+
+// They are created lazily because only one can be created per test file.
+var renderer = null;
+var persistentRenderer = null;
+function getRenderer() {
+  return (
+    renderer ||
+    (renderer = ReactFiberReconciler({
+      ...SharedHostConfig,
+      mutation: MutationHostConfig,
+    }))
+  );
+}
+function getPersistentRenderer() {
+  return (
+    persistentRenderer ||
+    (persistentRenderer = ReactFiberReconciler({
+      ...SharedHostConfig,
+      persistence: PersistenceHostConfig,
+    }))
+  );
+}
 
 var rootContainers = new Map();
 var roots = new Map();
@@ -317,6 +333,7 @@ var ReactNoop = {
     rootID: string,
     callback: ?Function,
   ) {
+    const NoopRenderer = getRenderer();
     let root = roots.get(rootID);
     if (!root) {
       const container = {rootID: rootID, children: []};
@@ -332,6 +349,7 @@ var ReactNoop = {
     rootID: string,
     callback: ?Function,
   ) {
+    const PersistentNoopRenderer = getPersistentRenderer();
     let root = persistentRoots.get(rootID);
     if (!root) {
       const container = {rootID: rootID, children: []};
@@ -343,6 +361,7 @@ var ReactNoop = {
   },
 
   unmountRootWithID(rootID: string) {
+    const NoopRenderer = getRenderer();
     const root = roots.get(rootID);
     if (root) {
       NoopRenderer.updateContainer(null, root, null, () => {
@@ -355,6 +374,7 @@ var ReactNoop = {
   findInstance(
     componentOrElement: Element | ?React$Component<any, any>,
   ): null | Instance | TextInstance {
+    const NoopRenderer = getRenderer();
     if (componentOrElement == null) {
       return null;
     }
@@ -431,13 +451,25 @@ var ReactNoop = {
     return !!scheduledCallback;
   },
 
-  batchedUpdates: NoopRenderer.batchedUpdates,
+  batchedUpdates(...args: Array<any>) {
+    const NoopRenderer = getRenderer();
+    return NoopRenderer.batchedUpdates(...args);
+  },
 
-  deferredUpdates: NoopRenderer.deferredUpdates,
+  deferredUpdates(...args: Array<any>) {
+    const NoopRenderer = getRenderer();
+    return NoopRenderer.deferredUpdates(...args);
+  },
 
-  unbatchedUpdates: NoopRenderer.unbatchedUpdates,
+  unbatchedUpdates(...args: Array<any>) {
+    const NoopRenderer = getRenderer();
+    return NoopRenderer.unbatchedUpdates(...args);
+  },
 
-  flushSync: NoopRenderer.flushSync,
+  flushSync(...args: Array<any>) {
+    const NoopRenderer = getRenderer();
+    return NoopRenderer.flushSync(...args);
+  },
 
   // Logs the current state of the tree.
   dumpTree(rootID: string = DEFAULT_ROOT_ID) {

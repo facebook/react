@@ -12,6 +12,8 @@
 var React;
 var ReactNativeCS;
 
+jest.mock('ReactFeatureFlags', () => require('ReactNativeCSFeatureFlags'));
+
 describe('ReactNativeCS', () => {
   beforeEach(() => {
     jest.resetModules();

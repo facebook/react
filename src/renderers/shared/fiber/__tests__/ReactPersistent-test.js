@@ -16,6 +16,12 @@ let ReactPortal;
 describe('ReactPersistent', () => {
   beforeEach(() => {
     jest.resetModules();
+
+    const ReactFeatureFlags = require('ReactFeatureFlags');
+    ReactFeatureFlags.enableMutableReconciler = false;
+    ReactFeatureFlags.enablePersistentReconciler = true;
+    ReactFeatureFlags.enableNoopReconciler = false;
+
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactPortal = require('ReactPortal');
