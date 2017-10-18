@@ -458,7 +458,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (
       current === null ||
       current.tag !== HostPortal ||
-      current.stateNode.containerInfo !== portal.containerInfo ||
+      // Persistent containers don't have permanent identity.
+      // current.stateNode.containerInfo !== portal.containerInfo ||
       current.stateNode.implementation !== portal.implementation
     ) {
       // Insert
@@ -1315,7 +1316,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (child.key === key) {
         if (
           child.tag === HostPortal &&
-          child.stateNode.containerInfo === portal.containerInfo &&
+          // Persistent containers don't have permanent identity.
+          // child.stateNode.containerInfo === portal.containerInfo &&
           child.stateNode.implementation === portal.implementation
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
