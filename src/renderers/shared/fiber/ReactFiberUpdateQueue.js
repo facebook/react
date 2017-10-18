@@ -198,7 +198,12 @@ function processUpdateQueue<State>(
     // We need to create a work-in-progress queue, by cloning the current queue.
     const currentQueue = queue;
     queue = workInProgress.updateQueue = {
-      baseState: currentQueue.baseState,
+      // If we hit this clone path, the work-in-progress update queue is
+      // conceptually empty. Which means its base state is the same as its
+      // memoized state. This usually the same as the current queue's base
+      // state, but could be different if setState was called during a child's
+      // render phase.
+      baseState: workInProgress.memoizedState,
       expirationTime: currentQueue.expirationTime,
       first: currentQueue.first,
       last: currentQueue.last,
