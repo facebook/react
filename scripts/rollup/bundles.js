@@ -232,8 +232,6 @@ const bundles = [
     name: 'react-art',
     paths: [
       'packages/react-art/**/*.js',
-      // TODO: This is because of DOMFrameScheduling. Should be shared?
-      'packages/react-dom/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
