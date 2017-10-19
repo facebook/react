@@ -497,9 +497,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (remainingTime === NoWork) {
       capturedErrors = null;
       failedBoundaries = null;
+      // Return null instead of NoWork so we don't leak it.
+      return null;
     }
 
-    return remainingTime === NoWork ? null : remainingTime;
+    return remainingTime;
   }
 
   function resetExpirationTime(
