@@ -108,7 +108,7 @@ module.exports = function(babel) {
             if (prodErrorId === undefined) {
               // The error cannot be found in the map.
               // (This case isn't expected to occur.)
-              // Even if it does, it's best to transform the invariant to a turnary,
+              // Even if it does, it's best to transform the invariant to a ternary,
               // So we don't risk executing any slow code unnecessarily
               // (eg generating an invariant message we don't actually need).
               prodInvariant = path.node.arguments[1];
