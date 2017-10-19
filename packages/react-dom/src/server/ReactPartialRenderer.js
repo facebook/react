@@ -30,7 +30,7 @@ var omittedCloseTags = require('omittedCloseTags');
 var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
-var getStackAddendum = emptyFunction.thatReturnsArgument('');
+var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

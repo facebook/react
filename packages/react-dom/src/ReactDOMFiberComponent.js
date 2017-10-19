@@ -61,7 +61,7 @@ var HTML = '__html';
 
 var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
-var getStack = emptyFunction.thatReturnsArgument('');
+var getStack = emptyFunction.thatReturns('');
 
 if (__DEV__) {
   getStack = getCurrentFiberStackAddendum;
