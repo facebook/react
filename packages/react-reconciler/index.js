@@ -10,6 +10,10 @@
 'use strict';
 
 // TODO: bundle Flow types with the package.
-export type {HostConfig, Deadline, Reconciler} from './src/ReactFiberReconciler';
+export type {
+  HostConfig,
+  Deadline,
+  Reconciler,
+} from './src/ReactFiberReconciler';
 
 module.exports = require('./src/ReactFiberReconciler');
