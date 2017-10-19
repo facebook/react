@@ -123,7 +123,7 @@
       "./scripts/jest/environment.js"
     ],
     "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
-    "testRegex": "/__tests__/.*(\\.js|coffee|ts)$",
+    "testRegex": "/__tests__/.*(\\.js|\\.coffee|[^d]\\.ts)$",
     "moduleFileExtensions": [
       "js",
       "json",
