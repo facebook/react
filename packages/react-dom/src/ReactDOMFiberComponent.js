@@ -61,7 +61,7 @@ var HTML = '__html';
 
 var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
-var getStack = emptyFunction;
+var getStack = emptyFunction.thatReturnsArgument('');
 
 if (__DEV__) {
   getStack = getCurrentFiberStackAddendum;
@@ -562,7 +562,7 @@ var ReactDOMFiberComponent = {
         props = rawProps;
     }
 
-    assertValidProps(tag, props, getCurrentFiberOwnerName);
+    assertValidProps(tag, props, getStack);
 
     setInitialDOMProperties(
       tag,
@@ -656,7 +656,7 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    assertValidProps(tag, nextProps, getCurrentFiberOwnerName);
+    assertValidProps(tag, nextProps, getStack);
 
     var propKey;
     var styleName;
@@ -971,7 +971,7 @@ var ReactDOMFiberComponent = {
         break;
     }
 
-    assertValidProps(tag, rawProps, getCurrentFiberOwnerName);
+    assertValidProps(tag, rawProps, getStack);
 
     if (__DEV__) {
       var extraAttributeNames: Set<string> = new Set();

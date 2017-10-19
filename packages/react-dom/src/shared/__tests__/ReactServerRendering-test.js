@@ -18,6 +18,10 @@ var PropTypes;
 
 var ROOT_ATTRIBUTE_NAME;
 
+function normalizeCodeLocInfo(str) {
+  return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
+}
+
 describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -380,11 +384,17 @@ describe('ReactDOMServer', () => {
     });
 
     it('should throw prop mapping error for an <iframe /> with invalid props', () => {
-      expect(() =>
-        ReactDOMServer.renderToString(<iframe style="border:none;" />),
-      ).toThrowError(
+      let caughtErr;
+      try {
+        ReactDOMServer.renderToString(<iframe style="border:none;" />);
+      } catch (err) {
+        caughtErr = err;
+      }
+      expect(caughtErr).not.toBe(undefined);
+      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'The `style` prop expects a mapping from style properties to values, not ' +
-          "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX.",
+          "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX." +
+          '\n    in iframe (at **)',
       );
     });
   });
@@ -722,6 +732,18 @@ describe('ReactDOMServer', () => {
     expect(console.error.calls.argsFor(1)[0]).toBe(
       'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
         'HTML tags in React.',
+    );
+  });
+
+  it('should warn about contentEditable and children', () => {
+    spyOn(console, 'error');
+    ReactDOMServer.renderToString(<div contentEditable={true} children="" />);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+      'Warning: A component is `contentEditable` and contains `children` ' +
+        'managed by React. It is now your responsibility to guarantee that ' +
+        'none of those nodes are unexpectedly modified or duplicated. This ' +
+        'is probably not intentional.\n    in div (at **)',
     );
   });
 });
