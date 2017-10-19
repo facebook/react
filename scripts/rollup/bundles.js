@@ -323,6 +323,7 @@ const bundles = [
     label: 'native-cs-fiber',
     manglePropertiesOnProd: false,
     name: 'react-native-cs-renderer',
+    featureFlags: 'packages/react-cs-renderer/src/ReactNativeCSFeatureFlags',
     paths: [
       'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
       'packages/react-cs-renderer/**/*.js',

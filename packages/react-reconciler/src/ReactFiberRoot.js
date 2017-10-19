@@ -17,6 +17,8 @@ const {createHostRootFiber} = require('ReactFiber');
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
   containerInfo: any,
+  // Used only by persistent updates.
+  pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
   // Determines if this root has already been added to the schedule for work.
@@ -40,6 +42,7 @@ exports.createFiberRoot = function(
   const root = {
     current: uninitializedFiber,
     containerInfo: containerInfo,
+    pendingChildren: null,
     isScheduled: false,
     nextScheduledRoot: null,
     context: null,

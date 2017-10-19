@@ -20,6 +20,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('ReactFiberReconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
@@ -85,7 +86,7 @@ function removeChild(
 
 let elapsedTimeInMs = 0;
 
-var NoopRenderer = ReactFiberReconciler({
+var SharedHostConfig = {
   getRootHostContext() {
     if (failInBeginPhase) {
       throw new Error('Error in host config.');
@@ -176,7 +177,10 @@ var NoopRenderer = ReactFiberReconciler({
   now(): number {
     return elapsedTimeInMs;
   },
+};
 
+var NoopRenderer = ReactFiberReconciler({
+  ...SharedHostConfig,
   mutation: {
     commitMount(instance: Instance, type: string, newProps: Props): void {
       // Noop
@@ -211,8 +215,64 @@ var NoopRenderer = ReactFiberReconciler({
   },
 });
 
+var PersistentNoopRenderer = ReactFeatureFlags.enablePersistentReconciler
+  ? ReactFiberReconciler({
+      ...SharedHostConfig,
+      persistence: {
+        cloneInstance(
+          instance: Instance,
+          updatePayload: null | Object,
+          type: string,
+          oldProps: Props,
+          newProps: Props,
+          internalInstanceHandle: Object,
+          keepChildren: boolean,
+          recyclableInstance: null | Instance,
+        ): Instance {
+          const clone = {
+            id: instance.id,
+            type: type,
+            children: keepChildren ? instance.children : [],
+            prop: newProps.prop,
+          };
+          Object.defineProperty(clone, 'id', {
+            value: clone.id,
+            enumerable: false,
+          });
+          return clone;
+        },
+
+        createContainerChildSet(
+          container: Container,
+        ): Array<Instance | TextInstance> {
+          return [];
+        },
+
+        appendChildToContainerChildSet(
+          childSet: Array<Instance | TextInstance>,
+          child: Instance | TextInstance,
+        ): void {
+          childSet.push(child);
+        },
+
+        finalizeContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {},
+
+        replaceContainerChildren(
+          container: Container,
+          newChildren: Array<Instance | TextInstance>,
+        ): void {
+          container.children = newChildren;
+        },
+      },
+    })
+  : null;
+
 var rootContainers = new Map();
 var roots = new Map();
+var persistentRoots = new Map();
 var DEFAULT_ROOT_ID = '<default>';
 
 let yieldedValues = null;
@@ -273,6 +333,26 @@ var ReactNoop = {
       roots.set(rootID, root);
     }
     NoopRenderer.updateContainer(element, root, null, callback);
+  },
+
+  renderToPersistentRootWithID(
+    element: React$Element<any>,
+    rootID: string,
+    callback: ?Function,
+  ) {
+    if (PersistentNoopRenderer === null) {
+      throw new Error(
+        'Enable ReactFeatureFlags.enablePersistentReconciler to use it in tests.',
+      );
+    }
+    let root = persistentRoots.get(rootID);
+    if (!root) {
+      const container = {rootID: rootID, children: []};
+      rootContainers.set(rootID, container);
+      root = PersistentNoopRenderer.createContainer(container, false);
+      persistentRoots.set(rootID, root);
+    }
+    PersistentNoopRenderer.updateContainer(element, root, null, callback);
   },
 
   unmountRootWithID(rootID: string) {

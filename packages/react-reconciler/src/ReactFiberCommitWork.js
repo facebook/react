@@ -13,6 +13,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {HostConfig} from 'ReactFiberReconciler';
 
+var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactTypeOfWork = require('ReactTypeOfWork');
 var {
   ClassComponent,
@@ -38,11 +39,11 @@ if (__DEV__) {
   var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
-  const {getPublicInstance} = config;
+  const {getPublicInstance, mutation, persistence} = config;
 
   if (__DEV__) {
     var callComponentWillUnmountWithTimerInDev = function(current, instance) {
@@ -162,6 +163,10 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // We have no life-cycles associated with text.
         return;
       }
+      case HostPortal: {
+        // We have no life-cycles associated with portals.
+        return;
+      }
       default: {
         invariant(
           false,
@@ -222,7 +227,14 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        unmountHostComponents(current);
+        if (ReactFeatureFlags.enableMutatingReconciler && mutation) {
+          unmountHostComponents(current);
+        } else if (
+          ReactFeatureFlags.enablePersistentReconciler &&
+          persistence
+        ) {
+          emptyPortalContainer(current);
+        }
         return;
       }
     }
@@ -239,7 +251,12 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
       commitUnmount(node);
       // Visit children because they may contain more composite or host nodes.
       // Skip portals because commitUnmount() currently visits them recursively.
-      if (node.child !== null && node.tag !== HostPortal) {
+      if (
+        node.child !== null &&
+        // If we use mutation we drill down into portals using commitUnmount above.
+        // If we don't use mutation we drill down into portals here instead.
+        (!mutation || node.tag !== HostPortal)
+      ) {
         node.child.return = node;
         node = node.child;
         continue;
@@ -272,22 +289,75 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     }
   }
 
-  if (!config.mutation) {
-    return {
-      commitResetTextContent(finishedWork: Fiber) {},
-      commitPlacement(finishedWork: Fiber) {},
-      commitDeletion(current: Fiber) {
-        // Detach refs and call componentWillUnmount() on the whole subtree.
-        commitNestedUnmounts(current);
-        detachFiber(current);
-      },
-      commitWork(current: Fiber | null, finishedWork: Fiber) {},
-      commitLifeCycles,
-      commitAttachRef,
-      commitDetachRef,
-    };
+  if (!mutation) {
+    let commitContainer;
+    if (persistence) {
+      const {replaceContainerChildren, createContainerChildSet} = persistence;
+      var emptyPortalContainer = function(current: Fiber) {
+        const portal: {containerInfo: C, pendingChildren: CC} =
+          current.stateNode;
+        const {containerInfo} = portal;
+        const emptyChildSet = createContainerChildSet(containerInfo);
+        replaceContainerChildren(containerInfo, emptyChildSet);
+      };
+      commitContainer = function(finishedWork: Fiber) {
+        switch (finishedWork.tag) {
+          case ClassComponent: {
+            return;
+          }
+          case HostComponent: {
+            return;
+          }
+          case HostText: {
+            return;
+          }
+          case HostRoot:
+          case HostPortal: {
+            const portalOrRoot: {containerInfo: C, pendingChildren: CC} =
+              finishedWork.stateNode;
+            const {containerInfo, pendingChildren} = portalOrRoot;
+            replaceContainerChildren(containerInfo, pendingChildren);
+            return;
+          }
+          default: {
+            invariant(
+              false,
+              'This unit of work tag should not have side-effects. This error is ' +
+                'likely caused by a bug in React. Please file an issue.',
+            );
+          }
+        }
+      };
+    } else {
+      commitContainer = function(finishedWork: Fiber) {
+        // Noop
+      };
+    }
+    if (
+      ReactFeatureFlags.enablePersistentReconciler ||
+      ReactFeatureFlags.enableNoopReconciler
+    ) {
+      return {
+        commitResetTextContent(finishedWork: Fiber) {},
+        commitPlacement(finishedWork: Fiber) {},
+        commitDeletion(current: Fiber) {
+          // Detach refs and call componentWillUnmount() on the whole subtree.
+          commitNestedUnmounts(current);
+          detachFiber(current);
+        },
+        commitWork(current: Fiber | null, finishedWork: Fiber) {
+          commitContainer(finishedWork);
+        },
+        commitLifeCycles,
+        commitAttachRef,
+        commitDetachRef,
+      };
+    } else if (persistence) {
+      invariant(false, 'Persistent reconciler is disabled.');
+    } else {
+      invariant(false, 'Noop reconciler is disabled.');
+    }
   }
-
   const {
     commitMount,
     commitUpdate,
@@ -299,7 +369,7 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     insertInContainerBefore,
     removeChild,
     removeChildFromContainer,
-  } = config.mutation;
+  } = mutation;
 
   function getHostParentFiber(fiber: Fiber): Fiber {
     let parent = fiber.return;
@@ -599,13 +669,17 @@ module.exports = function<T, P, I, TI, PI, C, CX, PL>(
     resetTextContent(current.stateNode);
   }
 
-  return {
-    commitResetTextContent,
-    commitPlacement,
-    commitDeletion,
-    commitWork,
-    commitLifeCycles,
-    commitAttachRef,
-    commitDetachRef,
-  };
+  if (ReactFeatureFlags.enableMutatingReconciler) {
+    return {
+      commitResetTextContent,
+      commitPlacement,
+      commitDeletion,
+      commitWork,
+      commitLifeCycles,
+      commitAttachRef,
+      commitDetachRef,
+    };
+  } else {
+    invariant(false, 'Mutating reconciler is disabled.');
+  }
 };

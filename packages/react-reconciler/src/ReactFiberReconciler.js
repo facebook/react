@@ -47,7 +47,7 @@ export type Deadline = {
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
 
-export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
+export type HostConfig<T, P, I, TI, PI, C, CC, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
   getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
@@ -100,7 +100,7 @@ export type HostConfig<T, P, I, TI, PI, C, CX, PL> = {
   +hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
 
   +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
-  +persistence?: PersistentUpdatesHostConfig<T, P, I, C, CX, PL>,
+  +persistence?: PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL>,
 };
 
 type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
@@ -132,28 +132,24 @@ type MutableUpdatesHostConfig<T, P, I, TI, C, PL> = {
   removeChildFromContainer(container: C, child: I | TI): void,
 };
 
-type PersistentUpdatesHostConfig<T, P, I, C, CX, PL> = {
+type PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL> = {
   cloneInstance(
     instance: I,
-    updatePayload: PL,
+    updatePayload: null | PL,
     type: T,
     oldProps: P,
     newProps: P,
     internalInstanceHandle: OpaqueHandle,
     keepChildren: boolean,
-  ): I,
-  tryToReuseInstance(
-    instance: I,
-    updatePayload: PL,
-    type: T,
-    oldProps: P,
-    newProps: P,
-    internalInstanceHandle: OpaqueHandle,
-    keepChildren: boolean,
+    recyclableInstance: I,
   ): I,
 
-  createRootInstance(rootContainerInstance: C, hostContext: CX): I,
-  commitRootInstance(rootInstance: I): void,
+  createContainerChildSet(container: C): CC,
+
+  appendChildToContainerChildSet(childSet: CC, child: I | TI): void,
+  finalizeContainerChildren(container: C, newChildren: CC): void,
+
+  replaceContainerChildren(container: C, newChildren: CC): void,
 };
 
 type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
@@ -257,8 +253,8 @@ function getContextForSubtree(
     : parentContext;
 }
 
-module.exports = function<T, P, I, TI, PI, C, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CX, PL>,
+module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
   var {getPublicInstance} = config;
 
