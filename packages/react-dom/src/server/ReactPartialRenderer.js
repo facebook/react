@@ -130,7 +130,7 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
-function createMarkupForStyles(styles, component) {
+function createMarkupForStyles(styles) {
   var serialized = '';
   var delimiter = '';
   for (var styleName in styles) {
@@ -141,7 +141,11 @@ function createMarkupForStyles(styles, component) {
     var styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(styleName, styleValue, component);
+        warnValidStyle(
+          styleName,
+          styleValue,
+          () => '', // getCurrentFiberStackAddendum,
+        );
       }
     }
     if (styleValue != null) {
@@ -263,7 +267,6 @@ function createOpenTagMarkup(
   namespace,
   makeStaticMarkup,
   isRootElement,
-  instForDebug,
 ) {
   var ret = '<' + tagVerbatim;
 
@@ -276,7 +279,7 @@ function createOpenTagMarkup(
       continue;
     }
     if (propKey === STYLE) {
-      propValue = createMarkupForStyles(propValue, instForDebug);
+      propValue = createMarkupForStyles(propValue);
     }
     var markup = null;
     if (isCustomComponent(tagLowercase, props)) {
@@ -791,7 +794,6 @@ class ReactDOMServerRenderer {
       namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
-      null,
     );
     var footer = '';
     if (omittedCloseTags.hasOwnProperty(tag)) {
