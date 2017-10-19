@@ -169,12 +169,7 @@ const bundles = [
     label: 'dom-server-browser',
     manglePropertiesOnProd: false,
     name: 'react-dom/server.browser',
-    paths: [
-      'packages/react-dom/**/*.js',
-      // TODO: server shouldn't depend on reconciler modules:
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
   },
 
   {
@@ -194,12 +189,7 @@ const bundles = [
     label: 'dom-server-server-node',
     manglePropertiesOnProd: false,
     name: 'react-dom/server.node',
-    paths: [
-      'packages/react-dom/**/*.js',
-      // TODO: server shouldn't depend on reconciler modules:
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
   },
 
   /******* React ART *******/
