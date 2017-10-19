@@ -117,8 +117,6 @@ const bundles = [
       'prop-types/checkPropTypes',
       'react',
       'react-dom',
-      'React',
-      'ReactDOM',
     ],
     fbEntry: 'packages/react-dom/test-utils.js',
     hasteName: 'ReactTestUtils',

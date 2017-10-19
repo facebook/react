@@ -53,8 +53,8 @@
       "gzip": 11118
     },
     "ReactTestUtils-dev.js (FB_DEV)": {
-      "size": 41552,
-      "gzip": 11064
+      "size": 41569,
+      "gzip": 11069
     },
     "react-dom-unstable-native-dependencies.development.js (UMD_DEV)": {
       "size": 84961,
