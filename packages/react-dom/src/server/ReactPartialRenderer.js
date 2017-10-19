@@ -30,8 +30,6 @@ var omittedCloseTags = require('omittedCloseTags');
 var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
-var emptyFunctionThatReturnsNull = emptyFunction.thatReturnsNull;
-
 var getStackAddendum = emptyFunction.thatReturnsArgument('');
 
 if (__DEV__) {
