@@ -530,18 +530,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.type === REACT_FRAGMENT_TYPE) {
-            const created = createFiberFromFragment(
-              isArray(newChild.props.children)
-                ? newChild.props.children
-                : [newChild.props.children],
-              returnFiber.internalContextTag,
-              expirationTime,
-              newChild.key,
-            );
-            created.return = returnFiber;
-            return created;
-          }
           const created = createFiberFromElement(
             newChild,
             returnFiber.internalContextTag,
@@ -635,18 +623,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
+          if (newChild.type === REACT_FRAGMENT_TYPE) {
+            return updateSlot(
+              returnFiber,
+              oldFiber,
+              newChild.props.children,
+              expirationTime,
+            );
+          }
+
           if (newChild.key === key) {
-            if (newChild.type === REACT_FRAGMENT_TYPE) {
-              return updateFragment(
-                returnFiber,
-                oldFiber,
-                isArray(newChild.props.children)
-                  ? newChild.props.children
-                  : [newChild.props.children],
-                expirationTime,
-                key,
-              );
-            }
             return updateElement(
               returnFiber,
               oldFiber,
@@ -697,17 +683,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        // Fragments doesn't have keys so if the previous key is implicit we can
-        // update it.
-        if (key !== null) {
-          return null;
-        }
         return updateFragment(
           returnFiber,
           oldFiber,
           newChild,
           expirationTime,
-          null,
+          key,
         );
       }
 
@@ -753,9 +734,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             return updateFragment(
               returnFiber,
               matchedFiber,
-              isArray(newChild.props.children)
-                ? newChild.props.children
-                : [newChild.props.children],
+              newChild.props.children,
               expirationTime,
               newChild.key,
             );
@@ -1401,6 +1380,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     currentFirstChild: Fiber | null,
     newChild: any,
     expirationTime: ExpirationTime,
+    nested?: boolean,
   ): Fiber | null {
     // This function is not recursive.
     // If the top level item is an array, we treat it as a set of children,
@@ -1412,14 +1392,20 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          if (newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null) {
-            return reconcileChildrenArray(
+          // This function recurses only on a top-level fragment,
+          // so that it is treated as a set of children
+          // Otherwise, we follow the normal flow.
+          if (
+            newChild.type === REACT_FRAGMENT_TYPE &&
+            newChild.key === null &&
+            !nested
+          ) {
+            return reconcileChildFibers(
               returnFiber,
               currentFirstChild,
-              isArray(newChild.props.children)
-                ? newChild.props.children
-                : [newChild.props.children],
+              newChild.props.children,
               expirationTime,
+              true,
             );
           }
 

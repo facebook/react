@@ -97,7 +97,7 @@ describe('ReactFragment', () => {
     expect(instanceB).toBe(instanceA);
   });
 
-  it('should not preserve state of children with 2 levels nesting', function() {
+  it('should not preserve state of children if no siblings and nested', function() {
     var instance = null;
     var ops = [];
 
@@ -115,9 +115,45 @@ describe('ReactFragment', () => {
         : <React.Fragment>
             <React.Fragment>
               <Stateful key="a" />
-              <div key="b">World</div>
-              <div key="c" />
             </React.Fragment>
+          </React.Fragment>;
+    }
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    var instanceA = instance;
+
+    expect(instanceA).not.toBe(null);
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    var instanceB = instance;
+
+    expect(ops).toEqual(['Stateful render', 'Stateful render']);
+    expect(instanceB).not.toBe(instanceA);
+  });
+
+  it('should not preserve state of children if nested with siblings', function() {
+    var instance = null;
+    var ops = [];
+
+    class Stateful extends React.Component {
+      render() {
+        ops.push('Stateful render');
+        instance = this;
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : <React.Fragment>
+            <React.Fragment>
+              <Stateful key="a" />
+            </React.Fragment>
+            <div />
           </React.Fragment>;
     }
     ReactNoop.render(<Fragment />);

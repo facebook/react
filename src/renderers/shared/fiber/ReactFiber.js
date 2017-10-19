@@ -324,9 +324,7 @@ exports.createFiberFromElement = function(
     fiber.pendingProps = element.props;
   } else if (type === REACT_FRAGMENT_TYPE) {
     fiber = createFiberFromFragment(
-      Array.isArray(element.props.children)
-        ? element.props.children
-        : [element.props.children],
+      element.props.children,
       internalContextTag,
       expirationTime,
       key,
