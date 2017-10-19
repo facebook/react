@@ -118,11 +118,7 @@ const bundles = [
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
-    paths: [
-      'packages/react-dom/**/*.js',
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
   },
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
@@ -175,6 +171,7 @@ const bundles = [
     name: 'react-dom/server.browser',
     paths: [
       'packages/react-dom/**/*.js',
+      // TODO: server shouldn't depend on reconciler modules:
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
@@ -199,6 +196,7 @@ const bundles = [
     name: 'react-dom/server.node',
     paths: [
       'packages/react-dom/**/*.js',
+      // TODO: server shouldn't depend on reconciler modules:
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
@@ -234,8 +232,6 @@ const bundles = [
     name: 'react-art',
     paths: [
       'packages/react-art/**/*.js',
-      // Because of DOMFrameScheduling. Should be shared?
-      'packages/react-dom/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
@@ -375,11 +371,7 @@ const bundles = [
     label: 'shallow-renderer',
     manglePropertiesOnProd: false,
     name: 'react-test-renderer/shallow',
-    paths: [
-      'packages/react-test-renderer/**/*.js',
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    paths: ['packages/react-test-renderer/**/*.js', 'packages/shared/**/*.js'],
   },
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
