@@ -1290,27 +1290,13 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   // TODO: Everything below this is written as if it has been lifted to the
   // renderers. I'll do this in a follow-up.
 
-  // Represents a renderer root, e.g. the result of ReactDOM.createRoot
-  type ReactRoot = {|
-    +internalRoot: FiberRoot,
-    // Represents the work that on this root that needs to be flushed. To avoid
-    // leaking the fact that NoWork is a magic number, we use null to represent
-    // the absence of work.
-    remainingWork: ExpirationTime | null,
-    // True if the root is complete and it's ready to be committed. This flag
-    // is only true in between the render phase and commit phase. If we re-
-    // render a root without committing it, set it back to false. Attempting to
-    // commit a root that isn't ready will throw an error.
-    isReadyForCommit: boolean,
-  |};
+  // Linked-list of roots
+  let firstScheduledRoot: FiberRoot | null = null;
+  let lastScheduledRoot: FiberRoot | null = null;
 
-  // TODO: Is a map the right data structure here? We need to associate a
-  // an opqaue, internal root (FiberRoot) with a renderer root (what I'm
-  // calling ReactRoot here).
-  const scheduledRoots: Map<FiberRoot, ReactRoot> = new Map();
   let isCallbackScheduled: boolean = false;
   let isFlushingWork: boolean = false;
-  let nextFlushedRoot: ReactRoot | null = null;
+  let nextFlushedRoot: FiberRoot | null = null;
   let nextFlushedExpirationTime: ExpirationTime | null = null;
   let deadlineDidExpire: boolean = false;
   let hasUnhandledError: boolean = false;
@@ -1328,10 +1314,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
 
   // requestWork is called by the scheduler whenever a root receives an update.
   // It's up to the renderer to call renderRoot at some point in the future.
-  function requestWork(
-    internalRoot: FiberRoot,
-    expirationTime: ExpirationTime,
-  ) {
+  function requestWork(root: FiberRoot, expirationTime: ExpirationTime) {
     if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
       invariant(
         false,
@@ -1343,21 +1326,21 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     // Check if this root is already part of the schedule.
-    let reactRoot = scheduledRoots.get(internalRoot);
-    if (reactRoot === undefined) {
+    if (root.remainingWork === null) {
       // This root is not already scheduled. Add it.
-      reactRoot = {
-        internalRoot,
-        remainingWork: expirationTime,
-        isReadyForCommit: false,
-      };
-      scheduledRoots.set(internalRoot, reactRoot);
+      root.remainingWork = expirationTime;
+      if (lastScheduledRoot === null) {
+        firstScheduledRoot = lastScheduledRoot = root;
+      } else {
+        lastScheduledRoot.nextScheduledRoot = root;
+        lastScheduledRoot = root;
+      }
     } else {
       // This root is already scheduled, but its priority may have increased.
-      const remainingWork = reactRoot.remainingWork;
+      const remainingWork = root.remainingWork;
       if (remainingWork === null || expirationTime < remainingWork) {
         // Update the priority.
-        reactRoot.remainingWork = expirationTime;
+        root.remainingWork = expirationTime;
       }
     }
 
@@ -1382,24 +1365,44 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   function findHighestPriorityRoot() {
     let highestPriorityWork = null;
     let highestPriorityRoot = null;
-    scheduledRoots.forEach((reactRoot, key) => {
-      const remainingWork = reactRoot.remainingWork;
+
+    let previousScheduledRoot = null;
+    let root = firstScheduledRoot;
+    while (root !== null) {
+      const remainingWork = root.remainingWork;
       if (remainingWork === null) {
         // If this root no longer has work, remove it from the scheduler.
-        scheduledRoots.delete(key);
+        let next = root.nextScheduledRoot;
+        root.nextScheduledRoot = null;
+        if (previousScheduledRoot === null) {
+          firstScheduledRoot = next;
+        } else {
+          previousScheduledRoot.nextScheduledRoot = next;
+        }
+        if (next === null) {
+          lastScheduledRoot = null;
+        }
+        root = next;
+        continue;
       } else if (
         highestPriorityWork === null ||
         remainingWork < highestPriorityWork
       ) {
+        // Update the priority, if it's higher
         highestPriorityWork = remainingWork;
-        highestPriorityRoot = reactRoot;
+        highestPriorityRoot = root;
       }
-    });
+      previousScheduledRoot = root;
+      root = root.nextScheduledRoot;
+    }
 
     // If the next root is the same as the previous root, this is a nested
     // update. To prevent an infinite loop, increment the nested update count.
-    const previousRoot = nextFlushedRoot;
-    if (previousRoot !== null && previousRoot === highestPriorityRoot) {
+    const previousFlushedRoot = nextFlushedRoot;
+    if (
+      previousFlushedRoot !== null &&
+      previousFlushedRoot === highestPriorityRoot
+    ) {
       nestedUpdateCount++;
     } else {
       // Reset whenever we switch roots.
@@ -1440,52 +1443,44 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       // TODO: Pass current time as argument to renderRoot, commitRoot
       if (nextFlushedExpirationTime <= recalculateCurrentTime()) {
         // Flush sync work.
-        if (nextFlushedRoot.isReadyForCommit) {
+        if (nextFlushedRoot.isComplete) {
           // This root is already complete. We can commit it.
-          nextFlushedRoot.isReadyForCommit = false;
-          nextFlushedRoot.remainingWork = commitRoot(
-            nextFlushedRoot.internalRoot,
-          );
+          nextFlushedRoot.isComplete = false;
+          nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
         } else {
-          nextFlushedRoot.isReadyForCommit = false;
-          const isReadyForCommit = renderRoot(
-            nextFlushedRoot.internalRoot,
+          nextFlushedRoot.isComplete = false;
+          const isComplete = renderRoot(
+            nextFlushedRoot,
             nextFlushedExpirationTime,
           );
-          if (isReadyForCommit) {
+          if (isComplete) {
             // We've completed the root. Commit it.
-            nextFlushedRoot.remainingWork = commitRoot(
-              nextFlushedRoot.internalRoot,
-            );
+            nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
           }
         }
       } else {
         // Flush async work.
-        if (nextFlushedRoot.isReadyForCommit) {
+        if (nextFlushedRoot.isComplete) {
           // This root is already complete. We can commit it.
-          nextFlushedRoot.isReadyForCommit = false;
-          nextFlushedRoot.remainingWork = commitRoot(
-            nextFlushedRoot.internalRoot,
-          );
+          nextFlushedRoot.isComplete = false;
+          nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
         } else {
-          nextFlushedRoot.isReadyForCommit = false;
-          const isReadyForCommit = renderRoot(
-            nextFlushedRoot.internalRoot,
+          nextFlushedRoot.isComplete = false;
+          const isComplete = renderRoot(
+            nextFlushedRoot,
             nextFlushedExpirationTime,
           );
-          if (isReadyForCommit) {
+          if (isComplete) {
             // We've completed the root. Check the deadline one more time
             // before committing.
             if (!shouldYield()) {
               // Still time left. Commit the root.
-              nextFlushedRoot.remainingWork = commitRoot(
-                nextFlushedRoot.internalRoot,
-              );
-              nextFlushedRoot.isReadyForCommit = false;
+              nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
+              nextFlushedRoot.isComplete = false;
             } else {
               // There's no time left. Mark this root as complete. We'll come
               // back and commit it later.
-              nextFlushedRoot.isReadyForCommit = true;
+              nextFlushedRoot.isComplete = true;
             }
           }
         }
