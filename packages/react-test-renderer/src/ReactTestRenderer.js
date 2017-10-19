@@ -4,14 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactTestRendererFiberEntry
- * @preventMunge
  * @flow
  */
 
 'use strict';
 
-var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactFiberReconciler = require('react-reconciler');
 var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
 var ReactGenericBatching = require('ReactGenericBatching');
 var emptyObject = require('fbjs/lib/emptyObject');

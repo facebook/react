@@ -23,11 +23,17 @@ const RN_PROD = bundleTypes.RN_PROD;
 const moduleTypes = {
   ISOMORPHIC: 'ISOMORPHIC',
   RENDERER: 'RENDERER',
+  RENDERER_UTILS: 'RENDERER_UTILS',
   RECONCILER: 'RECONCILER',
 };
 
+// React
 const ISOMORPHIC = moduleTypes.ISOMORPHIC;
+// Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
 const RENDERER = moduleTypes.RENDERER;
+// Helper packages that access specific renderer's internals. (e.g. TestUtils)
+const RENDERER_UTILS = moduleTypes.RENDERER_UTILS;
+// Standalone reconciler for third-party renderers.
 const RECONCILER = moduleTypes.RECONCILER;
 
 const babelOptsReact = {
@@ -114,7 +120,7 @@ const bundles = [
     ],
     fbEntry: 'packages/react-dom/test-utils.js',
     hasteName: 'ReactTestUtils',
-    moduleType: RENDERER,
+    moduleType: RENDERER_UTILS,
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
@@ -142,7 +148,7 @@ const bundles = [
     ],
     fbEntry: 'packages/react-dom/unstable-native-dependencies.js',
     hasteName: 'ReactDOMUnstableNativeDependencies',
-    moduleType: RENDERER,
+    moduleType: RENDERER_UTILS,
     label: 'dom-unstable-native-dependencies',
     manglePropertiesOnProd: false,
     name: 'react-dom/unstable-native-dependencies',
@@ -281,6 +287,7 @@ const bundles = [
       'prop-types/checkPropTypes',
     ],
     hasteName: 'ReactNativeRTFiber',
+    moduleType: RENDERER,
     isRenderer: true,
     label: 'native-rt-fiber',
     manglePropertiesOnProd: false,
@@ -305,6 +312,7 @@ const bundles = [
     entry: 'packages/react-cs-renderer/index.js',
     externals: ['prop-types/checkPropTypes'],
     hasteName: 'ReactNativeCSFiber',
+    moduleType: RENDERER,
     isRenderer: true,
     label: 'native-cs-fiber',
     manglePropertiesOnProd: false,

@@ -3,9 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactARTFiberEntry
  */
+
 'use strict';
 
 require('art/modes/current').setCurrent(
@@ -18,7 +17,7 @@ const Transform = require('art/core/transform');
 const invariant = require('fbjs/lib/invariant');
 const emptyObject = require('fbjs/lib/emptyObject');
 const React = require('react');
-const ReactFiberReconciler = require('ReactFiberReconciler');
+const ReactFiberReconciler = require('react-reconciler');
 const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 
 const {Component} = React;

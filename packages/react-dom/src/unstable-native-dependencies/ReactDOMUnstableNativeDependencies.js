@@ -3,14 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMUnstableNativeDependenciesEntry
  */
 
 const EventPluginUtils = require('EventPluginUtils');
 const ResponderEventPlugin = require('ResponderEventPlugin');
 const ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
 
+// This is used by react-native-web.
 const ReactDOMUnstableNativeDependencies = {
   injectComponentTree: EventPluginUtils.injection.injectComponentTree,
   ResponderEventPlugin,

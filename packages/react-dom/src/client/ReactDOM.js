@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFiberEntry
  * @flow
  */
 
@@ -22,7 +21,7 @@ var ReactDOMComponentTree = require('ReactDOMComponentTree');
 var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactGenericBatching = require('ReactGenericBatching');
-var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactFiberReconciler = require('react-reconciler');
 var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
@@ -784,7 +783,7 @@ ReactRoot.prototype.unmount = function(callback) {
   DOMRenderer.updateContainer(null, root, null, callback);
 };
 
-var ReactDOMFiber = {
+var ReactDOM = {
   createRoot(container: DOMContainer, options?: RootOptions): ReactRootNode {
     const hydrate = options != null && options.hydrate === true;
     return new ReactRoot(container, hydrate);
@@ -988,4 +987,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactDOMFiber;
+module.exports = ReactDOM;

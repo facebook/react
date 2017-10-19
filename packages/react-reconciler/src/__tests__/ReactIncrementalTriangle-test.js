@@ -16,7 +16,7 @@ describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
-    ReactNoop = require('ReactNoopEntry');
+    ReactNoop = require('react-noop-renderer');
   });
 
   function span(prop) {

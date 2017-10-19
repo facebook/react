@@ -7,24 +7,20 @@
 
 'use strict';
 
-// TODO: Move the source into packages
-var ReactDOMFiber = require('ReactDOMFiberEntry');
+var ReactDOM = require('./src/client/ReactDOM');
 
-Object.assign(
-  ReactDOMFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
-  {
-    // These are real internal dependencies that are trickier to remove:
-    ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
-    ReactErrorUtils: require('ReactErrorUtils'),
-    ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
-    ReactFiberTreeReflection: require('ReactFiberTreeReflection'),
-    ReactDOMComponentTree: require('ReactDOMComponentTree'),
-    ReactInstanceMap: require('ReactInstanceMap'),
-    // These are dependencies of TapEventPlugin:
-    EventPluginUtils: require('EventPluginUtils'),
-    EventPropagators: require('EventPropagators'),
-    SyntheticUIEvent: require('SyntheticUIEvent'),
-  },
-);
+Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
+  // These are real internal dependencies that are trickier to remove:
+  ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
+  ReactErrorUtils: require('ReactErrorUtils'),
+  ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
+  ReactFiberTreeReflection: require('ReactFiberTreeReflection'),
+  ReactDOMComponentTree: require('ReactDOMComponentTree'),
+  ReactInstanceMap: require('ReactInstanceMap'),
+  // These are dependencies of TapEventPlugin:
+  EventPluginUtils: require('EventPluginUtils'),
+  EventPropagators: require('EventPropagators'),
+  SyntheticUIEvent: require('SyntheticUIEvent'),
+});
 
-module.exports = ReactDOMFiber;
+module.exports = ReactDOM;

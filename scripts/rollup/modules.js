@@ -23,6 +23,7 @@ const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
 const ISOMORPHIC = moduleTypes.ISOMORPHIC;
+const RENDERER = moduleTypes.RENDERER;
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -122,6 +123,10 @@ function getNodeModules(bundleType, moduleType) {
 
 function ignoreFBModules() {
   return [
+    // These are FB-specific aliases to react and react-dom.
+    // Don't attempt to bundle them into other bundles.
+    'React',
+    'ReactDOM',
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
@@ -180,14 +185,21 @@ function getExternalModules(externals, bundleType, moduleType) {
   return externalModules;
 }
 
-function getInternalModules() {
+function getInternalModules(moduleType) {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
-  return {
+  let aliases = {
     reactProdInvariant: resolve(
       './packages/shared/src/utils/reactProdInvariant.js'
     ),
   };
+  if (moduleType === RENDERER) {
+    // Renderers bundle the whole reconciler.
+    aliases['react-reconciler'] = resolve(
+      './packages/react-reconciler/index.js'
+    );
+  }
+  return aliases;
 }
 
 function getFbjsModuleAliases(bundleType) {
@@ -292,7 +304,7 @@ function getAliases(paths, bundleType, moduleType, extractErrors) {
       extractErrors && extractErrorCodes(errorCodeOpts),
       bundleType
     ),
-    getInternalModules(),
+    getInternalModules(moduleType),
     getNodeModules(bundleType, moduleType),
     getFbjsModuleAliases(bundleType)
   );

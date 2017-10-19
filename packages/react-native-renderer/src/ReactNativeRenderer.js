@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberEntry
  * @flow
  */
 
@@ -41,7 +40,7 @@ ReactFiberErrorLogger.injection.injectDialog(
   ReactNativeFiberErrorDialog.showDialog,
 );
 
-const ReactNativeFiber: ReactNativeType = {
+const ReactNativeRenderer: ReactNativeType = {
   NativeComponent: require('ReactNativeComponent'),
 
   findNodeHandle: findNumericNodeHandle,
@@ -71,7 +70,7 @@ const ReactNativeFiber: ReactNativeType = {
   },
 
   unmountComponentAtNodeAndRemoveContainer(containerTag: number) {
-    ReactNativeFiber.unmountComponentAtNode(containerTag);
+    ReactNativeRenderer.unmountComponentAtNode(containerTag);
 
     // Call back into native to remove all of the subviews from this container
     UIManager.removeRootView(containerTag);
@@ -107,7 +106,7 @@ const ReactNativeFiber: ReactNativeType = {
 if (__DEV__) {
   // $FlowFixMe
   Object.assign(
-    ReactNativeFiber.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
+    ReactNativeRenderer.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED,
     {
       // TODO: none of these work since Fiber. Remove these dependencies.
       // Used by RCTRenderingPerf, Systrace:
@@ -136,4 +135,4 @@ injectInternals({
   rendererPackageName: 'react-native-renderer',
 });
 
-module.exports = ReactNativeFiber;
+module.exports = ReactNativeRenderer;
