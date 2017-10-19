@@ -1,0 +1,12 @@
+{
+  "name": "react-is",
+  "description": "Brand checking of React Elements.",
+  "keywords": ["react"],
+  "version": "1.0.0",
+  "homepage": "https://reactjs.org/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": ["index.js"],
+  "main": "index.js",
+  "repository": "facebook/react"
+}
