@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactEntry');
+module.exports = require('./src/React');

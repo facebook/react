@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactTestUtilsEntry');
+module.exports = require('./src/test-utils/ReactTestUtils');

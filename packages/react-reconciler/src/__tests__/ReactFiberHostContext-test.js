@@ -17,7 +17,7 @@ describe('ReactFiberHostContext', () => {
     jest.resetModules();
     React = require('react');
     // TODO: can we express this test with only public API?
-    ReactFiberReconciler = require('ReactFiberReconciler');
+    ReactFiberReconciler = require('react-reconciler');
   });
 
   it('works with null host context', () => {

@@ -4,7 +4,7 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNoopEntry
+ * @providesModule ReactNoop
  * @flow
  */
 
@@ -22,7 +22,7 @@ import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-var ReactFiberReconciler = require('ReactFiberReconciler');
+var ReactFiberReconciler = require('react-reconciler');
 var ReactInstanceMap = require('ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
 

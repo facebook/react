@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactNativeRTFiberEntry');
+module.exports = require('./src/ReactNativeRT');

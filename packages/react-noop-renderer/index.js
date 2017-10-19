@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactNoopEntry');
+module.exports = require('./src/ReactNoop');

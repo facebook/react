@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactDOMServerBrowserEntry');
+module.exports = require('./src/server/ReactDOMServerBrowser');

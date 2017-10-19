@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactARTFiberEntry');
+module.exports = require('./src/ReactART');

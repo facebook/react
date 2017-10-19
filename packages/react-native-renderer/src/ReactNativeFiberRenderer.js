@@ -10,7 +10,7 @@
 
 'use strict';
 
-const ReactFiberReconciler = require('ReactFiberReconciler');
+const ReactFiberReconciler = require('react-reconciler');
 const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('ReactNativeComponentTree');
 const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');

@@ -7,4 +7,4 @@
 
 'use strict';
 
-module.exports = require('./src/ReactDOMFiberEntry');
+module.exports = require('./src/client/ReactDOM');
