@@ -60,7 +60,7 @@ if (__DEV__) {
     (typeof Symbol === 'function' &&
       Symbol.for &&
       Symbol.for('react.fragment')) ||
-    0xad9c;
+    0xeacb;
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
