@@ -26,10 +26,11 @@ export type FiberRoot = {
   remainingWork: ExpirationTime | null,
   // Determines if this root can be committed.
   isReadyForCommit: boolean,
-  // Same as isReadyForCommit, but belongs to FiberRoot instead of HostRoot.
-  // TODO: The reason this is separate is because the FiberRoot concept will
-  // likely be lifted out of the reconciler and into the renderer.
-  isComplete: boolean,
+  // A finished work-in-progress HostRoot that's ready to be committed.
+  // TODO: The reason this is separate from isReadyForCommit is because the
+  // FiberRoot concept will likely be lifted out of the reconciler and into
+  // the renderer.
+  finishedWork: Fiber | null,
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
@@ -52,7 +53,7 @@ exports.createFiberRoot = function(
     pendingChildren: null,
     remainingWork: null,
     isReadyForCommit: false,
-    isComplete: false,
+    finishedWork: null,
     context: null,
     pendingContext: null,
     hydrate,

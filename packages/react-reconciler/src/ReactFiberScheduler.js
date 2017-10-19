@@ -337,7 +337,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function commitRoot(root: FiberRoot): ExpirationTime | null {
+  function commitRoot(finishedWork: Fiber): ExpirationTime | null {
     // We keep track of this so that captureError can collect any boundaries
     // that capture an error during the commit phase. The reason these aren't
     // local to this function is because errors that occur during cWU are
@@ -348,11 +348,12 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       startCommitTimer();
     }
 
-    const finishedWork = root.current.alternate;
+    const root: FiberRoot = finishedWork.stateNode;
     invariant(
-      root.isReadyForCommit && finishedWork !== null,
-      'Cannot commit an incomplete root. This error is likely caused by a ' +
-        'bug in React. Please file an issue.',
+      root.current !== finishedWork,
+      'Cannot commit the same tree as before. This is probably a bug ' +
+        'related to the return field. This error is likely caused by a bug ' +
+        'in React. Please file an issue.',
     );
     root.isReadyForCommit = false;
 
@@ -777,7 +778,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   function renderRoot(
     root: FiberRoot,
     expirationTime: ExpirationTime,
-  ): boolean {
+  ): Fiber | null {
     if (__DEV__) {
       startWorkLoopTimer();
     }
@@ -901,7 +902,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       onUncaughtError(uncaughtError);
     }
 
-    return root.isReadyForCommit;
+    return root.isReadyForCommit ? root.current.alternate : null;
   }
 
   // Returns the boundary that captured the error, or null if the error is ignored
@@ -1443,44 +1444,39 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       // TODO: Pass current time as argument to renderRoot, commitRoot
       if (nextFlushedExpirationTime <= recalculateCurrentTime()) {
         // Flush sync work.
-        if (nextFlushedRoot.isComplete) {
+        let finishedWork = nextFlushedRoot.finishedWork;
+        if (finishedWork !== null) {
           // This root is already complete. We can commit it.
-          nextFlushedRoot.isComplete = false;
-          nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
+          nextFlushedRoot.finishedWork = null;
+          nextFlushedRoot.remainingWork = commitRoot(finishedWork);
         } else {
-          nextFlushedRoot.isComplete = false;
-          const isComplete = renderRoot(
-            nextFlushedRoot,
-            nextFlushedExpirationTime,
-          );
-          if (isComplete) {
+          nextFlushedRoot.finishedWork = null;
+          finishedWork = renderRoot(nextFlushedRoot, nextFlushedExpirationTime);
+          if (finishedWork !== null) {
             // We've completed the root. Commit it.
-            nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
+            nextFlushedRoot.remainingWork = commitRoot(finishedWork);
           }
         }
       } else {
         // Flush async work.
-        if (nextFlushedRoot.isComplete) {
+        let finishedWork = nextFlushedRoot.finishedWork;
+        if (finishedWork !== null) {
           // This root is already complete. We can commit it.
-          nextFlushedRoot.isComplete = false;
-          nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
+          nextFlushedRoot.finishedWork = null;
+          nextFlushedRoot.remainingWork = commitRoot(finishedWork);
         } else {
-          nextFlushedRoot.isComplete = false;
-          const isComplete = renderRoot(
-            nextFlushedRoot,
-            nextFlushedExpirationTime,
-          );
-          if (isComplete) {
+          nextFlushedRoot.finishedWork = null;
+          finishedWork = renderRoot(nextFlushedRoot, nextFlushedExpirationTime);
+          if (finishedWork !== null) {
             // We've completed the root. Check the deadline one more time
             // before committing.
             if (!shouldYield()) {
               // Still time left. Commit the root.
-              nextFlushedRoot.remainingWork = commitRoot(nextFlushedRoot);
-              nextFlushedRoot.isComplete = false;
+              nextFlushedRoot.remainingWork = commitRoot(finishedWork);
             } else {
               // There's no time left. Mark this root as complete. We'll come
               // back and commit it later.
-              nextFlushedRoot.isComplete = true;
+              nextFlushedRoot.finishedWork = finishedWork;
             }
           }
         }
