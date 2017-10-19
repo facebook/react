@@ -19,12 +19,6 @@
 var ReactCurrentOwner = require('ReactCurrentOwner');
 var ReactElement = require('ReactElement');
 
-const REACT_FRAGMENT_TYPE =
-  (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.fragment')) ||
-  0xad9c;
-
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
   var lowPriorityWarning = require('lowPriorityWarning');
@@ -61,6 +55,12 @@ if (__DEV__) {
     stack += ReactDebugCurrentFrame.getStackAddendum() || '';
     return stack;
   };
+
+  var REACT_FRAGMENT_TYPE =
+    (typeof Symbol === 'function' &&
+      Symbol.for &&
+      Symbol.for('react.fragment')) ||
+    0xad9c;
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
