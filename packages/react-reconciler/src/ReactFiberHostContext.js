@@ -10,8 +10,8 @@
 
 'use strict';
 
+import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from 'ReactFiber';
-import type {HostConfig} from 'ReactFiberReconciler';
 import type {StackCursor} from 'ReactFiberStack';
 
 const {createCursor, pop, push} = require('ReactFiberStack');

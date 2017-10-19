@@ -18,7 +18,7 @@
 // layout, paint and other browser work is counted against the available time.
 // The frame rate is dynamically adjusted.
 
-import type {Deadline} from 'ReactFiberReconciler';
+import type {Deadline} from 'react-reconciler';
 
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
