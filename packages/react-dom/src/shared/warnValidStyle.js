@@ -16,7 +16,6 @@ var warnValidStyle = emptyFunction;
 if (__DEV__) {
   var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
   var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
 
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
@@ -29,7 +28,7 @@ if (__DEV__) {
   var warnedForNaNValue = false;
   var warnedForInfinityValue = false;
 
-  var warnHyphenatedStyleName = function(name) {
+  var warnHyphenatedStyleName = function(name, getStack) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -40,11 +39,11 @@ if (__DEV__) {
       'Unsupported style property %s. Did you mean %s?%s',
       name,
       camelizeStyleName(name),
-      checkRenderMessage(),
+      getStack(),
     );
   };
 
-  var warnBadVendoredStyleName = function(name) {
+  var warnBadVendoredStyleName = function(name, getStack) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -55,11 +54,11 @@ if (__DEV__) {
       'Unsupported vendor-prefixed style property %s. Did you mean %s?%s',
       name,
       name.charAt(0).toUpperCase() + name.slice(1),
-      checkRenderMessage(),
+      getStack(),
     );
   };
 
-  var warnStyleValueWithSemicolon = function(name, value) {
+  var warnStyleValueWithSemicolon = function(name, value, getStack) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -67,15 +66,15 @@ if (__DEV__) {
     warnedStyleValues[value] = true;
     warning(
       false,
-      "Style property values shouldn't contain a semicolon.%s " +
-        'Try "%s: %s" instead.',
-      checkRenderMessage(),
+      "Style property values shouldn't contain a semicolon. " +
+        'Try "%s: %s" instead.%s',
       name,
       value.replace(badStyleValueWithSemicolonPattern, ''),
+      getStack(),
     );
   };
 
-  var warnStyleValueIsNaN = function(name, value) {
+  var warnStyleValueIsNaN = function(name, value, getStack) {
     if (warnedForNaNValue) {
       return;
     }
@@ -85,11 +84,11 @@ if (__DEV__) {
       false,
       '`NaN` is an invalid value for the `%s` css style property.%s',
       name,
-      checkRenderMessage(),
+      getStack(),
     );
   };
 
-  var warnStyleValueIsInfinity = function(name, value) {
+  var warnStyleValueIsInfinity = function(name, value, getStack) {
     if (warnedForInfinityValue) {
       return;
     }
@@ -99,36 +98,24 @@ if (__DEV__) {
       false,
       '`Infinity` is an invalid value for the `%s` css style property.%s',
       name,
-      checkRenderMessage(),
+      getStack(),
     );
   };
 
-  var checkRenderMessage = function() {
-    var ownerName;
-    // Fiber doesn't pass it but uses ReactDebugCurrentFiber to track it.
-    // It is only enabled in development and tracks host components too.
-    ownerName = getCurrentFiberOwnerName();
-    // TODO: also report the stack.
-    if (ownerName) {
-      return '\n\nCheck the render method of `' + ownerName + '`.';
-    }
-    return '';
-  };
-
-  warnValidStyle = function(name, value, component) {
+  warnValidStyle = function(name, value, getStack) {
     if (name.indexOf('-') > -1) {
-      warnHyphenatedStyleName(name);
+      warnHyphenatedStyleName(name, getStack);
     } else if (badVendoredStyleNamePattern.test(name)) {
-      warnBadVendoredStyleName(name);
+      warnBadVendoredStyleName(name, getStack);
     } else if (badStyleValueWithSemicolonPattern.test(value)) {
-      warnStyleValueWithSemicolon(name, value);
+      warnStyleValueWithSemicolon(name, value, getStack);
     }
 
     if (typeof value === 'number') {
       if (isNaN(value)) {
-        warnStyleValueIsNaN(name, value);
+        warnStyleValueIsNaN(name, value, getStack);
       } else if (!isFinite(value)) {
-        warnStyleValueIsInfinity(name, value);
+        warnStyleValueIsInfinity(name, value, getStack);
       }
     }
   };

@@ -61,7 +61,11 @@ var HTML = '__html';
 
 var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
 
+var getStack = emptyFunction;
+
 if (__DEV__) {
+  getStack = getCurrentFiberStackAddendum;
+
   var warnedUnknownTags = {
     // Chrome is the only major browser not shipping <time>. But as of July
     // 2017 it intends to ship it due to widespread usage. We intentionally
@@ -263,7 +267,7 @@ function setInitialDOMProperties(
         }
       }
       // Relies on `updateStylesByID` not mutating `styleUpdates`.
-      CSSPropertyOperations.setValueForStyles(domElement, nextProp);
+      CSSPropertyOperations.setValueForStyles(domElement, nextProp, getStack);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       var nextHtml = nextProp ? nextProp[HTML] : undefined;
       if (nextHtml != null) {
@@ -319,7 +323,7 @@ function updateDOMProperties(
     var propKey = updatePayload[i];
     var propValue = updatePayload[i + 1];
     if (propKey === STYLE) {
-      CSSPropertyOperations.setValueForStyles(domElement, propValue);
+      CSSPropertyOperations.setValueForStyles(domElement, propValue, getStack);
     } else if (propKey === DANGEROUSLY_SET_INNER_HTML) {
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {

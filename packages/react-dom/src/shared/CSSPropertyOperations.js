@@ -57,9 +57,8 @@ var CSSPropertyOperations = {
    *
    * @param {DOMElement} node
    * @param {object} styles
-   * @param {ReactDOMComponent} component
    */
-  setValueForStyles: function(node, styles, component) {
+  setValueForStyles: function(node, styles, getStack) {
     var style = node.style;
     for (var styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
@@ -68,7 +67,7 @@ var CSSPropertyOperations = {
       var isCustomProperty = styleName.indexOf('--') === 0;
       if (__DEV__) {
         if (!isCustomProperty) {
-          warnValidStyle(styleName, styles[styleName], component);
+          warnValidStyle(styleName, styles[styleName], getStack);
         }
       }
       var styleValue = dangerousStyleValue(
