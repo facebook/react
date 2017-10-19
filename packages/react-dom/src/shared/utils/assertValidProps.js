@@ -18,11 +18,7 @@ if (__DEV__) {
 
 var HTML = '__html';
 
-function assertValidProps(
-  tag: string,
-  props: ?Object,
-  getStack: () => string,
-) {
+function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
   if (!props) {
     return;
   }
