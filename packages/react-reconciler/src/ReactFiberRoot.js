@@ -11,10 +11,8 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {createHostRootFiber} = require('ReactFiber');
-const {NoWork} = require('ReactFiberExpirationTime');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -23,8 +21,6 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
-  // Determines if this root has already been scheduled.
-  scheduledAt: ExpirationTime,
   // Determines if this root can be committed.
   isReadyForCommit: boolean,
   // Top context object, used by renderSubtreeIntoContainer
@@ -45,7 +41,6 @@ exports.createFiberRoot = function(
     current: uninitializedFiber,
     containerInfo: containerInfo,
     pendingChildren: null,
-    scheduledAt: NoWork,
     isReadyForCommit: false,
     nextScheduledRoot: null,
     context: null,
