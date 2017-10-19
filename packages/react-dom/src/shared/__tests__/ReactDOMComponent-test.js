@@ -953,7 +953,7 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should warn against children for void elements', () => {
+    it('should throw on children for void elements', () => {
       const container = document.createElement('div');
       let caughtErr;
       try {
@@ -969,7 +969,7 @@ describe('ReactDOMComponent', () => {
       );
     });
 
-    it('should warn against dangerouslySetInnerHTML for void elements', () => {
+    it('should throw on dangerouslySetInnerHTML for void elements', () => {
       const container = document.createElement('div');
       let caughtErr;
       try {
