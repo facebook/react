@@ -21,7 +21,7 @@ var HTML = '__html';
 function assertValidProps(
   tag: string,
   props: ?Object,
-  getStack: () => ?string,
+  getStack: () => string,
 ) {
   if (!props) {
     return;
