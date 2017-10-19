@@ -41,9 +41,6 @@ const update = async ({cwd, dry, version}) => {
         json.version = version;
       }
 
-      if (project !== 'react') {
-        json.peerDependencies.react = `^${version}`;
-      }
       await writeJson(path, json, {spaces: 2});
     };
     await Promise.all(projects.map(updateProjectPackage));
