@@ -13,28 +13,12 @@ var invariant = require('fbjs/lib/invariant');
 var voidElementTags = require('voidElementTags');
 
 if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
 }
 
 var HTML = '__html';
 
-function getDeclarationErrorAddendum(getCurrentOwnerName) {
-  if (__DEV__) {
-    var ownerName = getCurrentOwnerName();
-    if (ownerName) {
-      // TODO: also report the stack.
-      return '\n\nThis DOM node was rendered by `' + ownerName + '`.';
-    }
-  }
-  return '';
-}
-
-function assertValidProps(
-  tag: string,
-  props: ?Object,
-  getCurrentOwnerName: () => ?string,
-) {
+function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
   if (!props) {
     return;
   }
@@ -45,7 +29,7 @@ function assertValidProps(
       '%s is a void element tag and must neither have `children` nor ' +
         'use `dangerouslySetInnerHTML`.%s',
       tag,
-      getDeclarationErrorAddendum(getCurrentOwnerName),
+      getStack(),
     );
   }
   if (props.dangerouslySetInnerHTML != null) {
@@ -70,7 +54,7 @@ function assertValidProps(
         'React. It is now your responsibility to guarantee that none of ' +
         'those nodes are unexpectedly modified or duplicated. This is ' +
         'probably not intentional.%s',
-      getCurrentFiberStackAddendum() || '',
+      getStack(),
     );
   }
   invariant(
@@ -78,7 +62,7 @@ function assertValidProps(
     'The `style` prop expects a mapping from style properties to values, ' +
       "not a string. For example, style={{marginRight: spacing + 'em'}} when " +
       'using JSX.%s',
-    getDeclarationErrorAddendum(getCurrentOwnerName),
+    getStack(),
   );
 }
 

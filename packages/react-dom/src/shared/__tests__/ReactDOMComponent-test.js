@@ -954,50 +954,38 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn against children for void elements', () => {
-      var container = document.createElement('div');
-
-      expect(function() {
+      const container = document.createElement('div');
+      let caughtErr;
+      try {
         ReactDOM.render(<input>children</input>, container);
-      }).toThrowError(
+      } catch (err) {
+        caughtErr = err;
+      }
+      expect(caughtErr).not.toBe(undefined);
+      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'input is a void element tag and must neither have `children` nor ' +
           'use `dangerouslySetInnerHTML`.',
+        '\n    in input (at **)',
       );
     });
 
     it('should warn against dangerouslySetInnerHTML for void elements', () => {
-      var container = document.createElement('div');
-
-      expect(function() {
+      const container = document.createElement('div');
+      let caughtErr;
+      try {
         ReactDOM.render(
           <input dangerouslySetInnerHTML={{__html: 'content'}} />,
           container,
         );
-      }).toThrowError(
-        'input is a void element tag and must neither have `children` nor use ' +
-          '`dangerouslySetInnerHTML`.',
+      } catch (err) {
+        caughtErr = err;
+      }
+      expect(caughtErr).not.toBe(undefined);
+      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
+        'input is a void element tag and must neither have `children` nor ' +
+          'use `dangerouslySetInnerHTML`.',
+        '\n    in input (at **)',
       );
-    });
-
-    it('should include owner rather than parent in warnings', () => {
-      var container = document.createElement('div');
-
-      function Parent(props) {
-        return props.children;
-      }
-      function Owner() {
-        // We're using the input dangerouslySetInnerHTML invariant but the
-        // exact error doesn't matter as long as we have a way to verify
-        // that warnings and invariants contain owner rather than parent name.
-        return (
-          <Parent>
-            <input dangerouslySetInnerHTML={{__html: 'content'}} />
-          </Parent>
-        );
-      }
-
-      expect(function() {
-        ReactDOM.render(<Owner />, container);
-      }).toThrowError('\n\nThis DOM node was rendered by `Owner`.');
     });
 
     it('should emit a warning once for a named custom component using shady DOM', () => {
@@ -1178,19 +1166,27 @@ describe('ReactDOMComponent', () => {
       expect(tracker.getValue()).toEqual('foo');
     });
 
-    it('should warn for children on void elements', () => {
+    it('should throw for children on void elements', () => {
       class X extends React.Component {
         render() {
           return <input>moo</input>;
         }
       }
 
-      var container = document.createElement('div');
-      expect(function() {
+      const container = document.createElement('div');
+      let caughtErr;
+      try {
         ReactDOM.render(<X />, container);
-      }).toThrowError(
+      } catch (err) {
+        caughtErr = err;
+      }
+
+      expect(caughtErr).not.toBe(undefined);
+      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'input is a void element tag and must neither have `children` ' +
-          'nor use `dangerouslySetInnerHTML`.\n\nThis DOM node was rendered by `X`.',
+          'nor use `dangerouslySetInnerHTML`.' +
+          '\n    in input (at **)' +
+          '\n    in X (at **)',
       );
     });
 
@@ -1303,12 +1299,20 @@ describe('ReactDOMComponent', () => {
         }
       }
 
-      expect(function() {
+      let caughtErr;
+      try {
         ReactDOM.render(<Animal />, container);
-      }).toThrowError(
+      } catch (err) {
+        caughtErr = err;
+      }
+
+      expect(caughtErr).not.toBe(undefined);
+      expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
-          'when using JSX.\n\nThis DOM node was rendered by `Animal`.',
+          'when using JSX.' +
+          '\n    in div (at **)' +
+          '\n    in Animal (at **)',
       );
     });
 

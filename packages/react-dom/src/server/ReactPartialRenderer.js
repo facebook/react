@@ -30,7 +30,7 @@ var omittedCloseTags = require('omittedCloseTags');
 var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
-var emptyFunctionThatReturnsNull = emptyFunction.thatReturnsNull;
+var getStackAddendum = emptyFunction.thatReturnsArgument('');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -80,9 +80,9 @@ if (__DEV__) {
     currentDebugStack = null;
     ReactDebugCurrentFrame.getCurrentStack = null;
   };
-  var getStackAddendum = function(): null | string {
+  getStackAddendum = function(): null | string {
     if (currentDebugStack === null) {
-      return null;
+      return '';
     }
     let stack = '';
     let debugStack = currentDebugStack;
@@ -141,11 +141,7 @@ function createMarkupForStyles(styles) {
     var styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(
-          styleName,
-          styleValue,
-          () => '', // getCurrentFiberStackAddendum,
-        );
+        warnValidStyle(styleName, styleValue, getStackAddendum);
       }
     }
     if (styleValue != null) {
@@ -574,7 +570,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'input',
           props,
-          () => '', //getCurrentFiberStackAddendum
+          getStackAddendum,
         );
 
         if (
@@ -632,7 +628,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'textarea',
           props,
-          () => '', //getCurrentFiberStackAddendum
+          getStackAddendum,
         );
         if (
           props.value !== undefined &&
@@ -693,7 +689,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'select',
           props,
-          () => '', // getCurrentFiberStackAddendum,
+          getStackAddendum,
         );
 
         for (var i = 0; i < valuePropNames.length; i++) {
@@ -785,7 +781,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, emptyFunctionThatReturnsNull);
+    assertValidProps(tag, props, getStackAddendum);
 
     var out = createOpenTagMarkup(
       element.type,
