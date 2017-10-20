@@ -34,7 +34,7 @@ describe('ReactDOMServer', () => {
     ExecutionEnvironment.canUseDOM = false;
     ReactDOMServer = require('react-dom/server');
 
-    var DOMProperty = require('../shared/DOMProperty');
+    var DOMProperty = require('react-dom/src/shared/DOMProperty');
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 

@@ -24,8 +24,8 @@ describe('ReactDOMEventListener', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-    ReactDOMEventListener = require('../client/event/ReactDOMEventListener');
+    ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
+    ReactDOMEventListener = require('react-dom/src/client/event/ReactDOMEventListener');
     ReactTestUtils = require('react-dom/test-utils');
 
     handleTopLevel = jest.fn();

@@ -16,9 +16,9 @@ describe('SyntheticClipboardEvent', () => {
 
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    SyntheticClipboardEvent = require('../SyntheticClipboardEvent');
+    SyntheticClipboardEvent = require('react-dom/src/client/event/SyntheticClipboardEvent');
     createEvent = function(nativeEvent) {
-      var target = require('../getEventTarget')(nativeEvent);
+      var target = require('react-dom/src/client/event/getEventTarget')(nativeEvent);
       return SyntheticClipboardEvent.getPooled({}, '', nativeEvent, target);
     };
   });

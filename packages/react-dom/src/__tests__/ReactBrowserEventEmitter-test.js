@@ -63,10 +63,10 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginRegistry = require('shared/event/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-    ReactBrowserEventEmitter = require('../client/event/ReactBrowserEventEmitter');
+    ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
+    ReactBrowserEventEmitter = require('react-dom/src/client/event/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
-    TapEventPlugin = require('../client/event/plugins/TapEventPlugin');
+    TapEventPlugin = require('react-dom/src/client/event/plugins/TapEventPlugin');
 
     var container = document.createElement('div');
 

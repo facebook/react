@@ -29,7 +29,7 @@ const findNumericNodeHandle = require('./findNumericNodeHandle');
 import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
 
-require('ReactNativeInjection');
+require('./ReactNativeInjection');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeFiberRenderer.batchedUpdates,

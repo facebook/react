@@ -16,10 +16,10 @@ describe('SyntheticWheelEvent', () => {
 
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    SyntheticWheelEvent = require('../SyntheticWheelEvent');
+    SyntheticWheelEvent = require('react-dom/src/client/event/SyntheticWheelEvent');
 
     createEvent = function(nativeEvent) {
-      var target = require('../getEventTarget')(nativeEvent);
+      var target = require('react-dom/src/client/event/getEventTarget')(nativeEvent);
       return SyntheticWheelEvent.getPooled({}, '', nativeEvent, target);
     };
   });
