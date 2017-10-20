@@ -11,8 +11,10 @@
 'use strict';
 
 import type {Fiber} from 'ReactFiber';
+import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {createHostRootFiber} = require('ReactFiber');
+const {NoWork} = require('ReactFiberExpirationTime');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -21,15 +23,22 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
-  // Determines if this root has already been added to the schedule for work.
-  isScheduled: boolean,
-  // The work schedule is a linked list.
-  nextScheduledRoot: FiberRoot | null,
+  // Remaining expiration time on this root.
+  remainingExpirationTime: ExpirationTime,
+  // Determines if this root can be committed.
+  isReadyForCommit: boolean,
+  // A finished work-in-progress HostRoot that's ready to be committed.
+  // TODO: The reason this is separate from isReadyForCommit is because the
+  // FiberRoot concept will likely be lifted out of the reconciler and into
+  // the renderer.
+  finishedWork: Fiber | null,
   // Top context object, used by renderSubtreeIntoContainer
   context: Object | null,
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
+  // Linked-list of roots
+  nextScheduledRoot: FiberRoot | null,
 };
 
 exports.createFiberRoot = function(
@@ -43,11 +52,13 @@ exports.createFiberRoot = function(
     current: uninitializedFiber,
     containerInfo: containerInfo,
     pendingChildren: null,
-    isScheduled: false,
-    nextScheduledRoot: null,
+    remainingExpirationTime: NoWork,
+    isReadyForCommit: false,
+    finishedWork: null,
     context: null,
     pendingContext: null,
     hydrate,
+    nextScheduledRoot: null,
   };
   uninitializedFiber.stateNode = root;
   return root;
