@@ -91,6 +91,7 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
+    // Simulate a native change event
     instance.a.value = 'giraffe';
     ReactTestUtils.SimulateNative.change(instance.a);
     ReactTestUtils.SimulateNative.blur(instance.a);
