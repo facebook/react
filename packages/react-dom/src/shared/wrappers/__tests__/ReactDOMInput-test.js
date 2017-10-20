@@ -16,17 +16,13 @@ describe('ReactDOMInput', () => {
   var ReactDOM;
   var ReactDOMServer;
   var ReactTestUtils;
-  var inputValueTracking;
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   function setUntrackedValue(elem, value) {
-    var tracker = inputValueTracking._getTrackerFromNode(elem);
-    var current = tracker.getValue();
-    elem.value = value;
-    tracker.setValue(current);
+    elem.setAttribute('value', value);
   }
 
   beforeEach(() => {
@@ -35,8 +31,6 @@ describe('ReactDOMInput', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-    // TODO: can we express this test with only public API?
-    inputValueTracking = require('inputValueTracking');
     spyOn(console, 'error');
   });
 
@@ -114,11 +108,19 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    instance.a.focus();
-    // Simulate a native keyup event
-    setUntrackedValue(instance.a, 'giraffe');
+    var nodeValueSetter = jest.genMockFn();
+    var nodeValue = instance.a.value;
+    Object.defineProperty(instance.a, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
 
-    instance.a.dispatchEvent(inputEvent);
+    ReactTestUtils.Simulate.change(instance.a, {target: {value: 'giraffe'}});
+    ReactTestUtils.SimulateNative.blur(instance.a);
 
     expect(instance.a.value).toBe('giraffe');
     expect(instance.switchedFocus).toBe(true);
@@ -604,7 +606,18 @@ describe('ReactDOMInput', () => {
     var container = document.createElement('div');
     var node = ReactDOM.render(stub, container);
 
-    setUntrackedValue(node, 'giraffe');
+    var nodeValueSetter = jest.genMockFn();
+    var nodeValue = node.value;
+    Object.defineProperty(node, 'value', {
+      get: function() {
+        return nodeValue;
+      },
+      set: nodeValueSetter.mockImplementation(function(newValue) {
+        nodeValue = newValue;
+      }),
+    });
+
+    node.value = 'giraffe';
 
     var fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
