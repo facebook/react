@@ -23,7 +23,9 @@ describe('SyntheticKeyboardEvent', () => {
     // TODO: can we express this test with only public API?
     SyntheticKeyboardEvent = require('react-dom/src/client/event/SyntheticKeyboardEvent');
     createEvent = function(nativeEvent) {
-      var target = require('react-dom/src/client/event/getEventTarget')(nativeEvent);
+      var target = require('react-dom/src/client/event/getEventTarget')(
+        nativeEvent,
+      );
       return SyntheticKeyboardEvent.getPooled({}, '', nativeEvent, target);
     };
   });

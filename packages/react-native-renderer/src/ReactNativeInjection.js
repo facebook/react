@@ -15,7 +15,7 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
- // Module provided by RN:
+// Module provided by RN:
 require('InitializeCore');
 
 var EventPluginHub = require('shared/event/EventPluginHub');

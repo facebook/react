@@ -18,13 +18,17 @@ type SelectWithWrapperState = HTMLSelectElement & {
 };
 
 var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
-var {getCurrentFiberOwnerName} = require('react-reconciler/src/ReactDebugCurrentFiber');
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
 
 if (__DEV__) {
   var didWarnValueDefaultValue = false;
   var warning = require('fbjs/lib/warning');
   // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {getCurrentFiberStackAddendum} = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
 }
 
 function getDeclarationErrorAddendum() {

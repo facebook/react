@@ -13,7 +13,9 @@ const ReactGenericBatching = require('shared/event/ReactGenericBatching');
 const ReactVersion = require('shared/ReactVersion');
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-const {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
+const {
+  injectInternals,
+} = require('react-reconciler/src/ReactFiberDevToolsHook');
 
 import type {ReactNativeCSType} from 'ReactNativeCSTypes';
 

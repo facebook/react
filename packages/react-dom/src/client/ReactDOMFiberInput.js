@@ -23,11 +23,15 @@ var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropT
 var ReactDOMComponentTree = require('./ReactDOMComponentTree');
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var {getCurrentFiberOwnerName} = require('react-reconciler/src/ReactDebugCurrentFiber');
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
 
 if (__DEV__) {
   // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {getCurrentFiberStackAddendum} = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
 }
 

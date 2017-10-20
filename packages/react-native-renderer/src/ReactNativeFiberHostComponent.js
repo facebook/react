@@ -16,7 +16,10 @@ var ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
-var {mountSafeCallback, warnForStyleProps} = require('./NativeMethodsMixinUtils');
+var {
+  mountSafeCallback,
+  warnForStyleProps,
+} = require('./NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,

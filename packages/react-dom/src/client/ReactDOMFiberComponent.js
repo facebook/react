@@ -22,7 +22,9 @@ var ReactDOMFiberSelect = require('./ReactDOMFiberSelect');
 var ReactDOMFiberTextarea = require('./ReactDOMFiberTextarea');
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var {getCurrentFiberOwnerName} = require('react-reconciler/src/ReactDebugCurrentFiber');
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
 
 var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('../shared/HTMLNodeType');
 
@@ -36,7 +38,9 @@ var setTextContent = require('./setTextContent');
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {getCurrentFiberStackAddendum} = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
   var ReactDOMInvalidARIAHook = require('../shared/ReactDOMInvalidARIAHook');
   var ReactDOMNullInputValuePropHook = require('../shared/ReactDOMNullInputValuePropHook');
   var ReactDOMUnknownPropertyHook = require('../shared/ReactDOMUnknownPropertyHook');
