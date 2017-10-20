@@ -9,10 +9,11 @@
 
 'use strict';
 
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactVersion = require('ReactVersion');
+const ReactGenericBatching = require('shared/event/ReactGenericBatching');
+const ReactVersion = require('shared/ReactVersion');
 
-const {injectInternals} = require('ReactFiberDevToolsHook');
+// TODO: export or move to shared.
+const {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
 
 import type {ReactNativeCSType} from 'ReactNativeCSTypes';
 
