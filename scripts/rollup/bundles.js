@@ -95,7 +95,9 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
-      'packages/react-dom/**/*.js',
+      'packages/react-dom/*.js',
+      'packages/react-dom/src/client/**/*.js',
+      'packages/react-dom/src/shared/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
     ],
@@ -124,7 +126,12 @@ const bundles = [
     label: 'test-utils',
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
-    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
+    paths: [
+      'packages/react-dom/*.js',
+      'packages/react-dom/src/test-utils/**/*.js',
+      'packages/react-dom/src/shared/**/*.js',
+      'packages/shared/**/*.js',
+    ],
   },
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
@@ -152,7 +159,12 @@ const bundles = [
     label: 'dom-unstable-native-dependencies',
     manglePropertiesOnProd: false,
     name: 'react-dom/unstable-native-dependencies',
-    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
+    paths: [
+      'packages/react-dom/*.js',
+      'packages/react-dom/src/unstable-native-dependencies/**/*.js',
+      'packages/react-dom/src/shared/**/*.js',
+      'packages/shared/**/*.js',
+    ],
   },
 
   /******* React DOM Server *******/
@@ -175,7 +187,12 @@ const bundles = [
     label: 'dom-server-browser',
     manglePropertiesOnProd: false,
     name: 'react-dom/server.browser',
-    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
+    paths: [
+      'packages/react-dom/*.js',
+      'packages/react-dom/src/server/**/*.js',
+      'packages/react-dom/src/shared/**/*.js',
+      'packages/shared/**/*.js',
+    ],
   },
 
   {
@@ -195,7 +212,12 @@ const bundles = [
     label: 'dom-server-server-node',
     manglePropertiesOnProd: false,
     name: 'react-dom/server.node',
-    paths: ['packages/react-dom/**/*.js', 'packages/shared/**/*.js'],
+    paths: [
+      'packages/react-dom/*.js',
+      'packages/react-dom/src/server/**/*.js',
+      'packages/react-dom/src/shared/**/*.js',
+      'packages/shared/**/*.js',
+    ],
   },
 
   /******* React ART *******/
