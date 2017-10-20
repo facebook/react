@@ -15,7 +15,7 @@ const versions = {
     .version,
   'packages/react-test-renderer/package.json': require('../../packages/react-test-renderer/package.json')
     .version,
-  'packages/shared/src/ReactVersion.js': require('../../packages/shared/src/ReactVersion'),
+  'packages/shared/ReactVersion.js': require('../../packages/shared/ReactVersion'),
 };
 
 let allVersionsMatch = true;

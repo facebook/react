@@ -30,7 +30,7 @@ var omittedCloseTags = require('omittedCloseTags');
 var isCustomComponent = require('isCustomComponent');
 
 var toArray = React.Children.toArray;
-var emptyFunctionThatReturnsNull = emptyFunction.thatReturnsNull;
+var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
@@ -80,9 +80,9 @@ if (__DEV__) {
     currentDebugStack = null;
     ReactDebugCurrentFrame.getCurrentStack = null;
   };
-  var getStackAddendum = function(): null | string {
+  getStackAddendum = function(): null | string {
     if (currentDebugStack === null) {
-      return null;
+      return '';
     }
     let stack = '';
     let debugStack = currentDebugStack;
@@ -130,7 +130,7 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
-function createMarkupForStyles(styles, component) {
+function createMarkupForStyles(styles) {
   var serialized = '';
   var delimiter = '';
   for (var styleName in styles) {
@@ -141,7 +141,7 @@ function createMarkupForStyles(styles, component) {
     var styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
-        warnValidStyle(styleName, styleValue, component);
+        warnValidStyle(styleName, styleValue, getStackAddendum);
       }
     }
     if (styleValue != null) {
@@ -263,7 +263,6 @@ function createOpenTagMarkup(
   namespace,
   makeStaticMarkup,
   isRootElement,
-  instForDebug,
 ) {
   var ret = '<' + tagVerbatim;
 
@@ -276,7 +275,7 @@ function createOpenTagMarkup(
       continue;
     }
     if (propKey === STYLE) {
-      propValue = createMarkupForStyles(propValue, instForDebug);
+      propValue = createMarkupForStyles(propValue);
     }
     var markup = null;
     if (isCustomComponent(tagLowercase, props)) {
@@ -571,7 +570,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'input',
           props,
-          () => '', //getCurrentFiberStackAddendum
+          getStackAddendum,
         );
 
         if (
@@ -629,7 +628,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'textarea',
           props,
-          () => '', //getCurrentFiberStackAddendum
+          getStackAddendum,
         );
         if (
           props.value !== undefined &&
@@ -690,7 +689,7 @@ class ReactDOMServerRenderer {
         ReactControlledValuePropTypes.checkPropTypes(
           'select',
           props,
-          () => '', // getCurrentFiberStackAddendum,
+          getStackAddendum,
         );
 
         for (var i = 0; i < valuePropNames.length; i++) {
@@ -782,7 +781,7 @@ class ReactDOMServerRenderer {
       validatePropertiesInDevelopment(tag, props);
     }
 
-    assertValidProps(tag, props, emptyFunctionThatReturnsNull);
+    assertValidProps(tag, props, getStackAddendum);
 
     var out = createOpenTagMarkup(
       element.type,
@@ -791,7 +790,6 @@ class ReactDOMServerRenderer {
       namespace,
       this.makeStaticMarkup,
       this.stack.length === 1,
-      null,
     );
     var footer = '';
     if (omittedCloseTags.hasOwnProperty(tag)) {

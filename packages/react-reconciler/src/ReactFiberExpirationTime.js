@@ -48,25 +48,3 @@ function computeExpirationBucket(
   );
 }
 exports.computeExpirationBucket = computeExpirationBucket;
-
-// Given the current clock time and an expiration time, returns the
-// relative expiration time. Possible values include NoWork, Sync, Task, and
-// Never. All other values represent an async expiration time.
-function relativeExpirationTime(
-  currentTime: ExpirationTime,
-  expirationTime: ExpirationTime,
-): ExpirationTime {
-  switch (expirationTime) {
-    case NoWork:
-    case Sync:
-    case Task:
-    case Never:
-      return expirationTime;
-  }
-  const delta = expirationTime - currentTime;
-  if (delta <= 0) {
-    return Task;
-  }
-  return msToExpirationTime(delta);
-}
-exports.relativeExpirationTime = relativeExpirationTime;

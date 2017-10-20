@@ -211,6 +211,28 @@ describe('ReactDOMProduction', () => {
     );
   });
 
+  // Regression test verifying that trying to access (missing) component stack doesn't crash.
+  it('should throw on children for void elements', () => {
+    const errorCode = 137;
+    const container = document.createElement('div');
+    expect(() =>
+      ReactDOM.render(<input>children</input>, container),
+    ).toThrowError(
+      `Minified React error #${errorCode}; visit ` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=input&args[]=` +
+        ' for the full message or use the non-minified dev environment' +
+        ' for full errors and additional helpful warnings.',
+    );
+    expect(() =>
+      ReactDOMServer.renderToString(<input>children</input>, container),
+    ).toThrowError(
+      `Minified React error #${errorCode}; visit ` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=input&args[]=` +
+        ' for the full message or use the non-minified dev environment' +
+        ' for full errors and additional helpful warnings.',
+    );
+  });
+
   it('should not crash with devtools installed', () => {
     try {
       global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {

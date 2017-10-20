@@ -6,7 +6,6 @@
  *
  * @providesModule ReactNativeFiberHostComponent
  * @flow
- * @preventMunge
  */
 
 'use strict';
