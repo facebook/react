@@ -66,13 +66,14 @@ describe('ReactFragment', () => {
   });
 
   it('should preserve state of children with 1 level nesting', function() {
-    var instance = null;
     var ops = [];
 
     class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
       render() {
-        ops.push('Stateful render');
-        instance = this;
         return <div>Hello</div>;
       }
     }
@@ -94,8 +95,6 @@ describe('ReactFragment', () => {
     );
     ReactNoop.flush();
 
-    var instanceA = instance;
-
     ReactNoop.render(
       <div>
         <Fragment condition={true} />
@@ -104,20 +103,18 @@ describe('ReactFragment', () => {
     );
     ReactNoop.flush();
 
-    var instanceB = instance;
-
-    expect(ops).toEqual(['Stateful render', 'Stateful render']);
-    expect(instanceB).toBe(instanceA);
+    expect(ops).toEqual(['Update Stateful']);
   });
 
   it('should not preserve state of children if no siblings and nested', function() {
-    var instance = null;
     var ops = [];
 
     class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
       render() {
-        ops.push('Stateful render');
-        instance = this;
         return <div>Hello</div>;
       }
     }
@@ -134,27 +131,21 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
-
-    expect(instanceA).not.toBe(null);
-
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
-
-    expect(ops).toEqual(['Stateful render', 'Stateful render']);
-    expect(instanceB).not.toBe(instanceA);
+    expect(ops).toEqual([]);
   });
 
   it('should not preserve state of children if nested with siblings', function() {
-    var instance = null;
     var ops = [];
 
     class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
       render() {
-        ops.push('Stateful render');
-        instance = this;
         return <div>Hello</div>;
       }
     }
@@ -172,27 +163,21 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
-
-    expect(instanceA).not.toBe(null);
-
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
-
-    expect(ops).toEqual(['Stateful render', 'Stateful render']);
-    expect(instanceB).not.toBe(instanceA);
+    expect(ops).toEqual([]);
   });
 
   it('should preserve state of children in a reorder', function() {
-    var instance = null;
     var ops = [];
 
     class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
       render() {
-        ops.push('Stateful render');
-        instance = this;
         return <div>Hello</div>;
       }
     }
@@ -217,27 +202,21 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
-
-    expect(instanceA).not.toBe(null);
-
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
-
-    expect(ops).toEqual(['Stateful render', 'Stateful render']);
-    expect(instanceB).toBe(instanceA);
+    expect(ops).toEqual(['Update Stateful']);
   });
 
   it('should preserve state of children when the keys are same', function() {
-    var instance = null;
     var ops = [];
 
     class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
       render() {
-        ops.push('Stateful render');
-        instance = this;
         return <div>Hello</div>;
       }
     }
@@ -257,25 +236,21 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
-
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
-
-    expect(ops).toEqual(['Stateful render', 'Stateful render']);
-    expect(instanceB).toBe(instanceA);
+    expect(ops).toEqual(['Update Stateful']);
   });
 
   it('should not preserve state of children when the keys are different', function() {
-    var instance = null;
     var ops = [];
 
     class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
       render() {
-        ops.push('Stateful render');
-        instance = this;
         return <div>Hello</div>;
       }
     }
@@ -294,24 +269,18 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
 
-    var instanceA = instance;
-
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    var instanceB = instance;
-
-    expect(ops).toEqual(['Stateful render', 'Stateful render']);
-    expect(instanceB).not.toBe(instanceA);
+    expect(ops).toEqual([]);
   });
 
   it('should preserve state with reordering in multiple levels', function() {
     var ops = [];
 
     class Stateful extends React.Component {
-      shouldComponentUpdate() {
-        ops.push('update');
-        return true;
+      componentDidUpdate() {
+        ops.push('Update Stateful');
       }
 
       render() {
@@ -347,16 +316,15 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    expect(ops).toEqual(['update']);
+    expect(ops).toEqual(['Update Stateful']);
   });
 
   it('should preserve state with reordering in multiple levels', function() {
     var ops = [];
 
     class Stateful extends React.Component {
-      shouldComponentUpdate() {
-        ops.push('update');
-        return true;
+      componentDidUpdate() {
+        ops.push('Update Stateful');
       }
 
       render() {
@@ -392,6 +360,6 @@ describe('ReactFragment', () => {
     ReactNoop.render(<Fragment condition={true} />);
     ReactNoop.flush();
 
-    expect(ops).toEqual(['update']);
+    expect(ops).toEqual(['Update Stateful']);
   });
 });
