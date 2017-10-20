@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactElement = require('ReactElement');
+var ReactElement = require('../element/ReactElement');
 
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');

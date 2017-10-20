@@ -7,19 +7,19 @@
 
 'use strict';
 
-var ReactBaseClasses = require('ReactBaseClasses');
-var ReactChildren = require('ReactChildren');
-var ReactElement = require('ReactElement');
-var ReactVersion = require('ReactVersion');
+var ReactBaseClasses = require('./class/ReactBaseClasses');
+var ReactChildren = require('./children/ReactChildren');
+var ReactElement = require('./element/ReactElement');
+var ReactVersion = require('shared/ReactVersion');
 
-var onlyChild = require('onlyChild');
+var onlyChild = require('./children/onlyChild');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
-  var ReactElementValidator = require('ReactElementValidator');
+  var ReactElementValidator = require('./element/ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;
@@ -56,7 +56,7 @@ var React = {
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
     // These should not be included in production.
-    ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
+    ReactDebugCurrentFrame: require('./element/ReactDebugCurrentFrame'),
   });
 }
 

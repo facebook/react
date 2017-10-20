@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
+var ReactCurrentOwner = require('./ReactCurrentOwner');
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 if (__DEV__) {

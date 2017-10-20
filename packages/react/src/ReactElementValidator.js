@@ -16,16 +16,16 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
+var ReactCurrentOwner = require('./ReactCurrentOwner');
+var ReactElement = require('./ReactElement');
 
 if (__DEV__) {
+  var ReactDebugCurrentFrame = require('./ReactDebugCurrentFrame');
   var checkPropTypes = require('prop-types/checkPropTypes');
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
+  var lowPriorityWarning = require('shared/lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
-  var describeComponentFrame = require('describeComponentFrame');
-  var getComponentName = require('getComponentName');
+  var describeComponentFrame = require('shared/describeComponentFrame');
+  var getComponentName = require('shared/getComponentName');
 
   var currentlyValidatingElement = null;
 
