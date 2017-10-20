@@ -56,7 +56,6 @@ var {createWorkInProgress} = require('./ReactFiber');
 var {onCommitRoot} = require('./ReactFiberDevToolsHook');
 var {
   NoWork,
-  Task,
   Sync,
   Never,
   msToExpirationTime,
@@ -1172,15 +1171,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         expirationTime = computeAsyncExpiration();
       }
     }
-
-    if (
-      expirationTime === Sync &&
-      isBatchingUpdates &&
-      (!isUnbatchingUpdates || isCommitting)
-    ) {
-      // If we're in a batch, downgrade sync to task.
-      expirationTime = Task;
-    }
     return expirationTime;
   }
 
@@ -1250,7 +1240,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleWorkImpl(fiber, Task, true);
+    scheduleWorkImpl(fiber, Sync, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
@@ -1319,8 +1309,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     // Check if this root is already part of the schedule.
-    if (root.remainingExpirationTime === NoWork) {
+    if (!root.isScheduled) {
       // This root is not already scheduled. Add it.
+      root.isScheduled = true;
       root.remainingExpirationTime = expirationTime;
       if (lastScheduledRoot === null) {
         firstScheduledRoot = lastScheduledRoot = root;
@@ -1340,21 +1331,23 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       }
     }
 
-    // If we're not already rendering, schedule work to flush now (if it's
-    // sync) or later (if it's async).
-    if (!isRendering) {
-      // TODO: Remove distinction between sync and task. Maybe we can remove
-      // these magic numbers entirely by always comparing to the current time?
-      if (expirationTime === Sync) {
-        if (isUnbatchingUpdates) {
-          performWork(Sync, null);
-        } else {
-          performWork(Task, null);
-        }
-      } else if (!isCallbackScheduled) {
-        isCallbackScheduled = true;
-        scheduleDeferredCallback(flushAsyncWork);
+    if (isRendering) {
+      return;
+    }
+
+    if (isBatchingUpdates) {
+      if (!isUnbatchingUpdates) {
+        return;
       }
+      root.isUnbatched = true;
+    }
+
+    // TODO: Get rid of Sync and use current time?
+    if (expirationTime === Sync) {
+      performWork(Sync, null);
+    } else if (!isCallbackScheduled) {
+      isCallbackScheduled = true;
+      scheduleDeferredCallback(flushAsyncWork);
     }
   }
 
@@ -1365,10 +1358,23 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     let previousScheduledRoot = null;
     let root = firstScheduledRoot;
     while (root !== null) {
+      if (isUnbatchingUpdates) {
+        if (root.isUnbatched) {
+          highestPriorityWork = root.remainingExpirationTime;
+          highestPriorityRoot = root;
+          root.isUnbatched = false;
+          break;
+        }
+        previousScheduledRoot = root;
+        root = root.nextScheduledRoot;
+        continue;
+      }
+
       const remainingExpirationTime = root.remainingExpirationTime;
       if (remainingExpirationTime === NoWork) {
         // If this root no longer has work, remove it from the scheduler.
         let next = root.nextScheduledRoot;
+        root.isScheduled = false;
         root.nextScheduledRoot = null;
         if (previousScheduledRoot === null) {
           firstScheduledRoot = next;
@@ -1546,7 +1552,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
       if (!isBatchingUpdates && !isRendering) {
-        performWork(Task, null);
+        performWork(Sync, null);
       }
     }
   }
@@ -1579,7 +1585,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         'flushSync was called from inside a lifecycle method. It cannot be ' +
           'called when React is already rendering.',
       );
-      performWork(Task, null);
+      performWork(Sync, null);
     }
   }
 

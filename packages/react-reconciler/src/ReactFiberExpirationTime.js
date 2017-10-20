@@ -14,14 +14,12 @@ export type ExpirationTime = number;
 
 const NoWork = 0;
 const Sync = 1;
-const Task = 2;
 const Never = 2147483647; // Max int32: Math.pow(2, 31) - 1
 
 const UNIT_SIZE = 10;
-const MAGIC_NUMBER_OFFSET = 3;
+const MAGIC_NUMBER_OFFSET = 2;
 
 exports.Sync = Sync;
-exports.Task = Task;
 exports.NoWork = NoWork;
 exports.Never = Never;
 
