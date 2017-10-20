@@ -380,11 +380,18 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current !== null && current.type === element.type) {
+    // TODO: Split these into branches based on typeof type
+    if (
+      current !== null &&
+      (current.type === element.type ||
+        (current.tag === Fragment && element.type === REACT_FRAGMENT_TYPE))
+    ) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
-      existing.pendingProps = element.props;
+      existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
+        ? element.props.children
+        : element.props;
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
@@ -1231,7 +1238,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        if (child.type === element.type) {
+        // TODO: Split these into branches based on typeof type
+        if (
+          child.type === element.type ||
+          (child.tag === Fragment && element.type === REACT_FRAGMENT_TYPE)
+        ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, expirationTime);
           existing.ref = coerceRef(child, element);

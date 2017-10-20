@@ -386,7 +386,6 @@ function createFiberFromFragment(
   key: null | string,
 ): Fiber {
   const fiber = createFiber(Fragment, key, internalContextTag);
-  fiber.type = REACT_FRAGMENT_TYPE;
   fiber.pendingProps = elements;
   fiber.expirationTime = expirationTime;
   return fiber;
