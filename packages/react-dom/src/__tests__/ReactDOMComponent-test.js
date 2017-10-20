@@ -2042,7 +2042,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`',
+        'If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: trues="`whatever`". If you mean to conditionally pass an ' +
+          'attribute, use a ternary expression: `true`={condition ? value : null}.',
       );
     });
 
@@ -2055,7 +2057,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`',
+        'If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
+          'attribute, use a ternary expression: `true`={condition ? value : null}.',
       );
     });
 
@@ -2230,7 +2234,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`.',
+        'If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
+          'attribute, use a ternary expression: `true`={condition ? value : null}.',
       );
     });
 
@@ -2283,7 +2289,9 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `false` for non-boolean attribute `whatever`.',
+        'If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `false`="`whatever`". If you mean to conditionally pass an ' +
+          'attribute, use a ternary expression: `false`={condition ? value : null}.',
       );
     });
   });
