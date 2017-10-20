@@ -21,8 +21,8 @@ describe('ReactDOMInput', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  function setUntrackedValue(elem, value) {
-    elem.setAttribute('value', value);
+  function triggerNativeValueEvent(elem, value) {
+    ReactTestUtils.Simulate.change(elem, {target: {value: value}});
   }
 
   beforeEach(() => {
@@ -44,7 +44,7 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
 
     // Simulate a native change event
-    setUntrackedValue(node, 'giraffe');
+    triggerNativeValueEvent(node, 'giraffe');
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
@@ -74,11 +74,7 @@ describe('ReactDOMInput', () => {
       switchedFocus = false;
       change(newValue) {
         this.setState({value: newValue});
-        // Calling focus here will blur the text box which causes a native
-        // change event. Ideally we shouldn't have to fire this ourselves.
-        // I don't know how to simulate a change event on a text box.
         this.a.dispatchEvent(changeEvent);
-        this.b.focus();
       }
       blur(currentValue) {
         this.switchedFocus = true;
@@ -167,7 +163,7 @@ describe('ReactDOMInput', () => {
     document.body.appendChild(container);
 
     // Simulate a native keyup event
-    setUntrackedValue(instance.a, 'giraffe');
+    triggerNativeValueEvent(instance.a, 'giraffe');
     instance.a.dispatchEvent(inputEvent);
 
     // These should now both have been restored to their controlled value.
