@@ -31,6 +31,8 @@ describe('ReactDOMInput', () => {
   });
 
   it('should properly control a value even if no event listener exists', () => {
+     // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
     var container = document.createElement('div');
     var stub = ReactDOM.render(<input type="text" value="lion" />, container);
 
@@ -40,12 +42,6 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
 
     ReactTestUtils.SimulateNative.change(node, {target: {value: 'giraffe'}});
-
-    // This must use the native event dispatching. If we simulate, we will
-    // bypass the lazy event attachment system so we won't actually test this.
-    var nativeEvent = document.createEvent('Event');
-    nativeEvent.initEvent('change', true, true);
-    node.dispatchEvent(nativeEvent);
 
     expect(node.value).toBe('lion');
 
