@@ -64,7 +64,6 @@ describe('ReactDOMInput', () => {
       b = null;
       switchedFocus = false;
       change(newValue) {
-        console.log('newValue')
         this.setState({value: newValue});
         this.a.dispatchEvent(changeEvent);
       }
@@ -96,7 +95,7 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    instance.a.value = 'giraffe'
+    instance.a.value = 'giraffe';
     ReactTestUtils.Simulate.change(instance.a);
     ReactTestUtils.SimulateNative.blur(instance.a);
 
