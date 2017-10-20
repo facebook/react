@@ -20,7 +20,7 @@ const update = async ({cwd, dry, version}) => {
     await writeJson(packagePath, rootPackage, {spaces: 2});
 
     // Update ReactVersion source file
-    const reactVersionPath = join(cwd, 'packages/shared/src/ReactVersion.js');
+    const reactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
     const reactVersion = readFileSync(reactVersionPath, 'utf8').replace(
       /module\.exports = '[^']+';/,
       `module.exports = '${version}';`
@@ -39,6 +39,16 @@ const update = async ({cwd, dry, version}) => {
         json.version = `0.${semver.minor(json.version) + 1}.0`;
       } else {
         json.version = version;
+      }
+
+      if (project !== 'react') {
+        const peerVersion = json.peerDependencies.react.replace('^', '');
+
+        // Release engineers can manually update minor and bugfix versions,
+        // But we should ensure that major versions always match.
+        if (semver.major(version) !== semver.major(peerVersion)) {
+          json.peerDependencies.react = `^${semver.major(version)}.0.0`;
+        }
       }
 
       await writeJson(path, json, {spaces: 2});
