@@ -10,7 +10,7 @@
 'use strict';
 
 var ReactDOMSelection = require('./ReactDOMSelection');
-var {ELEMENT_NODE} = require('shared/HTMLNodeType');
+var {ELEMENT_NODE} = require('../shared/HTMLNodeType');
 
 var containsNode = require('fbjs/lib/containsNode');
 var focusNode = require('fbjs/lib/focusNode');

@@ -25,7 +25,7 @@ var {
 } = require('./ReactFiberContext');
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('./ReactTypeOfSideEffect');
+var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
 var ReactFiberExpirationTime = require('./ReactFiberExpirationTime');
 var {
   IndeterminateComponent,

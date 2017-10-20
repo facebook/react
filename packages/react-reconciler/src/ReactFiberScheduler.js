@@ -74,7 +74,7 @@ var {
   Callback,
   Err,
   Ref,
-} = require('./ReactTypeOfSideEffect');
+} = require('shared/ReactTypeOfSideEffect');
 
 var {
   HostRoot,

@@ -10,7 +10,7 @@
 'use strict';
 
 var EventPropagators = require('shared/event/EventPropagators');
-var ReactDOMComponentTree = require('../../../ReactDOMComponentTree');
+var ReactDOMComponentTree = require('../../ReactDOMComponentTree');
 var SyntheticMouseEvent = require('../SyntheticMouseEvent');
 
 var eventTypes = {

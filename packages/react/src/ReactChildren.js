@@ -16,7 +16,7 @@ var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {getStackAddendum} = require('ReactDebugCurrentFrame');
+  var {getStackAddendum} = require('../element/ReactDebugCurrentFrame');
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;

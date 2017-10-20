@@ -14,8 +14,8 @@ var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('../ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('../../ReactDOMComponentTree');
 var ReactInputSelection = require('../../ReactInputSelection');
-var SyntheticEvent = require('../SyntheticEvent');
-var {DOCUMENT_NODE} = require('shared/HTMLNodeType');
+var SyntheticEvent = require('shared/event/SyntheticEvent');
+var {DOCUMENT_NODE} = require('../../../shared/HTMLNodeType');
 
 var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('shared/isTextInputElement');

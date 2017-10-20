@@ -10,11 +10,11 @@
 'use strict';
 
 var BeforeInputEventPlugin = require('./event/plugins/BeforeInputEventPlugin');
-var ChangeEventPlugin = require('/event/plugins/ChangeEventPlugin');
+var ChangeEventPlugin = require('./event/plugins/ChangeEventPlugin');
 var DOMEventPluginOrder = require('./event/plugins/DOMEventPluginOrder');
 var EnterLeaveEventPlugin = require('./event/plugins/EnterLeaveEventPlugin');
-var EventPluginHub = require('./event/EventPluginHub');
-var EventPluginUtils = require('./event/EventPluginUtils');
+var EventPluginHub = require('shared/event/EventPluginHub');
+var EventPluginUtils = require('shared/event/EventPluginUtils');
 var ReactBrowserEventEmitter = require('./event/ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('./ReactDOMComponentTree');
 var ReactDOMEventListener = require('./event/ReactDOMEventListener');

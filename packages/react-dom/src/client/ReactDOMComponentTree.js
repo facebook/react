@@ -9,7 +9,7 @@
 
 'use strict';
 
-var {HostComponent, HostText} = require('ReactTypeOfWork');
+var {HostComponent, HostText} = require('shared/ReactTypeOfWork');
 
 var invariant = require('fbjs/lib/invariant');
 

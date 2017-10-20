@@ -37,7 +37,7 @@ if (__DEV__) {
 var {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} = require('ReactFiberTreeReflection');
+} = require('shared/ReactFiberTreeReflection');
 
 export type Deadline = {
   timeRemaining: () => number,

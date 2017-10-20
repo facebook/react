@@ -9,7 +9,7 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('shared/HTMLNodeType');
+var {TEXT_NODE} = require('../shared/HTMLNodeType');
 
 /**
  * Given any node return the first leaf node without children.

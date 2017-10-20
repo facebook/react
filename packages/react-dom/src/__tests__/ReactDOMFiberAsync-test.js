@@ -38,7 +38,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('with feature flag disabled', () => {
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('ReactFeatureFlags');
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
       ReactFeatureFlags.enableAsyncSubtreeAPI = false;
       ReactDOM = require('react-dom');
@@ -62,7 +62,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('with feature flag enabled', () => {
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('ReactFeatureFlags');
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactDOM = require('react-dom');

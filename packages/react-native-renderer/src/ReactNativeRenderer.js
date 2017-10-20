@@ -44,7 +44,7 @@ ReactFiberErrorLogger.injection.injectDialog(
 );
 
 const ReactNativeRenderer: ReactNativeType = {
-  NativeComponent: require('ReactNativeComponent'),
+  NativeComponent: require('./ReactNativeComponent'),
 
   findNodeHandle: findNumericNodeHandle,
 
@@ -93,16 +93,16 @@ const ReactNativeRenderer: ReactNativeType = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
-    NativeMethodsMixin: require('NativeMethodsMixin'),
+    NativeMethodsMixin: require('./NativeMethodsMixin'),
 
     // Used by react-native-github/Libraries/ components
-    ReactNativeBridgeEventPlugin: require('ReactNativeBridgeEventPlugin'), // requireNativeComponent
-    ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
-    ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
-    ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
-    TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg RCTText, RCTView, ReactNativeART
-    takeSnapshot: require('takeSnapshot'), // react-native-implementation
+    ReactNativeBridgeEventPlugin: require('./ReactNativeBridgeEventPlugin'), // requireNativeComponent
+    ReactGlobalSharedState: require('shared/ReactGlobalSharedState'), // Systrace
+    ReactNativeComponentTree: require('./ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
+    ReactNativePropRegistry: require('./ReactNativePropRegistry'), // flattenStyle, Stylesheet
+    TouchHistoryMath: require('shared/event/plugins/TouchHistoryMath'), // PanResponder
+    createReactNativeComponentClass: require('./createReactNativeComponentClass'), // eg RCTText, RCTView, ReactNativeART
+    takeSnapshot: require('./takeSnapshot'), // react-native-implementation
   },
 };
 

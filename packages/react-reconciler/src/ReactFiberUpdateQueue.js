@@ -13,7 +13,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
-const {Callback: CallbackEffect} = require('./ReactTypeOfSideEffect');
+const {Callback: CallbackEffect} = require('shared/ReactTypeOfSideEffect');
 
 const {NoWork} = require('./ReactFiberExpirationTime');
 

@@ -32,11 +32,11 @@ var {
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} = require('HTMLNodeType');
-var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
+} = require('../shared/HTMLNodeType');
+var {ROOT_ATTRIBUTE_NAME} = require('../shared/DOMProperty');
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var ReactPortal = require('react-reconciler/src/isomoprhic/ReactPortal');
+var ReactPortal = require('react-reconciler/src/isomorphic/ReactPortal');
 var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
 
 var getComponentName = require('shared/getComponentName');
@@ -83,8 +83,8 @@ if (__DEV__) {
   }
 }
 
-require('ReactDOMClientInjection');
-require('ReactDOMInjection');
+require('./ReactDOMClientInjection');
+require('../shared/ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
@@ -940,13 +940,13 @@ var ReactDOM = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('EventPluginHub'),
+    EventPluginHub: require('shared/event/EventPluginHub'),
     // Used by test-utils
-    EventPluginRegistry: require('EventPluginRegistry'),
-    EventPropagators: require('EventPropagators'),
+    EventPluginRegistry: require('shared/event/EventPluginRegistry'),
+    EventPropagators: require('shared/event/EventPropagators'),
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('ReactDOMEventListener'),
+    ReactDOMEventListener: require('./event/ReactDOMEventListener'),
   },
 };
 

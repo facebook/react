@@ -13,7 +13,7 @@
 var CSSPropertyOperations = require('../shared/CSSPropertyOperations');
 var DOMNamespaces = require('../shared/DOMNamespaces');
 var DOMProperty = require('../shared/DOMProperty');
-var DOMPropertyOperations = require('../shared/DOMPropertyOperations');
+var DOMPropertyOperations = require('./DOMPropertyOperations');
 var EventPluginRegistry = require('shared/event/EventPluginRegistry');
 var ReactBrowserEventEmitter = require('./event/ReactBrowserEventEmitter');
 var ReactDOMFiberInput = require('./ReactDOMFiberInput');
@@ -24,7 +24,7 @@ var ReactDOMFiberTextarea = require('./ReactDOMFiberTextarea');
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 var {getCurrentFiberOwnerName} = require('react-reconciler/src/ReactDebugCurrentFiber');
 
-var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('shared/HTMLNodeType');
+var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('../shared/HTMLNodeType');
 
 var assertValidProps = require('../shared/assertValidProps');
 var emptyFunction = require('fbjs/lib/emptyFunction');

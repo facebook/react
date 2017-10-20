@@ -62,7 +62,7 @@ describe('ReactTreeTraversal', () => {
   }
 
   beforeEach(() => {
-    ReactTreeTraversal = require('ReactTreeTraversal');
+    ReactTreeTraversal = require('shared/ReactTreeTraversal');
     mockFn.mockReset();
   });
 
