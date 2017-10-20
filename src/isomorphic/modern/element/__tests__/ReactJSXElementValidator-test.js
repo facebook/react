@@ -270,14 +270,12 @@ describe('ReactJSXElementValidator', () => {
     var Undefined = undefined;
     var Null = null;
     var True = true;
-    var Num = 123;
     var Div = 'div';
     spyOn(console, 'error');
     void <Undefined />;
     void <Null />;
     void <True />;
-    void <Num />;
-    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(3);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
@@ -297,14 +295,8 @@ describe('ReactJSXElementValidator', () => {
         'components) but got: boolean.' +
         '\n\nCheck your code at **.',
     );
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: number.' +
-        '\n\nCheck your code at **.',
-    );
     void <Div />;
-    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(3);
   });
 
   it('should check default prop values', () => {

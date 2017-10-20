@@ -55,12 +55,6 @@ if (__DEV__) {
     stack += ReactDebugCurrentFrame.getStackAddendum() || '';
     return stack;
   };
-
-  var REACT_FRAGMENT_TYPE =
-    (typeof Symbol === 'function' &&
-      Symbol.for &&
-      Symbol.for('react.fragment')) ||
-    0xeacb;
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
@@ -238,7 +232,8 @@ var ReactElementValidator = {
     var validType =
       typeof type === 'string' ||
       typeof type === 'function' ||
-      type === REACT_FRAGMENT_TYPE;
+      typeof type === 'symbol' ||
+      typeof type === 'number';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
