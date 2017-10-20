@@ -375,11 +375,13 @@ function getPlugins(
   modulesToStub,
   featureFlags
 ) {
+  // Extract error codes 1st so we can replace invariant messages in prod builds
+  // Without re-running the slow build script.
   const plugins = [
-    babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
       Modules.getAliases(paths, bundleType, moduleType, argv['extract-errors'])
     ),
+    babel(updateBabelConfig(babelOpts, bundleType)),
   ];
 
   const replaceModules = Modules.getDefaultReplaceModules(
