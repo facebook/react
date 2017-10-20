@@ -1530,16 +1530,17 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   // TODO: Not happy about this hook. Conceptually, renderRoot should return a
   // tuple of (isReadyForCommit, didError, error)
   function onUncaughtError(error) {
-    if (nextFlushedRoot !== null) {
-      // Unschedule this root so we don't work on it again until there's
-      // another update.
-      nextFlushedRoot.remainingWork = null;
-      if (!hasUnhandledError) {
-        hasUnhandledError = true;
-        unhandledError = error;
-      }
-    } else {
-      throw error;
+    invariant(
+      nextFlushedRoot !== null,
+      'Should be working on a root. This error is likely caused by a bug in ' +
+        'React. Please file an issue.',
+    );
+    // Unschedule this root so we don't work on it again until there's
+    // another update.
+    nextFlushedRoot.remainingWork = null;
+    if (!hasUnhandledError) {
+      hasUnhandledError = true;
+      unhandledError = error;
     }
   }
 
