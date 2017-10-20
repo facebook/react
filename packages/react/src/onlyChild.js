@@ -6,7 +6,7 @@
  */
 'use strict';
 
-var ReactElement = require('../element/ReactElement');
+var ReactElement = require('./ReactElement');
 
 var invariant = require('fbjs/lib/invariant');
 

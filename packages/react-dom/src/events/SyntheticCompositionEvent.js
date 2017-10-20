@@ -7,7 +7,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('shared/event/SyntheticEvent');
+var SyntheticEvent = require('events/SyntheticEvent');
 
 /**
  * @interface Event

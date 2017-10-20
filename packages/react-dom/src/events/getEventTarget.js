@@ -7,7 +7,7 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('../../shared/HTMLNodeType');
+var {TEXT_NODE} = require('../shared/HTMLNodeType');
 
 /**
  * Gets the target node from a native browser event by accounting for

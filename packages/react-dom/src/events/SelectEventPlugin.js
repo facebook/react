@@ -7,13 +7,13 @@
 
 'use strict';
 
-var EventPropagators = require('shared/event/EventPropagators');
+var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('../ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('../../ReactDOMComponentTree');
-var ReactInputSelection = require('../../ReactInputSelection');
-var SyntheticEvent = require('shared/event/SyntheticEvent');
-var {DOCUMENT_NODE} = require('../../../shared/HTMLNodeType');
+var ReactBrowserEventEmitter = require('./ReactBrowserEventEmitter');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+var ReactInputSelection = require('../client/ReactInputSelection');
+var SyntheticEvent = require('events/SyntheticEvent');
+var {DOCUMENT_NODE} = require('../shared/HTMLNodeType');
 
 var getActiveElement = require('fbjs/lib/getActiveElement');
 var isTextInputElement = require('shared/isTextInputElement');

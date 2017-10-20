@@ -9,9 +9,9 @@
 
 'use strict';
 
-var EventPluginUtils = require('shared/event/EventPluginUtils');
-var EventPropagators = require('shared/event/EventPropagators');
-var SyntheticUIEvent = require('../SyntheticUIEvent');
+var EventPluginUtils = require('events/EventPluginUtils');
+var EventPropagators = require('events/EventPropagators');
+var SyntheticUIEvent = require('./SyntheticUIEvent');
 var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
 
 var isStartish = EventPluginUtils.isStartish;

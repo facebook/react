@@ -50,9 +50,9 @@ describe('BeforeInputEventPlugin', function() {
 
     // TODO: can we express this test with only public API?
     this.ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
-    this.SyntheticCompositionEvent = require('react-dom/src/client/event/SyntheticCompositionEvent');
-    this.SyntheticInputEvent = require('react-dom/src/client/event/SyntheticInputEvent');
-    this.BeforeInputEventPlugin = require('react-dom/src/client/event/plugins/BeforeInputEventPlugin');
+    this.SyntheticCompositionEvent = require('react-dom/src/events/SyntheticCompositionEvent');
+    this.SyntheticInputEvent = require('react-dom/src/events/SyntheticInputEvent');
+    this.BeforeInputEventPlugin = require('react-dom/src/events/BeforeInputEventPlugin');
   }
 
   function extract(node, eventType, optionalData) {

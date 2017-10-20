@@ -20,7 +20,7 @@ describe('ReactCoroutine', () => {
     ReactNoop = require('react-noop-renderer');
     // TODO: can we express this test with only public API?
     // TODO: direct imports like some-package/src/* are bad. Fix me.
-    ReactCoroutine = require('react-reconciler/src/isomorphic/ReactCoroutine');
+    ReactCoroutine = require('react-reconciler/src/ReactCoroutine');
   });
 
   function div(...children) {

@@ -19,9 +19,9 @@ Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
   ReactDOMComponentTree: require('./src/client/ReactDOMComponentTree'),
   ReactInstanceMap: require('shared/ReactInstanceMap'),
   // These are dependencies of TapEventPlugin:
-  EventPluginUtils: require('shared/event/EventPluginUtils'),
-  EventPropagators: require('shared/event/EventPropagators'),
-  SyntheticUIEvent: require('./client/event/SyntheticUIEvent'),
+  EventPluginUtils: require('events/EventPluginUtils'),
+  EventPropagators: require('events/EventPropagators'),
+  SyntheticUIEvent: require('./events/SyntheticUIEvent'),
 });
 
 module.exports = ReactDOM;

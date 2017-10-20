@@ -8,8 +8,8 @@
  */
 'use strict';
 
-const EventPropagators = require('shared/event/EventPropagators');
-const SyntheticEvent = require('shared/event/SyntheticEvent');
+const EventPropagators = require('events/EventPropagators');
+const SyntheticEvent = require('events/SyntheticEvent');
 const invariant = require('fbjs/lib/invariant');
 
 const customBubblingEventTypes = {};

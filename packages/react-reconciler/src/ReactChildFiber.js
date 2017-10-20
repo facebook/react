@@ -14,11 +14,8 @@ import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
 import type {Fiber} from 'ReactFiber';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
-var {
-  REACT_COROUTINE_TYPE,
-  REACT_YIELD_TYPE,
-} = require('./isomorphic/ReactCoroutine');
-var {REACT_PORTAL_TYPE} = require('./isomorphic/ReactPortal');
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('./ReactCoroutine');
+var {REACT_PORTAL_TYPE} = require('./ReactPortal');
 
 var ReactFiber = require('./ReactFiber');
 var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');

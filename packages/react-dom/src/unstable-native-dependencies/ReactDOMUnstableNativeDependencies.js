@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const EventPluginUtils = require('shared/event/EventPluginUtils');
-const ResponderEventPlugin = require('shared/event/plugins/ResponderEventPlugin');
-const ResponderTouchHistoryStore = require('shared/event/plugins/ResponderTouchHistoryStore');
+const EventPluginUtils = require('events/EventPluginUtils');
+const ResponderEventPlugin = require('events/ResponderEventPlugin');
+const ResponderTouchHistoryStore = require('events/ResponderTouchHistoryStore');
 
 // This is used by react-native-web.
 const ReactDOMUnstableNativeDependencies = {

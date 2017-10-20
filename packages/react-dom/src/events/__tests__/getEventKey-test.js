@@ -10,7 +10,7 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var getEventKey = require('react-dom/src/client/event/getEventKey');
+var getEventKey = require('react-dom/src/events/getEventKey');
 
 describe('getEventKey', () => {
   describe('when key is implemented in a browser', () => {

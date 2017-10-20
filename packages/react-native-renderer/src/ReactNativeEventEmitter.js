@@ -8,12 +8,12 @@
  */
 'use strict';
 
-var EventPluginHub = require('shared/event/EventPluginHub');
-var EventPluginRegistry = require('shared/event/EventPluginRegistry');
-var ReactEventEmitterMixin = require('shared/event/ReactEventEmitterMixin');
+var EventPluginHub = require('events/EventPluginHub');
+var EventPluginRegistry = require('events/EventPluginRegistry');
+var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
 var ReactNativeComponentTree = require('./ReactNativeComponentTree');
 var ReactNativeTagHandles = require('./ReactNativeTagHandles');
-var ReactGenericBatching = require('shared/event/ReactGenericBatching');
+var ReactGenericBatching = require('events/ReactGenericBatching');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

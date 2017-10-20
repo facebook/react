@@ -8,9 +8,9 @@
 'use strict';
 
 var EventListener = require('fbjs/lib/EventListener');
-var ReactDOMComponentTree = require('../ReactDOMComponentTree');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
-var ReactGenericBatching = require('shared/event/ReactGenericBatching');
+var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 
 var getEventTarget = require('./getEventTarget');

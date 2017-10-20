@@ -9,7 +9,7 @@
 
 'use strict';
 
-const ReactGenericBatching = require('shared/event/ReactGenericBatching');
+const ReactGenericBatching = require('events/ReactGenericBatching');
 const ReactVersion = require('shared/ReactVersion');
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.

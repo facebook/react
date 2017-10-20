@@ -9,7 +9,7 @@
 
 var EventPluginRegistry = require('./EventPluginRegistry');
 var EventPluginUtils = require('./EventPluginUtils');
-var ReactErrorUtils = require('../ReactErrorUtils');
+var ReactErrorUtils = require('shared/ReactErrorUtils');
 
 var accumulateInto = require('./accumulateInto');
 var forEachAccumulated = require('./forEachAccumulated');

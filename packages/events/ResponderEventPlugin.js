@@ -7,13 +7,13 @@
 
 'use strict';
 
-var EventPluginUtils = require('../EventPluginUtils');
-var EventPropagators = require('../EventPropagators');
-var ReactTreeTraversal = require('../../ReactTreeTraversal');
+var EventPluginUtils = require('./EventPluginUtils');
+var EventPropagators = require('./EventPropagators');
+var ReactTreeTraversal = require('shared/ReactTreeTraversal');
 var ResponderSyntheticEvent = require('./ResponderSyntheticEvent');
 var ResponderTouchHistoryStore = require('./ResponderTouchHistoryStore');
 
-var accumulate = require('../accumulate');
+var accumulate = require('./accumulate');
 
 var isStartish = EventPluginUtils.isStartish;
 var isMoveish = EventPluginUtils.isMoveish;

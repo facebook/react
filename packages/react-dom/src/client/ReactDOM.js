@@ -14,13 +14,13 @@ import type {ReactNodeList} from 'ReactTypes';
 require('../shared/checkReact');
 var DOMNamespaces = require('../shared/DOMNamespaces');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('./event/ReactBrowserEventEmitter');
-var ReactControlledComponent = require('shared/event/ReactControlledComponent');
+var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
+var ReactControlledComponent = require('events/ReactControlledComponent');
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactDOMComponentTree = require('./ReactDOMComponentTree');
 var ReactDOMFiberComponent = require('./ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
-var ReactGenericBatching = require('shared/event/ReactGenericBatching');
+var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactFiberReconciler = require('react-reconciler');
 var ReactInputSelection = require('./ReactInputSelection');
 var ReactInstanceMap = require('shared/ReactInstanceMap');
@@ -36,7 +36,7 @@ var {
 var {ROOT_ATTRIBUTE_NAME} = require('../shared/DOMProperty');
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var ReactPortal = require('react-reconciler/src/isomorphic/ReactPortal');
+var ReactPortal = require('react-reconciler/src/ReactPortal');
 var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
 
 var getComponentName = require('shared/getComponentName');
@@ -940,13 +940,13 @@ var ReactDOM = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('shared/event/EventPluginHub'),
+    EventPluginHub: require('events/EventPluginHub'),
     // Used by test-utils
-    EventPluginRegistry: require('shared/event/EventPluginRegistry'),
-    EventPropagators: require('shared/event/EventPropagators'),
+    EventPluginRegistry: require('events/EventPluginRegistry'),
+    EventPropagators: require('events/EventPropagators'),
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('./event/ReactDOMEventListener'),
+    ReactDOMEventListener: require('../events/ReactDOMEventListener'),
   },
 };
 

@@ -8,7 +8,7 @@
 'use strict';
 
 var DOMProperty = require('./DOMProperty');
-var EventPluginRegistry = require('shared/event/EventPluginRegistry');
+var EventPluginRegistry = require('events/EventPluginRegistry');
 var isCustomComponent = require('./isCustomComponent');
 
 if (__DEV__) {

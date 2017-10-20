@@ -7,17 +7,17 @@
 
 'use strict';
 
-var EventPluginHub = require('shared/event/EventPluginHub');
-var EventPropagators = require('shared/event/EventPropagators');
+var EventPluginHub = require('events/EventPluginHub');
+var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactControlledComponent = require('shared/event/ReactControlledComponent');
-var ReactDOMComponentTree = require('../../ReactDOMComponentTree');
-var ReactGenericBatching = require('shared/event/ReactGenericBatching');
-var SyntheticEvent = require('shared/event/SyntheticEvent');
+var ReactControlledComponent = require('events/ReactControlledComponent');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+var ReactGenericBatching = require('events/ReactGenericBatching');
+var SyntheticEvent = require('events/SyntheticEvent');
 
-var inputValueTracking = require('../../inputValueTracking');
-var getEventTarget = require('../getEventTarget');
-var isEventSupported = require('../isEventSupported');
+var inputValueTracking = require('../client/inputValueTracking');
+var getEventTarget = require('./getEventTarget');
+var isEventSupported = require('./isEventSupported');
 var isTextInputElement = require('shared/isTextInputElement');
 
 var eventTypes = {

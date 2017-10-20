@@ -11,12 +11,12 @@
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
-const ReactPortal = require('react-reconciler/src/isomorphic/ReactPortal');
+const ReactPortal = require('react-reconciler/src/ReactPortal');
 const {
   injectInternals,
 } = require('react-reconciler/src/ReactFiberDevToolsHook');
 
-const ReactGenericBatching = require('shared/event/ReactGenericBatching');
+const ReactGenericBatching = require('events/ReactGenericBatching');
 const ReactNativeFiberErrorDialog = require('./ReactNativeFiberErrorDialog');
 const ReactNativeComponentTree = require('./ReactNativeComponentTree');
 const ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
@@ -102,7 +102,7 @@ const ReactNativeRenderer: ReactNativeType = {
     ReactGlobalSharedState: require('shared/ReactGlobalSharedState'), // Systrace
     ReactNativeComponentTree: require('./ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
     ReactNativePropRegistry: require('./ReactNativePropRegistry'), // flattenStyle, Stylesheet
-    TouchHistoryMath: require('shared/event/plugins/TouchHistoryMath'), // PanResponder
+    TouchHistoryMath: require('events/TouchHistoryMath'), // PanResponder
     createReactNativeComponentClass: require('./createReactNativeComponentClass'), // eg RCTText, RCTView, ReactNativeART
     takeSnapshot: require('./takeSnapshot'), // react-native-implementation
   },

@@ -7,11 +7,11 @@
 
 'use strict';
 
-var EventPropagators = require('shared/event/EventPropagators');
+var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var FallbackCompositionState = require('./FallbackCompositionState');
-var SyntheticCompositionEvent = require('../SyntheticCompositionEvent');
-var SyntheticInputEvent = require('../SyntheticInputEvent');
+var SyntheticCompositionEvent = require('./SyntheticCompositionEvent');
+var SyntheticInputEvent = require('./SyntheticInputEvent');
 
 import type {TopLevelTypes} from 'BrowserEventConstants';
 

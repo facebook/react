@@ -7,12 +7,12 @@
 
 'use strict';
 
-var EventPluginRegistry = require('shared/event/EventPluginRegistry');
+var EventPluginRegistry = require('events/EventPluginRegistry');
 var ReactDOMEventListener = require('./ReactDOMEventListener');
-var ReactEventEmitterMixin = require('shared/event/ReactEventEmitterMixin');
+var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
 
 var isEventSupported = require('./isEventSupported');
-var {topLevelTypes} = require('shared/event/BrowserEventConstants');
+var {topLevelTypes} = require('events/BrowserEventConstants');
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:

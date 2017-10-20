@@ -59,14 +59,14 @@ describe('ReactBrowserEventEmitter', () => {
     LISTENER.mockClear();
     EventListener = require('fbjs/lib/EventListener');
     // TODO: can we express this test with only public API?
-    EventPluginHub = require('shared/event/EventPluginHub');
-    EventPluginRegistry = require('shared/event/EventPluginRegistry');
+    EventPluginHub = require('events/EventPluginHub');
+    EventPluginRegistry = require('events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
-    ReactBrowserEventEmitter = require('react-dom/src/client/event/ReactBrowserEventEmitter');
+    ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
-    TapEventPlugin = require('react-dom/src/client/event/plugins/TapEventPlugin');
+    TapEventPlugin = require('react-dom/src/events/TapEventPlugin');
 
     var container = document.createElement('div');
 

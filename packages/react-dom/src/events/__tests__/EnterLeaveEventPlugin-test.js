@@ -24,7 +24,7 @@ describe('EnterLeaveEventPlugin', () => {
     ReactTestUtils = require('react-dom/test-utils');
     // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
-    EnterLeaveEventPlugin = require('react-dom/src/client/event/plugins/EnterLeaveEventPlugin');
+    EnterLeaveEventPlugin = require('react-dom/src/events/EnterLeaveEventPlugin');
   });
 
   it('should set relatedTarget properly in iframe', () => {
