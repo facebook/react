@@ -183,10 +183,12 @@ if (__DEV__) {
     if (typeof value === 'boolean') {
       warning(
         DOMProperty.shouldAttributeAcceptBooleanValue(name),
-        'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
-          'the value to a string.%s',
+        'If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `%s`="`%s`". If you mean to conditionally pass an attribute, ' +
+          'use a ternary expression: `%s`={condition ? value : null}.%s',
         value,
         name,
+        value,
         getStackAddendum(),
       );
       warnedProperties[name] = true;
