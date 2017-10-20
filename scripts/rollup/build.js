@@ -594,10 +594,10 @@ rimraf('build', () => {
       syncReactNative(join('build', 'react-native'), syncFbsource)
     );
     tasks.push(() =>
-      syncReactNativeRT(join('build', 'react-native-rt'), syncFbsource)
+      syncReactNativeRT(join('build', 'react-rt'), syncFbsource)
     );
     tasks.push(() =>
-      syncReactNativeCS(join('build', 'react-native-cs'), syncFbsource)
+      syncReactNativeCS(join('build', 'react-cs'), syncFbsource)
     );
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
