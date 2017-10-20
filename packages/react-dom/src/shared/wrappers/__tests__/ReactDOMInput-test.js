@@ -95,18 +95,8 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    var nodeValueSetter = jest.genMockFn();
-    var nodeValue = instance.a.value;
-    Object.defineProperty(instance.a, 'value', {
-      get: function() {
-        return nodeValue;
-      },
-      set: nodeValueSetter.mockImplementation(function(newValue) {
-        nodeValue = newValue;
-      }),
-    });
-
-    ReactTestUtils.Simulate.change(instance.a, {target: {value: 'giraffe'}});
+    instance.a.value = 'giraffe'
+    ReactTestUtils.SimulateNative.change(instance.a);
     ReactTestUtils.SimulateNative.blur(instance.a);
 
     expect(instance.a.value).toBe('giraffe');
