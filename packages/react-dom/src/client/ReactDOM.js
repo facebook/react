@@ -738,10 +738,22 @@ function renderSubtreeIntoContainer(
     root = container._reactRootContainer = newRoot;
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
-      DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
+      DOMRenderer.updateContainer(
+        children,
+        newRoot,
+        parentComponent,
+        false,
+        callback,
+      );
     });
   } else {
-    DOMRenderer.updateContainer(children, root, parentComponent, callback);
+    DOMRenderer.updateContainer(
+      children,
+      root,
+      parentComponent,
+      false,
+      callback,
+    );
   }
   return DOMRenderer.getPublicRootInstance(root);
 }
@@ -779,11 +791,11 @@ ReactRoot.prototype.render = function(
   callback: ?() => mixed,
 ): void {
   const root = this._reactRootContainer;
-  DOMRenderer.updateContainer(children, root, null, callback);
+  DOMRenderer.updateContainer(children, root, null, false, callback);
 };
 ReactRoot.prototype.unmount = function(callback) {
   const root = this._reactRootContainer;
-  DOMRenderer.updateContainer(null, root, null, callback);
+  DOMRenderer.updateContainer(null, root, null, false, callback);
 };
 
 var ReactDOM = {

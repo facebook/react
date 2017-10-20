@@ -222,6 +222,7 @@ export type Reconciler<C, I, TI> = {
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
+    deferCommit: boolean,
     callback: ?Function,
   ): void,
   batchedUpdates<A>(fn: () => A): A,
@@ -341,6 +342,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       element: ReactNodeList,
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
+      deferCommit: boolean,
       callback: ?Function,
     ): void {
       // TODO: If this is a nested container, this won't be the root.

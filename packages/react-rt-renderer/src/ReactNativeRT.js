@@ -58,7 +58,13 @@ const ReactNativeRTFiber: ReactNativeRTType = {
       root = ReactNativeRTFiberRenderer.createContainer(containerTag, false);
       roots.set(containerTag, root);
     }
-    ReactNativeRTFiberRenderer.updateContainer(element, root, null, callback);
+    ReactNativeRTFiberRenderer.updateContainer(
+      element,
+      root,
+      null,
+      false,
+      callback,
+    );
 
     return ReactNativeRTFiberRenderer.getPublicRootInstance(root);
   },
@@ -67,9 +73,15 @@ const ReactNativeRTFiber: ReactNativeRTType = {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      ReactNativeRTFiberRenderer.updateContainer(null, root, null, () => {
-        roots.delete(containerTag);
-      });
+      ReactNativeRTFiberRenderer.updateContainer(
+        null,
+        root,
+        null,
+        false,
+        () => {
+          roots.delete(containerTag);
+        },
+      );
     }
   },
 
