@@ -2042,7 +2042,10 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`',
+        'Warning: If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an attribute, ' +
+          'use a ternary expression: `true`={condition ? value : null}.\n' +
+          'in div (at **)',
       );
     });
 
@@ -2055,7 +2058,10 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`',
+        'Warning: If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an attribute, ' +
+          'use a ternary expression: `true`={condition ? value : null}.\n' +
+          'in div (at **)',
       );
     });
 
@@ -2230,7 +2236,10 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`.',
+        'Warning: If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an attribute, ' +
+          'use a ternary expression: `true`={condition ? value : null}.\n' +
+          'in div (at **)',
       );
     });
 
@@ -2283,7 +2292,10 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `false` for non-boolean attribute `whatever`.',
+        'Warning: If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `false`="`whatever`". If you mean to conditionally pass an attribute, ' +
+          'use a ternary expression: `true`={condition ? value : null}.\n' +
+          'in div (at **)',
       );
     });
   });
