@@ -577,7 +577,7 @@ describe('ReactDOMInput', () => {
     var stub = <input type="text" value={0} onChange={handler} />;
     var container = document.createElement('div');
     var node = ReactDOM.render(stub, container);
-    
+
     node.value = 'giraffe';
     ReactTestUtils.Simulate.change(node);
 
