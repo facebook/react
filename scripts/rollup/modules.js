@@ -8,9 +8,9 @@ const moduleTypes = require('./bundles').moduleTypes;
 const extractErrorCodes = require('../error-codes/extract-errors');
 
 const exclude = [
-  'src/**/__benchmarks__/**/*.js',
-  'src/**/__tests__/**/*.js',
-  'src/**/__mocks__/**/*.js',
+  '**/__benchmarks__/**/*.js',
+  '**/__tests__/**/*.js',
+  '**/__mocks__/**/*.js',
 ];
 
 const UMD_DEV = bundleTypes.UMD_DEV;
@@ -23,6 +23,7 @@ const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
 const ISOMORPHIC = moduleTypes.ISOMORPHIC;
+const RENDERER = moduleTypes.RENDERER;
 
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -122,9 +123,12 @@ function getNodeModules(bundleType, moduleType) {
 
 function ignoreFBModules() {
   return [
+    // These are FB-specific aliases to react and react-dom.
+    // Don't attempt to bundle them into other bundles.
+    'React',
+    'ReactDOM',
     // At FB, we don't know them statically:
     'ReactFeatureFlags',
-    'ReactDOMFeatureFlags',
     // In FB bundles, we preserve an inline require to ReactCurrentOwner.
     // See the explanation in FB version of ReactCurrentOwner in www:
     'ReactCurrentOwner',
@@ -181,12 +185,19 @@ function getExternalModules(externals, bundleType, moduleType) {
   return externalModules;
 }
 
-function getInternalModules() {
+function getInternalModules(moduleType) {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
-  return {
-    reactProdInvariant: resolve('./src/shared/utils/reactProdInvariant.js'),
+  let aliases = {
+    reactProdInvariant: resolve('./packages/shared/reactProdInvariant.js'),
   };
+  if (moduleType === RENDERER) {
+    // Renderers bundle the whole reconciler.
+    aliases['react-reconciler'] = resolve(
+      './packages/react-reconciler/index.js'
+    );
+  }
+  return aliases;
 }
 
 function getFbjsModuleAliases(bundleType) {
@@ -291,19 +302,33 @@ function getAliases(paths, bundleType, moduleType, extractErrors) {
       extractErrors && extractErrorCodes(errorCodeOpts),
       bundleType
     ),
-    getInternalModules(),
+    getInternalModules(moduleType),
     getNodeModules(bundleType, moduleType),
     getFbjsModuleAliases(bundleType)
   );
 }
 
-function getDefaultReplaceModules(bundleType, bundleModulesToStub) {
+function replaceFeatureFlags(featureFlags) {
+  if (!featureFlags) {
+    return {};
+  }
+  return {
+    "'ReactFeatureFlags'": `'${resolve(featureFlags)}'`,
+  };
+}
+
+function getDefaultReplaceModules(
+  bundleType,
+  bundleModulesToStub,
+  featureFlags
+) {
   return Object.assign(
     {},
     replaceFbjsModuleAliases(bundleType),
     replaceDevOnlyStubbedModules(bundleType),
     replaceLegacyModuleAliases(bundleType),
-    replaceBundleStubModules(bundleModulesToStub)
+    replaceBundleStubModules(bundleModulesToStub),
+    replaceFeatureFlags(featureFlags)
   );
 }
 

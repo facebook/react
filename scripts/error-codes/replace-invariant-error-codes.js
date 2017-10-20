@@ -91,13 +91,6 @@ module.exports = function(babel) {
             var condition = node.arguments[0];
             var errorMsgLiteral = evalToString(node.arguments[1]);
 
-            var prodErrorId = errorMap[errorMsgLiteral];
-            if (prodErrorId === undefined) {
-              // The error cannot be found in the map.
-              node[SEEN_SYMBOL] = true;
-              return;
-            }
-
             var devInvariant = t.callExpression(
               node.callee,
               [
@@ -109,10 +102,22 @@ module.exports = function(babel) {
             devInvariant[SEEN_SYMBOL] = true;
 
             var localInvariantId = getProdInvariantIdentifier(path, this);
-            var prodInvariant = t.callExpression(
-              localInvariantId,
-              [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
-            );
+
+            var prodErrorId = errorMap[errorMsgLiteral];
+            var prodInvariant;
+            if (prodErrorId === undefined) {
+              // The error cannot be found in the map.
+              // (This case isn't expected to occur.)
+              // Even if it does, it's best to transform the invariant to a ternary,
+              // So we don't risk executing any slow code unnecessarily
+              // (eg generating an invariant message we don't actually need).
+              prodInvariant = path.node.arguments[1];
+            } else {
+              prodInvariant = t.callExpression(
+                localInvariantId,
+                [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
+              );
+            }
 
             prodInvariant[SEEN_SYMBOL] = true;
             path.replaceWith(
