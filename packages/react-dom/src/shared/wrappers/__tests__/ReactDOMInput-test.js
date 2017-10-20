@@ -116,6 +116,7 @@ describe('ReactDOMInput', () => {
       a = null;
       b = null;
       change(newValue) {
+        console.log(newValue)
         // This click will change the checkbox's value to false. Then it will
         // invoke an inner change event. When we finally, flush, we need to
         // reset the checkbox's value to true since that is its controlled
@@ -143,7 +144,8 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    ReactTestUtils.SimulateNative.change(instance.a, { target: { value: 'giraffe' }});
+    instance.a.value = 'giraffe';
+    ReactTestUtils.Simulate.change(instance.a);
     instance.a.dispatchEvent(inputEvent);
 
     expect(instance.a.value).toBe('lion');
