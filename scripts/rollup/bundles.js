@@ -291,6 +291,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-native-renderer',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-native-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
@@ -322,6 +323,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-native-rt-renderer',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
       'packages/react-rt-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
@@ -348,6 +350,7 @@ const bundles = [
     name: 'react-native-cs-renderer',
     featureFlags: 'packages/react-cs-renderer/src/ReactNativeCSFeatureFlags',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
       'packages/react-cs-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
