@@ -64,6 +64,7 @@ describe('ReactDOMInput', () => {
       b = null;
       switchedFocus = false;
       change(newValue) {
+        console.log('newValue')
         this.setState({value: newValue});
         this.a.dispatchEvent(changeEvent);
       }
@@ -96,7 +97,7 @@ describe('ReactDOMInput', () => {
     document.body.appendChild(container);
 
     instance.a.value = 'giraffe'
-    ReactTestUtils.SimulateNative.change(instance.a);
+    ReactTestUtils.Simulate.change(instance.a);
     ReactTestUtils.SimulateNative.blur(instance.a);
 
     expect(instance.a.value).toBe('giraffe');
@@ -116,7 +117,6 @@ describe('ReactDOMInput', () => {
       a = null;
       b = null;
       change(newValue) {
-        console.log(newValue)
         // This click will change the checkbox's value to false. Then it will
         // invoke an inner change event. When we finally, flush, we need to
         // reset the checkbox's value to true since that is its controlled
