@@ -183,8 +183,8 @@ if (__DEV__) {
     if (typeof value === 'boolean') {
       warning(
         DOMProperty.shouldAttributeAcceptBooleanValue(name),
-        'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
-          'the value to a string.%s',
+        'Received `%s` for non-boolean attribute `%s`. If this is expected, use ' +
+          'condition ? ... : undefined instead.%s',
         value,
         name,
         getStackAddendum(),
