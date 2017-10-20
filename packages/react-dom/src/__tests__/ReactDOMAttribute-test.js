@@ -55,7 +55,7 @@ describe('ReactDOM unknown attribute', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
         'Warning: If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`=\"`unknown`\". If you mean to conditionally pass an ' +
+          'instead: `true`="`unknown`". If you mean to conditionally pass an ' +
           'attribute, use a ternary expression: `true`={condition ? value : null}.\n' +
           '    in div (at **)',
       );

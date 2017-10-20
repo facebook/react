@@ -2043,7 +2043,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`=\"`whatever`\". If you mean to conditionally pass an ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
           'attribute, use a ternary expression: `true`={condition ? value : null}.',
       );
     });
@@ -2058,7 +2058,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`=\"`whatever`\". If you mean to conditionally pass an ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
           'attribute, use a ternary expression: `true`={condition ? value : null}.',
       );
     });
@@ -2235,7 +2235,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`=\"`whatever`\". If you mean to conditionally pass an ' +
+          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
           'attribute, use a ternary expression: `true`={condition ? value : null}.',
       );
     });
@@ -2290,7 +2290,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `false`=\"`whatever`\". If you mean to conditionally pass an ' +
+          'instead: `false`="`whatever`". If you mean to conditionally pass an ' +
           'attribute, use a ternary expression: `false`={condition ? value : null}.',
       );
     });

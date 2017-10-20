@@ -184,7 +184,7 @@ if (__DEV__) {
       warning(
         DOMProperty.shouldAttributeAcceptBooleanValue(name),
         'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `%s`=\"`%s`\". If you mean to conditionally pass an ' +
+          'instead: `%s`="`%s`". If you mean to conditionally pass an ' +
           'attribute, use a ternary expression: `%s`={condition ? value : null}.%s',
         value,
         name,
