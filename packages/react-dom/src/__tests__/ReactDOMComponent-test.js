@@ -14,7 +14,6 @@ describe('ReactDOMComponent', () => {
   var ReactTestUtils;
   var ReactDOM;
   var ReactDOMServer;
-  var inputValueTracking;
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -26,8 +25,6 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-    // TODO: can we express this test with only public API?
-    inputValueTracking = require('../client/inputValueTracking');
   });
 
   describe('updateDOM', () => {
@@ -832,6 +829,32 @@ describe('ReactDOMComponent', () => {
 
   describe('mountComponent', () => {
     var mountComponent;
+    var getTracker = (node: any) => {
+      var descriptor = Object.getOwnPropertyDescriptor(
+        node.constructor.prototype,
+        'value',
+      );
+
+      var currentValue = '' + node.value;
+
+      Object.defineProperty(node, 'value', {
+        enumerable: descriptor.enumerable,
+        configurable: true,
+        get: () => {
+          return descriptor.get.call(this);
+        },
+        set: (value) => {
+          currentValue = '' + value;
+          descriptor.set.call(this, value);
+        },
+      });
+
+      return {
+        getValue() {
+          return currentValue;
+        },
+      };
+    };
 
     beforeEach(() => {
       mountComponent = function(props) {
@@ -1151,18 +1174,14 @@ describe('ReactDOMComponent', () => {
         <input type="text" defaultValue="foo" />,
         container,
       );
-
-      var tracker = inputValueTracking._getTrackerFromNode(inst);
-
+      var tracker = getTracker(inst);
       expect(tracker.getValue()).toEqual('foo');
     });
 
     it('should track textarea values', () => {
       var container = document.createElement('div');
       var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
-
-      var tracker = inputValueTracking._getTrackerFromNode(inst);
-
+      var tracker = getTracker(inst);
       expect(tracker.getValue()).toEqual('foo');
     });
 
