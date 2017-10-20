@@ -14,6 +14,7 @@ import type {Fiber} from 'ReactFiber';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
 const {createHostRootFiber} = require('ReactFiber');
+const {NoWork} = require('ReactFiberExpirationTime');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -22,8 +23,8 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
-  // Remaining priority on this root.
-  remainingWork: ExpirationTime | null,
+  // Remaining expiration time on this root.
+  remainingExpirationTime: ExpirationTime,
   // Determines if this root can be committed.
   isReadyForCommit: boolean,
   // A finished work-in-progress HostRoot that's ready to be committed.
@@ -51,7 +52,7 @@ exports.createFiberRoot = function(
     current: uninitializedFiber,
     containerInfo: containerInfo,
     pendingChildren: null,
-    remainingWork: null,
+    remainingExpirationTime: NoWork,
     isReadyForCommit: false,
     finishedWork: null,
     context: null,

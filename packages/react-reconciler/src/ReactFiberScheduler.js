@@ -337,7 +337,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function commitRoot(finishedWork: Fiber): ExpirationTime | null {
+  function commitRoot(finishedWork: Fiber): ExpirationTime {
     // We keep track of this so that captureError can collect any boundaries
     // that capture an error during the commit phase. The reason these aren't
     // local to this function is because errors that occur during cWU are
@@ -497,8 +497,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (remainingTime === NoWork) {
       capturedErrors = null;
       failedBoundaries = null;
-      // Return null instead of NoWork so we don't leak it.
-      return null;
     }
 
     return remainingTime;
@@ -1300,7 +1298,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isCallbackScheduled: boolean = false;
   let isFlushingWork: boolean = false;
   let nextFlushedRoot: FiberRoot | null = null;
-  let nextFlushedExpirationTime: ExpirationTime | null = null;
+  let nextFlushedExpirationTime: ExpirationTime = NoWork;
   let deadlineDidExpire: boolean = false;
   let hasUnhandledError: boolean = false;
   let unhandledError: mixed | null = null;
@@ -1329,9 +1327,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     // Check if this root is already part of the schedule.
-    if (root.remainingWork === null) {
+    if (root.remainingExpirationTime === NoWork) {
       // This root is not already scheduled. Add it.
-      root.remainingWork = expirationTime;
+      root.remainingExpirationTime = expirationTime;
       if (lastScheduledRoot === null) {
         firstScheduledRoot = lastScheduledRoot = root;
       } else {
@@ -1340,10 +1338,13 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       }
     } else {
       // This root is already scheduled, but its priority may have increased.
-      const remainingWork = root.remainingWork;
-      if (remainingWork === null || expirationTime < remainingWork) {
+      const remainingExpirationTime = root.remainingExpirationTime;
+      if (
+        remainingExpirationTime === NoWork ||
+        expirationTime < remainingExpirationTime
+      ) {
         // Update the priority.
-        root.remainingWork = expirationTime;
+        root.remainingExpirationTime = expirationTime;
       }
     }
 
@@ -1366,14 +1367,14 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function findHighestPriorityRoot() {
-    let highestPriorityWork = null;
+    let highestPriorityWork = NoWork;
     let highestPriorityRoot = null;
 
     let previousScheduledRoot = null;
     let root = firstScheduledRoot;
     while (root !== null) {
-      const remainingWork = root.remainingWork;
-      if (remainingWork === null) {
+      const remainingExpirationTime = root.remainingExpirationTime;
+      if (remainingExpirationTime === NoWork) {
         // If this root no longer has work, remove it from the scheduler.
         let next = root.nextScheduledRoot;
         root.nextScheduledRoot = null;
@@ -1388,11 +1389,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         root = next;
         continue;
       } else if (
-        highestPriorityWork === null ||
-        remainingWork < highestPriorityWork
+        highestPriorityWork === NoWork ||
+        remainingExpirationTime < highestPriorityWork
       ) {
         // Update the priority, if it's higher
-        highestPriorityWork = remainingWork;
+        highestPriorityWork = remainingExpirationTime;
         highestPriorityRoot = root;
       }
       previousScheduledRoot = root;
@@ -1416,13 +1417,10 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function flushAsyncWork(dl) {
-    flushWork(null, dl);
+    flushWork(NoWork, dl);
   }
 
-  function flushWork(
-    minExpirationTime: ExpirationTime | null,
-    dl: Deadline | null,
-  ) {
+  function flushWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
     invariant(
       !isFlushingWork,
       'flushWork was called recursively. This error is likely caused ' +
@@ -1437,8 +1435,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     findHighestPriorityRoot();
     while (
       nextFlushedRoot !== null &&
-      nextFlushedExpirationTime !== null &&
-      (minExpirationTime === null ||
+      nextFlushedExpirationTime !== NoWork &&
+      (minExpirationTime === NoWork ||
         nextFlushedExpirationTime <= minExpirationTime) &&
       !deadlineDidExpire
     ) {
@@ -1450,13 +1448,13 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         if (finishedWork !== null) {
           // This root is already complete. We can commit it.
           nextFlushedRoot.finishedWork = null;
-          nextFlushedRoot.remainingWork = commitRoot(finishedWork);
+          nextFlushedRoot.remainingExpirationTime = commitRoot(finishedWork);
         } else {
           nextFlushedRoot.finishedWork = null;
           finishedWork = renderRoot(nextFlushedRoot, nextFlushedExpirationTime);
           if (finishedWork !== null) {
             // We've completed the root. Commit it.
-            nextFlushedRoot.remainingWork = commitRoot(finishedWork);
+            nextFlushedRoot.remainingExpirationTime = commitRoot(finishedWork);
           }
         }
       } else {
@@ -1465,7 +1463,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         if (finishedWork !== null) {
           // This root is already complete. We can commit it.
           nextFlushedRoot.finishedWork = null;
-          nextFlushedRoot.remainingWork = commitRoot(finishedWork);
+          nextFlushedRoot.remainingExpirationTime = commitRoot(finishedWork);
         } else {
           nextFlushedRoot.finishedWork = null;
           finishedWork = renderRoot(nextFlushedRoot, nextFlushedExpirationTime);
@@ -1474,7 +1472,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
             // before committing.
             if (!shouldYield()) {
               // Still time left. Commit the root.
-              nextFlushedRoot.remainingWork = commitRoot(finishedWork);
+              nextFlushedRoot.remainingExpirationTime = commitRoot(
+                finishedWork,
+              );
             } else {
               // There's no time left. Mark this root as complete. We'll come
               // back and commit it later.
@@ -1537,7 +1537,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     );
     // Unschedule this root so we don't work on it again until there's
     // another update.
-    nextFlushedRoot.remainingWork = null;
+    nextFlushedRoot.remainingExpirationTime = NoWork;
     if (!hasUnhandledError) {
       hasUnhandledError = true;
       unhandledError = error;
