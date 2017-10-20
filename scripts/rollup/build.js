@@ -3,10 +3,7 @@
 const rollup = require('rollup').rollup;
 const babel = require('rollup-plugin-babel');
 const commonjs = require('rollup-plugin-commonjs');
-// temporary load edited version of rollup-plugin-alias until issue
-// https://github.com/rollup/rollup-plugin-alias/issues/11 got resolved
-// TODO watch rollup-plugin-alias and revert to it when issue got resolved
-const alias = require('./plugins/rollup-plugin-alias');
+const alias = require('rollup-plugin-alias');
 const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');

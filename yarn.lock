@@ -4131,9 +4131,9 @@ rimraf@2, rimraf@^2.2.8, rimraf@^2.5.1, rimraf@^2.6.1:
   dependencies:
     glob "^7.0.5"
 
-rollup-plugin-alias@^1.2.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-alias/-/rollup-plugin-alias-1.3.1.tgz#a9152fec4b6a6510dae93989517ca7853c32a6fa"
+rollup-plugin-alias@^1.4.0:
+  version "1.4.0"
+  resolved "https://registry.npmjs.org/rollup-plugin-alias/-/rollup-plugin-alias-1.4.0.tgz#120cba7c46621c03138f0ca6fd5dd2ade9872db9"
   dependencies:
     slash "^1.0.0"
 
