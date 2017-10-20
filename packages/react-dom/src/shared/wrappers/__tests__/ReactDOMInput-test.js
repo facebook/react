@@ -39,7 +39,7 @@ describe('ReactDOMInput', () => {
     var node = ReactDOM.findDOMNode(stub);
     expectDev(console.error.calls.count()).toBe(1);
 
-    ReactTestUtils.Simulate.change(node, {target: {value: 'giraffe'}});
+    ReactTestUtils.SimulateNative.change(node, {target: {value: 'giraffe'}});
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
@@ -157,7 +157,7 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    ReactTestUtils.Simulate.change(instance.a, 'giraffe');
+    ReactTestUtils.SimulateNative.change(instance.a, { target: { value: 'giraffe' }});
     instance.a.dispatchEvent(inputEvent);
 
     expect(instance.a.value).toBe('lion');
