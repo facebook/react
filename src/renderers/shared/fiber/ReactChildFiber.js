@@ -623,16 +623,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          if (newChild.type === REACT_FRAGMENT_TYPE) {
-            return updateSlot(
-              returnFiber,
-              oldFiber,
-              newChild.props.children,
-              expirationTime,
-            );
-          }
-
           if (newChild.key === key) {
+            if (newChild.type === REACT_FRAGMENT_TYPE) {
+              return updateFragment(
+                returnFiber,
+                oldFiber,
+                newChild.props.children,
+                expirationTime,
+                key,
+              );
+            }
             return updateElement(
               returnFiber,
               oldFiber,

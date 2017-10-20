@@ -52,6 +52,19 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([text('hello '), span()]);
   });
 
+  it('should render an iterable via noop renderer', () => {
+    const element = (
+      <React.Fragment>
+        {new Set([<span key="a">hi</span>, <span key="b">bye</span>])}
+      </React.Fragment>
+    );
+
+    ReactNoop.render(element);
+    ReactNoop.flush();
+
+    expect(ReactNoop.getChildren()).toEqual([span(), span()]);
+  });
+
   it('should preserve state of children with 1 level nesting', function() {
     var instance = null;
     var ops = [];
@@ -290,5 +303,95 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual(['Stateful render', 'Stateful render']);
     expect(instanceB).not.toBe(instanceA);
+  });
+
+  it('should preserve state with reordering in multiple levels', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      shouldComponentUpdate() {
+        ops.push('update');
+        return true;
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition
+        ? <div>
+            <React.Fragment key="c">
+              <span>foo</span>
+              <div key="b">
+                <Stateful key="a" />
+              </div>
+            </React.Fragment>
+            <span>boop</span>
+          </div>
+        : <div>
+            <span>beep</span>
+            <React.Fragment key="c">
+              <div key="b">
+                <Stateful key="a" />
+              </div>
+              <span>bar</span>
+            </React.Fragment>
+          </div>;
+    }
+
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['update']);
+  });
+
+  it('should preserve state with reordering in multiple levels', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      shouldComponentUpdate() {
+        ops.push('update');
+        return true;
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Fragment({condition}) {
+      return condition
+        ? <div>
+            <React.Fragment key="c">
+              <span>foo</span>
+              <div key="b">
+                <Stateful key="a" />
+              </div>
+            </React.Fragment>
+            <span>boop</span>
+          </div>
+        : <div>
+            <span>beep</span>
+            <React.Fragment key="c">
+              <div key="b">
+                <Stateful key="a" />
+              </div>
+              <span>bar</span>
+            </React.Fragment>
+          </div>;
+    }
+
+    ReactNoop.render(<Fragment />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['update']);
   });
 });
