@@ -10,10 +10,10 @@
 'use strict';
 
 var ReactFiberReconciler = require('react-reconciler');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactGenericBatching = require('ReactGenericBatching');
+var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
+var ReactGenericBatching = require('shared/event/ReactGenericBatching');
 var emptyObject = require('fbjs/lib/emptyObject');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var invariant = require('fbjs/lib/invariant');
 var {
   Fragment,

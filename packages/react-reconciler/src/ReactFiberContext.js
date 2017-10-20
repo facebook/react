@@ -14,17 +14,17 @@ import type {Fiber} from 'ReactFiber';
 import type {StackCursor} from 'ReactFiberStack';
 
 var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
+var getComponentName = require('shared/getComponentName');
 var invariant = require('fbjs/lib/invariant');
-var {isFiberMounted} = require('ReactFiberTreeReflection');
-var {ClassComponent, HostRoot} = require('ReactTypeOfWork');
-const {createCursor, pop, push} = require('ReactFiberStack');
+var {isFiberMounted} = require('shared/ReactFiberTreeReflection');
+var {ClassComponent, HostRoot} = require('shared/ReactTypeOfWork');
+const {createCursor, pop, push} = require('./ReactFiberStack');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var checkPropTypes = require('prop-types/checkPropTypes');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
+  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
   var warnedAboutMissingGetChildContext = {};
 }
 

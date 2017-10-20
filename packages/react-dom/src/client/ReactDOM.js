@@ -11,23 +11,21 @@
 
 import type {ReactNodeList} from 'ReactTypes';
 
-require('checkReact');
-var DOMNamespaces = require('DOMNamespaces');
+require('../shared/checkReact');
+var DOMNamespaces = require('../shared/DOMNamespaces');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
-var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactGenericBatching = require('ReactGenericBatching');
+var ReactBrowserEventEmitter = require('./event/ReactBrowserEventEmitter');
+var ReactControlledComponent = require('shared/event/ReactControlledComponent');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactDOMComponentTree = require('./ReactDOMComponentTree');
+var ReactDOMFiberComponent = require('./ReactDOMFiberComponent');
+var ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
+var ReactGenericBatching = require('shared/event/ReactGenericBatching');
 var ReactFiberReconciler = require('react-reconciler');
-var ReactInputSelection = require('ReactInputSelection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPortal = require('ReactPortal');
-var ReactVersion = require('ReactVersion');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var {injectInternals} = require('ReactFiberDevToolsHook');
+var ReactInputSelection = require('./ReactInputSelection');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var ReactVersion = require('shared/ReactVersion');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
 var {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -37,7 +35,11 @@ var {
 } = require('HTMLNodeType');
 var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
 
-var getComponentName = require('getComponentName');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var ReactPortal = require('react-reconciler/src/isomoprhic/ReactPortal');
+var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
+
+var getComponentName = require('shared/getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 var {getChildNamespace} = DOMNamespaces;

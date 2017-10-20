@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactPartialRenderer = require('ReactPartialRenderer');
+var ReactPartialRenderer = require('./ReactPartialRenderer');
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the

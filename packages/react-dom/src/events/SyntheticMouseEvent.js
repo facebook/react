@@ -9,9 +9,9 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+var SyntheticUIEvent = require('./SyntheticUIEvent');
 
-var getEventModifierState = require('getEventModifierState');
+var getEventModifierState = require('./getEventModifierState');
 
 /**
  * @interface MouseEvent

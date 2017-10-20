@@ -12,10 +12,10 @@
 
 import type {Fiber} from 'ReactFiber';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+var ReactInstanceMap = require('./ReactInstanceMap');
+var {ReactCurrentOwner} = require('./ReactGlobalSharedState');
 
-var getComponentName = require('getComponentName');
+var getComponentName = require('./getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
@@ -28,9 +28,9 @@ var {
   HostRoot,
   HostPortal,
   HostText,
-} = require('ReactTypeOfWork');
+} = require('./ReactTypeOfWork');
 
-var {NoEffect, Placement} = require('ReactTypeOfSideEffect');
+var {NoEffect, Placement} = require('./ReactTypeOfSideEffect');
 
 var MOUNTING = 1;
 var MOUNTED = 2;

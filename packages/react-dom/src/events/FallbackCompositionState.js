@@ -9,7 +9,7 @@
 
 'use strict';
 
-var getTextContentAccessor = require('getTextContentAccessor');
+var getTextContentAccessor = require('../../getTextContentAccessor');
 
 /**
  * This helper object stores information about text content of a target node,

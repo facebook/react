@@ -14,13 +14,13 @@ import type {Fiber} from 'ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 
-var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('shared/getComponentName');
   var {
     getStackAddendumByWorkInProgressFiber,
-  } = require('ReactFiberComponentTreeHook');
+  } = require('shared/ReactFiberComponentTreeHook');
 }
 
 function getCurrentFiberOwnerName(): string | null {

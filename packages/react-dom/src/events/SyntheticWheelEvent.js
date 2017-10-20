@@ -9,7 +9,7 @@
 
 'use strict';
 
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
+var SyntheticMouseEvent = require('./SyntheticMouseEvent');
 
 /**
  * @interface WheelEvent

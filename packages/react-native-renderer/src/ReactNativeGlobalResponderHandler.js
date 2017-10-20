@@ -8,6 +8,7 @@
  */
 'use strict';
 
+// Module provided by RN:
 var UIManager = require('UIManager');
 
 var ReactNativeGlobalResponderHandler = {

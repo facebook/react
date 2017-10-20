@@ -9,17 +9,17 @@
 
 'use strict';
 
-var BeforeInputEventPlugin = require('BeforeInputEventPlugin');
-var ChangeEventPlugin = require('ChangeEventPlugin');
-var DOMEventPluginOrder = require('DOMEventPluginOrder');
-var EnterLeaveEventPlugin = require('EnterLeaveEventPlugin');
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMEventListener = require('ReactDOMEventListener');
-var SelectEventPlugin = require('SelectEventPlugin');
-var SimpleEventPlugin = require('SimpleEventPlugin');
+var BeforeInputEventPlugin = require('./event/plugins/BeforeInputEventPlugin');
+var ChangeEventPlugin = require('/event/plugins/ChangeEventPlugin');
+var DOMEventPluginOrder = require('./event/plugins/DOMEventPluginOrder');
+var EnterLeaveEventPlugin = require('./event/plugins/EnterLeaveEventPlugin');
+var EventPluginHub = require('./event/EventPluginHub');
+var EventPluginUtils = require('./event/EventPluginUtils');
+var ReactBrowserEventEmitter = require('./event/ReactBrowserEventEmitter');
+var ReactDOMComponentTree = require('./ReactDOMComponentTree');
+var ReactDOMEventListener = require('./event/ReactDOMEventListener');
+var SelectEventPlugin = require('./event/plugins/SelectEventPlugin');
+var SimpleEventPlugin = require('./event/plugins/SimpleEventPlugin');
 
 ReactDOMEventListener.setHandleTopLevel(
   ReactBrowserEventEmitter.handleTopLevel,

@@ -10,16 +10,17 @@
 
 'use strict';
 
-const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog'); // Reused from RN, seems fine?
-const ReactPortal = require('ReactPortal');
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactNativeRTFiberRenderer = require('ReactNativeRTFiberRenderer');
-const ReactNativeRTFiberInspector = require('ReactNativeRTFiberInspector');
-const ReactVersion = require('ReactVersion');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
+const ReactNativeFiberErrorDialog = require('react-native-renderer/src/ReactNativeFiberErrorDialog');
+const ReactPortal = require('react-reconciler/src/isomorphic/ReactPortal');
+const {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
 
-const {injectInternals} = require('ReactFiberDevToolsHook');
+const ReactGenericBatching = require('shared/event/ReactGenericBatching');
+const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+const ReactNativeRTFiberRenderer = require('./ReactNativeRTFiberRenderer');
+const ReactNativeRTFiberInspector = require('./ReactNativeRTFiberInspector');
+const ReactVersion = require('shared/ReactVersion');
 
 import type {ReactNativeRTType} from 'ReactNativeRTTypes';
 import type {ReactNodeList} from 'ReactTypes';

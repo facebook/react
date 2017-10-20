@@ -9,11 +9,11 @@
 
 'use strict';
 
-var dangerousStyleValue = require('dangerousStyleValue');
+var dangerousStyleValue = require('./dangerousStyleValue');
 
 if (__DEV__) {
   var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-  var warnValidStyle = require('warnValidStyle');
+  var warnValidStyle = require('./warnValidStyle');
 }
 
 /**

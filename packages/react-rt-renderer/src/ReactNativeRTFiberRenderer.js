@@ -11,8 +11,10 @@
 'use strict';
 
 const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactNativeRTTagHandles = require('ReactNativeRTTagHandles');
+const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+const ReactNativeRTTagHandles = require('./ReactNativeRTTagHandles');
+
+// Module provided by RN:
 const RTManager = require('RTManager');
 
 const emptyObject = require('fbjs/lib/emptyObject');

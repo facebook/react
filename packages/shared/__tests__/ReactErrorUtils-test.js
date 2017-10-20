@@ -14,7 +14,7 @@ var ReactErrorUtils;
 describe('ReactErrorUtils', () => {
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    ReactErrorUtils = require('ReactErrorUtils');
+    ReactErrorUtils = require('../ReactErrorUtils');
   });
 
   // Run tests in both DEV and production

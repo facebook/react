@@ -9,13 +9,13 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var EventPluginRegistry = require('EventPluginRegistry');
-var isCustomComponent = require('isCustomComponent');
+var DOMProperty = require('./DOMProperty');
+var EventPluginRegistry = require('shared/event/EventPluginRegistry');
+var isCustomComponent = require('./isCustomComponent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 }
 
 function getStackAddendum() {

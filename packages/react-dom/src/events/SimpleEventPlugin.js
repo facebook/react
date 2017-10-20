@@ -10,20 +10,20 @@
 
 'use strict';
 
-var EventPropagators = require('EventPropagators');
-var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
-var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-var SyntheticEvent = require('SyntheticEvent');
-var SyntheticFocusEvent = require('SyntheticFocusEvent');
-var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var SyntheticDragEvent = require('SyntheticDragEvent');
-var SyntheticTouchEvent = require('SyntheticTouchEvent');
-var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var SyntheticWheelEvent = require('SyntheticWheelEvent');
+var EventPropagators = require('shared/event/EventPropagators');
+var SyntheticAnimationEvent = require('../SyntheticAnimationEvent');
+var SyntheticClipboardEvent = require('../SyntheticClipboardEvent');
+var SyntheticEvent = require('../SyntheticEvent');
+var SyntheticFocusEvent = require('../SyntheticFocusEvent');
+var SyntheticKeyboardEvent = require('../SyntheticKeyboardEvent');
+var SyntheticMouseEvent = require('../SyntheticMouseEvent');
+var SyntheticDragEvent = require('../SyntheticDragEvent');
+var SyntheticTouchEvent = require('../SyntheticTouchEvent');
+var SyntheticTransitionEvent = require('../SyntheticTransitionEvent');
+var SyntheticUIEvent = require('../SyntheticUIEvent');
+var SyntheticWheelEvent = require('../SyntheticWheelEvent');
 
-var getEventCharCode = require('getEventCharCode');
+var getEventCharCode = require('../getEventCharCode');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

@@ -15,17 +15,19 @@
  * ensures it exists in the dependency graph and can be `require`d.
  * TODO: require this in packager, not in React #10932517
  */
+ // Module provided by RN:
 require('InitializeCore');
 
-var EventPluginHub = require('EventPluginHub');
-var EventPluginUtils = require('EventPluginUtils');
+var EventPluginHub = require('shared/event/EventPluginHub');
+var EventPluginUtils = require('shared/event/EventPluginUtils');
+// Module provided by RN:
 var RCTEventEmitter = require('RCTEventEmitter');
-var ReactNativeBridgeEventPlugin = require('ReactNativeBridgeEventPlugin');
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeEventEmitter = require('ReactNativeEventEmitter');
-var ReactNativeEventPluginOrder = require('ReactNativeEventPluginOrder');
-var ReactNativeGlobalResponderHandler = require('ReactNativeGlobalResponderHandler');
-var ResponderEventPlugin = require('ResponderEventPlugin');
+var ReactNativeBridgeEventPlugin = require('./ReactNativeBridgeEventPlugin');
+var ReactNativeComponentTree = require('./ReactNativeComponentTree');
+var ReactNativeEventEmitter = require('./ReactNativeEventEmitter');
+var ReactNativeEventPluginOrder = require('./ReactNativeEventPluginOrder');
+var ReactNativeGlobalResponderHandler = require('./ReactNativeGlobalResponderHandler');
+var ResponderEventPlugin = require('shared/event/plugins/ResponderEventPlugin');
 
 /**
  * Register the event emitter with the native bridge

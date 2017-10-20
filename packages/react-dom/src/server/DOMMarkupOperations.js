@@ -9,9 +9,9 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+var DOMProperty = require('../shared/DOMProperty');
 
-var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
+var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

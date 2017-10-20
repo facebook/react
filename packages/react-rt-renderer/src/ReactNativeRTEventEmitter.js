@@ -9,8 +9,10 @@
  */
 'use strict';
 
-var ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-var ReactGenericBatching = require('ReactGenericBatching');
+var ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+var ReactGenericBatching = require('shared/event/ReactGenericBatching');
+
+// Module provided by RN:
 var BatchedBridge = require('BatchedBridge');
 
 var ReactNativeRTEventEmitter = {

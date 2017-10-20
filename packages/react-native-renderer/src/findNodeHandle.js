@@ -10,10 +10,10 @@
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
+var getComponentName = require('shared/getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {

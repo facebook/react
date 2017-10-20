@@ -9,7 +9,7 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+var DOMProperty = require('../shared/DOMProperty');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

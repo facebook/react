@@ -9,19 +9,21 @@
  */
 'use strict';
 
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+
+// Module provided by RN:
 const TextInputState = require('TextInputState');
 const UIManager = require('UIManager');
 
 const invariant = require('fbjs/lib/invariant');
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
+const findNodeHandle = require('./findNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 const {
   mountSafeCallback,
   throwOnStylesProp,
   warnForStyleProps,
-} = require('NativeMethodsMixinUtils');
+} = require('./NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,

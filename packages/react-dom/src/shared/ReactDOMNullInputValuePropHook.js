@@ -11,7 +11,7 @@
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 }
 
 var didWarnValueNull = false;

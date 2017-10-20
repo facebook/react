@@ -12,14 +12,16 @@
 'use strict';
 
 const React = require('react');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+
+// Modules provided by RN:
 const TextInputState = require('TextInputState');
 const UIManager = require('UIManager');
 
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
+const findNodeHandle = require('./findNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
-const {mountSafeCallback} = require('NativeMethodsMixinUtils');
+const {mountSafeCallback} = require('./NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,

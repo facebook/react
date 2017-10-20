@@ -9,7 +9,7 @@
 
 'use strict';
 
-var getEventCharCode = require('getEventCharCode');
+var getEventCharCode = require('./getEventCharCode');
 
 /**
  * Normalization of deprecated HTML5 `key` values

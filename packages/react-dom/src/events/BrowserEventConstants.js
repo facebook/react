@@ -9,7 +9,7 @@
 
 'use strict';
 
-var getVendorPrefixedEventName = require('getVendorPrefixedEventName');
+var getVendorPrefixedEventName = require('./getVendorPrefixedEventName');
 
 /**
  * Types of raw signals from the browser caught at the top level.

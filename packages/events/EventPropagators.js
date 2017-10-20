@@ -9,11 +9,11 @@
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
-var ReactTreeTraversal = require('ReactTreeTraversal');
+var EventPluginHub = require('./EventPluginHub');
+var ReactTreeTraversal = require('../ReactTreeTraversal');
 
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
+var accumulateInto = require('./accumulateInto');
+var forEachAccumulated = require('./forEachAccumulated');
 
 type PropagationPhases = 'bubbled' | 'captured';
 

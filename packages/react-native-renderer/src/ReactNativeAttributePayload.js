@@ -9,8 +9,9 @@
  */
 'use strict';
 
-var ReactNativePropRegistry = require('ReactNativePropRegistry');
+var ReactNativePropRegistry = require('./ReactNativePropRegistry');
 
+// Module provided by RN:
 var deepDiffer = require('deepDiffer');
 var flattenStyle = require('flattenStyle');
 

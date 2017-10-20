@@ -9,9 +9,9 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var HTMLDOMPropertyConfig = require('HTMLDOMPropertyConfig');
-var SVGDOMPropertyConfig = require('SVGDOMPropertyConfig');
+var DOMProperty = require('./DOMProperty');
+var HTMLDOMPropertyConfig = require('./HTMLDOMPropertyConfig');
+var SVGDOMPropertyConfig = require('./SVGDOMPropertyConfig');
 
 DOMProperty.injection.injectDOMPropertyConfig(HTMLDOMPropertyConfig);
 DOMProperty.injection.injectDOMPropertyConfig(SVGDOMPropertyConfig);

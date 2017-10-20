@@ -9,7 +9,7 @@
 
 'use strict';
 
-var SyntheticUIEvent = require('SyntheticUIEvent');
+var SyntheticUIEvent = require('./SyntheticUIEvent');
 
 /**
  * @interface FocusEvent

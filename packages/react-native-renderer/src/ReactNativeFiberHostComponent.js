@@ -10,11 +10,13 @@
 
 'use strict';
 
-var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+var ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+
+// Modules provided by RN:
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
-var {mountSafeCallback, warnForStyleProps} = require('NativeMethodsMixinUtils');
+var {mountSafeCallback, warnForStyleProps} = require('./NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,

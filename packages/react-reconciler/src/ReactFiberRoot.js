@@ -13,8 +13,8 @@
 import type {Fiber} from 'ReactFiber';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
-const {createHostRootFiber} = require('ReactFiber');
-const {NoWork} = require('ReactFiberExpirationTime');
+const {createHostRootFiber} = require('./ReactFiber');
+const {NoWork} = require('./ReactFiberExpirationTime');
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.

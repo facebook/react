@@ -13,8 +13,8 @@
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from 'ReactFiber';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var {
   ClassComponent,
   HostRoot,
@@ -23,20 +23,20 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('ReactFiberDevToolsHook');
+var {commitCallbacks} = require('./ReactFiberUpdateQueue');
+var {onCommitUnmount} = require('./ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} = require('ReactErrorUtils');
+} = require('shared/ReactErrorUtils');
 
-var {Placement, Update, ContentReset} = require('ReactTypeOfSideEffect');
+var {Placement, Update, ContentReset} = require('shared/ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
 }
 
 module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(

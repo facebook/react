@@ -10,6 +10,7 @@
 
 'use strict';
 
+// Module provided by RN:
 const ExceptionsManager = require('ExceptionsManager');
 
 import type {CapturedError} from 'ReactFiberScheduler';

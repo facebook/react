@@ -13,26 +13,26 @@
 import type {Fiber} from 'ReactFiber';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
-var {Update} = require('ReactTypeOfSideEffect');
+var {Update} = require('shared/ReactTypeOfSideEffect');
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
 
 var {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   isContextConsumer,
-} = require('ReactFiberContext');
+} = require('./ReactFiberContext');
 var {
   insertUpdateIntoFiber,
   processUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {hasContextChanged} = require('ReactFiberContext');
-var {isMounted} = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
+} = require('./ReactFiberUpdateQueue');
+var {hasContextChanged} = require('./ReactFiberContext');
+var {isMounted} = require('shared/ReactFiberTreeReflection');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
+var getComponentName = require('shared/getComponentName');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var invariant = require('fbjs/lib/invariant');
 
@@ -40,7 +40,7 @@ const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(

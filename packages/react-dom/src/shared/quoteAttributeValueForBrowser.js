@@ -9,7 +9,7 @@
 
 'use strict';
 
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+var escapeTextContentForBrowser = require('./escapeTextContentForBrowser');
 
 /**
  * Escapes attribute value to prevent scripting attacks.

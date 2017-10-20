@@ -9,8 +9,8 @@
 
 'use strict';
 
-var Namespaces = require('DOMNamespaces').Namespaces;
-var createMicrosoftUnsafeLocalFunction = require('createMicrosoftUnsafeLocalFunction');
+var Namespaces = require('../shared/DOMNamespaces').Namespaces;
+var createMicrosoftUnsafeLocalFunction = require('../shared/createMicrosoftUnsafeLocalFunction');
 
 // SVG temp container for IE lacking innerHTML
 var reusableSVGContainer;

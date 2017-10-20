@@ -10,9 +10,9 @@
 'use strict';
 
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var setInnerHTML = require('setInnerHTML');
-var {TEXT_NODE} = require('HTMLNodeType');
+var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
+var setInnerHTML = require('./setInnerHTML');
+var {TEXT_NODE} = require('shared/HTMLNodeType');
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved

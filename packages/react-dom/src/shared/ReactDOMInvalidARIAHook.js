@@ -9,8 +9,8 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var isCustomComponent = require('isCustomComponent');
+var DOMProperty = require('./DOMProperty');
+var isCustomComponent = require('./isCustomComponent');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');

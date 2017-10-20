@@ -9,7 +9,7 @@
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+var DOMProperty = require('./DOMProperty');
 
 var {HAS_STRING_BOOLEAN_VALUE} = DOMProperty.injection;
 

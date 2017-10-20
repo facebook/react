@@ -9,9 +9,10 @@
  */
 'use strict';
 
+// Module provided by RN:
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = require('findNumericNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 /**
  * Capture an image of the screen, window or an individual view. The image

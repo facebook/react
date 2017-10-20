@@ -15,7 +15,8 @@ var validateDOMNesting = emptyFunction;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {getCurrentFiberStackAddendum} = require('react-reconciler/src/ReactDebugCurrentFiber');
 
   // This validation code was written based on the HTML5 parsing spec:
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope

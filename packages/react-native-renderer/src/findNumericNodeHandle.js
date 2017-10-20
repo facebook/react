@@ -9,7 +9,7 @@
  */
 'use strict';
 
-var findNodeHandle = require('findNodeHandle');
+var findNodeHandle = require('./findNodeHandle');
 
 /**
  * External users of findNodeHandle() expect the host tag number return type.

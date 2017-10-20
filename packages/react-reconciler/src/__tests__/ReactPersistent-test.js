@@ -17,7 +17,7 @@ describe('ReactPersistent', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    const ReactFeatureFlags = require('ReactFeatureFlags');
+    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
     ReactFeatureFlags.enableMutableReconciler = false;
     ReactFeatureFlags.enablePersistentReconciler = true;
     ReactFeatureFlags.enableNoopReconciler = false;

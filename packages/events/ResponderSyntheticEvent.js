@@ -9,7 +9,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('SyntheticEvent');
+var SyntheticEvent = require('../SyntheticEvent');
 
 /**
  * `touchHistory` isn't actually on the native event, but putting it in the

@@ -9,7 +9,7 @@
 
 'use strict';
 
-var CSSProperty = require('CSSProperty');
+var CSSProperty = require('./CSSProperty');
 
 var isUnitlessNumber = CSSProperty.isUnitlessNumber;
 

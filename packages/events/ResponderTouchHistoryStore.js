@@ -10,7 +10,7 @@
 
 'use strict';
 
-const EventPluginUtils = require('EventPluginUtils');
+const EventPluginUtils = require('../EventPluginUtils');
 
 const invariant = require('fbjs/lib/invariant');
 

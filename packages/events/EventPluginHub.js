@@ -9,12 +9,12 @@
 
 'use strict';
 
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactErrorUtils = require('ReactErrorUtils');
+var EventPluginRegistry = require('./EventPluginRegistry');
+var EventPluginUtils = require('./EventPluginUtils');
+var ReactErrorUtils = require('../ReactErrorUtils');
 
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
+var accumulateInto = require('./accumulateInto');
+var forEachAccumulated = require('./forEachAccumulated');
 var invariant = require('fbjs/lib/invariant');
 
 /**

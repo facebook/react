@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactErrorUtils = require('ReactErrorUtils');
+var ReactErrorUtils = require('../ReactErrorUtils');
 
 var invariant = require('fbjs/lib/invariant');
 

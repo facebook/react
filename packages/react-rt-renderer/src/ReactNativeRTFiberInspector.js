@@ -9,11 +9,11 @@
  */
 'use strict';
 
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName');
+const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+const ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
+const getComponentName = require('shared/getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
+const ReactTypeOfWork = require('shared/ReactTypeOfWork');
 const invariant = require('fbjs/lib/invariant');
 
 const {getFiberFromTag} = ReactNativeRTComponentTree;

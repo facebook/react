@@ -13,11 +13,11 @@
 import type {Fiber} from 'ReactFiber';
 import type {ExpirationTime} from 'ReactFiberExpirationTime';
 
-const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
+const {Callback: CallbackEffect} = require('./ReactTypeOfSideEffect');
 
-const {NoWork} = require('ReactFiberExpirationTime');
+const {NoWork} = require('./ReactFiberExpirationTime');
 
-const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
+const {ClassComponent, HostRoot} = require('shared/ReactTypeOfWork');
 
 const invariant = require('fbjs/lib/invariant');
 

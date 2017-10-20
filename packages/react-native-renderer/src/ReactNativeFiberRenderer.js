@@ -11,14 +11,16 @@
 'use strict';
 
 const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
-const ReactNativeTagHandles = require('ReactNativeTagHandles');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
-const UIManager = require('UIManager');
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+const ReactNativeComponentTree = require('./ReactNativeComponentTree');
+const ReactNativeFiberHostComponent = require('./ReactNativeFiberHostComponent');
+const ReactNativeTagHandles = require('./ReactNativeTagHandles');
+const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
 
+// Modules provided by RN:
+const UIManager = require('UIManager');
 const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
+
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 

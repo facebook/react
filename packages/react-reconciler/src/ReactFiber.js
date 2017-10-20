@@ -33,18 +33,18 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
-} = require('ReactTypeOfWork');
+} = require('shared/ReactTypeOfWork');
 
-var {NoWork} = require('ReactFiberExpirationTime');
+var {NoWork} = require('./ReactFiberExpirationTime');
 
-var {NoContext} = require('ReactTypeOfInternalContext');
+var {NoContext} = require('./ReactTypeOfInternalContext');
 
-var {NoEffect} = require('ReactTypeOfSideEffect');
+var {NoEffect} = require('shared/ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('shared/getComponentName');
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});

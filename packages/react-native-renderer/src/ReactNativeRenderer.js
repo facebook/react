@@ -9,19 +9,22 @@
 
 'use strict';
 
-const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
-const ReactPortal = require('ReactPortal');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-const ReactNativeFiberInspector = require('ReactNativeFiberInspector');
-const ReactVersion = require('ReactVersion');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
+const ReactPortal = require('react-reconciler/src/isomorphic/ReactPortal');
+const {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
+
+const ReactGenericBatching = require('shared/event/ReactGenericBatching');
+const ReactNativeFiberErrorDialog = require('./ReactNativeFiberErrorDialog');
+const ReactNativeComponentTree = require('./ReactNativeComponentTree');
+const ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
+const ReactNativeFiberInspector = require('./ReactNativeFiberInspector');
+const ReactVersion = require('shared/ReactVersion');
+
+// Module provided by RN:
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = require('findNumericNodeHandle');
-
-const {injectInternals} = require('ReactFiberDevToolsHook');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 import type {ReactNativeType} from 'ReactNativeTypes';
 import type {ReactNodeList} from 'ReactTypes';
