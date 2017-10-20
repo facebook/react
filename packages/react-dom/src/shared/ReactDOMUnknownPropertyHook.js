@@ -29,7 +29,7 @@ if (__DEV__) {
   var rARIACamel = new RegExp(
     '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
   );
-  var possibleStandardNames = require('possibleStandardNames');
+  var possibleStandardNames = require('./possibleStandardNames');
 
   var validateProperty = function(tagName, name, value) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {

@@ -61,9 +61,9 @@ var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-  var lowPriorityWarning = require('lowPriorityWarning');
+  var lowPriorityWarning = require('shared/lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
-  var validateDOMNesting = require('validateDOMNesting');
+  var validateDOMNesting = require('./validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 
   if (

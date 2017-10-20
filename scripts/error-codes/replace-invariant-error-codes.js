@@ -26,7 +26,7 @@ module.exports = function(babel) {
       path.scope.getProgramParent().push({
         id: localState.prodInvariantIdentifier,
         init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
+          t.stringLiteral('shared/reactProdInvariant'),
         ]),
       });
     }

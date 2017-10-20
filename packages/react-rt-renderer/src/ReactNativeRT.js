@@ -34,7 +34,7 @@ import type {ReactNodeList} from 'ReactTypes';
  */
 require('InitializeCore');
 
-require('ReactNativeRTEventEmitter');
+require('./ReactNativeRTEventEmitter');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeRTFiberRenderer.batchedUpdates,
