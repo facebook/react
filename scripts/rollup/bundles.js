@@ -95,8 +95,10 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-dom/*.js',
       'packages/react-dom/src/client/**/*.js',
+      'packages/react-dom/src/events/**/*.js',
       'packages/react-dom/src/shared/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
@@ -127,7 +129,9 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom/test-utils',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-dom/*.js',
+      'packages/react-dom/src/events/**/*.js',
       'packages/react-dom/src/test-utils/**/*.js',
       'packages/react-dom/src/shared/**/*.js',
       'packages/shared/**/*.js',
@@ -160,6 +164,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom/unstable-native-dependencies',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-dom/*.js',
       'packages/react-dom/src/unstable-native-dependencies/**/*.js',
       'packages/react-dom/src/shared/**/*.js',
@@ -188,6 +193,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom/server.browser',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-dom/*.js',
       'packages/react-dom/src/server/**/*.js',
       'packages/react-dom/src/shared/**/*.js',
@@ -366,6 +372,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-test-renderer',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-test-renderer/**/*.js',
       'packages/react-reconciler/**/*.js',
       'packages/shared/**/*.js',
