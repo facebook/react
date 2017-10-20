@@ -219,6 +219,7 @@ const bundles = [
     manglePropertiesOnProd: false,
     name: 'react-dom/server.node',
     paths: [
+      'packages/events/**/*.js',
       'packages/react-dom/*.js',
       'packages/react-dom/src/server/**/*.js',
       'packages/react-dom/src/shared/**/*.js',
