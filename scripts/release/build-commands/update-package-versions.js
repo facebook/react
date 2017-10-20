@@ -20,7 +20,7 @@ const update = async ({cwd, dry, version}) => {
     await writeJson(packagePath, rootPackage, {spaces: 2});
 
     // Update ReactVersion source file
-    const reactVersionPath = join(cwd, 'packages/shared/src/ReactVersion.js');
+    const reactVersionPath = join(cwd, 'packages/shared/ReactVersion.js');
     const reactVersion = readFileSync(reactVersionPath, 'utf8').replace(
       /module\.exports = '[^']+';/,
       `module.exports = '${version}';`

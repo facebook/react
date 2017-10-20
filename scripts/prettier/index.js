@@ -38,6 +38,7 @@ const config = {
       'packages/*/*.js',
       // Source files
       'packages/*/src/**/*.js',
+      'packages/shared/**/*.js',
     ],
     ignore: ['**/node_modules/**'],
   },
