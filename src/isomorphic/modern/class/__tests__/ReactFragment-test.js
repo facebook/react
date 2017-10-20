@@ -187,13 +187,14 @@ describe('ReactFragment', () => {
     function Fragment({condition}) {
       return condition
         ? <React.Fragment>
-            <React.Fragment>
+            <div />
+            <React.Fragment key="d">
               <div key="b">World</div>
               <Stateful key="a" />
             </React.Fragment>
           </React.Fragment>
         : <React.Fragment>
-            <React.Fragment>
+            <React.Fragment key="d">
               <Stateful key="a" />
               <div key="b">World</div>
             </React.Fragment>
@@ -235,6 +236,7 @@ describe('ReactFragment', () => {
           </React.Fragment>
         : <React.Fragment key="a">
             <Stateful />
+            <div />
             <span>World</span>
           </React.Fragment>;
     }
