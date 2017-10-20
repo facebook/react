@@ -196,7 +196,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   // updates in sync mode.)
   let expirationContext: ExpirationTime = NoWork;
 
-  let isPerformingWork: boolean = false;
+  let isWorking: boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork: Fiber | null = null;
@@ -342,7 +342,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // that capture an error during the commit phase. The reason these aren't
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
-    isPerformingWork = true;
+    isWorking = true;
     isCommitting = true;
     if (__DEV__) {
       startCommitTimer();
@@ -467,7 +467,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     isCommitting = false;
-    isPerformingWork = false;
+    isWorking = false;
     if (__DEV__) {
       stopCommitLifeCyclesTimer();
       stopCommitTimer();
@@ -784,11 +784,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     invariant(
-      !isPerformingWork,
+      !isWorking,
       'renderRoot was called recursively. This error is likely caused ' +
         'by a bug in React. Please file an issue.',
     );
-    isPerformingWork = true;
+    isWorking = true;
 
     // We're about to mutate the work-in-progress tree. If the root was pending
     // commit, it no longer is: we'll need to complete it again.
@@ -890,7 +890,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     const uncaughtError = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
-    isPerformingWork = false;
+    isWorking = false;
     didFatal = false;
     firstUncaughtError = null;
 
@@ -1159,7 +1159,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (expirationContext !== NoWork) {
       // An explicit expiration context was set;
       expirationTime = expirationContext;
-    } else if (isPerformingWork) {
+    } else if (isWorking) {
       if (isCommitting) {
         // Updates that occur during the commit phase should have sync priority
         // by default.
@@ -1234,7 +1234,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
           if (
-            !isPerformingWork &&
+            !isWorking &&
             root === nextRoot &&
             expirationTime <= nextRenderExpirationTime
           ) {
@@ -1296,7 +1296,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let lastScheduledRoot: FiberRoot | null = null;
 
   let isCallbackScheduled: boolean = false;
-  let isFlushingWork: boolean = false;
+  let isRendering: boolean = false;
   let nextFlushedRoot: FiberRoot | null = null;
   let nextFlushedExpirationTime: ExpirationTime = NoWork;
   let deadlineDidExpire: boolean = false;
@@ -1350,14 +1350,14 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
 
     // If we're not already rendering, schedule work to flush now (if it's
     // sync) or later (if it's async).
-    if (!isFlushingWork) {
+    if (!isRendering) {
       // TODO: Remove distinction between sync and task. Maybe we can remove
       // these magic numbers entirely by always comparing to the current time?
       if (expirationTime === Sync) {
         if (isUnbatchingUpdates) {
-          flushWork(Sync, null);
+          performWork(Sync, null);
         } else {
-          flushWork(Task, null);
+          performWork(Task, null);
         }
       } else if (!isCallbackScheduled) {
         isCallbackScheduled = true;
@@ -1417,17 +1417,17 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function flushAsyncWork(dl) {
-    flushWork(NoWork, dl);
+    performWork(NoWork, dl);
   }
 
-  function flushWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
+  function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
     invariant(
-      !isFlushingWork,
-      'flushWork was called recursively. This error is likely caused ' +
+      !isRendering,
+      'performWork was called recursively. This error is likely caused ' +
         'by a bug in React. Please file an issue.',
     );
 
-    isFlushingWork = true;
+    isRendering = true;
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
@@ -1503,7 +1503,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // Clean-up.
     deadline = null;
     deadlineDidExpire = false;
-    isFlushingWork = false;
+    isRendering = false;
     nestedUpdateCount = 0;
 
     if (hasUnhandledError) {
@@ -1553,8 +1553,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       return fn(a);
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
-      if (!isBatchingUpdates && !isFlushingWork) {
-        flushWork(Task, null);
+      if (!isBatchingUpdates && !isRendering) {
+        performWork(Task, null);
       }
     }
   }
@@ -1583,11 +1583,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     } finally {
       isBatchingUpdates = previousIsBatchingUpdates;
       invariant(
-        !isFlushingWork,
+        !isRendering,
         'flushSync was called from inside a lifecycle method. It cannot be ' +
           'called when React is already rendering.',
       );
-      flushWork(Task, null);
+      performWork(Task, null);
     }
   }
 
