@@ -189,9 +189,7 @@ function getInternalModules(moduleType) {
   // we tell Rollup where these files are located internally, otherwise
   // it doesn't pick them up and assumes they're external
   let aliases = {
-    reactProdInvariant: resolve(
-      './packages/shared/src/utils/reactProdInvariant.js'
-    ),
+    reactProdInvariant: resolve('./packages/shared/reactProdInvariant.js'),
   };
   if (moduleType === RENDERER) {
     // Renderers bundle the whole reconciler.
