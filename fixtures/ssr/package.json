@@ -11,15 +11,17 @@
     "express": "^4.14.0",
     "ignore-styles": "^5.0.1",
     "import-export": "^1.0.1",
-    "node-fetch": "^1.6.3"
+    "node-fetch": "^1.6.3",
+    "react": "file:../../build/packages/react",
+    "react-dom": "file:../../build/packages/react-dom"
   },
   "scripts": {
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
-    "start:client": "NODE_PATH=../../build/packages PORT=3001 react-scripts start",
-    "start:server": "NODE_PATH=../../build/packages NODE_ENV=development node server",
-    "start:prod": "NODE_PATH=../../build/packages react-scripts build && NODE_PATH=../../build/packages NODE_ENV=production node server",
-    "build": "NODE_PATH=../../build/packages react-scripts build",
-    "test": "NODE_PATH=../../build/packages react-scripts test --env=jsdom",
+    "start:client": "PORT=3001 react-scripts start",
+    "start:server": "NODE_ENV=development node server",
+    "start:prod": "react-scripts build && NODE_ENV=production node server",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   }
 }

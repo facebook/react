@@ -1,0 +1,35 @@
+{
+  "name": "react-reconciler",
+  "description": "React package for creating custom renderers.",
+  "version": "0.1.0",
+  "keywords": [
+    "react"
+  ],
+  "homepage": "https://facebook.github.io/react/",
+  "bugs": "https://github.com/facebook/react/issues",
+  "license": "MIT",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/"
+  ],
+  "main": "index.js",
+  "repository": "facebook/react",
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "peerDependencies": {
+    "react": "^16.0.0"
+  },
+  "dependencies": {
+    "fbjs": "^0.8.16",
+    "loose-envify": "^1.1.0",
+    "object-assign": "^4.1.1"
+  },
+  "browserify": {
+    "transform": [
+      "loose-envify"
+    ]
+  }
+}

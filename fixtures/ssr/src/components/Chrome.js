@@ -15,6 +15,11 @@ export default class Chrome extends Component {
           <title>{this.props.title}</title>
         </head>
         <body>
+          <noscript
+            dangerouslySetInnerHTML={{
+              __html: `<b>Enable JavaScript to run this app.</b>`,
+            }}
+          />
           {this.props.children}
           <script
             dangerouslySetInnerHTML={{

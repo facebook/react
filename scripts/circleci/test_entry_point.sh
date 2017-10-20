@@ -18,6 +18,7 @@ if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
   COMMANDS_TO_RUN+=('node ./scripts/tasks/jest')
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
+  COMMANDS_TO_RUN+=('./scripts/circleci/check_license.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/test_print_warnings.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/track_stats.sh')
   # COMMANDS_TO_RUN+=('./scripts/circleci/bench.sh')

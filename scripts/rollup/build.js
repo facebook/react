@@ -23,6 +23,8 @@ const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
 const syncReactDom = require('./sync').syncReactDom;
 const syncReactNative = require('./sync').syncReactNative;
+const syncReactNativeRT = require('./sync').syncReactNativeRT;
+const syncReactNativeCS = require('./sync').syncReactNativeCS;
 const Packaging = require('./packaging');
 const Header = require('./header');
 const closure = require('rollup-plugin-closure-compiler-js');
@@ -35,6 +37,8 @@ const FB_DEV = Bundles.bundleTypes.FB_DEV;
 const FB_PROD = Bundles.bundleTypes.FB_PROD;
 const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
+
+const RECONCILER = Bundles.moduleTypes.RECONCILER;
 
 const reactVersion = require('../../package.json').version;
 const requestedBundleTypes = (argv.type || '')
@@ -80,7 +84,13 @@ function getHeaderSanityCheck(bundleType, hasteName) {
   }
 }
 
-function getBanner(bundleType, hasteName, filename) {
+function getBanner(bundleType, hasteName, filename, moduleType) {
+  if (moduleType === RECONCILER) {
+    // Standalone reconciler is only used by third-party renderers.
+    // It is handled separately.
+    return getReconcilerBanner(bundleType, filename);
+  }
+
   switch (bundleType) {
     // UMDs are not wrapped in conditions.
     case UMD_DEV:
@@ -114,7 +124,13 @@ function getBanner(bundleType, hasteName, filename) {
   }
 }
 
-function getFooter(bundleType) {
+function getFooter(bundleType, filename, moduleType) {
+  if (moduleType === RECONCILER) {
+    // Standalone reconciler is only used by third-party renderers.
+    // It is handled separately.
+    return getReconcilerFooter(bundleType);
+  }
+
   // Only need a footer if getBanner() has an opening brace.
   switch (bundleType) {
     // Non-UMD DEV bundles need conditions to help weak dead code elimination.
@@ -127,7 +143,46 @@ function getFooter(bundleType) {
   }
 }
 
-function updateBabelConfig(babelOpts, bundleType) {
+// TODO: this is extremely gross.
+// But it only affects the "experimental" standalone reconciler build.
+// The goal is to avoid having any shared state between renderers sharing it on npm.
+// Ideally we should just remove shared state in all Fiber modules and then lint against it.
+// But for now, we store the exported function in a variable, and then put the rest of the code
+// into a closure that makes all module-level state private to each call.
+const RECONCILER_WRAPPER_INTRO = `var $$$reconciler;\nmodule.exports = function(config) {\n`;
+const RECONCILER_WRAPPER_OUTRO = `return ($$$reconciler || ($$$reconciler = module.exports))(config);\n};\n`;
+
+function getReconcilerBanner(bundleType, filename) {
+  let banner = `${Header.getHeader(filename, reactVersion)}\n\n'use strict';\n\n\n`;
+  switch (bundleType) {
+    case NODE_DEV:
+      banner += `if (process.env.NODE_ENV !== "production") {\n${RECONCILER_WRAPPER_INTRO}`;
+      break;
+    case NODE_PROD:
+      banner += RECONCILER_WRAPPER_INTRO;
+      break;
+    default:
+      throw new Error(
+        'Standalone reconciler does not support ' + bundleType + ' builds.'
+      );
+  }
+  return banner;
+}
+
+function getReconcilerFooter(bundleType) {
+  switch (bundleType) {
+    case NODE_DEV:
+      return `\n${RECONCILER_WRAPPER_OUTRO}\n}`;
+    case NODE_PROD:
+      return `\n${RECONCILER_WRAPPER_OUTRO}`;
+    default:
+      throw new Error(
+        'Standalone reconciler does not support ' + bundleType + ' builds.'
+      );
+  }
+}
+
+function updateBabelConfig(babelOpts, bundleType, filename) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
@@ -168,11 +223,23 @@ function handleRollupWarnings(warning) {
   console.warn(warning.message || warning);
 }
 
-function updateBundleConfig(config, filename, format, bundleType, hasteName) {
+function updateBundleConfig(
+  config,
+  filename,
+  format,
+  bundleType,
+  hasteName,
+  moduleType
+) {
   return Object.assign({}, config, {
-    banner: getBanner(bundleType, hasteName, filename),
-    dest: Packaging.getPackageDestination(config, bundleType, filename),
-    footer: getFooter(bundleType),
+    banner: getBanner(bundleType, hasteName, filename, moduleType),
+    dest: Packaging.getPackageDestination(
+      config,
+      bundleType,
+      filename,
+      hasteName
+    ),
+    footer: getFooter(bundleType, filename, moduleType),
     format,
     interop: false,
   });
@@ -317,21 +384,22 @@ function getPlugins(
   filename,
   bundleType,
   hasteName,
-  isRenderer,
+  moduleType,
   manglePropertiesOnProd,
-  useFiber,
-  modulesToStub
+  modulesToStub,
+  featureFlags
 ) {
   const plugins = [
     babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
-      Modules.getAliases(paths, bundleType, isRenderer, argv['extract-errors'])
+      Modules.getAliases(paths, bundleType, moduleType, argv['extract-errors'])
     ),
   ];
 
   const replaceModules = Modules.getDefaultReplaceModules(
     bundleType,
-    modulesToStub
+    modulesToStub,
+    featureFlags
   );
 
   // We have to do this check because Rollup breaks on empty object.
@@ -463,7 +531,7 @@ function createBundle(bundle, bundleType) {
     external: Modules.getExternalModules(
       bundle.externals,
       bundleType,
-      bundle.isRenderer
+      bundle.moduleType
     ),
     onwarn: handleRollupWarnings,
     plugins: getPlugins(
@@ -473,10 +541,10 @@ function createBundle(bundle, bundleType) {
       filename,
       bundleType,
       bundle.hasteName,
-      bundle.isRenderer,
+      bundle.moduleType,
       bundle.manglePropertiesOnProd,
-      bundle.useFiber,
-      bundle.modulesToStub
+      bundle.modulesToStub,
+      bundle.featureFlags
     ),
   })
     .then(result =>
@@ -486,7 +554,8 @@ function createBundle(bundle, bundleType) {
           filename,
           format,
           bundleType,
-          bundle.hasteName
+          bundle.hasteName,
+          bundle.moduleType
         )
       )
     )
@@ -519,6 +588,8 @@ rimraf('build', () => {
   const tasks = [
     Packaging.createFacebookWWWBuild,
     Packaging.createReactNativeBuild,
+    Packaging.createReactNativeRTBuild,
+    Packaging.createReactNativeCSBuild,
   ];
   for (const bundle of Bundles.bundles) {
     tasks.push(
@@ -535,6 +606,12 @@ rimraf('build', () => {
   if (syncFbsource) {
     tasks.push(() =>
       syncReactNative(join('build', 'react-native'), syncFbsource)
+    );
+    tasks.push(() =>
+      syncReactNativeRT(join('build', 'react-native-rt'), syncFbsource)
+    );
+    tasks.push(() =>
+      syncReactNativeCS(join('build', 'react-native-cs'), syncFbsource)
     );
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));

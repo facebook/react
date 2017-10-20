@@ -4,6 +4,7 @@
 // are set up. So we might as well enforce it.
 process.env.NODE_ENV = 'test';
 
+var fs = require('fs');
 var path = require('path');
 
 var babel = require('babel-core');
@@ -59,6 +60,9 @@ var babelOptions = {
 
 module.exports = {
   process: function(src, filePath) {
+    // Resolve the path so we can tell our own packages from node_modules.
+    filePath = fs.realpathSync(filePath);
+
     if (filePath.match(/\.coffee$/)) {
       return coffee.compile(src, {bare: true});
     }

@@ -16,7 +16,7 @@
   "bugs": {
     "url": "https://github.com/facebook/react/issues"
   },
-  "homepage": "https://facebook.github.io/react/",
+  "homepage": "https://reactjs.org/",
   "dependencies": {
     "create-react-class": "^15.6.2",
     "fbjs": "^0.8.16",
@@ -25,7 +25,7 @@
     "prop-types": "^15.6.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-beta.5"
+    "react": "^16.0.0"
   },
   "files": [
     "LICENSE",

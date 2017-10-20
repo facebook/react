@@ -9,6 +9,7 @@ import ButtonFixtures from './buttons';
 import DateInputFixtures from './date-inputs';
 import ErrorHandling from './error-handling';
 import EventPooling from './event-pooling';
+import CustomElementFixtures from './custom-elements';
 
 const React = window.React;
 
@@ -40,6 +41,8 @@ function FixturesPage() {
       return <ErrorHandling />;
     case '/event-pooling':
       return <EventPooling />;
+    case '/custom-elements':
+      return <CustomElementFixtures />;
     default:
       return <p>Please select a test fixture.</p>;
   }
