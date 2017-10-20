@@ -23,7 +23,7 @@ const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationI
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 export type Container = number;
 export type Instance = {

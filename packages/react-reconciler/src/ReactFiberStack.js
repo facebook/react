@@ -9,7 +9,7 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 export type StackCursor<T> = {
   current: T,

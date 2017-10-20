@@ -15,7 +15,7 @@ const invariant = require('fbjs/lib/invariant');
 const customBubblingEventTypes = {};
 const customDirectEventTypes = {};
 
-import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: {},

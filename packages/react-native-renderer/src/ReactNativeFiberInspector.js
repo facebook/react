@@ -22,7 +22,7 @@ const {getClosestInstanceFromNode} = ReactNativeComponentTree;
 const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 const {HostComponent} = ReactTypeOfWork;
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 let getInspectorDataForViewTag;
 

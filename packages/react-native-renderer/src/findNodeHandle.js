@@ -19,7 +19,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
  * ReactNative vs ReactWeb

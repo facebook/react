@@ -9,8 +9,8 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {StackCursor} from 'ReactFiberStack';
+import type {Fiber} from './ReactFiber';
+import type {StackCursor} from './ReactFiberStack';
 
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('shared/getComponentName');

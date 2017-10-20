@@ -9,18 +9,18 @@
 
 'use strict';
 
-import type {ReactElement, Source} from 'ReactElementType';
+import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {
   ReactCoroutine,
   ReactFragment,
   ReactPortal,
   ReactYield,
-} from 'ReactTypes';
-import type {TypeOfWork} from 'ReactTypeOfWork';
-import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
-import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
-import type {UpdateQueue} from 'ReactFiberUpdateQueue';
+} from 'shared/ReactTypes';
+import type {TypeOfWork} from 'shared/ReactTypeOfWork';
+import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
+import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
 var {
   IndeterminateComponent,

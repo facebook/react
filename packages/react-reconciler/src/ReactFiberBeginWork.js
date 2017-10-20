@@ -10,12 +10,12 @@
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCoroutine} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {HostContext} from 'ReactFiberHostContext';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {ReactCoroutine} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {HostContext} from './ReactFiberHostContext';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 var {
   mountChildFibersInPlace,

@@ -17,7 +17,7 @@ const {
   injectInternals,
 } = require('react-reconciler/src/ReactFiberDevToolsHook');
 
-import type {ReactNativeCSType} from 'ReactNativeCSTypes';
+import type {ReactNativeCSType} from './ReactNativeCSTypes';
 
 const ReactFiberReconciler = require('react-reconciler');
 

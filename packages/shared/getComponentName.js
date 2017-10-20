@@ -9,7 +9,7 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 function getComponentName(fiber: Fiber): string | null {
   const {type} = fiber;

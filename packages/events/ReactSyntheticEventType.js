@@ -10,7 +10,7 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 export type DispatchConfig = {
   dependencies: Array<string>,

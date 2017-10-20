@@ -9,9 +9,9 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {ReactNodeList} from 'ReactTypes';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var {

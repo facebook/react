@@ -10,10 +10,10 @@
 'use strict';
 
 import type {HostConfig, Deadline} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 export type CapturedError = {
   componentName: ?string,

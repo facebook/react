@@ -9,7 +9,7 @@
 
 'use strict';
 
-import type {ReactNodeList} from 'ReactTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 require('../shared/checkReact');
 var DOMNamespaces = require('../shared/DOMNamespaces');

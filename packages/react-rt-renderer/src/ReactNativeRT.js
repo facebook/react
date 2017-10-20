@@ -23,8 +23,8 @@ const ReactNativeRTFiberRenderer = require('./ReactNativeRTFiberRenderer');
 const ReactNativeRTFiberInspector = require('./ReactNativeRTFiberInspector');
 const ReactVersion = require('shared/ReactVersion');
 
-import type {ReactNativeRTType} from 'ReactNativeRTTypes';
-import type {ReactNodeList} from 'ReactTypes';
+import type {ReactNativeRTType} from './ReactNativeRTTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 /**
  * Make sure essential globals are available and are patched correctly. Please don't remove this

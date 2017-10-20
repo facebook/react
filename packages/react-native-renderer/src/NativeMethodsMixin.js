@@ -30,7 +30,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeTypes';
+} from './ReactNativeTypes';
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native

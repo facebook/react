@@ -9,7 +9,11 @@
 
 'use strict';
 
-import type {ReactCoroutine, ReactNodeList, ReactYield} from 'ReactTypes';
+import type {
+  ReactCoroutine,
+  ReactNodeList,
+  ReactYield,
+} from 'shared/ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.

@@ -28,13 +28,13 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-import type {TopLevelTypes} from 'BrowserEventConstants';
+import type {TopLevelTypes} from 'events/BrowserEventConstants';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'ReactSyntheticEventType';
-import type {Fiber} from 'ReactFiber';
-import type {EventTypes, PluginModule} from 'PluginModuleType';
+} from 'events/ReactSyntheticEventType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 
 /**
  * Turns

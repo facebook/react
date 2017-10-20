@@ -9,8 +9,8 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 const {createHostRootFiber} = require('./ReactFiber');
 const {NoWork} = require('./ReactFiberExpirationTime');

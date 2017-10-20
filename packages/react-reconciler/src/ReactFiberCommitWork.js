@@ -10,7 +10,7 @@
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');

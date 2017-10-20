@@ -20,7 +20,7 @@ var {
 var describeComponentFrame = require('./describeComponentFrame');
 var getComponentName = require('./getComponentName');
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {

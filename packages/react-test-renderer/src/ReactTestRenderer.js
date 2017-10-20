@@ -24,8 +24,8 @@ var {
   HostRoot,
 } = ReactTypeOfWork;
 
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,

@@ -9,7 +9,7 @@
 
 'use strict';
 
-import type {ReactNodeList, ReactPortal} from 'ReactTypes';
+import type {ReactNodeList, ReactPortal} from 'shared/ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.

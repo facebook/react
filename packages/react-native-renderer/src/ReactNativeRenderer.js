@@ -28,8 +28,8 @@ const UIManager = require('UIManager');
 
 const findNumericNodeHandle = require('./findNumericNodeHandle');
 
-import type {ReactNativeType} from 'ReactNativeTypes';
-import type {ReactNodeList} from 'ReactTypes';
+import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 require('./ReactNativeInjection');
 

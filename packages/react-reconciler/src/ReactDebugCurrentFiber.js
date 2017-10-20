@@ -9,7 +9,7 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 type LifeCyclePhase = 'render' | 'getChildContext';
 

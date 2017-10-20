@@ -9,10 +9,12 @@
 
 'use strict';
 
-import type {ReactElement} from 'ReactElementType';
-import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactCoroutine, ReactPortal, ReactYield} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {
+  ExpirationTime,
+} from 'react-reconciler/src/ReactFiberExpirationTime';
 
 var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('./ReactCoroutine');
 var {REACT_PORTAL_TYPE} = require('./ReactPortal');

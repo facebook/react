@@ -9,9 +9,13 @@
 
 'use strict';
 
-import type {DispatchConfig} from 'ReactSyntheticEventType';
+import type {DispatchConfig} from './ReactSyntheticEventType';
 
-import type {AnyNativeEvent, PluginName, PluginModule} from 'PluginModuleType';
+import type {
+  AnyNativeEvent,
+  PluginName,
+  PluginModule,
+} from './PluginModuleType';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 
