@@ -51,10 +51,6 @@ describe('ReactDOMInput', () => {
   it('should control a value in reentrant events', () => {
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    var inputEvent = document.createEvent('Event');
-    inputEvent.initEvent('input', true, true);
-    // This must use the native event dispatching. If we simulate, we will
-    // bypass the lazy event attachment system so we won't actually test this.
     var changeEvent = document.createEvent('Event');
     changeEvent.initEvent('change', true, true);
 
@@ -96,7 +92,7 @@ describe('ReactDOMInput', () => {
     document.body.appendChild(container);
 
     instance.a.value = 'giraffe';
-    ReactTestUtils.Simulate.change(instance.a);
+    ReactTestUtils.SimulateNative.change(instance.a);
     ReactTestUtils.SimulateNative.blur(instance.a);
 
     expect(instance.a.value).toBe('giraffe');
