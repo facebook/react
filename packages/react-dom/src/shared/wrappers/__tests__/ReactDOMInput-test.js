@@ -21,10 +21,6 @@ describe('ReactDOMInput', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  function triggerNativeValueEvent(elem, value) {
-    ReactTestUtils.Simulate.change(elem, {target: {value: value}});
-  }
-
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -43,8 +39,7 @@ describe('ReactDOMInput', () => {
     var node = ReactDOM.findDOMNode(stub);
     expectDev(console.error.calls.count()).toBe(1);
 
-    // Simulate a native change event
-    triggerNativeValueEvent(node, 'giraffe');
+    ReactTestUtils.Simulate.change(node, {target: {value: 'giraffe'}});
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
@@ -162,11 +157,8 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    // Simulate a native keyup event
-    triggerNativeValueEvent(instance.a, 'giraffe');
+    ReactTestUtils.Simulate.change(instance.a, 'giraffe');
     instance.a.dispatchEvent(inputEvent);
-
-    // These should now both have been restored to their controlled value.
 
     expect(instance.a.value).toBe('lion');
     expect(instance.b.checked).toBe(true);
