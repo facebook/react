@@ -54,8 +54,9 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
-        'Warning: Received `true` for non-boolean attribute `unknown`. ' +
-          'If this is expected, cast the value to a string.\n' +
+        'Warning: If you intentionally tried to pass a boolean, pass it as a string ' +
+          'instead: `true`=\"`unknown`\". If you mean to conditionally pass an ' +
+          'attribute, use a ternary expression: `true`={condition ? value : null}.\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
