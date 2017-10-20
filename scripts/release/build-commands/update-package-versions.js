@@ -42,8 +42,15 @@ const update = async ({cwd, dry, version}) => {
       }
 
       if (project !== 'react') {
-        json.peerDependencies.react = `^${version}`;
+        const peerVersion = json.peerDependencies.react.replace('^', '');
+
+        // Release engineers can manually update minor and bugfix versions,
+        // But we should ensure that major versions always match.
+        if (semver.major(version) !== semver.major(peerVersion)) {
+          json.peerDependencies.react = `^${semver.major(version)}.0.0`;
+        }
       }
+
       await writeJson(path, json, {spaces: 2});
     };
     await Promise.all(projects.map(updateProjectPackage));
