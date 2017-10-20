@@ -7,7 +7,7 @@
 
 'use strict';
 
-var BrowserEventConstants = require('events/BrowserEventConstants');
+var BrowserEventConstants = require('../events/BrowserEventConstants');
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');

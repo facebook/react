@@ -10,12 +10,12 @@ const chalk = require('chalk');
 const escapeStringRegexp = require('escape-string-regexp');
 const join = require('path').join;
 const resolve = require('path').resolve;
+const resolvePlugin = require('rollup-plugin-node-resolve');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
-const propertyMangleWhitelist = require('./mangle').propertyMangleWhitelist;
 const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
 const syncReactDom = require('./sync').syncReactDom;
@@ -47,21 +47,13 @@ const requestedBundleNames = (argv._[0] || '')
 const syncFbsource = argv['sync-fbsource'];
 const syncWww = argv['sync-www'];
 
-// used for when we property mangle with uglify/gcc
-const mangleRegex = new RegExp(
-  `^(?${propertyMangleWhitelist
-    .map(prop => `!${escapeStringRegexp(prop)}`)
-    .join('|')}$).*$`,
-  'g'
-);
-
-function getHeaderSanityCheck(bundleType, hasteName) {
+function getHeaderSanityCheck(bundleType, globalName) {
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
     case RN_DEV:
     case RN_PROD:
-      let hasteFinalName = hasteName;
+      let hasteFinalName = globalName;
       switch (bundleType) {
         case FB_DEV:
         case RN_DEV:
@@ -81,7 +73,7 @@ function getHeaderSanityCheck(bundleType, hasteName) {
   }
 }
 
-function getBanner(bundleType, hasteName, filename, moduleType) {
+function getBanner(bundleType, globalName, filename, moduleType) {
   if (moduleType === RECONCILER) {
     // Standalone reconciler is only used by third-party renderers.
     // It is handled separately.
@@ -109,7 +101,7 @@ function getBanner(bundleType, hasteName, filename, moduleType) {
     case RN_DEV:
     case RN_PROD:
       const isDev = bundleType === FB_DEV || bundleType === RN_DEV;
-      const hasteFinalName = hasteName + (isDev ? '-dev' : '-prod');
+      const hasteFinalName = globalName + (isDev ? '-dev' : '-prod');
       // Wrap the contents of the if-DEV check with an IIFE.
       // Block-level function definitions can cause problems for strict mode.
       return (
@@ -179,14 +171,22 @@ function getReconcilerFooter(bundleType) {
   }
 }
 
-function updateBabelConfig(babelOpts, bundleType, filename) {
+function getBabelConfig(updateBabelOptions, bundleType, filename) {
+  let options = {
+    exclude: 'node_modules/**',
+    presets: [],
+    plugins: [],
+  };
+  if (updateBabelOptions) {
+    options = updateBabelOptions(options);
+  }
   switch (bundleType) {
     case FB_DEV:
     case FB_PROD:
     case RN_DEV:
     case RN_PROD:
-      return Object.assign({}, babelOpts, {
-        plugins: babelOpts.plugins.concat([
+      return Object.assign({}, options, {
+        plugins: options.plugins.concat([
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('./plugins/wrap-warning-with-env-check'),
         ]),
@@ -195,8 +195,8 @@ function updateBabelConfig(babelOpts, bundleType, filename) {
     case UMD_PROD:
     case NODE_DEV:
     case NODE_PROD:
-      return Object.assign({}, babelOpts, {
-        plugins: babelOpts.plugins.concat([
+      return Object.assign({}, options, {
+        plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
           resolve('./scripts/babel/transform-object-assign-require'),
 
@@ -208,7 +208,7 @@ function updateBabelConfig(babelOpts, bundleType, filename) {
         ]),
       });
     default:
-      return babelOpts;
+      return options;
   }
 }
 
@@ -220,25 +220,28 @@ function handleRollupWarnings(warning) {
   console.warn(warning.message || warning);
 }
 
-function updateBundleConfig(
-  config,
+function getRollupOutputOptions(
   filename,
   format,
   bundleType,
-  hasteName,
+  externalGlobals,
+  globalName,
   moduleType
 ) {
-  return Object.assign({}, config, {
-    banner: getBanner(bundleType, hasteName, filename, moduleType),
-    dest: Packaging.getPackageDestination(
-      config,
+  return Object.assign({}, {
+    banner: getBanner(bundleType, globalName, filename, moduleType),
+    destDir: 'build/',
+    dest: 'build/' + Packaging.getOutputPathRelativeToBuildFolder(
       bundleType,
       filename,
-      hasteName
+      globalName,
     ),
     footer: getFooter(bundleType, filename, moduleType),
     format,
+    globals: externalGlobals,
     interop: false,
+    moduleName: globalName,
+    sourceMap: false,
   });
 }
 
@@ -264,7 +267,7 @@ function getFormat(bundleType) {
   }
 }
 
-function getFilename(name, hasteName, bundleType) {
+function getFilename(name, globalName, bundleType) {
   // we do this to replace / to -, for react-dom/server
   name = name.replace('/', '-');
   switch (bundleType) {
@@ -278,16 +281,15 @@ function getFilename(name, hasteName, bundleType) {
       return `${name}.production.min.js`;
     case FB_DEV:
     case RN_DEV:
-      return `${hasteName}-dev.js`;
+      return `${globalName}-dev.js`;
     case FB_PROD:
     case RN_PROD:
-      return `${hasteName}-prod.js`;
+      return `${globalName}-prod.js`;
   }
 }
 
-function uglifyConfig(configs) {
+function getUglifyConfig(configs) {
   var mangle = configs.mangle;
-  var manglePropertiesOnProd = configs.manglePropertiesOnProd;
   var preserveVersionHeader = configs.preserveVersionHeader;
   var removeComments = configs.removeComments;
   var headerSanityCheck = configs.headerSanityCheck;
@@ -326,12 +328,6 @@ function uglifyConfig(configs) {
         return !removeComments;
       },
     },
-    mangleProperties: mangle && manglePropertiesOnProd
-      ? {
-          ignore_quoted: true,
-          regex: mangleRegex,
-        }
-      : false,
     mangle: mangle
       ? {
           toplevel: true,
@@ -341,79 +337,45 @@ function uglifyConfig(configs) {
   };
 }
 
-function getCommonJsConfig(bundleType) {
-  switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-    case NODE_DEV:
-    case NODE_PROD:
-      return {};
-    case RN_DEV:
-    case RN_PROD:
-      return {
-        ignore: Modules.ignoreReactNativeModules(),
-      };
-    case FB_DEV:
-    case FB_PROD:
-      // Modules we don't want to inline in the bundle.
-      // Force them to stay as require()s in the output.
-      return {
-        ignore: Modules.ignoreFBModules(),
-      };
-  }
-}
-
 function getPlugins(
   entry,
-  babelOpts,
-  paths,
+  externalPackages,
+  updateBabelOptions,
   filename,
   bundleType,
-  hasteName,
+  globalName,
   moduleType,
-  manglePropertiesOnProd,
   modulesToStub,
   featureFlags
 ) {
-  // Extract error codes 1st so we can replace invariant messages in prod builds
-  // Without re-running the slow build script.
   const plugins = [
     alias(
-      Modules.getAliases(paths, bundleType, moduleType, argv['extract-errors'])
+      Modules.getModuleAliases(bundleType, entry),
     ),
-    babel(updateBabelConfig(babelOpts, bundleType)),
+    resolvePlugin({
+      // TODO: 3.0 of this plugin removed this option :-( but it seems essential.
+      skip: externalPackages
+    }),
+    babel(getBabelConfig(updateBabelOptions, bundleType)),
   ];
-
-  const replaceModules = Modules.getDefaultReplaceModules(
-    bundleType,
-    modulesToStub,
-    featureFlags
-  );
-
-  // We have to do this check because Rollup breaks on empty object.
-  // TODO: file an issue with rollup-plugin-replace.
-  if (Object.keys(replaceModules).length > 0) {
-    plugins.unshift(replace(replaceModules));
-  }
-
-  const headerSanityCheck = getHeaderSanityCheck(bundleType, hasteName);
-
+  const commonJsConfig = {
+    ignore: Modules.getIgnoredModules(bundleType),
+  };
+  const headerSanityCheck = getHeaderSanityCheck(bundleType, globalName);
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
     case FB_DEV:
       plugins.push(
         replace(stripEnvVariables(false)),
-        // needs to happen after strip env
-        commonjs(getCommonJsConfig(bundleType))
+        commonjs(commonJsConfig)
       );
       break;
     case UMD_PROD:
     case NODE_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),
-        // needs to happen after strip env
-        commonjs(getCommonJsConfig(bundleType)),
+        commonjs(commonJsConfig),
         closure({
           compilationLevel: 'SIMPLE',
           languageIn: 'ECMASCRIPT5_STRICT',
@@ -432,12 +394,10 @@ function getPlugins(
     case FB_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),
-        // needs to happen after strip env
-        commonjs(getCommonJsConfig(bundleType)),
+        commonjs(commonJsConfig),
         uglify(
           uglifyConfig({
             mangle: bundleType !== FB_PROD,
-            manglePropertiesOnProd,
             preserveVersionHeader: bundleType === UMD_PROD,
             // leave comments in for source map debugging purposes
             // they will be stripped as part of FB's build process
@@ -451,12 +411,10 @@ function getPlugins(
     case RN_PROD:
       plugins.push(
         replace(stripEnvVariables(bundleType === RN_PROD)),
-        // needs to happen after strip env
-        commonjs(getCommonJsConfig(bundleType)),
+        commonjs(commonJsConfig),
         uglify(
-          uglifyConfig({
+          getUglifyConfig({
             mangle: false,
-            manglePropertiesOnProd,
             preserveVersionHeader: true,
             removeComments: true,
             headerSanityCheck,
@@ -465,7 +423,6 @@ function getPlugins(
       );
       break;
   }
-  // this needs to come last or it doesn't report sizes correctly
   plugins.push(
     sizes({
       getSize: (size, gzip) => {
@@ -477,7 +434,6 @@ function getPlugins(
       },
     })
   );
-
   return plugins;
 }
 
@@ -503,44 +459,69 @@ function createBundle(bundle, bundleType) {
     }
   }
 
-  const filename = getFilename(bundle.name, bundle.hasteName, bundleType);
+  const filename = getFilename(bundle.output || bundle.entry, bundle.global, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
-  const packageName = Packaging.getPackageName(bundle.name);
+  const packageName = Packaging.getPackageName(bundle.entry);
+
+  let resolvedEntry = require.resolve(bundle.entry);
+  if (bundleType === FB_DEV || bundleType === FB_PROD) {
+    const resolvedFBEntry = resolvedEntry.replace('.js', '.fb.js');
+    if (fs.existsSync(resolvedFBEntry)) {
+      resolvedEntry = resolvedFBEntry;
+    }
+  }
+
+  const externalGlobals = Modules.getExternalGlobals(
+    bundle.externals,
+    bundleType,
+    bundle.moduleType,
+    bundle.entry
+  );
+  const nodeDependencies = Modules.getNodeDependencies(
+    bundle.entry
+  );
+
+  let externalPackages = Object.keys(externalGlobals);
+  if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
+    externalPackages = externalPackages.concat(nodeDependencies);
+  }
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
-    entry: bundleType === FB_DEV || bundleType === FB_PROD
-      ? bundle.fbEntry
-      : bundle.entry,
-    external: Modules.getExternalModules(
-      bundle.externals,
-      bundleType,
-      bundle.moduleType
-    ),
+    entry: resolvedEntry,
+    external(id) {
+      if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
+        if (externalPackages.some(
+          dep => id === dep || id.startsWith(dep + '/')
+        )) {
+          return true;
+        }
+      }
+      return externalGlobals[id];
+    },
     onwarn: handleRollupWarnings,
     plugins: getPlugins(
       bundle.entry,
-      bundle.babelOpts,
-      bundle.paths,
+      externalPackages,
+      bundle.babel,
       filename,
       bundleType,
-      bundle.hasteName,
+      bundle.global,
       bundle.moduleType,
-      bundle.manglePropertiesOnProd,
       bundle.modulesToStub,
       bundle.featureFlags
     ),
   })
     .then(result =>
       result.write(
-        updateBundleConfig(
-          bundle.config,
+        getRollupOutputOptions(
           filename,
           format,
           bundleType,
-          bundle.hasteName,
+          externalGlobals,
+          bundle.global,
           bundle.moduleType
         )
       )

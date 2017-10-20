@@ -12,7 +12,7 @@ var ReactDOMEventListener = require('./ReactDOMEventListener');
 var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
 
 var isEventSupported = require('./isEventSupported');
-var {topLevelTypes} = require('events/BrowserEventConstants');
+var {topLevelTypes} = require('./BrowserEventConstants');
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:

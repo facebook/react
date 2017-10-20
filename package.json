@@ -82,7 +82,7 @@
     "rollup-plugin-closure-compiler-js": "^1.0.4",
     "rollup-plugin-commonjs": "^8.0.2",
     "rollup-plugin-inject": "^2.0.0",
-    "rollup-plugin-node-resolve": "^2.0.0",
+    "rollup-plugin-node-resolve": "^2",
     "rollup-plugin-replace": "^1.1.1",
     "rollup-plugin-uglify": "^1.0.1",
     "run-sequence": "^1.1.4",

@@ -1,8 +1,8 @@
 {
   "bundleSizes": {
     "react.development.js (UMD_DEV)": {
-      "size": 54803,
-      "gzip": 14350
+      "size": 54828,
+      "gzip": 14397
     },
     "react.production.min.js (UMD_PROD)": {
       "size": 6634,
@@ -85,8 +85,8 @@
       "gzip": 15545
     },
     "react-dom-server.browser.development.js (UMD_DEV)": {
-      "size": 124902,
-      "gzip": 32255
+      "size": 170908,
+      "gzip": 44043
     },
     "react-dom-server.browser.production.min.js (UMD_PROD)": {
       "size": 15337,

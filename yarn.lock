@@ -4171,7 +4171,7 @@ rollup-plugin-inject@^2.0.0:
     magic-string "^0.16.0"
     rollup-pluginutils "^1.2.0"
 
-rollup-plugin-node-resolve@^2.0.0:
+rollup-plugin-node-resolve@^2:
   version "2.1.1"
   resolved "https://registry.yarnpkg.com/rollup-plugin-node-resolve/-/rollup-plugin-node-resolve-2.1.1.tgz#cbb783b0d15b02794d58915350b2f0d902b8ddc8"
   dependencies:

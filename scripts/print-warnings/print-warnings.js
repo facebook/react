@@ -70,8 +70,9 @@ const sourcePaths = Bundles.bundles
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_DEV) !== -1 ||
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
   )
-  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), [])
-  .concat(Modules.getExcludedHasteGlobs().map(glob => `!${glob}`));
+  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), []);
+  // TODO: this is broken.
+  // .concat(Modules.getExcludedHasteGlobs().map(glob => `!${glob}`));
 
 gs(sourcePaths).pipe(
   through.obj(transform, cb => {
