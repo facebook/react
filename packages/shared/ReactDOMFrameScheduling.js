@@ -68,7 +68,6 @@ if (!ExecutionEnvironment.canUseDOM) {
 } else if (typeof requestIdleCallback !== 'function') {
   // Polyfill requestIdleCallback.
 
-  var scheduledRAFCallback = null;
   var scheduledRICCallback = null;
 
   var isIdleScheduled = false;
@@ -145,11 +144,6 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (!isIdleScheduled) {
       isIdleScheduled = true;
       window.postMessage(messageKey, '*');
-    }
-    var callback = scheduledRAFCallback;
-    scheduledRAFCallback = null;
-    if (callback !== null) {
-      callback(rafTime);
     }
   };
 
