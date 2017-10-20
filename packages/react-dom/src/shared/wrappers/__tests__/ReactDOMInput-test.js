@@ -581,24 +581,9 @@ describe('ReactDOMInput', () => {
     var stub = <input type="text" value={0} onChange={handler} />;
     var container = document.createElement('div');
     var node = ReactDOM.render(stub, container);
-
-    var nodeValueSetter = jest.genMockFn();
-    var nodeValue = node.value;
-    Object.defineProperty(node, 'value', {
-      get: function() {
-        return nodeValue;
-      },
-      set: nodeValueSetter.mockImplementation(function(newValue) {
-        nodeValue = newValue;
-      }),
-    });
-
+    
     node.value = 'giraffe';
-
-    var fakeNativeEvent = function() {};
-    fakeNativeEvent.target = node;
-    fakeNativeEvent.path = [node, container];
-    ReactTestUtils.simulateNativeEventOnNode('topInput', node, fakeNativeEvent);
+    ReactTestUtils.Simulate.change(node);
 
     expect(handled).toBe(true);
   });
