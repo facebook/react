@@ -508,7 +508,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     expirationTime: ExpirationTime,
   ): Fiber | null {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes doesn't have keys. If the previous node is implicitly keyed
+      // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
       const created = createFiberFromText(
@@ -598,7 +598,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const key = oldFiber !== null ? oldFiber.key : null;
 
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes doesn't have keys. If the previous node is implicitly keyed
+      // Text nodes don't have keys. If the previous node is implicitly keyed
       // we can continue to replace it without aborting even if it is not a text
       // node.
       if (key !== null) {
@@ -641,7 +641,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          // Yields doesn't have keys. If the previous node is implicitly keyed
+          // Yields don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a
           // yield.
           if (key === null) {
@@ -666,7 +666,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
-        // Fragments doesn't have keys so if the previous key is implicit we can
+        // Fragments don't have keys so if the previous key is implicit we can
         // update it.
         if (key !== null) {
           return null;
@@ -694,7 +694,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     expirationTime: ExpirationTime,
   ): Fiber | null {
     if (typeof newChild === 'string' || typeof newChild === 'number') {
-      // Text nodes doesn't have keys, so we neither have to check the old nor
+      // Text nodes don't have keys, so we neither have to check the old nor
       // new node for the key. If both are text nodes, they match.
       const matchedFiber = existingChildren.get(newIdx) || null;
       return updateTextNode(
@@ -734,7 +734,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
         }
 
         case REACT_YIELD_TYPE: {
-          // Yields doesn't have keys, so we neither have to check the old nor
+          // Yields don't have keys, so we neither have to check the old nor
           // new node for the key. If both are yields, they match.
           const matchedFiber = existingChildren.get(newIdx) || null;
           return updateYield(
