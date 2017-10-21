@@ -28,7 +28,10 @@ describe('ReactDOMInput', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-    setUntrackedValue = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;    
+    setUntrackedValue = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    ).set;
     spyOn(console, 'error');
   });
 
@@ -43,7 +46,7 @@ describe('ReactDOMInput', () => {
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    setUntrackedValue.call(node, 'giraffe');    
+    setUntrackedValue.call(node, 'giraffe');
     ReactTestUtils.SimulateNative.change(node);
 
     expect(node.value).toBe('lion');
@@ -95,7 +98,7 @@ describe('ReactDOMInput', () => {
     document.body.appendChild(container);
 
     // Simulate a native change event
-    setUntrackedValue.call(instance.a, 'giraffe');    
+    setUntrackedValue.call(instance.a, 'giraffe');
     ReactTestUtils.SimulateNative.change(instance.a);
     ReactTestUtils.SimulateNative.blur(instance.a);
 
@@ -143,7 +146,7 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    setUntrackedValue.call(instance.a, 'giraffe');    
+    setUntrackedValue.call(instance.a, 'giraffe');
     ReactTestUtils.Simulate.change(instance.a);
     instance.a.dispatchEvent(inputEvent);
 
@@ -159,7 +162,7 @@ describe('ReactDOMInput', () => {
       stub = ReactTestUtils.renderIntoDocument(stub);
       var node = ReactDOM.findDOMNode(stub);
 
-      node.value = '2.0';      
+      node.value = '2.0';
 
       ReactTestUtils.Simulate.change(stub);
 
