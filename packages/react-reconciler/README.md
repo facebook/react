@@ -30,9 +30,9 @@ module.exports = RendererPublicAPI;
 
 ## Practical Examples
 
-* [React ART](https://github.com/facebook/react/blob/master/src/renderers/art/ReactARTFiberEntry.js)
-* [React DOM](https://github.com/facebook/react/blob/master/src/fb/ReactDOMFiberFBEntry.js)
-* [React Native](https://github.com/facebook/react/blob/master/src/renderers/native/ReactNativeFiberRenderer.js)
+* [React ART](https://github.com/facebook/react/blob/master/packages/react-art/src/ReactART.js)
+* [React DOM](https://github.com/facebook/react/blob/master/packages/react-dom/src/client/ReactDOM.js)
+* [React Native](https://github.com/facebook/react/blob/master/packages/react-native-renderer/src/ReactNativeFiberRenderer.js)
 
 If these links break please file an issue and we’ll fix them. They intentionally link to the latest versions since the API is still evolving.
 
