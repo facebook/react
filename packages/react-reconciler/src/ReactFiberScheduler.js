@@ -1308,16 +1308,18 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       );
     }
 
+    // Add the root to the schedule.
     // Check if this root is already part of the schedule.
-    if (!root.isScheduled) {
+    if (root.nextScheduledRoot === null) {
       // This root is not already scheduled. Add it.
-      root.isScheduled = true;
       root.remainingExpirationTime = expirationTime;
       if (lastScheduledRoot === null) {
         firstScheduledRoot = lastScheduledRoot = root;
+        root.nextScheduledRoot = root;
       } else {
         lastScheduledRoot.nextScheduledRoot = root;
         lastScheduledRoot = root;
+        lastScheduledRoot.nextScheduledRoot = firstScheduledRoot;
       }
     } else {
       // This root is already scheduled, but its priority may have increased.
@@ -1360,35 +1362,60 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     let highestPriorityWork = NoWork;
     let highestPriorityRoot = null;
 
-    let previousScheduledRoot = null;
-    let root = firstScheduledRoot;
-    while (root !== null) {
-      const remainingExpirationTime = root.remainingExpirationTime;
-      if (remainingExpirationTime === NoWork) {
-        // If this root no longer has work, remove it from the scheduler.
-        let next = root.nextScheduledRoot;
-        root.isScheduled = false;
-        root.nextScheduledRoot = null;
-        if (previousScheduledRoot === null) {
-          firstScheduledRoot = next;
+    if (lastScheduledRoot !== null) {
+      let previousScheduledRoot = lastScheduledRoot;
+      let root = firstScheduledRoot;
+      while (root !== null) {
+        const remainingExpirationTime = root.remainingExpirationTime;
+        if (remainingExpirationTime === NoWork) {
+          // This root no longer has work. Remove it from the scheduler.
+
+          // TODO: This check is redudant, but Flow is confused by the branch
+          // below where we set lastScheduledRoot to null, even though we break
+          // from the loop right after.
+          invariant(
+            previousScheduledRoot !== null && lastScheduledRoot !== null,
+            'Should have a previous and last root. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
+          );
+          if (root === root.nextScheduledRoot) {
+            // This is the only root in the list.
+            root.nextScheduledRoot = null;
+            firstScheduledRoot = lastScheduledRoot = null;
+            break;
+          } else if (root === firstScheduledRoot) {
+            // This is the first root in the list.
+            const next = root.nextScheduledRoot;
+            firstScheduledRoot = next;
+            lastScheduledRoot.nextScheduledRoot = next;
+            root.nextScheduledRoot = null;
+          } else if (root === lastScheduledRoot) {
+            // This is the last root in the list.
+            lastScheduledRoot = previousScheduledRoot;
+            lastScheduledRoot.nextScheduledRoot = firstScheduledRoot;
+            root.nextScheduledRoot = null;
+            break;
+          } else {
+            previousScheduledRoot.nextScheduledRoot = root.nextScheduledRoot;
+            root.nextScheduledRoot = null;
+          }
+          root = previousScheduledRoot.nextScheduledRoot;
         } else {
-          previousScheduledRoot.nextScheduledRoot = next;
+          if (
+            highestPriorityWork === NoWork ||
+            remainingExpirationTime < highestPriorityWork
+          ) {
+            // Update the priority, if it's higher
+            highestPriorityWork = remainingExpirationTime;
+            highestPriorityRoot = root;
+          }
+          if (root === lastScheduledRoot) {
+            break;
+          }
+          previousScheduledRoot = root;
+          root = root.nextScheduledRoot;
         }
-        if (next === null) {
-          lastScheduledRoot = null;
-        }
-        root = next;
-        continue;
-      } else if (
-        highestPriorityWork === NoWork ||
-        remainingExpirationTime < highestPriorityWork
-      ) {
-        // Update the priority, if it's higher
-        highestPriorityWork = remainingExpirationTime;
-        highestPriorityRoot = root;
       }
-      previousScheduledRoot = root;
-      root = root.nextScheduledRoot;
     }
 
     // If the next root is the same as the previous root, this is a nested

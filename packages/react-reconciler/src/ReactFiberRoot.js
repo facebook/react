@@ -22,10 +22,6 @@ export type FiberRoot = {
   pendingChildren: any,
   // The currently active root fiber. This is the mutable root of the tree.
   current: Fiber,
-  // Whether this root is part of the root schedule. Different than whether it
-  // has remaining expiration time, because we don't remove roots from the
-  // schedule until the next time we search for work.
-  isScheduled: boolean,
   // Remaining expiration time on this root.
   remainingExpirationTime: ExpirationTime,
   // Determines if this root can be committed.
@@ -55,7 +51,6 @@ exports.createFiberRoot = function(
     current: uninitializedFiber,
     containerInfo: containerInfo,
     pendingChildren: null,
-    isScheduled: false,
     remainingExpirationTime: NoWork,
     isReadyForCommit: false,
     finishedWork: null,
