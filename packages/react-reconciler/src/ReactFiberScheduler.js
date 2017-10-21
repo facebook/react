@@ -1332,14 +1332,19 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     if (isRendering) {
+      // Prevent reentrancy. Remaining work will be scheduled at the end of
+      // the currently rendering batch.
       return;
     }
 
     if (isBatchingUpdates) {
-      if (!isUnbatchingUpdates) {
-        return;
+      // Flush work at the end of the batch.
+      if (isUnbatchingUpdates) {
+        // ...unless we're inside unbatchedUpdates, in which case we should
+        // flush it now.
+        performWorkOnRoot(root, Sync);
       }
-      root.isUnbatched = true;
+      return;
     }
 
     // TODO: Get rid of Sync and use current time?
@@ -1347,7 +1352,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       performWork(Sync, null);
     } else if (!isCallbackScheduled) {
       isCallbackScheduled = true;
-      scheduleDeferredCallback(flushAsyncWork);
+      scheduleDeferredCallback(performAsyncWork);
     }
   }
 
@@ -1358,18 +1363,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     let previousScheduledRoot = null;
     let root = firstScheduledRoot;
     while (root !== null) {
-      if (isUnbatchingUpdates) {
-        if (root.isUnbatched) {
-          highestPriorityWork = root.remainingExpirationTime;
-          highestPriorityRoot = root;
-          root.isUnbatched = false;
-          break;
-        }
-        previousScheduledRoot = root;
-        root = root.nextScheduledRoot;
-        continue;
-      }
-
       const remainingExpirationTime = root.remainingExpirationTime;
       if (remainingExpirationTime === NoWork) {
         // If this root no longer has work, remove it from the scheduler.
@@ -1414,18 +1407,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     nextFlushedExpirationTime = highestPriorityWork;
   }
 
-  function flushAsyncWork(dl) {
+  function performAsyncWork(dl) {
     performWork(NoWork, dl);
   }
 
   function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
-    invariant(
-      !isRendering,
-      'performWork was called recursively. This error is likely caused ' +
-        'by a bug in React. Please file an issue.',
-    );
-
-    isRendering = true;
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
@@ -1438,49 +1424,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         nextFlushedExpirationTime <= minExpirationTime) &&
       !deadlineDidExpire
     ) {
-      // Check if this is async work or sync/expired work.
-      // TODO: Pass current time as argument to renderRoot, commitRoot
-      if (nextFlushedExpirationTime <= recalculateCurrentTime()) {
-        // Flush sync work.
-        let finishedWork = nextFlushedRoot.finishedWork;
-        if (finishedWork !== null) {
-          // This root is already complete. We can commit it.
-          nextFlushedRoot.finishedWork = null;
-          nextFlushedRoot.remainingExpirationTime = commitRoot(finishedWork);
-        } else {
-          nextFlushedRoot.finishedWork = null;
-          finishedWork = renderRoot(nextFlushedRoot, nextFlushedExpirationTime);
-          if (finishedWork !== null) {
-            // We've completed the root. Commit it.
-            nextFlushedRoot.remainingExpirationTime = commitRoot(finishedWork);
-          }
-        }
-      } else {
-        // Flush async work.
-        let finishedWork = nextFlushedRoot.finishedWork;
-        if (finishedWork !== null) {
-          // This root is already complete. We can commit it.
-          nextFlushedRoot.finishedWork = null;
-          nextFlushedRoot.remainingExpirationTime = commitRoot(finishedWork);
-        } else {
-          nextFlushedRoot.finishedWork = null;
-          finishedWork = renderRoot(nextFlushedRoot, nextFlushedExpirationTime);
-          if (finishedWork !== null) {
-            // We've completed the root. Check the deadline one more time
-            // before committing.
-            if (!shouldYield()) {
-              // Still time left. Commit the root.
-              nextFlushedRoot.remainingExpirationTime = commitRoot(
-                finishedWork,
-              );
-            } else {
-              // There's no time left. Mark this root as complete. We'll come
-              // back and commit it later.
-              nextFlushedRoot.finishedWork = finishedWork;
-            }
-          }
-        }
-      }
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime);
       // Find the next highest priority work.
       findHighestPriorityRoot();
     }
@@ -1495,13 +1439,12 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // If there's work left over, schedule a new callback.
     if (nextFlushedRoot !== null && !isCallbackScheduled) {
       isCallbackScheduled = true;
-      scheduleDeferredCallback(flushAsyncWork);
+      scheduleDeferredCallback(performAsyncWork);
     }
 
     // Clean-up.
     deadline = null;
     deadlineDidExpire = false;
-    isRendering = false;
     nestedUpdateCount = 0;
 
     if (hasUnhandledError) {
@@ -1510,6 +1453,60 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       hasUnhandledError = false;
       throw error;
     }
+  }
+
+  function performWorkOnRoot(root, expirationTime) {
+    invariant(
+      !isRendering,
+      'performWorkOnRoot was called recursively. This error is likely caused ' +
+        'by a bug in React. Please file an issue.',
+    );
+
+    isRendering = true;
+
+    // Check if this is async work or sync/expired work.
+    // TODO: Pass current time as argument to renderRoot, commitRoot
+    if (expirationTime <= recalculateCurrentTime()) {
+      // Flush sync work.
+      let finishedWork = root.finishedWork;
+      if (finishedWork !== null) {
+        // This root is already complete. We can commit it.
+        root.finishedWork = null;
+        root.remainingExpirationTime = commitRoot(finishedWork);
+      } else {
+        root.finishedWork = null;
+        finishedWork = renderRoot(root, expirationTime);
+        if (finishedWork !== null) {
+          // We've completed the root. Commit it.
+          root.remainingExpirationTime = commitRoot(finishedWork);
+        }
+      }
+    } else {
+      // Flush async work.
+      let finishedWork = root.finishedWork;
+      if (finishedWork !== null) {
+        // This root is already complete. We can commit it.
+        root.finishedWork = null;
+        root.remainingExpirationTime = commitRoot(finishedWork);
+      } else {
+        root.finishedWork = null;
+        finishedWork = renderRoot(root, expirationTime);
+        if (finishedWork !== null) {
+          // We've completed the root. Check the deadline one more time
+          // before committing.
+          if (!shouldYield()) {
+            // Still time left. Commit the root.
+            root.remainingExpirationTime = commitRoot(finishedWork);
+          } else {
+            // There's no time left. Mark this root as complete. We'll come
+            // back and commit it later.
+            root.finishedWork = finishedWork;
+          }
+        }
+      }
+    }
+
+    isRendering = false;
   }
 
   // When working on async work, the reconciler asks the renderer if it should

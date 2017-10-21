@@ -30,8 +30,6 @@ export type FiberRoot = {
   remainingExpirationTime: ExpirationTime,
   // Determines if this root can be committed.
   isReadyForCommit: boolean,
-  // Used for unbatchedUpdates
-  isUnbatched: boolean,
   // A finished work-in-progress HostRoot that's ready to be committed.
   // TODO: The reason this is separate from isReadyForCommit is because the
   // FiberRoot concept will likely be lifted out of the reconciler and into
@@ -60,7 +58,6 @@ exports.createFiberRoot = function(
     isScheduled: false,
     remainingExpirationTime: NoWork,
     isReadyForCommit: false,
-    isUnbatched: false,
     finishedWork: null,
     context: null,
     pendingContext: null,
