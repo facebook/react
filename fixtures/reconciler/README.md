@@ -8,6 +8,7 @@ These fixtures are a smoke-screen verification that the built React Reconciler d
 To test, from the project root:
 * `yarn build`
 * `cd fixtures/reconciler`
+* `yarn`
 * `yarn test`
 
 They should run as part of the CI check.

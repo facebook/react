@@ -9,6 +9,7 @@ function getProvidesHeader(hasteFinalName) {
  *
  * @noflow
  * @providesModule ${hasteFinalName}
+ * @preventMunge
  */
 `;
 }

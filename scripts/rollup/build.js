@@ -372,19 +372,22 @@ function getPlugins(
   hasteName,
   moduleType,
   manglePropertiesOnProd,
-  useFiber,
-  modulesToStub
+  modulesToStub,
+  featureFlags
 ) {
+  // Extract error codes 1st so we can replace invariant messages in prod builds
+  // Without re-running the slow build script.
   const plugins = [
-    babel(updateBabelConfig(babelOpts, bundleType)),
     alias(
       Modules.getAliases(paths, bundleType, moduleType, argv['extract-errors'])
     ),
+    babel(updateBabelConfig(babelOpts, bundleType)),
   ];
 
   const replaceModules = Modules.getDefaultReplaceModules(
     bundleType,
-    modulesToStub
+    modulesToStub,
+    featureFlags
   );
 
   // We have to do this check because Rollup breaks on empty object.
@@ -526,8 +529,8 @@ function createBundle(bundle, bundleType) {
       bundle.hasteName,
       bundle.moduleType,
       bundle.manglePropertiesOnProd,
-      bundle.useFiber,
-      bundle.modulesToStub
+      bundle.modulesToStub,
+      bundle.featureFlags
     ),
   })
     .then(result =>
@@ -591,10 +594,10 @@ rimraf('build', () => {
       syncReactNative(join('build', 'react-native'), syncFbsource)
     );
     tasks.push(() =>
-      syncReactNativeRT(join('build', 'react-native-rt'), syncFbsource)
+      syncReactNativeRT(join('build', 'react-rt'), syncFbsource)
     );
     tasks.push(() =>
-      syncReactNativeCS(join('build', 'react-native-cs'), syncFbsource)
+      syncReactNativeCS(join('build', 'react-cs'), syncFbsource)
     );
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
