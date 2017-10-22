@@ -36,7 +36,7 @@ var SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key: string): string {
+function escape(key) {
   var escapeRegex = /[=:]/g;
   var escaperLookup = {
     '=': '=0',
