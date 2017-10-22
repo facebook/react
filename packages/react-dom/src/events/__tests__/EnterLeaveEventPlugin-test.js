@@ -23,25 +23,32 @@ describe('EnterLeaveEventPlugin', () => {
   });
 
   it('should set relatedTarget properly in iframe', () => {
-    var iframe = document.createElement('iframe');
+    const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
-
-    var iframeDocument = iframe.contentDocument;
+    const iframeDocument = iframe.contentDocument;
 
     iframeDocument.write(
       '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
     );
     iframeDocument.close();
 
-    var component = ReactDOM.render(
-      <div />,
+    let events = [];
+    const component = ReactDOM.render(
+      <div
+        onMouseOver={e => {
+          e.persist();
+          events.push(e);
+        }}
+      />,
       iframeDocument.body.getElementsByTagName('div')[0],
     );
-    var div = ReactDOM.findDOMNode(component);
-    var doc = div.ownerDocument;
-    var mouseEnterRelatedTarget = doc.defaultView || doc.parentWindow;
+    ReactTestUtils.SimulateNative.mouseOver(component, {
+      relatedTarget: iframe.contentWindow,
+    });
 
-    expect(mouseEnterRelatedTarget).toBe(iframe.contentWindow);
+    expect(events.length).toBe(1);
+    expect(events[0].target).toBe(component);
+    expect(events[0].relatedTarget).toBe(iframe.contentWindow);
   });
 
   // Regression test for https://github.com/facebook/react/issues/10906.
