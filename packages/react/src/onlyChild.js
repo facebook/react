@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @providesModule onlyChild
+ * @flow
  */
 'use strict';
 
@@ -26,7 +27,7 @@ var invariant = require('fbjs/lib/invariant');
  * @return {ReactElement} The first and only `ReactElement` contained in the
  * structure.
  */
-function onlyChild(children) {
+function onlyChild(children: ?Object): ReactElement {
   invariant(
     ReactElement.isValidElement(children),
     'React.Children.only expected to receive a single React element child.',
