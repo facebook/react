@@ -11,7 +11,7 @@ React는 사용자 인터페이스 구축을 위한 JavaScript library이다.
 
 ## Examples
 
-We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
+우리는 [웹 사이트에](https://reactjs.org/) 몇가지 예를 가지고 있읍니다. 시작하기 위한 한가지의 예는 다음과 같습니다.:
 
 ```jsx
 class HelloMessage extends React.Component {
@@ -26,38 +26,40 @@ ReactDOM.render(
 );
 ```
 
-This example will render "Hello John" into a container on the page.
+이 예제는 페이지의 컨테이너안에 "Hello John"을 렌더링할 것입니다.
 
-You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs.org/docs/introducing-jsx.html). JSX is not required to use React, but it makes code more readable, and writing it feels like writing HTML. We recommend using [Babel](https://babeljs.io/) with a [React preset](https://babeljs.io/docs/plugins/preset-react/) to convert JSX into native JavaScript for browsers to digest.
+우리는 [JSX](https://reactjs.org/docs/introducing-jsx.html)라고 불리우는 HTML과 비슷한 문법을 가진 구문을 사용한 것을 눈치 챌 수 있읍니다. JSX는 React를 사용할 필요가 없지만 코드를 더 읽기 쉽게 만들어 HTML 작성과 같은 느낌을줍니다. [Babel](https://babeljs.io/)을 [React preset](https://babeljs.io/docs/plugins/preset-react/)과 함께 사용하여 JSX를 브라우저가 소화할 수 있는 기본 JavaScript로 변환하는 것이 좋습니다.
 
-## Installation
+## 설치하기
 
-React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://reactjs.org/docs/installation.html#using-a-cdn).
+React는 [npm](https://www.npmjs.com/)에 `react` 패키지로 제공됩니다. [CDN](https://reactjs.org/docs/installation.html#using-a-cdn)에서도 구할 수 있습니다.
 
-React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
+React는 유연하며 다양한 프로젝트에서 사용할 수 있습니다. 새로운 앱을 만들 수는 있지만 다시 작성하지 않고 점진적으로 기존 codebase에 도입 할 수도 있습니다.
 
-The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
+React를 설치하는 권장 방법은 프로젝트에 따라 다릅니다. 다음은 가장 일반적인 시나리오에 대한 간단한 가이드입니다.:
 
-* [Trying Out React](https://reactjs.org/docs/installation.html#trying-out-react)
-* [Creating a New Application](https://reactjs.org/docs/installation.html#creating-a-new-application)
-* [Adding React to an Existing Application](https://reactjs.org/docs/installation.html#adding-react-to-an-existing-application)
+* [React를 시도해보기](https://reactjs.org/docs/installation.html#trying-out-react)
+* [새로운 어플리케이션을 만들기](https://reactjs.org/docs/installation.html#creating-a-new-application)
+* [기존 어플리케이션에 React 추가하기](https://reactjs.org/docs/installation.html#adding-react-to-an-existing-application)
 
-## Contributing
+## 기여하기
 
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
+이 저장소의 주요 목적은 React 코어를 계속 발전시켜 더 빠르고 쉽게 사용할 수있게하는 것입니다.  React의 개발은 GitHub에서 열리 며, 버그 수정 및 개선에 기여한 커뮤니티에 감사드립니다. React를 향상시키는 데 어떻게 참여할 수 있는지 배우려면 아래를 읽으십시오.
 
-### [Code of Conduct](https://code.facebook.com/codeofconduct)
+### [행동 강령](https://code.facebook.com/codeofconduct)
 
-Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
+Facebook은 프로젝트 참여자가 준수해야 할 행동 강령을 채택했습니다. 어떤 행동이 용인 될 것인지, 용인되지 않을 것인지 이해할 수 있도록 [행동 강령 전문](https://code.facebook.com/codeofconduct)을 읽으십시오.
 
-### Contributing Guide
+### 기여 안내
 
-Read our [contributing guide](https://reactjs.org/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
+개발 프로세스, 버그 수정 및 개선 제안 방법, React에 대한 변경 사항을 빌드하고 테스트하는 방법에 대해 알아 보려면 [기여 안내](https://reactjs.org/contributing/how-to-contribute.html)를 읽어보십시오.
 
-### Beginner Friendly Bugs
 
-To help you get your feet wet and get you familiar with our contribution process, we have a list of [beginner friendly bugs](https://github.com/facebook/react/labels/Difficulty%3A%20beginner) that contain bugs which are fairly easy to fix. This is a great place to get started.
+### 초보자 친화적 인 버그
 
-### License
+버그 때문에 식은 땀을 흘리는 초보자들과 기여 프로세스에 익숙해 지도록하는 것을 돕기위해 버그 수정이 쉬운 [초보자용 버그목록](https://github.com/facebook/react/labels/Difficulty%3A%20beginner)이 있습니다.이것은 React를 시작하기에 훌륭한 곳입니다.
 
-React is [MIT licensed](./LICENSE).
+
+### 라이센스
+
+React는 [MIT licensed](./LICENSE)를 따릅니다.
