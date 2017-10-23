@@ -12,24 +12,19 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactTestUtils = require('react-dom/test-utils');
-var TestRenderer = require('react-test-renderer');
 
 function getTrackedValue(elem) {
   return elem.value;
 }
 
-function setTrackedValue(elem, value) {
-  elem.value = value;
-}
-
 var setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
-  'checked'
+  'checked',
 ).set;
 
 var setUntrackedValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
-  'value'
+  'value',
 ).set;
 
 describe('ChangeEventPlugin', () => {
@@ -42,7 +37,7 @@ describe('ChangeEventPlugin', () => {
     }
 
     var input = ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" onChange={cb} />
+      <input type="checkbox" onChange={cb} />,
     );
 
     setUntrackedChecked.call(input, true);
