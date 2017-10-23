@@ -1,6 +1,6 @@
 # [React](https://reactjs.org/) &middot; [![CircleCI Status](https://circleci.com/gh/facebook/react.svg?style=shield&circle-token=:circle-token)](https://circleci.com/gh/facebook/react) [![Coverage Status](https://img.shields.io/coveralls/facebook/react/master.svg?style=flat)](https://coveralls.io/github/facebook/react?branch=master) [![npm version](https://img.shields.io/npm/v/react.svg?style=flat)](https://www.npmjs.com/package/react) [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md#pull-requests)
 
-React는 사용자 인터페이스 구축을 위한 JavaScript library이다.
+React는 사용자 인터페이스 구축을 위한 JavaScript library입니다.
 
 * **선언적:** React는 대화 형 UI를 만드는 데 손쉽게 합니다.응용 프로그램의 각 상태에 대한 간단한 보기를 디자인하면 React는 데이터가 변경 될 때 올바른 구성 요소 만 효과적으로 업데이트하고 렌더링합니다. 선언적 뷰는 코드를보다 예측 가능하고 이해하기 쉽고 디버그하기 쉽도록 만듭니다.
 * **구성 요소 기반 :** 자체 상태를 관리하는 캡슐화 된 구성 요소를 작성한 다음 복잡한 UI를 만들기 위해 구성합니다. 구성 요소 로직은 템플릿 대신 JavaScript로 작성되므로 앱을 통해 풍부한 데이터를 쉽게 전달하고 DOM에서 상태를 유지할 수 있습니다.
