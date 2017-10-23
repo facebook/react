@@ -33,7 +33,10 @@
     "README.md",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "Circle.js",
+    "Rectangle.js",
+    "Wedge.js"
   ],
   "browserify": {
     "transform": [
