@@ -62,6 +62,7 @@ describe('ReactDOMInput', () => {
   });
 
   it('should control a value in reentrant events', () => {
+    var changeEvent = getEvent('change');
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
       a = null;
@@ -102,7 +103,7 @@ describe('ReactDOMInput', () => {
     setUntrackedValue.call(instance.a, 'giraffe');
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    instance.a.dispatchEvent(getEvent('change'));
+    instance.a.dispatchEvent(changeEvent);
     instance.a.dispatchEvent(getEvent('blur'));
 
     expect(instance.a.value).toBe('giraffe');
