@@ -22,6 +22,12 @@ describe('ReactDOMInput', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
+  function getEvent(type, opts) {
+    var event = document.createEvent('Event');
+    event.initEvent(type, true, true);
+    return event;
+  };
+
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -44,10 +50,11 @@ describe('ReactDOMInput', () => {
     var node = ReactDOM.findDOMNode(stub);
     expectDev(console.error.calls.count()).toBe(1);
 
+    setUntrackedValue.call(node, 'giraffe');
+
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    setUntrackedValue.call(node, 'giraffe');
-    ReactTestUtils.SimulateNative.change(node);
+    node.dispatchEvent(getEvent('change'));
 
     expect(node.value).toBe('lion');
 
@@ -55,11 +62,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('should control a value in reentrant events', () => {
-    // This must use the native event dispatching. If we simulate, we will
-    // bypass the lazy event attachment system so we won't actually test this.
-    var changeEvent = document.createEvent('Event');
-    changeEvent.initEvent('change', true, true);
-
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
       a = null;
@@ -97,10 +99,11 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
-    // Simulate a native change event
     setUntrackedValue.call(instance.a, 'giraffe');
-    ReactTestUtils.SimulateNative.change(instance.a);
-    ReactTestUtils.SimulateNative.blur(instance.a);
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    instance.a.dispatchEvent(getEvent('change'));
+    instance.a.dispatchEvent(getEvent('blur'));
 
     expect(instance.a.value).toBe('giraffe');
     expect(instance.switchedFocus).toBe(true);
@@ -109,11 +112,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('should control values in reentrant events with different targets', () => {
-    // This must use the native event dispatching. If we simulate, we will
-    // bypass the lazy event attachment system so we won't actually test this.
-    var inputEvent = document.createEvent('Event');
-    inputEvent.initEvent('input', true, true);
-
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
       a = null;
@@ -147,8 +145,10 @@ describe('ReactDOMInput', () => {
     document.body.appendChild(container);
 
     setUntrackedValue.call(instance.a, 'giraffe');
-    ReactTestUtils.Simulate.change(instance.a);
-    instance.a.dispatchEvent(inputEvent);
+    // This must use the native event dispatching. If we simulate, we will
+    // bypass the lazy event attachment system so we won't actually test this.
+    instance.a.dispatchEvent(getEvent('change'));
+    instance.a.dispatchEvent(getEvent('input'));
 
     expect(instance.a.value).toBe('lion');
     expect(instance.b.checked).toBe(true);
@@ -584,8 +584,12 @@ describe('ReactDOMInput', () => {
     var container = document.createElement('div');
     var node = ReactDOM.render(stub, container);
 
-    node.value = 'giraffe';
-    ReactTestUtils.Simulate.change(node);
+    setUntrackedValue.call(node, 'giraffe');
+
+    var fakeNativeEvent = function() {};
+    fakeNativeEvent.target = node;
+    fakeNativeEvent.path = [node, container];
+    ReactTestUtils.simulateNativeEventOnNode('topInput', node, fakeNativeEvent);
 
     expect(handled).toBe(true);
   });
