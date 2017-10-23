@@ -145,7 +145,6 @@ describe('ReactDOMInput', () => {
     setUntrackedValue.call(instance.a, 'giraffe');
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    dispatchEventOnNode(instance.a, 'change');
     dispatchEventOnNode(instance.a, 'input');
 
     expect(instance.a.value).toBe('lion');
