@@ -30,7 +30,7 @@ describe('SyntheticEvent', () => {
       event.initEvent(
         eventType,
         defaultNativeEvent.bubbles,
-        defaultNativeEvent.cancelabl,
+        defaultNativeEvent.cancelable,
       );
       return event;
     };
