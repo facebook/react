@@ -18,6 +18,7 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
+    "art": "^0.10.1",
     "create-react-class": "^15.6.2",
     "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
