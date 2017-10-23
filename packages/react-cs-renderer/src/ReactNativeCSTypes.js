@@ -12,12 +12,7 @@
  * Flat CS renderer bundles are too big for Flow to parse efficiently.
  * Provide minimal Flow typing for the high-level RN API and call it a day.
  */
-export type ReactNativeCSType = {
-  render(
-    element: React$Element<any>,
-    containerTag: any,
-    callback: ?Function,
-  ): any,
-  unmountComponentAtNode(containerTag: number): any,
-  unstable_batchedUpdates: any, // TODO (bvaughn) Add types
-};
+
+import type {Component} from 'CSComponent';
+
+export type ReactNativeCSType = Component<any, any, any>;

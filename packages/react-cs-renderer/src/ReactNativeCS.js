@@ -9,41 +9,31 @@
 
 'use strict';
 
-import type {ReactNativeCSType} from './ReactNativeCSTypes';
-
+const {CSStatefulComponent} = require('CSStatefulComponent');
 const ReactFiberReconciler = require('react-reconciler');
-// TODO: direct imports like some-package/src/* are bad. Fix me.
+const ReactGenericBatching = require('events/ReactGenericBatching');
+const ReactVersion = require('shared/ReactVersion');
+
 const {
   injectInternals,
 } = require('react-reconciler/src/ReactFiberDevToolsHook');
-const ReactGenericBatching = require('events/ReactGenericBatching');
-const ReactVersion = require('shared/ReactVersion');
-const emptyObject = require('fbjs/lib/emptyObject');
 
-export type Container = number;
-export type Instance = number;
-export type Props = Object;
-export type TextInstance = number;
+import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ReactNativeCSType} from './ReactNativeCSTypes';
 
-function processProps(instance: number, props: Props): Object {
-  const propsPayload = {};
-  for (var key in props) {
-    if (key === 'children') {
-      // Skip special case.
-      continue;
-    }
-    var value = props[key];
-    if (typeof value === 'function') {
-      value = {
-        style: 'rt-event',
-        event: key,
-        tag: instance,
-      };
-    }
-    propsPayload[key] = value;
-  }
-  return propsPayload;
-}
+const emptyObject = {};
+
+type Container = {
+  pendingChild: null | Instance | TextInstance,
+};
+type InstanceProps = Props & {children: Array<Instance>};
+type Instance = {
+  props: InstanceProps,
+  options: {key: string, ref: null},
+  data: {type: 'NATIVE', name: string},
+};
+type Props = Object;
+type TextInstance = Instance;
 
 function arePropsEqual(oldProps: Props, newProps: Props): boolean {
   var key;
@@ -68,11 +58,19 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
   return true;
 }
 
+// React doesn't expose its full keypath. To manage lifetime of instances, we instead use IDs.
+let nextComponentKey = 0;
+
+// Callback. Currently this is global, but it should be per root.
+let scheduledCallback = null;
+
 const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   appendInitialChild(
     parentInstance: Instance,
     child: Instance | TextInstance,
-  ): void {},
+  ): void {
+    parentInstance.props.children.push(child);
+  },
 
   createInstance(
     type: string,
@@ -81,7 +79,16 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): Instance {
-    return 0;
+    let key = '' + nextComponentKey++;
+    let ref = null; // TODO: Always create Ref object so that getPublicInstance can use it.
+    // We need a new props object so that we can represent flattened children.
+    let newProps = Object.assign({}, props);
+    newProps.children = [];
+    return {
+      props: newProps,
+      options: {key, ref: null},
+      data: {type: 'NATIVE', name: type},
+    };
   },
 
   createTextInstance(
@@ -90,7 +97,8 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     hostContext: {},
     internalInstanceHandle: Object,
   ): TextInstance {
-    return 0;
+    // Could auto-translate to CSText with some host context defined attributes.
+    throw new Error('Not yet implemented.');
   },
 
   finalizeInitialChildren(
@@ -110,8 +118,8 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return emptyObject;
   },
 
-  getPublicInstance(instance) {
-    return instance;
+  getPublicInstance(instance: Instance) {
+    return instance.options.ref;
   },
 
   prepareForCommit(): void {},
@@ -123,11 +131,11 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     newProps: Props,
     rootContainerInstance: Container,
     hostContext: {},
-  ): null | Object {
+  ): null | InstanceProps {
     if (arePropsEqual(oldProps, newProps)) {
       return null;
     }
-    return processProps(instance, newProps);
+    return Object.assign({}, newProps);
   },
 
   resetAfterCommit(): void {},
@@ -136,7 +144,9 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return false;
   },
 
-  scheduleDeferredCallback: global.requestIdleCallback,
+  scheduleDeferredCallback(callback) {
+    scheduledCallback = callback;
+  },
 
   shouldSetTextContent(type: string, props: Props): boolean {
     // TODO: Figure out when we should allow text content.
@@ -153,7 +163,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   persistence: {
     cloneInstance(
       instance: Instance,
-      updatePayload: null | Object,
+      updatePayload: null | InstanceProps,
       type: string,
       oldProps: Props,
       newProps: Props,
@@ -161,63 +171,48 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
       keepChildren: boolean,
       recyclableInstance: null | Instance,
     ): Instance {
-      return 0;
+      let newInstanceProps = updatePayload;
+      if (newInstanceProps === null) {
+        newInstanceProps = Object.assign({}, newProps);
+      }
+      // We need a new props object so that we can represent flattened children.
+      newInstanceProps.children = keepChildren ? instance.props.children : [];
+      return {
+        props: newInstanceProps,
+        options: instance.options,
+        data: instance.data,
+      };
     },
 
-    createContainerChildSet(
-      container: Container,
-    ): Array<Instance | TextInstance> {
-      return [];
+    createContainerChildSet(container: Container): Container {
+      // We'll only ever have one instance in the container.
+      container.pendingChild = null;
+      return container;
     },
 
     appendChildToContainerChildSet(
-      childSet: Array<Instance | TextInstance>,
+      childSet: Container,
       child: Instance | TextInstance,
-    ): void {},
+    ): void {
+      if (childSet.pendingChild !== null) {
+        throw new Error(
+          'CSReact does not support top level fragments. Wrap it in a primitve.',
+        );
+      }
+      childSet.pendingChild = child;
+    },
 
     finalizeContainerChildren(
       container: Container,
-      newChildren: Array<Instance | TextInstance>,
+      newChildren: Container,
     ): void {},
 
     replaceContainerChildren(
       container: Container,
-      newChildren: Array<Instance | TextInstance>,
+      newChildren: Container,
     ): void {},
   },
 });
-
-const roots = new Map();
-
-const ReactNativeCSFiber: ReactNativeCSType = {
-  render(element: React$Element<any>, containerTag: any, callback: ?Function) {
-    let root = roots.get(containerTag);
-
-    if (!root) {
-      // TODO (bvaughn): If we decide to keep the wrapper component,
-      // We could create a wrapper for containerTag as well to reduce special casing.
-      root = ReactNativeCSFiberRenderer.createContainer(containerTag, false);
-      roots.set(containerTag, root);
-    }
-    ReactNativeCSFiberRenderer.updateContainer(element, root, null, callback);
-
-    return ReactNativeCSFiberRenderer.getPublicRootInstance(root);
-  },
-
-  unmountComponentAtNode(containerTag: number) {
-    const root = roots.get(containerTag);
-    if (root) {
-      // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      ReactNativeCSFiberRenderer.updateContainer(null, root, null, () => {
-        roots.delete(containerTag);
-      });
-    }
-  },
-
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
-
-  flushSync: ReactNativeCSFiberRenderer.flushSync,
-};
 
 injectInternals({
   findHostInstanceByFiber: ReactNativeCSFiberRenderer.findHostInstance,
@@ -227,4 +222,43 @@ injectInternals({
   rendererPackageName: 'react-cs-renderer',
 });
 
-module.exports = ReactNativeCSFiber;
+type ReactCSProps = {children: ReactNodeList};
+type ReactCSState = {
+  root: Object,
+  container: {
+    pendingChild: null | Instance | TextInstance,
+  },
+};
+
+const ReactCS = CSStatefulComponent({
+  getInitialState({props: ReactCSProps}): ReactCSState {
+    let container = {
+      pendingChild: null,
+    };
+    let root = ReactNativeCSFiberRenderer.createContainer(container, false);
+    return {root, container};
+  },
+  render({
+    props,
+    state,
+    stateUpdater,
+  }: {
+    props: ReactCSProps,
+    state: ReactCSState,
+    stateUpdater: (update: (oldState: ReactCSState) => ReactCSState) => void,
+  }) {
+    ReactNativeCSFiberRenderer.updateContainer(
+      props.children,
+      state.root,
+      null,
+      null,
+    );
+    return state.container.pendingChild;
+  },
+  getInstance({state}: {state: ReactCSState}) {
+    return ReactNativeCSFiberRenderer.getPublicRootInstance(state.root);
+  },
+  // TODO: Unmount hook. E.g. finalizer.
+});
+
+module.exports = (ReactCS: ReactNativeCSType);
