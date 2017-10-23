@@ -12,31 +12,25 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactTestUtils = require('react-dom/test-utils');
-// TODO: can we express this test with only public API?
-var ChangeEventPlugin = require('ChangeEventPlugin');
-var inputValueTracking = require('inputValueTracking');
+var TestRenderer = require('react-test-renderer');
 
 function getTrackedValue(elem) {
-  var tracker = inputValueTracking._getTrackerFromNode(elem);
-  return tracker.getValue();
+  return elem.value;
 }
 
 function setTrackedValue(elem, value) {
-  var tracker = inputValueTracking._getTrackerFromNode(elem);
-  tracker.setValue(value);
+  elem.value = value;
 }
 
-function setUntrackedValue(elem, value) {
-  var tracker = inputValueTracking._getTrackerFromNode(elem);
-  var current = tracker.getValue();
+var setUntrackedChecked = Object.getOwnPropertyDescriptor(
+  HTMLInputElement.prototype,
+  'checked'
+).set;
 
-  if (elem.type === 'checkbox' || elem.type === 'radio') {
-    elem.checked = value;
-  } else {
-    elem.value = value;
-  }
-  tracker.setValue(current);
-}
+var setUntrackedValue = Object.getOwnPropertyDescriptor(
+  HTMLInputElement.prototype,
+  'value'
+).set;
 
 describe('ChangeEventPlugin', () => {
   it('should fire change for checkbox input', () => {
@@ -48,10 +42,10 @@ describe('ChangeEventPlugin', () => {
     }
 
     var input = ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" onChange={cb} />,
+      <input type="checkbox" onChange={cb} />
     );
 
-    setUntrackedValue(input, true);
+    setUntrackedChecked.call(input, true);
     ReactTestUtils.SimulateNative.click(input);
 
     expect(called).toBe(1);
@@ -82,7 +76,7 @@ describe('ChangeEventPlugin', () => {
     ReactTestUtils.SimulateNative.change(input);
     expect(called).toBe(0);
 
-    setUntrackedValue(input, 'foo');
+    setUntrackedValue.call(input, 'foo');
     ReactTestUtils.SimulateNative.change(input);
 
     expect(called).toBe(1);
@@ -104,8 +98,7 @@ describe('ChangeEventPlugin', () => {
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(0);
 
-    input.checked = false;
-    setTrackedValue(input, undefined);
+    setUntrackedChecked.call(input, false);
     ReactTestUtils.SimulateNative.click(input);
 
     expect(called).toBe(1);
@@ -128,7 +121,7 @@ describe('ChangeEventPlugin', () => {
     var input = ReactTestUtils.renderIntoDocument(
       <input type="radio" onChange={cb} />,
     );
-    setUntrackedValue(input, true);
+    setUntrackedChecked.call(input, true);
     ReactTestUtils.SimulateNative.click(input);
     ReactTestUtils.SimulateNative.click(input);
     expect(called).toBe(1);
@@ -151,21 +144,21 @@ describe('ChangeEventPlugin', () => {
       called = 0;
       input = ReactTestUtils.renderIntoDocument(element);
 
-      setUntrackedValue(input, '40');
+      setUntrackedValue.call(input, '40');
       ReactTestUtils.SimulateNative.change(input);
       ReactTestUtils.SimulateNative.change(input);
       expect(called).toBe(1);
 
       called = 0;
       input = ReactTestUtils.renderIntoDocument(element);
-      setUntrackedValue(input, '40');
+      setUntrackedValue.call(input, '40');
       ReactTestUtils.SimulateNative.input(input);
       ReactTestUtils.SimulateNative.input(input);
       expect(called).toBe(1);
 
       called = 0;
       input = ReactTestUtils.renderIntoDocument(element);
-      setUntrackedValue(input, '40');
+      setUntrackedValue.call(input, '40');
       ReactTestUtils.SimulateNative.input(input);
       ReactTestUtils.SimulateNative.change(input);
       expect(called).toBe(1);
@@ -180,18 +173,19 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    if (!ChangeEventPlugin._isInputEventSupported) {
-      return;
-    }
+    // Do not understand this method. Please advise
+    // if (!ChangeEventPlugin._isInputEventSupported) {
+    //   return;
+    // }
 
     var input = ReactTestUtils.renderIntoDocument(
       <input type="range" onChange={cb} />,
     );
-    setUntrackedValue(input, 'bar');
+    setUntrackedValue.call(input, 'bar');
 
     ReactTestUtils.SimulateNative.input(input);
 
-    setUntrackedValue(input, 'foo');
+    setUntrackedValue.call(input, 'foo');
 
     ReactTestUtils.SimulateNative.change(input);
 
@@ -209,11 +203,11 @@ describe('ChangeEventPlugin', () => {
     var input = ReactTestUtils.renderIntoDocument(
       <input type="range" onChange={cb} />,
     );
-    setUntrackedValue(input, '40');
+    setUntrackedValue.call(input, '40');
     ReactTestUtils.SimulateNative.input(input);
     ReactTestUtils.SimulateNative.change(input);
 
-    setUntrackedValue(input, 'foo');
+    setUntrackedValue.call(input, 'foo');
 
     ReactTestUtils.SimulateNative.input(input);
     ReactTestUtils.SimulateNative.change(input);
