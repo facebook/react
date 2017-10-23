@@ -9,7 +9,6 @@
 
 'use strict';
 
-var SyntheticEvent;
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -18,63 +17,122 @@ describe('SyntheticEvent', () => {
   var createEvent;
 
   beforeEach(() => {
-    // TODO: can we express this test with only public API?
-    SyntheticEvent = require('SyntheticEvent');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-
-    createEvent = function(nativeEvent) {
-      var target = require('getEventTarget')(nativeEvent);
-      return SyntheticEvent.getPooled({}, '', nativeEvent, target);
+    createEvent = (eventType, nativeEvent) => {
+      const defaultNativeEvent = {
+        bubbles: true,
+        cancelable: true,
+        ...nativeEvent,
+      };
+      var event = new Event([eventType, defaultNativeEvent]);
+      event.initEvent(
+        eventType,
+        defaultNativeEvent.bubbles,
+        defaultNativeEvent.cancelabl,
+      );
+      return event;
     };
   });
 
   it('should normalize `target` from the nativeEvent', () => {
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
+    var click = jest.fn();
+    var container = document.createElement('div');
 
-    expect(syntheticEvent.target).toBe(target);
-    expect(syntheticEvent.type).toBe(undefined);
+    var onClick = e => click(e.target);
+
+    var instance = ReactDOM.render(<div onClick={onClick} />, container);
+
+    document.body.appendChild(container);
+
+    var event = createEvent('click', {srcElement: instance});
+    var elem = ReactDOM.findDOMNode(instance);
+    elem.dispatchEvent(event);
+    expect(click).toBeCalledWith(elem);
+    document.body.removeChild(container);
   });
 
   it('should be able to `preventDefault`', () => {
-    var nativeEvent = {};
-    var syntheticEvent = createEvent(nativeEvent);
+    var click = jest.fn();
+    var container = document.createElement('div');
 
-    expect(syntheticEvent.isDefaultPrevented()).toBe(false);
-    syntheticEvent.preventDefault();
-    expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+    var onClick = e => {
+      click(e.isDefaultPrevented());
+      e.preventDefault();
+      click(e.isDefaultPrevented());
+    };
 
-    expect(syntheticEvent.defaultPrevented).toBe(true);
+    var instance = ReactDOM.render(<div onClick={onClick} />, container);
 
-    expect(nativeEvent.returnValue).toBe(false);
+    document.body.appendChild(container);
+
+    var event = createEvent('click', {srcElement: instance});
+    var elem = ReactDOM.findDOMNode(instance);
+    elem.dispatchEvent(event);
+    expect(click.mock.calls[0][0]).toBe(false);
+    expect(click.mock.calls[1][0]).toBe(true);
+    document.body.removeChild(container);
   });
 
   it('should be prevented if nativeEvent is prevented', () => {
-    expect(createEvent({defaultPrevented: true}).isDefaultPrevented()).toBe(
-      true,
-    );
-    expect(createEvent({returnValue: false}).isDefaultPrevented()).toBe(true);
+    var click = jest.fn();
+    var container = document.createElement('div');
+
+    var onClick = e => click(e.isDefaultPrevented());
+
+    var instance = ReactDOM.render(<div onClick={onClick} />, container);
+
+    var elem = ReactDOM.findDOMNode(instance);
+    ReactTestUtils.SimulateNative.click(elem, {defaultPrevented: true});
+    ReactTestUtils.SimulateNative.click(elem, {returnValue: false});
+
+    expect(click.mock.calls[0][0]).toBe(true);
+    expect(click.mock.calls[1][0]).toBe(true);
   });
 
   it('should be able to `stopPropagation`', () => {
-    var nativeEvent = {};
-    var syntheticEvent = createEvent(nativeEvent);
+    var click = jest.fn();
+    var container = document.createElement('div');
 
-    expect(syntheticEvent.isPropagationStopped()).toBe(false);
-    syntheticEvent.stopPropagation();
-    expect(syntheticEvent.isPropagationStopped()).toBe(true);
+    var onClick = e => {
+      click(e.isPropagationStopped());
+      e.stopPropagation();
+      click(e.isPropagationStopped());
+    };
 
-    expect(nativeEvent.cancelBubble).toBe(true);
+    var instance = ReactDOM.render(<div onClick={onClick} />, container);
+
+    document.body.appendChild(container);
+
+    var event = createEvent('click', {srcElement: instance});
+    var elem = ReactDOM.findDOMNode(instance);
+    elem.dispatchEvent(event);
+    expect(click.mock.calls[0][0]).toBe(false);
+    expect(click.mock.calls[1][0]).toBe(true);
+    document.body.removeChild(container);
   });
 
   it('should be able to `persist`', () => {
-    var syntheticEvent = createEvent({});
+    var click = jest.fn();
+    var container = document.createElement('div');
 
-    expect(syntheticEvent.isPersistent()).toBe(false);
-    syntheticEvent.persist();
-    expect(syntheticEvent.isPersistent()).toBe(true);
+    var onClick = e => {
+      click(e.isPersistent());
+      e.persist();
+      click(e.isPersistent());
+    };
+
+    var instance = ReactDOM.render(<div onClick={onClick} />, container);
+
+    document.body.appendChild(container);
+
+    var event = createEvent('click', {srcElement: instance});
+    var elem = ReactDOM.findDOMNode(instance);
+    elem.dispatchEvent(event);
+    expect(click.mock.calls[0][0]).toBe(false);
+    expect(click.mock.calls[1][0]).toBe(true);
+    document.body.removeChild(container);
   });
 
   it('should be nullified if the synthetic event has called destructor and log warnings', () => {
@@ -143,9 +201,9 @@ describe('SyntheticEvent', () => {
     );
   });
 
-  // TODO: reenable this test. We are currently silencing these warnings when
-  // using TestUtils.Simulate to avoid spurious warnings that result from the
-  // way we simulate events.
+  /* TODO: reenable this test. We are currently silencing these warnings when
+   using TestUtils.Simulate to avoid spurious warnings that result from the
+   way we simulate events. */
   xit(
     'should properly log warnings when events simulated with rendered components',
     () => {
