@@ -22,10 +22,10 @@ describe('ReactDOMInput', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  function getEvent(type) {
+  function dispatchEventOnNode(node, type) {
     var event = document.createEvent('Event');
     event.initEvent(type, true, true);
-    return event;
+    node.dispatchEvent(event);
   }
 
   beforeEach(() => {
@@ -54,7 +54,7 @@ describe('ReactDOMInput', () => {
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    node.dispatchEvent(getEvent('change'));
+    dispatchEventOnNode(node, 'change');
 
     expect(node.value).toBe('lion');
 
@@ -62,7 +62,6 @@ describe('ReactDOMInput', () => {
   });
 
   it('should control a value in reentrant events', () => {
-    var changeEvent = getEvent('change');
     class ControlledInputs extends React.Component {
       state = {value: 'lion'};
       a = null;
@@ -70,7 +69,7 @@ describe('ReactDOMInput', () => {
       switchedFocus = false;
       change(newValue) {
         this.setState({value: newValue});
-        this.a.dispatchEvent(changeEvent);
+        dispatchEventOnNode(this.a, 'change');
       }
       blur(currentValue) {
         this.switchedFocus = true;
@@ -103,8 +102,8 @@ describe('ReactDOMInput', () => {
     setUntrackedValue.call(instance.a, 'giraffe');
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    instance.a.dispatchEvent(changeEvent);
-    instance.a.dispatchEvent(getEvent('blur'));
+    dispatchEventOnNode(instance.a, 'change');
+    dispatchEventOnNode(instance.a, 'blur');
 
     expect(instance.a.value).toBe('giraffe');
     expect(instance.switchedFocus).toBe(true);
@@ -148,8 +147,8 @@ describe('ReactDOMInput', () => {
     setUntrackedValue.call(instance.a, 'giraffe');
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
-    instance.a.dispatchEvent(getEvent('change'));
-    instance.a.dispatchEvent(getEvent('input'));
+    dispatchEventOnNode(instance.a, 'change');
+    dispatchEventOnNode(instance.a, 'input');
 
     expect(instance.a.value).toBe('lion');
     expect(instance.b.checked).toBe(true);
