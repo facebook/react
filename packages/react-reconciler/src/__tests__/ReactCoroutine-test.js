@@ -11,15 +11,12 @@
 
 var React;
 var ReactNoop;
-var ReactCoroutine;
 
 describe('ReactCoroutine', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    // TODO: can we express this test with only public API?
-    ReactCoroutine = require('ReactCoroutine');
   });
 
   function div(...children) {
@@ -43,7 +40,7 @@ describe('ReactCoroutine', () => {
     // yielding. E.g. Continuation.yieldType = 123;
     function Child({bar}) {
       ops.push(['Child', bar]);
-      return ReactCoroutine.createYield({
+      return ReactNoop.createYield({
         props: {
           bar: bar,
         },
@@ -67,11 +64,7 @@ describe('ReactCoroutine', () => {
     // yielding. E.g. Parent.handler = HandleYields;
     function Parent(props) {
       ops.push('Parent');
-      return ReactCoroutine.createCoroutine(
-        props.children,
-        HandleYields,
-        props,
-      );
+      return ReactNoop.createCoroutine(props.children, HandleYields, props);
     }
 
     function App() {
@@ -104,7 +97,7 @@ describe('ReactCoroutine', () => {
     }
 
     function Child({bar}) {
-      return ReactCoroutine.createYield({
+      return ReactNoop.createYield({
         props: {
           bar: bar,
         },
@@ -123,11 +116,7 @@ describe('ReactCoroutine', () => {
     }
 
     function Parent(props) {
-      return ReactCoroutine.createCoroutine(
-        props.children,
-        HandleYields,
-        props,
-      );
+      return ReactNoop.createCoroutine(props.children, HandleYields, props);
     }
 
     function App(props) {
@@ -163,7 +152,7 @@ describe('ReactCoroutine', () => {
     class Child extends React.Component {
       render() {
         ops.push('Child');
-        return ReactCoroutine.createYield(Continuation);
+        return ReactNoop.createYield(Continuation);
       }
       componentWillUnmount() {
         ops.push('Unmount Child');
@@ -180,7 +169,7 @@ describe('ReactCoroutine', () => {
     class Parent extends React.Component {
       render() {
         ops.push('Parent');
-        return ReactCoroutine.createCoroutine(
+        return ReactNoop.createCoroutine(
           this.props.children,
           HandleYields,
           this.props,
@@ -215,12 +204,12 @@ describe('ReactCoroutine', () => {
       state = {value: 5};
       render() {
         instances[this.props.id] = this;
-        return ReactCoroutine.createYield(this.state.value);
+        return ReactNoop.createYield(this.state.value);
       }
     }
 
     function App(props) {
-      return ReactCoroutine.createCoroutine(
+      return ReactNoop.createCoroutine(
         [
           <Counter key="a" id="a" />,
           <Counter key="b" id="b" />,
