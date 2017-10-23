@@ -23,9 +23,7 @@ describe('ReactDOMInput', () => {
   }
 
   function dispatchEventOnNode(node, type) {
-    var event = document.createEvent('Event');
-    event.initEvent(type, true, true);
-    node.dispatchEvent(event);
+    node.dispatchEvent(new Event(type, {bubbles: true, cancelable: true}));
   }
 
   beforeEach(() => {
