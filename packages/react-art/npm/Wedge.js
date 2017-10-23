@@ -20,7 +20,7 @@
  *
  */
 
- 'use strict';
+'use strict';
 
 var assign = require('object-assign');
 var PropTypes = require('prop-types');
