@@ -843,7 +843,7 @@ describe('ReactDOMComponent', () => {
         get: () => {
           return descriptor.get.call(this);
         },
-        set: (value) => {
+        set: value => {
           currentValue = '' + value;
           descriptor.set.call(this, value);
         },
