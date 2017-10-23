@@ -26,7 +26,7 @@ describe('ReactDOMInput', () => {
     var event = document.createEvent('Event');
     event.initEvent(type, true, true);
     return event;
-  };
+  }
 
   beforeEach(() => {
     jest.resetModules();
