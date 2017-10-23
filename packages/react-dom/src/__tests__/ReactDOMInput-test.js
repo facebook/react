@@ -22,7 +22,7 @@ describe('ReactDOMInput', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  function getEvent(type, opts) {
+  function getEvent(type) {
     var event = document.createEvent('Event');
     event.initEvent(type, true, true);
     return event;
