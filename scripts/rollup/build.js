@@ -7,7 +7,6 @@ const alias = require('rollup-plugin-alias');
 const uglify = require('rollup-plugin-uglify');
 const replace = require('rollup-plugin-replace');
 const chalk = require('chalk');
-const escapeStringRegexp = require('escape-string-regexp');
 const join = require('path').join;
 const resolve = require('path').resolve;
 const resolvePlugin = require('rollup-plugin-node-resolve');
@@ -224,7 +223,7 @@ function getRollupOutputOptions(
   filename,
   format,
   bundleType,
-  externalGlobals,
+  globals,
   globalName,
   moduleType
 ) {
@@ -238,7 +237,7 @@ function getRollupOutputOptions(
     ),
     footer: getFooter(bundleType, filename, moduleType),
     format,
-    globals: externalGlobals,
+    globals,
     interop: false,
     moduleName: globalName,
     sourceMap: false,
@@ -337,9 +336,17 @@ function getUglifyConfig(configs) {
   };
 }
 
+// FB uses require('React') instead of require('react').
+// We can't set up a forwarding module due to case sensitivity issues.
+const rewriteFBReactImport = () => ({
+  transformBundle(source) {
+    return source.replace(/require\(['"]react['"]\)/g, 'require(\'React\')')
+  }
+});
+
 function getPlugins(
   entry,
-  externalPackages,
+  externals,
   updateBabelOptions,
   filename,
   bundleType,
@@ -350,32 +357,27 @@ function getPlugins(
 ) {
   const plugins = [
     alias(
-      Modules.getModuleAliases(bundleType, entry),
+      Modules.getShims(bundleType, entry)
     ),
     resolvePlugin({
-      // TODO: 3.0 of this plugin removed this option :-( but it seems essential.
-      skip: externalPackages
+      skip: externals,
     }),
     babel(getBabelConfig(updateBabelOptions, bundleType)),
   ];
-  const commonJsConfig = {
-    ignore: Modules.getIgnoredModules(bundleType),
-  };
   const headerSanityCheck = getHeaderSanityCheck(bundleType, globalName);
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
-    case FB_DEV:
       plugins.push(
         replace(stripEnvVariables(false)),
-        commonjs(commonJsConfig)
+        commonjs()
       );
       break;
     case UMD_PROD:
     case NODE_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),
-        commonjs(commonJsConfig),
+        commonjs(),
         closure({
           compilationLevel: 'SIMPLE',
           languageIn: 'ECMASCRIPT5_STRICT',
@@ -391,12 +393,19 @@ function getPlugins(
         })
       );
       break;
+    case FB_DEV:
+      plugins.push(
+        replace(stripEnvVariables(false)),
+        commonjs(),
+        rewriteFBReactImport()
+      );
+      break;
     case FB_PROD:
       plugins.push(
         replace(stripEnvVariables(true)),
-        commonjs(commonJsConfig),
+        commonjs(),
         uglify(
-          uglifyConfig({
+          getUglifyConfig({
             mangle: bundleType !== FB_PROD,
             preserveVersionHeader: bundleType === UMD_PROD,
             // leave comments in for source map debugging purposes
@@ -404,14 +413,15 @@ function getPlugins(
             removeComments: bundleType !== FB_PROD,
             headerSanityCheck,
           })
-        )
+        ),
+        rewriteFBReactImport()
       );
       break;
     case RN_DEV:
     case RN_PROD:
       plugins.push(
         replace(stripEnvVariables(bundleType === RN_PROD)),
-        commonjs(commonJsConfig),
+        commonjs(),
         uglify(
           getUglifyConfig({
             mangle: false,
@@ -473,38 +483,32 @@ function createBundle(bundle, bundleType) {
     }
   }
 
-  const externalGlobals = Modules.getExternalGlobals(
+  const shouldBundleDependencies = (bundleType === UMD_DEV || bundleType === UMD_PROD);
+  const peerGlobals = Modules.getPeerGlobals(
     bundle.externals,
-    bundleType,
-    bundle.moduleType,
-    bundle.entry
+    bundle.moduleType
   );
-  const nodeDependencies = Modules.getNodeDependencies(
-    bundle.entry
-  );
-
-  let externalPackages = Object.keys(externalGlobals);
-  if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
-    externalPackages = externalPackages.concat(nodeDependencies);
+  let externals = Object.keys(peerGlobals);
+  if (!shouldBundleDependencies) {
+    const deps = Modules.getDependencies(bundleType, bundle.entry);
+    externals = externals.concat(deps);
   }
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
     entry: resolvedEntry,
     external(id) {
-      if (bundleType === NODE_DEV || bundleType === NODE_PROD) {
-        if (externalPackages.some(
-          dep => id === dep || id.startsWith(dep + '/')
-        )) {
-          return true;
-        }
+      const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
+      const isProvidedByDependency = externals.some(containsThisModule);
+      if (!shouldBundleDependencies && isProvidedByDependency) {
+        return true;
       }
-      return externalGlobals[id];
+      return Boolean(peerGlobals[id]);
     },
     onwarn: handleRollupWarnings,
     plugins: getPlugins(
       bundle.entry,
-      externalPackages,
+      externals,
       bundle.babel,
       filename,
       bundleType,
@@ -520,7 +524,7 @@ function createBundle(bundle, bundleType) {
           filename,
           format,
           bundleType,
-          externalGlobals,
+          peerGlobals,
           bundle.global,
           bundle.moduleType
         )
