@@ -805,7 +805,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       resetContextStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
-      nextUnitOfWork = createWorkInProgress(nextRoot.current, expirationTime, null);
+      nextUnitOfWork = createWorkInProgress(
+        nextRoot.current,
+        expirationTime,
+        null,
+      );
     }
 
     let didError = false;
