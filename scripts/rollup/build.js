@@ -363,6 +363,17 @@ function getCommonJsConfig(bundleType) {
   }
 }
 
+// for use with rollup repalce plugin:
+// windows paths breaks the string if we dosn't replace all "\" with "/"
+// it only make effect on windows paths
+function normalizeWindowsPathsInReplaceModules(mapToReplace) {
+  const newMap = {};
+  Object.keys(mapToReplace).forEach(key => {
+    newMap[key] = mapToReplace[key].replace(/\\/g, '/');
+  });
+  return newMap;
+}
+
 function getPlugins(
   entry,
   babelOpts,
@@ -393,7 +404,9 @@ function getPlugins(
   // We have to do this check because Rollup breaks on empty object.
   // TODO: file an issue with rollup-plugin-replace.
   if (Object.keys(replaceModules).length > 0) {
-    plugins.unshift(replace(replaceModules));
+    plugins.unshift(
+      replace(normalizeWindowsPathsInReplaceModules(replaceModules))
+    );
   }
 
   const headerSanityCheck = getHeaderSanityCheck(bundleType, hasteName);
