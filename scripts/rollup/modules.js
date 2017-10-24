@@ -75,7 +75,7 @@ function getShims(bundleType, entry, featureFlags) {
           __dirname + '/shims/rollup/assign-umd.js'
         );
       }
-      return {};
+      break;
     case FB_DEV:
     case FB_PROD:
       // FB forks a few modules in www that are usually bundled.
