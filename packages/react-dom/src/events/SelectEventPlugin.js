@@ -3,22 +3,20 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SelectEventPlugin
  */
 
 'use strict';
 
-var EventPropagators = require('EventPropagators');
+var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInputSelection = require('ReactInputSelection');
-var SyntheticEvent = require('SyntheticEvent');
-var {DOCUMENT_NODE} = require('HTMLNodeType');
+var ReactBrowserEventEmitter = require('./ReactBrowserEventEmitter');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+var ReactInputSelection = require('../client/ReactInputSelection');
+var SyntheticEvent = require('events/SyntheticEvent');
+var {DOCUMENT_NODE} = require('../shared/HTMLNodeType');
 
 var getActiveElement = require('fbjs/lib/getActiveElement');
-var isTextInputElement = require('isTextInputElement');
+var isTextInputElement = require('shared/isTextInputElement');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 
 var skipSelectionChangeEvent =

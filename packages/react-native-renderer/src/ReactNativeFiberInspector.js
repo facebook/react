@@ -4,24 +4,25 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberInspector
  * @flow
  */
 'use strict';
 
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName');
+const ReactNativeComponentTree = require('./ReactNativeComponentTree');
+const ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
+const getComponentName = require('shared/getComponentName');
 const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
-const UIManager = require('UIManager');
+const ReactTypeOfWork = require('shared/ReactTypeOfWork');
 const invariant = require('fbjs/lib/invariant');
+
+// Module provided by RN:
+const UIManager = require('UIManager');
 
 const {getClosestInstanceFromNode} = ReactNativeComponentTree;
 const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 const {HostComponent} = ReactTypeOfWork;
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 let getInspectorDataForViewTag;
 

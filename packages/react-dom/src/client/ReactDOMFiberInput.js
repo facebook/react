@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFiberInput
  * @flow
  */
 
@@ -18,13 +17,20 @@ type InputWithWrapperState = HTMLInputElement & {
   },
 };
 
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
+var DOMPropertyOperations = require('./DOMPropertyOperations');
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+var ReactDOMComponentTree = require('./ReactDOMComponentTree');
+
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
 
 if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
 }
 

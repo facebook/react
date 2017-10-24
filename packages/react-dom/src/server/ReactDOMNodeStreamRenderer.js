@@ -3,13 +3,11 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMNodeStreamRenderer
  */
 
 'use strict';
 
-var ReactPartialRenderer = require('ReactPartialRenderer');
+var ReactPartialRenderer = require('./ReactPartialRenderer');
 var Readable = require('stream').Readable;
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.

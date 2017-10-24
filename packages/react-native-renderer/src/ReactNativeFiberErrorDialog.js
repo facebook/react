@@ -4,15 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberErrorDialog
  * @flow
  */
 
 'use strict';
 
+// Module provided by RN:
 const ExceptionsManager = require('ExceptionsManager');
 
-import type {CapturedError} from 'ReactFiberScheduler';
+import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
 
 /**
  * Intercept lifecycle errors and ensure they are shown with the correct stack

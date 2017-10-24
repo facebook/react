@@ -4,17 +4,21 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberHostComponent
  * @flow
  */
 
 'use strict';
 
-var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+var ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+
+// Modules provided by RN:
 var TextInputState = require('TextInputState');
 var UIManager = require('UIManager');
 
-var {mountSafeCallback, warnForStyleProps} = require('NativeMethodsMixinUtils');
+var {
+  mountSafeCallback,
+  warnForStyleProps,
+} = require('./NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -22,8 +26,8 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeTypes';
-import type {Instance} from 'ReactNativeFiberRenderer';
+} from './ReactNativeTypes';
+import type {Instance} from './ReactNativeFiberRenderer';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the

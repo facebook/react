@@ -4,25 +4,26 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberRenderer
  * @flow
  */
 
 'use strict';
 
 const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberHostComponent = require('ReactNativeFiberHostComponent');
-const ReactNativeTagHandles = require('ReactNativeTagHandles');
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
-const UIManager = require('UIManager');
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+const ReactNativeComponentTree = require('./ReactNativeComponentTree');
+const ReactNativeFiberHostComponent = require('./ReactNativeFiberHostComponent');
+const ReactNativeTagHandles = require('./ReactNativeTagHandles');
+const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
 
+// Modules provided by RN:
+const UIManager = require('UIManager');
 const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
+
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 export type Container = number;
 export type Instance = {

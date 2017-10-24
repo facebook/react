@@ -18,7 +18,7 @@ const invariant = require('fbjs/lib/invariant');
 const emptyObject = require('fbjs/lib/emptyObject');
 const React = require('react');
 const ReactFiberReconciler = require('react-reconciler');
-const ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
+const ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
 
 const {Component} = React;
 

@@ -3,19 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ResponderEventPlugin
  */
 
 'use strict';
 
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var ReactTreeTraversal = require('ReactTreeTraversal');
-var ResponderSyntheticEvent = require('ResponderSyntheticEvent');
-var ResponderTouchHistoryStore = require('ResponderTouchHistoryStore');
+var EventPluginUtils = require('./EventPluginUtils');
+var EventPropagators = require('./EventPropagators');
+var ReactTreeTraversal = require('shared/ReactTreeTraversal');
+var ResponderSyntheticEvent = require('./ResponderSyntheticEvent');
+var ResponderTouchHistoryStore = require('./ResponderTouchHistoryStore');
 
-var accumulate = require('accumulate');
+var accumulate = require('./accumulate');
 
 var isStartish = EventPluginUtils.isStartish;
 var isMoveish = EventPluginUtils.isMoveish;

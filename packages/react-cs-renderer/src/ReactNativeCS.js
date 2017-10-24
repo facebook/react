@@ -9,12 +9,15 @@
 
 'use strict';
 
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactVersion = require('ReactVersion');
+const ReactGenericBatching = require('events/ReactGenericBatching');
+const ReactVersion = require('shared/ReactVersion');
 
-const {injectInternals} = require('ReactFiberDevToolsHook');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+const {
+  injectInternals,
+} = require('react-reconciler/src/ReactFiberDevToolsHook');
 
-import type {ReactNativeCSType} from 'ReactNativeCSTypes';
+import type {ReactNativeCSType} from './ReactNativeCSTypes';
 
 const ReactFiberReconciler = require('react-reconciler');
 

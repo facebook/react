@@ -4,23 +4,22 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule findNodeHandle
  * @flow
  */
 
 'use strict';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
+var getComponentName = require('shared/getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
  * ReactNative vs ReactWeb

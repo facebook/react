@@ -4,24 +4,23 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiber
  * @flow
  */
 
 'use strict';
 
-import type {ReactElement, Source} from 'ReactElementType';
+import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {
   ReactCoroutine,
   ReactFragment,
   ReactPortal,
   ReactYield,
-} from 'ReactTypes';
-import type {TypeOfWork} from 'ReactTypeOfWork';
-import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
-import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
-import type {UpdateQueue} from 'ReactFiberUpdateQueue';
+} from 'shared/ReactTypes';
+import type {TypeOfWork} from 'shared/ReactTypeOfWork';
+import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
+import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
 var {
   IndeterminateComponent,
@@ -33,18 +32,18 @@ var {
   CoroutineComponent,
   YieldComponent,
   Fragment,
-} = require('ReactTypeOfWork');
+} = require('shared/ReactTypeOfWork');
 
-var {NoWork} = require('ReactFiberExpirationTime');
+var {NoWork} = require('./ReactFiberExpirationTime');
 
-var {NoContext} = require('ReactTypeOfInternalContext');
+var {NoContext} = require('./ReactTypeOfInternalContext');
 
-var {NoEffect} = require('ReactTypeOfSideEffect');
+var {NoEffect} = require('shared/ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('shared/getComponentName');
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});

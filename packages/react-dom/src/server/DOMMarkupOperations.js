@@ -3,15 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule DOMMarkupOperations
  */
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+var DOMProperty = require('../shared/DOMProperty');
 
-var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
+var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

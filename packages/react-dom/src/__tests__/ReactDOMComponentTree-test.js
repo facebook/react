@@ -34,7 +34,7 @@ describe('ReactDOMComponentTree', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('ReactDOMComponentTree');
+    ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
     ReactDOMServer = require('react-dom/server');
   });
 

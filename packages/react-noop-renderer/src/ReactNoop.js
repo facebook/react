@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNoop
  * @flow
  */
 
@@ -17,13 +16,14 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {UpdateQueue} from 'ReactFiberUpdateQueue';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var ReactFiberInstrumentation = require('react-reconciler/src/ReactFiberInstrumentation');
 var ReactFiberReconciler = require('react-reconciler');
-var ReactInstanceMap = require('ReactInstanceMap');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 var expect = require('jest-matchers');

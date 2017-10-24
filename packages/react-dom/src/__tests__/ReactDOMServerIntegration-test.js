@@ -314,7 +314,7 @@ function resetModules() {
   jest.resetModuleRegistry();
 
   // TODO: can we express this test with only public API?
-  ExecutionEnvironment = require('ExecutionEnvironment');
+  ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
   PropTypes = require('prop-types');
   React = require('react');

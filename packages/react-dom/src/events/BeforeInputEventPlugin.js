@@ -3,17 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule BeforeInputEventPlugin
  */
 
 'use strict';
 
-var EventPropagators = require('EventPropagators');
+var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var FallbackCompositionState = require('FallbackCompositionState');
-var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
-var SyntheticInputEvent = require('SyntheticInputEvent');
+var FallbackCompositionState = require('./FallbackCompositionState');
+var SyntheticCompositionEvent = require('./SyntheticCompositionEvent');
+var SyntheticInputEvent = require('./SyntheticInputEvent');
 
 import type {TopLevelTypes} from 'BrowserEventConstants';
 

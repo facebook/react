@@ -4,17 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeEventEmitter
  * @flow
  */
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
-var EventPluginRegistry = require('EventPluginRegistry');
-var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
-var ReactNativeComponentTree = require('ReactNativeComponentTree');
-var ReactNativeTagHandles = require('ReactNativeTagHandles');
-var ReactGenericBatching = require('ReactGenericBatching');
+var EventPluginHub = require('events/EventPluginHub');
+var EventPluginRegistry = require('events/EventPluginRegistry');
+var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
+var ReactNativeComponentTree = require('./ReactNativeComponentTree');
+var ReactNativeTagHandles = require('./ReactNativeTagHandles');
+var ReactGenericBatching = require('events/ReactGenericBatching');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

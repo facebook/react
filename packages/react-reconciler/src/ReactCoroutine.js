@@ -4,13 +4,16 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactCoroutine
  * @flow
  */
 
 'use strict';
 
-import type {ReactCoroutine, ReactNodeList, ReactYield} from 'ReactTypes';
+import type {
+  ReactCoroutine,
+  ReactNodeList,
+  ReactYield,
+} from 'shared/ReactTypes';
 
 // The Symbol used to tag the special React types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.

@@ -3,17 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule EventPropagators
  */
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
-var ReactTreeTraversal = require('ReactTreeTraversal');
+var EventPluginHub = require('./EventPluginHub');
+var ReactTreeTraversal = require('shared/ReactTreeTraversal');
 
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
+var accumulateInto = require('./accumulateInto');
+var forEachAccumulated = require('./forEachAccumulated');
 
 type PropagationPhases = 'bubbled' | 'captured';
 

@@ -14,8 +14,8 @@ const React = require('react');
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
 
-const describeComponentFrame = require('describeComponentFrame');
-const getComponentName = require('getComponentName');
+const describeComponentFrame = require('shared/describeComponentFrame');
+const getComponentName = require('shared/getComponentName');
 
 class ReactShallowRenderer {
   static createRenderer = function() {

@@ -9,35 +9,35 @@
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {ReactNodeList} from 'ReactTypes';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var {
   findCurrentUnmaskedContext,
   isContextProvider,
   processChildContext,
-} = require('ReactFiberContext');
-var {createFiberRoot} = require('ReactFiberRoot');
-var ReactFiberScheduler = require('ReactFiberScheduler');
-var ReactInstanceMap = require('ReactInstanceMap');
-var {HostComponent} = require('ReactTypeOfWork');
-var {insertUpdateIntoFiber} = require('ReactFiberUpdateQueue');
+} = require('./ReactFiberContext');
+var {createFiberRoot} = require('./ReactFiberRoot');
+var ReactFiberScheduler = require('./ReactFiberScheduler');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var {HostComponent} = require('shared/ReactTypeOfWork');
+var {insertUpdateIntoFiber} = require('./ReactFiberUpdateQueue');
 var emptyObject = require('fbjs/lib/emptyObject');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var getComponentName = require('getComponentName');
+  var ReactFiberInstrumentation = require('./ReactFiberInstrumentation');
+  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
+  var getComponentName = require('shared/getComponentName');
   var didWarnAboutNestedUpdates = false;
 }
 
 var {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} = require('ReactFiberTreeReflection');
+} = require('shared/ReactFiberTreeReflection');
 
 export type Deadline = {
   timeRemaining: () => number,

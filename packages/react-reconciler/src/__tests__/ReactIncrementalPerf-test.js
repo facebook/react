@@ -116,8 +116,8 @@ describe('ReactDebugFiberPerf', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     // TODO: can we express this test with only public API?
-    ReactCoroutine = require('ReactCoroutine');
-    ReactPortal = require('ReactPortal');
+    ReactCoroutine = require('react-reconciler/src/ReactCoroutine');
+    ReactPortal = require('react-reconciler/src/ReactPortal');
     PropTypes = require('prop-types');
   });
 

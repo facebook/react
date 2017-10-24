@@ -24,7 +24,7 @@ const facebookWWWSrcDependencies = [
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
-  'packages/react-reconciler/src/ReactTypes.js',
+  'packages/shared/ReactTypes.js',
   'packages/react-native-renderer/src/ReactNativeTypes.js',
 ];
 
@@ -200,27 +200,25 @@ function createNodePackage(bundleType, packageName, filename) {
   return Promise.resolve();
 }
 
-function getPackageDestination(config, bundleType, filename, hasteName) {
-  let dest = config.destDir + filename;
-
+function getOutputPathRelativeToBuildFolder(bundleType, filename, hasteName) {
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
-    dest = `${config.destDir}${facebookWWW}/${filename}`;
+    return `${facebookWWW}/${filename}`;
   } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
-    dest = `${config.destDir}dist/${filename}`;
+    return `dist/${filename}`;
   } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
     if (hasteName === 'ReactRTRenderer') {
-      dest = `${config.destDir}react-rt/${filename}`;
+      return `react-rt/${filename}`;
     } else if (hasteName === 'ReactCSRenderer') {
-      dest = `${config.destDir}react-cs/${filename}`;
+      return `react-cs/${filename}`;
     } else {
-      dest = `${config.destDir}react-native/${filename}`;
+      return `react-native/${filename}`;
     }
   }
-  return dest;
+  return filename;
 }
 
 module.exports = {
-  getPackageDestination,
+  getOutputPathRelativeToBuildFolder,
   createNodePackage,
   getPackageName,
   createFacebookWWWBuild,

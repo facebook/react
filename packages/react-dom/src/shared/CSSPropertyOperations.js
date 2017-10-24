@@ -3,17 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule CSSPropertyOperations
  */
 
 'use strict';
 
-var dangerousStyleValue = require('dangerousStyleValue');
+var dangerousStyleValue = require('./dangerousStyleValue');
 
 if (__DEV__) {
   var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-  var warnValidStyle = require('warnValidStyle');
+  var warnValidStyle = require('./warnValidStyle');
 }
 
 /**

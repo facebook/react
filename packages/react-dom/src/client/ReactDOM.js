@@ -9,35 +9,37 @@
 
 'use strict';
 
-import type {ReactNodeList} from 'ReactTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-require('checkReact');
-var DOMNamespaces = require('DOMNamespaces');
+require('../shared/checkReact');
+var DOMNamespaces = require('../shared/DOMNamespaces');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
-var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactGenericBatching = require('ReactGenericBatching');
+var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
+var ReactControlledComponent = require('events/ReactControlledComponent');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactDOMComponentTree = require('./ReactDOMComponentTree');
+var ReactDOMFiberComponent = require('./ReactDOMFiberComponent');
+var ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
+var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactFiberReconciler = require('react-reconciler');
-var ReactInputSelection = require('ReactInputSelection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPortal = require('ReactPortal');
-var ReactVersion = require('ReactVersion');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var {injectInternals} = require('ReactFiberDevToolsHook');
+var ReactInputSelection = require('./ReactInputSelection');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var ReactVersion = require('shared/ReactVersion');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
 var {
   ELEMENT_NODE,
   TEXT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} = require('HTMLNodeType');
-var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
+} = require('../shared/HTMLNodeType');
+var {ROOT_ATTRIBUTE_NAME} = require('../shared/DOMProperty');
 
-var getComponentName = require('getComponentName');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var ReactPortal = require('react-reconciler/src/ReactPortal');
+var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
+
+var getComponentName = require('shared/getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
 var {getChildNamespace} = DOMNamespaces;
@@ -59,9 +61,9 @@ var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-  var lowPriorityWarning = require('lowPriorityWarning');
+  var lowPriorityWarning = require('shared/lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
-  var validateDOMNesting = require('validateDOMNesting');
+  var validateDOMNesting = require('./validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 
   if (
@@ -81,8 +83,8 @@ if (__DEV__) {
   }
 }
 
-require('ReactDOMClientInjection');
-require('ReactDOMInjection');
+require('./ReactDOMClientInjection');
+require('../shared/ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
@@ -938,13 +940,13 @@ var ReactDOM = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('EventPluginHub'),
+    EventPluginHub: require('events/EventPluginHub'),
     // Used by test-utils
-    EventPluginRegistry: require('EventPluginRegistry'),
-    EventPropagators: require('EventPropagators'),
+    EventPluginRegistry: require('events/EventPluginRegistry'),
+    EventPropagators: require('events/EventPropagators'),
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('ReactDOMEventListener'),
+    ReactDOMEventListener: require('../events/ReactDOMEventListener'),
   },
 };
 

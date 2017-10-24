@@ -7,13 +7,13 @@
 
 'use strict';
 
-var BrowserEventConstants = require('BrowserEventConstants');
+var BrowserEventConstants = require('../events/BrowserEventConstants');
 var React = require('react');
 var ReactDOM = require('react-dom');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var SyntheticEvent = require('SyntheticEvent');
+var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
+var SyntheticEvent = require('events/SyntheticEvent');
 
 var invariant = require('fbjs/lib/invariant');
 

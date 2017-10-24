@@ -11,7 +11,7 @@
 
 var React = require('react');
 // TODO: can we express this test with only public API?
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
+var ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
 var ReactTestUtils = require('react-dom/test-utils');
 
 /**
@@ -62,7 +62,7 @@ describe('ReactTreeTraversal', () => {
   }
 
   beforeEach(() => {
-    ReactTreeTraversal = require('ReactTreeTraversal');
+    ReactTreeTraversal = require('shared/ReactTreeTraversal');
     mockFn.mockReset();
   });
 

@@ -4,21 +4,20 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberHydrationContext
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 var invariant = require('fbjs/lib/invariant');
 
-const {HostComponent, HostText, HostRoot} = require('ReactTypeOfWork');
-const {Deletion, Placement} = require('ReactTypeOfSideEffect');
+const {HostComponent, HostText, HostRoot} = require('shared/ReactTypeOfWork');
+const {Deletion, Placement} = require('shared/ReactTypeOfSideEffect');
 
-const {createFiberFromHostInstanceForDeletion} = require('ReactFiber');
+const {createFiberFromHostInstanceForDeletion} = require('./ReactFiber');
 
 export type HydrationContext<C, CX> = {
   enterHydrationState(fiber: Fiber): boolean,

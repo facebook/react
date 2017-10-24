@@ -9,24 +9,29 @@
 
 'use strict';
 
-const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog');
-const ReactPortal = require('ReactPortal');
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactNativeFiberRenderer = require('ReactNativeFiberRenderer');
-const ReactNativeFiberInspector = require('ReactNativeFiberInspector');
-const ReactVersion = require('ReactVersion');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
+const ReactPortal = require('react-reconciler/src/ReactPortal');
+const {
+  injectInternals,
+} = require('react-reconciler/src/ReactFiberDevToolsHook');
+
+const ReactGenericBatching = require('events/ReactGenericBatching');
+const ReactNativeFiberErrorDialog = require('./ReactNativeFiberErrorDialog');
+const ReactNativeComponentTree = require('./ReactNativeComponentTree');
+const ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
+const ReactNativeFiberInspector = require('./ReactNativeFiberInspector');
+const ReactVersion = require('shared/ReactVersion');
+
+// Module provided by RN:
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = require('findNumericNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
-const {injectInternals} = require('ReactFiberDevToolsHook');
+import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-import type {ReactNativeType} from 'ReactNativeTypes';
-import type {ReactNodeList} from 'ReactTypes';
-
-require('ReactNativeInjection');
+require('./ReactNativeInjection');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeFiberRenderer.batchedUpdates,
@@ -41,7 +46,7 @@ ReactFiberErrorLogger.injection.injectDialog(
 );
 
 const ReactNativeRenderer: ReactNativeType = {
-  NativeComponent: require('ReactNativeComponent'),
+  NativeComponent: require('./ReactNativeComponent'),
 
   findNodeHandle: findNumericNodeHandle,
 
@@ -90,16 +95,16 @@ const ReactNativeRenderer: ReactNativeType = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
-    NativeMethodsMixin: require('NativeMethodsMixin'),
+    NativeMethodsMixin: require('./NativeMethodsMixin'),
 
     // Used by react-native-github/Libraries/ components
-    ReactNativeBridgeEventPlugin: require('ReactNativeBridgeEventPlugin'), // requireNativeComponent
-    ReactGlobalSharedState: require('ReactGlobalSharedState'), // Systrace
-    ReactNativeComponentTree: require('ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
-    ReactNativePropRegistry: require('ReactNativePropRegistry'), // flattenStyle, Stylesheet
-    TouchHistoryMath: require('TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('createReactNativeComponentClass'), // eg RCTText, RCTView, ReactNativeART
-    takeSnapshot: require('takeSnapshot'), // react-native-implementation
+    ReactNativeBridgeEventPlugin: require('./ReactNativeBridgeEventPlugin'), // requireNativeComponent
+    ReactGlobalSharedState: require('shared/ReactGlobalSharedState'), // Systrace
+    ReactNativeComponentTree: require('./ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
+    ReactNativePropRegistry: require('./ReactNativePropRegistry'), // flattenStyle, Stylesheet
+    TouchHistoryMath: require('events/TouchHistoryMath'), // PanResponder
+    createReactNativeComponentClass: require('./createReactNativeComponentClass'), // RCTText, RCTView, ReactNativeART
+    takeSnapshot: require('./takeSnapshot'), // react-native-implementation
   },
 };
 

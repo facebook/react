@@ -3,24 +3,22 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ChangeEventPlugin
  */
 
 'use strict';
 
-var EventPluginHub = require('EventPluginHub');
-var EventPropagators = require('EventPropagators');
+var EventPluginHub = require('events/EventPluginHub');
+var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactGenericBatching = require('ReactGenericBatching');
-var SyntheticEvent = require('SyntheticEvent');
+var ReactControlledComponent = require('events/ReactControlledComponent');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+var ReactGenericBatching = require('events/ReactGenericBatching');
+var SyntheticEvent = require('events/SyntheticEvent');
 
-var inputValueTracking = require('inputValueTracking');
-var getEventTarget = require('getEventTarget');
-var isEventSupported = require('isEventSupported');
-var isTextInputElement = require('isTextInputElement');
+var inputValueTracking = require('../client/inputValueTracking');
+var getEventTarget = require('./getEventTarget');
+var isEventSupported = require('./isEventSupported');
+var isTextInputElement = require('shared/isTextInputElement');
 
 var eventTypes = {
   change: {

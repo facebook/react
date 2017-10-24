@@ -4,24 +4,25 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule NativeMethodsMixin
  * @flow
  */
 'use strict';
 
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+
+// Module provided by RN:
 const TextInputState = require('TextInputState');
 const UIManager = require('UIManager');
 
 const invariant = require('fbjs/lib/invariant');
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
+const findNodeHandle = require('./findNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 const {
   mountSafeCallback,
   throwOnStylesProp,
   warnForStyleProps,
-} = require('NativeMethodsMixinUtils');
+} = require('./NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -29,7 +30,7 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeTypes';
+} from './ReactNativeTypes';
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native

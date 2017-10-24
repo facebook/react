@@ -4,38 +4,45 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFiberComponent
  * @flow
  */
 
 'use strict';
 
-var CSSPropertyOperations = require('CSSPropertyOperations');
-var DOMNamespaces = require('DOMNamespaces');
-var DOMProperty = require('DOMProperty');
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var EventPluginRegistry = require('EventPluginRegistry');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMFiberInput = require('ReactDOMFiberInput');
-var ReactDOMFiberOption = require('ReactDOMFiberOption');
-var ReactDOMFiberSelect = require('ReactDOMFiberSelect');
-var ReactDOMFiberTextarea = require('ReactDOMFiberTextarea');
-var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('HTMLNodeType');
+var CSSPropertyOperations = require('../shared/CSSPropertyOperations');
+var DOMNamespaces = require('../shared/DOMNamespaces');
+var DOMProperty = require('../shared/DOMProperty');
+var DOMPropertyOperations = require('./DOMPropertyOperations');
+var EventPluginRegistry = require('events/EventPluginRegistry');
+var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
+var ReactDOMFiberInput = require('./ReactDOMFiberInput');
+var ReactDOMFiberOption = require('./ReactDOMFiberOption');
+var ReactDOMFiberSelect = require('./ReactDOMFiberSelect');
+var ReactDOMFiberTextarea = require('./ReactDOMFiberTextarea');
 
-var assertValidProps = require('assertValidProps');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
+
+var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = require('../shared/HTMLNodeType');
+
+var assertValidProps = require('../shared/assertValidProps');
 var emptyFunction = require('fbjs/lib/emptyFunction');
-var inputValueTracking = require('inputValueTracking');
-var isCustomComponent = require('isCustomComponent');
-var setInnerHTML = require('setInnerHTML');
-var setTextContent = require('setTextContent');
+var inputValueTracking = require('./inputValueTracking');
+var isCustomComponent = require('../shared/isCustomComponent');
+var setInnerHTML = require('./setInnerHTML');
+var setTextContent = require('./setTextContent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-  var ReactDOMInvalidARIAHook = require('ReactDOMInvalidARIAHook');
-  var ReactDOMNullInputValuePropHook = require('ReactDOMNullInputValuePropHook');
-  var ReactDOMUnknownPropertyHook = require('ReactDOMUnknownPropertyHook');
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var ReactDOMInvalidARIAHook = require('../shared/ReactDOMInvalidARIAHook');
+  var ReactDOMNullInputValuePropHook = require('../shared/ReactDOMNullInputValuePropHook');
+  var ReactDOMUnknownPropertyHook = require('../shared/ReactDOMUnknownPropertyHook');
   var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
   var {
     validateProperties: validateInputProperties,

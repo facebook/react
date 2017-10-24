@@ -3,14 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule assertValidProps
  */
 
 'use strict';
 
 var invariant = require('fbjs/lib/invariant');
-var voidElementTags = require('voidElementTags');
+var voidElementTags = require('./voidElementTags');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

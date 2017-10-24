@@ -21,7 +21,7 @@ describe('ReactNative', () => {
     React = require('react');
     ReactNative = require('react-native-renderer');
     UIManager = require('UIManager');
-    createReactNativeComponentClass = require('createReactNativeComponentClass');
+    createReactNativeComponentClass = require('react-native-renderer/src/createReactNativeComponentClass');
   });
 
   it('should be able to create and render a native component', () => {

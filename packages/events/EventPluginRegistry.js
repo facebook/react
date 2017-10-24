@@ -4,15 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule EventPluginRegistry
  * @flow
  */
 
 'use strict';
 
-import type {DispatchConfig} from 'ReactSyntheticEventType';
+import type {DispatchConfig} from './ReactSyntheticEventType';
 
-import type {AnyNativeEvent, PluginName, PluginModule} from 'PluginModuleType';
+import type {
+  AnyNativeEvent,
+  PluginName,
+  PluginModule,
+} from './PluginModuleType';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 

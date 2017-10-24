@@ -3,19 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMUnknownPropertyHook
  */
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var EventPluginRegistry = require('EventPluginRegistry');
-var isCustomComponent = require('isCustomComponent');
+var DOMProperty = require('./DOMProperty');
+var EventPluginRegistry = require('events/EventPluginRegistry');
+var isCustomComponent = require('./isCustomComponent');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 }
 
 function getStackAddendum() {
@@ -31,7 +29,7 @@ if (__DEV__) {
   var rARIACamel = new RegExp(
     '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
   );
-  var possibleStandardNames = require('possibleStandardNames');
+  var possibleStandardNames = require('./possibleStandardNames');
 
   var validateProperty = function(tagName, name, value) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {

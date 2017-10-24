@@ -11,7 +11,7 @@
 
 describe('escapeTextContentForBrowser', () => {
   // TODO: can we express this test with only public API?
-  var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
+  var escapeTextContentForBrowser = require('react-dom/src/shared/escapeTextContentForBrowser');
 
   it('should escape boolean to string', () => {
     expect(escapeTextContentForBrowser(true)).toBe('true');

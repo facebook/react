@@ -4,29 +4,30 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactChildFiber
  * @flow
  */
 
 'use strict';
 
-import type {ReactElement} from 'ReactElementType';
-import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactCoroutine, ReactPortal, ReactYield} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {
+  ExpirationTime,
+} from 'react-reconciler/src/ReactFiberExpirationTime';
 
-var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
-var {REACT_PORTAL_TYPE} = require('ReactPortal');
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('./ReactCoroutine');
+var {REACT_PORTAL_TYPE} = require('./ReactPortal');
 
-var ReactFiber = require('ReactFiber');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactFiber = require('./ReactFiber');
+var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
+  var {getCurrentFiberStackAddendum} = require('./ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
   var didWarnAboutMaps = false;
   /**

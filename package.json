@@ -116,7 +116,7 @@
       ".*": "./scripts/jest/preprocessor.js"
     },
     "transformIgnorePatterns": [
-      "/node_modules/(?!react)"
+      "/node_modules/(?!react|shared|events)"
     ],
     "setupFiles": [
       "./scripts/jest/setup.js",

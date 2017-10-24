@@ -4,11 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDebugFiberPerf
  * @flow
  */
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
 type MeasurementPhase =
   | 'componentWillMount'
@@ -31,9 +30,9 @@ if (__DEV__) {
     HostPortal,
     YieldComponent,
     Fragment,
-  } = require('ReactTypeOfWork');
+  } = require('shared/ReactTypeOfWork');
 
-  const getComponentName = require('getComponentName');
+  const getComponentName = require('shared/getComponentName');
 
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.

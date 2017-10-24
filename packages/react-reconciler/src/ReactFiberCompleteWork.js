@@ -4,29 +4,28 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberCompleteWork
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCoroutine} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
-import type {HostContext} from 'ReactFiberHostContext';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {FiberRoot} from 'ReactFiberRoot';
+import type {ReactCoroutine} from 'shared/ReactTypes';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {HostContext} from './ReactFiberHostContext';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {FiberRoot} from './ReactFiberRoot';
 
-var {reconcileChildFibers} = require('ReactChildFiber');
+var {reconcileChildFibers} = require('./ReactChildFiber');
 var {
   popContextProvider,
   popTopLevelContextObject,
-} = require('ReactFiberContext');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactFiberExpirationTime = require('ReactFiberExpirationTime');
+} = require('./ReactFiberContext');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
+var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
+var ReactFiberExpirationTime = require('./ReactFiberExpirationTime');
 var {
   IndeterminateComponent,
   FunctionalComponent,

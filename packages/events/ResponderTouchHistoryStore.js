@@ -4,13 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ResponderTouchHistoryStore
  * @flow
  */
 
 'use strict';
 
-const EventPluginUtils = require('EventPluginUtils');
+const EventPluginUtils = require('./EventPluginUtils');
 
 const invariant = require('fbjs/lib/invariant');
 
