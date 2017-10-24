@@ -103,7 +103,7 @@ const ReactNativeRenderer: ReactNativeType = {
     ReactNativeComponentTree: require('./ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
     ReactNativePropRegistry: require('./ReactNativePropRegistry'), // flattenStyle, Stylesheet
     TouchHistoryMath: require('events/TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('./createReactNativeComponentClass'), // eg RCTText, RCTView, ReactNativeART
+    createReactNativeComponentClass: require('./createReactNativeComponentClass'), // RCTText, RCTView, ReactNativeART
     takeSnapshot: require('./takeSnapshot'), // react-native-implementation
   },
 };
