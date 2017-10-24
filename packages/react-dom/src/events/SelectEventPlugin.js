@@ -13,7 +13,6 @@ var EventPropagators = require('EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInputSelection = require('ReactInputSelection');
 var SyntheticEvent = require('SyntheticEvent');
 var {DOCUMENT_NODE} = require('HTMLNodeType');
 
@@ -56,6 +55,22 @@ var isListeningToAllDependencies =
   ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
+ * Determine if a node can have a selection associated with it.
+ *
+ * @param {DOMElement} node
+ * @return {boolean} True if the node can have a selection.
+ */
+function hasSelectionCapabilities(node) {
+  var nodeName = node && node.nodeName && node.nodeName.toLowerCase();
+  return (
+    nodeName &&
+    ((nodeName === 'input' && node.type === 'text') ||
+      nodeName === 'textarea' ||
+      node.contentEditable === 'true')
+  );
+}
+
+/**
  * Get an object which is a unique representation of the current selection.
  *
  * The return value will not be consistent across nodes or browsers, but
@@ -67,7 +82,7 @@ var isListeningToAllDependencies =
 function getSelection(node) {
   if (
     'selectionStart' in node &&
-    ReactInputSelection.hasSelectionCapabilities(node)
+    hasSelectionCapabilities(node)
   ) {
     return {
       start: node.selectionStart,

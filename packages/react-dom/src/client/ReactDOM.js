@@ -22,7 +22,6 @@ var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
 var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
 var ReactGenericBatching = require('ReactGenericBatching');
 var ReactFiberReconciler = require('react-reconciler');
-var ReactInputSelection = require('ReactInputSelection');
 var ReactInstanceMap = require('ReactInstanceMap');
 var ReactPortal = require('ReactPortal');
 var ReactVersion = require('ReactVersion');
@@ -113,7 +112,6 @@ type HostContextProd = string;
 type HostContext = HostContextDev | HostContextProd;
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
 
 /**
  * True if the supplied DOM node is a valid node element.
@@ -216,13 +214,10 @@ var DOMRenderer = ReactFiberReconciler({
 
   prepareForCommit(): void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
-    selectionInformation = ReactInputSelection.getSelectionInformation();
     ReactBrowserEventEmitter.setEnabled(false);
   },
 
   resetAfterCommit(): void {
-    ReactInputSelection.restoreSelection(selectionInformation);
-    selectionInformation = null;
     ReactBrowserEventEmitter.setEnabled(eventsEnabled);
     eventsEnabled = null;
   },
