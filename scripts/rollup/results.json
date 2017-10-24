@@ -193,8 +193,8 @@
       "gzip": 60806
     },
     "react-reconciler.development.js (NODE_DEV)": {
-      "size": 281633,
-      "gzip": 58459
+      "size": 278819,
+      "gzip": 57593
     },
     "react-reconciler.production.min.js (NODE_PROD)": {
       "size": 38245,
