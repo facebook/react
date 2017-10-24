@@ -102,34 +102,33 @@ module.exports = function(babel) {
             devInvariant[SEEN_SYMBOL] = true;
 
             var localInvariantId = getProdInvariantIdentifier(path, this);
-
             var prodErrorId = errorMap[errorMsgLiteral];
-            var prodInvariant;
+            var body = null;
+
             if (prodErrorId === undefined) {
-              // The error cannot be found in the map.
-              // (This case isn't expected to occur.)
-              // Even if it does, it's best to transform the invariant to a ternary,
-              // So we don't risk executing any slow code unnecessarily
-              // (eg generating an invariant message we don't actually need).
-              prodInvariant = path.node.arguments[1];
+              // The error wasn't found in the map.
+              // This is only expected to occur on master since we extract codes before releases.
+              // Keep the original invariant.
+              body = t.expressionStatement(devInvariant);
             } else {
-              prodInvariant = t.callExpression(
+              var prodInvariant = t.callExpression(
                 localInvariantId,
                 [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
               );
+              prodInvariant[SEEN_SYMBOL] = true;
+              // The error was found in the map.
+              // Switch between development and production versions depending on the env.
+              body = t.ifStatement(
+                DEV_EXPRESSION,
+                t.blockStatement([t.expressionStatement(devInvariant)]),
+                t.blockStatement([t.expressionStatement(prodInvariant)])
+              );
             }
 
-            prodInvariant[SEEN_SYMBOL] = true;
             path.replaceWith(
               t.ifStatement(
                 t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.ifStatement(
-                    DEV_EXPRESSION,
-                    t.blockStatement([t.expressionStatement(devInvariant)]),
-                    t.blockStatement([t.expressionStatement(prodInvariant)])
-                  ),
-                ])
+                t.blockStatement([body])
               )
             );
           }
