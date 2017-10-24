@@ -62,7 +62,7 @@ var {
   computeExpirationBucket,
 } = require('./ReactFiberExpirationTime');
 var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
-var {getUpdateExpirationTime} = require('./ReactFiberUpdateQueue');
+var {getFiberUpdateQueueExpirationTime} = require('./ReactFiberUpdateQueue');
 var {resetContext} = require('./ReactFiberContext');
 
 export type CapturedError = {
@@ -504,7 +504,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     // Check for pending updates.
-    let newExpirationTime = getUpdateExpirationTime(workInProgress);
+    let newExpirationTime = getFiberUpdateQueueExpirationTime(workInProgress);
 
     // TODO: Calls need to visit stateNode
 
