@@ -88,6 +88,7 @@ function getSelection(node) {
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {
@@ -95,10 +96,15 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
+  var doc =
+    nativeEventTarget.ownerDocument ||
+    nativeEventTarget.document ||
+    nativeEventTarget;
+
   if (
     mouseDown ||
     activeElement == null ||
-    activeElement !== getActiveElement()
+    activeElement !== getActiveElement(doc)
   ) {
     return null;
   }
