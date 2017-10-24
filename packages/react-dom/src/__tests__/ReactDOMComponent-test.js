@@ -2287,7 +2287,7 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'If you mean to conditionally pass an attribute, use a ternary ' +
-          'expression: `false`={condition ? value : null} instead of ' +
+          'expression: `false`={condition ? value : undefined} instead of ' +
           '{condition && value}.',
       );
     });
