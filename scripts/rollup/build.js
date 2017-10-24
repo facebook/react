@@ -17,6 +17,7 @@ const Modules = require('./modules');
 const Bundles = require('./bundles');
 const sizes = require('./plugins/sizes-plugin');
 const Stats = require('./stats');
+const extractErrorCodes = require('../error-codes/extract-errors');
 const syncReactDom = require('./sync').syncReactDom;
 const syncReactNative = require('./sync').syncReactNative;
 const syncReactNativeRT = require('./sync').syncReactNativeRT;
@@ -45,6 +46,10 @@ const requestedBundleNames = (argv._[0] || '')
   .map(type => type.toLowerCase());
 const syncFbsource = argv['sync-fbsource'];
 const syncWww = argv['sync-www'];
+const shouldExtractErrors = argv['extract-errors'];
+const errorCodeOpts = {
+  errorMapFilePath: 'scripts/error-codes/codes.json',
+};
 
 function getHeaderSanityCheck(bundleType, globalName) {
   switch (bundleType) {
@@ -342,11 +347,25 @@ function getUglifyConfig(configs) {
 
 // FB uses require('React') instead of require('react').
 // We can't set up a forwarding module due to case sensitivity issues.
-const rewriteFBReactImport = () => ({
-  transformBundle(source) {
-    return source.replace(/require\(['"]react['"]\)/g, "require('React')");
-  },
-});
+function rewriteFBReactImport() {
+  return {
+    transformBundle(source) {
+      return source.replace(/require\(['"]react['"]\)/g, "require('React')");
+    },
+  };
+}
+
+// Plugin that writes to the error code file so that by the time it is picked
+// up by Babel, the errors are already extracted.
+function writeErrorCodes() {
+  const flush = extractErrorCodes(errorCodeOpts);
+  return {
+    transform(source) {
+      flush(source);
+      return source;
+    },
+  };
+}
 
 function getPlugins(
   entry,
@@ -360,12 +379,14 @@ function getPlugins(
   featureFlags
 ) {
   const plugins = [
+    shouldExtractErrors && writeErrorCodes(),
     alias(Modules.getShims(bundleType, entry, featureFlags)),
     resolvePlugin({
       skip: externals,
     }),
     babel(getBabelConfig(updateBabelOptions, bundleType)),
-  ];
+  ].filter(Boolean);
+
   const headerSanityCheck = getHeaderSanityCheck(bundleType, globalName);
   switch (bundleType) {
     case UMD_DEV:
@@ -600,7 +621,7 @@ rimraf('build', () => {
       console.log(Stats.printResults());
       // save the results for next run
       Stats.saveResults();
-      if (argv['extract-errors']) {
+      if (shouldExtractErrors) {
         console.warn(
           '\nWarning: this build was created with --extract-errors enabled.\n' +
             'this will result in extremely slow builds and should only be\n' +

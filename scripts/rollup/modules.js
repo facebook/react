@@ -4,9 +4,6 @@ const path = require('path');
 const bundleTypes = require('./bundles').bundleTypes;
 const moduleTypes = require('./bundles').moduleTypes;
 
-// TODO
-const extractErrorCodes = require('../error-codes/extract-errors');
-
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
