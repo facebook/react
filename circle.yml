@@ -2,12 +2,12 @@
 machine:
   timezone: America/Los_Angeles
   node:
-    version: 6
+    version: 8
   ruby:
     version: 2.2.3
   environment:
     TRAVIS_REPO_SLUG: facebook/react
-    YARN_VERSION: 0.17.8
+    YARN_VERSION: 1.2.1
     PATH: "${PATH}:${HOME}/.yarn/bin"
 
 dependencies:
