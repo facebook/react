@@ -450,7 +450,7 @@ type Frame = {
   childIndex: number,
   context: Object,
   footer: string,
-  debugElementStack: Array<any>,
+  debugElementStack: Array<React.Element>,
 };
 
 class ReactDOMServerRenderer {
@@ -465,7 +465,7 @@ class ReactDOMServerRenderer {
     makeStaticMarkup: boolean,
   ) {
     var children = React.isValidElement(element) ? [element] : toArray(element);
-    var topFrame: Frame = ({
+    var topFrame = (({
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
       domNamespace: Namespaces.html,
@@ -473,7 +473,7 @@ class ReactDOMServerRenderer {
       childIndex: 0,
       context: emptyObject,
       footer: '',
-    }: any);
+    }: any): Frame);
     if (__DEV__) {
       topFrame.debugElementStack = [];
     }
@@ -548,13 +548,13 @@ class ReactDOMServerRenderer {
           return this.renderDOM(child, context, parentNamespace);
         } else {
           var children = toArray(child);
-          var frame: Frame = ({
+          var frame = (({
             domNamespace: parentNamespace,
             children,
             childIndex: 0,
             context: context,
             footer: '',
-          }: Object);
+          }: any): Frame);
           if (__DEV__) {
             frame.debugElementStack = [];
           }
@@ -843,14 +843,14 @@ class ReactDOMServerRenderer {
     } else {
       children = toArray(props.children);
     }
-    var frame: Frame = ({
+    var frame = (({
       domNamespace: getChildNamespace(parentNamespace, element.type),
       tag,
       children,
       childIndex: 0,
       context: context,
       footer: footer,
-    }: any);
+    }: any): Frame);
     if (__DEV__) {
       frame.debugElementStack = [];
     }
