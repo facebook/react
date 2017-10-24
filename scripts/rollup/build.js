@@ -507,7 +507,7 @@ function createBundle(bundle, bundleType) {
       if (!shouldBundleDependencies && isProvidedByDependency) {
         return true;
       }
-      return Boolean(peerGlobals[id]);
+      return !!peerGlobals[id];
     },
     onwarn: handleRollupWarnings,
     plugins: getPlugins(

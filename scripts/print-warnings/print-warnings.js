@@ -71,8 +71,11 @@ const sourcePaths = Bundles.bundles
       bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
   )
   .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), []);
-// TODO: this is broken.
-// .concat(Modules.getExcludedHasteGlobs().map(glob => `!${glob}`));
+  .concat([
+    '!**/__benchmarks__/**/*.js',
+    '!**/__tests__/**/*.js',
+    '!**/__mocks__/**/*.js',
+  ]);
 
 gs(sourcePaths).pipe(
   through.obj(transform, cb => {

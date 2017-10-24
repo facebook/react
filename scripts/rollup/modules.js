@@ -3,19 +3,14 @@
 const path = require('path');
 const bundleTypes = require('./bundles').bundleTypes;
 const moduleTypes = require('./bundles').moduleTypes;
+
+// TODO
 const extractErrorCodes = require('../error-codes/extract-errors');
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
-const NODE_DEV = bundleTypes.NODE_DEV;
-const NODE_PROD = bundleTypes.NODE_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
-const RN_DEV = bundleTypes.RN_DEV;
-const RN_PROD = bundleTypes.RN_PROD;
-
-const ISOMORPHIC = moduleTypes.ISOMORPHIC;
-const RENDERER = moduleTypes.RENDERER;
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
