@@ -2,7 +2,6 @@
 
 const path = require('path');
 const bundleTypes = require('./bundles').bundleTypes;
-const moduleTypes = require('./bundles').moduleTypes;
 
 const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;

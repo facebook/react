@@ -28,7 +28,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-import type {TopLevelTypes} from 'events/BrowserEventConstants';
+import type {TopLevelTypes} from './BrowserEventConstants';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
