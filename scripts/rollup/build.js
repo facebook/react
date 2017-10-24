@@ -357,7 +357,7 @@ function getPlugins(
 ) {
   const plugins = [
     alias(
-      Modules.getShims(bundleType, entry)
+      Modules.getShims(bundleType, entry, featureFlags)
     ),
     resolvePlugin({
       skip: externals,

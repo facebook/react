@@ -135,54 +135,29 @@ const bundles = [
 
   /******* React Native RT *******/
   {
+    label: 'native-rt-fiber',
     bundleTypes: [RN_DEV, RN_PROD],
-    config: {
-      moduleName: 'ReactNativeRTFiber',
-    },
-    entry: 'packages/react-rt-renderer/index.js',
+    moduleType: RENDERER,
+    entry: 'react-rt-renderer',
+    global: 'ReactRTRenderer',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
       'Platform',
       'BatchedBridge',
       'RTManager',
-      'prop-types/checkPropTypes',
-    ],
-    hasteName: 'ReactRTRenderer',
-    moduleType: RENDERER,
-    isRenderer: true,
-    label: 'native-rt-fiber',
-    name: 'react-native-rt-renderer',
-    paths: [
-      'packages/events/**/*.js',
-      'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
-      'packages/react-rt-renderer/**/*.js',
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
     ],
   },
 
   /******* React Native CS *******/
   {
-    bundleTypes: [RN_DEV, RN_PROD],
-    config: {
-      moduleName: 'ReactNativeCSFiber',
-    },
-    entry: 'packages/react-cs-renderer/index.js',
-    externals: ['prop-types/checkPropTypes'],
-    hasteName: 'ReactCSRenderer',
-    moduleType: RENDERER,
-    isRenderer: true,
     label: 'native-cs-fiber',
-    name: 'react-native-cs-renderer',
-    featureFlags: 'packages/react-cs-renderer/src/ReactNativeCSFeatureFlags',
-    paths: [
-      'packages/events/**/*.js',
-      'packages/react-native-renderer/**/*.js', // This is used since we reuse the error dialog code
-      'packages/react-cs-renderer/**/*.js',
-      'packages/react-reconciler/**/*.js',
-      'packages/shared/**/*.js',
-    ],
+    bundleTypes: [RN_DEV, RN_PROD],
+    moduleType: RENDERER,
+    entry: 'react-cs-renderer',
+    global: 'ReactCSRenderer',
+    externals: [],
+    featureFlags: 'react-cs-renderer/src/ReactNativeCSFeatureFlags',
   },
 
   /******* React Test Renderer *******/

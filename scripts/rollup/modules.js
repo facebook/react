@@ -38,7 +38,8 @@ const forkedFBModules = Object.freeze([
 
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
 function getPeerGlobals(externals, moduleType) {
-  return externals.reduce((peerGlobals, name) => {
+  const peerGlobals = {};
+  externals.forEach(name => {
     if (!knownGlobals[name] && (
       moduleType === UMD_DEV ||
       moduleType === UMD_PROD
@@ -46,8 +47,8 @@ function getPeerGlobals(externals, moduleType) {
       throw new Error('Cannot build UMD without a global name for: ' + name);
     }
     peerGlobals[name] = knownGlobals[name];
-    return peerGlobals
-  }, {});
+  });
+  return peerGlobals;
 }
 
 // Determines node_modules packages that are safe to assume will exist.
@@ -71,16 +72,15 @@ function getDependencies(bundleType, entry) {
 }
 
 // Hijacks some modules for optimization and integration reasons.
-function getShims(bundleType, entry) {
+function getShims(bundleType, entry, featureFlags) {
+  const shims = {};
   switch (bundleType) {
     case UMD_DEV:
     case UMD_PROD:
       if (getDependencies(bundleType, entry).indexOf('react') !== -1) {
         // Optimization: rely on object-assign polyfill that is already a part
         // of the React package instead of bundling it again.
-        return {
-          'object-assign': path.resolve(__dirname + '/shims/rollup/assign-umd.js')
-        };
+        shims['object-assign'] = path.resolve(__dirname + '/shims/rollup/assign-umd.js')
       }
       return {};
     case FB_DEV:
@@ -91,16 +91,18 @@ function getShims(bundleType, entry) {
       // Rollup doesn't make it very easy to rewrite and ignore such a require,
       // so we resort to using a shim that re-exports the www module, and then
       // treating shim's target destinations as external (see getDependencies).
-      return forkedFBModules.reduce((shims, srcPath) => {
+      forkedFBModules.forEach((srcPath) => {
         const resolvedSrcPath = require.resolve(srcPath);
         const wwwName = path.parse(resolvedSrcPath).name;
         const shimPath = path.resolve(__dirname + `/shims/rollup/${wwwName}-www.js`);
         shims[resolvedSrcPath] = shimPath;
-        return shims;
-      }, {});
-    default:
-      return {};
+      });
+      break;
   }
+  if (featureFlags) {
+    shims[require.resolve('shared/ReactFeatureFlags')] = require.resolve(featureFlags)
+  };
+  return shims;
 }
 
 module.exports = {
