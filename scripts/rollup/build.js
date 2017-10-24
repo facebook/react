@@ -227,21 +227,25 @@ function getRollupOutputOptions(
   globalName,
   moduleType
 ) {
-  return Object.assign({}, {
-    banner: getBanner(bundleType, globalName, filename, moduleType),
-    destDir: 'build/',
-    dest: 'build/' + Packaging.getOutputPathRelativeToBuildFolder(
-      bundleType,
-      filename,
-      globalName,
-    ),
-    footer: getFooter(bundleType, filename, moduleType),
-    format,
-    globals,
-    interop: false,
-    moduleName: globalName,
-    sourceMap: false,
-  });
+  return Object.assign(
+    {},
+    {
+      banner: getBanner(bundleType, globalName, filename, moduleType),
+      destDir: 'build/',
+      dest: 'build/' +
+        Packaging.getOutputPathRelativeToBuildFolder(
+          bundleType,
+          filename,
+          globalName
+        ),
+      footer: getFooter(bundleType, filename, moduleType),
+      format,
+      globals,
+      interop: false,
+      moduleName: globalName,
+      sourceMap: false,
+    }
+  );
 }
 
 function stripEnvVariables(production) {
@@ -340,8 +344,8 @@ function getUglifyConfig(configs) {
 // We can't set up a forwarding module due to case sensitivity issues.
 const rewriteFBReactImport = () => ({
   transformBundle(source) {
-    return source.replace(/require\(['"]react['"]\)/g, 'require(\'React\')')
-  }
+    return source.replace(/require\(['"]react['"]\)/g, "require('React')");
+  },
 });
 
 function getPlugins(
@@ -356,9 +360,7 @@ function getPlugins(
   featureFlags
 ) {
   const plugins = [
-    alias(
-      Modules.getShims(bundleType, entry, featureFlags)
-    ),
+    alias(Modules.getShims(bundleType, entry, featureFlags)),
     resolvePlugin({
       skip: externals,
     }),
@@ -368,10 +370,7 @@ function getPlugins(
   switch (bundleType) {
     case UMD_DEV:
     case NODE_DEV:
-      plugins.push(
-        replace(stripEnvVariables(false)),
-        commonjs()
-      );
+      plugins.push(replace(stripEnvVariables(false)), commonjs());
       break;
     case UMD_PROD:
     case NODE_PROD:
@@ -469,7 +468,11 @@ function createBundle(bundle, bundleType) {
     }
   }
 
-  const filename = getFilename(bundle.output || bundle.entry, bundle.global, bundleType);
+  const filename = getFilename(
+    bundle.output || bundle.entry,
+    bundle.global,
+    bundleType
+  );
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);
@@ -483,7 +486,8 @@ function createBundle(bundle, bundleType) {
     }
   }
 
-  const shouldBundleDependencies = (bundleType === UMD_DEV || bundleType === UMD_PROD);
+  const shouldBundleDependencies =
+    bundleType === UMD_DEV || bundleType === UMD_PROD;
   const peerGlobals = Modules.getPeerGlobals(
     bundle.externals,
     bundle.moduleType

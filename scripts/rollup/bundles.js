@@ -93,7 +93,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-dom/server',
     output: 'react-dom/server.node',
-    externals: ['react', 'stream']
+    externals: ['react', 'stream'],
   },
 
   /******* React ART *******/
@@ -104,12 +104,11 @@ const bundles = [
     entry: 'react-art',
     global: 'ReactART',
     externals: ['react'],
-    babel: opts => Object.assign({}, opts, {
-      // Include JSX
-      presets: opts.presets.concat([
-        require.resolve('babel-preset-react'),
-      ]),
-    }),
+    babel: opts =>
+      Object.assign({}, opts, {
+        // Include JSX
+        presets: opts.presets.concat([require.resolve('babel-preset-react')]),
+      }),
   },
 
   /******* React Native *******/
@@ -197,7 +196,7 @@ const bundles = [
     entry: 'react-reconciler',
     global: 'ReactReconciler',
     externals: ['react'],
-  }
+  },
 ];
 
 // Based on deep-freeze by substack (public domain)

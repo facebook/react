@@ -19,7 +19,7 @@ const RENDERER = moduleTypes.RENDERER;
 
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
-  'react': 'React',
+  react: 'React',
   'react-dom': 'ReactDOM',
 });
 
@@ -40,10 +40,10 @@ const forkedFBModules = Object.freeze([
 function getPeerGlobals(externals, moduleType) {
   const peerGlobals = {};
   externals.forEach(name => {
-    if (!knownGlobals[name] && (
-      moduleType === UMD_DEV ||
-      moduleType === UMD_PROD
-    )) {
+    if (
+      !knownGlobals[name] &&
+      (moduleType === UMD_DEV || moduleType === UMD_PROD)
+    ) {
       throw new Error('Cannot build UMD without a global name for: ' + name);
     }
     peerGlobals[name] = knownGlobals[name];
@@ -53,20 +53,19 @@ function getPeerGlobals(externals, moduleType) {
 
 // Determines node_modules packages that are safe to assume will exist.
 function getDependencies(bundleType, entry) {
-  const packageJson = require(
-    path.basename(path.dirname(require.resolve(entry))) + '/package.json'
-  );
+  const packageJson = require(path.basename(
+    path.dirname(require.resolve(entry))
+  ) + '/package.json');
   // Both deps and peerDeps are assumed as accessible.
-  let deps = Array.from(new Set([
-    ...Object.keys(packageJson.dependencies || {}),
-    ...Object.keys(packageJson.peerDependencies || {}),
-  ]));
+  let deps = Array.from(
+    new Set([
+      ...Object.keys(packageJson.dependencies || {}),
+      ...Object.keys(packageJson.peerDependencies || {}),
+    ])
+  );
   // In www, forked modules are also require-able.
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
-    deps = [
-      ...deps,
-      ...forkedFBModules.map(name => path.basename(name)),
-    ];
+    deps = [...deps, ...forkedFBModules.map(name => path.basename(name))];
   }
   return deps;
 }
@@ -80,7 +79,9 @@ function getShims(bundleType, entry, featureFlags) {
       if (getDependencies(bundleType, entry).indexOf('react') !== -1) {
         // Optimization: rely on object-assign polyfill that is already a part
         // of the React package instead of bundling it again.
-        shims['object-assign'] = path.resolve(__dirname + '/shims/rollup/assign-umd.js')
+        shims['object-assign'] = path.resolve(
+          __dirname + '/shims/rollup/assign-umd.js'
+        );
       }
       return {};
     case FB_DEV:
@@ -91,17 +92,21 @@ function getShims(bundleType, entry, featureFlags) {
       // Rollup doesn't make it very easy to rewrite and ignore such a require,
       // so we resort to using a shim that re-exports the www module, and then
       // treating shim's target destinations as external (see getDependencies).
-      forkedFBModules.forEach((srcPath) => {
+      forkedFBModules.forEach(srcPath => {
         const resolvedSrcPath = require.resolve(srcPath);
         const wwwName = path.parse(resolvedSrcPath).name;
-        const shimPath = path.resolve(__dirname + `/shims/rollup/${wwwName}-www.js`);
+        const shimPath = path.resolve(
+          __dirname + `/shims/rollup/${wwwName}-www.js`
+        );
         shims[resolvedSrcPath] = shimPath;
       });
       break;
   }
   if (featureFlags) {
-    shims[require.resolve('shared/ReactFeatureFlags')] = require.resolve(featureFlags)
-  };
+    shims[require.resolve('shared/ReactFeatureFlags')] = require.resolve(
+      featureFlags
+    );
+  }
   return shims;
 }
 
