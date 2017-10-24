@@ -41,6 +41,8 @@ export type FiberRoot = {
   // other than the UpdateQueue type, since it would be duplicated across
   // packages regardless.
   deferredCommits: UpdateQueue<null> | null,
+  // TODO: Same as deferrredCommits.
+  completionCallbacks: UpdateQueue<null> | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
 };
@@ -63,6 +65,7 @@ exports.createFiberRoot = function(
     pendingContext: null,
     hydrate,
     deferredCommits: null,
+    completionCallbacks: null,
     nextScheduledRoot: null,
   };
   uninitializedFiber.stateNode = root;

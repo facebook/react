@@ -62,7 +62,10 @@ var {
   computeExpirationBucket,
 } = require('./ReactFiberExpirationTime');
 var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
-var {getFiberUpdateQueueExpirationTime} = require('./ReactFiberUpdateQueue');
+var {
+  getFiberUpdateQueueExpirationTime,
+  processUpdateQueue,
+} = require('./ReactFiberUpdateQueue');
 var {resetContext} = require('./ReactFiberContext');
 
 export type CapturedError = {
@@ -1289,6 +1292,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isBatchingUpdates: boolean = false;
   let isUnbatchingUpdates: boolean = false;
 
+  let completionCallbacks: Array<() => mixed> | null = null;
+
   // Use these to prevent an infinite loop of nested updates
   const NESTED_UPDATE_LIMIT = 1000;
   let nestedUpdateCount: number = 0;
@@ -1478,12 +1483,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     deadlineDidExpire = false;
     nestedUpdateCount = 0;
 
-    if (hasUnhandledError) {
-      const error = unhandledError;
-      unhandledError = null;
-      hasUnhandledError = false;
-      throw error;
-    }
+    finishRendering();
   }
 
   function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
@@ -1496,6 +1496,21 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // This has the effect of synchronously flushing all work up to and
     // including the given time.
     performWorkOnRoot(root, expirationTime, expirationTime);
+    finishRendering();
+  }
+
+  function finishRendering() {
+    if (completionCallbacks !== null) {
+      const callbacks = completionCallbacks;
+      completionCallbacks = null;
+      // TODO: What should happen if a completion callback throws? Should we
+      // wrap these in try-catch and continue calling the others?
+      for (let i = 0; i < callbacks.length; i++) {
+        const callback = callbacks[i];
+        callback();
+      }
+    }
+
     if (hasUnhandledError) {
       const error = unhandledError;
       unhandledError = null;
@@ -1574,12 +1589,34 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       // another update.
       root.finishedWork = finishedWork;
       root.remainingExpirationTime = NoWork;
-      return;
+    } else {
+      // Commit the root.
+      root.finishedWork = null;
+      root.remainingExpirationTime = commitRoot(finishedWork);
     }
 
-    // Commit the root.
-    root.finishedWork = null;
-    root.remainingExpirationTime = commitRoot(finishedWork);
+    // Regardless of whether we committed, this tree was completed, so we
+    // should process matching completion callbacks.
+    if (root.completionCallbacks !== null) {
+      const rootCompletionCallbacks = root.completionCallbacks;
+      processUpdateQueue(rootCompletionCallbacks, null, null, expirationTime);
+      const callbackList = rootCompletionCallbacks.callbackList;
+      if (completionCallbacks === null) {
+        completionCallbacks = [];
+      }
+      if (callbackList !== null) {
+        rootCompletionCallbacks.callbackList = null;
+        for (let i = 0; i < callbackList.length; i++) {
+          const update = callbackList[i];
+          // Assume this callback is a function
+          const callback: () => mixed = (update.callback: any);
+          // This update might be processed again. Clear the callback so it's
+          // only called once.
+          update.callback = null;
+          completionCallbacks.push(callback);
+        }
+      }
+    }
   }
 
   // When working on async work, the reconciler asks the renderer if it should
@@ -1663,6 +1700,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    requestWork,
     flushRoot,
     batchedUpdates,
     unbatchedUpdates,

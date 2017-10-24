@@ -64,6 +64,8 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 var {
+  createUpdateQueue,
+  insertUpdateIntoQueue,
   processUpdateQueue,
 } = require('../../../react-reconciler/src/ReactFiberUpdateQueue');
 
@@ -780,16 +782,69 @@ function createPortal(
 }
 
 type WorkNode = {
+  then(onComplete: () => mixed): void,
   commit(): void,
 
   _reactRootContainer: FiberRoot,
   _expirationTime: ExpirationTime,
+
+  _onComplete: (() => void) | null,
+  _completionCallbacks: Array<() => mixed> | null,
+  _didComplete: boolean,
 };
 
 function Work(root: FiberRoot, expirationTime: ExpirationTime) {
   this._reactRootContainer = root;
   this._expirationTime = expirationTime;
+
+  this._onComplete = null;
+  this._completionCallbacks = null;
+  this._didComplete = false;
 }
+Work.prototype.then = function(cb: () => mixed) {
+  if (this._didComplete) {
+    cb();
+    return;
+  }
+  let completionCallbacks = this._completionCallbacks;
+  if (completionCallbacks === null) {
+    completionCallbacks = this._completionCallbacks = [];
+  }
+  completionCallbacks.push(cb);
+  if (this._onComplete !== null) {
+    return;
+  }
+  this._onComplete = () => {
+    this._didComplete = true;
+    const callbacks = this._completionCallbacks;
+    if (callbacks === null) {
+      return;
+    }
+    for (let i = 0; i < callbacks.length; i++) {
+      // TODO: What should happen if a callback throws?
+      const callback = callbacks[i];
+      callback();
+    }
+  };
+  const root = this._reactRootContainer;
+  const expirationTime = this._expirationTime;
+  let rootCompletionCallbacks = root.completionCallbacks;
+  if (rootCompletionCallbacks === null) {
+    rootCompletionCallbacks = root.completionCallbacks = createUpdateQueue(
+      null,
+    );
+  }
+  const rootCompletionCallback = {
+    expirationTime,
+    partialState: null,
+    callback: this._onComplete,
+    isReplace: false,
+    isForced: false,
+    next: null,
+  };
+  insertUpdateIntoQueue(rootCompletionCallbacks, rootCompletionCallback);
+  DOMRenderer.requestWork(root, expirationTime);
+};
 Work.prototype.commit = function() {
   const root = this._reactRootContainer;
   const expirationTime = this._expirationTime;
@@ -801,8 +856,8 @@ Work.prototype.commit = function() {
 };
 
 type ReactRootNode = {
-  render(children: ReactNodeList, callback: ?() => mixed): void,
-  unmount(callback: ?() => mixed): void,
+  render(children: ReactNodeList, callback: ?() => mixed): WorkNode,
+  unmount(callback: ?() => mixed): WorkNode,
 
   _reactRootContainer: *,
 };
@@ -818,9 +873,16 @@ function ReactRoot(container: Container, hydrate: boolean) {
 ReactRoot.prototype.render = function(
   children: ReactNodeList,
   callback: ?() => mixed,
-): void {
+): WorkNode {
   const root = this._reactRootContainer;
-  DOMRenderer.updateContainer(children, root, null, false, callback);
+  const expirationTime = DOMRenderer.updateContainer(
+    children,
+    root,
+    null,
+    false,
+    null,
+  );
+  return new Work(root, expirationTime);
 };
 ReactRoot.prototype.prerender = function(children: ReactNodeList): WorkNode {
   const root = this._reactRootContainer;
@@ -833,9 +895,16 @@ ReactRoot.prototype.prerender = function(children: ReactNodeList): WorkNode {
   );
   return new Work(root, expirationTime);
 };
-ReactRoot.prototype.unmount = function(callback) {
+ReactRoot.prototype.unmount = function(): WorkNode {
   const root = this._reactRootContainer;
-  DOMRenderer.updateContainer(null, root, null, false, callback);
+  const expirationTime = DOMRenderer.updateContainer(
+    null,
+    root,
+    null,
+    false,
+    null,
+  );
+  return new Work(root, expirationTime);
 };
 
 var ReactDOM = {

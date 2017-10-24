@@ -231,6 +231,7 @@ export type Reconciler<C, I, TI> = {
     callback: ?Function,
   ): ExpirationTime,
   flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
+  requestWork(root: OpaqueRoot, expirationTime: ExpirationTime): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -271,6 +272,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    requestWork,
     flushRoot,
     batchedUpdates,
     unbatchedUpdates,
@@ -340,7 +342,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         callback: null,
         isReplace: false,
         isForced: false,
-        nextCallback: null,
         next: null,
       };
       insertUpdateIntoQueue(deferredCommits, deferredCommit);
@@ -352,7 +353,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       callback,
       isReplace: false,
       isForced: false,
-      nextCallback: null,
       next: null,
     };
     insertUpdateIntoFiber(current, update);
@@ -399,6 +399,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     },
 
     flushRoot,
+
+    requestWork,
 
     batchedUpdates,
 

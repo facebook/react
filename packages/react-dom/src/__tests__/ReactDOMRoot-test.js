@@ -98,4 +98,69 @@ describe('ReactDOMRoot', () => {
     expect(ops).toEqual([]);
     expect(container.textContent).toEqual('Hi');
   });
+
+  it('can wait for prerender to finish', () => {
+    const Async = React.unstable_AsyncComponent;
+    const root = ReactDOM.createRoot(container);
+    const work = root.prerender(<Async>Foo</Async>);
+
+    // Hasn't updated yet
+    expect(container.textContent).toEqual('');
+
+    let ops = [];
+    work.then(() => {
+      // Still hasn't updated
+      ops.push(container.textContent);
+      // Should synchronously commit
+      work.commit();
+      ops.push(container.textContent);
+    });
+    // Flush async work
+    jest.runAllTimers();
+    expect(ops).toEqual(['', 'Foo']);
+  });
+
+  it('resolves `then` callback synchronously if update is sync', () => {
+    const root = ReactDOM.createRoot(container);
+    const work = root.prerender(<div>Hi</div>);
+
+    let ops = [];
+    work.then(() => {
+      work.commit();
+      ops.push(container.textContent);
+      expect(container.textContent).toEqual('Hi');
+    });
+    // `then` should have synchronously resolved
+    expect(ops).toEqual(['Hi']);
+  });
+
+  it('resolves `then` callback if tree already completed', () => {
+    const root = ReactDOM.createRoot(container);
+    const work = root.prerender(<div>Hi</div>);
+
+    let ops = [];
+    work.then(() => {
+      work.commit();
+      ops.push(container.textContent);
+      expect(container.textContent).toEqual('Hi');
+    });
+
+    work.then(() => {
+      ops.push('Second callback');
+    });
+
+    // `then` should have synchronously resolved
+    expect(ops).toEqual(['Hi', 'Second callback']);
+  });
+
+  it('render returns a work object, too', () => {
+    const root = ReactDOM.createRoot(container);
+    const work = root.render(<div>Hello</div>);
+    let ops = [];
+    work.then(() => {
+      // Work already committed.
+      ops.push(container.textContent);
+    });
+    expect(container.textContent).toEqual('Hello');
+  });
 });
