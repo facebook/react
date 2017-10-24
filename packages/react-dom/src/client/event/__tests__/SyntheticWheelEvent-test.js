@@ -9,61 +9,112 @@
 
 'use strict';
 
-var SyntheticWheelEvent;
-
 describe('SyntheticWheelEvent', () => {
-  var createEvent;
+  var React;
+  var ReactDOM;
+  var ReactTestUtils;
 
   beforeEach(() => {
-    // TODO: can we express this test with only public API?
-    SyntheticWheelEvent = require('SyntheticWheelEvent');
-
-    createEvent = function(nativeEvent) {
-      var target = require('getEventTarget')(nativeEvent);
-      return SyntheticWheelEvent.getPooled({}, '', nativeEvent, target);
-    };
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should normalize properties from the Event interface', () => {
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
-
-    expect(syntheticEvent.target).toBe(target);
-    expect(syntheticEvent.type).toBe(undefined);
+    let events = [];
+    const container = document.createElement('div');
+    const component = ReactDOM.render(
+      <div
+        onWheel={e => {
+          e.persist();
+          events.push(e);
+        }}
+      />,
+      container
+    );
+    ReactTestUtils.SimulateNative.wheel(component, {});
+    expect(events[0].target).toBe(component);
+    expect(events[0].type).toBe(undefined);
   });
 
   it('should normalize properties from the MouseEvent interface', () => {
-    expect(createEvent({which: 2, button: 1}).button).toBe(1);
+    let events = [];
+    const container = document.createElement('div');
+    const component = ReactDOM.render(
+      <div
+        onWheel={e => {
+          e.persist();
+          events.push(e);
+        }}
+      />,
+      container
+    );
+
+    ReactTestUtils.SimulateNative.wheel(component, {which: 2, button: 1});
+    expect(events[0].button).toBe(1);
   });
 
   it('should normalize properties from the WheelEvent interface', () => {
-    var standardEvent = createEvent({deltaX: 10, deltaY: -50});
-    expect(standardEvent.deltaX).toBe(10);
-    expect(standardEvent.deltaY).toBe(-50);
+    let events = [];
+    const container = document.createElement('div');
+    const component = ReactDOM.render(
+      <div
+        onWheel={e => {
+          e.persist();
+          events.push(e);
+        }}
+      />,
+      container
+    );
 
-    var webkitEvent = createEvent({wheelDeltaX: -10, wheelDeltaY: 50});
-    expect(webkitEvent.deltaX).toBe(10);
-    expect(webkitEvent.deltaY).toBe(-50);
+    ReactTestUtils.SimulateNative.wheel(component, {deltaX: 10, deltaY: -50});
+    expect(events[0].deltaX).toBe(10);
+    expect(events[0].deltaY).toBe(-50);
+    
+    ReactTestUtils.SimulateNative.wheel(component, {wheelDeltaX: -10, wheelDeltaY: 50});
+    expect(events[1].deltaX).toBe(10);
+    expect(events[1].deltaY).toBe(-50);
   });
 
   it('should be able to `preventDefault` and `stopPropagation`', () => {
-    var nativeEvent = {};
-    var syntheticEvent = createEvent(nativeEvent);
-
-    expect(syntheticEvent.isDefaultPrevented()).toBe(false);
-    syntheticEvent.preventDefault();
-    expect(syntheticEvent.isDefaultPrevented()).toBe(true);
-
-    expect(syntheticEvent.isPropagationStopped()).toBe(false);
-    syntheticEvent.stopPropagation();
-    expect(syntheticEvent.isPropagationStopped()).toBe(true);
+    let events = [];
+    const container = document.createElement('div');
+    const component = ReactDOM.render(
+      <div
+        onWheel={e => {
+          e.persist();
+          events.push(e);
+        }}
+      />,
+      container
+    );
+    
+    ReactTestUtils.SimulateNative.wheel(component, {});
+    expect(events[0].isDefaultPrevented()).toBe(false);
+    events[0].preventDefault();
+    expect(events[0].isDefaultPrevented()).toBe(true);
+    
+    ReactTestUtils.SimulateNative.wheel(component, {});
+    expect(events[1].isPropagationStopped()).toBe(false);
+    events[1].stopPropagation();
+    expect(events[1].isPropagationStopped()).toBe(true);
   });
 
   it('should be able to `persist`', () => {
-    var syntheticEvent = createEvent({});
-
-    expect(syntheticEvent.isPersistent()).toBe(false);
-    syntheticEvent.persist();
-    expect(syntheticEvent.isPersistent()).toBe(true);
+    let events = [];
+    const container = document.createElement('div');
+    const component = ReactDOM.render(
+      <div
+        onWheel={e => {
+          events.push(e);
+        }}
+      />,
+      container
+    );
+    
+    ReactTestUtils.SimulateNative.wheel(component, {});
+    expect(events[0].isPersistent()).toBe(false);
+    events[0].persist();
+    expect(events[0].isPersistent()).toBe(true);
   });
 });
