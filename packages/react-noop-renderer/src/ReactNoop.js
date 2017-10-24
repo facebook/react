@@ -20,6 +20,7 @@
 import type {Fiber} from 'ReactFiber';
 import type {UpdateQueue} from 'ReactFiberUpdateQueue';
 
+var ReactCoroutine = require('ReactCoroutine');
 var ReactFeatureFlags = require('ReactFeatureFlags');
 var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
 var ReactFiberReconciler = require('react-reconciler');
@@ -451,6 +452,10 @@ var ReactNoop = {
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
   flushSync: NoopRenderer.flushSync,
+
+  createCoroutine: ReactCoroutine.createCoroutine,
+
+  createYield: ReactCoroutine.createYield,
 
   // Logs the current state of the tree.
   dumpTree(rootID: string = DEFAULT_ROOT_ID) {
