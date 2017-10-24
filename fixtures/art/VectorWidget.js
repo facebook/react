@@ -6,7 +6,7 @@
  */
 'use strict';
 
-var Circle = require('react-art/Circle');
+var Circle = require('react-art/lib/Circle.art');
 var React = require('react');
 var ReactART = require('react-art');
 var Group = ReactART.Group;

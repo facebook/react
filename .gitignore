@@ -21,3 +21,6 @@ chrome-user-data
 .vscode
 *.swp
 *.swo
+.ftpconfig
+.ftpignore
+.git/*

@@ -1,3 +1,19 @@
+'use strict';
+
+var _extends =
+  Object.assign ||
+  function(target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+    return target;
+  };
+
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -20,12 +36,9 @@
  *
  */
 
-'use strict';
-
-var assign = require('object-assign');
 var PropTypes = require('prop-types');
 var React = require('react');
-var ReactART = require('react-art');
+var ReactART = require('..');
 
 var createReactClass = require('create-react-class');
 
@@ -180,7 +193,7 @@ var Wedge = createReactClass({
       path = this._createArcPath(startAngle, endAngle, or, ir);
     }
 
-    return React.createElement(Shape, assign({}, this.props, {d: path}));
+    return React.createElement(Shape, _extends({}, this.props, {d: path}));
   },
 });
 
