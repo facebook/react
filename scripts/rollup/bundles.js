@@ -49,7 +49,7 @@ const bundles = [
 
   /******* React DOM *******/
   {
-    label: 'dom-fiber',
+    label: 'dom-client',
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     moduleType: RENDERER,
     entry: 'react-dom',
@@ -59,7 +59,7 @@ const bundles = [
 
   //******* Test Utils *******/
   {
-    label: 'test-utils',
+    label: 'dom-test-utils',
     moduleType: RENDERER_UTILS,
     bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
     entry: 'react-dom/test-utils',
@@ -98,7 +98,7 @@ const bundles = [
 
   /******* React ART *******/
   {
-    label: 'art-fiber',
+    label: 'art',
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
     moduleType: RENDERER,
     entry: 'react-art',
@@ -113,7 +113,7 @@ const bundles = [
 
   /******* React Native *******/
   {
-    label: 'native-fiber',
+    label: 'native',
     bundleTypes: [RN_DEV, RN_PROD],
     moduleType: RENDERER,
     entry: 'react-native-renderer',
@@ -134,7 +134,7 @@ const bundles = [
 
   /******* React Native RT *******/
   {
-    label: 'native-rt-fiber',
+    label: 'native-rt',
     bundleTypes: [RN_DEV, RN_PROD],
     moduleType: RENDERER,
     entry: 'react-rt-renderer',
@@ -150,7 +150,7 @@ const bundles = [
 
   /******* React Native CS *******/
   {
-    label: 'native-cs-fiber',
+    label: 'native-cs',
     bundleTypes: [RN_DEV, RN_PROD],
     moduleType: RENDERER,
     entry: 'react-cs-renderer',
@@ -161,7 +161,7 @@ const bundles = [
 
   /******* React Test Renderer *******/
   {
-    label: 'test-fiber',
+    label: 'test',
     bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-test-renderer',
@@ -170,7 +170,7 @@ const bundles = [
   },
 
   {
-    label: 'shallow-fiber',
+    label: 'test-shallow',
     bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-test-renderer/shallow',
@@ -180,7 +180,7 @@ const bundles = [
 
   /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
   {
-    label: 'noop-fiber',
+    label: 'noop',
     bundleTypes: [NODE_DEV],
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
