@@ -345,6 +345,23 @@ function getUglifyConfig(configs) {
   };
 }
 
+// We use this for various shims, such as www forks of the code,
+// renderer-specific feature flag overrides, and UMD optimizations.
+function shimModules(shims) {
+  // For some reason, even if we use the alias plugin,
+  // Rollup still attempts to bundle unused original code
+  // if it exists. We have to explicitly stub it out.
+  const nullStub = {
+    transform(source, id) {
+      if (shims[id]) {
+        return 'module.exports = null;';
+      }
+      return source;
+    },
+  };
+  return [nullStub, alias(shims)];
+}
+
 // FB uses require('React') instead of require('react').
 // We can't set up a forwarding module due to case sensitivity issues.
 function rewriteFBReactImport() {
@@ -378,9 +395,10 @@ function getPlugins(
   modulesToStub,
   featureFlags
 ) {
+  const shims = Modules.getShims(bundleType, entry, featureFlags);
   const plugins = [
     shouldExtractErrors && writeErrorCodes(),
-    alias(Modules.getShims(bundleType, entry, featureFlags)),
+    ...shimModules(shims),
     resolvePlugin({
       skip: externals,
     }),
