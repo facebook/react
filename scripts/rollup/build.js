@@ -507,11 +507,7 @@ function createBundle(bundle, bundleType) {
     }
   }
 
-  const filename = getFilename(
-    bundle.output || bundle.entry,
-    bundle.global,
-    bundleType
-  );
+  const filename = getFilename(bundle.entry, bundle.global, bundleType);
   const logKey =
     chalk.white.bold(filename) + chalk.dim(` (${bundleType.toLowerCase()})`);
   const format = getFormat(bundleType);

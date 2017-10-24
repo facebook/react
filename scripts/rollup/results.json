@@ -109,8 +109,8 @@
       "gzip": 11846
     },
     "react-dom-server.node.development.js (NODE_DEV)": {
-      "size": 96729,
-      "gzip": 25627
+      "size": 96739,
+      "gzip": 25630
     },
     "react-dom-server.node.production.min.js (NODE_PROD)": {
       "size": 15988,

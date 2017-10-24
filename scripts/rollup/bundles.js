@@ -91,8 +91,7 @@ const bundles = [
     label: 'dom-server-node',
     bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
-    entry: 'react-dom/server',
-    output: 'react-dom/server.node',
+    entry: 'react-dom/server.node',
     externals: ['react', 'stream'],
   },
 
