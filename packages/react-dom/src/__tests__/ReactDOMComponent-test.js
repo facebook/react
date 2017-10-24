@@ -2042,9 +2042,8 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
-          'attribute, use a ternary expression: `true`={condition ? value : null}.',
+        'Received `true` for non-boolean attribute `whatever`. If this is expected, cast ' +
+          'the value to a string.',
       );
     });
 
@@ -2057,9 +2056,8 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
-          'attribute, use a ternary expression: `true`={condition ? value : null}.',
+        'Received `true` for non-boolean attribute `whatever`. If this is expected, cast ' +
+          'the value to a string.',
       );
     });
 
@@ -2234,9 +2232,8 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `true`="`whatever`". If you mean to conditionally pass an ' +
-          'attribute, use a ternary expression: `true`={condition ? value : null}.',
+        'Received `true` for non-boolean attribute `whatever`. If this is expected, cast ' +
+          'the value to a string.',
       );
     });
 
@@ -2289,9 +2286,9 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `false`="`whatever`". If you mean to conditionally pass an ' +
-          'attribute, use a ternary expression: `false`={condition ? value : null}.',
+        'If you mean to conditionally pass an attribute, use a ternary ' +
+          'expression: `false`={condition ? value : null} instead of ' +
+          '{condition && value}.',
       );
     });
   });

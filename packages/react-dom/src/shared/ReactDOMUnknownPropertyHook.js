@@ -180,19 +180,26 @@ if (__DEV__) {
       return true;
     }
 
-    if (typeof value === 'boolean') {
+    if (typeof value === 'boolean' && value === false) {
       warning(
         DOMProperty.shouldAttributeAcceptBooleanValue(name),
-        'If you intentionally tried to pass a boolean, pass it as a string ' +
-          'instead: `%s`="`%s`". If you mean to conditionally pass an ' +
-          'attribute, use a ternary expression: `%s`={condition ? value : null}.%s',
-        value,
-        name,
+        'If you mean to conditionally pass an attribute, use a ternary ' +
+          'expression: `%s`={condition ? value : undefined} instead of ' +
+          '{condition && value}.%s',
         value,
         getStackAddendum(),
       );
       warnedProperties[name] = true;
       return true;
+    } else if (typeof value === 'boolean') {
+      warning(
+        DOMProperty.shouldAttributeAcceptBooleanValue(name),
+        'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
+          'the value to a string.%s',
+        value,
+        name,
+        getStackAddendum(),
+      );
     }
 
     // Now that we've validated casing, do not validate
