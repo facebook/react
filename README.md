@@ -33,7 +33,7 @@ You'll notice that we used an HTML-like syntax; [we call it JSX](https://reactjs
 
 React is available as the `react` package on [npm](https://www.npmjs.com/). It is also available on a [CDN](https://reactjs.org/docs/installation.html#using-a-cdn).
 
-React is flexible and can be used in a variety of projects. You can create new apps with it, but you can also gradually introduce it into an existing codebase without doing a rewrite.
+React is flexible and can be used in a variety of projects. Not only can you create new apps with it but also you can gradually introduce it into an existing codebase without doing a rewrite.
 
 The recommended way to install React depends on your project. Here you can find short guides for the most common scenarios:
 
@@ -43,7 +43,7 @@ The recommended way to install React depends on your project. Here you can find 
 
 ## Contributing
 
-The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
+The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open space on GitHub and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
 
 ### [Code of Conduct](https://code.facebook.com/codeofconduct)
 
