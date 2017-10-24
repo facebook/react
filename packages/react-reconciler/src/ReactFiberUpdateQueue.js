@@ -82,6 +82,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
   }
   return queue;
 }
+exports.createUpdateQueue = createUpdateQueue;
 
 function insertUpdateIntoQueue<State>(
   queue: UpdateQueue<State>,
@@ -282,6 +283,7 @@ function processUpdateQueue<State>(
 
   return state;
 }
+exports.processUpdateQueue = processUpdateQueue;
 
 function processFiberUpdateQueue<State>(
   current: Fiber | null,

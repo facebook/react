@@ -11,6 +11,7 @@
 
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
 const {createHostRootFiber} = require('./ReactFiber');
 const {NoWork} = require('./ReactFiberExpirationTime');
@@ -36,6 +37,10 @@ export type FiberRoot = {
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
+  // TODO: This belongs in the renderer, which suggests we should use something
+  // other than the UpdateQueue type, since it would be duplicated across
+  // packages regardless.
+  deferredCommits: UpdateQueue<null> | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
 };
@@ -57,6 +62,7 @@ exports.createFiberRoot = function(
     context: null,
     pendingContext: null,
     hydrate,
+    deferredCommits: null,
     nextScheduledRoot: null,
   };
   uninitializedFiber.stateNode = root;

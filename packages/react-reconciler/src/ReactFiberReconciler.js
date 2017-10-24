@@ -12,6 +12,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactInstanceMap = require('shared/ReactInstanceMap');
@@ -25,7 +26,11 @@ var {
 } = require('./ReactFiberContext');
 var {createFiberRoot} = require('./ReactFiberRoot');
 var ReactFiberScheduler = require('./ReactFiberScheduler');
-var {insertUpdateIntoFiber} = require('./ReactFiberUpdateQueue');
+var {
+  insertUpdateIntoQueue,
+  insertUpdateIntoFiber,
+  createUpdateQueue,
+} = require('./ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var getComponentName = require('shared/getComponentName');
@@ -224,7 +229,8 @@ export type Reconciler<C, I, TI> = {
     parentComponent: ?React$Component<any, any>,
     deferCommit: boolean,
     callback: ?Function,
-  ): void,
+  ): ExpirationTime,
+  flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -265,6 +271,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    flushRoot,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -274,6 +281,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   function scheduleTopLevelUpdate(
     current: Fiber,
     element: ReactNodeList,
+    deferCommit: boolean,
     callback: ?Function,
   ) {
     if (__DEV__) {
@@ -320,6 +328,24 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       expirationTime = computeExpirationForFiber(current);
     }
 
+    if (deferCommit) {
+      const root: FiberRoot = current.stateNode;
+      let deferredCommits = root.deferredCommits;
+      if (deferredCommits === null) {
+        deferredCommits = root.deferredCommits = createUpdateQueue(null);
+      }
+      const deferredCommit = {
+        expirationTime,
+        partialState: null,
+        callback: null,
+        isReplace: false,
+        isForced: false,
+        nextCallback: null,
+        next: null,
+      };
+      insertUpdateIntoQueue(deferredCommits, deferredCommit);
+    }
+
     const update = {
       expirationTime,
       partialState: {element},
@@ -331,6 +357,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     };
     insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
+
+    return expirationTime;
   }
 
   return {
@@ -344,7 +372,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       parentComponent: ?React$Component<any, any>,
       deferCommit: boolean,
       callback: ?Function,
-    ): void {
+    ): ExpirationTime {
       // TODO: If this is a nested container, this won't be the root.
       const current = container.current;
 
@@ -367,8 +395,10 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         container.pendingContext = context;
       }
 
-      scheduleTopLevelUpdate(current, element, callback);
+      return scheduleTopLevelUpdate(current, element, deferCommit, callback);
     },
+
+    flushRoot,
 
     batchedUpdates,
 

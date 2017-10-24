@@ -10,6 +10,10 @@
 'use strict';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {FiberRoot} from '../../../react-reconciler/src/ReactFiberRoot';
+import type {
+  ExpirationTime,
+} from '../../../react-reconciler/src/ReactFiberExpirationTime';
 
 require('../shared/checkReact');
 
@@ -58,6 +62,10 @@ var {
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
+
+var {
+  processUpdateQueue,
+} = require('../../../react-reconciler/src/ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var lowPriorityWarning = require('shared/lowPriorityWarning');
@@ -771,6 +779,27 @@ function createPortal(
   return ReactPortal.createPortal(children, container, null, key);
 }
 
+type WorkNode = {
+  commit(): void,
+
+  _reactRootContainer: FiberRoot,
+  _expirationTime: ExpirationTime,
+};
+
+function Work(root: FiberRoot, expirationTime: ExpirationTime) {
+  this._reactRootContainer = root;
+  this._expirationTime = expirationTime;
+}
+Work.prototype.commit = function() {
+  const root = this._reactRootContainer;
+  const expirationTime = this._expirationTime;
+  const deferredCommits = root.deferredCommits;
+  if (deferredCommits !== null) {
+    processUpdateQueue(deferredCommits, null, null, expirationTime);
+  }
+  DOMRenderer.flushRoot(root, expirationTime);
+};
+
 type ReactRootNode = {
   render(children: ReactNodeList, callback: ?() => mixed): void,
   unmount(callback: ?() => mixed): void,
@@ -792,6 +821,17 @@ ReactRoot.prototype.render = function(
 ): void {
   const root = this._reactRootContainer;
   DOMRenderer.updateContainer(children, root, null, false, callback);
+};
+ReactRoot.prototype.prerender = function(children: ReactNodeList): WorkNode {
+  const root = this._reactRootContainer;
+  const expirationTime = DOMRenderer.updateContainer(
+    children,
+    root,
+    null,
+    true,
+    null,
+  );
+  return new Work(root, expirationTime);
 };
 ReactRoot.prototype.unmount = function(callback) {
   const root = this._reactRootContainer;
