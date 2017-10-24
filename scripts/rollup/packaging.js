@@ -208,9 +208,9 @@ function getPackageDestination(config, bundleType, filename, hasteName) {
   } else if (bundleType === UMD_DEV || bundleType === UMD_PROD) {
     dest = `${config.destDir}dist/${filename}`;
   } else if (bundleType === RN_DEV || bundleType === RN_PROD) {
-    if (hasteName === 'ReactNativeRTFiber') {
+    if (hasteName === 'ReactRTRenderer') {
       dest = `${config.destDir}react-rt/${filename}`;
-    } else if (hasteName === 'ReactNativeCSFiber') {
+    } else if (hasteName === 'ReactCSRenderer') {
       dest = `${config.destDir}react-cs/${filename}`;
     } else {
       dest = `${config.destDir}react-native/${filename}`;
