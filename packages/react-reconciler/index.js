@@ -17,3 +17,6 @@ export type {
 } from './src/ReactFiberReconciler';
 
 module.exports = require('./src/ReactFiberReconciler');
+module.exports.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED = {
+  ReactCoroutine: require('./src/ReactCoroutine'),
+};
