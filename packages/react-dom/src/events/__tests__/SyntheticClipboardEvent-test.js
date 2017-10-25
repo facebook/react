@@ -9,17 +9,30 @@
 
 'use strict';
 
-var SyntheticClipboardEvent;
+var jsdom;
+var React;
+var ReactDOM;
 
 describe('SyntheticClipboardEvent', () => {
-  var createEvent;
+  var document;
+  var simulateEvent;
 
   beforeEach(() => {
-    // TODO: can we express this test with only public API?
-    SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-    createEvent = function(nativeEvent) {
-      var target = require('getEventTarget')(nativeEvent);
-      return SyntheticClipboardEvent.getPooled({}, '', nativeEvent, target);
+    jsdom = require('jsdom').jsdom;
+    React = require('react');
+    ReactDOM = require('react-dom');
+
+    document = jsdom('');
+
+    simulateEvent = (element, type, data) => {
+      var event = document.createEvent('Event');
+      event.initEvent(type, true, true);
+
+      if (data) {
+        event.clipboardData = data;
+      }
+
+      element.dispatchEvent(event);
     };
   });
 
@@ -27,6 +40,8 @@ describe('SyntheticClipboardEvent', () => {
     describe('clipboardData', () => {
       describe('when event has clipboardData', () => {
         it("returns event's clipboardData", () => {
+          var expectedCount = 3;
+
           // Mock clipboardData since native implementation doesn't have a constructor
           var clipboardData = {
             dropEffect: null,
@@ -35,9 +50,28 @@ describe('SyntheticClipboardEvent', () => {
             items: null,
             types: null,
           };
-          var clipboardEvent = createEvent({clipboardData: clipboardData});
 
-          expect(clipboardEvent.clipboardData).toBe(clipboardData);
+          var eventHandler = event => {
+            expect(event.clipboardData).toBe(clipboardData);
+            expectedCount -= 1;
+          };
+
+          var container = document.createElement('div');
+          var div = ReactDOM.render(
+            <div
+              onCopy={eventHandler}
+              onCut={eventHandler}
+              onPaste={eventHandler}
+            />,
+            container,
+          );
+          document.body.appendChild(div);
+
+          simulateEvent(div, 'copy', clipboardData);
+          simulateEvent(div, 'cut', clipboardData);
+          simulateEvent(div, 'paste', clipboardData);
+
+          expect(expectedCount).toBe(0);
         });
       });
     });
@@ -45,32 +79,88 @@ describe('SyntheticClipboardEvent', () => {
 
   describe('EventInterface', () => {
     it('normalizes properties from the Event interface', () => {
-      var target = document.createElement('div');
-      var syntheticEvent = createEvent({srcElement: target});
+      var expectedCount = 3;
+      var div;
 
-      expect(syntheticEvent.target).toBe(target);
-      expect(syntheticEvent.type).toBe(undefined);
+      var eventHandler = type => event => {
+        expect(event.target).toBe(div);
+        expect(event.type).toBe(type);
+        expectedCount -= 1;
+      };
+
+      var container = document.createElement('div');
+      div = ReactDOM.render(
+        <div
+          onCopy={eventHandler('copy')}
+          onCut={eventHandler('cut')}
+          onPaste={eventHandler('paste')}
+        />,
+        container,
+      );
+      document.body.appendChild(div);
+
+      simulateEvent(div, 'copy');
+      simulateEvent(div, 'cut');
+      simulateEvent(div, 'paste');
+
+      expect(expectedCount).toBe(0);
     });
 
     it('is able to `preventDefault` and `stopPropagation`', () => {
-      var nativeEvent = {};
-      var syntheticEvent = createEvent(nativeEvent);
+      var expectedCount = 3;
+      var eventHandler = event => {
+        expect(event.isDefaultPrevented()).toBe(false);
+        event.preventDefault();
+        expect(event.isDefaultPrevented()).toBe(true);
+        expect(event.isPropagationStopped()).toBe(false);
+        event.stopPropagation();
+        expect(event.isPropagationStopped()).toBe(true);
+        expectedCount -= 1;
+      };
 
-      expect(syntheticEvent.isDefaultPrevented()).toBe(false);
-      syntheticEvent.preventDefault();
-      expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+      var container = document.createElement('div');
+      var div = ReactDOM.render(
+        <div
+          onCopy={eventHandler}
+          onCut={eventHandler}
+          onPaste={eventHandler}
+        />,
+        container,
+      );
+      document.body.appendChild(div);
 
-      expect(syntheticEvent.isPropagationStopped()).toBe(false);
-      syntheticEvent.stopPropagation();
-      expect(syntheticEvent.isPropagationStopped()).toBe(true);
+      simulateEvent(div, 'copy');
+      simulateEvent(div, 'cut');
+      simulateEvent(div, 'paste');
+
+      expect(expectedCount).toBe(0);
     });
 
     it('is able to `persist`', () => {
-      var syntheticEvent = createEvent({});
+      var expectedCount = 3;
+      var eventHandler = event => {
+        expect(event.isPersistent()).toBe(false);
+        event.persist();
+        expect(event.isPersistent()).toBe(true);
+        expectedCount -= 1;
+      };
 
-      expect(syntheticEvent.isPersistent()).toBe(false);
-      syntheticEvent.persist();
-      expect(syntheticEvent.isPersistent()).toBe(true);
+      var container = document.createElement('div');
+      var div = ReactDOM.render(
+        <div
+          onCopy={eventHandler}
+          onCut={eventHandler}
+          onPaste={eventHandler}
+        />,
+        container,
+      );
+      document.body.appendChild(div);
+
+      simulateEvent(div, 'copy');
+      simulateEvent(div, 'cut');
+      simulateEvent(div, 'paste');
+
+      expect(expectedCount).toBe(0);
     });
   });
 });
