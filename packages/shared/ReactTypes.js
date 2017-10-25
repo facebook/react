@@ -11,8 +11,8 @@
 
 export type ReactNode =
   | React$Element<any>
-  | ReactCoroutine
-  | ReactYield
+  | ReactCall
+  | ReactReturn
   | ReactPortal
   | ReactText
   | ReactFragment;
@@ -25,16 +25,16 @@ export type ReactText = string | number;
 
 export type ReactEmpty = null | void | boolean;
 
-export type ReactCoroutine = {
+export type ReactCall = {
   $$typeof: Symbol | number,
   key: null | string,
   children: any,
-  // This should be a more specific CoroutineHandler
-  handler: (props: any, yields: Array<mixed>) => ReactNodeList,
+  // This should be a more specific CallHandler
+  handler: (props: any, returns: Array<mixed>) => ReactNodeList,
   props: any,
 };
 
-export type ReactYield = {
+export type ReactReturn = {
   $$typeof: Symbol | number,
   value: mixed,
 };

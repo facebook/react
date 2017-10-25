@@ -11,7 +11,7 @@
 
 describe('ReactDebugFiberPerf', () => {
   let React;
-  let ReactCoroutine;
+  let ReactCallReturn;
   let ReactNoop;
   let ReactPortal;
   let PropTypes;
@@ -115,8 +115,8 @@ describe('ReactDebugFiberPerf', () => {
     // Import after the polyfill is set up:
     React = require('react');
     ReactNoop = require('react-noop-renderer');
+    ReactCallReturn = require('react-call-return');
     // TODO: can we express this test with only public API?
-    ReactCoroutine = require('react-reconciler/src/ReactCoroutine');
     ReactPortal = require('react-reconciler/src/ReactPortal');
     PropTypes = require('prop-types');
   });
@@ -431,13 +431,13 @@ describe('ReactDebugFiberPerf', () => {
     expect(getFlameChart()).toMatchSnapshot();
   });
 
-  it('supports coroutines', () => {
+  it('supports returns', () => {
     function Continuation({isSame}) {
       return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
     }
 
     function CoChild({bar}) {
-      return ReactCoroutine.createYield({
+      return ReactCallReturn.unstable_createReturn({
         props: {
           bar: bar,
         },
@@ -449,16 +449,16 @@ describe('ReactDebugFiberPerf', () => {
       return [<CoChild key="a" bar={true} />, <CoChild key="b" bar={false} />];
     }
 
-    function HandleYields(props, yields) {
-      return yields.map((y, i) => (
+    function HandleReturns(props, returns) {
+      return returns.map((y, i) => (
         <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
     function CoParent(props) {
-      return ReactCoroutine.createCoroutine(
+      return ReactCallReturn.unstable_createCall(
         props.children,
-        HandleYields,
+        HandleReturns,
         props,
       );
     }

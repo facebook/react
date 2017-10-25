@@ -243,11 +243,11 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 "
 `;
 
-exports[`ReactDebugFiberPerf supports coroutines 1`] = `
+exports[`ReactDebugFiberPerf supports returns 1`] = `
 "⚛ (React Tree Reconciliation)
   ⚛ App [mount]
     ⚛ CoParent [mount]
-      ⚛ HandleYields [mount]
+      ⚛ HandleReturns [mount]
         ⚛ Indirection [mount]
           ⚛ CoChild [mount]
           ⚛ CoChild [mount]

@@ -507,7 +507,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // Check for pending updates.
     let newExpirationTime = getUpdateExpirationTime(workInProgress);
 
-    // TODO: Coroutines need to visit stateNode
+    // TODO: Calls need to visit stateNode
 
     // Bubble up the earliest expiration time.
     let child = workInProgress.child;
