@@ -383,8 +383,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // TODO: Split these into branches based on typeof type
     if (
       current !== null &&
-      (current.type === element.type ||
-        (current.tag === Fragment && element.type === REACT_FRAGMENT_TYPE))
+      (current.tag === Fragment
+        ? element.type === REACT_FRAGMENT_TYPE
+        : current.type === element.type)
     ) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
@@ -1240,8 +1241,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       if (child.key === key) {
         // TODO: Split these into branches based on typeof type
         if (
-          child.type === element.type ||
-          (child.tag === Fragment && element.type === REACT_FRAGMENT_TYPE)
+          child.tag === Fragment
+            ? element.type === REACT_FRAGMENT_TYPE
+            : child.type === element.type
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, expirationTime);
