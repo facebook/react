@@ -26,7 +26,6 @@
     "prop-types": "^15.6.0"
   },
   "peerDependencies": {
-    "art": "^0.10.1",
     "react": "^16.0.0"
   },
   "files": [
