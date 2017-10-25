@@ -51,7 +51,7 @@ describe('ReactDOMInput', () => {
     expectDev(console.error.calls.count()).toBe(1);
 
     
-    .call(node, 'giraffe');
+    setUntrackedValue.call(node, 'giraffe');
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
