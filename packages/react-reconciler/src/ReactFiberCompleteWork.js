@@ -17,15 +17,7 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 
-var {reconcileChildFibers} = require('./ReactChildFiber');
-var {
-  popContextProvider,
-  popTopLevelContextObject,
-} = require('./ReactFiberContext');
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
-var ReactFiberExpirationTime = require('./ReactFiberExpirationTime');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -38,11 +30,16 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
-var {Never} = ReactFiberExpirationTime;
-
+} = require('shared/ReactTypeOfWork');
+var {Placement, Ref, Update} = require('shared/ReactTypeOfSideEffect');
 var invariant = require('fbjs/lib/invariant');
+
+var {reconcileChildFibers} = require('./ReactChildFiber');
+var {
+  popContextProvider,
+  popTopLevelContextObject,
+} = require('./ReactFiberContext');
+var {Never} = require('./ReactFiberExpirationTime');
 
 module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,

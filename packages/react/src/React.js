@@ -7,11 +7,11 @@
 
 'use strict';
 
+var ReactVersion = require('shared/ReactVersion');
+
 var ReactBaseClasses = require('./ReactBaseClasses');
 var ReactChildren = require('./ReactChildren');
 var ReactElement = require('./ReactElement');
-var ReactVersion = require('shared/ReactVersion');
-
 var onlyChild = require('./onlyChild');
 
 var createElement = ReactElement.createElement;

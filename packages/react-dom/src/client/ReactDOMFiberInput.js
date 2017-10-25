@@ -9,22 +9,15 @@
 
 'use strict';
 
-type InputWithWrapperState = HTMLInputElement & {
-  _wrapperState: {
-    initialValue: ?string,
-    initialChecked: ?boolean,
-    controlled?: boolean,
-  },
-};
-
-var DOMPropertyOperations = require('./DOMPropertyOperations');
-var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('./ReactDOMComponentTree');
-
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 var {
   getCurrentFiberOwnerName,
 } = require('react-reconciler/src/ReactDebugCurrentFiber');
+var invariant = require('fbjs/lib/invariant');
+
+var DOMPropertyOperations = require('./DOMPropertyOperations');
+var ReactDOMComponentTree = require('./ReactDOMComponentTree');
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
 
 if (__DEV__) {
   // TODO: direct imports like some-package/src/* are bad. Fix me.
@@ -34,7 +27,13 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-var invariant = require('fbjs/lib/invariant');
+type InputWithWrapperState = HTMLInputElement & {
+  _wrapperState: {
+    initialValue: ?string,
+    initialChecked: ?boolean,
+    controlled?: boolean,
+  },
+};
 
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;

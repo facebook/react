@@ -9,10 +9,6 @@
 
 'use strict';
 
-import type {Fiber} from './ReactFiber';
-
-type LifeCyclePhase = 'render' | 'getChildContext';
-
 var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 
 if (__DEV__) {
@@ -21,6 +17,10 @@ if (__DEV__) {
     getStackAddendumByWorkInProgressFiber,
   } = require('shared/ReactFiberComponentTreeHook');
 }
+
+import type {Fiber} from './ReactFiber';
+
+type LifeCyclePhase = 'render' | 'getChildContext';
 
 function getCurrentFiberOwnerName(): string | null {
   if (__DEV__) {

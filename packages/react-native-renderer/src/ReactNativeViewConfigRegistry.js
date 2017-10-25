@@ -9,12 +9,12 @@
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
-
 import type {
   ReactNativeBaseComponentViewConfig,
   ViewConfigGetter,
 } from './ReactNativeTypes';
+
+const invariant = require('fbjs/lib/invariant');
 
 const viewConfigCallbacks = new Map();
 const viewConfigs = new Map();

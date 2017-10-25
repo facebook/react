@@ -12,10 +12,9 @@
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
-var invariant = require('fbjs/lib/invariant');
-
 const {HostComponent, HostText, HostRoot} = require('shared/ReactTypeOfWork');
 const {Deletion, Placement} = require('shared/ReactTypeOfSideEffect');
+var invariant = require('fbjs/lib/invariant');
 
 const {createFiberFromHostInstanceForDeletion} = require('./ReactFiber');
 

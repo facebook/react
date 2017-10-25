@@ -8,22 +8,6 @@
  */
 'use strict';
 
-const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-
-// Module provided by RN:
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
-
-const invariant = require('fbjs/lib/invariant');
-const findNodeHandle = require('./findNodeHandle');
-const findNumericNodeHandle = require('./findNumericNodeHandle');
-
-const {
-  mountSafeCallback,
-  throwOnStylesProp,
-  warnForStyleProps,
-} = require('./NativeMethodsMixinUtils');
-
 import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
@@ -31,6 +15,20 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
+
+const invariant = require('fbjs/lib/invariant');
+// Modules provided by RN:
+const TextInputState = require('TextInputState');
+const UIManager = require('UIManager');
+
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+const {
+  mountSafeCallback,
+  throwOnStylesProp,
+  warnForStyleProps,
+} = require('./NativeMethodsMixinUtils');
+const findNodeHandle = require('./findNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native

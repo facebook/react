@@ -12,20 +12,28 @@
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 require('../shared/checkReact');
-var DOMNamespaces = require('../shared/DOMNamespaces');
+
+var ReactFiberReconciler = require('react-reconciler');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var ReactPortal = require('react-reconciler/src/ReactPortal');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
+var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactControlledComponent = require('events/ReactControlledComponent');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactVersion = require('shared/ReactVersion');
+var ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
+var getComponentName = require('shared/getComponentName');
+var invariant = require('fbjs/lib/invariant');
+
 var ReactDOMComponentTree = require('./ReactDOMComponentTree');
 var ReactDOMFiberComponent = require('./ReactDOMFiberComponent');
-var ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
-var ReactGenericBatching = require('events/ReactGenericBatching');
-var ReactFiberReconciler = require('react-reconciler');
 var ReactInputSelection = require('./ReactInputSelection');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var ReactVersion = require('shared/ReactVersion');
-var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
+var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
+var DOMNamespaces = require('../shared/DOMNamespaces');
 var {
   ELEMENT_NODE,
   TEXT_NODE,
@@ -34,14 +42,6 @@ var {
   DOCUMENT_FRAGMENT_NODE,
 } = require('../shared/HTMLNodeType');
 var {ROOT_ATTRIBUTE_NAME} = require('../shared/DOMProperty');
-
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-var ReactPortal = require('react-reconciler/src/ReactPortal');
-var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
-
-var getComponentName = require('shared/getComponentName');
-var invariant = require('fbjs/lib/invariant');
-
 var {getChildNamespace} = DOMNamespaces;
 var {
   createElement,
@@ -60,12 +60,13 @@ var {
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
-  var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   var lowPriorityWarning = require('shared/lowPriorityWarning');
   var warning = require('fbjs/lib/warning');
+
   var validateDOMNesting = require('./validateDOMNesting');
   var {updatedAncestorInfo} = validateDOMNesting;
 
+  var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   if (
     typeof Map !== 'function' ||
     Map.prototype == null ||

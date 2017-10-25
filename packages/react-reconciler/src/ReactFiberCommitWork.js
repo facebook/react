@@ -22,17 +22,16 @@ var {
   HostPortal,
   CoroutineComponent,
 } = ReactTypeOfWork;
-var {commitCallbacks} = require('./ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('./ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
 } = require('shared/ReactErrorUtils');
-
 var {Placement, Update, ContentReset} = require('shared/ReactTypeOfSideEffect');
-
 var invariant = require('fbjs/lib/invariant');
+
+var {commitCallbacks} = require('./ReactFiberUpdateQueue');
+var {onCommitUnmount} = require('./ReactFiberDevToolsHook');
 
 if (__DEV__) {
   var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');

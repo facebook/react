@@ -10,18 +10,16 @@
 'use strict';
 
 import type {DispatchConfig} from './ReactSyntheticEventType';
-
 import type {
   AnyNativeEvent,
   PluginName,
   PluginModule,
 } from './PluginModuleType';
 
-type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
-
-type EventPluginOrder = null | Array<PluginName>;
-
 var invariant = require('fbjs/lib/invariant');
+
+type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
+type EventPluginOrder = null | Array<PluginName>;
 
 /**
  * Injectable ordering of event plugins.

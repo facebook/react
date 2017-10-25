@@ -8,9 +8,9 @@
 'use strict';
 
 var EventPluginRegistry = require('events/EventPluginRegistry');
-var ReactDOMEventListener = require('./ReactDOMEventListener');
 var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
 
+var ReactDOMEventListener = require('./ReactDOMEventListener');
 var isEventSupported = require('./isEventSupported');
 var {topLevelTypes} = require('./BrowserEventConstants');
 

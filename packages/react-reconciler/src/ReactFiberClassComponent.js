@@ -13,10 +13,15 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 var {Update} = require('shared/ReactTypeOfSideEffect');
-
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
+var {isMounted} = require('shared/ReactFiberTreeReflection');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var emptyObject = require('fbjs/lib/emptyObject');
+var getComponentName = require('shared/getComponentName');
+var shallowEqual = require('fbjs/lib/shallowEqual');
+var invariant = require('fbjs/lib/invariant');
 
+var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
 var {
   cacheContext,
   getMaskedContext,
@@ -28,19 +33,15 @@ var {
   processUpdateQueue,
 } = require('./ReactFiberUpdateQueue');
 var {hasContextChanged} = require('./ReactFiberContext');
-var {isMounted} = require('shared/ReactFiberTreeReflection');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('shared/getComponentName');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-var invariant = require('fbjs/lib/invariant');
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
+
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
+
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',

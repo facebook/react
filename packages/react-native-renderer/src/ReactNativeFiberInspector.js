@@ -8,21 +8,20 @@
  */
 'use strict';
 
-const ReactNativeComponentTree = require('./ReactNativeComponentTree');
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 const ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 const getComponentName = require('shared/getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
 const ReactTypeOfWork = require('shared/ReactTypeOfWork');
+const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
-
+const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
+const {HostComponent} = ReactTypeOfWork;
 // Module provided by RN:
 const UIManager = require('UIManager');
 
+const ReactNativeComponentTree = require('./ReactNativeComponentTree');
 const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
-
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 let getInspectorDataForViewTag;
 

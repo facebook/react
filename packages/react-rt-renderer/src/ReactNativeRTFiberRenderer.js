@@ -10,14 +10,13 @@
 'use strict';
 
 const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
-const ReactNativeRTTagHandles = require('./ReactNativeRTTagHandles');
-
+const emptyObject = require('fbjs/lib/emptyObject');
+const invariant = require('fbjs/lib/invariant');
 // Module provided by RN:
 const RTManager = require('RTManager');
 
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+const ReactNativeRTTagHandles = require('./ReactNativeRTTagHandles');
 
 export type Container = number;
 export type Instance = number;

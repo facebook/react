@@ -19,14 +19,15 @@ require('InitializeCore');
 
 var EventPluginHub = require('events/EventPluginHub');
 var EventPluginUtils = require('events/EventPluginUtils');
+var ResponderEventPlugin = require('events/ResponderEventPlugin');
 // Module provided by RN:
 var RCTEventEmitter = require('RCTEventEmitter');
+
 var ReactNativeBridgeEventPlugin = require('./ReactNativeBridgeEventPlugin');
 var ReactNativeComponentTree = require('./ReactNativeComponentTree');
 var ReactNativeEventEmitter = require('./ReactNativeEventEmitter');
 var ReactNativeEventPluginOrder = require('./ReactNativeEventPluginOrder');
 var ReactNativeGlobalResponderHandler = require('./ReactNativeGlobalResponderHandler');
-var ResponderEventPlugin = require('events/ResponderEventPlugin');
 
 /**
  * Register the event emitter with the native bridge

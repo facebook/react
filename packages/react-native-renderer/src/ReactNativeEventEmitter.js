@@ -11,9 +11,10 @@
 var EventPluginHub = require('events/EventPluginHub');
 var EventPluginRegistry = require('events/EventPluginRegistry');
 var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
+var ReactGenericBatching = require('events/ReactGenericBatching');
+
 var ReactNativeComponentTree = require('./ReactNativeComponentTree');
 var ReactNativeTagHandles = require('./ReactNativeTagHandles');
-var ReactGenericBatching = require('events/ReactGenericBatching');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

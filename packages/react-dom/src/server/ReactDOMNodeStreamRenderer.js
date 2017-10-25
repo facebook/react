@@ -7,8 +7,9 @@
 
 'use strict';
 
-var ReactPartialRenderer = require('./ReactPartialRenderer');
 var Readable = require('stream').Readable;
+
+var ReactPartialRenderer = require('./ReactPartialRenderer');
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {

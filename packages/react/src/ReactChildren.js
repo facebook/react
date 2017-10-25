@@ -7,13 +7,14 @@
 
 'use strict';
 
-var ReactElement = require('./ReactElement');
-
 var emptyFunction = require('fbjs/lib/emptyFunction');
 var invariant = require('fbjs/lib/invariant');
 
+var ReactElement = require('./ReactElement');
+
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+
   var {getStackAddendum} = require('./ReactDebugCurrentFrame');
 }
 

@@ -9,17 +9,18 @@
 
 'use strict';
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 var ReactInstanceMap = require('shared/ReactInstanceMap');
-var ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
 var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
 var getComponentName = require('shared/getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
+var ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
+
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
-
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
  * ReactNative vs ReactWeb

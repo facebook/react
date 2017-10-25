@@ -9,6 +9,9 @@
 
 import type {Fiber} from './ReactFiber';
 
+// Trust the developer to only use this with a __DEV__ check
+let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
+
 type MeasurementPhase =
   | 'componentWillMount'
   | 'componentWillUnmount'
@@ -19,10 +22,8 @@ type MeasurementPhase =
   | 'componentDidMount'
   | 'getChildContext';
 
-// Trust the developer to only use this with a __DEV__ check
-let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
-
 if (__DEV__) {
+  const getComponentName = require('shared/getComponentName');
   const {
     HostRoot,
     HostComponent,
@@ -31,8 +32,6 @@ if (__DEV__) {
     YieldComponent,
     Fragment,
   } = require('shared/ReactTypeOfWork');
-
-  const getComponentName = require('shared/getComponentName');
 
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.

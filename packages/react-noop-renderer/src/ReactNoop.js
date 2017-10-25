@@ -19,13 +19,12 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 var ReactFiberInstrumentation = require('react-reconciler/src/ReactFiberInstrumentation');
 var ReactFiberReconciler = require('react-reconciler');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactInstanceMap = require('shared/ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
-
 var expect = require('jest-matchers');
 
 const UPDATE_SIGNAL = {};

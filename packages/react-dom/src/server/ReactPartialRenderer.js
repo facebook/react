@@ -7,25 +7,25 @@
 
 'use strict';
 
+var React = require('react');
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var emptyObject = require('fbjs/lib/emptyObject');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+var invariant = require('fbjs/lib/invariant');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+
+var DOMMarkupOperations = require('./DOMMarkupOperations');
 var {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
 } = require('../shared/DOMNamespaces');
-var DOMMarkupOperations = require('./DOMMarkupOperations');
-var React = require('react');
 var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
-
 var assertValidProps = require('../shared/assertValidProps');
 var dangerousStyleValue = require('../shared/dangerousStyleValue');
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var emptyObject = require('fbjs/lib/emptyObject');
 var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var invariant = require('fbjs/lib/invariant');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
-var omittedCloseTags = require('../shared/omittedCloseTags');
 var isCustomComponent = require('../shared/isCustomComponent');
+var omittedCloseTags = require('../shared/omittedCloseTags');
 
 var toArray = React.Children.toArray;
 var getStackAddendum = emptyFunction.thatReturns('');
@@ -33,6 +33,7 @@ var getStackAddendum = emptyFunction.thatReturns('');
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var checkPropTypes = require('prop-types/checkPropTypes');
+
   var warnValidStyle = require('../shared/warnValidStyle');
   var {
     validateProperties: validateARIAProperties,
@@ -43,6 +44,7 @@ if (__DEV__) {
   var {
     validateProperties: validateUnknownProperties,
   } = require('../shared/ReactDOMUnknownPropertyHook');
+
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);

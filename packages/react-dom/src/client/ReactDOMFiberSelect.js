@@ -9,26 +9,28 @@
 
 'use strict';
 
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
+
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+
+if (__DEV__) {
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var warning = require('fbjs/lib/warning');
+
+  var didWarnValueDefaultValue = false;
+}
+
 type SelectWithWrapperState = HTMLSelectElement & {
   _wrapperState: {
     initialValue: ?string,
     wasMultiple: boolean,
   },
 };
-
-var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
-var {
-  getCurrentFiberOwnerName,
-} = require('react-reconciler/src/ReactDebugCurrentFiber');
-
-if (__DEV__) {
-  var didWarnValueDefaultValue = false;
-  var warning = require('fbjs/lib/warning');
-  // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {
-    getCurrentFiberStackAddendum,
-  } = require('react-reconciler/src/ReactDebugCurrentFiber');
-}
 
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();

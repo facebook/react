@@ -9,29 +9,27 @@
 
 'use strict';
 
+import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
+
+require('./ReactNativeInjection');
+
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
 const ReactPortal = require('react-reconciler/src/ReactPortal');
 const {
   injectInternals,
 } = require('react-reconciler/src/ReactFiberDevToolsHook');
-
 const ReactGenericBatching = require('events/ReactGenericBatching');
+const ReactVersion = require('shared/ReactVersion');
+// Module provided by RN:
+const UIManager = require('UIManager');
+
 const ReactNativeFiberErrorDialog = require('./ReactNativeFiberErrorDialog');
 const ReactNativeComponentTree = require('./ReactNativeComponentTree');
 const ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
 const ReactNativeFiberInspector = require('./ReactNativeFiberInspector');
-const ReactVersion = require('shared/ReactVersion');
-
-// Module provided by RN:
-const UIManager = require('UIManager');
-
 const findNumericNodeHandle = require('./findNumericNodeHandle');
-
-import type {ReactNativeType} from './ReactNativeTypes';
-import type {ReactNodeList} from 'shared/ReactTypes';
-
-require('./ReactNativeInjection');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeFiberRenderer.batchedUpdates,

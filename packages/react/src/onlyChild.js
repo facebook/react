@@ -6,9 +6,9 @@
  */
 'use strict';
 
-var ReactElement = require('./ReactElement');
-
 var invariant = require('fbjs/lib/invariant');
+
+var ReactElement = require('./ReactElement');
 
 /**
  * Returns the first child in a collection of children and verifies that there

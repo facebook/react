@@ -22,6 +22,8 @@ import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
+var invariant = require('fbjs/lib/invariant');
+var {NoEffect} = require('shared/ReactTypeOfSideEffect');
 var {
   IndeterminateComponent,
   ClassComponent,
@@ -35,15 +37,11 @@ var {
 } = require('shared/ReactTypeOfWork');
 
 var {NoWork} = require('./ReactFiberExpirationTime');
-
 var {NoContext} = require('./ReactTypeOfInternalContext');
-
-var {NoEffect} = require('shared/ReactTypeOfSideEffect');
-
-var invariant = require('fbjs/lib/invariant');
 
 if (__DEV__) {
   var getComponentName = require('shared/getComponentName');
+
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});

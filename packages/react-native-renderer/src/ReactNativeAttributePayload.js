@@ -8,11 +8,11 @@
  */
 'use strict';
 
-var ReactNativePropRegistry = require('./ReactNativePropRegistry');
-
-// Module provided by RN:
+// Modules provided by RN:
 var deepDiffer = require('deepDiffer');
 var flattenStyle = require('flattenStyle');
+
+var ReactNativePropRegistry = require('./ReactNativePropRegistry');
 
 var emptyObject = {};
 

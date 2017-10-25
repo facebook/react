@@ -11,16 +11,11 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var ReactInstanceMap = require('./ReactInstanceMap');
-var {ReactCurrentOwner} = require('./ReactGlobalSharedState');
-
-var getComponentName = require('./getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
+var ReactInstanceMap = require('./ReactInstanceMap');
+var {ReactCurrentOwner} = require('./ReactGlobalSharedState');
+var getComponentName = require('./getComponentName');
 var {
   ClassComponent,
   HostComponent,
@@ -28,8 +23,11 @@ var {
   HostPortal,
   HostText,
 } = require('./ReactTypeOfWork');
-
 var {NoEffect, Placement} = require('./ReactTypeOfSideEffect');
+
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var MOUNTING = 1;
 var MOUNTED = 2;

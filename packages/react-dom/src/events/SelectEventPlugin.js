@@ -9,15 +9,15 @@
 
 var EventPropagators = require('events/EventPropagators');
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+var SyntheticEvent = require('events/SyntheticEvent');
+var isTextInputElement = require('shared/isTextInputElement');
+var getActiveElement = require('fbjs/lib/getActiveElement');
+var shallowEqual = require('fbjs/lib/shallowEqual');
+
 var ReactBrowserEventEmitter = require('./ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 var ReactInputSelection = require('../client/ReactInputSelection');
-var SyntheticEvent = require('events/SyntheticEvent');
 var {DOCUMENT_NODE} = require('../shared/HTMLNodeType');
-
-var getActiveElement = require('fbjs/lib/getActiveElement');
-var isTextInputElement = require('shared/isTextInputElement');
-var shallowEqual = require('fbjs/lib/shallowEqual');
 
 var skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&

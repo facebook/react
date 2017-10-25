@@ -9,17 +9,6 @@
 
 'use strict';
 
-var ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-
-// Modules provided by RN:
-var TextInputState = require('TextInputState');
-var UIManager = require('UIManager');
-
-var {
-  mountSafeCallback,
-  warnForStyleProps,
-} = require('./NativeMethodsMixinUtils');
-
 import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
@@ -28,6 +17,16 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 import type {Instance} from './ReactNativeFiberRenderer';
+
+// Modules provided by RN:
+var TextInputState = require('TextInputState');
+var UIManager = require('UIManager');
+
+var ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+var {
+  mountSafeCallback,
+  warnForStyleProps,
+} = require('./NativeMethodsMixinUtils');
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the

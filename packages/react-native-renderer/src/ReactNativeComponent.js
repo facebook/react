@@ -10,18 +10,6 @@
 
 'use strict';
 
-const React = require('react');
-const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-
-// Modules provided by RN:
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
-
-const findNodeHandle = require('./findNodeHandle');
-const findNumericNodeHandle = require('./findNumericNodeHandle');
-
-const {mountSafeCallback} = require('./NativeMethodsMixinUtils');
-
 import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
@@ -29,6 +17,16 @@ import type {
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
+
+const React = require('react');
+// Modules provided by RN:
+const TextInputState = require('TextInputState');
+const UIManager = require('UIManager');
+
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+const {mountSafeCallback} = require('./NativeMethodsMixinUtils');
+const findNodeHandle = require('./findNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 /**
  * Superclass that provides methods to access the underlying native component.

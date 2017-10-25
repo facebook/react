@@ -7,13 +7,13 @@
 
 'use strict';
 
+var ReactErrorUtils = require('shared/ReactErrorUtils');
+var invariant = require('fbjs/lib/invariant');
+
 var EventPluginRegistry = require('./EventPluginRegistry');
 var EventPluginUtils = require('./EventPluginUtils');
-var ReactErrorUtils = require('shared/ReactErrorUtils');
-
 var accumulateInto = require('./accumulateInto');
 var forEachAccumulated = require('./forEachAccumulated');
-var invariant = require('fbjs/lib/invariant');
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
