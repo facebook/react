@@ -28,12 +28,12 @@ describe('ReactDOMInput', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    
+
     setUntrackedValue = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       'value',
     ).set;
-    
+
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -50,7 +50,6 @@ describe('ReactDOMInput', () => {
     var node = ReactDOM.findDOMNode(stub);
     expectDev(console.error.calls.count()).toBe(1);
 
-    
     setUntrackedValue.call(node, 'giraffe');
 
     // This must use the native event dispatching. If we simulate, we will
