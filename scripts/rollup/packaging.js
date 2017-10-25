@@ -17,10 +17,6 @@ const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const facebookWWW = 'facebook-www';
-// these files need to be copied to the facebook-www build
-const facebookWWWSrcDependencies = [
-  'packages/react-dom/src/events/TapEventPlugin.js',
-];
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
@@ -114,17 +110,7 @@ function createFacebookWWWBuild() {
   const from = join('scripts', 'rollup', 'shims', facebookWWW);
   const to = join('build', facebookWWW, 'shims');
 
-  return asyncCopyTo(from, to).then(() => {
-    let promises = [];
-    // we also need to copy over some specific files from src
-    // defined in facebookWWWSrcDependencies
-    for (const srcDependency of facebookWWWSrcDependencies) {
-      promises.push(
-        asyncCopyTo(resolve(srcDependency), join(to, basename(srcDependency)))
-      );
-    }
-    return Promise.all(promises);
-  });
+  return asyncCopyTo(from, to);
 }
 
 function copyBundleIntoNodePackage(packageName, filename, bundleType) {
