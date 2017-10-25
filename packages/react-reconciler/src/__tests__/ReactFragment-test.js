@@ -78,35 +78,21 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <Stateful key="a" />
-        : <React.Fragment>
-            <Stateful key="a" />
-            <div key="b">World</div>
-          </React.Fragment>;
-    }
-
-    ReactNoop.render(
-      <div>
-        <Fragment />
-        <div />
-      </div>,
-    );
+    ReactNoop.render(<Stateful key="a" />);
     ReactNoop.flush();
 
     ReactNoop.render(
-      <div>
-        <Fragment condition={true} />
-        <div />
-      </div>,
+      <React.Fragment>
+        <Stateful key="a" />
+        <div key="b">World</div>
+      </React.Fragment>,
     );
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
   });
 
-  it('should not preserve state of children if no siblings and nested', function() {
+  it('should not preserve state in non-top-level fragment nesting', function() {
     var ops = [];
 
     class Stateful extends React.Component {
@@ -119,25 +105,20 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <Stateful key="a" />
-        : <React.Fragment>
-            <React.Fragment>
-              <Stateful key="a" />
-            </React.Fragment>
-          </React.Fragment>;
-    }
-    ReactNoop.render(<Fragment />);
+    ReactNoop.render(
+      <React.Fragment>
+        <React.Fragment><Stateful key="a" /></React.Fragment>
+      </React.Fragment>,
+    );
     ReactNoop.flush();
 
-    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.render(<React.Fragment><Stateful key="a" /></React.Fragment>);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
   });
 
-  it('should not preserve state of children if nested with siblings', function() {
+  it('should not preserve state of children if nested 2 levels without siblings', function() {
     var ops = [];
 
     class Stateful extends React.Component {
@@ -150,26 +131,22 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <Stateful key="a" />
-        : <React.Fragment>
-            <React.Fragment>
-              <Stateful key="a" />
-            </React.Fragment>
-            <div />
-          </React.Fragment>;
-    }
-    ReactNoop.render(<Fragment />);
+    ReactNoop.render(<Stateful key="a" />);
     ReactNoop.flush();
 
-    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.render(
+      <React.Fragment>
+        <React.Fragment>
+          <Stateful key="a" />
+        </React.Fragment>
+      </React.Fragment>,
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
   });
 
-  it('should preserve state of children in a reorder', function() {
+  it('should not preserve state of children if nested 2 levels with siblings', function() {
     var ops = [];
 
     class Stateful extends React.Component {
@@ -182,33 +159,79 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <React.Fragment>
-            <div />
-            <React.Fragment key="d">
-              <div key="b">World</div>
-              <Stateful key="a" />
-            </React.Fragment>
-          </React.Fragment>
-        : <React.Fragment>
-            <React.Fragment key="d">
-              <Stateful key="a" />
-              <div key="b">World</div>
-            </React.Fragment>
-            <div key="c" />
-          </React.Fragment>;
-    }
-    ReactNoop.render(<Fragment />);
+    ReactNoop.render(<Stateful key="a" />);
     ReactNoop.flush();
 
-    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.render(
+      <React.Fragment>
+        <React.Fragment>
+          <Stateful key="a" />
+        </React.Fragment>
+        <div />
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+  });
+
+  it('should not preserve state between array nested in fragment and fragment', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    ReactNoop.render(
+      <React.Fragment>
+        <Stateful key="a" />
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+
+    ReactNoop.render(
+      <React.Fragment>
+        {[<Stateful key="a" />]}
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+  });
+
+  it('should preserve state between top level fragment and array', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    ReactNoop.render([<Stateful key="a" />]);
+    ReactNoop.flush();
+
+    ReactNoop.render(
+      <React.Fragment>
+        <Stateful key="a" />
+      </React.Fragment>,
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
   });
 
-  it('should preserve state of children when the keys are same', function() {
+  it('should preserve state between array nested in fragment and double nested fragment', function() {
     var ops = [];
 
     class Stateful extends React.Component {
@@ -221,22 +244,62 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <React.Fragment key="a">
-            <Stateful />
-          </React.Fragment>
-        : <React.Fragment key="a">
-            <Stateful />
-            <div />
-            <span>World</span>
-          </React.Fragment>;
-    }
-
-    ReactNoop.render(<Fragment />);
+    ReactNoop.render(<React.Fragment>{[<Stateful key="a" />]}</React.Fragment>);
     ReactNoop.flush();
 
-    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.render(
+      <React.Fragment>
+        <React.Fragment><Stateful key="a" /></React.Fragment>
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful']);
+  });
+
+  it('should preserve state between array nested in fragment and double nested array', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    ReactNoop.render(<React.Fragment>{[<Stateful key="a" />]}</React.Fragment>);
+    ReactNoop.flush();
+
+    ReactNoop.render([[<Stateful key="a" />]]);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful']);
+  });
+
+  it('should preserve state between double nested fragment and double nested array', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    ReactNoop.render(
+      <React.Fragment>
+        <React.Fragment><Stateful key="a" /></React.Fragment>
+      </React.Fragment>,
+    );
+    ReactNoop.flush();
+
+    ReactNoop.render([[<Stateful key="a" />]]);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
@@ -255,21 +318,19 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <React.Fragment key="a">
-            <Stateful />
-          </React.Fragment>
-        : <React.Fragment key="b">
-            <Stateful />
-            <span>World</span>
-          </React.Fragment>;
-    }
-
-    ReactNoop.render(<Fragment />);
+    ReactNoop.render(
+      <React.Fragment key="a">
+        <Stateful />
+      </React.Fragment>,
+    );
     ReactNoop.flush();
 
-    ReactNoop.render(<Fragment condition={true} />);
+    ReactNoop.render(
+      <React.Fragment key="b">
+        <Stateful />
+        <span>World</span>
+      </React.Fragment>,
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
@@ -288,76 +349,30 @@ describe('ReactFragment', () => {
       }
     }
 
-    function Fragment({condition}) {
-      return condition
-        ? <div>
-            <React.Fragment key="c">
-              <span>foo</span>
-              <div key="b">
-                <Stateful key="a" />
-              </div>
-            </React.Fragment>
-            <span>boop</span>
+    ReactNoop.render(
+      <div>
+        <React.Fragment key="c">
+          <span>foo</span>
+          <div key="b">
+            <Stateful key="a" />
           </div>
-        : <div>
-            <span>beep</span>
-            <React.Fragment key="c">
-              <div key="b">
-                <Stateful key="a" />
-              </div>
-              <span>bar</span>
-            </React.Fragment>
-          </div>;
-    }
-
-    ReactNoop.render(<Fragment />);
+        </React.Fragment>
+        <span>boop</span>
+      </div>,
+    );
     ReactNoop.flush();
 
-    ReactNoop.render(<Fragment condition={true} />);
-    ReactNoop.flush();
-
-    expect(ops).toEqual(['Update Stateful']);
-  });
-
-  it('should preserve state with reordering in multiple levels', function() {
-    var ops = [];
-
-    class Stateful extends React.Component {
-      componentDidUpdate() {
-        ops.push('Update Stateful');
-      }
-
-      render() {
-        return <div>Hello</div>;
-      }
-    }
-
-    function Fragment({condition}) {
-      return condition
-        ? <div>
-            <React.Fragment key="c">
-              <span>foo</span>
-              <div key="b">
-                <Stateful key="a" />
-              </div>
-            </React.Fragment>
-            <span>boop</span>
+    ReactNoop.render(
+      <div>
+        <span>beep</span>
+        <React.Fragment key="c">
+          <div key="b">
+            <Stateful key="a" />
           </div>
-        : <div>
-            <span>beep</span>
-            <React.Fragment key="c">
-              <div key="b">
-                <Stateful key="a" />
-              </div>
-              <span>bar</span>
-            </React.Fragment>
-          </div>;
-    }
-
-    ReactNoop.render(<Fragment />);
-    ReactNoop.flush();
-
-    ReactNoop.render(<Fragment condition={true} />);
+          <span>bar</span>
+        </React.Fragment>
+      </div>,
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
