@@ -3,31 +3,29 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactPartialRenderer
  */
 
 'use strict';
 
+var React = require('react');
+var emptyFunction = require('fbjs/lib/emptyFunction');
+var emptyObject = require('fbjs/lib/emptyObject');
+var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+var invariant = require('fbjs/lib/invariant');
+var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+
+var DOMMarkupOperations = require('./DOMMarkupOperations');
 var {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
-} = require('DOMNamespaces');
-var DOMMarkupOperations = require('DOMMarkupOperations');
-var React = require('react');
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-
-var assertValidProps = require('assertValidProps');
-var dangerousStyleValue = require('dangerousStyleValue');
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var emptyObject = require('fbjs/lib/emptyObject');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var invariant = require('fbjs/lib/invariant');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
-var omittedCloseTags = require('omittedCloseTags');
-var isCustomComponent = require('isCustomComponent');
+} = require('../shared/DOMNamespaces');
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+var assertValidProps = require('../shared/assertValidProps');
+var dangerousStyleValue = require('../shared/dangerousStyleValue');
+var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
+var isCustomComponent = require('../shared/isCustomComponent');
+var omittedCloseTags = require('../shared/omittedCloseTags');
 
 var toArray = React.Children.toArray;
 var getStackAddendum = emptyFunction.thatReturns('');
@@ -35,23 +33,25 @@ var getStackAddendum = emptyFunction.thatReturns('');
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var checkPropTypes = require('prop-types/checkPropTypes');
-  var warnValidStyle = require('warnValidStyle');
+
+  var warnValidStyle = require('../shared/warnValidStyle');
   var {
     validateProperties: validateARIAProperties,
-  } = require('ReactDOMInvalidARIAHook');
+  } = require('../shared/ReactDOMInvalidARIAHook');
   var {
     validateProperties: validateInputProperties,
-  } = require('ReactDOMNullInputValuePropHook');
+  } = require('../shared/ReactDOMNullInputValuePropHook');
   var {
     validateProperties: validateUnknownProperties,
-  } = require('ReactDOMUnknownPropertyHook');
+  } = require('../shared/ReactDOMUnknownPropertyHook');
+
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props);
   };
 
-  var describeComponentFrame = require('describeComponentFrame');
+  var describeComponentFrame = require('shared/describeComponentFrame');
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
@@ -60,7 +60,7 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
   var setCurrentDebugStack = function(stack) {

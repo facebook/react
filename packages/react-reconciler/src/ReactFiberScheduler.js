@@ -4,17 +4,67 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberScheduler
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig, Deadline} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+
+var {
+  getStackAddendumByWorkInProgressFiber,
+} = require('shared/ReactFiberComponentTreeHook');
+var {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = require('shared/ReactErrorUtils');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
+var getComponentName = require('shared/getComponentName');
+var {
+  PerformedWork,
+  Placement,
+  Update,
+  PlacementAndUpdate,
+  Deletion,
+  ContentReset,
+  Callback,
+  Err,
+  Ref,
+} = require('shared/ReactTypeOfSideEffect');
+var {
+  HostRoot,
+  HostComponent,
+  HostPortal,
+  ClassComponent,
+} = require('shared/ReactTypeOfWork');
+var invariant = require('fbjs/lib/invariant');
+
+var ReactFiberBeginWork = require('./ReactFiberBeginWork');
+var ReactFiberCompleteWork = require('./ReactFiberCompleteWork');
+var ReactFiberCommitWork = require('./ReactFiberCommitWork');
+var ReactFiberHostContext = require('./ReactFiberHostContext');
+var ReactFiberHydrationContext = require('./ReactFiberHydrationContext');
+var {popContextProvider} = require('./ReactFiberContext');
+const {reset} = require('./ReactFiberStack');
+var {logCapturedError} = require('./ReactFiberErrorLogger');
+var {createWorkInProgress} = require('./ReactFiber');
+var {onCommitRoot} = require('./ReactFiberDevToolsHook');
+var {
+  NoWork,
+  Task,
+  Sync,
+  Never,
+  msToExpirationTime,
+  computeExpirationBucket,
+} = require('./ReactFiberExpirationTime');
+var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
+var {getUpdateExpirationTime} = require('./ReactFiberUpdateQueue');
+var {resetContext} = require('./ReactFiberContext');
 
 export type CapturedError = {
   componentName: ?string,
@@ -30,69 +80,11 @@ export type HandleErrorInfo = {
   componentStack: string,
 };
 
-var {popContextProvider} = require('ReactFiberContext');
-const {reset} = require('ReactFiberStack');
-var {
-  getStackAddendumByWorkInProgressFiber,
-} = require('ReactFiberComponentTreeHook');
-var {logCapturedError} = require('ReactFiberErrorLogger');
-var {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = require('ReactErrorUtils');
-
-var ReactFiberBeginWork = require('ReactFiberBeginWork');
-var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
-var ReactFiberCommitWork = require('ReactFiberCommitWork');
-var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
-
-var {createWorkInProgress} = require('ReactFiber');
-var {onCommitRoot} = require('ReactFiberDevToolsHook');
-
-var {
-  NoWork,
-  Task,
-  Sync,
-  Never,
-  msToExpirationTime,
-  computeExpirationBucket,
-} = require('ReactFiberExpirationTime');
-
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
-var {
-  PerformedWork,
-  Placement,
-  Update,
-  PlacementAndUpdate,
-  Deletion,
-  ContentReset,
-  Callback,
-  Err,
-  Ref,
-} = require('ReactTypeOfSideEffect');
-
-var {
-  HostRoot,
-  HostComponent,
-  HostPortal,
-  ClassComponent,
-} = require('ReactTypeOfWork');
-
-var {getUpdateExpirationTime} = require('ReactFiberUpdateQueue');
-
-var {resetContext} = require('ReactFiberContext');
-
-var invariant = require('fbjs/lib/invariant');
-
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+
+  var ReactFiberInstrumentation = require('./ReactFiberInstrumentation');
+  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
   var {
     recordEffect,
     recordScheduleUpdate,
@@ -107,7 +99,7 @@ if (__DEV__) {
     stopCommitHostEffectsTimer,
     startCommitLifeCyclesTimer,
     stopCommitLifeCyclesTimer,
-  } = require('ReactDebugFiberPerf');
+  } = require('./ReactDebugFiberPerf');
 
   var didWarnAboutStateTransition = false;
 

@@ -4,29 +4,20 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberCompleteWork
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCoroutine} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
-import type {HostContext} from 'ReactFiberHostContext';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {FiberRoot} from 'ReactFiberRoot';
+import type {ReactCoroutine} from 'shared/ReactTypes';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {HostContext} from './ReactFiberHostContext';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {FiberRoot} from './ReactFiberRoot';
 
-var {reconcileChildFibers} = require('ReactChildFiber');
-var {
-  popContextProvider,
-  popTopLevelContextObject,
-} = require('ReactFiberContext');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactFiberExpirationTime = require('ReactFiberExpirationTime');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -39,11 +30,16 @@ var {
   CoroutineHandlerPhase,
   YieldComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
-var {Never} = ReactFiberExpirationTime;
-
+} = require('shared/ReactTypeOfWork');
+var {Placement, Ref, Update} = require('shared/ReactTypeOfSideEffect');
 var invariant = require('fbjs/lib/invariant');
+
+var {reconcileChildFibers} = require('./ReactChildFiber');
+var {
+  popContextProvider,
+  popTopLevelContextObject,
+} = require('./ReactFiberContext');
+var {Never} = require('./ReactFiberExpirationTime');
 
 module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,

@@ -4,22 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeComponent
  * @flow
  * @format
  */
 
 'use strict';
-
-const React = require('react');
-const ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
-
-const findNodeHandle = require('findNodeHandle');
-const findNumericNodeHandle = require('findNumericNodeHandle');
-
-const {mountSafeCallback} = require('NativeMethodsMixinUtils');
 
 import type {
   MeasureInWindowOnSuccessCallback,
@@ -27,7 +16,17 @@ import type {
   MeasureOnSuccessCallback,
   NativeMethodsMixinType,
   ReactNativeBaseComponentViewConfig,
-} from 'ReactNativeTypes';
+} from './ReactNativeTypes';
+
+const React = require('react');
+// Modules provided by RN:
+const TextInputState = require('TextInputState');
+const UIManager = require('UIManager');
+
+const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
+const {mountSafeCallback} = require('./NativeMethodsMixinUtils');
+const findNodeHandle = require('./findNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 /**
  * Superclass that provides methods to access the underlying native component.

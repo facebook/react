@@ -13,7 +13,7 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactTestUtils = require('react-dom/test-utils');
 // TODO: can we express this test with only public API?
-var inputValueTracking = require('inputValueTracking');
+var inputValueTracking = require('react-dom/src/client/inputValueTracking');
 
 var getTracker = inputValueTracking._getTrackerFromNode;
 

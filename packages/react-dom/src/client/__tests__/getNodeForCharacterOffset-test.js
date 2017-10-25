@@ -10,7 +10,7 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
+var getNodeForCharacterOffset = require('react-dom/src/client/getNodeForCharacterOffset');
 
 // Create node from HTML string
 function createNode(html) {

@@ -10,8 +10,8 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var setInnerHTML = require('setInnerHTML');
-var Namespaces = require('DOMNamespaces').Namespaces;
+var setInnerHTML = require('react-dom/src/client/setInnerHTML');
+var Namespaces = require('react-dom/src/shared/DOMNamespaces').Namespaces;
 
 describe('setInnerHTML', () => {
   describe('when the node has innerHTML property', () => {

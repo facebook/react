@@ -28,14 +28,16 @@ describe('ReactDOMInput', () => {
 
   beforeEach(() => {
     jest.resetModules();
-    React = require('react');
-    ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
-    ReactTestUtils = require('react-dom/test-utils');
+    
     setUntrackedValue = Object.getOwnPropertyDescriptor(
       HTMLInputElement.prototype,
       'value',
     ).set;
+    
+    React = require('react');
+    ReactDOM = require('react-dom');
+    ReactDOMServer = require('react-dom/server');
+    ReactTestUtils = require('react-dom/test-utils');
     spyOn(console, 'error');
   });
 
@@ -48,7 +50,8 @@ describe('ReactDOMInput', () => {
     var node = ReactDOM.findDOMNode(stub);
     expectDev(console.error.calls.count()).toBe(1);
 
-    setUntrackedValue.call(node, 'giraffe');
+    
+    .call(node, 'giraffe');
 
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
