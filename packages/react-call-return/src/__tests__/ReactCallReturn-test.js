@@ -11,16 +11,14 @@
 
 var React;
 var ReactNoop;
-var ReactCoroutine;
+var ReactCallReturn;
 
-describe('ReactCoroutine', () => {
+describe('ReactCallReturn', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    // TODO: can we express this test with only public API?
-    // TODO: direct imports like some-package/src/* are bad. Fix me.
-    ReactCoroutine = require('react-reconciler/src/ReactCoroutine');
+    ReactCallReturn = require('react-call-return');
   });
 
   function div(...children) {
@@ -32,7 +30,7 @@ describe('ReactCoroutine', () => {
     return {type: 'span', children: [], prop};
   }
 
-  it('should render a coroutine', () => {
+  it('should render a call', () => {
     var ops = [];
 
     function Continuation({isSame}) {
@@ -41,10 +39,10 @@ describe('ReactCoroutine', () => {
     }
 
     // An alternative API could mark Continuation as something that needs
-    // yielding. E.g. Continuation.yieldType = 123;
+    // returning. E.g. Continuation.returnType = 123;
     function Child({bar}) {
       ops.push(['Child', bar]);
-      return ReactCoroutine.createYield({
+      return ReactCallReturn.unstable_createReturn({
         props: {
           bar: bar,
         },
@@ -57,20 +55,20 @@ describe('ReactCoroutine', () => {
       return [<Child key="a" bar={true} />, <Child key="b" bar={false} />];
     }
 
-    function HandleYields(props, yields) {
-      ops.push('HandleYields');
-      return yields.map((y, i) => (
+    function HandleReturns(props, returns) {
+      ops.push('HandleReturns');
+      return returns.map((y, i) => (
         <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
     // An alternative API could mark Parent as something that needs
-    // yielding. E.g. Parent.handler = HandleYields;
+    // returning. E.g. Parent.handler = HandleReturns;
     function Parent(props) {
       ops.push('Parent');
-      return ReactCoroutine.createCoroutine(
+      return ReactCallReturn.unstable_createCall(
         props.children,
-        HandleYields,
+        HandleReturns,
         props,
       );
     }
@@ -86,11 +84,11 @@ describe('ReactCoroutine', () => {
       'Parent',
       'Indirection',
       ['Child', true],
-      // Yield
+      // Return
       ['Child', false],
-      // Yield
-      'HandleYields',
-      // Continue yields
+      // Return
+      'HandleReturns',
+      // Call continuations
       ['Continuation', true],
       ['Continuation', false],
     ]);
@@ -99,13 +97,13 @@ describe('ReactCoroutine', () => {
     ]);
   });
 
-  it('should update a coroutine', () => {
+  it('should update a call', () => {
     function Continuation({isSame}) {
       return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
     }
 
     function Child({bar}) {
-      return ReactCoroutine.createYield({
+      return ReactCallReturn.unstable_createReturn({
         props: {
           bar: bar,
         },
@@ -117,16 +115,16 @@ describe('ReactCoroutine', () => {
       return [<Child key="a" bar={true} />, <Child key="b" bar={false} />];
     }
 
-    function HandleYields(props, yields) {
-      return yields.map((y, i) => (
+    function HandleReturns(props, returns) {
+      return returns.map((y, i) => (
         <y.continuation key={i} isSame={props.foo === y.props.bar} />
       ));
     }
 
     function Parent(props) {
-      return ReactCoroutine.createCoroutine(
+      return ReactCallReturn.unstable_createCall(
         props.children,
-        HandleYields,
+        HandleReturns,
         props,
       );
     }
@@ -148,7 +146,7 @@ describe('ReactCoroutine', () => {
     ]);
   });
 
-  it('should unmount a composite in a coroutine', () => {
+  it('should unmount a composite in a call', () => {
     var ops = [];
 
     class Continuation extends React.Component {
@@ -164,16 +162,16 @@ describe('ReactCoroutine', () => {
     class Child extends React.Component {
       render() {
         ops.push('Child');
-        return ReactCoroutine.createYield(Continuation);
+        return ReactCallReturn.unstable_createReturn(Continuation);
       }
       componentWillUnmount() {
         ops.push('Unmount Child');
       }
     }
 
-    function HandleYields(props, yields) {
-      ops.push('HandleYields');
-      return yields.map((ContinuationComponent, i) => (
+    function HandleReturns(props, returns) {
+      ops.push('HandleReturns');
+      return returns.map((ContinuationComponent, i) => (
         <ContinuationComponent key={i} />
       ));
     }
@@ -181,9 +179,9 @@ describe('ReactCoroutine', () => {
     class Parent extends React.Component {
       render() {
         ops.push('Parent');
-        return ReactCoroutine.createCoroutine(
+        return ReactCallReturn.unstable_createCall(
           this.props.children,
-          HandleYields,
+          HandleReturns,
           this.props,
         );
       }
@@ -195,7 +193,7 @@ describe('ReactCoroutine', () => {
     ReactNoop.render(<Parent><Child /></Parent>);
     ReactNoop.flush();
 
-    expect(ops).toEqual(['Parent', 'Child', 'HandleYields', 'Continuation']);
+    expect(ops).toEqual(['Parent', 'Child', 'HandleReturns', 'Continuation']);
 
     ops = [];
 
@@ -209,25 +207,25 @@ describe('ReactCoroutine', () => {
     ]);
   });
 
-  it('should handle deep updates in coroutine', () => {
+  it('should handle deep updates in call', () => {
     let instances = {};
 
     class Counter extends React.Component {
       state = {value: 5};
       render() {
         instances[this.props.id] = this;
-        return ReactCoroutine.createYield(this.state.value);
+        return ReactCallReturn.unstable_createReturn(this.state.value);
       }
     }
 
     function App(props) {
-      return ReactCoroutine.createCoroutine(
+      return ReactCallReturn.unstable_createCall(
         [
           <Counter key="a" id="a" />,
           <Counter key="b" id="b" />,
           <Counter key="c" id="c" />,
         ],
-        (p, yields) => yields.map((y, i) => <span key={i} prop={y * 100} />),
+        (p, returns) => returns.map((y, i) => <span key={i} prop={y * 100} />),
         {},
       );
     }

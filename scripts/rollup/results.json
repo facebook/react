@@ -199,6 +199,14 @@
     "react-reconciler.production.min.js (NODE_PROD)": {
       "size": 38245,
       "gzip": 11943
+    },
+    "react-call-return.development.js (NODE_DEV)": {
+      "size": 2721,
+      "gzip": 943
+    },
+    "react-call-return.production.min.js (NODE_PROD)": {
+      "size": 845,
+      "gzip": 484
     }
   }
 }

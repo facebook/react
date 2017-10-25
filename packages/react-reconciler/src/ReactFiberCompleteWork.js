@@ -10,7 +10,7 @@
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCoroutine} from 'shared/ReactTypes';
+import type {ReactCall} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
@@ -26,9 +26,9 @@ var {
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-  CoroutineHandlerPhase,
-  YieldComponent,
+  CallComponent,
+  CallHandlerPhase,
+  ReturnComponent,
   Fragment,
 } = require('shared/ReactTypeOfWork');
 var {Placement, Ref, Update} = require('shared/ReactTypeOfSideEffect');
@@ -79,7 +79,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     workInProgress.effectTag |= Ref;
   }
 
-  function appendAllYields(yields: Array<mixed>, workInProgress: Fiber) {
+  function appendAllReturns(returns: Array<mixed>, workInProgress: Fiber) {
     let node = workInProgress.stateNode;
     if (node) {
       node.return = workInProgress;
@@ -90,9 +90,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         node.tag === HostText ||
         node.tag === HostPortal
       ) {
-        invariant(false, 'A coroutine cannot have host component children.');
-      } else if (node.tag === YieldComponent) {
-        yields.push(node.type);
+        invariant(false, 'A call cannot have host component children.');
+      } else if (node.tag === ReturnComponent) {
+        returns.push(node.type);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -109,34 +109,34 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function moveCoroutineToHandlerPhase(
+  function moveCallToHandlerPhase(
     current: Fiber | null,
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
-    var coroutine = (workInProgress.memoizedProps: ?ReactCoroutine);
+    var call = (workInProgress.memoizedProps: ?ReactCall);
     invariant(
-      coroutine,
+      call,
       'Should be resolved by now. This error is likely caused by a bug in ' +
         'React. Please file an issue.',
     );
 
-    // First step of the coroutine has completed. Now we need to do the second.
-    // TODO: It would be nice to have a multi stage coroutine represented by a
+    // First step of the call has completed. Now we need to do the second.
+    // TODO: It would be nice to have a multi stage call represented by a
     // single component, or at least tail call optimize nested ones. Currently
     // that requires additional fields that we don't want to add to the fiber.
     // So this requires nested handlers.
     // Note: This doesn't mutate the alternate node. I don't think it needs to
     // since this stage is reset for every pass.
-    workInProgress.tag = CoroutineHandlerPhase;
+    workInProgress.tag = CallHandlerPhase;
 
-    // Build up the yields.
+    // Build up the returns.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var yields: Array<mixed> = [];
-    appendAllYields(yields, workInProgress);
-    var fn = coroutine.handler;
-    var props = coroutine.props;
-    var nextChildren = fn(props, yields);
+    var returns: Array<mixed> = [];
+    appendAllReturns(returns, workInProgress);
+    var fn = call.handler;
+    var props = call.props;
+    var nextChildren = fn(props, returns);
 
     var currentFirstChild = current !== null ? current.child : null;
     workInProgress.child = reconcileChildFibers(
@@ -566,17 +566,17 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         }
         return null;
       }
-      case CoroutineComponent:
-        return moveCoroutineToHandlerPhase(
+      case CallComponent:
+        return moveCallToHandlerPhase(
           current,
           workInProgress,
           renderExpirationTime,
         );
-      case CoroutineHandlerPhase:
-        // Reset the tag to now be a first phase coroutine.
-        workInProgress.tag = CoroutineComponent;
+      case CallHandlerPhase:
+        // Reset the tag to now be a first phase call.
+        workInProgress.tag = CallComponent;
         return null;
-      case YieldComponent:
+      case ReturnComponent:
         // Does nothing.
         return null;
       case Fragment:
