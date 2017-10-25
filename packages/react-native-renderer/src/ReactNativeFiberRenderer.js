@@ -13,6 +13,7 @@ const ReactFiberReconciler = require('react-reconciler');
 const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('./ReactNativeComponentTree');
 const ReactNativeFiberHostComponent = require('./ReactNativeFiberHostComponent');
+const ReactNativeFrameScheduling = require('./ReactNativeFrameScheduling');
 const ReactNativeTagHandles = require('./ReactNativeTagHandles');
 const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
 
@@ -159,6 +160,8 @@ const NativeRenderer = ReactFiberReconciler({
     return instance;
   },
 
+  now: ReactNativeFrameScheduling.now,
+
   prepareForCommit(): void {
     // Noop
   },
@@ -178,11 +181,11 @@ const NativeRenderer = ReactFiberReconciler({
     // Noop
   },
 
+  scheduleDeferredCallback: ReactNativeFrameScheduling.scheduleDeferredCallback,
+
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return false;
   },
-
-  scheduleDeferredCallback: global.requestIdleCallback,
 
   shouldSetTextContent(type: string, props: Props): boolean {
     // TODO (bvaughn) Revisit this decision.
@@ -195,11 +198,6 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   useSyncScheduling: true,
-
-  now(): number {
-    // TODO: Enable expiration by implementing this method.
-    return 0;
-  },
 
   mutation: {
     appendChild(
