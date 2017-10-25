@@ -18,10 +18,8 @@ Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
   ReactFiberTreeReflection: require('shared/ReactFiberTreeReflection'),
   ReactDOMComponentTree: require('./src/client/ReactDOMComponentTree'),
   ReactInstanceMap: require('shared/ReactInstanceMap'),
-  // These are dependencies of TapEventPlugin:
-  EventPluginUtils: require('events/EventPluginUtils'),
-  EventPropagators: require('events/EventPropagators'),
-  SyntheticUIEvent: require('./src/events/SyntheticUIEvent'),
+  // Used by www msite:
+  TapEventPlugin: require('./src/events/TapEventPlugin'),
 });
 
 module.exports = ReactDOM;

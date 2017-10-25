@@ -41,12 +41,12 @@
       "gzip": 33563
     },
     "ReactDOM-dev.js (FB_DEV)": {
-      "size": 587573,
-      "gzip": 134618
+      "size": 590443,
+      "gzip": 135554
     },
     "ReactDOM-prod.js (FB_PROD)": {
-      "size": 418348,
-      "gzip": 92934
+      "size": 420794,
+      "gzip": 93574
     },
     "react-dom-test-utils.development.js (NODE_DEV)": {
       "size": 41554,
@@ -101,8 +101,8 @@
       "gzip": 5899
     },
     "ReactDOMServer-dev.js (FB_DEV)": {
-      "size": 93943,
-      "gzip": 25012
+      "size": 93901,
+      "gzip": 25000
     },
     "ReactDOMServer-prod.js (FB_PROD)": {
       "size": 42426,
