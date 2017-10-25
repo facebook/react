@@ -9,9 +9,9 @@
 
 'use strict';
 
-const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
-
 import type {ViewConfigGetter} from './ReactNativeTypes';
+
+const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
 
 /**
  * Creates a renderable ReactNative host component.

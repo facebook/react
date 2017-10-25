@@ -8,7 +8,6 @@
 'use strict';
 
 var {HostComponent, HostText} = require('shared/ReactTypeOfWork');
-
 var invariant = require('fbjs/lib/invariant');
 
 var randomKey = Math.random().toString(36).slice(2);

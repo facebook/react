@@ -8,7 +8,6 @@
 'use strict';
 
 var SyntheticUIEvent = require('./SyntheticUIEvent');
-
 var getEventModifierState = require('./getEventModifierState');
 
 /**

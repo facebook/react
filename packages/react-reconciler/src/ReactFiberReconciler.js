@@ -14,6 +14,10 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var {HostComponent} = require('shared/ReactTypeOfWork');
+var emptyObject = require('fbjs/lib/emptyObject');
+
 var {
   findCurrentUnmaskedContext,
   isContextProvider,
@@ -21,16 +25,15 @@ var {
 } = require('./ReactFiberContext');
 var {createFiberRoot} = require('./ReactFiberRoot');
 var ReactFiberScheduler = require('./ReactFiberScheduler');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var {HostComponent} = require('shared/ReactTypeOfWork');
 var {insertUpdateIntoFiber} = require('./ReactFiberUpdateQueue');
-var emptyObject = require('fbjs/lib/emptyObject');
 
 if (__DEV__) {
+  var getComponentName = require('shared/getComponentName');
   var warning = require('fbjs/lib/warning');
+
   var ReactFiberInstrumentation = require('./ReactFiberInstrumentation');
   var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
-  var getComponentName = require('shared/getComponentName');
+
   var didWarnAboutNestedUpdates = false;
 }
 

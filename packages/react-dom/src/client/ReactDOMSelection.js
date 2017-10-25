@@ -7,10 +7,9 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
-
 var getNodeForCharacterOffset = require('./getNodeForCharacterOffset');
 var getTextContentAccessor = require('./getTextContentAccessor');
+var {TEXT_NODE} = require('../shared/HTMLNodeType');
 
 /**
  * @param {DOMElement} outerNode

@@ -7,11 +7,12 @@
 
 'use strict';
 
-var ReactDOMStringRenderer = require('./ReactDOMStringRenderer');
-var ReactDOMNodeStreamRenderer = require('./ReactDOMNodeStreamRenderer');
+require('../shared/ReactDOMInjection');
+
 var ReactVersion = require('shared/ReactVersion');
 
-require('../shared/ReactDOMInjection');
+var ReactDOMStringRenderer = require('./ReactDOMStringRenderer');
+var ReactDOMNodeStreamRenderer = require('./ReactDOMNodeStreamRenderer');
 
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,

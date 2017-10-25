@@ -9,10 +9,10 @@
 
 'use strict';
 
+import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
+
 // Module provided by RN:
 const ExceptionsManager = require('ExceptionsManager');
-
-import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
 
 /**
  * Intercept lifecycle errors and ensure they are shown with the correct stack

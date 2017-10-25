@@ -7,11 +7,12 @@
 
 'use strict';
 
-var ReactDOMStringRenderer = require('./ReactDOMStringRenderer');
+require('../shared/ReactDOMInjection');
+
 var ReactVersion = require('shared/ReactVersion');
 var invariant = require('fbjs/lib/invariant');
 
-require('../shared/ReactDOMInjection');
+var ReactDOMStringRenderer = require('./ReactDOMStringRenderer');
 
 module.exports = {
   renderToString: ReactDOMStringRenderer.renderToString,

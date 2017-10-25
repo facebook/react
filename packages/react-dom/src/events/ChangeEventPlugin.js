@@ -9,16 +9,16 @@
 
 var EventPluginHub = require('events/EventPluginHub');
 var EventPropagators = require('events/EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 var ReactControlledComponent = require('events/ReactControlledComponent');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 var ReactGenericBatching = require('events/ReactGenericBatching');
 var SyntheticEvent = require('events/SyntheticEvent');
+var isTextInputElement = require('shared/isTextInputElement');
+var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
 
-var inputValueTracking = require('../client/inputValueTracking');
 var getEventTarget = require('./getEventTarget');
 var isEventSupported = require('./isEventSupported');
-var isTextInputElement = require('shared/isTextInputElement');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+var inputValueTracking = require('../client/inputValueTracking');
 
 var eventTypes = {
   change: {

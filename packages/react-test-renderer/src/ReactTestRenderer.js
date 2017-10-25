@@ -9,9 +9,12 @@
 
 'use strict';
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
+
 var ReactFiberReconciler = require('react-reconciler');
-var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactGenericBatching = require('events/ReactGenericBatching');
+var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var emptyObject = require('fbjs/lib/emptyObject');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var invariant = require('fbjs/lib/invariant');
@@ -23,9 +26,6 @@ var {
   HostText,
   HostRoot,
 } = ReactTypeOfWork;
-
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,

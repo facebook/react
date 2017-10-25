@@ -7,9 +7,9 @@
 
 'use strict';
 
-var EventPluginUtils = require('./EventPluginUtils');
-
 var invariant = require('fbjs/lib/invariant');
+
+var EventPluginUtils = require('./EventPluginUtils');
 
 // Use to restore controlled state after a change event has fired.
 

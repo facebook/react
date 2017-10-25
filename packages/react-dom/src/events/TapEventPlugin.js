@@ -11,11 +11,11 @@
 
 var EventPluginUtils = require('events/EventPluginUtils');
 var EventPropagators = require('events/EventPropagators');
-var SyntheticUIEvent = require('./SyntheticUIEvent');
 var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
-
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
+
+var SyntheticUIEvent = require('./SyntheticUIEvent');
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket

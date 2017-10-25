@@ -7,11 +7,11 @@
 
 'use strict';
 
-var ReactNoopUpdateQueue = require('./ReactNoopUpdateQueue');
-
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var lowPriorityWarning = require('shared/lowPriorityWarning');
+
+var ReactNoopUpdateQueue = require('./ReactNoopUpdateQueue');
 
 /**
  * Base class helpers for the updating state of a component.

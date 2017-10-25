@@ -8,8 +8,9 @@
 'use strict';
 
 var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
+
 var setInnerHTML = require('./setInnerHTML');
+var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
 var {TEXT_NODE} = require('../shared/HTMLNodeType');
 
 /**

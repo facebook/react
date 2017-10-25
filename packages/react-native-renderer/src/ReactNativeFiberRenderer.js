@@ -9,21 +9,25 @@
 
 'use strict';
 
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+
 const ReactFiberReconciler = require('react-reconciler');
+const emptyObject = require('fbjs/lib/emptyObject');
+const invariant = require('fbjs/lib/invariant');
+// Modules provided by RN:
+const UIManager = require('UIManager');
+const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
+
 const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
 const ReactNativeComponentTree = require('./ReactNativeComponentTree');
 const ReactNativeFiberHostComponent = require('./ReactNativeFiberHostComponent');
 const ReactNativeTagHandles = require('./ReactNativeTagHandles');
 const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
-
-// Modules provided by RN:
-const UIManager = require('UIManager');
-const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
-
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
-
-import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+const {
+  precacheFiberNode,
+  uncacheFiberNode,
+  updateFiberProps,
+} = ReactNativeComponentTree;
 
 export type Container = number;
 export type Instance = {
@@ -33,12 +37,6 @@ export type Instance = {
 };
 export type Props = Object;
 export type TextInstance = number;
-
-const {
-  precacheFiberNode,
-  uncacheFiberNode,
-  updateFiberProps,
-} = ReactNativeComponentTree;
 
 function recursivelyUncacheFiberNode(node: Instance | TextInstance) {
   if (typeof node === 'number') {

@@ -13,9 +13,9 @@ import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
-const {createCursor, pop, push} = require('./ReactFiberStack');
-
 const invariant = require('fbjs/lib/invariant');
+
+const {createCursor, pop, push} = require('./ReactFiberStack');
 
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);

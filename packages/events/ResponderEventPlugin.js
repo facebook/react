@@ -7,12 +7,12 @@
 
 'use strict';
 
+var ReactTreeTraversal = require('shared/ReactTreeTraversal');
+
 var EventPluginUtils = require('./EventPluginUtils');
 var EventPropagators = require('./EventPropagators');
-var ReactTreeTraversal = require('shared/ReactTreeTraversal');
 var ResponderSyntheticEvent = require('./ResponderSyntheticEvent');
 var ResponderTouchHistoryStore = require('./ResponderTouchHistoryStore');
-
 var accumulate = require('./accumulate');
 
 var isStartish = EventPluginUtils.isStartish;

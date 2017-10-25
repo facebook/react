@@ -18,12 +18,13 @@ var ReactCurrentOwner = require('./ReactCurrentOwner');
 var ReactElement = require('./ReactElement');
 
 if (__DEV__) {
-  var ReactDebugCurrentFrame = require('./ReactDebugCurrentFrame');
-  var checkPropTypes = require('prop-types/checkPropTypes');
   var lowPriorityWarning = require('shared/lowPriorityWarning');
-  var warning = require('fbjs/lib/warning');
   var describeComponentFrame = require('shared/describeComponentFrame');
   var getComponentName = require('shared/getComponentName');
+  var checkPropTypes = require('prop-types/checkPropTypes');
+  var warning = require('fbjs/lib/warning');
+
+  var ReactDebugCurrentFrame = require('./ReactDebugCurrentFrame');
 
   var currentlyValidatingElement = null;
 

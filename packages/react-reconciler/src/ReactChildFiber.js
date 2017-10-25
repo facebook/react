@@ -16,19 +16,20 @@ import type {
   ExpirationTime,
 } from 'react-reconciler/src/ReactFiberExpirationTime';
 
-var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('./ReactCoroutine');
-var {REACT_PORTAL_TYPE} = require('./ReactPortal');
-
-var ReactFiber = require('./ReactFiber');
 var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 
+var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('./ReactCoroutine');
+var {REACT_PORTAL_TYPE} = require('./ReactPortal');
+var ReactFiber = require('./ReactFiber');
+
 if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('./ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
+
+  var {getCurrentFiberStackAddendum} = require('./ReactDebugCurrentFiber');
+
   var didWarnAboutMaps = false;
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or

@@ -8,14 +8,12 @@
 
 'use strict';
 
-const checkPropTypes = require('prop-types/checkPropTypes');
 const React = require('react');
-
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
-
 const describeComponentFrame = require('shared/describeComponentFrame');
 const getComponentName = require('shared/getComponentName');
+const emptyObject = require('fbjs/lib/emptyObject');
+const invariant = require('fbjs/lib/invariant');
+const checkPropTypes = require('prop-types/checkPropTypes');
 
 class ReactShallowRenderer {
   static createRenderer = function() {

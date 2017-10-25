@@ -8,8 +8,8 @@
 'use strict';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
   var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
+  var warning = require('fbjs/lib/warning');
 }
 
 var didWarnValueNull = false;

@@ -12,14 +12,13 @@ require('art/modes/current').setCurrent(
   require('art/modes/fast-noSideEffects'),
 );
 
+const React = require('react');
+const ReactFiberReconciler = require('react-reconciler');
+const ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
 const Mode = require('art/modes/current');
 const Transform = require('art/core/transform');
 const invariant = require('fbjs/lib/invariant');
 const emptyObject = require('fbjs/lib/emptyObject');
-const React = require('react');
-const ReactFiberReconciler = require('react-reconciler');
-const ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
-
 const {Component} = React;
 
 const pooledTransform = new Transform();

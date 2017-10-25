@@ -8,14 +8,14 @@
  */
 'use strict';
 
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+
 const EventPropagators = require('events/EventPropagators');
 const SyntheticEvent = require('events/SyntheticEvent');
 const invariant = require('fbjs/lib/invariant');
 
 const customBubblingEventTypes = {};
 const customDirectEventTypes = {};
-
-import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: {},

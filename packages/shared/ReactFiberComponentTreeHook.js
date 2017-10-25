@@ -9,6 +9,8 @@
 
 'use strict';
 
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
 var ReactTypeOfWork = require('./ReactTypeOfWork');
 var {
   IndeterminateComponent,
@@ -18,8 +20,6 @@ var {
 } = ReactTypeOfWork;
 var describeComponentFrame = require('./describeComponentFrame');
 var getComponentName = require('./getComponentName');
-
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {

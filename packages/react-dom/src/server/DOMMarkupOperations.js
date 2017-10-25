@@ -8,7 +8,6 @@
 'use strict';
 
 var DOMProperty = require('../shared/DOMProperty');
-
 var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser');
 
 if (__DEV__) {

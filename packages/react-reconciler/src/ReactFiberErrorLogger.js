@@ -9,9 +9,9 @@
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
-
 import type {CapturedError} from './ReactFiberScheduler';
+
+const invariant = require('fbjs/lib/invariant');
 
 const defaultShowDialog = (capturedError: CapturedError) => true;
 

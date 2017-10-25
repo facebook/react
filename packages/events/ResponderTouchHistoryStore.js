@@ -9,10 +9,9 @@
 
 'use strict';
 
-const EventPluginUtils = require('./EventPluginUtils');
-
 const invariant = require('fbjs/lib/invariant');
 
+const EventPluginUtils = require('./EventPluginUtils');
 const {isEndish, isMoveish, isStartish} = EventPluginUtils;
 
 if (__DEV__) {

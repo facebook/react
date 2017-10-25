@@ -8,8 +8,9 @@
 'use strict';
 
 var EventPropagators = require('events/EventPropagators');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+
 var SyntheticMouseEvent = require('./SyntheticMouseEvent');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 
 var eventTypes = {
   mouseEnter: {

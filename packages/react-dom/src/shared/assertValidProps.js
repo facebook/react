@@ -8,6 +8,7 @@
 'use strict';
 
 var invariant = require('fbjs/lib/invariant');
+
 var voidElementTags = require('./voidElementTags');
 
 if (__DEV__) {

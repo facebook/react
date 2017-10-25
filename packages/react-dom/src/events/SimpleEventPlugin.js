@@ -9,10 +9,19 @@
 
 'use strict';
 
+import type {TopLevelTypes} from './BrowserEventConstants';
+import type {
+  DispatchConfig,
+  ReactSyntheticEvent,
+} from 'events/ReactSyntheticEventType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {EventTypes, PluginModule} from 'events/PluginModuleType';
+
 var EventPropagators = require('events/EventPropagators');
+var SyntheticEvent = require('events/SyntheticEvent');
+
 var SyntheticAnimationEvent = require('./SyntheticAnimationEvent');
 var SyntheticClipboardEvent = require('./SyntheticClipboardEvent');
-var SyntheticEvent = require('events/SyntheticEvent');
 var SyntheticFocusEvent = require('./SyntheticFocusEvent');
 var SyntheticKeyboardEvent = require('./SyntheticKeyboardEvent');
 var SyntheticMouseEvent = require('./SyntheticMouseEvent');
@@ -21,20 +30,11 @@ var SyntheticTouchEvent = require('./SyntheticTouchEvent');
 var SyntheticTransitionEvent = require('./SyntheticTransitionEvent');
 var SyntheticUIEvent = require('./SyntheticUIEvent');
 var SyntheticWheelEvent = require('./SyntheticWheelEvent');
-
 var getEventCharCode = require('./getEventCharCode');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
-
-import type {TopLevelTypes} from './BrowserEventConstants';
-import type {
-  DispatchConfig,
-  ReactSyntheticEvent,
-} from 'events/ReactSyntheticEventType';
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 
 /**
  * Turns

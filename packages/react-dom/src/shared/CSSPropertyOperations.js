@@ -11,6 +11,7 @@ var dangerousStyleValue = require('./dangerousStyleValue');
 
 if (__DEV__) {
   var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
+
   var warnValidStyle = require('./warnValidStyle');
 }
 

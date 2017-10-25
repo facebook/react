@@ -15,6 +15,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var emptyFunction = require('fbjs/lib/emptyFunction');
   var PropTypes = require('prop-types');
+
   var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
   ReactControlledValuePropTypes.checkPropTypes = emptyFunction;

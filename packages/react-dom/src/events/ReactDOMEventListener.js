@@ -7,15 +7,14 @@
 
 'use strict';
 
-var EventListener = require('fbjs/lib/EventListener');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactGenericBatching = require('events/ReactGenericBatching');
+var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
+var EventListener = require('fbjs/lib/EventListener');
+var {HostRoot} = ReactTypeOfWork;
 
 var getEventTarget = require('./getEventTarget');
-
-var {HostRoot} = ReactTypeOfWork;
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 
 var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 var callbackBookkeepingPool = [];
