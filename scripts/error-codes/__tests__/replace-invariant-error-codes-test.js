@@ -97,8 +97,9 @@ ${expectedInvariantTransformResult}`
   it('should correctly transform invariants that are not in the error codes map', () => {
     compare(
       "invariant(condition, 'This is not a real error message.');",
-      "var _prodInvariant = require('reactProdInvariant');\n\n" +
-        "!condition ? invariant(false, 'This is not a real error message.') : void 0;"
+      `var _prodInvariant = require('shared/reactProdInvariant');
+
+!condition ? invariant(false, 'This is not a real error message.') : void 0;`
     );
   });
 });
