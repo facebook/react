@@ -168,11 +168,6 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    // Do not understand this method. Please advise
-    // if (!ChangeEventPlugin._isInputEventSupported) {
-    //   return;
-    // }
-
     var input = ReactTestUtils.renderIntoDocument(
       <input type="range" onChange={cb} />,
     );
