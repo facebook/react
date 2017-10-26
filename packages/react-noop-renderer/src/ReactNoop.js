@@ -25,7 +25,7 @@ var ReactFiberReconciler = require('react-reconciler');
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactInstanceMap = require('shared/ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
-var expect = require('jest-matchers');
+var expect = require('expect');
 
 const UPDATE_SIGNAL = {};
 
