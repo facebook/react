@@ -180,10 +180,13 @@ if (__DEV__) {
       return true;
     }
 
-    if (typeof value === 'boolean') {
+    if (
+      typeof value === 'boolean' &&
+      !DOMProperty.shouldAttributeAcceptBooleanValue(name)
+    ) {
       if (value === true) {
         warning(
-          DOMProperty.shouldAttributeAcceptBooleanValue(name),
+          false,
           'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
             'the value to a string.%s',
           value,
@@ -192,7 +195,7 @@ if (__DEV__) {
         );
       } else {
         warning(
-          DOMProperty.shouldAttributeAcceptBooleanValue(name),
+          false,
           'If you mean to conditionally pass an attribute, use a ternary ' +
             'expression: `%s`={condition ? value : undefined} instead of ' +
             '{condition && value}.%s',
