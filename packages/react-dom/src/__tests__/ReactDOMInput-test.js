@@ -69,7 +69,11 @@ describe('ReactDOMInput', () => {
       switchedFocus = false;
       change(newValue) {
         this.setState({value: newValue});
+        // Calling focus here will blur the text box which causes a native
+        // change event. Ideally we shouldn't have to fire this ourselves.
+        // Don't remove unless you've verified the fix in #8240 is still covered.
         dispatchEventOnNode(this.a, 'change');
+        this.b.focus();
       }
       blur(currentValue) {
         this.switchedFocus = true;
@@ -99,6 +103,9 @@ describe('ReactDOMInput', () => {
     // We need it to be in the body to test native event dispatching.
     document.body.appendChild(container);
 
+    // Focus the field so we can later blur it.
+    // Don't remove unless you've verified the fix in #8240 is still covered.
+    instance.a.focus();
     setUntrackedValue.call(instance.a, 'giraffe');
     // This must use the native event dispatching. If we simulate, we will
     // bypass the lazy event attachment system so we won't actually test this.
