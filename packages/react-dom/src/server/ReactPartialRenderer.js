@@ -66,7 +66,8 @@ if (__DEV__) {
   var currentDebugStack = null;
   var currentDebugElementStack = null;
   var setCurrentDebugStack = function(stack) {
-    currentDebugElementStack = stack[stack.length - 1].debugElementStack;
+    var frame: Frame = stack[stack.length - 1];
+    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
     // We are about to enter a new composite stack, reset the array.
     currentDebugElementStack.length = 0;
     currentDebugStack = stack;
@@ -89,7 +90,8 @@ if (__DEV__) {
     let stack = '';
     let debugStack = currentDebugStack;
     for (let i = debugStack.length - 1; i >= 0; i--) {
-      let debugElementStack = debugStack[i].debugElementStack;
+      const frame: Frame = debugStack[i];
+      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
       }
@@ -451,6 +453,9 @@ type Frame = {
   childIndex: number,
   context: Object,
   footer: string,
+};
+
+type FrameDev = Frame & {
   debugElementStack: Array<React.Element>,
 };
 
@@ -466,7 +471,7 @@ class ReactDOMServerRenderer {
     makeStaticMarkup: boolean,
   ) {
     var children = React.isValidElement(element) ? [element] : toArray(element);
-    var topFrame = (({
+    var topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
       domNamespace: Namespaces.html,
@@ -474,9 +479,9 @@ class ReactDOMServerRenderer {
       childIndex: 0,
       context: emptyObject,
       footer: '',
-    }: any): Frame);
+    };
     if (__DEV__) {
-      topFrame.debugElementStack = [];
+      ((topFrame: any): FrameDev).debugElementStack = [];
     }
     this.stack = [topFrame];
     this.exhausted = false;
@@ -549,15 +554,15 @@ class ReactDOMServerRenderer {
           return this.renderDOM(child, context, parentNamespace);
         } else {
           var children = toArray(child);
-          var frame = (({
+          var frame: Frame = {
             domNamespace: parentNamespace,
             children,
             childIndex: 0,
             context: context,
             footer: '',
-          }: any): Frame);
+          };
           if (__DEV__) {
-            frame.debugElementStack = [];
+            ((frame: any): FrameDev).debugElementStack = [];
           }
           this.stack.push(frame);
           return '';
@@ -844,16 +849,16 @@ class ReactDOMServerRenderer {
     } else {
       children = toArray(props.children);
     }
-    var frame = (({
+    var frame = {
       domNamespace: getChildNamespace(parentNamespace, element.type),
       tag,
       children,
       childIndex: 0,
       context: context,
       footer: footer,
-    }: any): Frame);
+    };
     if (__DEV__) {
-      frame.debugElementStack = [];
+      ((frame: any): FrameDev).debugElementStack = [];
     }
     this.stack.push(frame);
     this.previousWasTextNode = false;
