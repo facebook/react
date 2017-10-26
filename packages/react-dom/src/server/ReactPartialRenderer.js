@@ -3,9 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 'use strict';
+
+import type {ReactElement} from 'shared/ReactElementType';
 
 var React = require('react');
 var emptyFunction = require('fbjs/lib/emptyFunction');
@@ -27,7 +31,12 @@ var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser
 var isCustomComponent = require('../shared/isCustomComponent');
 var omittedCloseTags = require('../shared/omittedCloseTags');
 
-var toArray = React.Children.toArray;
+// Based on reading the React.Children implementation. TODO: type this somewhere?
+type ReactNode = string | number | ReactElement;
+type FlatReactChildren = Array<null | ReactNode>;
+type toArrayType = (children: mixed) => FlatReactChildren;
+var toArray = ((React.Children.toArray: any): toArrayType);
+
 var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
@@ -63,14 +72,15 @@ if (__DEV__) {
   var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
-  var setCurrentDebugStack = function(stack) {
-    currentDebugElementStack = stack[stack.length - 1].debugElementStack;
+  var setCurrentDebugStack = function(stack: Array<Frame>) {
+    var frame: Frame = stack[stack.length - 1];
+    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
     // We are about to enter a new composite stack, reset the array.
     currentDebugElementStack.length = 0;
     currentDebugStack = stack;
     ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
   };
-  var pushElementToDebugStack = function(element) {
+  var pushElementToDebugStack = function(element: ReactElement) {
     if (currentDebugElementStack !== null) {
       currentDebugElementStack.push(element);
     }
@@ -87,7 +97,8 @@ if (__DEV__) {
     let stack = '';
     let debugStack = currentDebugStack;
     for (let i = debugStack.length - 1; i >= 0; i--) {
-      let debugElementStack = debugStack[i].debugElementStack;
+      const frame: Frame = debugStack[i];
+      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
       }
@@ -130,7 +141,7 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
-function createMarkupForStyles(styles) {
+function createMarkupForStyles(styles): string | null {
   var serialized = '';
   var delimiter = '';
   for (var styleName in styles) {
@@ -159,7 +170,7 @@ function createMarkupForStyles(styles) {
 }
 
 function warnNoop(
-  publicInstance: ReactComponent<any, any, any>,
+  publicInstance: React$Component<any, any>,
   callerName: string,
 ) {
   if (__DEV__) {
@@ -195,7 +206,7 @@ function getNonChildrenInnerMarkup(props) {
   return null;
 }
 
-function flattenOptionChildren(children) {
+function flattenOptionChildren(children: mixed): string {
   var content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -257,13 +268,13 @@ var RESERVED_PROPS = {
 };
 
 function createOpenTagMarkup(
-  tagVerbatim,
-  tagLowercase,
-  props,
-  namespace,
-  makeStaticMarkup,
-  isRootElement,
-) {
+  tagVerbatim: string,
+  tagLowercase: string,
+  props: Object,
+  namespace: string,
+  makeStaticMarkup: boolean,
+  isRootElement: boolean,
+): string {
   var ret = '<' + tagVerbatim;
 
   for (var propKey in props) {
@@ -317,12 +328,20 @@ function validateRenderResult(child, type) {
   }
 }
 
-function resolve(child, context) {
+function resolve(
+  child: mixed,
+  context: Object,
+): {|
+  child: mixed,
+  context: Object,
+|} {
   while (React.isValidElement(child)) {
+    // Safe because we just checked it's an element.
+    var element: ReactElement = ((child: any): ReactElement);
     if (__DEV__) {
-      pushElementToDebugStack(child);
+      pushElementToDebugStack(element);
     }
-    var Component = child.type;
+    var Component = element.type;
     if (typeof Component !== 'function') {
       break;
     }
@@ -354,9 +373,9 @@ function resolve(child, context) {
     };
 
     if (shouldConstruct(Component)) {
-      inst = new Component(child.props, publicContext, updater);
+      inst = new Component(element.props, publicContext, updater);
     } else {
-      inst = Component(child.props, publicContext, updater);
+      inst = Component(element.props, publicContext, updater);
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -364,7 +383,7 @@ function resolve(child, context) {
       }
     }
 
-    inst.props = child.props;
+    inst.props = element.props;
     inst.context = publicContext;
     inst.updater = updater;
 
@@ -388,7 +407,7 @@ function resolve(child, context) {
           for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
             var partial = oldQueue[i];
             var partialState = typeof partial === 'function'
-              ? partial.call(inst, nextState, child.props, publicContext)
+              ? partial.call(inst, nextState, element.props, publicContext)
               : partial;
             if (partialState) {
               if (dontMutate) {
@@ -442,20 +461,46 @@ function resolve(child, context) {
   return {child, context};
 }
 
+type Frame = {
+  domNamespace: string,
+  children: FlatReactChildren,
+  childIndex: number,
+  context: Object,
+  footer: string,
+};
+
+type FrameDev = Frame & {
+  debugElementStack: Array<ReactElement>,
+};
+
 class ReactDOMServerRenderer {
-  constructor(element, makeStaticMarkup) {
-    var children = React.isValidElement(element) ? [element] : toArray(element);
-    var topFrame = {
+  stack: Array<Frame>;
+  exhausted: boolean;
+  // TODO: type this more strictly:
+  currentSelectValue: any;
+  previousWasTextNode: boolean;
+  makeStaticMarkup: boolean;
+
+  constructor(children: mixed, makeStaticMarkup: boolean) {
+    var flatChildren;
+    if (React.isValidElement(children)) {
+      // Safe because we just checked it's an element.
+      var element = ((children: any): ReactElement);
+      flatChildren = [element];
+    } else {
+      flatChildren = toArray(children);
+    }
+    var topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
       domNamespace: Namespaces.html,
-      children,
+      children: flatChildren,
       childIndex: 0,
       context: emptyObject,
       footer: '',
     };
     if (__DEV__) {
-      topFrame.debugElementStack = [];
+      ((topFrame: any): FrameDev).debugElementStack = [];
     }
     this.stack = [topFrame];
     this.exhausted = false;
@@ -464,7 +509,7 @@ class ReactDOMServerRenderer {
     this.makeStaticMarkup = makeStaticMarkup;
   }
 
-  read(bytes) {
+  read(bytes: number): string | null {
     if (this.exhausted) {
       return null;
     }
@@ -475,7 +520,7 @@ class ReactDOMServerRenderer {
         this.exhausted = true;
         break;
       }
-      var frame = this.stack[this.stack.length - 1];
+      var frame: Frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
         var footer = frame.footer;
         out += footer;
@@ -501,7 +546,11 @@ class ReactDOMServerRenderer {
     return out;
   }
 
-  render(child, context, parentNamespace) {
+  render(
+    child: ReactNode | null,
+    context: Object,
+    parentNamespace: string,
+  ): string {
     if (typeof child === 'string' || typeof child === 'number') {
       var text = '' + child;
       if (text === '') {
@@ -516,23 +565,26 @@ class ReactDOMServerRenderer {
       this.previousWasTextNode = true;
       return escapeTextContentForBrowser(text);
     } else {
-      ({child, context} = resolve(child, context));
-      if (child === null || child === false) {
+      var nextChild;
+      ({child: nextChild, context} = resolve(child, context));
+      if (nextChild === null || nextChild === false) {
         return '';
       } else {
-        if (React.isValidElement(child)) {
-          return this.renderDOM(child, context, parentNamespace);
+        if (React.isValidElement(nextChild)) {
+          // Safe because we just checked it's an element.
+          var nextElement = ((nextChild: any): ReactElement);
+          return this.renderDOM(nextElement, context, parentNamespace);
         } else {
-          var children = toArray(child);
-          var frame = {
+          var nextChildren = toArray(nextChild);
+          var frame: Frame = {
             domNamespace: parentNamespace,
-            children,
+            children: nextChildren,
             childIndex: 0,
             context: context,
             footer: '',
           };
           if (__DEV__) {
-            frame.debugElementStack = [];
+            ((frame: any): FrameDev).debugElementStack = [];
           }
           this.stack.push(frame);
           return '';
@@ -541,7 +593,11 @@ class ReactDOMServerRenderer {
     }
   }
 
-  renderDOM(element, context, parentNamespace) {
+  renderDOM(
+    element: ReactElement,
+    context: Object,
+    parentNamespace: string,
+  ): string {
     var tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
@@ -828,7 +884,7 @@ class ReactDOMServerRenderer {
       footer: footer,
     };
     if (__DEV__) {
-      frame.debugElementStack = [];
+      ((frame: any): FrameDev).debugElementStack = [];
     }
     this.stack.push(frame);
     this.previousWasTextNode = false;
