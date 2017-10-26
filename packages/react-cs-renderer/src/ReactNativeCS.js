@@ -9,15 +9,15 @@
 
 'use strict';
 
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactVersion = require('ReactVersion');
-
-const {injectInternals} = require('ReactFiberDevToolsHook');
-
-import type {ReactNativeCSType} from 'ReactNativeCSTypes';
+import type {ReactNativeCSType} from './ReactNativeCSTypes';
 
 const ReactFiberReconciler = require('react-reconciler');
-
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+const {
+  injectInternals,
+} = require('react-reconciler/src/ReactFiberDevToolsHook');
+const ReactGenericBatching = require('events/ReactGenericBatching');
+const ReactVersion = require('shared/ReactVersion');
 const emptyObject = require('fbjs/lib/emptyObject');
 
 export type Container = number;

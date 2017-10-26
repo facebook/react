@@ -5,22 +5,21 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
- * @providesModule ReactFiberComponentTreeHook
  */
 
 'use strict';
 
-var ReactTypeOfWork = require('ReactTypeOfWork');
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
+var ReactTypeOfWork = require('./ReactTypeOfWork');
 var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
 } = ReactTypeOfWork;
-var describeComponentFrame = require('describeComponentFrame');
-var getComponentName = require('getComponentName');
-
-import type {Fiber} from 'ReactFiber';
+var describeComponentFrame = require('./describeComponentFrame');
+var getComponentName = require('./getComponentName');
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {

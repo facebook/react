@@ -4,11 +4,26 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFiberSelect
  * @flow
  */
 
 'use strict';
+
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
+
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+
+if (__DEV__) {
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var warning = require('fbjs/lib/warning');
+
+  var didWarnValueDefaultValue = false;
+}
 
 type SelectWithWrapperState = HTMLSelectElement & {
   _wrapperState: {
@@ -16,15 +31,6 @@ type SelectWithWrapperState = HTMLSelectElement & {
     wasMultiple: boolean,
   },
 };
-
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-
-if (__DEV__) {
-  var didWarnValueDefaultValue = false;
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-}
 
 function getDeclarationErrorAddendum() {
   var ownerName = getCurrentFiberOwnerName();

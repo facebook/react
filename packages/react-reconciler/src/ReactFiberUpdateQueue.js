@@ -4,22 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberUpdateQueue
  * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-const {Callback: CallbackEffect} = require('ReactTypeOfSideEffect');
-
-const {NoWork} = require('ReactFiberExpirationTime');
-
-const {ClassComponent, HostRoot} = require('ReactTypeOfWork');
-
+const {Callback: CallbackEffect} = require('shared/ReactTypeOfSideEffect');
+const {ClassComponent, HostRoot} = require('shared/ReactTypeOfWork');
 const invariant = require('fbjs/lib/invariant');
+
+const {NoWork} = require('./ReactFiberExpirationTime');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

@@ -4,33 +4,30 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberTreeReflection
  * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var ReactInstanceMap = require('ReactInstanceMap');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-
-var getComponentName = require('getComponentName');
 var invariant = require('fbjs/lib/invariant');
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
+var ReactInstanceMap = require('./ReactInstanceMap');
+var {ReactCurrentOwner} = require('./ReactGlobalSharedState');
+var getComponentName = require('./getComponentName');
 var {
   ClassComponent,
   HostComponent,
   HostRoot,
   HostPortal,
   HostText,
-} = require('ReactTypeOfWork');
+} = require('./ReactTypeOfWork');
+var {NoEffect, Placement} = require('./ReactTypeOfSideEffect');
 
-var {NoEffect, Placement} = require('ReactTypeOfSideEffect');
+if (__DEV__) {
+  var warning = require('fbjs/lib/warning');
+}
 
 var MOUNTING = 1;
 var MOUNTED = 2;
