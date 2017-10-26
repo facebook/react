@@ -20,17 +20,17 @@ describe('SyntheticEvent', () => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
-    createEvent = (eventType, nativeEvent) => {
-      const defaultNativeEvent = {
+    createEvent = (eventInit, eventOptions) => {
+      const defaultEventInit = {
         bubbles: true,
         cancelable: true,
-        ...nativeEvent,
+        ...eventOptions,
       };
-      var event = new Event([eventType, defaultNativeEvent]);
+      var event = new Event(eventInit, defaultEventInit);
       event.initEvent(
-        eventType,
-        defaultNativeEvent.bubbles,
-        defaultNativeEvent.cancelable,
+        eventInit,
+        defaultEventInit.bubbles,
+        defaultEventInit.cancelable,
       );
       return event;
     };
