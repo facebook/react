@@ -61,6 +61,7 @@ describe('SyntheticEvent', () => {
       click(e.isDefaultPrevented());
       e.preventDefault();
       click(e.isDefaultPrevented());
+      click(e.defaultPrevented);
     };
 
     var instance = ReactDOM.render(<div onClick={onClick} />, container);
@@ -71,6 +72,7 @@ describe('SyntheticEvent', () => {
     instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
+    expect(click.mock.calls[2][0]).toBe(true);
     document.body.removeChild(container);
   });
 
