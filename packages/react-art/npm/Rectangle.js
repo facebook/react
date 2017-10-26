@@ -1,26 +1,8 @@
-'use strict';
-
-var _extends =
-  Object.assign ||
-  function(target) {
-    for (var i = 1; i < arguments.length; i++) {
-      var source = arguments[i];
-      for (var key in source) {
-        if (Object.prototype.hasOwnProperty.call(source, key)) {
-          target[key] = source[key];
-        }
-      }
-    }
-    return target;
-  };
-
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule Rectangle.art
  * @typechecks
  *
  * Example usage:
@@ -40,9 +22,12 @@ var _extends =
  *
  */
 
+'use strict';
+
+var assign = require('object-assign');
 var PropTypes = require('prop-types');
 var React = require('react');
-var ReactART = require('..');
+var ReactART = require('react-art');
 
 var createReactClass = require('create-react-class');
 
@@ -146,7 +131,7 @@ var Rectangle = createReactClass({
     }
     path.line(0, -height + (bl + tl));
 
-    return React.createElement(Shape, _extends({}, this.props, {d: path}));
+    return React.createElement(Shape, assign({}, this.props, {d: path}));
   },
 });
 

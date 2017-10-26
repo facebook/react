@@ -3,14 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule onlyChild
  */
 'use strict';
 
-var ReactElement = require('ReactElement');
-
 var invariant = require('fbjs/lib/invariant');
+
+var ReactElement = require('./ReactElement');
 
 /**
  * Returns the first child in a collection of children and verifies that there

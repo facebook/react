@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactElementValidator
  */
 
 /**
@@ -16,16 +14,17 @@
 
 'use strict';
 
-var ReactCurrentOwner = require('ReactCurrentOwner');
-var ReactElement = require('ReactElement');
+var ReactCurrentOwner = require('./ReactCurrentOwner');
+var ReactElement = require('./ReactElement');
 
 if (__DEV__) {
+  var lowPriorityWarning = require('shared/lowPriorityWarning');
+  var describeComponentFrame = require('shared/describeComponentFrame');
+  var getComponentName = require('shared/getComponentName');
   var checkPropTypes = require('prop-types/checkPropTypes');
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var ReactDebugCurrentFrame = require('ReactDebugCurrentFrame');
   var warning = require('fbjs/lib/warning');
-  var describeComponentFrame = require('describeComponentFrame');
-  var getComponentName = require('getComponentName');
+
+  var ReactDebugCurrentFrame = require('./ReactDebugCurrentFrame');
 
   var currentlyValidatingElement = null;
 

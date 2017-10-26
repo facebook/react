@@ -4,15 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeAttributePayload
  * @flow
  */
 'use strict';
 
-var ReactNativePropRegistry = require('ReactNativePropRegistry');
-
+// Modules provided by RN:
 var deepDiffer = require('deepDiffer');
 var flattenStyle = require('flattenStyle');
+
+var ReactNativePropRegistry = require('./ReactNativePropRegistry');
 
 var emptyObject = {};
 

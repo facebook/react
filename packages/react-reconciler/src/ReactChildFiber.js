@@ -4,30 +4,30 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactChildFiber
  * @flow
  */
 
 'use strict';
 
-import type {ReactElement} from 'ReactElementType';
-import type {ReactCoroutine, ReactPortal, ReactYield} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {ReactElement} from 'shared/ReactElementType';
+import type {ReactCall, ReactPortal, ReactReturn} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {
+  ExpirationTime,
+} from 'react-reconciler/src/ReactFiberExpirationTime';
 
-var {REACT_COROUTINE_TYPE, REACT_YIELD_TYPE} = require('ReactCoroutine');
-var {REACT_PORTAL_TYPE} = require('ReactPortal');
-
-var ReactFiber = require('ReactFiber');
-var ReactTypeOfSideEffect = require('ReactTypeOfSideEffect');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-
+var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
+var {REACT_PORTAL_TYPE} = require('./ReactPortal');
+var ReactFiber = require('./ReactFiber');
 
 if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
   var warning = require('fbjs/lib/warning');
+
+  var {getCurrentFiberStackAddendum} = require('./ReactDebugCurrentFiber');
+
   var didWarnAboutMaps = false;
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
@@ -76,8 +76,8 @@ const {
   createFiberFromElement,
   createFiberFromFragment,
   createFiberFromText,
-  createFiberFromCoroutine,
-  createFiberFromYield,
+  createFiberFromCall,
+  createFiberFromReturn,
   createFiberFromPortal,
 } = ReactFiber;
 
@@ -88,8 +88,8 @@ const {
   ClassComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-  YieldComponent,
+  CallComponent,
+  ReturnComponent,
   Fragment,
 } = ReactTypeOfWork;
 
@@ -97,11 +97,21 @@ const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
+
+// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
 // nor polyfill, then a plain number is used for performance.
-const REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
+var REACT_ELEMENT_TYPE;
+var REACT_CALL_TYPE;
+var REACT_RETURN_TYPE;
+if (typeof Symbol === 'function' && Symbol.for) {
+  REACT_ELEMENT_TYPE = Symbol.for('react.element');
+  REACT_CALL_TYPE = Symbol.for('react.call');
+  REACT_RETURN_TYPE = Symbol.for('react.return');
+} else {
+  REACT_ELEMENT_TYPE = 0xeac7;
+  REACT_CALL_TYPE = 0xeac8;
+  REACT_RETURN_TYPE = 0xeac9;
+}
 
 function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   if (maybeIterable === null || typeof maybeIterable === 'undefined') {
@@ -399,17 +409,17 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     }
   }
 
-  function updateCoroutine(
+  function updateCall(
     returnFiber: Fiber,
     current: Fiber | null,
-    coroutine: ReactCoroutine,
+    call: ReactCall,
     expirationTime: ExpirationTime,
   ): Fiber {
     // TODO: Should this also compare handler to determine whether to reuse?
-    if (current === null || current.tag !== CoroutineComponent) {
+    if (current === null || current.tag !== CallComponent) {
       // Insert
-      const created = createFiberFromCoroutine(
-        coroutine,
+      const created = createFiberFromCall(
+        call,
         returnFiber.internalContextTag,
         expirationTime,
       );
@@ -418,32 +428,32 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     } else {
       // Move based on index
       const existing = useFiber(current, expirationTime);
-      existing.pendingProps = coroutine;
+      existing.pendingProps = call;
       existing.return = returnFiber;
       return existing;
     }
   }
 
-  function updateYield(
+  function updateReturn(
     returnFiber: Fiber,
     current: Fiber | null,
-    yieldNode: ReactYield,
+    returnNode: ReactReturn,
     expirationTime: ExpirationTime,
   ): Fiber {
-    if (current === null || current.tag !== YieldComponent) {
+    if (current === null || current.tag !== ReturnComponent) {
       // Insert
-      const created = createFiberFromYield(
-        yieldNode,
+      const created = createFiberFromReturn(
+        returnNode,
         returnFiber.internalContextTag,
         expirationTime,
       );
-      created.type = yieldNode.value;
+      created.type = returnNode.value;
       created.return = returnFiber;
       return created;
     } else {
       // Move based on index
       const existing = useFiber(current, expirationTime);
-      existing.type = yieldNode.value;
+      existing.type = returnNode.value;
       existing.return = returnFiber;
       return existing;
     }
@@ -533,8 +543,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           return created;
         }
 
-        case REACT_COROUTINE_TYPE: {
-          const created = createFiberFromCoroutine(
+        case REACT_CALL_TYPE: {
+          const created = createFiberFromCall(
             newChild,
             returnFiber.internalContextTag,
             expirationTime,
@@ -543,8 +553,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           return created;
         }
 
-        case REACT_YIELD_TYPE: {
-          const created = createFiberFromYield(
+        case REACT_RETURN_TYPE: {
+          const created = createFiberFromReturn(
             newChild,
             returnFiber.internalContextTag,
             expirationTime,
@@ -627,25 +637,25 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           }
         }
 
-        case REACT_COROUTINE_TYPE: {
+        case REACT_CALL_TYPE: {
           if (newChild.key === key) {
-            return updateCoroutine(
-              returnFiber,
-              oldFiber,
-              newChild,
-              expirationTime,
-            );
+            return updateCall(returnFiber, oldFiber, newChild, expirationTime);
           } else {
             return null;
           }
         }
 
-        case REACT_YIELD_TYPE: {
-          // Yields don't have keys. If the previous node is implicitly keyed
+        case REACT_RETURN_TYPE: {
+          // Returns don't have keys. If the previous node is implicitly keyed
           // we can continue to replace it without aborting even if it is not a
           // yield.
           if (key === null) {
-            return updateYield(returnFiber, oldFiber, newChild, expirationTime);
+            return updateReturn(
+              returnFiber,
+              oldFiber,
+              newChild,
+              expirationTime,
+            );
           } else {
             return null;
           }
@@ -720,12 +730,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           );
         }
 
-        case REACT_COROUTINE_TYPE: {
+        case REACT_CALL_TYPE: {
           const matchedFiber =
             existingChildren.get(
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
-          return updateCoroutine(
+          return updateCall(
             returnFiber,
             matchedFiber,
             newChild,
@@ -733,11 +743,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
           );
         }
 
-        case REACT_YIELD_TYPE: {
-          // Yields don't have keys, so we neither have to check the old nor
-          // new node for the key. If both are yields, they match.
+        case REACT_RETURN_TYPE: {
+          // Returns don't have keys, so we neither have to check the old nor
+          // new node for the key. If both are returns, they match.
           const matchedFiber = existingChildren.get(newIdx) || null;
-          return updateYield(
+          return updateReturn(
             returnFiber,
             matchedFiber,
             newChild,
@@ -794,7 +804,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
       switch (child.$$typeof) {
         case REACT_ELEMENT_TYPE:
-        case REACT_COROUTINE_TYPE:
+        case REACT_CALL_TYPE:
         case REACT_PORTAL_TYPE:
           warnForMissingKey(child);
           const key = child.key;
@@ -1234,22 +1244,22 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return created;
   }
 
-  function reconcileSingleCoroutine(
+  function reconcileSingleCall(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    coroutine: ReactCoroutine,
+    call: ReactCall,
     expirationTime: ExpirationTime,
   ): Fiber {
-    const key = coroutine.key;
+    const key = call.key;
     let child = currentFirstChild;
     while (child !== null) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        if (child.tag === CoroutineComponent) {
+        if (child.tag === CallComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(child, expirationTime);
-          existing.pendingProps = coroutine;
+          existing.pendingProps = call;
           existing.return = returnFiber;
           return existing;
         } else {
@@ -1262,8 +1272,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    const created = createFiberFromCoroutine(
-      coroutine,
+    const created = createFiberFromCall(
+      call,
       returnFiber.internalContextTag,
       expirationTime,
     );
@@ -1271,19 +1281,19 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return created;
   }
 
-  function reconcileSingleYield(
+  function reconcileSingleReturn(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
-    yieldNode: ReactYield,
+    returnNode: ReactReturn,
     expirationTime: ExpirationTime,
   ): Fiber {
     // There's no need to check for keys on yields since they're stateless.
     let child = currentFirstChild;
     if (child !== null) {
-      if (child.tag === YieldComponent) {
+      if (child.tag === ReturnComponent) {
         deleteRemainingChildren(returnFiber, child.sibling);
         const existing = useFiber(child, expirationTime);
-        existing.type = yieldNode.value;
+        existing.type = returnNode.value;
         existing.return = returnFiber;
         return existing;
       } else {
@@ -1291,12 +1301,12 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
     }
 
-    const created = createFiberFromYield(
-      yieldNode,
+    const created = createFiberFromReturn(
+      returnNode,
       returnFiber.internalContextTag,
       expirationTime,
     );
-    created.type = yieldNode.value;
+    created.type = returnNode.value;
     created.return = returnFiber;
     return created;
   }
@@ -1370,18 +1380,18 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             ),
           );
 
-        case REACT_COROUTINE_TYPE:
+        case REACT_CALL_TYPE:
           return placeSingleChild(
-            reconcileSingleCoroutine(
+            reconcileSingleCall(
               returnFiber,
               currentFirstChild,
               newChild,
               expirationTime,
             ),
           );
-        case REACT_YIELD_TYPE:
+        case REACT_RETURN_TYPE:
           return placeSingleChild(
-            reconcileSingleYield(
+            reconcileSingleReturn(
               returnFiber,
               currentFirstChild,
               newChild,

@@ -17,7 +17,7 @@ describe('createReactNativeComponentClass', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    createReactNativeComponentClass = require('createReactNativeComponentClass');
+    createReactNativeComponentClass = require('../createReactNativeComponentClass');
     React = require('react');
     ReactNative = require('react-native-renderer');
   });

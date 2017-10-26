@@ -4,11 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDebugFiberPerf
  * @flow
  */
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
+
+// Trust the developer to only use this with a __DEV__ check
+let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
 
 type MeasurementPhase =
   | 'componentWillMount'
@@ -20,20 +22,16 @@ type MeasurementPhase =
   | 'componentDidMount'
   | 'getChildContext';
 
-// Trust the developer to only use this with a __DEV__ check
-let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
-
 if (__DEV__) {
+  const getComponentName = require('shared/getComponentName');
   const {
     HostRoot,
     HostComponent,
     HostText,
     HostPortal,
-    YieldComponent,
+    ReturnComponent,
     Fragment,
-  } = require('ReactTypeOfWork');
-
-  const getComponentName = require('getComponentName');
+  } = require('shared/ReactTypeOfWork');
 
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.
@@ -170,7 +168,7 @@ if (__DEV__) {
       case HostComponent:
       case HostText:
       case HostPortal:
-      case YieldComponent:
+      case ReturnComponent:
       case Fragment:
         return true;
       default:
