@@ -36,7 +36,7 @@ describe('ReactDOMInput', () => {
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
     // TODO: can we express this test with only public API?
-    inputValueTracking = require('react-dom/src/client/inputValueTracking');
+    inputValueTracking = require('../client/inputValueTracking');
     spyOn(console, 'error');
   });
 

@@ -17,13 +17,13 @@ describe('SyntheticKeyboardEvent', () => {
 
   beforeEach(() => {
     // Mock getEventCharCode for proper unit testing
-    jest.mock('react-dom/src/events/getEventCharCode');
-    getEventCharCode = require('react-dom/src/events/getEventCharCode');
+    jest.mock('../getEventCharCode');
+    getEventCharCode = require('../getEventCharCode');
 
     // TODO: can we express this test with only public API?
-    SyntheticKeyboardEvent = require('react-dom/src/events/SyntheticKeyboardEvent');
+    SyntheticKeyboardEvent = require('../SyntheticKeyboardEvent');
     createEvent = function(nativeEvent) {
-      var target = require('react-dom/src/events/getEventTarget')(nativeEvent);
+      var target = require('../getEventTarget')(nativeEvent);
       return SyntheticKeyboardEvent.getPooled({}, '', nativeEvent, target);
     };
   });

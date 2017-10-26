@@ -20,7 +20,7 @@ describe('ReactDOMSelection', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMSelection = require('react-dom/src/client/ReactDOMSelection');
+    ReactDOMSelection = require('../client/ReactDOMSelection');
     invariant = require('fbjs/lib/invariant');
 
     ({getModernOffsetsFromPoints} = ReactDOMSelection);

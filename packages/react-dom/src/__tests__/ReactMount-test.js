@@ -9,7 +9,7 @@
 
 'use strict';
 
-const {COMMENT_NODE} = require('react-dom/src/shared/HTMLNodeType');
+const {COMMENT_NODE} = require('../shared/HTMLNodeType');
 
 const invariant = require('invariant');
 

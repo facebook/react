@@ -34,7 +34,8 @@ describe('ReactDOMServer', () => {
     ExecutionEnvironment.canUseDOM = false;
     ReactDOMServer = require('react-dom/server');
 
-    var DOMProperty = require('react-dom/src/shared/DOMProperty');
+    // TODO: can we express this test with only public API?
+    var DOMProperty = require('../shared/DOMProperty');
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
