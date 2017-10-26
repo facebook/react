@@ -2,8 +2,8 @@
 
 // We want to globally mock this but jest doesn't let us do that by default
 // for a file that already exists. So we have to explicitly mock it.
-jest.mock('ReactFeatureFlags', () => {
-  const flags = require.requireActual('ReactFeatureFlags');
+jest.mock('shared/ReactFeatureFlags', () => {
+  const flags = require.requireActual('shared/ReactFeatureFlags');
   return Object.assign({}, flags, {
     disableNewFiberFeatures: true,
   });
@@ -11,4 +11,5 @@ jest.mock('ReactFeatureFlags', () => {
 
 // Error logging varies between Fiber and Stack;
 // Rather than fork dozens of tests, mock the error-logging file by default.
-jest.mock('ReactFiberErrorLogger');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+jest.mock('react-reconciler/src/ReactFiberErrorLogger');

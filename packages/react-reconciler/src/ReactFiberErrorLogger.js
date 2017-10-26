@@ -4,15 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberErrorLogger
  * @flow
  */
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
+import type {CapturedError} from './ReactFiberScheduler';
 
-import type {CapturedError} from 'ReactFiberScheduler';
+const invariant = require('fbjs/lib/invariant');
 
 const defaultShowDialog = (capturedError: CapturedError) => true;
 

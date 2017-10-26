@@ -3,8 +3,6 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactControlledValuePropTypes
  */
 
 'use strict';
@@ -17,6 +15,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
   var emptyFunction = require('fbjs/lib/emptyFunction');
   var PropTypes = require('prop-types');
+
   var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
 
   ReactControlledValuePropTypes.checkPropTypes = emptyFunction;
