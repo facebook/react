@@ -35,7 +35,19 @@ type Instance = {
 type Props = Object;
 type TextInstance = Instance;
 
-function arePropsEqual(oldProps: Props, newProps: Props): boolean {
+// We currently don't actually return a new state. We only use state updaters to trigger a
+// rerender. Therefore our state updater is the identity functions. When we later deal
+// with sync scheduling and aborted renders, we will need to update the state in render.
+const identityUpdater = state => state;
+// We currently don't have a hook for aborting render. Will add one once it is in place
+// in React Native proper.
+const infiniteDeadline = {
+  timeRemaining: function() {
+    return Infinity;
+  },
+};
+
+const arePropsEqual = (oldProps: Props, newProps: Props): boolean => {
   var key;
   for (key in newProps) {
     if (key === 'children') {
@@ -56,13 +68,15 @@ function arePropsEqual(oldProps: Props, newProps: Props): boolean {
     }
   }
   return true;
-}
+};
 
 // React doesn't expose its full keypath. To manage lifetime of instances, we instead use IDs.
 let nextComponentKey = 0;
 
-// Callback. Currently this is global, but it should be per root.
+// Callback. Currently this is global. TODO: This should be per root.
 let scheduledCallback = null;
+// Updater. This is the CS updater we use to trigger the update. TODO: This should be per root.
+let scheduleUpdate = null;
 
 const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   appendInitialChild(
@@ -146,6 +160,9 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
 
   scheduleDeferredCallback(callback) {
     scheduledCallback = callback;
+    if (scheduleUpdate !== null) {
+      scheduleUpdate(identityUpdater);
+    }
   },
 
   shouldSetTextContent(type: string, props: Props): boolean {
@@ -153,7 +170,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     return false;
   },
 
-  useSyncScheduling: true,
+  useSyncScheduling: false,
 
   now(): number {
     // TODO: Enable expiration by implementing this method.
@@ -253,6 +270,11 @@ const ReactCS = CSStatefulComponent({
       null,
       null,
     );
+    if (scheduledCallback) {
+      const callback = scheduledCallback;
+      scheduledCallback = null;
+      callback(infiniteDeadline);
+    }
     return state.container.pendingChild;
   },
   getInstance({state}: {state: ReactCSState}) {
