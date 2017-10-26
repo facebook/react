@@ -11,7 +11,7 @@
 
 describe('quoteAttributeValueForBrowser', () => {
   // TODO: can we express this test with only public API?
-  var quoteAttributeValueForBrowser = require('react-dom/src/shared/quoteAttributeValueForBrowser');
+  var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser');
 
   it('should escape boolean to string', () => {
     expect(quoteAttributeValueForBrowser(true)).toBe('"true"');

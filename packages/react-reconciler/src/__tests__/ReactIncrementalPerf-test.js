@@ -117,7 +117,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop = require('react-noop-renderer');
     ReactCallReturn = require('react-call-return');
     // TODO: can we express this test with only public API?
-    ReactPortal = require('react-reconciler/src/ReactPortal');
+    ReactPortal = require('../ReactPortal');
     PropTypes = require('prop-types');
   });
 

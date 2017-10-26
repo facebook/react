@@ -9,7 +9,7 @@
 
 'use strict';
 
-jest.mock('react-dom/src/events/isEventSupported');
+jest.mock('../events/isEventSupported');
 
 describe('EventPluginHub', () => {
   var React;

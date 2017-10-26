@@ -184,7 +184,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
-    externals: ['react', 'jest-matchers'],
+    externals: ['react', 'expect'],
   },
 
   /******* React Reconciler *******/
