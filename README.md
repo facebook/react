@@ -43,7 +43,7 @@ The recommended way to install React depends on your project. Here you can find 
 
 ## Documentation
 
-the react documentation can be found [here](https://reactjs.org/docs).
+The React documentation can be found [here](https://reactjs.org/docs).
 
 ## Contributing
 
