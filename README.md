@@ -41,6 +41,10 @@ The recommended way to install React depends on your project. Here you can find 
 * [Creating a New Application](https://reactjs.org/docs/installation.html#creating-a-new-application)
 * [Adding React to an Existing Application](https://reactjs.org/docs/installation.html#adding-react-to-an-existing-application)
 
+## Documentation
+
+the react documentation can be found [here](https://reactjs.org/docs).
+
 ## Contributing
 
 The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
