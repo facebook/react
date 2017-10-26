@@ -12,26 +12,21 @@
 describe('SyntheticWheelEvent', () => {
   var React;
   var ReactDOM;
-  var createMouseWheelEvent;
+  var createMouseEvent;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    createMouseWheelEvent = (options = {}) => {
-      // WheelEvent() interface is not supported, using document.createEvent instead
+    createMouseEvent = (type = '', options = {}) => {
       const event = document.createEvent('MouseEvent');
-      event.initEvent('wheel', true, false);
+      event.initEvent(type, true, false);
       return Object.assign(event, options);
     };
   });
 
   it('should normalize properties from the Event interface', () => {
     const container = document.createElement('div');
-    const event = new Event('', {
-      bubbles: true,
-      cancelable: false,
-      srcElement: container,
-    });
+    const event = createMouseEvent('', { srcElement: container });
     container.dispatchEvent(event);
 
     expect(event.target).toBe(container);
@@ -63,11 +58,11 @@ describe('SyntheticWheelEvent', () => {
 
     const node = ReactDOM.findDOMNode(component);
 
-    node.dispatchEvent(createMouseWheelEvent({ deltaX: 10, deltaY: -50 }));
+    node.dispatchEvent(createMouseEvent('wheel', { deltaX: 10, deltaY: -50 }));
     expect(events[0].deltaX).toBe(10);
     expect(events[0].deltaY).toBe(-50);
 
-    node.dispatchEvent(createMouseWheelEvent({ wheelDeltaX: -10, wheelDeltaY: 50 }));
+    node.dispatchEvent(createMouseEvent('wheel', { wheelDeltaX: -10, wheelDeltaY: 50 }));
     expect(events[1].deltaX).toBe(10);
     expect(events[1].deltaY).toBe(-50);
     
@@ -89,12 +84,12 @@ describe('SyntheticWheelEvent', () => {
 
     const node = ReactDOM.findDOMNode(component);
 
-    node.dispatchEvent(createMouseWheelEvent());
+    node.dispatchEvent(createMouseEvent('wheel'));
     expect(events[0].isDefaultPrevented()).toBe(false);
     events[0].preventDefault();
     expect(events[0].isDefaultPrevented()).toBe(true);
     
-    node.dispatchEvent(createMouseWheelEvent());
+    node.dispatchEvent(createMouseEvent('wheel'));
     expect(events[1].isPropagationStopped()).toBe(false);
     events[1].stopPropagation();
     expect(events[1].isPropagationStopped()).toBe(true);
@@ -116,7 +111,7 @@ describe('SyntheticWheelEvent', () => {
 
     const node = ReactDOM.findDOMNode(component);
 
-    node.dispatchEvent(createMouseWheelEvent());
+    node.dispatchEvent(createMouseEvent('wheel'));
     expect(events[0].isPersistent()).toBe(false);
     events[0].persist();
     expect(events[0].isPersistent()).toBe(true);
