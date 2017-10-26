@@ -25,7 +25,7 @@ describe('SyntheticEvent', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
     createEvent = function(nativeEvent) {
-      var target = require('react-dom/src/events/getEventTarget')(nativeEvent);
+      var target = require('../getEventTarget')(nativeEvent);
       return SyntheticEvent.getPooled({}, '', nativeEvent, target);
     };
   });

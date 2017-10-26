@@ -10,7 +10,7 @@
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "21.2.0",
+    "babel-jest": "^21.3.0-beta.4",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
@@ -53,6 +53,7 @@
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-react": "^6.7.1",
     "eslint-plugin-react-internal": "file:./scripts/eslint-rules",
+    "expect": "^21.3.0-beta.4",
     "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
@@ -63,11 +64,10 @@
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
     "jasmine-check": "^1.0.0-rc.0",
-    "jest": "21.2.1",
-    "jest-config": "21.2.1",
-    "jest-jasmine2": "21.2.1",
-    "jest-matchers": "20.1.0-delta.1",
-    "jest-runtime": "21.2.1",
+    "jest": "^21.3.0-beta.4",
+    "jest-config": "^21.3.0-beta.4",
+    "jest-jasmine2": "^21.3.0-beta.4",
+    "jest-runtime": "^21.3.0-beta.4",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
     "ncp": "^2.0.0",
@@ -115,9 +115,6 @@
     "transform": {
       ".*": "./scripts/jest/preprocessor.js"
     },
-    "transformIgnorePatterns": [
-      "/node_modules/(?!react|shared|events)"
-    ],
     "setupFiles": [
       "./scripts/jest/setup.js",
       "./scripts/jest/environment.js"

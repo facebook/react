@@ -20,7 +20,7 @@ var {
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
+  CallComponent,
 } = ReactTypeOfWork;
 var {
   invokeGuardedCallback,
@@ -217,7 +217,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         safelyDetachRef(current);
         return;
       }
-      case CoroutineComponent: {
+      case CallComponent: {
         commitNestedUnmounts(current.stateNode);
         return;
       }

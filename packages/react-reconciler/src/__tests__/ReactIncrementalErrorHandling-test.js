@@ -935,11 +935,9 @@ describe('ReactIncrementalErrorHandling', () => {
     function initReactFiberErrorLoggerMock(mock) {
       jest.resetModules();
       if (mock) {
-        // TODO: direct imports like some-package/src/* are bad. Fix me.
-        jest.mock('react-reconciler/src/ReactFiberErrorLogger');
+        jest.mock('../ReactFiberErrorLogger');
       } else {
-        // TODO: direct imports like some-package/src/* are bad. Fix me.
-        jest.unmock('react-reconciler/src/ReactFiberErrorLogger');
+        jest.unmock('../ReactFiberErrorLogger');
       }
       React = require('react');
       ReactNoop = require('react-noop-renderer');
@@ -1035,8 +1033,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
       const logCapturedErrorCalls = [];
 
-      // TODO: direct imports like some-package/src/* are bad. Fix me.
-      const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
+      const ReactFiberErrorLogger = require('../ReactFiberErrorLogger');
       ReactFiberErrorLogger.logCapturedError.mockImplementation(
         capturedError => {
           logCapturedErrorCalls.push(capturedError);

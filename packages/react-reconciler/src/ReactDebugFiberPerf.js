@@ -29,7 +29,7 @@ if (__DEV__) {
     HostComponent,
     HostText,
     HostPortal,
-    YieldComponent,
+    ReturnComponent,
     Fragment,
   } = require('shared/ReactTypeOfWork');
 
@@ -168,7 +168,7 @@ if (__DEV__) {
       case HostComponent:
       case HostText:
       case HostPortal:
-      case YieldComponent:
+      case ReturnComponent:
       case Fragment:
         return true;
       default:

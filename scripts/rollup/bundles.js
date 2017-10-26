@@ -184,7 +184,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
-    externals: ['react', 'jest-matchers'],
+    externals: ['react', 'expect'],
   },
 
   /******* React Reconciler *******/
@@ -195,6 +195,16 @@ const bundles = [
     entry: 'react-reconciler',
     global: 'ReactReconciler',
     externals: ['react'],
+  },
+
+  /******* React Call Return (experimental) *******/
+  {
+    label: 'react-call-return',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-call-return',
+    global: 'ReactCallReturn',
+    externals: [],
   },
 ];
 

@@ -13,7 +13,7 @@ var React;
 var ReactNativeCS;
 
 jest.mock('shared/ReactFeatureFlags', () =>
-  require('react-cs-renderer/src/ReactNativeCSFeatureFlags'),
+  require('../ReactNativeCSFeatureFlags'),
 );
 
 describe('ReactNativeCS', () => {

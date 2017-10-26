@@ -11,10 +11,10 @@
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {
-  ReactCoroutine,
+  ReactCall,
   ReactFragment,
   ReactPortal,
-  ReactYield,
+  ReactReturn,
 } from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
 import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
@@ -31,8 +31,8 @@ var {
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-  YieldComponent,
+  CallComponent,
+  ReturnComponent,
   Fragment,
 } = require('shared/ReactTypeOfWork');
 
@@ -406,28 +406,24 @@ exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
   return fiber;
 };
 
-exports.createFiberFromCoroutine = function(
-  coroutine: ReactCoroutine,
+exports.createFiberFromCall = function(
+  call: ReactCall,
   internalContextTag: TypeOfInternalContext,
   expirationTime: ExpirationTime,
 ): Fiber {
-  const fiber = createFiber(
-    CoroutineComponent,
-    coroutine.key,
-    internalContextTag,
-  );
-  fiber.type = coroutine.handler;
-  fiber.pendingProps = coroutine;
+  const fiber = createFiber(CallComponent, call.key, internalContextTag);
+  fiber.type = call.handler;
+  fiber.pendingProps = call;
   fiber.expirationTime = expirationTime;
   return fiber;
 };
 
-exports.createFiberFromYield = function(
-  yieldNode: ReactYield,
+exports.createFiberFromReturn = function(
+  returnNode: ReactReturn,
   internalContextTag: TypeOfInternalContext,
   expirationTime: ExpirationTime,
 ): Fiber {
-  const fiber = createFiber(YieldComponent, null, internalContextTag);
+  const fiber = createFiber(ReturnComponent, null, internalContextTag);
   fiber.expirationTime = expirationTime;
   return fiber;
 };

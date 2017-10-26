@@ -11,7 +11,7 @@
 
 var React = require('react');
 // TODO: can we express this test with only public API?
-var ReactDOMComponentTree = require('react-dom/src/client/ReactDOMComponentTree');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 var ReactTestUtils = require('react-dom/test-utils');
 
 /**
