@@ -22,7 +22,7 @@ describe('SyntheticWheelEvent', () => {
       const event = document.createEvent('MouseEvent');
       event.initEvent('wheel', true, false);
       return Object.assign(event, options);
-    }
+    };
   });
 
   it('should normalize properties from the Event interface', () => {
