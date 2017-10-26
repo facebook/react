@@ -46,7 +46,7 @@ describe('SyntheticEvent', () => {
 
     document.body.appendChild(container);
 
-    var event = createEvent('click', {srcElement: instance});
+    var event = createEvent('click');
 
     instance.dispatchEvent(event);
     expect(click).toBeCalledWith(instance);
@@ -67,7 +67,7 @@ describe('SyntheticEvent', () => {
 
     document.body.appendChild(container);
 
-    var event = createEvent('click', {srcElement: instance});
+    var event = createEvent('click');
     instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
@@ -103,7 +103,7 @@ describe('SyntheticEvent', () => {
 
     document.body.appendChild(container);
 
-    var event = createEvent('click', {srcElement: instance});
+    var event = createEvent('click');
     instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
@@ -124,7 +124,7 @@ describe('SyntheticEvent', () => {
 
     document.body.appendChild(container);
 
-    var event = createEvent('click', {srcElement: instance});
+    var event = createEvent('click');
     instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
