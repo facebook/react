@@ -11,7 +11,16 @@
 
 var React;
 var ReactDOM;
-var ReactTestUtils;
+
+const simulateMouseEvent = (node, type, relatedTarget) => {
+  node.dispatchEvent(
+    new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      relatedTarget,
+    }),
+  );
+};
 
 describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
@@ -19,7 +28,6 @@ describe('EnterLeaveEventPlugin', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
   });
 
   it('should set relatedTarget properly in iframe', () => {
@@ -42,9 +50,8 @@ describe('EnterLeaveEventPlugin', () => {
       />,
       iframeDocument.body.getElementsByTagName('div')[0],
     );
-    ReactTestUtils.SimulateNative.mouseOver(component, {
-      relatedTarget: iframe.contentWindow,
-    });
+
+    simulateMouseEvent(component, 'mouseover', iframe.contentWindow);
 
     expect(events.length).toBe(1);
     expect(events[0].target).toBe(component);
@@ -74,11 +81,10 @@ describe('EnterLeaveEventPlugin', () => {
     // The issue only reproduced on insertion during the first update.
     ReactDOM.render(<Parent showChild={true} />, div);
 
+    document.body.appendChild(div);
+
     // Enter from parent into the child.
-    ReactTestUtils.simulateNativeEventOnNode('topMouseOut', parent, {
-      target: parent,
-      relatedTarget: parent.firstChild,
-    });
+    simulateMouseEvent(parent, 'mouseout', parent.firstChild);
 
     // Entering a child should fire on the child, not on the parent.
     expect(childEnterCalls).toBe(1);
