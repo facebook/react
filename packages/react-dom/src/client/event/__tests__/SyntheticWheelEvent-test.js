@@ -12,59 +12,40 @@
 describe('SyntheticWheelEvent', () => {
   var React;
   var ReactDOM;
-  var createDispatchWheelEvent;
+  var createMouseWheelEvent;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    createDispatchWheelEvent = (component, options = {}) => {
-      const event = new MouseEvent('wheel', {
-        bubbles: true,
-        cancelable: false,
-        ...options,
-      });
-      const node = ReactDOM.findDOMNode(component);
-      node.dispatchEvent(event);
-    } 
+    createMouseWheelEvent = (options = {}) => {
+      // WheelEvent() interface is not supported, using document.createEvent instead
+      const event = document.createEvent('MouseEvent');
+      event.initEvent('wheel', true, false);
+      return Object.assign(event, options);
+    }
   });
 
   it('should normalize properties from the Event interface', () => {
-    var events = [];
     const container = document.createElement('div');
-    var onWheel = event => {
-      event.persist();
-      events.push(event);
-    }
-    const component = ReactDOM.render(
-      <div onWheel={onWheel} />,
-      container
-    );
-    document.body.appendChild(container);
-    createDispatchWheelEvent(component);
+    const event = new Event('', {
+      bubbles: true,
+      cancelable: false,
+      srcElement: container,
+    });
+    container.dispatchEvent(event);
 
-    expect(events[0].target).toBe(component);
-    expect(events[0].type).toBe('wheel');
-
-    document.body.removeChild(container);
+    expect(event.target).toBe(container);
+    expect(event.type).toBe('');
   });
 
   it('should normalize properties from the MouseEvent interface', () => {
-    var events = [];
-    const container = document.createElement('div');
-    var onWheel = event => {
-      event.persist();
-      events.push(event);
-    }
-    const component = ReactDOM.render(
-      <div onWheel={onWheel} />,
-      container
-    );
-    document.body.appendChild(container);
-    createDispatchWheelEvent(component, {which: 2, button: 1});
-
-    expect(events[0].button).toBe(1);
-
-    document.body.removeChild(container);
+    const event = new MouseEvent('', {
+      bubbles: true,
+      cancelable: false,
+      which: 2,
+      button: 1,
+    });
+    expect(event.button).toBe(1);
   });
 
   it('should normalize properties from the WheelEvent interface', () => {
@@ -73,18 +54,20 @@ describe('SyntheticWheelEvent', () => {
     var onWheel = event => {
       event.persist();
       events.push(event);
-    }
+    };
     const component = ReactDOM.render(
       <div onWheel={onWheel} />,
       container
     );
     document.body.appendChild(container);
 
-    createDispatchWheelEvent(component, {deltaX: 10, deltaY: -50});
+    const node = ReactDOM.findDOMNode(component);
+
+    node.dispatchEvent(createMouseWheelEvent({ deltaX: 10, deltaY: -50 }));
     expect(events[0].deltaX).toBe(10);
     expect(events[0].deltaY).toBe(-50);
-    
-    createDispatchWheelEvent(component, {wheelDeltaX: -10, wheelDeltaY: 50});
+
+    node.dispatchEvent(createMouseWheelEvent({ wheelDeltaX: -10, wheelDeltaY: 50 }));
     expect(events[1].deltaX).toBe(10);
     expect(events[1].deltaY).toBe(-50);
     
@@ -97,19 +80,21 @@ describe('SyntheticWheelEvent', () => {
     var onWheel = event => {
       event.persist();
       events.push(event);
-    }
+    };
     const component = ReactDOM.render(
       <div onWheel={onWheel} />,
       container
     );
     document.body.appendChild(container);
 
-    createDispatchWheelEvent(component, {});
+    const node = ReactDOM.findDOMNode(component);
+
+    node.dispatchEvent(createMouseWheelEvent());
     expect(events[0].isDefaultPrevented()).toBe(false);
     events[0].preventDefault();
     expect(events[0].isDefaultPrevented()).toBe(true);
     
-    createDispatchWheelEvent(component, {});
+    node.dispatchEvent(createMouseWheelEvent());
     expect(events[1].isPropagationStopped()).toBe(false);
     events[1].stopPropagation();
     expect(events[1].isPropagationStopped()).toBe(true);
@@ -122,14 +107,16 @@ describe('SyntheticWheelEvent', () => {
     const container = document.createElement('div');
     var onWheel = event => {
       events.push(event);
-    }
+    };
     const component = ReactDOM.render(
       <div onWheel={onWheel} />,
       container
     );
     document.body.appendChild(container);
 
-    createDispatchWheelEvent(component, {});
+    const node = ReactDOM.findDOMNode(component);
+
+    node.dispatchEvent(createMouseWheelEvent());
     expect(events[0].isPersistent()).toBe(false);
     events[0].persist();
     expect(events[0].isPersistent()).toBe(true);
