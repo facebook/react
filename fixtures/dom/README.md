@@ -4,12 +4,12 @@ A set of DOM test cases for quickly identifying browser issues.
 
 ## Setup
 
-To reference a local build of React, first run `yarn run build` at the root
+To reference a local build of React, first run `yarn build` at the root
 of the React project. Then:
 
 ```
 cd fixtures/dom
-yarn install
+yarn
 yarn start
 ```
 
