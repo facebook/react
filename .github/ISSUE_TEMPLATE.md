@@ -1,7 +1,9 @@
-**Do you want to request a *feature* or report a *bug*?**
+<!--
+  Note: if the issue is about documentation or the website, please file it at:
+  https://github.com/reactjs/reactjs.org/issues/new
+-->
 
-Note that the documentation and source code for reactjs.org lives in a different repository: https://github.com/reactjs/reactjs.org. 
-If your issue is regarding the documentation website please open the issue at https://github.com/reactjs/reactjs.org/issues/new.
+**Do you want to request a *feature* or report a *bug*?**
 
 **What is the current behavior?**
 
