@@ -196,6 +196,7 @@ var SelectEventPlugin = {
       // key, when multiple keydown events are fired but only one keyup is.
       // This is also our approach for IE handling, for the reason above.
       case 'topSelectionChange':
+        mouseDown = false;
         if (skipSelectionChangeEvent) {
           break;
         }
