@@ -8,6 +8,20 @@ React is a JavaScript library for building user interfaces.
 
 [Learn how to use React in your own project](https://reactjs.org/docs/getting-started.html).
 
+## Documentation
+
+You can find the React documentation [on the website](https://reactjs.org/docs).  
+It is divided into several sections:
+
+* [Quick Start](https://reactjs.org/docs/hello-world.html)
+* [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
+* [API Reference](https://reactjs.org/docs/react-api.html)
+* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
+* [Where to Get Support](https://reactjs.org/community/support.html)
+* [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
+
+You can improve it by sending pull requests to [this repository](https://github.com/reactjs/reactjs.org).
+
 ## Examples
 
 We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
@@ -49,7 +63,7 @@ The main purpose of this repository is to continue to evolve React core, making 
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
-### Contributing Guide
+### [Contributing Guide](https://reactjs.org/contributing/how-to-contribute.html)
 
 Read our [contributing guide](https://reactjs.org/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
