@@ -26,6 +26,11 @@ describe('ReactFragment', () => {
     return {text: val};
   }
 
+  function div(...children) {
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
+    return {type: 'div', children, prop: undefined};
+  }
+
   it('should render a single child via noop renderer', () => {
     const element = (
       <React.Fragment>
@@ -90,6 +95,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div(), div()]);
   });
 
   it('should not preserve state in non-top-level fragment nesting', function() {
@@ -116,6 +122,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should not preserve state of children if nested 2 levels without siblings', function() {
@@ -144,6 +151,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should not preserve state of children if nested 2 levels with siblings', function() {
@@ -173,6 +181,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div(), div()]);
   });
 
   it('should not preserve state between array nested in fragment and fragment', function() {
@@ -203,6 +212,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div(), div()]);
   });
 
   it('should preserve state between top level fragment and array', function() {
@@ -229,6 +239,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state between array nested in fragment and double nested fragment', function() {
@@ -255,6 +266,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state between array nested in fragment and double nested array', function() {
@@ -277,6 +289,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state between double nested fragment and double nested array', function() {
@@ -303,6 +316,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should not preserve state of children when the keys are different', function() {
@@ -334,6 +348,7 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div(), span()]);
   });
 
   it('should preserve state with reordering in multiple levels', function() {
@@ -376,5 +391,6 @@ describe('ReactFragment', () => {
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
   });
 });
