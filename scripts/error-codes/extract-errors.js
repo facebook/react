@@ -95,9 +95,7 @@ module.exports = function(opts) {
     );
   }
 
-  return function extractErrors(filepath) {
-    const source = fs.readFileSync(filepath, 'utf-8');
-
+  return function extractErrors(source) {
     transform(source);
     flush();
   };

@@ -73,6 +73,10 @@ arrify@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/arrify/-/arrify-1.0.1.tgz#898508da2226f380df904728456849c1501a4b0d"
 
+art@^0.10.1:
+  version "0.10.1"
+  resolved "https://registry.yarnpkg.com/art/-/art-0.10.1.tgz#38541883e399225c5e193ff246e8f157cf7b2146"
+
 asap@~2.0.3:
   version "2.0.6"
   resolved "https://registry.yarnpkg.com/asap/-/asap-2.0.6.tgz#e50347611d7e690943208bbdafebcbc2fb866d46"
@@ -1741,6 +1745,7 @@ rc@^1.1.7:
 "react-art@file:../../build/packages/react-art":
   version "16.0.0"
   dependencies:
+    art "^0.10.1"
     create-react-class "^15.6.2"
     fbjs "^0.8.16"
     loose-envify "^1.1.0"

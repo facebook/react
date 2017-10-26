@@ -3,18 +3,16 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactInputSelection
  */
 
 'use strict';
 
-var ReactDOMSelection = require('ReactDOMSelection');
-var {ELEMENT_NODE} = require('HTMLNodeType');
-
 var containsNode = require('fbjs/lib/containsNode');
 var focusNode = require('fbjs/lib/focusNode');
 var getActiveElement = require('fbjs/lib/getActiveElement');
+
+var ReactDOMSelection = require('./ReactDOMSelection');
+var {ELEMENT_NODE} = require('../shared/HTMLNodeType');
 
 function isInDocument(node) {
   return containsNode(document.documentElement, node);

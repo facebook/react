@@ -4,44 +4,44 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberClassComponent
  * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-var {Update} = require('ReactTypeOfSideEffect');
+var {Update} = require('shared/ReactTypeOfSideEffect');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var {isMounted} = require('shared/ReactFiberTreeReflection');
+var ReactInstanceMap = require('shared/ReactInstanceMap');
+var emptyObject = require('fbjs/lib/emptyObject');
+var getComponentName = require('shared/getComponentName');
+var shallowEqual = require('fbjs/lib/shallowEqual');
+var invariant = require('fbjs/lib/invariant');
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
+var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
 var {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   isContextConsumer,
-} = require('ReactFiberContext');
+} = require('./ReactFiberContext');
 var {
   insertUpdateIntoFiber,
   processUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {hasContextChanged} = require('ReactFiberContext');
-var {isMounted} = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-var invariant = require('fbjs/lib/invariant');
+} = require('./ReactFiberUpdateQueue');
+var {hasContextChanged} = require('./ReactFiberContext');
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
+
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
+
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
