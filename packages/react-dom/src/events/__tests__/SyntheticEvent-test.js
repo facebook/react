@@ -47,9 +47,9 @@ describe('SyntheticEvent', () => {
     document.body.appendChild(container);
 
     var event = createEvent('click', {srcElement: instance});
-    var elem = ReactDOM.findDOMNode(instance);
-    elem.dispatchEvent(event);
-    expect(click).toBeCalledWith(elem);
+
+    instance.dispatchEvent(event);
+    expect(click).toBeCalledWith(instance);
     document.body.removeChild(container);
   });
 
@@ -68,8 +68,7 @@ describe('SyntheticEvent', () => {
     document.body.appendChild(container);
 
     var event = createEvent('click', {srcElement: instance});
-    var elem = ReactDOM.findDOMNode(instance);
-    elem.dispatchEvent(event);
+    instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
     document.body.removeChild(container);
@@ -83,9 +82,8 @@ describe('SyntheticEvent', () => {
 
     var instance = ReactDOM.render(<div onClick={onClick} />, container);
 
-    var elem = ReactDOM.findDOMNode(instance);
-    ReactTestUtils.SimulateNative.click(elem, {defaultPrevented: true});
-    ReactTestUtils.SimulateNative.click(elem, {returnValue: false});
+    ReactTestUtils.SimulateNative.click(instance, {defaultPrevented: true});
+    ReactTestUtils.SimulateNative.click(instance, {returnValue: false});
 
     expect(click.mock.calls[0][0]).toBe(true);
     expect(click.mock.calls[1][0]).toBe(true);
@@ -106,8 +104,7 @@ describe('SyntheticEvent', () => {
     document.body.appendChild(container);
 
     var event = createEvent('click', {srcElement: instance});
-    var elem = ReactDOM.findDOMNode(instance);
-    elem.dispatchEvent(event);
+    instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
     document.body.removeChild(container);
@@ -128,8 +125,7 @@ describe('SyntheticEvent', () => {
     document.body.appendChild(container);
 
     var event = createEvent('click', {srcElement: instance});
-    var elem = ReactDOM.findDOMNode(instance);
-    elem.dispatchEvent(event);
+    instance.dispatchEvent(event);
     expect(click.mock.calls[0][0]).toBe(false);
     expect(click.mock.calls[1][0]).toBe(true);
     document.body.removeChild(container);
