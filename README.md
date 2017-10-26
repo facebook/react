@@ -8,6 +8,20 @@ React is a JavaScript library for building user interfaces.
 
 [Learn how to use React in your own project](https://reactjs.org/docs/getting-started.html).
 
+## Documentation
+
+You can find the React documentation [on the website](https://reactjs.org/docs).  
+It is divided into several sections:
+
+* [Quick Start](https://reactjs.org/docs/hello-world.html)
+* [Advanced Guides](https://reactjs.org/docs/jsx-in-depth.html)
+* [API Reference](https://reactjs.org/docs/react-api.html)
+* [Tutorial](https://reactjs.org/tutorial/tutorial.html)
+* [Where to Get Support](https://reactjs.org/community/support.html)
+* [Contributing Guide](https://reactjs.org/docs/how-to-contribute.html)
+
+You can improve it by sending pull requests to [this repository](https://github.com/reactjs/reactjs.org).
+
 ## Examples
 
 We have several examples [on the website](https://reactjs.org/). Here is the first one to get you started:
@@ -41,10 +55,6 @@ The recommended way to install React depends on your project. Here you can find 
 * [Creating a New Application](https://reactjs.org/docs/installation.html#creating-a-new-application)
 * [Adding React to an Existing Application](https://reactjs.org/docs/installation.html#adding-react-to-an-existing-application)
 
-## Documentation
-
-The React documentation can be found [here](https://reactjs.org/docs).
-
 ## Contributing
 
 The main purpose of this repository is to continue to evolve React core, making it faster and easier to use. Development of React happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements. Read below to learn how you can take part in improving React.
@@ -53,7 +63,7 @@ The main purpose of this repository is to continue to evolve React core, making 
 
 Facebook has adopted a Code of Conduct that we expect project participants to adhere to. Please read [the full text](https://code.facebook.com/codeofconduct) so that you can understand what actions will and will not be tolerated.
 
-### Contributing Guide
+### [Contributing Guide](https://reactjs.org/contributing/how-to-contribute.html)
 
 Read our [contributing guide](https://reactjs.org/contributing/how-to-contribute.html) to learn about our development process, how to propose bugfixes and improvements, and how to build and test your changes to React.
 
