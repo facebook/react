@@ -9,60 +9,63 @@
 
 'use strict';
 
-// TODO: can we express this test with only public API?
-var setInnerHTML = require('setInnerHTML');
-var Namespaces = require('DOMNamespaces').Namespaces;
+const React = require('react');
+const ReactDOM = require('react-dom');
 
-describe('setInnerHTML', () => {
+describe('dangerouslySetInnerHTML', () => {
   describe('when the node has innerHTML property', () => {
     it('sets innerHTML on it', () => {
-      var node = document.createElement('div');
-      var html = '<h1>hello</h1>';
-      setInnerHTML(node, html);
-      expect(node.innerHTML).toBe(html);
+      const container = document.createElement('div');
+      const component = ReactDOM.render(
+        <div dangerouslySetInnerHTML={{__html: '<h1>Hello</h1>'}} />,
+        container,
+      );
+      expect(component.innerHTML).toBe('<h1>Hello</h1>');
     });
   });
 
   describe('when the node does not have an innerHTML property', () => {
-    var node;
-    var nodeProxy;
+    let node;
     beforeEach(() => {
-      // Create a mock node that looks like an SVG in IE (without innerHTML)
-      node = document.createElementNS(Namespaces.svg, 'svg');
-
-      nodeProxy = new Proxy(node, {
-        has: (target, prop) => {
-          return prop === 'innerHTML' ? false : prop in target;
-        },
-      });
+      // Create a mock node that looks like an g in IE (without innerHTML)
+      node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
       spyOn(node, 'appendChild').and.callThrough();
       spyOn(node, 'removeChild').and.callThrough();
     });
 
     it('sets innerHTML on it', () => {
-      var html = '<circle></circle><rect></rect>';
-      setInnerHTML(nodeProxy, html);
+      const html = '<circle></circle>';
 
-      expect(node.appendChild.calls.argsFor(0)[0].outerHTML).toBe(
+      ReactDOM.render(<g dangerouslySetInnerHTML={{__html: html}} />, node);
+
+      expect(node.appendChild.calls.argsFor(0)[0].innerHTML).toBe(
         '<circle></circle>',
-      );
-      expect(node.appendChild.calls.argsFor(1)[0].outerHTML).toBe(
-        '<rect></rect>',
       );
     });
 
     it('clears previous children', () => {
-      var firstHtml = '<rect></rect>';
-      var secondHtml = '<circle></circle>';
-      setInnerHTML(nodeProxy, firstHtml);
+      const firstHtml = '<rect></rect>';
+      const secondHtml = '<circle></circle>';
 
-      setInnerHTML(nodeProxy, secondHtml);
+      let component = ReactDOM.render(
+        <g dangerouslySetInnerHTML={{__html: firstHtml}} />,
+        node,
+      );
+      ReactDOM.unmountComponentAtNode(
+        ReactDOM.findDOMNode(component).parentNode,
+      );
+      component = ReactDOM.render(
+        <g dangerouslySetInnerHTML={{__html: secondHtml}} />,
+        node,
+      );
 
-      expect(node.removeChild.calls.argsFor(0)[0].outerHTML).toBe(
+      expect(node.removeChild.calls.argsFor(0)[0].innerHTML).toBe(
         '<rect></rect>',
       );
-      expect(node.innerHTML).toBe('<circle></circle>');
+      expect(node.appendChild.calls.argsFor(1)[0].innerHTML).toBe(
+        '<circle></circle>',
+      );
     });
   });
 });
