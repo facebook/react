@@ -11,16 +11,15 @@ var ReactDOM = require('./src/client/ReactDOM');
 
 Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
   // These are real internal dependencies that are trickier to remove:
-  ReactBrowserEventEmitter: require('ReactBrowserEventEmitter'),
-  ReactErrorUtils: require('ReactErrorUtils'),
-  ReactFiberErrorLogger: require('ReactFiberErrorLogger'),
-  ReactFiberTreeReflection: require('ReactFiberTreeReflection'),
-  ReactDOMComponentTree: require('ReactDOMComponentTree'),
-  ReactInstanceMap: require('ReactInstanceMap'),
-  // These are dependencies of TapEventPlugin:
-  EventPluginUtils: require('EventPluginUtils'),
-  EventPropagators: require('EventPropagators'),
-  SyntheticUIEvent: require('SyntheticUIEvent'),
+  ReactBrowserEventEmitter: require('./src/events/ReactBrowserEventEmitter'),
+  ReactErrorUtils: require('shared/ReactErrorUtils'),
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  ReactFiberErrorLogger: require('react-reconciler/src/ReactFiberErrorLogger'),
+  ReactFiberTreeReflection: require('shared/ReactFiberTreeReflection'),
+  ReactDOMComponentTree: require('./src/client/ReactDOMComponentTree'),
+  ReactInstanceMap: require('shared/ReactInstanceMap'),
+  // Used by www msite:
+  TapEventPlugin: require('./src/events/TapEventPlugin'),
 });
 
 module.exports = ReactDOM;

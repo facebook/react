@@ -4,19 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTFiberRenderer
  * @flow
  */
 
 'use strict';
 
 const ReactFiberReconciler = require('react-reconciler');
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactNativeRTTagHandles = require('ReactNativeRTTagHandles');
-const RTManager = require('RTManager');
-
 const emptyObject = require('fbjs/lib/emptyObject');
 const invariant = require('fbjs/lib/invariant');
+// Module provided by RN:
+const RTManager = require('RTManager');
+
+const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+const ReactNativeRTTagHandles = require('./ReactNativeRTTagHandles');
 
 export type Container = number;
 export type Instance = number;

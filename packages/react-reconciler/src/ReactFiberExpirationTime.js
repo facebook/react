@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberExpirationTime
  * @flow
  */
 
@@ -15,14 +14,12 @@ export type ExpirationTime = number;
 
 const NoWork = 0;
 const Sync = 1;
-const Task = 2;
 const Never = 2147483647; // Max int32: Math.pow(2, 31) - 1
 
 const UNIT_SIZE = 10;
-const MAGIC_NUMBER_OFFSET = 3;
+const MAGIC_NUMBER_OFFSET = 2;
 
 exports.Sync = Sync;
-exports.Task = Task;
 exports.NoWork = NoWork;
 exports.Never = Never;
 
@@ -48,25 +45,3 @@ function computeExpirationBucket(
   );
 }
 exports.computeExpirationBucket = computeExpirationBucket;
-
-// Given the current clock time and an expiration time, returns the
-// relative expiration time. Possible values include NoWork, Sync, Task, and
-// Never. All other values represent an async expiration time.
-function relativeExpirationTime(
-  currentTime: ExpirationTime,
-  expirationTime: ExpirationTime,
-): ExpirationTime {
-  switch (expirationTime) {
-    case NoWork:
-    case Sync:
-    case Task:
-    case Never:
-      return expirationTime;
-  }
-  const delta = expirationTime - currentTime;
-  if (delta <= 0) {
-    return Task;
-  }
-  return msToExpirationTime(delta);
-}
-exports.relativeExpirationTime = relativeExpirationTime;

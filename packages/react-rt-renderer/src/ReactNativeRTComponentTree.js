@@ -4,13 +4,12 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTComponentTree
  * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 var instanceCache: {[key: number]: Fiber} = {};
 var instanceProps: {[key: number]: Object} = {};

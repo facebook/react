@@ -4,18 +4,12 @@
 // are set up. So we might as well enforce it.
 process.env.NODE_ENV = 'test';
 
-var fs = require('fs');
 var path = require('path');
 
 var babel = require('babel-core');
 var coffee = require('coffee-script');
 
 var tsPreprocessor = require('./ts-preprocessor');
-
-// This assumes the module map has been built. This might not be safe.
-// We should consider consuming this from a built fbjs module from npm.
-var moduleMap = require('fbjs/module-map');
-var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
@@ -40,15 +34,7 @@ var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
   plugins: [
-    pathToBabelPluginDevWithCode, // this pass has to run before `rewrite-modules`
-    [
-      babelPluginModules,
-      {
-        map: Object.assign({}, moduleMap, {
-          'object-assign': 'object-assign',
-        }),
-      },
-    ],
+    pathToBabelPluginDevWithCode,
     // Keep stacks detailed in tests.
     // Don't put this in .babelrc so that we don't embed filenames
     // into ReactART builds that include JSX.
@@ -60,19 +46,13 @@ var babelOptions = {
 
 module.exports = {
   process: function(src, filePath) {
-    // Resolve the path so we can tell our own packages from node_modules.
-    filePath = fs.realpathSync(filePath);
-
     if (filePath.match(/\.coffee$/)) {
       return coffee.compile(src, {bare: true});
     }
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
       return tsPreprocessor.compile(src, filePath);
     }
-    if (
-      !filePath.match(/\/node_modules\//) &&
-      !filePath.match(/\/third_party\//)
-    ) {
+    if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
       var isTestFile = !!filePath.match(/\/__tests__\//);

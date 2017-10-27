@@ -4,25 +4,26 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiber
  * @flow
  */
 
 'use strict';
 
-import type {ReactElement, Source} from 'ReactElementType';
+import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {
-  ReactCoroutine,
+  ReactCall,
   ReactFragment,
   ReactPortal,
-  ReactYield,
-} from 'ReactTypes';
-import type {TypeOfWork} from 'ReactTypeOfWork';
-import type {TypeOfInternalContext} from 'ReactTypeOfInternalContext';
-import type {TypeOfSideEffect} from 'ReactTypeOfSideEffect';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
-import type {UpdateQueue} from 'ReactFiberUpdateQueue';
+  ReactReturn,
+} from 'shared/ReactTypes';
+import type {TypeOfWork} from 'shared/ReactTypeOfWork';
+import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
+import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
+var invariant = require('fbjs/lib/invariant');
+var {NoEffect} = require('shared/ReactTypeOfSideEffect');
 var {
   IndeterminateComponent,
   ClassComponent,
@@ -30,21 +31,17 @@ var {
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-  YieldComponent,
+  CallComponent,
+  ReturnComponent,
   Fragment,
-} = require('ReactTypeOfWork');
+} = require('shared/ReactTypeOfWork');
 
-var {NoWork} = require('ReactFiberExpirationTime');
-
-var {NoContext} = require('ReactTypeOfInternalContext');
-
-var {NoEffect} = require('ReactTypeOfSideEffect');
-
-var invariant = require('fbjs/lib/invariant');
+var {NoWork} = require('./ReactFiberExpirationTime');
+var {NoContext} = require('./ReactTypeOfInternalContext');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('shared/getComponentName');
+
   var hasBadMapPolyfill = false;
   try {
     const nonExtensibleObject = Object.preventExtensions({});
@@ -397,28 +394,24 @@ exports.createFiberFromHostInstanceForDeletion = function(): Fiber {
   return fiber;
 };
 
-exports.createFiberFromCoroutine = function(
-  coroutine: ReactCoroutine,
+exports.createFiberFromCall = function(
+  call: ReactCall,
   internalContextTag: TypeOfInternalContext,
   expirationTime: ExpirationTime,
 ): Fiber {
-  const fiber = createFiber(
-    CoroutineComponent,
-    coroutine.key,
-    internalContextTag,
-  );
-  fiber.type = coroutine.handler;
-  fiber.pendingProps = coroutine;
+  const fiber = createFiber(CallComponent, call.key, internalContextTag);
+  fiber.type = call.handler;
+  fiber.pendingProps = call;
   fiber.expirationTime = expirationTime;
   return fiber;
 };
 
-exports.createFiberFromYield = function(
-  yieldNode: ReactYield,
+exports.createFiberFromReturn = function(
+  returnNode: ReactReturn,
   internalContextTag: TypeOfInternalContext,
   expirationTime: ExpirationTime,
 ): Fiber {
-  const fiber = createFiber(YieldComponent, null, internalContextTag);
+  const fiber = createFiber(ReturnComponent, null, internalContextTag);
   fiber.expirationTime = expirationTime;
   return fiber;
 };

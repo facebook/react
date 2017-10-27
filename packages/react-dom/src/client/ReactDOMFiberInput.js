@@ -4,11 +4,28 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFiberInput
  * @flow
  */
 
 'use strict';
+
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+var {
+  getCurrentFiberOwnerName,
+} = require('react-reconciler/src/ReactDebugCurrentFiber');
+var invariant = require('fbjs/lib/invariant');
+
+var DOMPropertyOperations = require('./DOMPropertyOperations');
+var ReactDOMComponentTree = require('./ReactDOMComponentTree');
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+
+if (__DEV__) {
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var warning = require('fbjs/lib/warning');
+}
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
@@ -17,18 +34,6 @@ type InputWithWrapperState = HTMLInputElement & {
     controlled?: boolean,
   },
 };
-
-var DOMPropertyOperations = require('DOMPropertyOperations');
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var {getCurrentFiberOwnerName} = require('ReactDebugCurrentFiber');
-
-if (__DEV__) {
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-  var warning = require('fbjs/lib/warning');
-}
-
-var invariant = require('fbjs/lib/invariant');
 
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
