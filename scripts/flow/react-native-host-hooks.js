@@ -117,5 +117,5 @@ declare module 'CSComponent' {
 }
 
 declare module 'CSStatefulComponent' {
-  declare function exports(spec: any): any;
+  declare function CSStatefulComponent(spec: any): any;
 }

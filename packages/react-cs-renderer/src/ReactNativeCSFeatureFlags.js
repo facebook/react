@@ -21,4 +21,5 @@ var ReactNativeCSFeatureFlags: FeatureFlags = {
   enablePersistentReconciler: true,
 };
 
+// TODO: convert this when ReactFeatureFlags is converted.
 module.exports = ReactNativeCSFeatureFlags;
