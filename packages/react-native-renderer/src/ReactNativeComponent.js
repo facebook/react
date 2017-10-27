@@ -37,11 +37,9 @@ import findNumericNodeHandle from './findNumericNodeHandle';
  *
  * @abstract
  */
-class ReactNativeComponent<DefaultProps, Props, State> extends React.Component<
-  Props,
-  State,
-> {
-  static defaultProps: $Abstract<DefaultProps>;
+class ReactNativeComponent<DefaultProps, Props, State>
+  extends React.Component<Props, State> {
+  static defaultProps: DefaultProps;
   props: Props;
   state: State;
 
