@@ -820,8 +820,7 @@ var ReactDOMFiberComponent = {
     if (tag === 'input') {
       ReactDOMFiberInput.updateChecked(domElement, nextRawProps, 'radio');
     }
-    // TODO: Ensure that an update gets scheduled if any of the special props
-    // changed.
+
     var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
     var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
     // Apply the diff.
@@ -831,6 +830,8 @@ var ReactDOMFiberComponent = {
       wasCustomComponentTag,
       isCustomComponentTag,
     );
+    // TODO: Ensure that an update gets scheduled if any of the special props
+    // changed.
     switch (tag) {
       case 'input':
         // Update the wrapper around inputs *after* updating props. This has to
