@@ -12,12 +12,14 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
-var ReactFiberReconciler = require('react-reconciler');
-var ReactGenericBatching = require('events/ReactGenericBatching');
-var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
-var emptyObject = require('fbjs/lib/emptyObject');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var invariant = require('fbjs/lib/invariant');
+import ReactFiberReconciler from 'react-reconciler';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
+import emptyObject from 'fbjs/lib/emptyObject';
+import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
+
+// TODO: make a named import after reconciler is converted.
 var {
   Fragment,
   FunctionalComponent,
@@ -642,4 +644,4 @@ var ReactTestRendererFiber = {
   /* eslint-enable camelcase */
 };
 
-module.exports = ReactTestRendererFiber;
+export default ReactTestRendererFiber;
