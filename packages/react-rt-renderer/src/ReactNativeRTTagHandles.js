@@ -8,7 +8,7 @@
  */
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 /**
  * Keeps track of allocating and associating native "tags" which are numeric,
@@ -49,4 +49,4 @@ var ReactNativeRTTagHandles = {
   },
 };
 
-module.exports = ReactNativeRTTagHandles;
+export default ReactNativeRTTagHandles;

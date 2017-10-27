@@ -8,15 +8,16 @@
  */
 'use strict';
 
-const ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
-const getComponentName = require('shared/getComponentName');
-const ReactTypeOfWork = require('shared/ReactTypeOfWork');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
+import getComponentName from 'shared/getComponentName';
+import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+
+import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+
 const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
 const {HostComponent} = ReactTypeOfWork;
-
-const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
 const {getFiberFromTag} = ReactNativeRTComponentTree;
 
 let getInspectorDataForViewTag;
@@ -102,6 +103,6 @@ if (__DEV__) {
   };
 }
 
-module.exports = {
+export default {
   getInspectorDataForViewTag,
 };

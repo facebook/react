@@ -13,18 +13,21 @@ import type {ReactNativeRTType} from './ReactNativeRTTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
-const ReactNativeFiberErrorDialog = require('react-native-renderer/src/ReactNativeFiberErrorDialog');
-const ReactPortal = require('react-reconciler/src/ReactPortal');
-const {
-  injectInternals,
-} = require('react-reconciler/src/ReactFiberDevToolsHook');
-const ReactGenericBatching = require('events/ReactGenericBatching');
-const ReactVersion = require('shared/ReactVersion');
+import ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
+import ReactNativeFiberErrorDialog
+  from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
+import ReactPortal from 'react-reconciler/src/ReactPortal';
+import ReactFiberDevToolsHook
+  from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import ReactVersion from 'shared/ReactVersion';
 
-const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
-const ReactNativeRTFiberRenderer = require('./ReactNativeRTFiberRenderer');
-const ReactNativeRTFiberInspector = require('./ReactNativeRTFiberInspector');
+import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import ReactNativeRTFiberRenderer from './ReactNativeRTFiberRenderer';
+import ReactNativeRTFiberInspector from './ReactNativeRTFiberInspector';
+
+// TODO: make a named import after reconciler is converted.
+var {injectInternals} = ReactFiberDevToolsHook;
 
 /**
  * Make sure essential globals are available and are patched correctly. Please don't remove this
@@ -96,4 +99,4 @@ injectInternals({
   rendererPackageName: 'react-rt-renderer',
 });
 
-module.exports = ReactNativeRTFiber;
+export default ReactNativeRTFiber;
