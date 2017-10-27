@@ -23,7 +23,7 @@ function compare(input, output) {
 
 var oldEnv;
 
-describe('dev-expression', () => {
+describe('CommonJS mode', () => {
   beforeEach(() => {
     oldEnv = process.env.NODE_ENV;
     process.env.NODE_ENV = '';
@@ -31,15 +31,6 @@ describe('dev-expression', () => {
 
   afterEach(() => {
     process.env.NODE_ENV = oldEnv;
-  });
-
-  it("should add `reactProdInvariant` when it finds `require('invariant')`", () => {
-    compare(
-      "var invariant = require('invariant');",
-      `var _prodInvariant = require('shared/reactProdInvariant');
-
-var invariant = require('invariant');`
-    );
   });
 
   it('should replace simple invariant calls', () => {
@@ -100,6 +91,84 @@ ${expectedInvariantTransformResult}`
       `var _prodInvariant = require('shared/reactProdInvariant');
 
 !condition ? invariant(false, 'This is not a real error message.') : void 0;`
+    );
+  });
+});
+
+describe('ES mode', () => {
+  beforeEach(() => {
+    oldEnv = process.env.NODE_ENV;
+    process.env.NODE_ENV = '';
+  });
+
+  afterEach(() => {
+    process.env.NODE_ENV = oldEnv;
+  });
+
+  it('should replace simple invariant calls', () => {
+    compare(
+      "import invariant from 'shared/reactProdInvariant';\n" +
+        "invariant(condition, 'Do not override existing functions.');",
+      "import _prodInvariant from 'shared/reactProdInvariant';\n" +
+        "import invariant from 'shared/reactProdInvariant';\n" +
+        '!condition ? ' +
+        '__DEV__ ? ' +
+        "invariant(false, 'Do not override existing functions.') : " +
+        `_prodInvariant('16') : void 0;`
+    );
+  });
+
+  it('should only add `reactProdInvariant` once', () => {
+    var expectedInvariantTransformResult =
+      '!condition ? ' +
+      '__DEV__ ? ' +
+      "invariant(false, 'Do not override existing functions.') : " +
+      `_prodInvariant('16') : void 0;`;
+
+    compare(
+      `import invariant from 'invariant';
+invariant(condition, 'Do not override existing functions.');
+invariant(condition, 'Do not override existing functions.');`,
+      `import _prodInvariant from 'shared/reactProdInvariant';
+import invariant from 'invariant';
+${expectedInvariantTransformResult}
+${expectedInvariantTransformResult}`
+    );
+  });
+
+  it('should support invariant calls with args', () => {
+    compare(
+      "import invariant from 'shared/reactProdInvariant';\n" +
+        "invariant(condition, 'Expected %s target to be an array; got %s', 'foo', 'bar');",
+      "import _prodInvariant from 'shared/reactProdInvariant';\n" +
+        "import invariant from 'shared/reactProdInvariant';\n" +
+        '!condition ? ' +
+        '__DEV__ ? ' +
+        "invariant(false, 'Expected %s target to be an array; got %s', 'foo', 'bar') : " +
+        `_prodInvariant('7', 'foo', 'bar') : void 0;`
+    );
+  });
+
+  it('should support invariant calls with a concatenated template string and args', () => {
+    compare(
+      "import invariant from 'shared/reactProdInvariant';\n" +
+        "invariant(condition, 'Expected a component class, ' + 'got %s.' + '%s', 'Foo', 'Bar');",
+      "import _prodInvariant from 'shared/reactProdInvariant';\n" +
+        "import invariant from 'shared/reactProdInvariant';\n" +
+        '!condition ? ' +
+        '__DEV__ ? ' +
+        "invariant(false, 'Expected a component class, got %s.%s', 'Foo', 'Bar') : " +
+        `_prodInvariant('18', 'Foo', 'Bar') : void 0;`
+    );
+  });
+
+  it('should correctly transform invariants that are not in the error codes map', () => {
+    compare(
+      "import invariant from 'shared/reactProdInvariant';\n" +
+        "invariant(condition, 'This is not a real error message.');",
+      "import _prodInvariant from 'shared/reactProdInvariant';\n" +
+        "import invariant from 'shared/reactProdInvariant';\n" +
+        "!condition ? invariant(false, 'This is not a real error message.') : void 0;"
     );
   });
 });
