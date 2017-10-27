@@ -8,7 +8,8 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber
+  from 'react-reconciler/src/ReactDebugCurrentFiber';
 import {registrationNameModules} from 'events/EventPluginRegistry';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
@@ -28,9 +29,15 @@ import {getPropertyInfo, shouldSetAttribute} from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
-import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
-import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
-import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
+import {
+  validateProperties as validateARIAProperties,
+} from '../shared/ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputProperties,
+} from '../shared/ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownProperties,
+} from '../shared/ReactDOMUnknownPropertyHook';
 
 var {
   getCurrentFiberOwnerName,
@@ -79,8 +86,9 @@ if (__DEV__) {
   var NORMALIZE_NULL_AND_REPLACEMENT_REGEX = /\u0000|\uFFFD/g;
 
   var normalizeMarkupForTextOrAttribute = function(markup: mixed): string {
-    const markupString =
-      typeof markup === 'string' ? markup : '' + (markup: any);
+    const markupString = typeof markup === 'string'
+      ? markup
+      : '' + (markup: any);
     return markupString
       .replace(NORMALIZE_NEWLINES_REGEX, '\n')
       .replace(NORMALIZE_NULL_AND_REPLACEMENT_REGEX, '');
@@ -176,13 +184,12 @@ if (__DEV__) {
     // re-initializing custom elements if they exist. But this breaks
     // how <noscript> is being handled. So we use the same document.
     // See the discussion in https://github.com/facebook/react/pull/11157.
-    var testElement =
-      parent.namespaceURI === HTML_NAMESPACE
-        ? parent.ownerDocument.createElement(parent.tagName)
-        : parent.ownerDocument.createElementNS(
-            (parent.namespaceURI: any),
-            parent.tagName,
-          );
+    var testElement = parent.namespaceURI === HTML_NAMESPACE
+      ? parent.ownerDocument.createElement(parent.tagName)
+      : parent.ownerDocument.createElementNS(
+          (parent.namespaceURI: any),
+          parent.tagName,
+        );
     testElement.innerHTML = html;
     return testElement.innerHTML;
   };
@@ -351,7 +358,7 @@ function updateDOMProperties(
 }
 
 export function createElement(
-  type: *,
+  type: string,
   props: Object,
   rootContainerElement: Element | Document,
   parentNamespace: string,
