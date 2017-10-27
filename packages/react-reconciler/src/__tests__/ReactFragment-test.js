@@ -83,19 +83,29 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(<Stateful key="a" />);
+    function Foo({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : <React.Fragment>
+            <Stateful key="a" />
+            <div key="b">World</div>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        <Stateful key="a" />
-        <div key="b">World</div>
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(), div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state of children nested at same level', function() {
@@ -111,31 +121,39 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment>
-          <React.Fragment>
-            <Stateful key="a" />
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>
+            <React.Fragment>
+              <React.Fragment>
+                <Stateful key="a" />
+              </React.Fragment>
+            </React.Fragment>
           </React.Fragment>
-        </React.Fragment>
-      </React.Fragment>,
-    );
+        : <React.Fragment>
+            <React.Fragment>
+              <React.Fragment>
+                <div />
+                <Stateful key="a" />
+              </React.Fragment>
+            </React.Fragment>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment>
-          <React.Fragment>
-            <div />
-            <Stateful key="a" />
-          </React.Fragment>
-        </React.Fragment>
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(), div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should not preserve state in non-top-level fragment nesting', function() {
@@ -151,14 +169,24 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment><Stateful key="a" /></React.Fragment>
-      </React.Fragment>,
-    );
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>
+            <React.Fragment><Stateful key="a" /></React.Fragment>
+          </React.Fragment>
+        : <React.Fragment><Stateful key="a" /></React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(<React.Fragment><Stateful key="a" /></React.Fragment>);
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
@@ -178,16 +206,26 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(<Stateful key="a" />);
+    function Foo({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : <React.Fragment>
+            <React.Fragment>
+              <Stateful key="a" />
+            </React.Fragment>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment>
-          <Stateful key="a" />
-        </React.Fragment>
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
@@ -207,21 +245,31 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(<Stateful key="a" />);
+    function Foo({condition}) {
+      return condition
+        ? <Stateful key="a" />
+        : <React.Fragment>
+            <React.Fragment>
+              <Stateful key="a" />
+            </React.Fragment>
+            <div />
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment>
-          <Stateful key="a" />
-        </React.Fragment>
-        <div />
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(), div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state between array nested in fragment and fragment', function() {
@@ -237,21 +285,29 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(
-      <React.Fragment>
-        <Stateful key="a" />
-      </React.Fragment>,
-    );
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>
+            <Stateful key="a" />
+          </React.Fragment>
+        : <React.Fragment>
+            {[<Stateful key="a" />]}
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        {[<Stateful key="a" />]}
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
@@ -268,17 +324,27 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render([<Stateful key="a" />]);
+    function Foo({condition}) {
+      return condition
+        ? [<Stateful key="a" />]
+        : <React.Fragment>
+            <Stateful key="a" />
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        <Stateful key="a" />
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
@@ -295,14 +361,24 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(<React.Fragment>{[<Stateful key="a" />]}</React.Fragment>);
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        : <React.Fragment>
+            <React.Fragment><Stateful key="a" /></React.Fragment>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment><Stateful key="a" /></React.Fragment>
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
@@ -322,10 +398,22 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(<React.Fragment>{[<Stateful key="a" />]}</React.Fragment>);
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>{[<Stateful key="a" />]}</React.Fragment>
+        : [[<Stateful key="a" />]];
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render([[<Stateful key="a" />]]);
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
@@ -345,17 +433,27 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(
-      <React.Fragment>
-        <React.Fragment><Stateful key="a" /></React.Fragment>
-      </React.Fragment>,
-    );
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>
+            <React.Fragment><Stateful key="a" /></React.Fragment>
+          </React.Fragment>
+        : [[<Stateful key="a" />]];
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render([[<Stateful key="a" />]]);
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
@@ -372,23 +470,31 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(
-      <React.Fragment key="a">
-        <Stateful />
-      </React.Fragment>,
-    );
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        : <React.Fragment key="b">
+            <Stateful />
+            <span>World</span>
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <React.Fragment key="b">
-        <Stateful />
-        <span>World</span>
-      </React.Fragment>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(), span()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
   it('should preserve state with reordering in multiple levels', function() {
@@ -404,33 +510,41 @@ describe('ReactFragment', () => {
       }
     }
 
-    ReactNoop.render(
-      <div>
-        <React.Fragment key="c">
-          <span>foo</span>
-          <div key="b">
-            <Stateful key="a" />
+    function Foo({condition}) {
+      return condition
+        ? <div>
+            <React.Fragment key="c">
+              <span>foo</span>
+              <div key="b">
+                <Stateful key="a" />
+              </div>
+            </React.Fragment>
+            <span>boop</span>
           </div>
-        </React.Fragment>
-        <span>boop</span>
-      </div>,
-    );
+        : <div>
+            <span>beep</span>
+            <React.Fragment key="c">
+              <div key="b">
+                <Stateful key="a" />
+              </div>
+              <span>bar</span>
+            </React.Fragment>
+          </div>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
 
-    ReactNoop.render(
-      <div>
-        <span>beep</span>
-        <React.Fragment key="c">
-          <div key="b">
-            <Stateful key="a" />
-          </div>
-          <span>bar</span>
-        </React.Fragment>
-      </div>,
-    );
+    ReactNoop.render(<Foo condition={false} />);
     ReactNoop.flush();
 
     expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
   });
 });
