@@ -144,6 +144,24 @@ var ReactDOMInput = {
     };
   },
 
+  updateChecked: function(
+    element: Element,
+    props: Object,
+    targetType: ?string,
+  ) {
+    var node = ((element: any): InputWithWrapperState);
+    if (!targetType || targetType === node.type) {
+      var checked = props.checked;
+      if (checked != null) {
+        DOMPropertyOperations.setValueForProperty(
+          node,
+          'checked',
+          checked || false,
+        );
+      }
+    }
+  },
+
   updateWrapper: function(element: Element, props: Object) {
     var node = ((element: any): InputWithWrapperState);
     if (__DEV__) {
@@ -183,14 +201,7 @@ var ReactDOMInput = {
       }
     }
 
-    var checked = props.checked;
-    if (checked != null) {
-      DOMPropertyOperations.setValueForProperty(
-        node,
-        'checked',
-        checked || false,
-      );
-    }
+    ReactDOMInput.updateChecked(element, props);
 
     var value = props.value;
     if (value != null) {

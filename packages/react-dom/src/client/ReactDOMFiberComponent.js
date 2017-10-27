@@ -814,21 +814,14 @@ var ReactDOMFiberComponent = {
     lastRawProps: Object,
     nextRawProps: Object,
   ): void {
+    // Update checked *before* name.
+    // In the middle of an update, it is possible to have multiple checked.
+    // When a checked radio tries to change name, browser makes another radio's checked false.
+    if (tag === 'input') {
+      ReactDOMFiberInput.updateChecked(domElement, nextRawProps, 'radio');
+    }
     // TODO: Ensure that an update gets scheduled if any of the special props
     // changed.
-    switch (tag) {
-      case 'input':
-        // Update the wrapper around inputs *after* updating props.
-        ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
-
-        // We also check that we haven't missed a value update, such as a
-        // Radio group shifting the checked value to another named radio input.
-        inputValueTracking.updateValueIfChanged((domElement: any));
-        break;
-      case 'textarea':
-        ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
-        break;
-    }
     var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
     var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
     // Apply the diff.
@@ -838,11 +831,25 @@ var ReactDOMFiberComponent = {
       wasCustomComponentTag,
       isCustomComponentTag,
     );
+    switch (tag) {
+      case 'input':
+        // Update the wrapper around inputs *after* updating props. This has to
+        // happen after `updateDOMProperties`. Otherwise HTML5 input validations
+        // raise warnings and prevent the new value from being assigned.
+        ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
 
-    if (tag === 'select') {
-      // <select> value update needs to occur after <option> children
-      // reconciliation
-      ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
+        // We also check that we haven't missed a value update, such as a
+        // Radio group shifting the checked value to another named radio input.
+        inputValueTracking.updateValueIfChanged((domElement: any));
+        break;
+      case 'textarea':
+        ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);
+        break;
+      case 'select':
+        // <select> value update needs to occur after <option> children
+        // reconciliation
+        ReactDOMFiberSelect.postUpdateWrapper(domElement, nextRawProps);
+        break;
     }
   },
 
