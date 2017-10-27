@@ -41,7 +41,7 @@ const findNumericNodeHandle = require('./findNumericNodeHandle');
  */
 class ReactNativeComponent<DefaultProps, Props, State>
   extends React.Component<Props, State> {
-  static defaultProps: $Abstract<DefaultProps>;
+  static defaultProps: DefaultProps;
   props: Props;
   state: State;
 
