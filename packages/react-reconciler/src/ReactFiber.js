@@ -43,12 +43,6 @@ var {NoEffect} = require('ReactTypeOfSideEffect');
 
 var invariant = require('fbjs/lib/invariant');
 
-const REACT_FRAGMENT_TYPE =
-  (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.fragment')) ||
-  0xeacb;
-
 if (__DEV__) {
   var getComponentName = require('getComponentName');
   var hasBadMapPolyfill = false;
@@ -322,13 +316,6 @@ exports.createFiberFromElement = function(
     fiber = createFiber(HostComponent, key, internalContextTag);
     fiber.type = type;
     fiber.pendingProps = element.props;
-  } else if (type === REACT_FRAGMENT_TYPE) {
-    fiber = createFiberFromFragment(
-      element.props.children,
-      internalContextTag,
-      expirationTime,
-      key,
-    );
   } else if (
     typeof type === 'object' &&
     type !== null &&

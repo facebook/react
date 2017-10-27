@@ -381,18 +381,11 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     expirationTime: ExpirationTime,
   ): Fiber {
     // TODO: Split these into branches based on typeof type
-    if (
-      current !== null &&
-      (current.tag === Fragment
-        ? element.type === REACT_FRAGMENT_TYPE
-        : current.type === element.type)
-    ) {
+    if (current !== null && current.type === element.type) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
       existing.ref = coerceRef(current, element);
-      existing.pendingProps = element.type === REACT_FRAGMENT_TYPE
-        ? element.props.children
-        : element.props;
+      existing.pendingProps = element.props;
       existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
@@ -401,14 +394,25 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return existing;
     } else {
       // Insert
-      const created = createFiberFromElement(
-        element,
-        returnFiber.internalContextTag,
-        expirationTime,
-      );
-      created.ref = coerceRef(current, element);
-      created.return = returnFiber;
-      return created;
+      if (element.type === REACT_FRAGMENT_TYPE) {
+        const created = createFiberFromFragment(
+          element.props.children,
+          returnFiber.internalContextTag,
+          expirationTime,
+          element.key,
+        );
+        created.return = returnFiber;
+        return created;
+      } else {
+        const created = createFiberFromElement(
+          element,
+          returnFiber.internalContextTag,
+          expirationTime,
+        );
+        created.ref = coerceRef(current, element);
+        created.return = returnFiber;
+        return created;
+      }
     }
   }
 
@@ -538,14 +542,25 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (typeof newChild === 'object' && newChild !== null) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE: {
-          const created = createFiberFromElement(
-            newChild,
-            returnFiber.internalContextTag,
-            expirationTime,
-          );
-          created.ref = coerceRef(null, newChild);
-          created.return = returnFiber;
-          return created;
+          if (newChild.type === REACT_FRAGMENT_TYPE) {
+            const created = createFiberFromFragment(
+              newChild.props.children,
+              returnFiber.internalContextTag,
+              expirationTime,
+              newChild.key,
+            );
+            created.return = returnFiber;
+            return created;
+          } else {
+            const created = createFiberFromElement(
+              newChild,
+              returnFiber.internalContextTag,
+              expirationTime,
+            );
+            created.ref = coerceRef(null, newChild);
+            created.return = returnFiber;
+            return created;
+          }
         }
 
         case REACT_COROUTINE_TYPE: {
@@ -1267,14 +1282,25 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       child = child.sibling;
     }
 
-    const created = createFiberFromElement(
-      element,
-      returnFiber.internalContextTag,
-      expirationTime,
-    );
-    created.ref = coerceRef(currentFirstChild, element);
-    created.return = returnFiber;
-    return created;
+    if (element.type === REACT_FRAGMENT_TYPE) {
+      const created = createFiberFromFragment(
+        element.props.children,
+        returnFiber.internalContextTag,
+        expirationTime,
+        element.key,
+      );
+      created.return = returnFiber;
+      return created;
+    } else {
+      const created = createFiberFromElement(
+        element,
+        returnFiber.internalContextTag,
+        expirationTime,
+      );
+      created.ref = coerceRef(currentFirstChild, element);
+      created.return = returnFiber;
+      return created;
+    }
   }
 
   function reconcileSingleCoroutine(
@@ -1385,140 +1411,9 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     return created;
   }
 
-  // A fork of reconcileChildFibers to be used when reconcileChildFibers
-  // encounters a top level fragment to treat it as a set of children.
-  // This function is not recursive.
-  function reconcileChildFibersForTopLevelFragment(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber | null,
-    newChild: any,
-    expirationTime: ExpirationTime,
-  ): Fiber | null {
-    // This function is not recursive.
-    // If the top level item is an array, we treat it as a set of children,
-    // not as a fragment. Nested arrays on the other hand will be treated as
-    // fragment nodes. Recursion happens at the normal flow.
-
-    // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
-    if (isObject) {
-      switch (newChild.$$typeof) {
-        case REACT_ELEMENT_TYPE:
-          return placeSingleChild(
-            reconcileSingleElement(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_COROUTINE_TYPE:
-          return placeSingleChild(
-            reconcileSingleCoroutine(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_YIELD_TYPE:
-          return placeSingleChild(
-            reconcileSingleYield(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_PORTAL_TYPE:
-          return placeSingleChild(
-            reconcileSinglePortal(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-      }
-    }
-
-    if (typeof newChild === 'string' || typeof newChild === 'number') {
-      return placeSingleChild(
-        reconcileSingleTextNode(
-          returnFiber,
-          currentFirstChild,
-          '' + newChild,
-          expirationTime,
-        ),
-      );
-    }
-
-    if (isArray(newChild)) {
-      return reconcileChildrenArray(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        expirationTime,
-      );
-    }
-
-    if (getIteratorFn(newChild)) {
-      return reconcileChildrenIterator(
-        returnFiber,
-        currentFirstChild,
-        newChild,
-        expirationTime,
-      );
-    }
-
-    if (isObject) {
-      throwOnInvalidObjectType(returnFiber, newChild);
-    }
-
-    if (__DEV__) {
-      if (typeof newChild === 'function') {
-        warnOnFunctionType();
-      }
-    }
-    if (typeof newChild === 'undefined') {
-      // If the new child is undefined, and the return fiber is a composite
-      // component, throw an error. If Fiber return types are disabled,
-      // we already threw above.
-      switch (returnFiber.tag) {
-        case ClassComponent: {
-          if (__DEV__) {
-            const instance = returnFiber.stateNode;
-            if (instance.render._isMockFunction) {
-              // We allow auto-mocks to proceed as if they're returning null.
-              break;
-            }
-          }
-        }
-        // Intentionally fall through to the next case, which handles both
-        // functions and classes
-        // eslint-disable-next-lined no-fallthrough
-        case FunctionalComponent: {
-          const Component = returnFiber.type;
-          invariant(
-            false,
-            '%s(...): Nothing was returned from render. This usually means a ' +
-              'return statement is missing. Or, to render nothing, ' +
-              'return null.',
-            Component.displayName || Component.name || 'Component',
-          );
-        }
-      }
-    }
-
-    // Remaining cases are all treated as empty.
-    return deleteRemainingChildren(returnFiber, currentFirstChild);
-  }
-
   // This API will tag the children with the side-effect of the reconciliation
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
-  // This function is forked at reconcileChildFibersForTopLevelFragment
-  // Please reflect changes in this function to its fork as well
   function reconcileChildFibers(
     returnFiber: Fiber,
     currentFirstChild: Fiber | null,
@@ -1532,20 +1427,21 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
 
     // Handle object types
     const isObject = typeof newChild === 'object' && newChild !== null;
+
+    // Handle top level unkeyed fragments as if they were arrays.
+    // This leads to an ambiguity between <>{[...]}</> and <>...</>.
+    // We treat the ambiguous cases above the same.
+    if (
+      isObject &&
+      newChild.type === REACT_FRAGMENT_TYPE &&
+      newChild.key === null
+    ) {
+      newChild = newChild.props.children;
+    }
+
     if (isObject) {
       switch (newChild.$$typeof) {
         case REACT_ELEMENT_TYPE:
-          // This function recurses only on a top-level fragment,
-          // so that it is treated as a set of children
-          // Otherwise, we follow the normal flow.
-          if (newChild.type === REACT_FRAGMENT_TYPE && newChild.key === null) {
-            return reconcileChildFibersForTopLevelFragment(
-              returnFiber,
-              currentFirstChild,
-              newChild.props.children,
-              expirationTime,
-            );
-          }
           return placeSingleChild(
             reconcileSingleElement(
               returnFiber,
