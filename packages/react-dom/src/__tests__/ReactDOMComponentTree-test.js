@@ -25,21 +25,17 @@ describe('ReactDOMComponentTree', () => {
     return instance.type;
   }
 
-  function getTextOf(instance) {
-    return instance.memoizedProps;
-  }
-
   function getInstanceFromNode(node) {
-    const instanceKey = Object
-        .keys(node)
-        .find(key => key.startsWith('__reactInternalInstance$'));
+    const instanceKey = Object.keys(node).find(key =>
+      key.startsWith('__reactInternalInstance$'),
+    );
     return node[instanceKey];
   }
 
   function getFiberPropsFromNode(node) {
-    const props = Object
-        .keys(node)
-        .find(key => key.startsWith('__reactEventHandlers$'));
+    const props = Object.keys(node).find(key =>
+      key.startsWith('__reactEventHandlers$'),
+    );
     return node[props];
   }
 
@@ -57,11 +53,10 @@ describe('ReactDOMComponentTree', () => {
     elem.dispatchEvent(event);
   }
 
-  const setUntrackedInputValue = Object
-    .getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      'value',
-    ).set;
+  const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
+    HTMLInputElement.prototype,
+    'value',
+  ).set;
 
   beforeEach(() => {
     React = require('react');
@@ -102,25 +97,25 @@ describe('ReactDOMComponentTree', () => {
 
   it('finds closest instance for node when an event happens', done => {
     const elemID = 'aID';
-    const innerHTML = {__html: `<div id="${elemID}"></div>`}
+    const innerHTML = {__html: `<div id="${elemID}"></div>`};
 
     class ClosestInstance extends React.Component {
-      id = 'closestInstance'
+      id = 'closestInstance';
       _onClick = e => {
         const node = e.currentTarget;
         const instance = getInstanceFromNode(node);
         expect(instance).toBeDefined();
-        expect(getTypeOf(instance)).toBe('div')
+        expect(getTypeOf(instance)).toBe('div');
         expect(node.id).toBe(this.id);
         done();
-      }
+      };
       render() {
         return (
           <div
             id="closestInstance"
             onClick={this._onClick}
-            dangerouslySetInnerHTML={innerHTML}>
-          </div>
+            dangerouslySetInnerHTML={innerHTML}
+          />
         );
       }
     }
@@ -145,10 +140,10 @@ describe('ReactDOMComponentTree', () => {
         expect(node.value).toEqual(finishValue);
         const instance = getInstanceFromNode(node);
         expect(instance).toBeDefined();
-        expect(getTypeOf(instance)).toBe('input')
+        expect(getTypeOf(instance)).toBe('input');
         expect(node.id).toBe(inputID);
-        done()
-      }
+        done();
+      };
       render() {
         return (
           <div>
@@ -188,7 +183,7 @@ describe('ReactDOMComponentTree', () => {
           expect(updatedProps.value).toBe(finishValue);
           done();
         });
-      }
+      };
       render() {
         return (
           <div>
