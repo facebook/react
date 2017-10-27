@@ -1422,19 +1422,20 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // not as a fragment. Nested arrays on the other hand will be treated as
     // fragment nodes. Recursion happens at the normal flow.
 
-    // Handle object types
-    const isObject = typeof newChild === 'object' && newChild !== null;
-
     // Handle top level unkeyed fragments as if they were arrays.
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
-      isObject &&
+      typeof newChild === 'object' &&
+      newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&
       newChild.key === null
     ) {
       newChild = newChild.props.children;
     }
+
+    // Handle object types
+    const isObject = typeof newChild === 'object' && newChild !== null;
 
     if (isObject) {
       switch (newChild.$$typeof) {

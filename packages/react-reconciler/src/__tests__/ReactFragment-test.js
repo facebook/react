@@ -44,6 +44,15 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([span()]);
   });
 
+  it('should render zero children via noop renderer', () => {
+    const element = <React.Fragment />;
+
+    ReactNoop.render(element);
+    ReactNoop.flush();
+
+    expect(ReactNoop.getChildren()).toEqual([]);
+  });
+
   it('should render multiple children via noop renderer', () => {
     const element = (
       <React.Fragment>
