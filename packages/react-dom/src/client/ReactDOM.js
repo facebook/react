@@ -10,6 +10,7 @@
 'use strict';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {HostConfig} from 'react-reconciler';
 
 require('../shared/checkReact');
 
@@ -439,7 +440,17 @@ const hydrationHostConfig = {
   },
 };
 
-const hostConfig = {
+const hostConfig: HostConfig<
+  string, // T
+  Props, // P
+  Instance, // I
+  TextInstance, // TI
+  Instance | TextInstance, // PI
+  Container, // C
+  void, // CC
+  HostContext, // CX
+  Array<mixed> // PL
+> = {
   getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
