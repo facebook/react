@@ -112,7 +112,8 @@ declare module 'BatchedBridge' {
 }
 
 declare module 'CSComponent' {
-  declare type Component<Props, State, Instance> = any;
+  declare type Element = any;
+  declare type Options<Instance> = any;
 }
 
 declare module 'CSStatefulComponent' {
