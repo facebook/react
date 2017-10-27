@@ -108,6 +108,45 @@ describe('ReactFragment', () => {
     expect(ReactNoop.getChildren()).toEqual([div()]);
   });
 
+  it('should preserve state between top-level fragments', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment>
+            <Stateful />
+          </React.Fragment>
+        : <React.Fragment>
+            <Stateful />
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
   it('should preserve state of children nested at same level', function() {
     var ops = [];
 
@@ -489,6 +528,45 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(), span()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
+  });
+
+  it('should not preserve state between unkeyed and keyed fragment', function() {
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition
+        ? <React.Fragment key="a">
+            <Stateful />
+          </React.Fragment>
+        : <React.Fragment>
+            <Stateful />
+          </React.Fragment>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div()]);
 
     ReactNoop.render(<Foo condition={true} />);
     ReactNoop.flush();
