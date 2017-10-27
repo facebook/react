@@ -402,25 +402,14 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       return existing;
     } else {
       // Insert
-      if (element.type === REACT_FRAGMENT_TYPE) {
-        const created = createFiberFromFragment(
-          element.props.children,
-          returnFiber.internalContextTag,
-          expirationTime,
-          element.key,
-        );
-        created.return = returnFiber;
-        return created;
-      } else {
-        const created = createFiberFromElement(
-          element,
-          returnFiber.internalContextTag,
-          expirationTime,
-        );
-        created.ref = coerceRef(current, element);
-        created.return = returnFiber;
-        return created;
-      }
+      const created = createFiberFromElement(
+        element,
+        returnFiber.internalContextTag,
+        expirationTime,
+      );
+      created.ref = coerceRef(current, element);
+      created.return = returnFiber;
+      return created;
     }
   }
 
