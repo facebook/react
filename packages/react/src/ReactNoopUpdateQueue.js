@@ -7,10 +7,9 @@
 
 'use strict';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var didWarnStateUpdateForUnmountedComponent = {};
-}
+import warning from 'fbjs/lib/warning';
+
+var didWarnStateUpdateForUnmountedComponent = {};
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
@@ -113,4 +112,4 @@ var ReactNoopUpdateQueue = {
   },
 };
 
-module.exports = ReactNoopUpdateQueue;
+export default ReactNoopUpdateQueue;

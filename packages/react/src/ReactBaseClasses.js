@@ -7,16 +7,16 @@
 
 'use strict';
 
-var emptyObject = require('fbjs/lib/emptyObject');
-var invariant = require('fbjs/lib/invariant');
-var lowPriorityWarning = require('shared/lowPriorityWarning');
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
 
-var ReactNoopUpdateQueue = require('./ReactNoopUpdateQueue');
+import ReactNoopUpdateQueue from './ReactNoopUpdateQueue';
 
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactComponent(props, context, updater) {
+function Component(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -25,7 +25,7 @@ function ReactComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-ReactComponent.prototype.isReactComponent = {};
+Component.prototype.isReactComponent = {};
 
 /**
  * Sets a subset of the state. Always use this to mutate
@@ -52,7 +52,7 @@ ReactComponent.prototype.isReactComponent = {};
  * @final
  * @protected
  */
-ReactComponent.prototype.setState = function(partialState, callback) {
+Component.prototype.setState = function(partialState, callback) {
   invariant(
     typeof partialState === 'object' ||
       typeof partialState === 'function' ||
@@ -77,7 +77,7 @@ ReactComponent.prototype.setState = function(partialState, callback) {
  * @final
  * @protected
  */
-ReactComponent.prototype.forceUpdate = function(callback) {
+Component.prototype.forceUpdate = function(callback) {
   this.updater.enqueueForceUpdate(this, callback, 'forceUpdate');
 };
 
@@ -100,7 +100,7 @@ if (__DEV__) {
     ],
   };
   var defineDeprecationWarning = function(methodName, info) {
-    Object.defineProperty(ReactComponent.prototype, methodName, {
+    Object.defineProperty(Component.prototype, methodName, {
       get: function() {
         lowPriorityWarning(
           false,
@@ -122,8 +122,8 @@ if (__DEV__) {
 /**
  * Base class helpers for the updating state of a component.
  */
-function ReactPureComponent(props, context, updater) {
-  // Duplicated from ReactComponent.
+function PureComponent(props, context, updater) {
+  // Duplicated from Component.
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -133,15 +133,15 @@ function ReactPureComponent(props, context, updater) {
 }
 
 function ComponentDummy() {}
-ComponentDummy.prototype = ReactComponent.prototype;
-var pureComponentPrototype = (ReactPureComponent.prototype = new ComponentDummy());
-pureComponentPrototype.constructor = ReactPureComponent;
+ComponentDummy.prototype = Component.prototype;
+var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
+pureComponentPrototype.constructor = PureComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(pureComponentPrototype, ReactComponent.prototype);
+Object.assign(pureComponentPrototype, Component.prototype);
 pureComponentPrototype.isPureReactComponent = true;
 
-function ReactAsyncComponent(props, context, updater) {
-  // Duplicated from ReactComponent.
+function AsyncComponent(props, context, updater) {
+  // Duplicated from Component.
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
@@ -150,17 +150,13 @@ function ReactAsyncComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-var asyncComponentPrototype = (ReactAsyncComponent.prototype = new ComponentDummy());
-asyncComponentPrototype.constructor = ReactAsyncComponent;
+var asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
+asyncComponentPrototype.constructor = AsyncComponent;
 // Avoid an extra prototype jump for these methods.
-Object.assign(asyncComponentPrototype, ReactComponent.prototype);
+Object.assign(asyncComponentPrototype, Component.prototype);
 asyncComponentPrototype.unstable_isAsyncReactComponent = true;
 asyncComponentPrototype.render = function() {
   return this.props.children;
 };
 
-module.exports = {
-  Component: ReactComponent,
-  PureComponent: ReactPureComponent,
-  AsyncComponent: ReactAsyncComponent,
-};
+export {Component, PureComponent, AsyncComponent};
