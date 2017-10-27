@@ -98,6 +98,11 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     // We need a new props object so that we can represent flattened children.
     let newProps = Object.assign({}, props);
     newProps.children = [];
+    if (type === 'CSCustom') {
+      // Special cased type that treats the props as the object.
+      // Useful for custom children types like FlexItem.
+      return newProps;
+    }
     return {
       props: newProps,
       options: {key, ref: null},
@@ -194,6 +199,9 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
       }
       // We need a new props object so that we can represent flattened children.
       newInstanceProps.children = keepChildren ? instance.props.children : [];
+      if (type === 'CSCustom') {
+        return newInstanceProps;
+      }
       return {
         props: newInstanceProps,
         options: instance.options,
