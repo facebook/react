@@ -7,17 +7,20 @@
 
 'use strict';
 
-require('../shared/ReactDOMInjection');
+import '../shared/ReactDOMInjection';
+import ReactVersion from 'shared/ReactVersion';
 
-var ReactVersion = require('shared/ReactVersion');
+import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
+import {
+  renderToNodeStream,
+  renderToStaticNodeStream,
+} from './ReactDOMNodeStreamRenderer';
 
-var ReactDOMStringRenderer = require('./ReactDOMStringRenderer');
-var ReactDOMNodeStreamRenderer = require('./ReactDOMNodeStreamRenderer');
-
-module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToNodeStream: ReactDOMNodeStreamRenderer.renderToNodeStream,
-  renderToStaticNodeStream: ReactDOMNodeStreamRenderer.renderToStaticNodeStream,
-  version: ReactVersion,
+export {
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
 };
+
+export const version = ReactVersion;
