@@ -34,6 +34,9 @@ var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 // TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
   plugins: [
+    // For Node environment only. For builds, Rollup takes care of ESM.
+    require.resolve('babel-plugin-transform-es2015-modules-commonjs'),
+
     pathToBabelPluginDevWithCode,
     // Keep stacks detailed in tests.
     // Don't put this in .babelrc so that we don't embed filenames
