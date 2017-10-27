@@ -331,7 +331,7 @@ var ReactNoop = {
       root = NoopRenderer.createContainer(container, false);
       roots.set(rootID, root);
     }
-    NoopRenderer.updateContainer(element, root, null, false, callback);
+    NoopRenderer.updateContainer(element, root, null, callback);
   },
 
   renderToPersistentRootWithID(
@@ -351,19 +351,13 @@ var ReactNoop = {
       root = PersistentNoopRenderer.createContainer(container, false);
       persistentRoots.set(rootID, root);
     }
-    PersistentNoopRenderer.updateContainer(
-      element,
-      root,
-      null,
-      false,
-      callback,
-    );
+    PersistentNoopRenderer.updateContainer(element, root, null, callback);
   },
 
   unmountRootWithID(rootID: string) {
     const root = roots.get(rootID);
     if (root) {
-      NoopRenderer.updateContainer(null, root, null, false, () => {
+      NoopRenderer.updateContainer(null, root, null, () => {
         roots.delete(rootID);
         rootContainers.delete(rootID);
       });

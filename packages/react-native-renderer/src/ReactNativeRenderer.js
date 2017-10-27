@@ -57,13 +57,7 @@ const ReactNativeRenderer: ReactNativeType = {
       root = ReactNativeFiberRenderer.createContainer(containerTag, false);
       roots.set(containerTag, root);
     }
-    ReactNativeFiberRenderer.updateContainer(
-      element,
-      root,
-      null,
-      false,
-      callback,
-    );
+    ReactNativeFiberRenderer.updateContainer(element, root, null, callback);
 
     return ReactNativeFiberRenderer.getPublicRootInstance(root);
   },
@@ -72,7 +66,7 @@ const ReactNativeRenderer: ReactNativeType = {
     const root = roots.get(containerTag);
     if (root) {
       // TODO: Is it safe to reset this now or should I wait since this unmount could be deferred?
-      ReactNativeFiberRenderer.updateContainer(null, root, null, false, () => {
+      ReactNativeFiberRenderer.updateContainer(null, root, null, () => {
         roots.delete(containerTag);
       });
     }

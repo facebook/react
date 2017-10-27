@@ -11,7 +11,7 @@
 
 import type {HostConfig, Deadline} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
+import type {FiberRoot, WorkNode} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
@@ -62,10 +62,7 @@ var {
   computeExpirationBucket,
 } = require('./ReactFiberExpirationTime');
 var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
-var {
-  getFiberUpdateQueueExpirationTime,
-  processUpdateQueue,
-} = require('./ReactFiberUpdateQueue');
+var {getFiberUpdateQueueExpirationTime} = require('./ReactFiberUpdateQueue');
 var {resetContext} = require('./ReactFiberContext');
 
 export type CapturedError = {
@@ -1292,7 +1289,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isBatchingUpdates: boolean = false;
   let isUnbatchingUpdates: boolean = false;
 
-  let completionCallbacks: Array<() => mixed> | null = null;
+  let completionCallbacks: Array<WorkNode> | null = null;
 
   // Use these to prevent an infinite loop of nested updates
   const NESTED_UPDATE_LIMIT = 1000;
@@ -1501,13 +1498,17 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
 
   function finishRendering() {
     if (completionCallbacks !== null) {
-      const callbacks = completionCallbacks;
+      const callbackNodes = completionCallbacks;
       completionCallbacks = null;
-      // TODO: What should happen if a completion callback throws? Should we
-      // wrap these in try-catch and continue calling the others?
-      for (let i = 0; i < callbacks.length; i++) {
-        const callback = callbacks[i];
-        callback();
+      for (let i = 0; i < callbackNodes.length; i++) {
+        // This node might be processed again. Clear the callback so it's
+        // only called once.
+        const callbackNode = callbackNodes[i];
+        const callback = callbackNode._onComplete;
+        if (typeof callback === 'function') {
+          // TODO: How should errors be handled?
+          callback.call(callbackNode);
+        }
       }
     }
 
@@ -1538,13 +1539,13 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       let finishedWork = root.finishedWork;
       if (finishedWork !== null) {
         // This root is already complete. We can commit it.
-        attemptToCommitRoot(root, finishedWork, expirationTime);
+        completeRoot(root, finishedWork, expirationTime);
       } else {
         root.finishedWork = null;
         finishedWork = renderRoot(root, expirationTime);
         if (finishedWork !== null) {
           // We've completed the root. Commit it.
-          attemptToCommitRoot(root, finishedWork, expirationTime);
+          completeRoot(root, finishedWork, expirationTime);
         }
       }
     } else {
@@ -1552,7 +1553,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       let finishedWork = root.finishedWork;
       if (finishedWork !== null) {
         // This root is already complete. We can commit it.
-        attemptToCommitRoot(root, finishedWork, expirationTime);
+        completeRoot(root, finishedWork, expirationTime);
       } else {
         root.finishedWork = null;
         finishedWork = renderRoot(root, expirationTime);
@@ -1561,7 +1562,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
           // before committing.
           if (!shouldYield()) {
             // Still time left. Commit the root.
-            attemptToCommitRoot(root, finishedWork, expirationTime);
+            completeRoot(root, finishedWork, expirationTime);
           } else {
             // There's no time left. Mark this root as complete. We'll come
             // back and commit it later.
@@ -1574,48 +1575,48 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     isRendering = false;
   }
 
-  function attemptToCommitRoot(
+  function completeRoot(
     root: FiberRoot,
     finishedWork: Fiber,
     expirationTime: ExpirationTime,
   ): void {
-    const deferredCommits = root.deferredCommits;
-    if (
-      deferredCommits !== null &&
-      deferredCommits.expirationTime !== NoWork &&
-      deferredCommits.expirationTime <= expirationTime
+    // If there are top-level work nodes, check if the commit is deferred by
+    // traversing the list.
+    let firstDeferredNode = null;
+    let firstIncompleteNode = root.firstTopLevelWork;
+    while (
+      firstIncompleteNode !== null &&
+      firstIncompleteNode._expirationTime <= expirationTime
     ) {
+      if (firstIncompleteNode._defer && firstDeferredNode === null) {
+        // This node's expiration matches, but its commit is deferred. We're
+        // blocked from committing at this level.
+        firstDeferredNode = firstIncompleteNode;
+      }
+      if (typeof firstIncompleteNode._onComplete === 'function') {
+        // This node has a callback. Add it to the list of completion callbacks.
+        if (completionCallbacks === null) {
+          completionCallbacks = [];
+        }
+        completionCallbacks.push(firstIncompleteNode);
+      }
+      firstIncompleteNode = firstIncompleteNode._next;
+    }
+
+    // The new first node is the first one that can't be committed.
+    root.firstTopLevelWork = firstDeferredNode === null
+      ? firstIncompleteNode
+      : firstDeferredNode;
+
+    if (firstDeferredNode === null) {
+      // Commit the root.
+      root.finishedWork = null;
+      root.remainingExpirationTime = commitRoot(finishedWork);
+    } else {
       // This root is not ready to commit. Unschedule it until we receive
       // another update.
       root.finishedWork = finishedWork;
       root.remainingExpirationTime = NoWork;
-    } else {
-      // Commit the root.
-      root.finishedWork = null;
-      root.remainingExpirationTime = commitRoot(finishedWork);
-    }
-
-    // Regardless of whether we committed, this tree was completed, so we
-    // should process matching completion callbacks.
-    if (root.completionCallbacks !== null) {
-      const rootCompletionCallbacks = root.completionCallbacks;
-      processUpdateQueue(rootCompletionCallbacks, null, null, expirationTime);
-      const callbackList = rootCompletionCallbacks.callbackList;
-      if (completionCallbacks === null) {
-        completionCallbacks = [];
-      }
-      if (callbackList !== null) {
-        rootCompletionCallbacks.callbackList = null;
-        for (let i = 0; i < callbackList.length; i++) {
-          const update = callbackList[i];
-          // Assume this callback is a function
-          const callback: () => mixed = (update.callback: any);
-          // This update might be processed again. Clear the callback so it's
-          // only called once.
-          update.callback = null;
-          completionCallbacks.push(callback);
-        }
-      }
     }
   }
 

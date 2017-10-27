@@ -10,10 +10,17 @@
 'use strict';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
-import type {FiberRoot} from '../../../react-reconciler/src/ReactFiberRoot';
+// TODO: This type is shared between the reconciler and ReactDOM, but will
+// eventually be lifted out to the renderer.
+import type {
+  FiberRoot,
+  WorkNode as FiberRootWorkNode,
+} from 'react-reconciler/src/ReactFiberRoot';
+// TODO: ExpirationTime (or whatever we end up calling it) should be a public
+// type that renderers can consume.
 import type {
   ExpirationTime,
-} from '../../../react-reconciler/src/ReactFiberExpirationTime';
+} from 'react-reconciler/src/ReactFiberExpirationTime';
 
 require('../shared/checkReact');
 
@@ -62,12 +69,6 @@ var {
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
-
-var {
-  createUpdateQueue,
-  insertUpdateIntoQueue,
-  processUpdateQueue,
-} = require('../../../react-reconciler/src/ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var lowPriorityWarning = require('shared/lowPriorityWarning');
@@ -748,22 +749,10 @@ function renderSubtreeIntoContainer(
     root = container._reactRootContainer = newRoot;
     // Initial mount should not be batched.
     DOMRenderer.unbatchedUpdates(() => {
-      DOMRenderer.updateContainer(
-        children,
-        newRoot,
-        parentComponent,
-        false,
-        callback,
-      );
+      DOMRenderer.updateContainer(children, newRoot, parentComponent, callback);
     });
   } else {
-    DOMRenderer.updateContainer(
-      children,
-      root,
-      parentComponent,
-      false,
-      callback,
-    );
+    DOMRenderer.updateContainer(children, root, parentComponent, callback);
   }
   return DOMRenderer.getPublicRootInstance(root);
 }
@@ -781,26 +770,65 @@ function createPortal(
   return ReactPortal.createPortal(children, container, null, key);
 }
 
-type WorkNode = {
+type WorkNode = FiberRootWorkNode & {
   then(onComplete: () => mixed): void,
   commit(): void,
 
   _reactRootContainer: FiberRoot,
-  _expirationTime: ExpirationTime,
 
-  _onComplete: (() => void) | null,
   _completionCallbacks: Array<() => mixed> | null,
   _didComplete: boolean,
 };
 
-function Work(root: FiberRoot, expirationTime: ExpirationTime) {
-  this._reactRootContainer = root;
-  this._expirationTime = expirationTime;
+function insertWork(root: FiberRoot, work: FiberRootWorkNode) {
+  // Insert into root's list of work nodes.
+  const expirationTime = work._expirationTime;
+  const firstNode = root.firstTopLevelWork;
+  if (firstNode === null) {
+    root.firstTopLevelWork = work;
+    work._next = null;
+  } else {
+    // Insert sorted by expiration time then insertion order
+    let insertAfter = null;
+    let insertBefore = firstNode;
+    while (
+      insertBefore !== null &&
+      insertBefore._expirationTime <= expirationTime
+    ) {
+      insertAfter = insertBefore;
+      insertBefore = insertBefore._next;
+    }
+    work._next = insertBefore;
+    if (insertAfter !== null) {
+      insertAfter._next = work;
+    }
+  }
+}
 
-  this._onComplete = null;
+function Work(root: FiberRoot, defer: boolean, expirationTime: ExpirationTime) {
+  this._reactRootContainer = root;
+
+  this._defer = defer;
+  this._expirationTime = expirationTime;
+  this._next = null;
+
   this._completionCallbacks = null;
   this._didComplete = false;
 }
+Work.prototype._onComplete = function() {
+  this._didComplete = true;
+  // Set this to null so it isn't called again.
+  this._onComplete = null;
+  const callbacks = this._completionCallbacks;
+  if (callbacks === null) {
+    return;
+  }
+  for (let i = 0; i < callbacks.length; i++) {
+    // TODO: Error handling
+    const callback = callbacks[i];
+    callback();
+  }
+};
 Work.prototype.then = function(cb: () => mixed) {
   if (this._didComplete) {
     cb();
@@ -811,47 +839,15 @@ Work.prototype.then = function(cb: () => mixed) {
     completionCallbacks = this._completionCallbacks = [];
   }
   completionCallbacks.push(cb);
-  if (this._onComplete !== null) {
-    return;
-  }
-  this._onComplete = () => {
-    this._didComplete = true;
-    const callbacks = this._completionCallbacks;
-    if (callbacks === null) {
-      return;
-    }
-    for (let i = 0; i < callbacks.length; i++) {
-      // TODO: What should happen if a callback throws?
-      const callback = callbacks[i];
-      callback();
-    }
-  };
+
   const root = this._reactRootContainer;
   const expirationTime = this._expirationTime;
-  let rootCompletionCallbacks = root.completionCallbacks;
-  if (rootCompletionCallbacks === null) {
-    rootCompletionCallbacks = root.completionCallbacks = createUpdateQueue(
-      null,
-    );
-  }
-  const rootCompletionCallback = {
-    expirationTime,
-    partialState: null,
-    callback: this._onComplete,
-    isReplace: false,
-    isForced: false,
-    next: null,
-  };
-  insertUpdateIntoQueue(rootCompletionCallbacks, rootCompletionCallback);
   DOMRenderer.requestWork(root, expirationTime);
 };
 Work.prototype.commit = function() {
+  this._defer = false;
   const root = this._reactRootContainer;
   const expirationTime = this._expirationTime;
-  const deferredCommits = root.deferredCommits;
-  if (deferredCommits !== null) {
-    processUpdateQueue(deferredCommits, null, null, expirationTime);
-  }
   DOMRenderer.flushRoot(root, expirationTime);
 };
 
@@ -875,36 +871,49 @@ ReactRoot.prototype.render = function(
   callback: ?() => mixed,
 ): WorkNode {
   const root = this._reactRootContainer;
-  const expirationTime = DOMRenderer.updateContainer(
-    children,
-    root,
-    null,
-    false,
-    null,
-  );
-  return new Work(root, expirationTime);
+  // TODO: Wrapping in batchedUpdates is needed to prevent work on the root from
+  // starting until after the work object is inserted. Remove it once
+  // root scheduling is lifted into the renderer.
+  return DOMRenderer.batchedUpdates(() => {
+    const expirationTime = DOMRenderer.updateContainer(
+      children,
+      root,
+      null,
+      null,
+    );
+    const work = new Work(root, false, expirationTime);
+    insertWork(root, work);
+    return work;
+  });
 };
 ReactRoot.prototype.prerender = function(children: ReactNodeList): WorkNode {
   const root = this._reactRootContainer;
-  const expirationTime = DOMRenderer.updateContainer(
-    children,
-    root,
-    null,
-    true,
-    null,
-  );
-  return new Work(root, expirationTime);
+  // TODO: Wrapping in batchedUpdates is needed to prevent work on the root from
+  // starting until after the work object is inserted. Remove it once
+  // root scheduling is lifted into the renderer.
+  return DOMRenderer.batchedUpdates(() => {
+    const expirationTime = DOMRenderer.updateContainer(
+      children,
+      root,
+      null,
+      null,
+    );
+    const work = new Work(root, true, expirationTime);
+    insertWork(root, work);
+    return work;
+  });
 };
 ReactRoot.prototype.unmount = function(): WorkNode {
   const root = this._reactRootContainer;
-  const expirationTime = DOMRenderer.updateContainer(
-    null,
-    root,
-    null,
-    false,
-    null,
-  );
-  return new Work(root, expirationTime);
+  // TODO: Wrapping in batchedUpdates is needed to prevent work on the root from
+  // starting until after the work object is inserted. Remove it once
+  // root scheduling is lifted into the renderer.
+  return DOMRenderer.batchedUpdates(() => {
+    const expirationTime = DOMRenderer.updateContainer(null, root, null, null);
+    const work = new Work(root, false, expirationTime);
+    insertWork(root, work);
+    return work;
+  });
 };
 
 var ReactDOM = {

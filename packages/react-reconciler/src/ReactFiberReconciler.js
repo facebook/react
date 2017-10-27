@@ -26,11 +26,7 @@ var {
 } = require('./ReactFiberContext');
 var {createFiberRoot} = require('./ReactFiberRoot');
 var ReactFiberScheduler = require('./ReactFiberScheduler');
-var {
-  insertUpdateIntoQueue,
-  insertUpdateIntoFiber,
-  createUpdateQueue,
-} = require('./ReactFiberUpdateQueue');
+var {insertUpdateIntoFiber} = require('./ReactFiberUpdateQueue');
 
 if (__DEV__) {
   var getComponentName = require('shared/getComponentName');
@@ -227,7 +223,6 @@ export type Reconciler<C, I, TI> = {
     element: ReactNodeList,
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
-    deferCommit: boolean,
     callback: ?Function,
   ): ExpirationTime,
   flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
@@ -283,7 +278,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   function scheduleTopLevelUpdate(
     current: Fiber,
     element: ReactNodeList,
-    deferCommit: boolean,
     callback: ?Function,
   ) {
     if (__DEV__) {
@@ -330,23 +324,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       expirationTime = computeExpirationForFiber(current);
     }
 
-    if (deferCommit) {
-      const root: FiberRoot = current.stateNode;
-      let deferredCommits = root.deferredCommits;
-      if (deferredCommits === null) {
-        deferredCommits = root.deferredCommits = createUpdateQueue(null);
-      }
-      const deferredCommit = {
-        expirationTime,
-        partialState: null,
-        callback: null,
-        isReplace: false,
-        isForced: false,
-        next: null,
-      };
-      insertUpdateIntoQueue(deferredCommits, deferredCommit);
-    }
-
     const update = {
       expirationTime,
       partialState: {element},
@@ -370,7 +347,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       element: ReactNodeList,
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
-      deferCommit: boolean,
       callback: ?Function,
     ): ExpirationTime {
       // TODO: If this is a nested container, this won't be the root.
@@ -395,7 +371,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         container.pendingContext = context;
       }
 
-      return scheduleTopLevelUpdate(current, element, deferCommit, callback);
+      return scheduleTopLevelUpdate(current, element, callback);
     },
 
     flushRoot,

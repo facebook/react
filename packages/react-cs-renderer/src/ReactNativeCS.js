@@ -285,7 +285,6 @@ const ReactCS = CSStatefulComponent({
       props.children,
       state.root,
       null,
-      false,
       null,
     );
     if (scheduledCallback) {

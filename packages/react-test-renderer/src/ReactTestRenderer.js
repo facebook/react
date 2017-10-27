@@ -574,7 +574,7 @@ var ReactTestRendererFiber = {
     };
     var root: FiberRoot | null = TestRenderer.createContainer(container, false);
     invariant(root != null, 'something went wrong');
-    TestRenderer.updateContainer(element, root, null, false, null);
+    TestRenderer.updateContainer(element, root, null, null);
 
     var entry = {
       root: undefined, // makes flow happy
@@ -601,13 +601,13 @@ var ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(newElement, root, null, false, null);
+        TestRenderer.updateContainer(newElement, root, null, null);
       },
       unmount() {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null, false, null);
+        TestRenderer.updateContainer(null, root, null, null);
         container = null;
         root = null;
       },

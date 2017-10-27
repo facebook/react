@@ -13,6 +13,8 @@ var React = require('react');
 var ReactDOM = require('react-dom');
 var ReactDOMServer = require('react-dom/server');
 
+const AsyncComponent = React.unstable_AsyncComponent;
+
 describe('ReactDOMRoot', () => {
   let container;
 
@@ -151,6 +153,21 @@ describe('ReactDOMRoot', () => {
 
     // `then` should have synchronously resolved
     expect(ops).toEqual(['Hi', 'Second callback']);
+  });
+
+  it('commits an earlier time without unblocking a later time', () => {
+    const root = ReactDOM.createRoot(container);
+    // Sync update
+    const work1 = root.prerender(<div>a</div>);
+    // Async update
+    const work2 = root.prerender(<AsyncComponent>b</AsyncComponent>);
+    // Flush only the sync update
+    work1.commit();
+    jest.runAllTimers();
+    expect(container.textContent).toBe('a');
+    // Now flush the async update
+    work2.commit();
+    expect(container.textContent).toBe('b');
   });
 
   it('render returns a work object, too', () => {
