@@ -10,13 +10,12 @@
 'use strict';
 
 describe('ReactDOMComponentTree', () => {
-  var React;
-  var ReactDOM;
-  var ReactDOMComponentTree;
-  var ReactDOMServer;
+  let React;
+  let ReactDOM;
+  let ReactDOMServer;
 
   function renderMarkupIntoDocument(elt) {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     // Force server-rendering path:
     container.innerHTML = ReactDOMServer.renderToString(elt);
     return ReactDOM.hydrate(elt, container);
@@ -30,12 +29,45 @@ describe('ReactDOMComponentTree', () => {
     return instance.memoizedProps;
   }
 
+  function getInstanceFromNode(node) {
+    const instanceKey = Object
+        .keys(node)
+        .find(key => key.startsWith('__reactInternalInstance$'));
+    return node[instanceKey];
+  }
+
+  function getFiberPropsFromNode(node) {
+    const props = Object
+        .keys(node)
+        .find(key => key.startsWith('__reactEventHandlers$'));
+    return node[props];
+  }
+
+  function simulateInput(elem, value) {
+    const inputEvent = document.createEvent('Event');
+    inputEvent.initEvent('input', true, true);
+    setUntrackedInputValue.call(elem, value);
+    elem.dispatchEvent(inputEvent);
+  }
+
+  function simulateClick(elem) {
+    const event = new MouseEvent('click', {
+      bubbles: true,
+    });
+    elem.dispatchEvent(event);
+  }
+
+  const setUntrackedInputValue = Object
+    .getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    ).set;
+
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
     ReactDOMServer = require('react-dom/server');
+    document.innerHTML = '';
   });
 
   it('finds nodes for instances', () => {
@@ -58,7 +90,7 @@ describe('ReactDOMComponentTree', () => {
     }
 
     function renderAndGetRef(toRef) {
-      var inst = renderMarkupIntoDocument(<Component toRef={toRef} />);
+      const inst = renderMarkupIntoDocument(<Component toRef={toRef} />);
       return inst.refs.target.nodeName;
     }
 
@@ -68,56 +100,113 @@ describe('ReactDOMComponentTree', () => {
     expect(renderAndGetRef('input')).toBe('INPUT');
   });
 
-  it('finds instances for nodes', () => {
-    class Component extends React.Component {
+  it('finds closest instance for node when an event happens', done => {
+    const elemID = 'aID';
+    const innerHTML = {__html: `<div id="${elemID}"></div>`}
+
+    class ClosestInstance extends React.Component {
+      id = 'closestInstance'
+      _onClick = e => {
+        const node = e.currentTarget;
+        const instance = getInstanceFromNode(node);
+        expect(instance).toBeDefined();
+        expect(getTypeOf(instance)).toBe('div')
+        expect(node.id).toBe(this.id);
+        done();
+      }
       render() {
         return (
-          <div>
-            <h1>hello</h1>
-            <p>
-              <input />
-            </p>
-            goodbye.
-            <main dangerouslySetInnerHTML={{__html: '<b><img></b>'}} />
+          <div
+            id="closestInstance"
+            onClick={this._onClick}
+            dangerouslySetInnerHTML={innerHTML}>
           </div>
         );
       }
     }
 
-    function renderAndQuery(sel) {
-      var root = renderMarkupIntoDocument(
-        <section>
-          <Component />
-        </section>,
-      );
-      return sel ? root.querySelector(sel) : root;
+    const component = <ClosestInstance />;
+    const container = document.createElement('div');
+    ReactDOM.render(<section>{component}</section>, container);
+    document.body.appendChild(container);
+    simulateClick(document.getElementById(elemID));
+  });
+
+  it('finds instances for nodes when events happen', done => {
+    const inputID = 'inputID';
+    const startValue = 'start';
+    const finishValue = 'finish';
+
+    class Controlled extends React.Component {
+      state = {value: startValue};
+      a = null;
+      _onChange = e => {
+        const node = e.currentTarget;
+        expect(node.value).toEqual(finishValue);
+        const instance = getInstanceFromNode(node);
+        expect(instance).toBeDefined();
+        expect(getTypeOf(instance)).toBe('input')
+        expect(node.id).toBe(inputID);
+        done()
+      }
+      render() {
+        return (
+          <div>
+            <input
+              id={inputID}
+              type="text"
+              ref={n => (this.a = n)}
+              value={this.state.value}
+              onChange={this._onChange}
+            />
+          </div>
+        );
+      }
     }
 
-    function renderAndGetInstance(sel) {
-      return ReactDOMComponentTree.getInstanceFromNode(renderAndQuery(sel));
+    const component = <Controlled />;
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(component, container);
+    document.body.appendChild(container);
+    simulateInput(instance.a, finishValue);
+  });
+
+  it('updates fiber props on changes', done => {
+    const startValue = 'start';
+    const finishValue = 'finish';
+
+    class AnotherControlled extends React.Component {
+      state = {value: startValue};
+      a = null;
+      _onChange = e => {
+        const node = e.currentTarget;
+        const props = getFiberPropsFromNode(node);
+        expect(props.value).toBe(startValue);
+        expect(node.value).toEqual(finishValue);
+        this.setState({value: e.currentTarget.value}, () => {
+          const updatedProps = getFiberPropsFromNode(node);
+          expect(updatedProps.value).toBe(finishValue);
+          done();
+        });
+      }
+      render() {
+        return (
+          <div>
+            <input
+              type="text"
+              ref={n => (this.a = n)}
+              value={this.state.value}
+              onChange={this._onChange}
+            />
+          </div>
+        );
+      }
     }
 
-    function renderAndGetClosest(sel) {
-      return ReactDOMComponentTree.getClosestInstanceFromNode(
-        renderAndQuery(sel),
-      );
-    }
-
-    expect(getTypeOf(renderAndGetInstance(null))).toBe('section');
-    expect(getTypeOf(renderAndGetInstance('div'))).toBe('div');
-    expect(getTypeOf(renderAndGetInstance('h1'))).toBe('h1');
-    expect(getTypeOf(renderAndGetInstance('p'))).toBe('p');
-    expect(getTypeOf(renderAndGetInstance('input'))).toBe('input');
-    expect(getTypeOf(renderAndGetInstance('main'))).toBe('main');
-
-    // This one's a text component!
-    var root = renderAndQuery(null);
-    var inst = ReactDOMComponentTree.getInstanceFromNode(
-      root.children[0].childNodes[2],
-    );
-    expect(getTextOf(inst)).toBe('goodbye.');
-
-    expect(getTypeOf(renderAndGetClosest('b'))).toBe('main');
-    expect(getTypeOf(renderAndGetClosest('img'))).toBe('main');
+    const component = <AnotherControlled />;
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(component, container);
+    document.body.appendChild(container);
+    simulateInput(instance.a, finishValue);
   });
 });
