@@ -276,6 +276,7 @@ const ReactCS = CSStatefulComponent({
     state: ReactCSState,
     stateUpdater: (update: (oldState: ReactCSState) => ReactCSState) => void,
   }) {
+    scheduleUpdate = stateUpdater;
     ReactNativeCSFiberRenderer.updateContainer(
       props.children,
       state.root,
