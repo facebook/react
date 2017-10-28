@@ -25,7 +25,10 @@ describe('ReactNativeCS', () => {
   });
 
   it('should be able to create and render a native component', () => {
-    const RCTView = 'View';
-    ReactNativeCS.render(<RCTView foo="test" />, 1);
+    const CSView = 'View';
+    var props = <CSView foo="test" />;
+    var state = ReactNativeCS.getInitialState({});
+    var stateUpdater = function() {};
+    ReactNativeCS.render({props, state, stateUpdater});
   });
 });
