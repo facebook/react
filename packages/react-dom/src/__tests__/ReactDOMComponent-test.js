@@ -2287,8 +2287,8 @@ describe('ReactDOMComponent', () => {
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
         'Received `false` for non-boolean attribute `whatever`. If you mean to conditionally ' +
-          'pass an attribute, use a ternary expression: {condition ? `whatever` : undefined} ' +
-          'instead of {condition && `whatever`}.',
+          'pass an attribute, use a ternary expression: {`whatever` ? value : undefined} ' +
+          'instead of {`whatever` && value}.',
       );
     });
   });

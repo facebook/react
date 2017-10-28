@@ -197,8 +197,8 @@ if (__DEV__) {
         warning(
           false,
           'Received `%s` for non-boolean attribute `%s`. If you mean to conditionally ' +
-            'pass an attribute, use a ternary expression: {condition ? `%s` : undefined} ' +
-            'instead of {condition && `%s`}.%s',
+            'pass an attribute, use a ternary expression: {`%s` ? value : undefined} ' +
+            'instead of {`%s` && value}.%s',
           value,
           name,
           name,
