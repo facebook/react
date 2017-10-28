@@ -1,6 +1,6 @@
 {
-  "name": "rjs-test",
   "private": true,
+  "name": "rjs-dev-fixture",
   "dependencies": {
     "requirejs": "^2.3.2"
   },

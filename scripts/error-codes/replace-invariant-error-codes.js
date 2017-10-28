@@ -6,11 +6,9 @@
  */
 'use strict';
 
+var fs = require('fs');
 var evalToString = require('../shared/evalToString');
-var existingErrorMap = require('./codes.json');
 var invertObject = require('./invertObject');
-
-var errorMap = invertObject(existingErrorMap);
 
 module.exports = function(babel) {
   var t = babel.types;
@@ -26,7 +24,7 @@ module.exports = function(babel) {
       path.scope.getProgramParent().push({
         id: localState.prodInvariantIdentifier,
         init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
+          t.stringLiteral('shared/reactProdInvariant'),
         ]),
       });
     }
@@ -91,13 +89,6 @@ module.exports = function(babel) {
             var condition = node.arguments[0];
             var errorMsgLiteral = evalToString(node.arguments[1]);
 
-            var prodErrorId = errorMap[errorMsgLiteral];
-            if (prodErrorId === undefined) {
-              // The error cannot be found in the map.
-              node[SEEN_SYMBOL] = true;
-              return;
-            }
-
             var devInvariant = t.callExpression(
               node.callee,
               [
@@ -108,23 +99,40 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantIdentifier(path, this);
-            var prodInvariant = t.callExpression(
-              localInvariantId,
-              [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
+            // Avoid caching because we write it as we go.
+            var existingErrorMap = JSON.parse(
+              fs.readFileSync(__dirname + '/codes.json', 'utf-8')
             );
+            var errorMap = invertObject(existingErrorMap);
 
-            prodInvariant[SEEN_SYMBOL] = true;
+            var localInvariantId = getProdInvariantIdentifier(path, this);
+            var prodErrorId = errorMap[errorMsgLiteral];
+            var body = null;
+
+            if (prodErrorId === undefined) {
+              // The error wasn't found in the map.
+              // This is only expected to occur on master since we extract codes before releases.
+              // Keep the original invariant.
+              body = t.expressionStatement(devInvariant);
+            } else {
+              var prodInvariant = t.callExpression(
+                localInvariantId,
+                [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
+              );
+              prodInvariant[SEEN_SYMBOL] = true;
+              // The error was found in the map.
+              // Switch between development and production versions depending on the env.
+              body = t.ifStatement(
+                DEV_EXPRESSION,
+                t.blockStatement([t.expressionStatement(devInvariant)]),
+                t.blockStatement([t.expressionStatement(prodInvariant)])
+              );
+            }
+
             path.replaceWith(
               t.ifStatement(
                 t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.ifStatement(
-                    DEV_EXPRESSION,
-                    t.blockStatement([t.expressionStatement(devInvariant)]),
-                    t.blockStatement([t.expressionStatement(prodInvariant)])
-                  ),
-                ])
+                t.blockStatement([body])
               )
             );
           }

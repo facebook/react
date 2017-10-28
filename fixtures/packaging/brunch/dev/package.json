@@ -1,10 +1,13 @@
 {
-  "name": "brunch-test",
+  "private": true,
+  "name": "brunch-dev-fixture",
   "devDependencies": {
-      "brunch": "^2.9.1",
-      "javascript-brunch": "^2.0.0"
+    "brunch": "^2.9.1",
+    "javascript-brunch": "^2.0.0",
+    "react": "file:../../../../build/packages/react",
+    "react-dom": "file:../../../../build/packages/react-dom"
   },
   "scripts": {
-    "build": "rm -rf public && ln -fs ../../../../../build/packages/react node_modules/react && ln -fs ../../../../../build/packages/react-dom node_modules/react-dom && brunch build"
+    "build": "rm -rf public && brunch build"
   }
 }

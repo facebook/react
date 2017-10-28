@@ -1,0 +1,14 @@
+{
+  "name": "react-fixtures",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "react": "file:../../build/packages/react",
+    "react-reconciler": "file:../../build/packages/react-reconciler"
+  },
+  "scripts": {
+    "test:dev": "../../node_modules/.bin/babel-node ./index",
+    "test:prod": "NODE_ENV=production ../../node_modules/.bin/babel-node ./index",
+    "test": "npm run test:dev && npm run test:prod"
+  }
+}

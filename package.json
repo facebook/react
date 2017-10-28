@@ -1,14 +1,16 @@
 {
-  "name": "react-build",
   "private": true,
   "version": "16.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
   "devDependencies": {
     "art": "^0.10.1",
     "async": "^1.5.0",
     "babel-cli": "^6.6.5",
     "babel-core": "^6.0.0",
     "babel-eslint": "^7.1.0",
-    "babel-jest": "20.1.0-delta.1",
+    "babel-jest": "^21.3.0-beta.4",
     "babel-plugin-check-es2015-constants": "^6.5.0",
     "babel-plugin-external-helpers": "^6.22.0",
     "babel-plugin-syntax-trailing-function-commas": "^6.5.0",
@@ -50,7 +52,8 @@
     "eslint-plugin-babel": "^3.3.0",
     "eslint-plugin-flowtype": "^2.25.0",
     "eslint-plugin-react": "^6.7.1",
-    "eslint-plugin-react-internal": "file:./eslint-rules",
+    "eslint-plugin-react-internal": "file:./scripts/eslint-rules",
+    "expect": "^21.3.0-beta.4",
     "fbjs": "^0.8.16",
     "fbjs-scripts": "^0.6.0",
     "filesize": "^3.5.6",
@@ -60,11 +63,11 @@
     "glob-stream": "^6.1.0",
     "gzip-js": "~0.3.2",
     "gzip-size": "^3.0.0",
-    "jest": "20.1.0-delta.1",
-    "jest-config": "20.1.0-delta.1",
-    "jest-jasmine2": "20.1.0-delta.1",
-    "jest-matchers": "20.1.0-delta.1",
-    "jest-runtime": "20.1.0-delta.1",
+    "jasmine-check": "^1.0.0-rc.0",
+    "jest": "^21.3.0-beta.4",
+    "jest-config": "^21.3.0-beta.4",
+    "jest-jasmine2": "^21.3.0-beta.4",
+    "jest-runtime": "^21.3.0-beta.4",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
     "ncp": "^2.0.0",
@@ -93,9 +96,6 @@
     "node": "4.x || 5.x || 6.x || 7.x || 8.x",
     "npm": "2.x || 3.x || 4.x || 5.x"
   },
-  "commonerConfig": {
-    "version": 7
-  },
   "scripts": {
     "build": "npm run version-check && node scripts/rollup/build.js",
     "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
@@ -109,8 +109,6 @@
   },
   "jest": {
     "modulePathIgnorePatterns": [
-      "/.module-cache/",
-      "<rootDir>/build/",
       "<rootDir>/scripts/rollup/shims/",
       "<rootDir>/scripts/bench/"
     ],
@@ -122,7 +120,7 @@
       "./scripts/jest/environment.js"
     ],
     "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
-    "testRegex": "/__tests__/.*(\\.js|coffee|ts)$",
+    "testRegex": "/__tests__/.*(\\.js|\\.coffee|[^d]\\.ts)$",
     "moduleFileExtensions": [
       "js",
       "json",
@@ -131,16 +129,11 @@
       "ts"
     ],
     "roots": [
-      "<rootDir>/eslint-rules",
-      "<rootDir>/mocks",
-      "<rootDir>/scripts",
-      "<rootDir>/src",
-      "node_modules/fbjs"
+      "<rootDir>/packages",
+      "<rootDir>/scripts"
     ],
     "collectCoverageFrom": [
-      "src/**/*.js",
-      "!src/__mocks__/vendor/third_party/*.js",
-      "!src/test/*.js"
+      "packages/**/*.js"
     ],
     "timers": "fake"
   }
