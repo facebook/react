@@ -12,7 +12,6 @@
 describe('ReactDOMComponentTree', () => {
   let React;
   let ReactDOM;
-  let AnotherReactDOM;
   let ReactDOMServer;
 
   function renderMarkupIntoDocument(elt) {
@@ -20,10 +19,6 @@ describe('ReactDOMComponentTree', () => {
     // Force server-rendering path:
     container.innerHTML = ReactDOMServer.renderToString(elt);
     return ReactDOM.hydrate(elt, container);
-  }
-
-  function getTypeOf(instance) {
-    return instance.type;
   }
 
   function simulateInput(elem, value) {
@@ -112,9 +107,9 @@ describe('ReactDOMComponentTree', () => {
     simulateClick(document.getElementById(elemID));
   });
 
-  it('finds instances for nodes when events happen', done => {
+  it('finds a controlled instance from node and gets its current fiber props', done => {
     const inputID = 'inputID';
-    const startValue = 'start';
+    const startValue = undefined;
     const finishValue = 'finish';
 
     class Controlled extends React.Component {
@@ -124,19 +119,35 @@ describe('ReactDOMComponentTree', () => {
         const node = e.currentTarget;
         expect(node.value).toEqual(finishValue);
         expect(node.id).toBe(inputID);
-        done();
+        spyOn(console, 'error');
+        expectDev(console.error.calls.count()).toBe(0);
+        this.setState(
+          {
+            value: node.value,
+          },
+          () => {
+            expectDev(console.error.calls.count()).toBe(1);
+            expectDev(console.error.calls.argsFor(0)[0]).toContain(
+              'Warning: A component is changing an uncontrolled input of ' +
+                'type text to be controlled. Input elements should not ' +
+                'switch from uncontrolled to controlled (or vice versa). ' +
+                'Decide between using a controlled or uncontrolled input ' +
+                'element for the lifetime of the component. More info: ' +
+                'https://fb.me/react-controlled-components',
+            );
+            done();
+          },
+        );
       };
       render() {
         return (
-          <div>
-            <input
-              id={inputID}
-              type="text"
-              ref={n => (this.a = n)}
-              value={this.state.value}
-              onChange={this._onChange}
-            />
-          </div>
+          <input
+            id={inputID}
+            type="text"
+            ref={n => (this.a = n)}
+            value={this.state.value}
+            onChange={this._onChange}
+          />
         );
       }
     }
@@ -148,28 +159,34 @@ describe('ReactDOMComponentTree', () => {
     simulateInput(instance.a, finishValue);
   });
 
-  it('finds instance of node being unmounted', () => {
+  it('finds instance of node that is attempted to be unmounted', () => {
     spyOn(console, 'error');
-    const component = <div></div>;
+    const component = <div />;
     const container = document.createElement('div');
-    const instance = ReactDOM.render(component, container);
-    ReactDOM.unmountComponentAtNode(container);
-    expectDev(console.error.calls.count()).toBe(0);
+    const node = ReactDOM.render(<div>{component}</div>, container);
+    ReactDOM.unmountComponentAtNode(node);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      "unmountComponentAtNode(): The node you're attempting to unmount " +
+        'was rendered by React and is not a top-level container. You may ' +
+        'have accidentally passed in a React root node instead of its ' +
+        'container.',
+    );
   });
 
   it('finds instance from node to stop rendering over other react rendered components', () => {
     spyOn(console, 'error');
     const component = <div><span>Hello</span></div>;
-    const anotherComponent = <div></div>;
+    const anotherComponent = <div />;
     const container = document.createElement('div');
     const instance = ReactDOM.render(component, container);
     ReactDOM.render(anotherComponent, instance);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       'render(...): Replacing React-rendered children with a new root ' +
-      'component. If you intended to update the children of this node, ' +
-      'you should instead have the existing children update their state ' +
-      'and render the new components instead of calling ReactDOM.render.'
+        'component. If you intended to update the children of this node, ' +
+        'you should instead have the existing children update their state ' +
+        'and render the new components instead of calling ReactDOM.render.',
     );
   });
 });
