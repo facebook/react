@@ -11,7 +11,6 @@
 
 const {CSStatefulComponent} = require('CSStatefulComponent');
 const ReactFiberReconciler = require('react-reconciler');
-const ReactGenericBatching = require('events/ReactGenericBatching');
 const ReactVersion = require('shared/ReactVersion');
 
 const {
@@ -105,7 +104,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     }
     return {
       props: newProps,
-      options: {key, ref: null},
+      options: {key, ref},
       data: {type: 'NATIVE', name: type},
     };
   },
@@ -256,7 +255,7 @@ type ReactCSState = {
 };
 
 const ReactCS = CSStatefulComponent({
-  getInitialState({props: ReactCSProps}): ReactCSState {
+  getInitialState({props}: {props: ReactCSProps}): ReactCSState {
     let container = {
       pendingChild: null,
     };

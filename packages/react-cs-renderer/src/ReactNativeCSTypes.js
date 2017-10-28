@@ -16,8 +16,6 @@
 
 import type {Options, Element} from 'CSComponent';
 
-type OpaqueState = {};
-
 export type Children<ChildType> = {|
   +children: $ReadOnlyArray<React$Element<ChildType>>,
 |};
