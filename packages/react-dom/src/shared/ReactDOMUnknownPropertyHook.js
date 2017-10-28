@@ -196,10 +196,13 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'If you mean to conditionally pass an attribute, use a ternary ' +
-            'expression: `%s`={condition ? value : undefined} instead of ' +
-            '{condition && value}.%s',
+          'Received `%s` for non-boolean attribute `%s`. If you mean to conditionally ' +
+            'pass an attribute, use a ternary expression: {condition ? `%s` : undefined} ' +
+            'instead of {condition && `%s`}.%s',
           value,
+          name,
+          name,
+          name,
           getStackAddendum(),
         );
       }

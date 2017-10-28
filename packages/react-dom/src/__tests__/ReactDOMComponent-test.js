@@ -2042,8 +2042,8 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for non-boolean attribute `whatever`. If this is expected, cast ' +
-          'the value to a string.',
+        'Received `true` for non-boolean attribute `whatever`. ' +
+          'If this is expected, cast the value to a string.',
       );
     });
 
@@ -2056,8 +2056,8 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for non-boolean attribute `whatever`. If this is expected, cast ' +
-          'the value to a string.',
+        'Received `true` for non-boolean attribute `whatever`. ' +
+          'If this is expected, cast the value to a string.',
       );
     });
 
@@ -2232,8 +2232,8 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for non-boolean attribute `whatever`. If this is expected, cast ' +
-          'the value to a string.',
+        'Received `true` for non-boolean attribute `whatever`. ' +
+          'If this is expected, cast the value to a string.',
       );
     });
 
@@ -2286,9 +2286,9 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'If you mean to conditionally pass an attribute, use a ternary ' +
-          'expression: `false`={condition ? value : undefined} instead of ' +
-          '{condition && value}.',
+        'Received `false` for non-boolean attribute `whatever`. If you mean to conditionally ' +
+          'pass an attribute, use a ternary expression: {condition ? `whatever` : undefined} ' +
+          'instead of {condition && `whatever`}.',
       );
     });
   });
