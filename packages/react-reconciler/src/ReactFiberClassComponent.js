@@ -9,19 +9,19 @@
 
 'use strict';
 
-import type {Fiber } from './ReactFiber';
-import type {ExpirationTime } from './ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-var { Update } = require('shared/ReactTypeOfSideEffect');
+var {Update} = require('shared/ReactTypeOfSideEffect');
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var { isMounted } = require('shared/ReactFiberTreeReflection');
+var {isMounted} = require('shared/ReactFiberTreeReflection');
 var ReactInstanceMap = require('shared/ReactInstanceMap');
 var emptyObject = require('fbjs/lib/emptyObject');
 var getComponentName = require('shared/getComponentName');
 var shallowEqual = require('fbjs/lib/shallowEqual');
 var invariant = require('fbjs/lib/invariant');
 
-var { AsyncUpdates } = require('./ReactTypeOfInternalContext');
+var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
 var {
   cacheContext,
   getMaskedContext,
@@ -32,7 +32,7 @@ var {
   insertUpdateIntoFiber,
   processUpdateQueue,
 } = require('./ReactFiberUpdateQueue');
-var { hasContextChanged } = require('./ReactFiberContext');
+var {hasContextChanged} = require('./ReactFiberContext');
 
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
@@ -40,13 +40,13 @@ const isArray = Array.isArray;
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 
-  var { startPhaseTimer, stopPhaseTimer } = require('./ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
 
-  var warnOnInvalidCallback = function (callback: mixed, callerName: string) {
+  var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +
-      'function. Instead received: %s.',
+        'function. Instead received: %s.',
       callerName,
       callback,
     );
@@ -59,22 +59,22 @@ if (__DEV__) {
   // exception.
   Object.defineProperty(fakeInternalInstance, '_processChildContext', {
     enumerable: false,
-    value: function () {
+    value: function() {
       invariant(
         false,
         '_processChildContext is not available in React 16+. This likely ' +
-        'means you have multiple copies of React and are attempting to nest ' +
-        'a React 15 tree inside a React 16 tree using ' +
-        "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
-        'to make sure you have only one copy of React (and ideally, switch ' +
-        'to ReactDOM.createPortal).',
+          'means you have multiple copies of React and are attempting to nest ' +
+          'a React 15 tree inside a React 16 tree using ' +
+          "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
+          'to make sure you have only one copy of React (and ideally, switch ' +
+          'to ReactDOM.createPortal).',
       );
     },
   });
   Object.freeze(fakeInternalInstance);
 }
 
-module.exports = function (
+module.exports = function(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
@@ -178,7 +178,7 @@ module.exports = function (
         warning(
           shouldUpdate !== undefined,
           '%s.shouldComponentUpdate(): Returned undefined instead of a ' +
-          'boolean value. Make sure to return true or false.',
+            'boolean value. Make sure to return true or false.',
           getComponentName(workInProgress) || 'Unknown',
         );
       }
@@ -206,14 +206,14 @@ module.exports = function (
         warning(
           renderPresent,
           '%s(...): No `render` method found on the returned component ' +
-          'instance: is the `constructor` defined well?',
+            'instance: is the `constructor` defined well?',
           name,
         );
       } else {
         warning(
           renderPresent,
           '%s(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
+            'instance: you may have forgotten to define `render`.',
           name,
         );
       }
@@ -224,8 +224,8 @@ module.exports = function (
       warning(
         noGetInitialStateOnES6,
         'getInitialState was defined on %s, a plain JavaScript class. ' +
-        'This is only supported for classes created using React.createClass. ' +
-        'Did you mean to define a state property instead?',
+          'This is only supported for classes created using React.createClass. ' +
+          'Did you mean to define a state property instead?',
         name,
       );
       const noGetDefaultPropsOnES6 =
@@ -234,22 +234,22 @@ module.exports = function (
       warning(
         noGetDefaultPropsOnES6,
         'getDefaultProps was defined on %s, a plain JavaScript class. ' +
-        'This is only supported for classes created using React.createClass. ' +
-        'Use a static property to define defaultProps instead.',
+          'This is only supported for classes created using React.createClass. ' +
+          'Use a static property to define defaultProps instead.',
         name,
       );
       const noInstancePropTypes = !instance.propTypes;
       warning(
         noInstancePropTypes,
         'propTypes was defined as an instance property on %s. Use a static ' +
-        'property to define propTypes instead.',
+          'property to define propTypes instead.',
         name,
       );
       const noInstanceContextTypes = !instance.contextTypes;
       warning(
         noInstanceContextTypes,
         'contextTypes was defined as an instance property on %s. Use a static ' +
-        'property to define contextTypes instead.',
+          'property to define contextTypes instead.',
         name,
       );
       const noComponentShouldUpdate =
@@ -257,9 +257,9 @@ module.exports = function (
       warning(
         noComponentShouldUpdate,
         '%s has a method called ' +
-        'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
-        'The name is phrased as a question because the function is ' +
-        'expected to return a value.',
+          'componentShouldUpdate(). Did you mean shouldComponentUpdate()? ' +
+          'The name is phrased as a question because the function is ' +
+          'expected to return a value.',
         name,
       );
       if (
@@ -270,8 +270,8 @@ module.exports = function (
         warning(
           false,
           '%s has a method called shouldComponentUpdate(). ' +
-          'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
-          'Please extend React.Component if shouldComponentUpdate is used.',
+            'shouldComponentUpdate should not be used when extending React.PureComponent. ' +
+            'Please extend React.Component if shouldComponentUpdate is used.',
           getComponentName(workInProgress) || 'A pure component',
         );
       }
@@ -280,8 +280,8 @@ module.exports = function (
       warning(
         noComponentDidUnmount,
         '%s has a method called ' +
-        'componentDidUnmount(). But there is no such lifecycle method. ' +
-        'Did you mean componentWillUnmount()?',
+          'componentDidUnmount(). But there is no such lifecycle method. ' +
+          'Did you mean componentWillUnmount()?',
         name,
       );
       const noComponentWillRecieveProps =
@@ -289,14 +289,14 @@ module.exports = function (
       warning(
         noComponentWillRecieveProps,
         '%s has a method called ' +
-        'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
+          'componentWillRecieveProps(). Did you mean componentWillReceiveProps()?',
         name,
       );
       const hasMutatedProps = instance.props !== workInProgress.pendingProps;
       warning(
         instance.props === undefined || !hasMutatedProps,
         '%s(...): When calling super() in `%s`, make sure to pass ' +
-        "up the same props that your component's constructor was passed.",
+          "up the same props that your component's constructor was passed.",
         name,
         name,
       );
@@ -304,7 +304,7 @@ module.exports = function (
       warning(
         noInstanceDefaultProps,
         'Setting defaultProps as an instance property on %s is not supported and will be ignored.' +
-        ' Instead, define defaultProps as a static property on %s.',
+          ' Instead, define defaultProps as a static property on %s.',
         name,
         name,
       );
@@ -322,7 +322,7 @@ module.exports = function (
       invariant(
         typeof workInProgress.type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
-        'use getChildContext().',
+          'use getChildContext().',
         getComponentName(workInProgress),
       );
     }
@@ -377,8 +377,8 @@ module.exports = function (
         warning(
           false,
           '%s.componentWillMount(): Assigning directly to this.state is ' +
-          "deprecated (except inside a component's " +
-          'constructor). Use setState instead.',
+            "deprecated (except inside a component's " +
+            'constructor). Use setState instead.',
           getComponentName(workInProgress),
         );
       }
@@ -406,8 +406,8 @@ module.exports = function (
         warning(
           false,
           '%s.componentWillReceiveProps(): Assigning directly to ' +
-          "this.state is deprecated (except inside a component's " +
-          'constructor). Use setState instead.',
+            "this.state is deprecated (except inside a component's " +
+            'constructor). Use setState instead.',
           getComponentName(workInProgress),
         );
       }
@@ -433,7 +433,7 @@ module.exports = function (
     invariant(
       props,
       'There must be pending props for an initial mount. This error is ' +
-      'likely caused by a bug in React. Please file an issue.',
+        'likely caused by a bug in React. Please file an issue.',
     );
 
     const unmaskedContext = getUnmaskedContext(workInProgress);
@@ -596,7 +596,7 @@ module.exports = function (
       invariant(
         newProps != null,
         'There should always be pending or memoized props. This error is ' +
-        'likely caused by a bug in React. Please file an issue.',
+          'likely caused by a bug in React. Please file an issue.',
       );
     }
     const oldContext = instance.context;
