@@ -85,6 +85,25 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
+  it('warns for fragments with illegal attributes', () => {
+    spyOn(console, 'error');
+
+    class Foo extends React.Component {
+      render() {
+        return <React.Fragment a={1} b={2}>hello</React.Fragment>;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Foo />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain('Invalid prop `');
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      '` supplied to `React.Fragment`. React.Fragment ' +
+        'can only have `key` and `children` props.',
+    );
+  });
+
   it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
 

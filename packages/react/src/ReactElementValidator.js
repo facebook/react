@@ -54,6 +54,14 @@ if (__DEV__) {
     stack += ReactDebugCurrentFrame.getStackAddendum() || '';
     return stack;
   };
+
+  var REACT_FRAGMENT_TYPE =
+    (typeof Symbol === 'function' &&
+      Symbol.for &&
+      Symbol.for('react.fragment')) ||
+    0xeacb;
+
+  var VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
@@ -226,6 +234,27 @@ function validatePropTypes(element) {
   }
 }
 
+/**
+ * Given a fragment, validate that it can only be provided with fragment props
+ * @param {ReactElement} fragment
+ */
+function validateFragmentProps(fragment) {
+  currentlyValidatingElement = fragment;
+
+  for (const key of Object.keys(fragment.props)) {
+    if (!VALID_FRAGMENT_PROPS.has(key)) {
+      warning(
+        false,
+        'Invalid prop `%s` supplied to `React.Fragment`. ' +
+          'React.Fragment can only have `key` and `children` props.',
+        key,
+      );
+      break;
+    }
+  }
+  currentlyValidatingElement = null;
+}
+
 var ReactElementValidator = {
   createElement: function(type, props, children) {
     var validType =
@@ -286,7 +315,11 @@ var ReactElementValidator = {
       }
     }
 
-    validatePropTypes(element);
+    if (typeof type === 'symbol' && type === REACT_FRAGMENT_TYPE) {
+      validateFragmentProps(element);
+    } else {
+      validatePropTypes(element);
+    }
 
     return element;
   },
