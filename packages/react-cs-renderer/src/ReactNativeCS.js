@@ -277,6 +277,10 @@ const ReactCS = CSStatefulComponent({
     stateUpdater: (update: (oldState: ReactCSState) => ReactCSState) => void,
   }) {
     scheduleUpdate = stateUpdater;
+    // TODO: For a props rerender updateContainer will schedule an additional state
+    // update even though it is not necessary since we're already rendering.
+    // We should only call scheduleUpdate for a React setState, not a top level
+    // props update.
     ReactNativeCSFiberRenderer.updateContainer(
       props.children,
       state.root,
