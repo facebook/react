@@ -82,7 +82,12 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     parentInstance: Instance,
     child: Instance | TextInstance,
   ): void {
-    parentInstance.props.children.push(child);
+    if (parentInstance.props) {
+      parentInstance.props.children.push(child);
+    } else {
+      // CSCustom
+      (parentInstance: any).children.push(child);
+    }
   },
 
   createInstance(
