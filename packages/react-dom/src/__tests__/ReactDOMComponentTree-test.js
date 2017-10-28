@@ -12,6 +12,7 @@
 describe('ReactDOMComponentTree', () => {
   let React;
   let ReactDOM;
+  let AnotherReactDOM;
   let ReactDOMServer;
 
   function renderMarkupIntoDocument(elt) {
@@ -25,23 +26,10 @@ describe('ReactDOMComponentTree', () => {
     return instance.type;
   }
 
-  function getInstanceFromNode(node) {
-    const instanceKey = Object.keys(node).find(key =>
-      key.startsWith('__reactInternalInstance$'),
-    );
-    return node[instanceKey];
-  }
-
-  function getFiberPropsFromNode(node) {
-    const props = Object.keys(node).find(key =>
-      key.startsWith('__reactEventHandlers$'),
-    );
-    return node[props];
-  }
-
   function simulateInput(elem, value) {
-    const inputEvent = document.createEvent('Event');
-    inputEvent.initEvent('input', true, true);
+    const inputEvent = new Event('input', {
+      bubbles: true,
+    });
     setUntrackedInputValue.call(elem, value);
     elem.dispatchEvent(inputEvent);
   }
@@ -103,9 +91,6 @@ describe('ReactDOMComponentTree', () => {
       id = 'closestInstance';
       _onClick = e => {
         const node = e.currentTarget;
-        const instance = getInstanceFromNode(node);
-        expect(instance).toBeDefined();
-        expect(getTypeOf(instance)).toBe('div');
         expect(node.id).toBe(this.id);
         done();
       };
@@ -138,9 +123,6 @@ describe('ReactDOMComponentTree', () => {
       _onChange = e => {
         const node = e.currentTarget;
         expect(node.value).toEqual(finishValue);
-        const instance = getInstanceFromNode(node);
-        expect(instance).toBeDefined();
-        expect(getTypeOf(instance)).toBe('input');
         expect(node.id).toBe(inputID);
         done();
       };
@@ -166,42 +148,28 @@ describe('ReactDOMComponentTree', () => {
     simulateInput(instance.a, finishValue);
   });
 
-  it('updates fiber props on changes', done => {
-    const startValue = 'start';
-    const finishValue = 'finish';
-
-    class AnotherControlled extends React.Component {
-      state = {value: startValue};
-      a = null;
-      _onChange = e => {
-        const node = e.currentTarget;
-        const props = getFiberPropsFromNode(node);
-        expect(props.value).toBe(startValue);
-        expect(node.value).toEqual(finishValue);
-        this.setState({value: e.currentTarget.value}, () => {
-          const updatedProps = getFiberPropsFromNode(node);
-          expect(updatedProps.value).toBe(finishValue);
-          done();
-        });
-      };
-      render() {
-        return (
-          <div>
-            <input
-              type="text"
-              ref={n => (this.a = n)}
-              value={this.state.value}
-              onChange={this._onChange}
-            />
-          </div>
-        );
-      }
-    }
-
-    const component = <AnotherControlled />;
+  it('finds instance of node being unmounted', () => {
+    spyOn(console, 'error');
+    const component = <div></div>;
     const container = document.createElement('div');
     const instance = ReactDOM.render(component, container);
-    document.body.appendChild(container);
-    simulateInput(instance.a, finishValue);
+    ReactDOM.unmountComponentAtNode(container);
+    expectDev(console.error.calls.count()).toBe(0);
+  });
+
+  it('finds instance from node to stop rendering over other react rendered components', () => {
+    spyOn(console, 'error');
+    const component = <div><span>Hello</span></div>;
+    const anotherComponent = <div></div>;
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(component, container);
+    ReactDOM.render(anotherComponent, instance);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'render(...): Replacing React-rendered children with a new root ' +
+      'component. If you intended to update the children of this node, ' +
+      'you should instead have the existing children update their state ' +
+      'and render the new components instead of calling ReactDOM.render.'
+    );
   });
 });
