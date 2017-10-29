@@ -55,7 +55,7 @@ describe('ReactDOM unknown attribute', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
         'Warning: Received `true` for non-boolean attribute `unknown`.\n\n ' +
-          'If you want `unknown` to appear in the DOM, cast it as a string. ' +
+          'If you want `unknown` to appear in the DOM, cast it to a string. ' +
           'For example, you can pass `unknown="true"` or `unknown={value.toString()}` instead.\n' +
           '    in div (at **)',
       );
