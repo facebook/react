@@ -207,7 +207,7 @@ module.exports = function(
           warning(
             false,
             '%s(...): No `render` method found on the returned component ' +
-              'instance: is the `constructor` defined well?',
+              'instance: did you accidentally return an object from the constructor?',
             name,
           );
         } else {
