@@ -16,30 +16,30 @@ describe('dangerouslySetInnerHTML', () => {
   describe('when the node has innerHTML property', () => {
     it('sets innerHTML on it', () => {
       const container = document.createElement('div');
-      const component = ReactDOM.render(
+      const node = ReactDOM.render(
         <div dangerouslySetInnerHTML={{__html: '<h1>Hello</h1>'}} />,
         container,
       );
-      expect(component.innerHTML).toBe('<h1>Hello</h1>');
+      expect(node.innerHTML).toBe('<h1>Hello</h1>');
     });
   });
 
   describe('when the node does not have an innerHTML property', () => {
-    let node;
+    let container;
     beforeEach(() => {
-      // Create a mock node that looks like an g in IE (without innerHTML)
-      node = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      // Create a mock container that looks like a svg in IE (without innerHTML)
+      container = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
 
-      spyOn(node, 'appendChild').and.callThrough();
-      spyOn(node, 'removeChild').and.callThrough();
+      spyOn(container, 'appendChild').and.callThrough();
+      spyOn(container, 'removeChild').and.callThrough();
     });
 
     it('sets innerHTML on it', () => {
       const html = '<circle></circle>';
 
-      ReactDOM.render(<g dangerouslySetInnerHTML={{__html: html}} />, node);
+      ReactDOM.render(<g dangerouslySetInnerHTML={{__html: html}} />, container);
 
-      expect(node.appendChild.calls.argsFor(0)[0].innerHTML).toBe(
+      expect(container.appendChild.calls.argsFor(0)[0].innerHTML).toBe(
         '<circle></circle>',
       );
     });
@@ -48,22 +48,20 @@ describe('dangerouslySetInnerHTML', () => {
       const firstHtml = '<rect></rect>';
       const secondHtml = '<circle></circle>';
 
-      let component = ReactDOM.render(
+      ReactDOM.render(
         <g dangerouslySetInnerHTML={{__html: firstHtml}} />,
-        node,
+        container,
       );
-      ReactDOM.unmountComponentAtNode(
-        ReactDOM.findDOMNode(component).parentNode,
-      );
-      component = ReactDOM.render(
+      ReactDOM.unmountComponentAtNode(container);
+      ReactDOM.render(
         <g dangerouslySetInnerHTML={{__html: secondHtml}} />,
-        node,
+        container,
       );
 
-      expect(node.removeChild.calls.argsFor(0)[0].innerHTML).toBe(
+      expect(container.removeChild.calls.argsFor(0)[0].innerHTML).toBe(
         '<rect></rect>',
       );
-      expect(node.appendChild.calls.argsFor(1)[0].innerHTML).toBe(
+      expect(container.appendChild.calls.argsFor(1)[0].innerHTML).toBe(
         '<circle></circle>',
       );
     });
