@@ -56,7 +56,7 @@ describe('ReactDOM unknown attribute', () => {
       ).toMatch(
         'Warning: Received `true` for non-boolean attribute `unknown`.\n\n ' +
           'If you want `unknown` to appear in the DOM, cast it as a string. ' +
-          'For example, you can pass `unknown="true"` or `unknown={value.toString()} instead.\n' +
+          'For example, you can pass `unknown="true"` or `unknown={value.toString()}` instead.\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
