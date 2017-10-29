@@ -55,8 +55,8 @@ describe('ReactDOM unknown attribute', () => {
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
         'Received `true` for the non-boolean attribute `unknown`.\n\n' +
-        'If you want to write it to the DOM, pass a string instead: ' +
-        'unknown="true" or unknown={value.toString()}.\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'unknown="true" or unknown={value.toString()}.\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
