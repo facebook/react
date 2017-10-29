@@ -187,8 +187,13 @@ if (__DEV__) {
       if (value === true) {
         warning(
           false,
-          'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
-            'the value to a string.%s',
+          'Received `%s` for non-boolean attribute `%s`.\n\n' +
+            'If you want `%s` to appear in the DOM, cast it to a string. ' +
+            'For example, you can pass `%s="%s"` or `%s={value.toString()}` instead.%s',
+          value,
+          name,
+          name,
+          name,
           value,
           name,
           getStackAddendum(),
@@ -196,10 +201,18 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'Received `%s` for non-boolean attribute `%s`. If you mean to conditionally ' +
-            'pass an attribute, use a ternary expression: {`%s` ? value : undefined} ' +
-            'instead of {`%s` && value}.%s',
+          'Received `%s` for non-boolean attribute `%s`.\n\n ' +
+            'If you want `%s` to appear in the DOM, cast it to a string. ' +
+            'For example, you can pass `%s="%s"` or `%s={value.toString()}.\n\n' +
+            'If you want to omit `%s` based on a condition, use a ternary expression. ' +
+            'For example, you can pass `%s={condition ? value : undefined}` ' +
+            'instead of `%s={condition && value}`.%s',
           value,
+          name,
+          name,
+          name,
+          value,
+          name,
           name,
           name,
           name,
