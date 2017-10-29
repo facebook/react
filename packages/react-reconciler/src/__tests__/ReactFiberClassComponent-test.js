@@ -39,7 +39,7 @@ describe('ReactFiberClassComponent', () => {
 
     expectDev(error).toBe(
       'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
-      'did you accidentally return an object from the constructor?'
+        'did you accidentally return an object from the constructor?',
     );
   });
 
