@@ -25,6 +25,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Fix `form.reset()` to respect `defaultValue` on uncontrolled `<select>`. ([@aweary](https://github.com/aweary) in [#11057](https://github.com/facebook/react/pull/11057))
 * Fix `<textarea>` placeholder not rendering on IE11. ([@gaearon](https://github.com/gaearon) in [#11177](https://github.com/facebook/react/pull/11177))
 * Fix a crash rendering into shadow root. ([@gaearon](https://github.com/gaearon) in [#11037](https://github.com/facebook/react/pull/11037))
+* Fix false positive warning about hydrating mixed case SVG tags. ([@gaearon](http://github.com/gaearon) in [#11174](https://github.com/facebook/react/pull/11174))
 * Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
 * Warn about nested updates no more than once. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11113](https://github.com/facebook/react/pull/11113))
@@ -36,12 +37,18 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Fix markup generation when components return strings. ([@gaearon](http://github.com/gaearon) in [#11109](https://github.com/facebook/react/pull/11109))
 * Fix obscure error message when passing an invalid style value. ([@iamdustan](https://github.com/iamdustan) in [#11173](https://github.com/facebook/react/pull/11173))
 * Include the `autoFocus` attribute into SSR markup. ([@gaearon](http://github.com/gaearon) in [#11192](https://github.com/facebook/react/pull/11192))
+* Include the component stack into more warnings. ([@gaearon](http://github.com/gaearon) in [#11284](https://github.com/facebook/react/pull/11284))
 
 ### React Test Renderer and Test Utils
 
 * Fix multiple `setState()` calls in `componentWillMount()` in shallow renderer. ([@Hypnosphi](https://github.com/Hypnosphi) in [#11167](https://github.com/facebook/react/pull/11167))
 * Fix shallow renderer to ignore `shouldComponentUpdate()` after `forceUpdate()`. ([@d4rky-pl](https://github.com/d4rky-pl) in [#11239](https://github.com/facebook/react/pull/11239))
 * Add back support for running in production mode. ([@gaearon](https://github.com/gaearon) in [#11112](https://github.com/facebook/react/pull/11112))
+* Add a missing `package.json` dependency. ([@gaearon](https://github.com/gaearon) in [#11340](https://github.com/facebook/react/pull/11340))
+
+### React ART
+
+* Add a missing `package.json` dependency. ([@gaearon](https://github.com/gaearon) in [#11341](https://github.com/facebook/react/pull/11341))
 
 </details>
 

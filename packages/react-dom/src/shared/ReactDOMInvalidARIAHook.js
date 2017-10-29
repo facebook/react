@@ -3,14 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMInvalidARIAHook
  */
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
-var isCustomComponent = require('isCustomComponent');
+var DOMProperty = require('./DOMProperty');
+var isCustomComponent = require('./isCustomComponent');
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
@@ -22,7 +20,7 @@ var hasOwnProperty = Object.prototype.hasOwnProperty;
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 
   var validAriaProperties = require('./validAriaProperties');
 }

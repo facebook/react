@@ -3,13 +3,11 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactTreeTraversal
  */
 
 'use strict';
 
-var {HostComponent} = require('ReactTypeOfWork');
+var {HostComponent} = require('./ReactTypeOfWork');
 
 function getParent(inst) {
   do {
