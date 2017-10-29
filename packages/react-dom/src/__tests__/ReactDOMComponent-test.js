@@ -2042,9 +2042,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for non-boolean attribute `whatever`.\n\n' +
-          'If you want `whatever` to appear in the DOM, cast it to a string. ' +
-          'For example, you can pass `whatever="true"` or `whatever={value.toString()}` instead.',
+        'Received `true` for the non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="true" or whatever={value.toString()}.',
       );
     });
 
@@ -2057,9 +2057,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for non-boolean attribute `whatever`.\n\n' +
-          'If you want `whatever` to appear in the DOM, cast it to a string. ' +
-          'For example, you can pass `whatever="true"` or `whatever={value.toString()}` instead.',
+        'Received `true` for the non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="true" or whatever={value.toString()}.',
       );
     });
 
@@ -2234,9 +2234,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for non-boolean attribute `whatever`.\n\n' +
-          'If you want `whatever` to appear in the DOM, cast it to a string. ' +
-          'For example, you can pass `whatever="true"` or `whatever={value.toString()}` instead.',
+        'Received `true` for the non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="true" or whatever={value.toString()}.',
       );
     });
 
@@ -2289,12 +2289,11 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `false` for non-boolean attribute `whatever`.\n\n ' +
-          'If you want `whatever` to appear in the DOM, cast it to a string. ' +
-          'For example, you can pass `whatever="false"` or `whatever={value.toString()}.\n\n' +
-          'If you want to omit `whatever` based on a condition, use a ternary expression. ' +
-          'For example, you can pass `whatever={condition ? value : undefined}` ' +
-          'instead of `whatever={condition && value}`.',
+        'Received `false` for the non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="false" or whatever={value.toString()}.\n\n' +
+          'If you conditionally omit it with whatever={condition && value}, ' +
+          'pass whatever={condition ? value : undefined} instead.',
       );
     });
   });

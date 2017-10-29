@@ -184,14 +184,13 @@ if (__DEV__) {
       typeof value === 'boolean' &&
       !DOMProperty.shouldAttributeAcceptBooleanValue(name)
     ) {
-      if (value === true) {
+      if (value) {
         warning(
           false,
-          'Received `%s` for non-boolean attribute `%s`.\n\n' +
-            'If you want `%s` to appear in the DOM, cast it to a string. ' +
-            'For example, you can pass `%s="%s"` or `%s={value.toString()}` instead.%s',
+          'Received `%s` for the non-boolean attribute `%s`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            '%s="%s" or %s={value.toString()}.%s',
           value,
-          name,
           name,
           name,
           value,
@@ -201,18 +200,15 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'Received `%s` for non-boolean attribute `%s`.\n\n ' +
-            'If you want `%s` to appear in the DOM, cast it to a string. ' +
-            'For example, you can pass `%s="%s"` or `%s={value.toString()}.\n\n' +
-            'If you want to omit `%s` based on a condition, use a ternary expression. ' +
-            'For example, you can pass `%s={condition ? value : undefined}` ' +
-            'instead of `%s={condition && value}`.%s',
+          'Received `%s` for the non-boolean attribute `%s`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            '%s="%s" or %s={value.toString()}.\n\n' +
+            'If you conditionally omit it with %s={condition && value}, ' +
+            'pass %s={condition ? value : undefined} instead.%s', 
           value,
           name,
           name,
-          name,
           value,
-          name,
           name,
           name,
           name,
