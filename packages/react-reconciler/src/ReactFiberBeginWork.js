@@ -39,6 +39,7 @@ var {
 } = require('shared/ReactTypeOfSideEffect');
 var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
+var getComponentName = require('shared/getComponentName');
 
 var ReactFiberClassComponent = require('./ReactFiberClassComponent');
 var {
@@ -471,6 +472,17 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     var value;
 
     if (__DEV__) {
+      const classWithRenderButNotExtendedFromReactComponent =
+        workInProgress.type.prototype && workInProgress.type.prototype.render;
+      if (classWithRenderButNotExtendedFromReactComponent) {
+        warning(
+          false,
+          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+            'This is likely to cause errors. Change %s to extend React.Component instead.',
+          getComponentName(workInProgress),
+          getComponentName(workInProgress),
+        );
+      }
       ReactCurrentOwner.current = workInProgress;
       value = fn(props, context);
     } else {
