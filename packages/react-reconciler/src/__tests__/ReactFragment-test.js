@@ -676,4 +676,46 @@ describe('ReactFragment', () => {
       'Each child in an array or iterator should have a unique "key" prop.',
     );
   });
+
+  it('should preserve state when it does not change positions', function() {
+    spyOn(console, 'error');
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition
+        ? [<span />, <React.Fragment><Stateful /></React.Fragment>]
+        : [<span />, <React.Fragment><Stateful /></React.Fragment>];
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([span(), div()]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
+    expect(ReactNoop.getChildren()).toEqual([span(), div()]);
+    expectDev(console.error.calls.count()).toBe(3);
+    for (let errorIndex = 0; errorIndex < 3; ++errorIndex) {
+      expectDev(console.error.calls.argsFor(errorIndex)[0]).toContain(
+        'Each child in an array or iterator should have a unique "key" prop.',
+      );
+    }
+  });
 });
