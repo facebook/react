@@ -19,7 +19,11 @@ var getTextContentAccessor = require('getTextContentAccessor');
  * @return {?object}
  */
 function getModernOffsets(outerNode) {
-  var selection = window.getSelection && window.getSelection();
+  var win = window;
+  if (outerNode.ownerDocument && outerNode.ownerDocument.defaultView) {
+    win = outerNode.ownerDocument.defaultView;
+  }
+  var selection = win.getSelection && win.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
@@ -156,11 +160,16 @@ function getModernOffsetsFromPoints(
  * @param {object} offsets
  */
 function setModernOffsets(node, offsets) {
-  if (!window.getSelection) {
+  var win = window;
+  if (node.ownerDocument && node.ownerDocument.defaultView) {
+    win = node.ownerDocument.defaultView;
+  }
+
+  if (!win.getSelection) {
     return;
   }
 
-  var selection = window.getSelection();
+  var selection = win.getSelection();
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
   var end = offsets.end === undefined ? start : Math.min(offsets.end, length);

@@ -88,14 +88,20 @@ function getSelection(node) {
       start: node.selectionStart,
       end: node.selectionEnd,
     };
-  } else if (window.getSelection) {
-    var selection = window.getSelection();
-    return {
-      anchorNode: selection.anchorNode,
-      anchorOffset: selection.anchorOffset,
-      focusNode: selection.focusNode,
-      focusOffset: selection.focusOffset,
-    };
+  } else {
+    var win = window;
+    if (node.ownerDocument && node.ownerDocument.defaultView) {
+      win = node.ownerDocument.defaultView;
+    }
+    if (win.getSelection) {
+      var selection = win.getSelection();
+      return {
+        anchorNode: selection.anchorNode,
+        anchorOffset: selection.anchorOffset,
+        focusNode: selection.focusNode,
+        focusOffset: selection.focusOffset,
+      };
+    }
   }
 }
 
