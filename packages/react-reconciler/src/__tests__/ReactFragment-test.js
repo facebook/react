@@ -634,4 +634,46 @@ describe('ReactFragment', () => {
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([div(span(), div(div()), span())]);
   });
+
+  it('should not preserve state when switching to a keyed fragment to an array', function() {
+    spyOn(console, 'error');
+    var ops = [];
+
+    class Stateful extends React.Component {
+      componentDidUpdate() {
+        ops.push('Update Stateful');
+      }
+
+      render() {
+        return <div>Hello</div>;
+      }
+    }
+
+    function Foo({condition}) {
+      return condition
+        ? <div>
+            {<React.Fragment key="foo"><Stateful /></React.Fragment>}<span />
+          </div>
+        : <div>{[<Stateful />]}<span /></div>;
+    }
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    ReactNoop.render(<Foo condition={false} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
+
+    ReactNoop.render(<Foo condition={true} />);
+    ReactNoop.flush();
+
+    expect(ops).toEqual([]);
+    expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Each child in an array or iterator should have a unique "key" prop.',
+    );
+  });
 });

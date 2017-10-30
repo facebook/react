@@ -388,7 +388,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     element: ReactElement,
     expirationTime: ExpirationTime,
   ): Fiber {
-    // TODO: Split these into branches based on typeof type
     if (current !== null && current.type === element.type) {
       // Move based on index
       const existing = useFiber(current, expirationTime);
@@ -703,12 +702,16 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
+        if (key !== null) {
+          return null;
+        }
+
         return updateFragment(
           returnFiber,
           oldFiber,
           newChild,
           expirationTime,
-          key,
+          null,
         );
       }
 
@@ -1251,7 +1254,6 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
       // TODO: If key === null and child.key === null, then this only applies to
       // the first item in the list.
       if (child.key === key) {
-        // TODO: Split these into branches based on typeof type
         if (
           child.tag === Fragment
             ? element.type === REACT_FRAGMENT_TYPE
