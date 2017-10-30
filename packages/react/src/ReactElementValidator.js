@@ -35,6 +35,8 @@ if (__DEV__) {
       return '#text';
     } else if (typeof element.type === 'string') {
       return element.type;
+    } else if (element.type === REACT_FRAGMENT_TYPE) {
+      return 'React.Fragment';
     } else {
       return element.type.displayName || element.type.name || 'Unknown';
     }
@@ -246,12 +248,22 @@ function validateFragmentProps(fragment) {
       warning(
         false,
         'Invalid prop `%s` supplied to `React.Fragment`. ' +
-          'React.Fragment can only have `key` and `children` props.',
+          'React.Fragment can only have `key` and `children` props.%s',
         key,
+        getStackAddendum(),
       );
       break;
     }
   }
+
+  if (fragment.ref !== null) {
+    warning(
+      false,
+      'Invalid attribute `ref` supplied to `React.Fragment`.%s',
+      getStackAddendum(),
+    );
+  }
+
   currentlyValidatingElement = null;
 }
 

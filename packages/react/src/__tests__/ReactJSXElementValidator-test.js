@@ -104,6 +104,30 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
+  it('warns for fragments with refs', () => {
+    spyOn(console, 'error');
+
+    class Foo extends React.Component {
+      render() {
+        return (
+          <React.Fragment
+            ref={bar => {
+              this.foo = bar;
+            }}>
+            hello
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Foo />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Invalid attribute `ref` supplied to `React.Fragment`.',
+    );
+  });
+
   it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
 
