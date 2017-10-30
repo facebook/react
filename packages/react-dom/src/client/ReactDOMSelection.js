@@ -16,7 +16,11 @@ var {TEXT_NODE} = require('../shared/HTMLNodeType');
  * @return {?object}
  */
 function getModernOffsets(outerNode) {
-  var selection = window.getSelection && window.getSelection();
+  var win = window;
+  if (outerNode.ownerDocument && outerNode.ownerDocument.defaultView) {
+    win = outerNode.ownerDocument.defaultView;
+  }
+  var selection = win.getSelection && win.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
@@ -153,11 +157,13 @@ function getModernOffsetsFromPoints(
  * @param {object} offsets
  */
 function setModernOffsets(node, offsets) {
-  if (!window.getSelection) {
+  var doc = node.ownerDocument || document;
+
+  if (!doc.defaultView.getSelection) {
     return;
   }
 
-  var selection = window.getSelection();
+  var selection = doc.defaultView.getSelection();
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
   var end = offsets.end === undefined ? start : Math.min(offsets.end, length);
@@ -183,7 +189,7 @@ function setModernOffsets(node, offsets) {
     ) {
       return;
     }
-    var range = document.createRange();
+    var range = doc.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 
