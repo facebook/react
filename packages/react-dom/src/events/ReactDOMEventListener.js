@@ -10,7 +10,6 @@
 var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var EventListener = require('fbjs/lib/EventListener');
 var {HostRoot} = ReactTypeOfWork;
 
 var getEventTarget = require('./getEventTarget');
@@ -127,11 +126,12 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    return EventListener.listen(
-      element,
-      handlerBaseName,
-      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
-    );
+    var callback = ReactDOMEventListener.dispatchEvent.bind(null, topLevelType);
+    if (element.addEventListener) {
+      element.addEventListener(handlerBaseName, callback, false);
+    } else if (element.attachEvent) {
+      element.attachEvent('on' + handlerBaseName, callback);
+    }
   },
 
   /**
@@ -148,11 +148,21 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    return EventListener.capture(
-      element,
-      handlerBaseName,
-      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
-    );
+    if (element.addEventListener) {
+      var callback = ReactDOMEventListener.dispatchEvent.bind(
+        null,
+        topLevelType,
+      );
+      element.addEventListener(handlerBaseName, callback, true);
+    } else {
+      if (__DEV__) {
+        console.error(
+          'Attempted to listen to events during the capture phase on a ' +
+            'browser that does not support the capture phase. Your application ' +
+            'will not receive some events.',
+        );
+      }
+    }
   },
 
   dispatchEvent: function(topLevelType, nativeEvent) {
