@@ -203,7 +203,7 @@ if (__DEV__) {
           'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.\n\n' +
-            'If you conditionally omit it with %s={condition && value}, ' +
+            'If you used to conditionally omit it with %s={condition && value}, ' +
             'pass %s={condition ? value : undefined} instead.%s',
           value,
           name,

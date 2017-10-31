@@ -2292,7 +2292,7 @@ describe('ReactDOMComponent', () => {
         'Received `false` for a non-boolean attribute `whatever`.\n\n' +
           'If you want to write it to the DOM, pass a string instead: ' +
           'whatever="false" or whatever={value.toString()}.\n\n' +
-          'If you conditionally omit it with whatever={condition && value}, ' +
+          'If you used to conditionally omit it with whatever={condition && value}, ' +
           'pass whatever={condition ? value : undefined} instead.',
       );
     });
