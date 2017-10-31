@@ -69,10 +69,12 @@ beforeEach(() => {
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ReactNativeBridgeEventPlugin = require('../ReactNativeBridgeEventPlugin');
+  ReactNativeBridgeEventPlugin = require('../ReactNativeBridgeEventPlugin')
+    .default;
   ResponderEventPlugin = require('events/ResponderEventPlugin');
   UIManager = require('UIManager');
-  createReactNativeComponentClass = require('../createReactNativeComponentClass');
+  createReactNativeComponentClass = require('../createReactNativeComponentClass')
+    .default;
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {

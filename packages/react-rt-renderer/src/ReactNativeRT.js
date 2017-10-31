@@ -14,8 +14,9 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
-import ReactNativeFiberErrorDialog
-  from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
+import {
+  showDialog,
+} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
 import ReactPortal from 'react-reconciler/src/ReactPortal';
 import ReactFiberDevToolsHook
   from 'react-reconciler/src/ReactFiberDevToolsHook';
@@ -47,9 +48,7 @@ const roots = new Map();
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(
-  ReactNativeFiberErrorDialog.showDialog,
-);
+ReactFiberErrorLogger.injection.injectDialog(showDialog);
 
 const ReactNativeRTFiber: ReactNativeRTType = {
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {

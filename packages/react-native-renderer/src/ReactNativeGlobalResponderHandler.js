@@ -7,7 +7,7 @@
 'use strict';
 
 // Module provided by RN:
-var UIManager = require('UIManager');
+import UIManager from 'UIManager';
 
 var ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
@@ -20,4 +20,4 @@ var ReactNativeGlobalResponderHandler = {
   },
 };
 
-module.exports = ReactNativeGlobalResponderHandler;
+export default ReactNativeGlobalResponderHandler;

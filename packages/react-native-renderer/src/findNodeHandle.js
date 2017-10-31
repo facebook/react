@@ -11,16 +11,16 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
-var getComponentName = require('shared/getComponentName');
-var invariant = require('fbjs/lib/invariant');
+import ReactInstanceMap from 'shared/ReactInstanceMap';
+import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import getComponentName from 'shared/getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
+import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+// TODO: named imports
+var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 /**
  * ReactNative vs ReactWeb
@@ -110,4 +110,4 @@ function findNodeHandle(componentOrHandle: any): any {
   }
 }
 
-module.exports = findNodeHandle;
+export default findNodeHandle;

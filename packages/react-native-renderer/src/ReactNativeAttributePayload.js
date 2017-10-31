@@ -9,10 +9,10 @@
 'use strict';
 
 // Modules provided by RN:
-var deepDiffer = require('deepDiffer');
-var flattenStyle = require('flattenStyle');
+import deepDiffer from 'deepDiffer';
+import flattenStyle from 'flattenStyle';
 
-var ReactNativePropRegistry = require('./ReactNativePropRegistry');
+import ReactNativePropRegistry from './ReactNativePropRegistry';
 
 var emptyObject = {};
 
@@ -485,30 +485,26 @@ function clearProperties(
   return diffProperties(updatePayload, prevProps, emptyObject, validAttributes);
 }
 
-var ReactNativeAttributePayload = {
-  create: function(
-    props: Object,
-    validAttributes: AttributeConfiguration,
-  ): ?Object {
-    return addProperties(
-      null, // updatePayload
-      props,
-      validAttributes,
-    );
-  },
+export function create(
+  props: Object,
+  validAttributes: AttributeConfiguration,
+): ?Object {
+  return addProperties(
+    null, // updatePayload
+    props,
+    validAttributes,
+  );
+}
 
-  diff: function(
-    prevProps: Object,
-    nextProps: Object,
-    validAttributes: AttributeConfiguration,
-  ): ?Object {
-    return diffProperties(
-      null, // updatePayload
-      prevProps,
-      nextProps,
-      validAttributes,
-    );
-  },
-};
-
-module.exports = ReactNativeAttributePayload;
+export function diff(
+  prevProps: Object,
+  nextProps: Object,
+  validAttributes: AttributeConfiguration,
+): ?Object {
+  return diffProperties(
+    null, // updatePayload
+    prevProps,
+    nextProps,
+    validAttributes,
+  );
+}

@@ -8,14 +8,14 @@
  */
 'use strict';
 
-var findNodeHandle = require('./findNodeHandle');
+import findNodeHandle from './findNodeHandle';
 
 /**
  * External users of findNodeHandle() expect the host tag number return type.
  * The injected findNodeHandle() strategy returns the instance wrapper though.
  * See NativeMethodsMixin#setNativeProps for more info on why this is done.
  */
-module.exports = function findNumericNodeHandleFiber(
+export default function findNumericNodeHandleFiber(
   componentOrHandle: any,
 ): ?number {
   const instance: any = findNodeHandle(componentOrHandle);
@@ -23,4 +23,4 @@ module.exports = function findNumericNodeHandleFiber(
     return instance;
   }
   return instance._nativeTag;
-};
+}
