@@ -41,6 +41,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 
   var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
+  var didWarnAboutStateAssignmentForComponent = {};
 
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
@@ -393,13 +394,17 @@ module.exports = function(
 
     if (instance.state !== oldState) {
       if (__DEV__) {
-        warning(
-          false,
-          '%s.componentWillReceiveProps(): Assigning directly to ' +
-            "this.state is deprecated (except inside a component's " +
-            'constructor). Use setState instead.',
-          getComponentName(workInProgress),
-        );
+        const componentName = getComponentName(workInProgress) || 'Component';
+        if (!didWarnAboutStateAssignmentForComponent[componentName]) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+              "this.state is deprecated (except inside a component's " +
+              'constructor). Use setState instead.',
+            componentName,
+          );
+          didWarnAboutStateAssignmentForComponent[componentName] = true;
+        }
       }
       updater.enqueueReplaceState(instance, instance.state, null);
     }

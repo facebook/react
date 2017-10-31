@@ -20,6 +20,7 @@ const {NoWork} = require('./ReactFiberExpirationTime');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
+  var didWarnUpdateInsideUpdate = false;
 }
 
 type PartialState<State, Props> =
@@ -132,7 +133,10 @@ function insertUpdateIntoFiber<State>(
 
   // Warn if an update is scheduled from inside an updater function.
   if (__DEV__) {
-    if (queue1.isProcessing || (queue2 !== null && queue2.isProcessing)) {
+    if (
+      (queue1.isProcessing || (queue2 !== null && queue2.isProcessing)) &&
+      !didWarnUpdateInsideUpdate
+    ) {
       warning(
         false,
         'An update (setState, replaceState, or forceUpdate) was scheduled ' +
@@ -140,6 +144,7 @@ function insertUpdateIntoFiber<State>(
           'with zero side-effects. Consider using componentDidUpdate or a ' +
           'callback.',
       );
+      didWarnUpdateInsideUpdate = true;
     }
   }
 

@@ -118,6 +118,7 @@ var didWarnDefaultChecked = false;
 var didWarnDefaultSelectValue = false;
 var didWarnDefaultTextareaValue = false;
 var didWarnInvalidOptionChildren = false;
+var didWarnAboutNoopUpdateForComponent = {};
 var valuePropNames = ['value', 'defaultValue'];
 var newlineEatingTags = {
   listing: true,
@@ -181,6 +182,13 @@ function warnNoop(
 ) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
+    const componentName =
+      (constructor && getComponentName(constructor)) || 'ReactClass';
+    const warningKey = `${componentName}.${callerName}`;
+    if (didWarnAboutNoopUpdateForComponent[warningKey]) {
+      return;
+    }
+
     warning(
       false,
       '%s(...): Can only update a mounting component. ' +
@@ -188,8 +196,9 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && getComponentName(constructor)) || 'ReactClass',
+      componentName,
     );
+    didWarnAboutNoopUpdateForComponent[warningKey] = true;
   }
 }
 

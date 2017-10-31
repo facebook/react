@@ -252,6 +252,9 @@ describe('ReactCompositeComponent', () => {
         'component. This is a no-op.\n\nPlease check the code for the ' +
         'Component component.',
     );
+
+    instance.forceUpdate();
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn about `setState` on unmounted components', () => {
@@ -391,6 +394,11 @@ describe('ReactCompositeComponent', () => {
     expect(instance).toBe(instance2);
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
+
+    // Test deduplication
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<Component prop={123} />, container);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn about `setState` in getChildContext', () => {
@@ -424,6 +432,11 @@ describe('ReactCompositeComponent', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot call setState() inside getChildContext()',
     );
+
+    // Test deduplication
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<Component />, container);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should cleanup even if render() fatals', () => {
