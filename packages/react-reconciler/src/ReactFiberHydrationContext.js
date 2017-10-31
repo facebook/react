@@ -12,11 +12,15 @@
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
-const {HostComponent, HostText, HostRoot} = require('shared/ReactTypeOfWork');
-const {Deletion, Placement} = require('shared/ReactTypeOfSideEffect');
-var invariant = require('fbjs/lib/invariant');
+import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-const {createFiberFromHostInstanceForDeletion} = require('./ReactFiber');
+import {createFiberFromHostInstanceForDeletion} from './ReactFiber';
+
+// TODO: named imports
+const {HostComponent, HostText, HostRoot} = ReactTypeOfWork;
+const {Deletion, Placement} = ReactTypeOfSideEffect;
 
 export type HydrationContext<C, CX> = {
   enterHydrationState(fiber: Fiber): boolean,
@@ -31,7 +35,7 @@ export type HydrationContext<C, CX> = {
   popHydrationState(fiber: Fiber): boolean,
 };
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ): HydrationContext<C, CX> {
   const {shouldSetTextContent, hydration} = config;
@@ -376,4 +380,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     prepareToHydrateHostTextInstance,
     popHydrationState,
   };
-};
+}

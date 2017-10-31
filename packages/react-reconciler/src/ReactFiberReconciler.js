@@ -13,34 +13,35 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var {HostComponent} = require('shared/ReactTypeOfWork');
-var emptyObject = require('fbjs/lib/emptyObject');
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
+import ReactInstanceMap from 'shared/ReactInstanceMap';
+import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import getComponentName from 'shared/getComponentName';
+import warning from 'fbjs/lib/warning';
 
-var {
+import {
   findCurrentUnmaskedContext,
   isContextProvider,
   processChildContext,
-} = require('./ReactFiberContext');
-var {createFiberRoot} = require('./ReactFiberRoot');
-var ReactFiberScheduler = require('./ReactFiberScheduler');
-var {insertUpdateIntoFiber} = require('./ReactFiberUpdateQueue');
+} from './ReactFiberContext';
+import {createFiberRoot} from './ReactFiberRoot';
+import ReactFiberScheduler from './ReactFiberScheduler';
+import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
+import ReactFiberInstrumentation from './ReactFiberInstrumentation';
+import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
-if (__DEV__) {
-  var getComponentName = require('shared/getComponentName');
-  var warning = require('fbjs/lib/warning');
-
-  var ReactFiberInstrumentation = require('./ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
-
-  var didWarnAboutNestedUpdates = false;
-}
-
+// TODO: named imports
+var {HostComponent} = ReactTypeOfWork;
 var {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} = require('shared/ReactFiberTreeReflection');
+} = ReactFiberTreeReflection;
+
+if (__DEV__) {
+  var didWarnAboutNestedUpdates = false;
+}
 
 export type Deadline = {
   timeRemaining: () => number,
@@ -255,7 +256,7 @@ function getContextForSubtree(
     : parentContext;
 }
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
   var {getPublicInstance} = config;
@@ -407,4 +408,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       return hostFiber.stateNode;
     },
   };
-};
+}

@@ -9,8 +9,20 @@
 
 import type {Fiber} from './ReactFiber';
 
+import getComponentName from 'shared/getComponentName';
+import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+
+const {
+  HostRoot,
+  HostComponent,
+  HostText,
+  HostPortal,
+  ReturnComponent,
+  Fragment,
+} = ReactTypeOfWork;
+
 // Trust the developer to only use this with a __DEV__ check
-let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
+let ReactDebugFiberPerf = (({}: any): typeof ReactDebugFiberPerf);
 
 type MeasurementPhase =
   | 'componentWillMount'
@@ -23,16 +35,6 @@ type MeasurementPhase =
   | 'getChildContext';
 
 if (__DEV__) {
-  const getComponentName = require('shared/getComponentName');
-  const {
-    HostRoot,
-    HostComponent,
-    HostText,
-    HostPortal,
-    ReturnComponent,
-    Fragment,
-  } = require('shared/ReactTypeOfWork');
-
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
@@ -408,4 +410,5 @@ if (__DEV__) {
   };
 }
 
-module.exports = ReactDebugFiberPerf;
+// TODO: named exports maybe?
+export default ReactDebugFiberPerf;

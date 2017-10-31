@@ -15,10 +15,10 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import './ReactNativeInjection';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
-import ReactPortal from 'react-reconciler/src/ReactPortal';
-import ReactFiberDevToolsHook
-  from 'react-reconciler/src/ReactFiberDevToolsHook';
+import * as ReactFiberErrorLogger
+  from 'react-reconciler/src/ReactFiberErrorLogger';
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
 import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
@@ -37,9 +37,6 @@ import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
 import findNumericNodeHandle from './findNumericNodeHandle';
 import takeSnapshot from './takeSnapshot';
-
-// TODO: named imports
-var {injectInternals} = ReactFiberDevToolsHook;
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeFiberRenderer.batchedUpdates,

@@ -11,7 +11,5 @@
 
 export type TypeOfInternalContext = number;
 
-module.exports = {
-  NoContext: 0,
-  AsyncUpdates: 1,
-};
+export const NoContext = 0;
+export const AsyncUpdates = 1;

@@ -13,22 +13,19 @@ import type {ReactNativeRTType} from './ReactNativeRTTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
+import * as ReactFiberErrorLogger
+  from 'react-reconciler/src/ReactFiberErrorLogger';
 import {
   showDialog,
 } from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
-import ReactPortal from 'react-reconciler/src/ReactPortal';
-import ReactFiberDevToolsHook
-  from 'react-reconciler/src/ReactFiberDevToolsHook';
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
 import ReactNativeRTFiberRenderer from './ReactNativeRTFiberRenderer';
 import ReactNativeRTFiberInspector from './ReactNativeRTFiberInspector';
-
-// TODO: make a named import after reconciler is converted.
-var {injectInternals} = ReactFiberDevToolsHook;
 
 /**
  * Make sure essential globals are available and are patched correctly. Please don't remove this

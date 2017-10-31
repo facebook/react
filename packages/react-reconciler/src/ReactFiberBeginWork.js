@@ -17,6 +17,35 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
+import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import invariant from 'fbjs/lib/invariant';
+import getComponentName from 'shared/getComponentName';
+import warning from 'fbjs/lib/warning';
+import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+
+import ReactFiberClassComponent from './ReactFiberClassComponent';
+import {
+  mountChildFibersInPlace,
+  reconcileChildFibers,
+  reconcileChildFibersInPlace,
+  cloneChildFibers,
+} from './ReactChildFiber';
+import {processUpdateQueue} from './ReactFiberUpdateQueue';
+import {
+  getMaskedContext,
+  getUnmaskedContext,
+  hasContextChanged,
+  pushContextProvider,
+  pushTopLevelContextObject,
+  invalidateContextProvider,
+} from './ReactFiberContext';
+import {NoWork, Never} from './ReactFiberExpirationTime';
+
+// TODO: named imports
+var {cancelWorkTimer} = ReactDebugFiberPerf;
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -29,46 +58,15 @@ var {
   CallHandlerPhase,
   ReturnComponent,
   Fragment,
-} = require('shared/ReactTypeOfWork');
-var {
-  PerformedWork,
-  Placement,
-  ContentReset,
-  Err,
-  Ref,
-} = require('shared/ReactTypeOfSideEffect');
-var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
-var invariant = require('fbjs/lib/invariant');
-var getComponentName = require('shared/getComponentName');
-
-var ReactFiberClassComponent = require('./ReactFiberClassComponent');
-var {
-  mountChildFibersInPlace,
-  reconcileChildFibers,
-  reconcileChildFibersInPlace,
-  cloneChildFibers,
-} = require('./ReactChildFiber');
-var {processUpdateQueue} = require('./ReactFiberUpdateQueue');
-var {
-  getMaskedContext,
-  getUnmaskedContext,
-  hasContextChanged,
-  pushContextProvider,
-  pushTopLevelContextObject,
-  invalidateContextProvider,
-} = require('./ReactFiberContext');
-var {NoWork, Never} = require('./ReactFiberExpirationTime');
+} = ReactTypeOfWork;
+var {PerformedWork, Placement, ContentReset, Err, Ref} = ReactTypeOfSideEffect;
+var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
-  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
-  var {cancelWorkTimer} = require('./ReactDebugFiberPerf');
-
   var warnedAboutStatelessRefs = {};
 }
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
@@ -865,4 +863,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     beginWork,
     beginFailedWork,
   };
-};
+}

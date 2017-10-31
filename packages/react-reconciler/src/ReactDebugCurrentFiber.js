@@ -9,14 +9,13 @@
 
 'use strict';
 
-var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
+import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import ReactFiberComponentTreeHook from 'shared/ReactFiberComponentTreeHook';
+import getComponentName from 'shared/getComponentName';
 
-if (__DEV__) {
-  var getComponentName = require('shared/getComponentName');
-  var {
-    getStackAddendumByWorkInProgressFiber,
-  } = require('shared/ReactFiberComponentTreeHook');
-}
+// TODO: named imports
+var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
+var {getStackAddendumByWorkInProgressFiber} = ReactFiberComponentTreeHook;
 
 import type {Fiber} from './ReactFiber';
 
@@ -75,4 +74,4 @@ var ReactDebugCurrentFiber = {
   getCurrentFiberStackAddendum,
 };
 
-module.exports = ReactDebugCurrentFiber;
+export default ReactDebugCurrentFiber;

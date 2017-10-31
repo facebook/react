@@ -16,13 +16,8 @@ import type {ReactNativeCSType} from './ReactNativeCSTypes';
 import {CSStatefulComponent} from 'CSStatefulComponent';
 
 import ReactFiberReconciler from 'react-reconciler';
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberDevToolsHook
-  from 'react-reconciler/src/ReactFiberDevToolsHook';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ReactVersion from 'shared/ReactVersion';
-
-// TODO: make a named import after reconciler is converted.
-var {injectInternals} = ReactFiberDevToolsHook;
 
 const emptyObject = {};
 

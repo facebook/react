@@ -17,10 +17,9 @@ import './ReactDOMClientInjection';
 
 import ReactFiberReconciler from 'react-reconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactPortal from 'react-reconciler/src/ReactPortal';
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberDevToolsHook
-  from 'react-reconciler/src/ReactFiberDevToolsHook';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactControlledComponent from 'events/ReactControlledComponent';
@@ -71,7 +70,6 @@ var {
 } = ReactDOMFiberComponent;
 var {updatedAncestorInfo} = validateDOMNesting;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
-var {injectInternals} = ReactFiberDevToolsHook;
 var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 if (__DEV__) {
