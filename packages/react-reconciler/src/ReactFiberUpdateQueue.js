@@ -12,16 +12,12 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
+import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import {NoWork} from './ReactFiberExpirationTime';
-
-// TODO: named imports
-const {Callback: CallbackEffect} = ReactTypeOfSideEffect;
-const {ClassComponent, HostRoot} = ReactTypeOfWork;
 
 if (__DEV__) {
   var didWarnUpdateInsideUpdate = false;

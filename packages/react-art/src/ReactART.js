@@ -9,7 +9,7 @@
 
 import React from 'react';
 import ReactFiberReconciler from 'react-reconciler';
-import ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
 import Mode from 'art/modes/current';
 import FastNoSideEffects from 'art/modes/fast-noSideEffects';
 import Transform from 'art/core/transform';

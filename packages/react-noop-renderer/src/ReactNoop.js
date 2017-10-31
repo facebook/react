@@ -24,7 +24,7 @@ import ReactFiberInstrumentation
   from 'react-reconciler/src/ReactFiberInstrumentation';
 import ReactFiberReconciler from 'react-reconciler';
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import ReactInstanceMap from 'shared/ReactInstanceMap';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 

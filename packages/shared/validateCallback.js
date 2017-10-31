@@ -20,4 +20,4 @@ function validateCallback(callback: ?Function) {
   );
 }
 
-module.exports = validateCallback;
+export default validateCallback;

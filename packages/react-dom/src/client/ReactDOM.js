@@ -26,11 +26,11 @@ import ReactControlledComponent from 'events/ReactControlledComponent';
 import EventPluginHub from 'events/EventPluginHub';
 import EventPluginRegistry from 'events/EventPluginRegistry';
 import EventPropagators from 'events/EventPropagators';
-import ReactInstanceMap from 'shared/ReactInstanceMap';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
-import ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
@@ -70,7 +70,6 @@ var {
 } = ReactDOMFiberComponent;
 var {updatedAncestorInfo} = validateDOMNesting;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
-var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 if (__DEV__) {
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';

@@ -11,16 +11,13 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import ReactInstanceMap from 'shared/ReactInstanceMap';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
-
-// TODO: named imports
-var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 /**
  * ReactNative vs ReactWeb

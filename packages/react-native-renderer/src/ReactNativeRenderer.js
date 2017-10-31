@@ -21,7 +21,7 @@ import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
 import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';

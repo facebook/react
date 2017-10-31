@@ -14,9 +14,12 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
-import ReactInstanceMap from 'shared/ReactInstanceMap';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {
+  findCurrentHostFiber,
+  findCurrentHostFiberWithNoPortals,
+} from 'shared/ReactFiberTreeReflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
@@ -31,13 +34,6 @@ import ReactFiberScheduler from './ReactFiberScheduler';
 import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-
-// TODO: named imports
-var {HostComponent} = ReactTypeOfWork;
-var {
-  findCurrentHostFiber,
-  findCurrentHostFiberWithNoPortals,
-} = ReactFiberTreeReflection;
 
 if (__DEV__) {
   var didWarnAboutNestedUpdates = false;

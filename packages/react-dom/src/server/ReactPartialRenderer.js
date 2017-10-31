@@ -20,7 +20,7 @@ import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
 import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
 import DOMMarkupOperations from './DOMMarkupOperations';
 import {
@@ -45,9 +45,6 @@ import {
 import {
   validateProperties as validateUnknownProperties,
 } from '../shared/ReactDOMUnknownPropertyHook';
-
-// TODO: convert these to named imports
-var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
 
 var REACT_FRAGMENT_TYPE =
   (typeof Symbol === 'function' &&

@@ -37,4 +37,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactFeatureFlags;
+export default ReactFeatureFlags;

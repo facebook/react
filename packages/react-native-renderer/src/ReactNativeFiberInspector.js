@@ -10,9 +10,12 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
+import {
+  findCurrentHostFiber,
+  findCurrentFiberUsingSlowPath,
+} from 'shared/ReactFiberTreeReflection';
 import getComponentName from 'shared/getComponentName';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 // Module provided by RN:
@@ -20,10 +23,8 @@ import UIManager from 'UIManager';
 
 import ReactNativeComponentTree from './ReactNativeComponentTree';
 
-// TODO: named imports
+// TODO: named imports?
 const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
 
 let getInspectorDataForViewTag;
 
@@ -53,7 +54,7 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+    const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }

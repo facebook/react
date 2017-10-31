@@ -9,13 +9,11 @@
 
 'use strict';
 
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
-import ReactFiberComponentTreeHook from 'shared/ReactFiberComponentTreeHook';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'shared/ReactFiberComponentTreeHook';
 import getComponentName from 'shared/getComponentName';
-
-// TODO: named imports
-var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
-var {getStackAddendumByWorkInProgressFiber} = ReactFiberComponentTreeHook;
 
 import type {Fiber} from './ReactFiber';
 

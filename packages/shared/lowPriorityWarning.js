@@ -51,4 +51,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = lowPriorityWarning;
+export default lowPriorityWarning;

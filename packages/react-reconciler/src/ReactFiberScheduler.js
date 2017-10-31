@@ -15,11 +15,28 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import ReactFiberComponentTreeHook from 'shared/ReactFiberComponentTreeHook';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import {
+  PerformedWork,
+  Placement,
+  Update,
+  PlacementAndUpdate,
+  Deletion,
+  ContentReset,
+  Callback,
+  Err,
+  Ref,
+} from 'shared/ReactTypeOfSideEffect';
+import {
+  HostRoot,
+  HostComponent,
+  HostPortal,
+  ClassComponent,
+} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -49,21 +66,7 @@ import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
 
 // TODO: named imports
-var {getStackAddendumByWorkInProgressFiber} = ReactFiberComponentTreeHook;
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
-var {ReactCurrentOwner} = ReactGlobalSharedState;
-var {
-  PerformedWork,
-  Placement,
-  Update,
-  PlacementAndUpdate,
-  Deletion,
-  ContentReset,
-  Callback,
-  Err,
-  Ref,
-} = ReactTypeOfSideEffect;
-var {HostRoot, HostComponent, HostPortal, ClassComponent} = ReactTypeOfWork;
 var {
   recordEffect,
   recordScheduleUpdate,

@@ -17,8 +17,16 @@ import type {
 } from 'react-reconciler/src/ReactFiberExpirationTime';
 
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {NoEffect, Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
+import {
+  FunctionalComponent,
+  ClassComponent,
+  HostText,
+  HostPortal,
+  CallComponent,
+  ReturnComponent,
+  Fragment,
+} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -83,18 +91,6 @@ if (__DEV__) {
 }
 
 const isArray = Array.isArray;
-
-const {
-  FunctionalComponent,
-  ClassComponent,
-  HostText,
-  HostPortal,
-  CallComponent,
-  ReturnComponent,
-  Fragment,
-} = ReactTypeOfWork;
-
-const {NoEffect, Placement, Deletion} = ReactTypeOfSideEffect;
 
 const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.

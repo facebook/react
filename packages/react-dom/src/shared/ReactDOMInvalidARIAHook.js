@@ -8,13 +8,11 @@
 'use strict';
 
 import warning from 'fbjs/lib/warning';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
 import DOMProperty from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import validAriaProperties from './validAriaProperties';
-
-var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');

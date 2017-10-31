@@ -8,14 +8,12 @@
 'use strict';
 
 import EventPluginRegistry from 'events/EventPluginRegistry';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import warning from 'fbjs/lib/warning';
 
 import DOMProperty from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
-
-var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();

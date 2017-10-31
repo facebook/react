@@ -11,16 +11,14 @@
 
 export type TypeOfWork = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9 | 10;
 
-module.exports = {
-  IndeterminateComponent: 0, // Before we know whether it is functional or class
-  FunctionalComponent: 1,
-  ClassComponent: 2,
-  HostRoot: 3, // Root of a host tree. Could be nested inside another node.
-  HostPortal: 4, // A subtree. Could be an entry point to a different renderer.
-  HostComponent: 5,
-  HostText: 6,
-  CallComponent: 7,
-  CallHandlerPhase: 8,
-  ReturnComponent: 9,
-  Fragment: 10,
-};
+export const IndeterminateComponent = 0; // Before we know whether it is functional or class
+export const FunctionalComponent = 1;
+export const ClassComponent = 2;
+export const HostRoot = 3; // Root of a host tree. Could be nested inside another node.
+export const HostPortal = 4; // A subtree. Could be an entry point to a different renderer.
+export const HostComponent = 5;
+export const HostText = 6;
+export const CallComponent = 7;
+export const CallHandlerPhase = 8;
+export const ReturnComponent = 9;
+export const Fragment = 10;

@@ -11,15 +11,14 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var ReactTypeOfWork = require('./ReactTypeOfWork');
-var {
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
-} = ReactTypeOfWork;
-var describeComponentFrame = require('./describeComponentFrame');
-var getComponentName = require('./getComponentName');
+} from './ReactTypeOfWork';
+import describeComponentFrame from './describeComponentFrame';
+import getComponentName from './getComponentName';
 
 function describeFiber(fiber: Fiber): string {
   switch (fiber.tag) {
@@ -43,7 +42,9 @@ function describeFiber(fiber: Fiber): string {
 // This function can only be called with a work-in-progress fiber and
 // only during begin or complete phase. Do not call it under any other
 // circumstances.
-function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
+export function getStackAddendumByWorkInProgressFiber(
+  workInProgress: Fiber,
+): string {
   var info = '';
   var node = workInProgress;
   do {
@@ -53,7 +54,3 @@ function getStackAddendumByWorkInProgressFiber(workInProgress: Fiber): string {
   } while (node);
   return info;
 }
-
-module.exports = {
-  getStackAddendumByWorkInProgressFiber,
-};

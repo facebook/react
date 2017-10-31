@@ -12,8 +12,8 @@
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
@@ -24,9 +24,7 @@ import {createCursor, pop, push} from './ReactFiberStack';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import ReactDebugFiberPerf from './ReactDebugFiberPerf';
 
-// TODO: named imports
-const {isFiberMounted} = ReactFiberTreeReflection;
-const {ClassComponent, HostRoot} = ReactTypeOfWork;
+// TODO: named imports?
 const {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 if (__DEV__) {

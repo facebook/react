@@ -10,16 +10,14 @@
 import type {Fiber} from './ReactFiber';
 
 import getComponentName from 'shared/getComponentName';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
-
-const {
+import {
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   ReturnComponent,
   Fragment,
-} = ReactTypeOfWork;
+} from 'shared/ReactTypeOfWork';
 
 // Trust the developer to only use this with a __DEV__ check
 let ReactDebugFiberPerf = (({}: any): typeof ReactDebugFiberPerf);

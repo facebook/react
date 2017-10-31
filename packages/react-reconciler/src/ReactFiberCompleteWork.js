@@ -18,19 +18,7 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
-import invariant from 'fbjs/lib/invariant';
-
-import {reconcileChildFibers} from './ReactChildFiber';
 import {
-  popContextProvider,
-  popTopLevelContextObject,
-} from './ReactFiberContext';
-import {Never} from './ReactFiberExpirationTime';
-
-// TODO: named imports
-var {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
@@ -42,8 +30,16 @@ var {
   CallHandlerPhase,
   ReturnComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {Placement, Ref, Update} = ReactTypeOfSideEffect;
+} from 'shared/ReactTypeOfWork';
+import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
+
+import {reconcileChildFibers} from './ReactChildFiber';
+import {
+  popContextProvider,
+  popTopLevelContextObject,
+} from './ReactFiberContext';
+import {Never} from './ReactFiberExpirationTime';
 
 export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,

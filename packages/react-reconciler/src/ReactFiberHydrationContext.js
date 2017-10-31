@@ -12,15 +12,11 @@
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
+import {HostComponent, HostText, HostRoot} from 'shared/ReactTypeOfWork';
+import {Deletion, Placement} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {createFiberFromHostInstanceForDeletion} from './ReactFiber';
-
-// TODO: named imports
-const {HostComponent, HostText, HostRoot} = ReactTypeOfWork;
-const {Deletion, Placement} = ReactTypeOfSideEffect;
 
 export type HydrationContext<C, CX> = {
   enterHydrationState(fiber: Fiber): boolean,

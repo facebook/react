@@ -12,10 +12,10 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
+import {Update} from 'shared/ReactTypeOfSideEffect';
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
-import ReactInstanceMap from 'shared/ReactInstanceMap';
+import {isMounted} from 'shared/ReactFiberTreeReflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';
 import shallowEqual from 'fbjs/lib/shallowEqual';
@@ -36,9 +36,7 @@ import {
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
 
-// TODO: named imports
-var {Update} = ReactTypeOfSideEffect;
-var {isMounted} = ReactFiberTreeReflection;
+// TODO: named imports?
 var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 const fakeInternalInstance = {};

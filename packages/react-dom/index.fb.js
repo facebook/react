@@ -13,7 +13,7 @@ Object.assign(ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
   // These are real internal dependencies that are trickier to remove:
   ReactBrowserEventEmitter: require('./src/events/ReactBrowserEventEmitter')
     .default,
-  ReactErrorUtils: require('shared/ReactErrorUtils'),
+  ReactErrorUtils: require('shared/ReactErrorUtils').default,
   // TODO: direct imports like some-package/src/* are bad. Fix me.
   ReactFiberErrorLogger: require('react-reconciler/src/ReactFiberErrorLogger'),
   ReactFiberTreeReflection: require('shared/ReactFiberTreeReflection'),

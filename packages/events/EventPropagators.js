@@ -7,7 +7,11 @@
 
 'use strict';
 
-import ReactTreeTraversal from 'shared/ReactTreeTraversal';
+import {
+  getParentInstance,
+  traverseTwoPhase,
+  traverseEnterLeave,
+} from 'shared/ReactTreeTraversal';
 import warning from 'fbjs/lib/warning';
 
 import EventPluginHub from './EventPluginHub';
@@ -57,11 +61,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
  */
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    ReactTreeTraversal.traverseTwoPhase(
-      event._targetInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -71,14 +71,8 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     var targetInst = event._targetInst;
-    var parentInst = targetInst
-      ? ReactTreeTraversal.getParentInstance(targetInst)
-      : null;
-    ReactTreeTraversal.traverseTwoPhase(
-      parentInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    var parentInst = targetInst ? getParentInstance(targetInst) : null;
+    traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -121,13 +115,7 @@ function accumulateTwoPhaseDispatchesSkipTarget(events) {
 }
 
 function accumulateEnterLeaveDispatches(leave, enter, from, to) {
-  ReactTreeTraversal.traverseEnterLeave(
-    from,
-    to,
-    accumulateDispatches,
-    leave,
-    enter,
-  );
+  traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
 }
 
 function accumulateDirectDispatches(events) {

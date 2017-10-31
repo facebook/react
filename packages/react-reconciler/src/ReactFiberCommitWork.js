@@ -13,9 +13,16 @@ import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {
+  ClassComponent,
+  HostRoot,
+  HostComponent,
+  HostText,
+  HostPortal,
+  CallComponent,
+} from 'shared/ReactTypeOfWork';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
+import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
 import invariant from 'fbjs/lib/invariant';
 
 import {commitCallbacks} from './ReactFiberUpdateQueue';
@@ -23,16 +30,7 @@ import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import ReactDebugFiberPerf from './ReactDebugFiberPerf';
 
 // TODO: named imports
-var {
-  ClassComponent,
-  HostRoot,
-  HostComponent,
-  HostText,
-  HostPortal,
-  CallComponent,
-} = ReactTypeOfWork;
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
-var {Placement, Update, ContentReset} = ReactTypeOfSideEffect;
 var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 export default function<T, P, I, TI, PI, C, CC, CX, PL>(

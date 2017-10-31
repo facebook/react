@@ -14,20 +14,17 @@ import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import ReactFiberReconciler from 'react-reconciler';
 import ReactGenericBatching from 'events/ReactGenericBatching';
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
+import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
 import emptyObject from 'fbjs/lib/emptyObject';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
-import invariant from 'fbjs/lib/invariant';
-
-// TODO: make a named import after reconciler is converted.
-var {
+import {
   Fragment,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
   HostText,
   HostRoot,
-} = ReactTypeOfWork;
+} from 'shared/ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -374,9 +371,7 @@ class ReactTestInstance {
 
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
-    const fiber = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-      this._fiber,
-    );
+    const fiber = findCurrentFiberUsingSlowPath(this._fiber);
     invariant(
       fiber !== null,
       "Can't read from currently-mounting component. This error is likely " +

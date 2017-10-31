@@ -22,4 +22,4 @@ function getComponentName(fiber: Fiber): string | null {
   return null;
 }
 
-module.exports = getComponentName;
+export default getComponentName;

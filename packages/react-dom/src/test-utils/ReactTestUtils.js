@@ -9,9 +9,14 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
-import ReactInstanceMap from 'shared/ReactInstanceMap';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {
+  ClassComponent,
+  FunctionalComponent,
+  HostComponent,
+  HostText,
+} from 'shared/ReactTypeOfWork';
 import SyntheticEvent from 'events/SyntheticEvent';
 import invariant from 'fbjs/lib/invariant';
 
@@ -28,12 +33,6 @@ var {
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var topLevelTypes = BrowserEventConstants.topLevelTypes;
-var {
-  ClassComponent,
-  FunctionalComponent,
-  HostComponent,
-  HostText,
-} = ReactTypeOfWork;
 
 function Event(suffix) {}
 
@@ -45,9 +44,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-    fiber,
-  );
+  var currentParent = findCurrentFiberUsingSlowPath(fiber);
   if (!currentParent) {
     return [];
   }

@@ -22,16 +22,8 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {UpdateQueue} from './ReactFiberUpdateQueue';
 
 import invariant from 'fbjs/lib/invariant';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
-import getComponentName from 'shared/getComponentName';
-
-import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext} from './ReactTypeOfInternalContext';
-
-// TODO: named imports?
-var {NoEffect} = ReactTypeOfSideEffect;
-var {
+import {NoEffect} from 'shared/ReactTypeOfSideEffect';
+import {
   IndeterminateComponent,
   ClassComponent,
   HostRoot,
@@ -41,7 +33,11 @@ var {
   CallComponent,
   ReturnComponent,
   Fragment,
-} = ReactTypeOfWork;
+} from 'shared/ReactTypeOfWork';
+import getComponentName from 'shared/getComponentName';
+
+import {NoWork} from './ReactFiberExpirationTime';
+import {NoContext} from './ReactTypeOfInternalContext';
 
 if (__DEV__) {
   var hasBadMapPolyfill = false;

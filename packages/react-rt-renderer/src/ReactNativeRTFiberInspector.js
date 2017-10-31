@@ -8,16 +8,18 @@
  */
 'use strict';
 
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
+import {
+  findCurrentFiberUsingSlowPath,
+  findCurrentHostFiber,
+} from 'shared/ReactFiberTreeReflection';
 import getComponentName from 'shared/getComponentName';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 
 import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
 
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
+// TODO: named imports?
 const {getFiberFromTag} = ReactNativeRTComponentTree;
 
 let getInspectorDataForViewTag;
@@ -48,7 +50,7 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+    const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }

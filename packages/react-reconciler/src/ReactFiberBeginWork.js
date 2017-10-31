@@ -17,9 +17,27 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
-import ReactTypeOfSideEffect from 'shared/ReactTypeOfSideEffect';
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import {
+  IndeterminateComponent,
+  FunctionalComponent,
+  ClassComponent,
+  HostRoot,
+  HostComponent,
+  HostText,
+  HostPortal,
+  CallComponent,
+  CallHandlerPhase,
+  ReturnComponent,
+  Fragment,
+} from 'shared/ReactTypeOfWork';
+import {
+  PerformedWork,
+  Placement,
+  ContentReset,
+  Err,
+  Ref,
+} from 'shared/ReactTypeOfSideEffect';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
@@ -46,21 +64,6 @@ import {NoWork, Never} from './ReactFiberExpirationTime';
 
 // TODO: named imports
 var {cancelWorkTimer} = ReactDebugFiberPerf;
-var {
-  IndeterminateComponent,
-  FunctionalComponent,
-  ClassComponent,
-  HostRoot,
-  HostComponent,
-  HostText,
-  HostPortal,
-  CallComponent,
-  CallHandlerPhase,
-  ReturnComponent,
-  Fragment,
-} = ReactTypeOfWork;
-var {PerformedWork, Placement, ContentReset, Err, Ref} = ReactTypeOfSideEffect;
-var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 if (__DEV__) {
   var warnedAboutStatelessRefs = {};

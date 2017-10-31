@@ -7,10 +7,8 @@
 
 'use strict';
 
-import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import warning from 'fbjs/lib/warning';
-
-var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
 
 var didWarnValueNull = false;
 

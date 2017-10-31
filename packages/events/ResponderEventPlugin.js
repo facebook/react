@@ -7,7 +7,7 @@
 
 'use strict';
 
-import ReactTreeTraversal from 'shared/ReactTreeTraversal';
+import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
 
 import EventPluginUtils from './EventPluginUtils';
 import EventPropagators from './EventPropagators';
@@ -327,7 +327,7 @@ function setResponderAndExtractTransfer(
   // TODO: stop one short of the current responder.
   var bubbleShouldSetFrom = !responderInst
     ? targetInst
-    : ReactTreeTraversal.getLowestCommonAncestor(responderInst, targetInst);
+    : getLowestCommonAncestor(responderInst, targetInst);
 
   // When capturing/bubbling the "shouldSet" event, we want to skip the target
   // (deepest ID) if it happens to be the current responder. The reasoning:
@@ -450,7 +450,7 @@ function noResponderTouches(nativeEvent) {
     if (target !== null && target !== undefined && target !== 0) {
       // Is the original touch location inside of the current responder?
       var targetInst = EventPluginUtils.getInstanceFromNode(target);
-      if (ReactTreeTraversal.isAncestor(responderInst, targetInst)) {
+      if (isAncestor(responderInst, targetInst)) {
         return false;
       }
     }

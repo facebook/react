@@ -8,15 +8,12 @@
 'use strict';
 
 import ReactGenericBatching from 'events/ReactGenericBatching';
-import ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
-import ReactTypeOfWork from 'shared/ReactTypeOfWork';
+import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {HostRoot} from 'shared/ReactTypeOfWork';
 import EventListener from 'fbjs/lib/EventListener';
 
 import getEventTarget from './getEventTarget';
 import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
-
-// TODO: named import
-var {HostRoot} = ReactTypeOfWork;
 
 var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 var callbackBookkeepingPool = [];
@@ -169,7 +166,7 @@ var ReactDOMEventListener = {
     if (
       targetInst !== null &&
       typeof targetInst.tag === 'number' &&
-      !ReactFiberTreeReflection.isFiberMounted(targetInst)
+      !isFiberMounted(targetInst)
     ) {
       // If we get an event (ex: img onload) before committing that
       // component's mount, ignore it for now (that is, treat it as if it was an
