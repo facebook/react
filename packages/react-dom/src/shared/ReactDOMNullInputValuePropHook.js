@@ -12,10 +12,7 @@ if (__DEV__) {
   var warning = require('fbjs/lib/warning');
 }
 
-var didWarnValueNull = {
-  default: false,
-  multiple: false,
-};
+var didWarnValueNull = false;
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -27,11 +24,9 @@ function validateProperties(type, props) {
     return;
   }
 
-  var isMultipleSelect = type === 'select' && props.multiple === true;
-  var errorType = isMultipleSelect ? 'multiple' : 'default';
-  var isFirstError = !didWarnValueNull[errorType];
-
-  if (props != null && props.value === null && isFirstError) {
+  if (props != null && props.value === null && !didWarnValueNull) {
+    var isMultipleSelect = type === 'select' && !!props.multiple;
+    var errorType = isMultipleSelect ? 'multiple' : 'default';
     warning(
       false,
       '`value` prop on `%s` should not be null. ' +
@@ -43,8 +38,7 @@ function validateProperties(type, props) {
         : 'string',
       getStackAddendum(),
     );
-
-    didWarnValueNull[errorType] = true;
+    didWarnValueNull = true;
   }
 }
 

@@ -18,6 +18,7 @@ describe('ReactDOMSelect', () => {
   var noop = function() {};
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -530,6 +531,7 @@ describe('ReactDOMSelect', () => {
       <select value={null} multiple={true}><option value="test" /></select>,
     );
 
+    expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `select` should not be null. ' +
         'Consider using an empty array when `multiple` is ' +
