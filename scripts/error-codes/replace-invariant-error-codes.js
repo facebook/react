@@ -15,36 +15,14 @@ module.exports = function(babel) {
 
   var SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
-  function shouldUseESModules(file) {
-    const body = file.file.ast.program.body;
-    return body.some(
-      node =>
-        node.type === 'ImportDeclaration' &&
-        (!node.importKind || node.importKind === 'value')
-    );
-  }
-
   // Generate a hygienic identifier
   function getProdInvariantIdentifier(path, file, localState) {
     if (!localState.prodInvariantIdentifier) {
-      if (shouldUseESModules(file)) {
-        localState.prodInvariantIdentifier = file.addImport(
-          'shared/reactProdInvariant',
-          'default',
-          'prodInvariant'
-        );
-      } else {
-        // TODO: Remove this branch when CommonJS is gone
-        localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
-          'prodInvariant'
-        );
-        path.scope.getProgramParent().push({
-          id: localState.prodInvariantIdentifier,
-          init: t.callExpression(t.identifier('require'), [
-            t.stringLiteral('shared/reactProdInvariant'),
-          ]),
-        });
-      }
+      localState.prodInvariantIdentifier = file.addImport(
+        'shared/reactProdInvariant',
+        'default',
+        'prodInvariant'
+      );
     }
     return localState.prodInvariantIdentifier;
   }

@@ -8,33 +8,11 @@
 'use strict';
 
 module.exports = function autoImporter(babel) {
-  const t = babel.types;
-
-  function shouldUseESModules(file) {
-    const body = file.file.ast.program.body;
-    return body.some(
-      node =>
-        node.type === 'ImportDeclaration' &&
-        (!node.importKind || node.importKind === 'value')
-    );
-  }
-
   function getAssignIdent(path, file, state) {
     if (state.id) {
       return state.id;
     }
-    if (shouldUseESModules(file)) {
-      state.id = file.addImport('object-assign', 'default', 'assign');
-    } else {
-      // TODO: Remove this branch when CommonJS is gone
-      state.id = path.scope.generateUidIdentifier('assign');
-      path.scope.getProgramParent().push({
-        id: state.id,
-        init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('object-assign'),
-        ]),
-      });
-    }
+    state.id = file.addImport('object-assign', 'default', 'assign');
     return state.id;
   }
 
