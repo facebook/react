@@ -125,7 +125,7 @@ if (__DEV__) {
     ) {
       warning(
         false,
-        'Received a `%s` for string attribute `is`. If this is expected, cast ' +
+        'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.%s',
         typeof value,
         getStackAddendum(),
@@ -137,7 +137,7 @@ if (__DEV__) {
     if (typeof value === 'number' && isNaN(value)) {
       warning(
         false,
-        'Received NaN for numeric attribute `%s`. If this is expected, cast ' +
+        'Received NaN for a numeric attribute `%s`. If this is expected, cast ' +
           'the value to a string.%s',
         name,
         getStackAddendum(),
@@ -187,7 +187,7 @@ if (__DEV__) {
       if (value) {
         warning(
           false,
-          'Received `%s` for the non-boolean attribute `%s`.\n\n' +
+          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.%s',
           value,
@@ -200,7 +200,7 @@ if (__DEV__) {
       } else {
         warning(
           false,
-          'Received `%s` for the non-boolean attribute `%s`.\n\n' +
+          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
             'If you want to write it to the DOM, pass a string instead: ' +
             '%s="%s" or %s={value.toString()}.\n\n' +
             'If you conditionally omit it with %s={condition && value}, ' +
