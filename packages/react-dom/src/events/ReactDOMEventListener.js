@@ -11,6 +11,7 @@ var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactErrorUtils = require('shared/ReactErrorUtils');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
+var warning = require('fbjs/lib/warning');
 var {HostRoot} = ReactTypeOfWork;
 
 var getEventTarget = require('./getEventTarget');
@@ -166,7 +167,8 @@ var ReactDOMEventListener = {
       element.addEventListener(handlerBaseName, callback, true);
     } else {
       if (__DEV__) {
-        console.error(
+        warning(
+          false,
           'Attempted to listen to events during the capture phase on a ' +
             'browser that does not support the capture phase. Your application ' +
             'will not receive some events.',
