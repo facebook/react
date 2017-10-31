@@ -421,6 +421,10 @@ describe('ReactCompositeComponent-state', () => {
         "this.state is deprecated (except inside a component's constructor). " +
         'Use setState instead.',
     );
+
+    // Check deduplication
+    ReactDOM.render(<Test />, container);
+    expect(console.error.calls.count()).toEqual(1);
   });
 
   it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {

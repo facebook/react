@@ -9,7 +9,6 @@
 
 'use strict';
 
-var EventListener;
 var EventPluginHub;
 var EventPluginRegistry;
 var React;
@@ -57,7 +56,7 @@ describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
-    EventListener = require('fbjs/lib/EventListener');
+
     // TODO: can we express this test with only public API?
     EventPluginHub = require('events/EventPluginHub');
     EventPluginRegistry = require('events/EventPluginRegistry');
@@ -374,34 +373,31 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should listen to events only once', () => {
-    spyOn(EventListener, 'listen');
+    spyOn(EventTarget.prototype, 'addEventListener');
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    expect(EventListener.listen.calls.count()).toBe(1);
+    expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
   });
 
   it('should work with event plugins without dependencies', () => {
-    spyOn(EventListener, 'listen');
+    spyOn(EventTarget.prototype, 'addEventListener');
 
     ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
 
-    expect(EventListener.listen.calls.argsFor(0)[1]).toBe('click');
+    expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
+      'click',
+    );
   });
 
   it('should work with event plugins with dependencies', () => {
-    spyOn(EventListener, 'listen');
-    spyOn(EventListener, 'capture');
+    spyOn(EventTarget.prototype, 'addEventListener');
 
     ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
 
     var setEventListeners = [];
-    var listenCalls = EventListener.listen.calls.allArgs();
-    var captureCalls = EventListener.capture.calls.allArgs();
+    var listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
     for (var i = 0; i < listenCalls.length; i++) {
       setEventListeners.push(listenCalls[i][1]);
-    }
-    for (i = 0; i < captureCalls.length; i++) {
-      setEventListeners.push(captureCalls[i][1]);
     }
 
     var module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];

@@ -5,19 +5,26 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @providesModule ReactNativeCSTypes
  */
 'use strict';
 
 /**
  * Flat CS renderer bundles are too big for Flow to parse efficiently.
- * Provide minimal Flow typing for the high-level RN API and call it a day.
+ * Provide minimal Flow typing for the high-level API and call it a day.
  */
-export type ReactNativeCSType = {
-  render(
-    element: React$Element<any>,
-    containerTag: any,
-    callback: ?Function,
-  ): any,
-  unmountComponentAtNode(containerTag: number): any,
-  unstable_batchedUpdates: any, // TODO (bvaughn) Add types
-};
+
+import type {Options, Element} from 'CSComponent';
+
+export type Children<ChildType> = {|
+  +children: $ReadOnlyArray<React$Element<ChildType>>,
+|};
+
+type StatelessComponent<Props> = React$StatelessFunctionalComponent<Props>;
+
+type ClassComponent<Props, Instance> = Class<React$Component<Props> & Instance>;
+
+export type ReactNativeCSType = <Props, Instance>(
+  props: Children<ClassComponent<Props, Instance> | StatelessComponent<Props>>,
+  options: Options<Instance> | void,
+) => Element;

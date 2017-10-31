@@ -35,6 +35,8 @@ if (__DEV__) {
       return '#text';
     } else if (typeof element.type === 'string') {
       return element.type;
+    } else if (element.type === REACT_FRAGMENT_TYPE) {
+      return 'React.Fragment';
     } else {
       return element.type.displayName || element.type.name || 'Unknown';
     }
@@ -54,6 +56,14 @@ if (__DEV__) {
     stack += ReactDebugCurrentFrame.getStackAddendum() || '';
     return stack;
   };
+
+  var REACT_FRAGMENT_TYPE =
+    (typeof Symbol === 'function' &&
+      Symbol.for &&
+      Symbol.for('react.fragment')) ||
+    0xeacb;
+
+  var VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
@@ -226,9 +236,44 @@ function validatePropTypes(element) {
   }
 }
 
+/**
+ * Given a fragment, validate that it can only be provided with fragment props
+ * @param {ReactElement} fragment
+ */
+function validateFragmentProps(fragment) {
+  currentlyValidatingElement = fragment;
+
+  for (const key of Object.keys(fragment.props)) {
+    if (!VALID_FRAGMENT_PROPS.has(key)) {
+      warning(
+        false,
+        'Invalid prop `%s` supplied to `React.Fragment`. ' +
+          'React.Fragment can only have `key` and `children` props.%s',
+        key,
+        getStackAddendum(),
+      );
+      break;
+    }
+  }
+
+  if (fragment.ref !== null) {
+    warning(
+      false,
+      'Invalid attribute `ref` supplied to `React.Fragment`.%s',
+      getStackAddendum(),
+    );
+  }
+
+  currentlyValidatingElement = null;
+}
+
 var ReactElementValidator = {
   createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function';
+    var validType =
+      typeof type === 'string' ||
+      typeof type === 'function' ||
+      typeof type === 'symbol' ||
+      typeof type === 'number';
     // We warn in this case but don't throw. We expect the element creation to
     // succeed and there will likely be errors in render.
     if (!validType) {
@@ -282,7 +327,11 @@ var ReactElementValidator = {
       }
     }
 
-    validatePropTypes(element);
+    if (typeof type === 'symbol' && type === REACT_FRAGMENT_TYPE) {
+      validateFragmentProps(element);
+    } else {
+      validatePropTypes(element);
+    }
 
     return element;
   },

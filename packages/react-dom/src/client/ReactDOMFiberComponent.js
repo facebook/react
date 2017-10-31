@@ -166,13 +166,26 @@ if (__DEV__) {
   };
 
   var warnForInvalidEventListener = function(registrationName, listener) {
-    warning(
-      false,
-      'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
-      registrationName,
-      typeof listener,
-      getCurrentFiberStackAddendum(),
-    );
+    if (listener === false) {
+      warning(
+        false,
+        'Expected `%s` listener to be a function, instead got `false`.\n\n' +
+          'If you used to conditionally omit it with %s={condition && value}, ' +
+          'pass %s={condition ? value : undefined} instead.%s',
+        registrationName,
+        registrationName,
+        registrationName,
+        getCurrentFiberStackAddendum(),
+      );
+    } else {
+      warning(
+        false,
+        'Expected `%s` listener to be a function, instead got a value of `%s` type.%s',
+        registrationName,
+        typeof listener,
+        getCurrentFiberStackAddendum(),
+      );
+    }
   };
 
   // Parse the HTML and read it back to normalize the HTML string so that it

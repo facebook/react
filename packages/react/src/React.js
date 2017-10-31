@@ -25,6 +25,12 @@ if (__DEV__) {
   cloneElement = ReactElementValidator.cloneElement;
 }
 
+const REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xeacb;
+
 var React = {
   Children: {
     map: ReactChildren.map,
@@ -37,6 +43,7 @@ var React = {
   Component: ReactBaseClasses.Component,
   PureComponent: ReactBaseClasses.PureComponent,
   unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
+  Fragment: REACT_FRAGMENT_TYPE,
 
   createElement: createElement,
   cloneElement: cloneElement,
@@ -57,6 +64,9 @@ if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
     // These should not be included in production.
     ReactDebugCurrentFrame: require('./ReactDebugCurrentFrame'),
+    // Shim for React DOM 16.0.0 which still destructured (but not used) this.
+    // TODO: remove in React 17.0.
+    ReactComponentTreeHook: {},
   });
 }
 
