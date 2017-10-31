@@ -203,7 +203,7 @@ module.exports = function(
       const renderPresent = instance.render;
 
       if (!renderPresent) {
-        if (type.prototype && type.prototype.render !== undefined) {
+        if (type.prototype && typeof type.prototype.render === 'function') {
           warning(
             false,
             '%s(...): No `render` method found on the returned component ' +
