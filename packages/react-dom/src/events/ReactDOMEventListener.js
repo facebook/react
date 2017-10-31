@@ -8,9 +8,9 @@
 'use strict';
 
 var ReactGenericBatching = require('events/ReactGenericBatching');
+var ReactErrorUtils = require('shared/ReactErrorUtils');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var EventListener = require('fbjs/lib/EventListener');
 var {HostRoot} = ReactTypeOfWork;
 
 var getEventTarget = require('./getEventTarget');
@@ -127,11 +127,18 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    return EventListener.listen(
-      element,
+    // TODO: Once we have static injection we should just wrap
+    // ReactDOMEventListener.dispatchEvent statically so we don't have to do
+    // it for every event type.
+    var callback = ReactErrorUtils.wrapEventListener(
       handlerBaseName,
       ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
     );
+    if (element.addEventListener) {
+      element.addEventListener(handlerBaseName, callback, false);
+    } else if (element.attachEvent) {
+      element.attachEvent('on' + handlerBaseName, callback);
+    }
   },
 
   /**
@@ -148,11 +155,24 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    return EventListener.capture(
-      element,
-      handlerBaseName,
-      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
-    );
+    if (element.addEventListener) {
+      // TODO: Once we have static injection we should just wrap
+      // ReactDOMEventListener.dispatchEvent statically so we don't have to do
+      // it for every event type.
+      var callback = ReactErrorUtils.wrapEventListener(
+        handlerBaseName,
+        ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
+      );
+      element.addEventListener(handlerBaseName, callback, true);
+    } else {
+      if (__DEV__) {
+        console.error(
+          'Attempted to listen to events during the capture phase on a ' +
+            'browser that does not support the capture phase. Your application ' +
+            'will not receive some events.',
+        );
+      }
+    }
   },
 
   dispatchEvent: function(topLevelType, nativeEvent) {
