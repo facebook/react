@@ -309,7 +309,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
     if (shouldClone) {
-      const clone = createWorkInProgress(fiber, expirationTime, pendingProps);
+      const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
       clone.index = 0;
       clone.sibling = null;
       return clone;
@@ -1582,8 +1582,8 @@ exports.cloneChildFibers = function(
   let currentChild = workInProgress.child;
   let newChild = createWorkInProgress(
     currentChild,
-    currentChild.expirationTime,
     currentChild.pendingProps,
+    currentChild.expirationTime,
   );
   workInProgress.child = newChild;
 
@@ -1592,8 +1592,8 @@ exports.cloneChildFibers = function(
     currentChild = currentChild.sibling;
     newChild = newChild.sibling = createWorkInProgress(
       currentChild,
-      currentChild.expirationTime,
       currentChild.pendingProps,
+      currentChild.expirationTime,
     );
     newChild.return = workInProgress;
   }

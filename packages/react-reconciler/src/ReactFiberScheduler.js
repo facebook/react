@@ -798,8 +798,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       nextRenderExpirationTime = expirationTime;
       nextUnitOfWork = createWorkInProgress(
         nextRoot.current,
-        expirationTime,
         null,
+        expirationTime,
       );
     }
 

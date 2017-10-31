@@ -231,8 +231,8 @@ function shouldConstruct(Component) {
 // This is used to create an alternate fiber to do work on.
 exports.createWorkInProgress = function(
   current: Fiber,
-  expirationTime: ExpirationTime,
   pendingProps: any,
+  expirationTime: ExpirationTime,
 ): Fiber {
   let workInProgress = current.alternate;
   if (workInProgress === null) {
