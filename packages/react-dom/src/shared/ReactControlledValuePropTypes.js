@@ -13,7 +13,6 @@ var ReactControlledValuePropTypes = {
 
 if (__DEV__) {
   var checkPropTypes = require('prop-types/checkPropTypes');
-  var PropTypes = require('prop-types');
 
   var hasReadOnlyValue = {
     button: true,
@@ -59,7 +58,6 @@ if (__DEV__) {
           'set either `onChange` or `readOnly`.',
       );
     },
-    onChange: PropTypes.func,
   };
 
   /**
