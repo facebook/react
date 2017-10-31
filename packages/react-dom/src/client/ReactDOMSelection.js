@@ -160,16 +160,13 @@ function getModernOffsetsFromPoints(
  * @param {object} offsets
  */
 function setModernOffsets(node, offsets) {
-  var win = window;
-  if (node.ownerDocument && node.ownerDocument.defaultView) {
-    win = node.ownerDocument.defaultView;
-  }
+  var doc = node.ownerDocument || document;
 
-  if (!win.getSelection) {
+  if (!doc.defaultView.getSelection) {
     return;
   }
 
-  var selection = win.getSelection();
+  var selection = doc.defaultView.getSelection();
   var length = node[getTextContentAccessor()].length;
   var start = Math.min(offsets.start, length);
   var end = offsets.end === undefined ? start : Math.min(offsets.end, length);
@@ -195,7 +192,7 @@ function setModernOffsets(node, offsets) {
     ) {
       return;
     }
-    var range = document.createRange();
+    var range = doc.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 
