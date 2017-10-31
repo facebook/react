@@ -31,6 +31,12 @@ var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser
 var isCustomComponent = require('../shared/isCustomComponent');
 var omittedCloseTags = require('../shared/omittedCloseTags');
 
+var REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xeacb;
+
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
 type FlatReactChildren = Array<null | ReactNode>;
@@ -204,6 +210,22 @@ function getNonChildrenInnerMarkup(props) {
     }
   }
   return null;
+}
+
+function flattenTopLevelChildren(children: mixed): FlatReactChildren {
+  if (!React.isValidElement(children)) {
+    return toArray(children);
+  }
+  const element = ((children: any): ReactElement);
+  if (element.type !== REACT_FRAGMENT_TYPE) {
+    return [element];
+  }
+  const fragmentChildren = element.props.children;
+  if (!React.isValidElement(fragmentChildren)) {
+    return toArray(fragmentChildren);
+  }
+  const fragmentChildElement = ((fragmentChildren: any): ReactElement);
+  return [fragmentChildElement];
 }
 
 function flattenOptionChildren(children: mixed): string {
@@ -482,14 +504,8 @@ class ReactDOMServerRenderer {
   makeStaticMarkup: boolean;
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
-    var flatChildren;
-    if (React.isValidElement(children)) {
-      // Safe because we just checked it's an element.
-      var element = ((children: any): ReactElement);
-      flatChildren = [element];
-    } else {
-      flatChildren = toArray(children);
-    }
+    const flatChildren = flattenTopLevelChildren(children);
+
     var topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
@@ -569,26 +585,42 @@ class ReactDOMServerRenderer {
       ({child: nextChild, context} = resolve(child, context));
       if (nextChild === null || nextChild === false) {
         return '';
-      } else {
-        if (React.isValidElement(nextChild)) {
-          // Safe because we just checked it's an element.
-          var nextElement = ((nextChild: any): ReactElement);
-          return this.renderDOM(nextElement, context, parentNamespace);
-        } else {
-          var nextChildren = toArray(nextChild);
-          var frame: Frame = {
-            domNamespace: parentNamespace,
-            children: nextChildren,
-            childIndex: 0,
-            context: context,
-            footer: '',
-          };
-          if (__DEV__) {
-            ((frame: any): FrameDev).debugElementStack = [];
-          }
-          this.stack.push(frame);
-          return '';
+      } else if (!React.isValidElement(nextChild)) {
+        const nextChildren = toArray(nextChild);
+        const frame: Frame = {
+          domNamespace: parentNamespace,
+          children: nextChildren,
+          childIndex: 0,
+          context: context,
+          footer: '',
+        };
+        if (__DEV__) {
+          ((frame: any): FrameDev).debugElementStack = [];
         }
+        this.stack.push(frame);
+        return '';
+      } else if (
+        ((nextChild: any): ReactElement).type === REACT_FRAGMENT_TYPE
+      ) {
+        const nextChildren = toArray(
+          ((nextChild: any): ReactElement).props.children,
+        );
+        const frame: Frame = {
+          domNamespace: parentNamespace,
+          children: nextChildren,
+          childIndex: 0,
+          context: context,
+          footer: '',
+        };
+        if (__DEV__) {
+          ((frame: any): FrameDev).debugElementStack = [];
+        }
+        this.stack.push(frame);
+        return '';
+      } else {
+        // Safe because we just checked it's an element.
+        var nextElement = ((nextChild: any): ReactElement);
+        return this.renderDOM(nextElement, context, parentNamespace);
       }
     }
   }

@@ -11,7 +11,6 @@
 
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
-
 var React;
 var ReactDOM;
 var ReactTestUtils;
@@ -51,7 +50,9 @@ describe('ReactJSXElementValidator', () => {
   it('warns for keys for arrays of elements in children position', () => {
     spyOn(console, 'error');
 
-    void <Component>{[<Component />, <Component />]}</Component>;
+    ReactTestUtils.renderIntoDocument(
+      <Component>{[<Component />, <Component />]}</Component>,
+    );
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -84,6 +85,49 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
+  it('warns for fragments with illegal attributes', () => {
+    spyOn(console, 'error');
+
+    class Foo extends React.Component {
+      render() {
+        return <React.Fragment a={1} b={2}>hello</React.Fragment>;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Foo />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain('Invalid prop `');
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      '` supplied to `React.Fragment`. React.Fragment ' +
+        'can only have `key` and `children` props.',
+    );
+  });
+
+  it('warns for fragments with refs', () => {
+    spyOn(console, 'error');
+
+    class Foo extends React.Component {
+      render() {
+        return (
+          <React.Fragment
+            ref={bar => {
+              this.foo = bar;
+            }}>
+            hello
+          </React.Fragment>
+        );
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Foo />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Invalid attribute `ref` supplied to `React.Fragment`.',
+    );
+  });
+
   it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
 
@@ -99,7 +143,7 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    void <Component>{iterable}</Component>;
+    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
 
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -107,17 +151,43 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('does not warns for arrays of elements with keys', () => {
+  it('does not warn for fragments of multiple elements without keys', () => {
+    ReactTestUtils.renderIntoDocument(
+      <React.Fragment>
+        <span>1</span>
+        <span>2</span>
+      </React.Fragment>,
+    );
+  });
+
+  it('warns for fragments of multiple elements with same key', () => {
     spyOn(console, 'error');
 
-    void (
-      <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>
+    ReactTestUtils.renderIntoDocument(
+      <React.Fragment>
+        <span key="a">1</span>
+        <span key="a">2</span>
+        <span key="b">3</span>
+      </React.Fragment>,
+    );
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Encountered two children with the same key, `a`.',
+    );
+  });
+
+  it('does not warn for arrays of elements with keys', () => {
+    spyOn(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(
+      <Component>{[<Component key="#1" />, <Component key="#2" />]}</Component>,
     );
 
     expectDev(console.error.calls.count()).toBe(0);
   });
 
-  it('does not warns for iterable elements with keys', () => {
+  it('does not warn for iterable elements with keys', () => {
     spyOn(console, 'error');
 
     var iterable = {
@@ -135,7 +205,7 @@ describe('ReactJSXElementValidator', () => {
       },
     };
 
-    void <Component>{iterable}</Component>;
+    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
 
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -156,25 +226,22 @@ describe('ReactJSXElementValidator', () => {
     };
     iterable.entries = iterable['@@iterator'];
 
-    void <Component>{iterable}</Component>;
+    ReactTestUtils.renderIntoDocument(<Component>{iterable}</Component>);
 
     expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly as children', () => {
-    spyOn(console, 'error');
-
-    void <Component><Component /><Component /></Component>;
-
-    expectDev(console.error.calls.count()).toBe(0);
+    ReactTestUtils.renderIntoDocument(
+      <Component>
+        <Component />
+        <Component />
+      </Component>,
+    );
   });
 
   it('does not warn when the child array contains non-elements', () => {
-    spyOn(console, 'error');
-
     void <Component>{[{}, {}]}</Component>;
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should give context for PropType errors in nested components.', () => {
@@ -246,14 +313,12 @@ describe('ReactJSXElementValidator', () => {
     var Undefined = undefined;
     var Null = null;
     var True = true;
-    var Num = 123;
     var Div = 'div';
     spyOn(console, 'error');
     void <Undefined />;
     void <Null />;
     void <True />;
-    void <Num />;
-    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(3);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
@@ -273,14 +338,8 @@ describe('ReactJSXElementValidator', () => {
         'components) but got: boolean.' +
         '\n\nCheck your code at **.',
     );
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(3)[0])).toBe(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
-        'components) but got: number.' +
-        '\n\nCheck your code at **.',
-    );
     void <Div />;
-    expectDev(console.error.calls.count()).toBe(4);
+    expectDev(console.error.calls.count()).toBe(3);
   });
 
   it('should check default prop values', () => {

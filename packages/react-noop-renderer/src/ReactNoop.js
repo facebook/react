@@ -512,7 +512,8 @@ var ReactNoop = {
       log(
         '  '.repeat(depth) +
           '- ' +
-          (fiber.type ? fiber.type.name || fiber.type : '[root]'),
+          // need to explicitly coerce Symbol to a string
+          (fiber.type ? fiber.type.name || fiber.type.toString() : '[root]'),
         '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']',
       );
       if (fiber.updateQueue) {
