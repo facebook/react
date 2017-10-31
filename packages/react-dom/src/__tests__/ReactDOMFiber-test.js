@@ -963,6 +963,7 @@ describe('ReactDOMFiber', () => {
       '    in div (at **)\n' + '    in Example (at **)',
     );
   });
+
   it('should not update event handlers until commit', () => {
     let ops = [];
     const handlerA = () => ops.push('A');
