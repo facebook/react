@@ -9,20 +9,17 @@
 
 'use strict';
 
-var jsdom;
 var React;
 var ReactDOM;
 
 describe('SyntheticClipboardEvent', () => {
-  var document;
   var simulateEvent;
 
   beforeEach(() => {
-    jsdom = require('jsdom').jsdom;
     React = require('react');
     ReactDOM = require('react-dom');
 
-    document = jsdom('');
+    document.body.innerHTML = '';
 
     simulateEvent = (element, type, data) => {
       var event = document.createEvent('Event');
@@ -108,6 +105,7 @@ describe('SyntheticClipboardEvent', () => {
 
     it('is able to `preventDefault` and `stopPropagation`', () => {
       var expectedCount = 3;
+
       var eventHandler = event => {
         expect(event.isDefaultPrevented()).toBe(false);
         event.preventDefault();
@@ -138,6 +136,7 @@ describe('SyntheticClipboardEvent', () => {
 
     it('is able to `persist`', () => {
       var expectedCount = 3;
+
       var eventHandler = event => {
         expect(event.isPersistent()).toBe(false);
         event.persist();
