@@ -7,11 +7,14 @@
 
 'use strict';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var setInnerHTML = require('./setInnerHTML');
-var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import setInnerHTML from './setInnerHTML';
+import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
+import HTMLNodeType from '../shared/HTMLNodeType';
+
+// TODO: named import
+var {TEXT_NODE} = HTMLNodeType;
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -51,4 +54,4 @@ if (ExecutionEnvironment.canUseDOM) {
   }
 }
 
-module.exports = setTextContent;
+export default setTextContent;

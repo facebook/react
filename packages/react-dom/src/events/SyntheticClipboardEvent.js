@@ -7,7 +7,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('events/SyntheticEvent');
+import SyntheticEvent from 'events/SyntheticEvent';
 
 /**
  * @interface Event
@@ -44,4 +44,4 @@ function SyntheticClipboardEvent(
 
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);
 
-module.exports = SyntheticClipboardEvent;
+export default SyntheticClipboardEvent;

@@ -7,7 +7,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('events/SyntheticEvent');
+import SyntheticEvent from 'events/SyntheticEvent';
 
 /**
  * @interface Event
@@ -43,4 +43,4 @@ SyntheticEvent.augmentClass(
   CompositionEventInterface,
 );
 
-module.exports = SyntheticCompositionEvent;
+export default SyntheticCompositionEvent;

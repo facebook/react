@@ -11,37 +11,51 @@
 
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-require('../shared/checkReact');
+import '../shared/checkReact';
+import '../shared/ReactDOMInjection';
+import './ReactDOMClientInjection';
 
-var ReactFiberReconciler = require('react-reconciler');
+import ReactFiberReconciler from 'react-reconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var ReactPortal = require('react-reconciler/src/ReactPortal');
+import ReactPortal from 'react-reconciler/src/ReactPortal';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var {injectInternals} = require('react-reconciler/src/ReactFiberDevToolsHook');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactGenericBatching = require('events/ReactGenericBatching');
-var ReactControlledComponent = require('events/ReactControlledComponent');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var ReactVersion = require('shared/ReactVersion');
-var ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
-var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
-var getComponentName = require('shared/getComponentName');
-var invariant = require('fbjs/lib/invariant');
+import ReactFiberDevToolsHook
+  from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import ReactControlledComponent from 'events/ReactControlledComponent';
+import EventPluginHub from 'events/EventPluginHub';
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import EventPropagators from 'events/EventPropagators';
+import ReactInstanceMap from 'shared/ReactInstanceMap';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import ReactVersion from 'shared/ReactVersion';
+import ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import getComponentName from 'shared/getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warning from 'fbjs/lib/warning';
 
-var ReactDOMComponentTree = require('./ReactDOMComponentTree');
-var ReactDOMFiberComponent = require('./ReactDOMFiberComponent');
-var ReactInputSelection = require('./ReactInputSelection');
-var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
-var DOMNamespaces = require('../shared/DOMNamespaces');
+import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
+import * as ReactInputSelection from './ReactInputSelection';
+import validateDOMNesting from './validateDOMNesting';
+import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import DOMNamespaces from '../shared/DOMNamespaces';
+import HTMLNodeType from '../shared/HTMLNodeType';
+import DOMProperty from '../shared/DOMProperty';
+
+// TODO: convert some of these to named imports
 var {
   ELEMENT_NODE,
   TEXT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} = require('../shared/HTMLNodeType');
-var {ROOT_ATTRIBUTE_NAME} = require('../shared/DOMProperty');
+} = HTMLNodeType;
+var {ROOT_ATTRIBUTE_NAME} = DOMProperty;
 var {getChildNamespace} = DOMNamespaces;
 var {
   createElement,
@@ -57,15 +71,12 @@ var {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
+var {updatedAncestorInfo} = validateDOMNesting;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
+var {injectInternals} = ReactFiberDevToolsHook;
+var {ReactCurrentOwner} = ReactGlobalSharedState;
 
 if (__DEV__) {
-  var lowPriorityWarning = require('shared/lowPriorityWarning');
-  var warning = require('fbjs/lib/warning');
-
-  var validateDOMNesting = require('./validateDOMNesting');
-  var {updatedAncestorInfo} = validateDOMNesting;
-
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   if (
     typeof Map !== 'function' ||
@@ -84,8 +95,6 @@ if (__DEV__) {
   }
 }
 
-require('./ReactDOMClientInjection');
-require('../shared/ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
@@ -941,13 +950,13 @@ var ReactDOM = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('events/EventPluginHub'),
+    EventPluginHub,
     // Used by test-utils
-    EventPluginRegistry: require('events/EventPluginRegistry'),
-    EventPropagators: require('events/EventPropagators'),
+    EventPluginRegistry,
+    EventPropagators,
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('../events/ReactDOMEventListener'),
+    ReactDOMEventListener,
   },
 };
 
@@ -990,4 +999,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactDOM;
+export default ReactDOM;

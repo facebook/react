@@ -7,7 +7,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('events/SyntheticEvent');
+import SyntheticEvent from 'events/SyntheticEvent';
 
 /**
  * @interface Event
@@ -41,4 +41,4 @@ function SyntheticInputEvent(
 
 SyntheticEvent.augmentClass(SyntheticInputEvent, InputEventInterface);
 
-module.exports = SyntheticInputEvent;
+export default SyntheticInputEvent;

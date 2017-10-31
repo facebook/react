@@ -7,12 +7,15 @@
 
 'use strict';
 
-var EventPluginRegistry = require('events/EventPluginRegistry');
-var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 
-var ReactDOMEventListener = require('./ReactDOMEventListener');
-var isEventSupported = require('./isEventSupported');
-var {topLevelTypes} = require('./BrowserEventConstants');
+import ReactDOMEventListener from './ReactDOMEventListener';
+import isEventSupported from './isEventSupported';
+import BrowserEventConstants from './BrowserEventConstants';
+
+// TODO: named import?
+var {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -237,4 +240,4 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 });
 
-module.exports = ReactBrowserEventEmitter;
+export default ReactBrowserEventEmitter;

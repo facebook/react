@@ -98,46 +98,44 @@ function trackValueOnNode(node: any): ?ValueTracker {
   return tracker;
 }
 
-var inputValueTracking = {
+export {
   // exposed for testing
-  _getTrackerFromNode: getTracker,
-
-  track(node: ElementWithValueTracker) {
-    if (getTracker(node)) {
-      return;
-    }
-
-    // TODO: Once it's just Fiber we can move this to node._wrapperState
-    node._valueTracker = trackValueOnNode(node);
-  },
-
-  updateValueIfChanged(node: ElementWithValueTracker) {
-    if (!node) {
-      return false;
-    }
-
-    var tracker = getTracker(node);
-    // if there is no tracker at this point it's unlikely
-    // that trying again will succeed
-    if (!tracker) {
-      return true;
-    }
-
-    var lastValue = tracker.getValue();
-    var nextValue = getValueFromNode(node);
-    if (nextValue !== lastValue) {
-      tracker.setValue(nextValue);
-      return true;
-    }
-    return false;
-  },
-
-  stopTracking(node: ElementWithValueTracker) {
-    var tracker = getTracker(node);
-    if (tracker) {
-      tracker.stopTracking();
-    }
-  },
+  getTracker as _getTrackerFromNode,
 };
 
-module.exports = inputValueTracking;
+export function track(node: ElementWithValueTracker) {
+  if (getTracker(node)) {
+    return;
+  }
+
+  // TODO: Once it's just Fiber we can move this to node._wrapperState
+  node._valueTracker = trackValueOnNode(node);
+}
+
+export function updateValueIfChanged(node: ElementWithValueTracker) {
+  if (!node) {
+    return false;
+  }
+
+  var tracker = getTracker(node);
+  // if there is no tracker at this point it's unlikely
+  // that trying again will succeed
+  if (!tracker) {
+    return true;
+  }
+
+  var lastValue = tracker.getValue();
+  var nextValue = getValueFromNode(node);
+  if (nextValue !== lastValue) {
+    tracker.setValue(nextValue);
+    return true;
+  }
+  return false;
+}
+
+export function stopTracking(node: ElementWithValueTracker) {
+  var tracker = getTracker(node);
+  if (tracker) {
+    tracker.stopTracking();
+  }
+}

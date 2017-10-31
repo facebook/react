@@ -7,15 +7,18 @@
 
 'use strict';
 
-var getNodeForCharacterOffset = require('./getNodeForCharacterOffset');
-var getTextContentAccessor = require('./getTextContentAccessor');
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import getNodeForCharacterOffset from './getNodeForCharacterOffset';
+import getTextContentAccessor from './getTextContentAccessor';
+import HTMLNodeType from '../shared/HTMLNodeType';
+
+// TODO: named imports
+var {TEXT_NODE} = HTMLNodeType;
 
 /**
  * @param {DOMElement} outerNode
  * @return {?object}
  */
-function getModernOffsets(outerNode) {
+export function getOffsets(outerNode) {
   var selection = window.getSelection && window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
@@ -58,8 +61,10 @@ function getModernOffsets(outerNode) {
  * `end` is the index of (focusNode, focusOffset).
  *
  * Returns null if you pass in garbage input but we should probably just crash.
+ *
+ * Exported only for testing.
  */
-function getModernOffsetsFromPoints(
+export function getModernOffsetsFromPoints(
   outerNode,
   anchorNode,
   anchorOffset,
@@ -152,7 +157,7 @@ function getModernOffsetsFromPoints(
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-function setModernOffsets(node, offsets) {
+export function setOffsets(node, offsets) {
   if (!window.getSelection) {
     return;
   }
@@ -196,21 +201,3 @@ function setModernOffsets(node, offsets) {
     }
   }
 }
-
-var ReactDOMSelection = {
-  /**
-   * @param {DOMElement} node
-   */
-  getOffsets: getModernOffsets,
-
-  // For tests.
-  getModernOffsetsFromPoints: getModernOffsetsFromPoints,
-
-  /**
-   * @param {DOMElement|DOMTextNode} node
-   * @param {object} offsets
-   */
-  setOffsets: setModernOffsets,
-};
-
-module.exports = ReactDOMSelection;

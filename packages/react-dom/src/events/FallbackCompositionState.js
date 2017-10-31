@@ -7,7 +7,7 @@
 
 'use strict';
 
-var getTextContentAccessor = require('../client/getTextContentAccessor');
+import getTextContentAccessor from '../client/getTextContentAccessor';
 
 /**
  * This helper object stores information about text content of a target node,
@@ -74,4 +74,4 @@ var FallbackCompositionState = {
   },
 };
 
-module.exports = FallbackCompositionState;
+export default FallbackCompositionState;

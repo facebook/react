@@ -10,7 +10,7 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var setInnerHTML = require('../setInnerHTML');
+var setInnerHTML = require('../setInnerHTML').default;
 var Namespaces = require('../../shared/DOMNamespaces').Namespaces;
 
 describe('setInnerHTML', () => {

@@ -7,7 +7,7 @@
 
 'use strict';
 
-var SyntheticEvent = require('events/SyntheticEvent');
+import SyntheticEvent from 'events/SyntheticEvent';
 
 /**
  * @interface Event
@@ -43,4 +43,4 @@ function SyntheticAnimationEvent(
 
 SyntheticEvent.augmentClass(SyntheticAnimationEvent, AnimationEventInterface);
 
-module.exports = SyntheticAnimationEvent;
+export default SyntheticAnimationEvent;
