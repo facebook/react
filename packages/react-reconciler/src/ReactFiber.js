@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @flow
  */
 
 'use strict';
@@ -270,14 +269,12 @@ exports.createWorkInProgress = function(
   }
 
   workInProgress.expirationTime = expirationTime;
+  workInProgress.pendingProps = pendingProps;
 
   workInProgress.child = current.child;
   workInProgress.memoizedProps = current.memoizedProps;
   workInProgress.memoizedState = current.memoizedState;
   workInProgress.updateQueue = current.updateQueue;
-
-  // pendingProps is set by the parent during reconciliation.
-  workInProgress.pendingProps = pendingProps;
 
   // These will be overridden during the parent's reconciliation
   workInProgress.sibling = current.sibling;
