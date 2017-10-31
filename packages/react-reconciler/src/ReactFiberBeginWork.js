@@ -472,15 +472,14 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     var value;
 
     if (__DEV__) {
-      const classWithRenderButNotExtendedFromReactComponent =
-        workInProgress.type.prototype && workInProgress.type.prototype.render;
-      if (classWithRenderButNotExtendedFromReactComponent) {
+      if (fn.prototype && typeof fn.prototype.render === 'function') {
+        const componentName = getComponentName(workInProgress);
         warning(
           false,
           "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
             'This is likely to cause errors. Change %s to extend React.Component instead.',
-          getComponentName(workInProgress),
-          getComponentName(workInProgress),
+          componentName,
+          componentName,
         );
       }
       ReactCurrentOwner.current = workInProgress;
