@@ -120,7 +120,7 @@ if (__DEV__) {
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
 
-  var warnAboutInvalidUpdates = function(instance: React$ComponentType<any>) {
+  var warnAboutInvalidUpdates = function(instance: React$Component<any>) {
     switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
         if (didWarnSetStateChildContext) {
