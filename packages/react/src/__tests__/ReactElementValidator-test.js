@@ -267,10 +267,9 @@ describe('ReactElementValidator', () => {
     React.createElement(undefined);
     React.createElement(null);
     React.createElement(true);
-    React.createElement(123);
     React.createElement({x: 17});
     React.createElement({});
-    expectDev(console.error.calls.count()).toBe(6);
+    expectDev(console.error.calls.count()).toBe(5);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
@@ -290,21 +289,16 @@ describe('ReactElementValidator', () => {
     expectDev(console.error.calls.argsFor(3)[0]).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
-        'components) but got: number.',
-    );
-    expectDev(console.error.calls.argsFor(4)[0]).toBe(
-      'Warning: React.createElement: type is invalid -- expected a string ' +
-        '(for built-in components) or a class/function (for composite ' +
         'components) but got: object.',
     );
-    expectDev(console.error.calls.argsFor(5)[0]).toBe(
+    expectDev(console.error.calls.argsFor(4)[0]).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +
         'components) but got: object. You likely forgot to export your ' +
         "component from the file it's defined in.",
     );
     React.createElement('div');
-    expectDev(console.error.calls.count()).toBe(6);
+    expectDev(console.error.calls.count()).toBe(5);
   });
 
   it('includes the owner name when passing null, undefined, boolean, or number', () => {

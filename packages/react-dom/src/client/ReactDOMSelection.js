@@ -3,16 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMSelection
  */
 
 'use strict';
 
-var {TEXT_NODE} = require('HTMLNodeType');
-
-var getNodeForCharacterOffset = require('getNodeForCharacterOffset');
-var getTextContentAccessor = require('getTextContentAccessor');
+var getNodeForCharacterOffset = require('./getNodeForCharacterOffset');
+var getTextContentAccessor = require('./getTextContentAccessor');
+var {TEXT_NODE} = require('../shared/HTMLNodeType');
 
 /**
  * @param {DOMElement} outerNode

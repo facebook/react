@@ -6,11 +6,9 @@
  */
 'use strict';
 
+var fs = require('fs');
 var evalToString = require('../shared/evalToString');
-var existingErrorMap = require('./codes.json');
 var invertObject = require('./invertObject');
-
-var errorMap = invertObject(existingErrorMap);
 
 module.exports = function(babel) {
   var t = babel.types;
@@ -26,7 +24,7 @@ module.exports = function(babel) {
       path.scope.getProgramParent().push({
         id: localState.prodInvariantIdentifier,
         init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
+          t.stringLiteral('shared/reactProdInvariant'),
         ]),
       });
     }
@@ -100,6 +98,12 @@ module.exports = function(babel) {
             );
 
             devInvariant[SEEN_SYMBOL] = true;
+
+            // Avoid caching because we write it as we go.
+            var existingErrorMap = JSON.parse(
+              fs.readFileSync(__dirname + '/codes.json', 'utf-8')
+            );
+            var errorMap = invertObject(existingErrorMap);
 
             var localInvariantId = getProdInvariantIdentifier(path, this);
             var prodErrorId = errorMap[errorMsgLiteral];

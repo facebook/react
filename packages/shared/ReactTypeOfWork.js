@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactTypeOfWork
  * @flow
  */
 
@@ -20,8 +19,8 @@ module.exports = {
   HostPortal: 4, // A subtree. Could be an entry point to a different renderer.
   HostComponent: 5,
   HostText: 6,
-  CoroutineComponent: 7,
-  CoroutineHandlerPhase: 8,
-  YieldComponent: 9,
+  CallComponent: 7,
+  CallHandlerPhase: 8,
+  ReturnComponent: 9,
   Fragment: 10,
 };

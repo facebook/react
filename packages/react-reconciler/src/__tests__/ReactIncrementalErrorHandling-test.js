@@ -935,9 +935,9 @@ describe('ReactIncrementalErrorHandling', () => {
     function initReactFiberErrorLoggerMock(mock) {
       jest.resetModules();
       if (mock) {
-        jest.mock('ReactFiberErrorLogger');
+        jest.mock('../ReactFiberErrorLogger');
       } else {
-        jest.unmock('ReactFiberErrorLogger');
+        jest.unmock('../ReactFiberErrorLogger');
       }
       React = require('react');
       ReactNoop = require('react-noop-renderer');
@@ -1033,7 +1033,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
       const logCapturedErrorCalls = [];
 
-      const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
+      const ReactFiberErrorLogger = require('../ReactFiberErrorLogger');
       ReactFiberErrorLogger.logCapturedError.mockImplementation(
         capturedError => {
           logCapturedErrorCalls.push(capturedError);

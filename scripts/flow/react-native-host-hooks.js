@@ -110,3 +110,12 @@ declare module 'RTManager' {
 declare module 'BatchedBridge' {
   declare function registerCallableModule(name: string, module: Object): void;
 }
+
+declare module 'CSComponent' {
+  declare type Element = any;
+  declare type Options<Instance> = any;
+}
+
+declare module 'CSStatefulComponent' {
+  declare function exports(spec: any): any;
+}

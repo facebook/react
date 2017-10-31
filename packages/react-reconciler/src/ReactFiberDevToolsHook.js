@@ -4,14 +4,13 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberDevToolsHook
  * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
 
 declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 

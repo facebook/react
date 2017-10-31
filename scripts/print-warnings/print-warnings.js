@@ -11,8 +11,6 @@ const fs = require('fs');
 const through = require('through2');
 const traverse = require('babel-traverse').default;
 const gs = require('glob-stream');
-const Bundles = require('../rollup/bundles');
-const Modules = require('../rollup/modules');
 
 const evalToString = require('../shared/evalToString');
 
@@ -64,16 +62,7 @@ function transform(file, enc, cb) {
   });
 }
 
-const sourcePaths = Bundles.bundles
-  .filter(
-    bundle =>
-      bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_DEV) !== -1 ||
-      bundle.bundleTypes.indexOf(Bundles.bundleTypes.FB_PROD) !== -1
-  )
-  .reduce((allPaths, bundle) => allPaths.concat(bundle.paths), [])
-  .concat(Modules.getExcludedHasteGlobs().map(glob => `!${glob}`));
-
-gs(sourcePaths).pipe(
+gs(['packages/**/*.js', '!**/__tests__/**/*.js', '!**/__mocks__/**/*.js']).pipe(
   through.obj(transform, cb => {
     process.stdout.write(Array.from(warnings).sort().join('\n') + '\n');
     cb();

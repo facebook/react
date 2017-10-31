@@ -3,21 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMEventListener
  */
 
 'use strict';
 
+var ReactGenericBatching = require('events/ReactGenericBatching');
+var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var EventListener = require('fbjs/lib/EventListener');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactGenericBatching = require('ReactGenericBatching');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-
-var getEventTarget = require('getEventTarget');
-
 var {HostRoot} = ReactTypeOfWork;
+
+var getEventTarget = require('./getEventTarget');
+var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
 
 var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 var callbackBookkeepingPool = [];
