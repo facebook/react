@@ -7,19 +7,16 @@
 
 'use strict';
 
-var ReactTreeTraversal = require('shared/ReactTreeTraversal');
+import ReactTreeTraversal from 'shared/ReactTreeTraversal';
+import warning from 'fbjs/lib/warning';
 
-var EventPluginHub = require('./EventPluginHub');
-var accumulateInto = require('./accumulateInto');
-var forEachAccumulated = require('./forEachAccumulated');
+import EventPluginHub from './EventPluginHub';
+import accumulateInto from './accumulateInto';
+import forEachAccumulated from './forEachAccumulated';
 
 type PropagationPhases = 'bubbled' | 'captured';
 
 var getListener = EventPluginHub.getListener;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 /**
  * Some event types have a notion of different registration names for different
@@ -155,4 +152,4 @@ var EventPropagators = {
   accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
 };
 
-module.exports = EventPropagators;
+export default EventPropagators;

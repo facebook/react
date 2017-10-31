@@ -7,13 +7,13 @@
 
 'use strict';
 
-var ReactTreeTraversal = require('shared/ReactTreeTraversal');
+import ReactTreeTraversal from 'shared/ReactTreeTraversal';
 
-var EventPluginUtils = require('./EventPluginUtils');
-var EventPropagators = require('./EventPropagators');
-var ResponderSyntheticEvent = require('./ResponderSyntheticEvent');
-var ResponderTouchHistoryStore = require('./ResponderTouchHistoryStore');
-var accumulate = require('./accumulate');
+import EventPluginUtils from './EventPluginUtils';
+import EventPropagators from './EventPropagators';
+import ResponderSyntheticEvent from './ResponderSyntheticEvent';
+import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
+import accumulate from './accumulate';
 
 var isStartish = EventPluginUtils.isStartish;
 var isMoveish = EventPluginUtils.isMoveish;
@@ -592,4 +592,4 @@ var ResponderEventPlugin = {
   },
 };
 
-module.exports = ResponderEventPlugin;
+export default ResponderEventPlugin;

@@ -71,7 +71,7 @@ beforeEach(() => {
   ReactNative = require('react-native-renderer');
   ReactNativeBridgeEventPlugin = require('../ReactNativeBridgeEventPlugin')
     .default;
-  ResponderEventPlugin = require('events/ResponderEventPlugin');
+  ResponderEventPlugin = require('events/ResponderEventPlugin').default;
   UIManager = require('UIManager');
   createReactNativeComponentClass = require('../createReactNativeComponentClass')
     .default;

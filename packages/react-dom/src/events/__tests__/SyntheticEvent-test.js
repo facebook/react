@@ -19,7 +19,7 @@ describe('SyntheticEvent', () => {
 
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    SyntheticEvent = require('events/SyntheticEvent');
+    SyntheticEvent = require('events/SyntheticEvent').default;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
