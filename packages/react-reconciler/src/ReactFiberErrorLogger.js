@@ -4,15 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberErrorLogger
  * @flow
  */
 
 'use strict';
 
-const invariant = require('fbjs/lib/invariant');
+import type {CapturedError} from './ReactFiberScheduler';
 
-import type {CapturedError} from 'ReactFiberScheduler';
+const invariant = require('fbjs/lib/invariant');
 
 const defaultShowDialog = (capturedError: CapturedError) => true;
 
@@ -56,7 +55,7 @@ function logCapturedError(capturedError: CapturedError): void {
     } else {
       errorBoundaryMessage =
         'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-        'You can learn more about error boundaries at https://fb.me/react-error-boundaries.';
+        'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.';
     }
     const combinedMessage =
       `${componentNameMessage}${componentStack}\n\n` +

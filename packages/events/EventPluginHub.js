@@ -3,19 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule EventPluginHub
  */
 
 'use strict';
 
-var EventPluginRegistry = require('EventPluginRegistry');
-var EventPluginUtils = require('EventPluginUtils');
-var ReactErrorUtils = require('ReactErrorUtils');
-
-var accumulateInto = require('accumulateInto');
-var forEachAccumulated = require('forEachAccumulated');
+var ReactErrorUtils = require('shared/ReactErrorUtils');
 var invariant = require('fbjs/lib/invariant');
+
+var EventPluginRegistry = require('./EventPluginRegistry');
+var EventPluginUtils = require('./EventPluginUtils');
+var accumulateInto = require('./accumulateInto');
+var forEachAccumulated = require('./forEachAccumulated');
 
 /**
  * Internal queue of events that have accumulated their dispatches and are

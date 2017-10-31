@@ -4,19 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule TapEventPlugin
  * @flow
  */
 
 'use strict';
 
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var SyntheticUIEvent = require('SyntheticUIEvent');
+var EventPluginUtils = require('events/EventPluginUtils');
+var EventPropagators = require('events/EventPropagators');
 var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
-
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
+
+var SyntheticUIEvent = require('./SyntheticUIEvent');
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket

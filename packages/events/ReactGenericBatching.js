@@ -3,13 +3,11 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactGenericBatching
  */
 
 'use strict';
 
-var ReactControlledComponent = require('ReactControlledComponent');
+var ReactControlledComponent = require('./ReactControlledComponent');
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party

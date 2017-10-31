@@ -4,14 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule takeSnapshot
  * @flow
  */
 'use strict';
 
+// Module provided by RN:
 const UIManager = require('UIManager');
 
-const findNumericNodeHandle = require('findNumericNodeHandle');
+const findNumericNodeHandle = require('./findNumericNodeHandle');
 
 /**
  * Capture an image of the screen, window or an individual view. The image

@@ -4,39 +4,37 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberCommitWork
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var {
   ClassComponent,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
+  CallComponent,
 } = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('ReactFiberDevToolsHook');
 var {
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
-} = require('ReactErrorUtils');
-
-var {Placement, Update, ContentReset} = require('ReactTypeOfSideEffect');
-
+} = require('shared/ReactErrorUtils');
+var {Placement, Update, ContentReset} = require('shared/ReactTypeOfSideEffect');
 var invariant = require('fbjs/lib/invariant');
 
+var {commitCallbacks} = require('./ReactFiberUpdateQueue');
+var {onCommitUnmount} = require('./ReactFiberDevToolsHook');
+
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
+  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
 }
 
 module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
@@ -219,7 +217,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         safelyDetachRef(current);
         return;
       }
-      case CoroutineComponent: {
+      case CallComponent: {
         commitNestedUnmounts(current.stateNode);
         return;
       }
