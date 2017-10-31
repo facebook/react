@@ -341,6 +341,19 @@ describe('ReactIncrementalUpdates', () => {
     expect(instance.state).toEqual({a: 'a', b: 'b'});
 
     expectDev(console.error.calls.count()).toBe(1);
-    console.error.calls.reset();
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'An update (setState, replaceState, or forceUpdate) was scheduled ' +
+        'from inside an update function. Update functions should be pure, ' +
+        'with zero side-effects. Consider using componentDidUpdate or a ' +
+        'callback.',
+    );
+
+    // Test deduplication
+    instance.setState(function a() {
+      this.setState({a: 'a'});
+      return {b: 'b'};
+    });
+    ReactNoop.flush();
+    expectDev(console.error.calls.count()).toBe(1);
   });
 });
