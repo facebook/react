@@ -72,7 +72,6 @@ if (__DEV__) {
   var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
-  var didWarnAboutNoopUpdateForComponent = {};
   var setCurrentDebugStack = function(stack: Array<Frame>) {
     var frame: Frame = stack[stack.length - 1];
     currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
@@ -113,6 +112,7 @@ var didWarnDefaultChecked = false;
 var didWarnDefaultSelectValue = false;
 var didWarnDefaultTextareaValue = false;
 var didWarnInvalidOptionChildren = false;
+var didWarnAboutNoopUpdateForComponent = {};
 var valuePropNames = ['value', 'defaultValue'];
 var newlineEatingTags = {
   listing: true,
@@ -178,7 +178,7 @@ function warnNoop(
     var constructor = publicInstance.constructor;
     const componentName =
       (constructor && getComponentName(constructor)) || 'ReactClass';
-    const warningKey = `${callerName}_${componentName}`;
+    const warningKey = `${componentName}.${callerName}`;
     if (didWarnAboutNoopUpdateForComponent[warningKey]) {
       return;
     }
