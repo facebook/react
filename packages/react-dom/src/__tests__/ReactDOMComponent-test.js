@@ -829,12 +829,6 @@ describe('ReactDOMComponent', () => {
 
   describe('mountComponent', () => {
     var mountComponent;
-    var getValueTracker = (node: HTMLInputElement | HTMLTextAreaElement) => {
-      return Object.getOwnPropertyDescriptor(
-        node.constructor.prototype,
-        'value',
-      ).get;
-    };
 
     beforeEach(() => {
       mountComponent = function(props) {
@@ -1154,37 +1148,47 @@ describe('ReactDOMComponent', () => {
         <input type="text" defaultValue="foo" />,
         container,
       );
-      var getTrackedValue = getValueTracker(inst);
-      expect(getTrackedValue.call(inst)).toEqual('foo');
+
+      var getValueTracker = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        'value',
+      ).get;
+
+      expect(getValueTracker.call(inst)).toEqual('foo');
 
       inst.defaultValue = 'new foo';
-      expect(getTrackedValue.call(inst)).not.toEqual('new foo');
-      expect(getTrackedValue.call(inst)).toEqual('foo');
+      expect(getValueTracker.call(inst)).not.toEqual('new foo');
+      expect(getValueTracker.call(inst)).toEqual('foo');
 
       inst.value = 'bar';
-      expect(getTrackedValue.call(inst)).toEqual('bar');
+      expect(getValueTracker.call(inst)).toEqual('bar');
 
       // even if the value changes to empty string, should not return to defaultValue
       inst.value = '';
-      expect(getTrackedValue.call(inst)).toEqual('');
+      expect(getValueTracker.call(inst)).toEqual('');
     });
 
     it('should track textarea values', () => {
       var container = document.createElement('div');
       var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
-      var getTrackedValue = getValueTracker(inst);
-      expect(getTrackedValue.call(inst)).toEqual('foo');
+
+      var getValueTracker = Object.getOwnPropertyDescriptor(
+        HTMLTextAreaElement.prototype,
+        'value',
+      ).get;
+
+      expect(getValueTracker.call(inst)).toEqual('foo');
 
       inst.defaultValue = 'new foo';
-      expect(getTrackedValue.call(inst)).not.toEqual('new foo');
-      expect(getTrackedValue.call(inst)).toEqual('foo');
+      expect(getValueTracker.call(inst)).not.toEqual('new foo');
+      expect(getValueTracker.call(inst)).toEqual('foo');
 
       inst.value = 'bar';
-      expect(getTrackedValue.call(inst)).toEqual('bar');
+      expect(getValueTracker.call(inst)).toEqual('bar');
 
       // even if the value changes to empty string, should not return to defaultValue
       inst.value = '';
-      expect(getTrackedValue.call(inst)).toEqual('');
+      expect(getValueTracker.call(inst)).toEqual('');
     });
 
     it('should throw for children on void elements', () => {
