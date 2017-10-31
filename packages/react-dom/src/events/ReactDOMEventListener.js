@@ -8,6 +8,7 @@
 'use strict';
 
 var ReactGenericBatching = require('events/ReactGenericBatching');
+var ReactErrorUtils = require('shared/ReactErrorUtils');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var {HostRoot} = ReactTypeOfWork;
@@ -126,7 +127,13 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    var callback = ReactDOMEventListener.dispatchEvent.bind(null, topLevelType);
+    // TODO: Once we have static injection we should just wrap
+    // ReactDOMEventListener.dispatchEvent statically so we don't have to do
+    // it for every event type.
+    var callback = ReactErrorUtils.wrapEventListener(
+      handlerBaseName,
+      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
+    );
     if (element.addEventListener) {
       element.addEventListener(handlerBaseName, callback, false);
     } else if (element.attachEvent) {
@@ -149,9 +156,12 @@ var ReactDOMEventListener = {
       return null;
     }
     if (element.addEventListener) {
-      var callback = ReactDOMEventListener.dispatchEvent.bind(
-        null,
-        topLevelType,
+      // TODO: Once we have static injection we should just wrap
+      // ReactDOMEventListener.dispatchEvent statically so we don't have to do
+      // it for every event type.
+      var callback = ReactErrorUtils.wrapEventListener(
+        handlerBaseName,
+        ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
       );
       element.addEventListener(handlerBaseName, callback, true);
     } else {
