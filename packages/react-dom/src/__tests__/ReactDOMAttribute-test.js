@@ -88,7 +88,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
-        'Warning: Received NaN for a numeric attribute `unknown`. ' +
+        'Warning: Received NaN for the `unknown` attribute. ' +
           'If this is expected, cast the value to a string.\n' +
           '    in div (at **)',
       );

@@ -2132,7 +2132,7 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('whatever')).toBe('NaN');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received NaN for a numeric attribute `whatever`. If this is ' +
+        'Warning: Received NaN for the `whatever` attribute. If this is ' +
           'expected, cast the value to a string.\n    in div',
       );
     });

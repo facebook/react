@@ -137,7 +137,7 @@ if (__DEV__) {
     if (typeof value === 'number' && isNaN(value)) {
       warning(
         false,
-        'Received NaN for a numeric attribute `%s`. If this is expected, cast ' +
+        'Received NaN for the `%s` attribute. If this is expected, cast ' +
           'the value to a string.%s',
         name,
         getStackAddendum(),
