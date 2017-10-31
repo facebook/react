@@ -40,22 +40,24 @@ describe('EnterLeaveEventPlugin', () => {
     );
     iframeDocument.close();
 
-    let events = [];
-    const component = ReactDOM.render(
+    let leaveEvents = [];
+
+    const node = ReactDOM.render(
       <div
-        onMouseOver={e => {
+        onMouseLeave={e => {
           e.persist();
-          events.push(e);
+          leaveEvents.push(e);
         }}
       />,
       iframeDocument.body.getElementsByTagName('div')[0],
     );
 
-    simulateMouseEvent(component, 'mouseover', iframe.contentWindow);
+    // Test onMouseLeave
+    simulateMouseEvent(node, 'mouseout', iframe.contentWindow);
 
-    expect(events.length).toBe(1);
-    expect(events[0].target).toBe(component);
-    expect(events[0].relatedTarget).toBe(iframe.contentWindow);
+    expect(leaveEvents.length).toBe(1);
+    expect(leaveEvents[0].target).toBe(node);
+    expect(leaveEvents[0].relatedTarget).toBe(iframe.contentWindow);
   });
 
   // Regression test for https://github.com/facebook/react/issues/10906.
