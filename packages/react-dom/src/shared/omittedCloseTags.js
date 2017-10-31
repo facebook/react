@@ -29,4 +29,4 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
-module.exports = omittedCloseTags;
+export default omittedCloseTags;

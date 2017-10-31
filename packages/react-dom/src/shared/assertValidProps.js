@@ -7,13 +7,10 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var voidElementTags = require('./voidElementTags');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import voidElementTags from './voidElementTags';
 
 var HTML = '__html';
 
@@ -65,4 +62,4 @@ function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
   );
 }
 
-module.exports = assertValidProps;
+export default assertValidProps;

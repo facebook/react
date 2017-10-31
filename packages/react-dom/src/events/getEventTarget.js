@@ -7,10 +7,7 @@
 
 'use strict';
 
-import HTMLNodeType from '../shared/HTMLNodeType';
-
-// TODO: named import
-var {TEXT_NODE} = HTMLNodeType;
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Gets the target node from a native browser event by accounting for

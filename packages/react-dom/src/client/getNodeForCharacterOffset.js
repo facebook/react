@@ -7,10 +7,7 @@
 
 'use strict';
 
-import HTMLNodeType from '../shared/HTMLNodeType';
-
-// TODO: convert to named import
-var {TEXT_NODE} = HTMLNodeType;
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Given any node return the first leaf node without children.

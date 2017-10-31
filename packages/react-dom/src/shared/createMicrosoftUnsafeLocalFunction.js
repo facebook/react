@@ -24,4 +24,4 @@ var createMicrosoftUnsafeLocalFunction = function(func) {
   }
 };
 
-module.exports = createMicrosoftUnsafeLocalFunction;
+export default createMicrosoftUnsafeLocalFunction;

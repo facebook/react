@@ -62,4 +62,4 @@ var ariaProperties = {
   'aria-setsize': 0,
 };
 
-module.exports = ariaProperties;
+export default ariaProperties;

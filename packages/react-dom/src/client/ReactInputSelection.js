@@ -12,10 +12,7 @@ import focusNode from 'fbjs/lib/focusNode';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 
 import * as ReactDOMSelection from './ReactDOMSelection';
-import HTMLNodeType from '../shared/HTMLNodeType';
-
-// TODO: named imports
-var {ELEMENT_NODE} = HTMLNodeType;
+import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 
 function isInDocument(node) {
   return containsNode(document.documentElement, node);

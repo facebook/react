@@ -11,10 +11,7 @@ import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 import setInnerHTML from './setInnerHTML';
 import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
-import HTMLNodeType from '../shared/HTMLNodeType';
-
-// TODO: named import
-var {TEXT_NODE} = HTMLNodeType;
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved

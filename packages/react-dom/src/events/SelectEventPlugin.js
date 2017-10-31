@@ -17,10 +17,7 @@ import shallowEqual from 'fbjs/lib/shallowEqual';
 import ReactBrowserEventEmitter from './ReactBrowserEventEmitter';
 import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
-import HTMLNodeType from '../shared/HTMLNodeType';
-
-// TODO: named import
-var {DOCUMENT_NODE} = HTMLNodeType;
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 var skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&

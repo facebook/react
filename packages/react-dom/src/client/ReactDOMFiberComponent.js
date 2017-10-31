@@ -25,30 +25,27 @@ import * as inputValueTracking from './inputValueTracking';
 import setInnerHTML from './setInnerHTML';
 import setTextContent from './setTextContent';
 import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import CSSPropertyOperations from '../shared/CSSPropertyOperations';
-import DOMNamespaces from '../shared/DOMNamespaces';
+import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
+import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import DOMProperty from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
-import HTMLNodeType from '../shared/HTMLNodeType';
+import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
-import ReactDOMInvalidARIAHook from '../shared/ReactDOMInvalidARIAHook';
-import ReactDOMNullInputValuePropHook
-  from '../shared/ReactDOMNullInputValuePropHook';
-import ReactDOMUnknownPropertyHook from '../shared/ReactDOMUnknownPropertyHook';
+import {
+  validateProperties as validateARIAProperties,
+} from '../shared/ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputProperties,
+} from '../shared/ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownProperties,
+} from '../shared/ReactDOMUnknownPropertyHook';
 
 // TODO: convert to named imports
-var {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} = HTMLNodeType;
 var {
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 } = ReactDebugCurrentFiber;
-var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
-var {
-  validateProperties: validateInputProperties,
-} = ReactDOMNullInputValuePropHook;
-var {
-  validateProperties: validateUnknownProperties,
-} = ReactDOMUnknownPropertyHook;
 
 var didWarnInvalidHydration = false;
 var didWarnShadyDOM = false;
@@ -64,7 +61,7 @@ var CHILDREN = 'children';
 var STYLE = 'style';
 var HTML = '__html';
 
-var {Namespaces: {html: HTML_NAMESPACE}, getIntrinsicNamespace} = DOMNamespaces;
+var {html: HTML_NAMESPACE} = Namespaces;
 
 var getStack = emptyFunction.thatReturns('');
 

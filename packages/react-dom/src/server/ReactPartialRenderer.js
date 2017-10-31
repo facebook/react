@@ -23,7 +23,11 @@ import describeComponentFrame from 'shared/describeComponentFrame';
 import ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
 
 import DOMMarkupOperations from './DOMMarkupOperations';
-import DOMNamespaces from '../shared/DOMNamespaces';
+import {
+  Namespaces,
+  getIntrinsicNamespace,
+  getChildNamespace,
+} from '../shared/DOMNamespaces';
 import ReactControlledValuePropTypes
   from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
@@ -32,22 +36,18 @@ import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
-import ReactDOMInvalidARIAHook from '../shared/ReactDOMInvalidARIAHook';
-import ReactDOMNullInputValuePropHook
-  from '../shared/ReactDOMNullInputValuePropHook';
-import ReactDOMUnknownPropertyHook from '../shared/ReactDOMUnknownPropertyHook';
+import {
+  validateProperties as validateARIAProperties,
+} from '../shared/ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputProperties,
+} from '../shared/ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownProperties,
+} from '../shared/ReactDOMUnknownPropertyHook';
 
 // TODO: convert these to named imports
 var {ReactDebugCurrentFrame} = ReactGlobalSharedState;
-var {validateProperties: validateARIAProperties} = ReactDOMInvalidARIAHook;
-var {
-  validateProperties: validateInputProperties,
-} = ReactDOMNullInputValuePropHook;
-var {
-  validateProperties: validateUnknownProperties,
-} = ReactDOMUnknownPropertyHook;
-
-var {Namespaces, getIntrinsicNamespace, getChildNamespace} = DOMNamespaces;
 
 var REACT_FRAGMENT_TYPE =
   (typeof Symbol === 'function' &&

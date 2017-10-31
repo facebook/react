@@ -7,12 +7,9 @@
 
 'use strict';
 
-import DOMNamespaces from '../shared/DOMNamespaces';
+import {Namespaces} from '../shared/DOMNamespaces';
 import createMicrosoftUnsafeLocalFunction
   from '../shared/createMicrosoftUnsafeLocalFunction';
-
-// TODO: named imports
-var {Namespaces} = DOMNamespaces;
 
 // SVG temp container for IE lacking innerHTML
 var reusableSVGContainer;

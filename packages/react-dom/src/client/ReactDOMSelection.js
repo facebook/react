@@ -9,10 +9,7 @@
 
 import getNodeForCharacterOffset from './getNodeForCharacterOffset';
 import getTextContentAccessor from './getTextContentAccessor';
-import HTMLNodeType from '../shared/HTMLNodeType';
-
-// TODO: named imports
-var {TEXT_NODE} = HTMLNodeType;
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * @param {DOMElement} outerNode

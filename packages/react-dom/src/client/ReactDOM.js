@@ -43,20 +43,18 @@ import * as ReactInputSelection from './ReactInputSelection';
 import validateDOMNesting from './validateDOMNesting';
 import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
 import ReactDOMEventListener from '../events/ReactDOMEventListener';
-import DOMNamespaces from '../shared/DOMNamespaces';
-import HTMLNodeType from '../shared/HTMLNodeType';
-import DOMProperty from '../shared/DOMProperty';
-
-// TODO: convert some of these to named imports
-var {
+import {getChildNamespace} from '../shared/DOMNamespaces';
+import {
   ELEMENT_NODE,
   TEXT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} = HTMLNodeType;
+} from '../shared/HTMLNodeType';
+import DOMProperty from '../shared/DOMProperty';
+
+// TODO: convert some of these to named imports
 var {ROOT_ATTRIBUTE_NAME} = DOMProperty;
-var {getChildNamespace} = DOMNamespaces;
 var {
   createElement,
   createTextNode,
