@@ -109,7 +109,6 @@ if (__DEV__) {
     if (didWarnStateUpdateForUnmountedComponent[componentName]) {
       return;
     }
-
     warning(
       false,
       'Can only update a mounted or mounting ' +

@@ -252,6 +252,9 @@ describe('ReactCompositeComponent', () => {
         'component. This is a no-op.\n\nPlease check the code for the ' +
         'Component component.',
     );
+
+    instance.forceUpdate();
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn about `setState` on unmounted components', () => {
