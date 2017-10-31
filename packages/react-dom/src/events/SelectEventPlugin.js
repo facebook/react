@@ -80,10 +80,7 @@ function hasSelectionCapabilities(node) {
  * @return {object}
  */
 function getSelection(node) {
-  if (
-    'selectionStart' in node &&
-    hasSelectionCapabilities(node)
-  ) {
+  if ('selectionStart' in node && hasSelectionCapabilities(node)) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,
