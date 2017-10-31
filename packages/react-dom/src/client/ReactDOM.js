@@ -31,7 +31,6 @@ var invariant = require('fbjs/lib/invariant');
 
 var ReactDOMComponentTree = require('./ReactDOMComponentTree');
 var ReactDOMFiberComponent = require('./ReactDOMFiberComponent');
-var ReactInputSelection = require('./ReactInputSelection');
 var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
 var DOMNamespaces = require('../shared/DOMNamespaces');
 var {
@@ -116,7 +115,6 @@ type HostContextProd = string;
 type HostContext = HostContextDev | HostContextProd;
 
 let eventsEnabled: ?boolean = null;
-let selectionInformation: ?mixed = null;
 
 /**
  * True if the supplied DOM node is a valid node element.
@@ -219,13 +217,10 @@ var DOMRenderer = ReactFiberReconciler({
 
   prepareForCommit(): void {
     eventsEnabled = ReactBrowserEventEmitter.isEnabled();
-    selectionInformation = ReactInputSelection.getSelectionInformation();
     ReactBrowserEventEmitter.setEnabled(false);
   },
 
   resetAfterCommit(): void {
-    ReactInputSelection.restoreSelection(selectionInformation);
-    selectionInformation = null;
     ReactBrowserEventEmitter.setEnabled(eventsEnabled);
     eventsEnabled = null;
   },

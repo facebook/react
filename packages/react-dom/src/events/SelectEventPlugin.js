@@ -16,7 +16,6 @@ var shallowEqual = require('fbjs/lib/shallowEqual');
 
 var ReactBrowserEventEmitter = require('./ReactBrowserEventEmitter');
 var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-var ReactInputSelection = require('../client/ReactInputSelection');
 var {DOCUMENT_NODE} = require('../shared/HTMLNodeType');
 
 var skipSelectionChangeEvent =
@@ -54,6 +53,22 @@ var isListeningToAllDependencies =
   ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
+ * Determine if a node can have a selection associated with it.
+ *
+ * @param {DOMElement} node
+ * @return {boolean} True if the node can have a selection.
+ */
+function hasSelectionCapabilities(node) {
+  var nodeName = node && node.nodeName && node.nodeName.toLowerCase();
+  return (
+    nodeName &&
+    ((nodeName === 'input' && node.type === 'text') ||
+      nodeName === 'textarea' ||
+      node.contentEditable === 'true')
+  );
+}
+
+/**
  * Get an object which is a unique representation of the current selection.
  *
  * The return value will not be consistent across nodes or browsers, but
@@ -63,22 +78,25 @@ var isListeningToAllDependencies =
  * @return {object}
  */
 function getSelection(node) {
-  if (
-    'selectionStart' in node &&
-    ReactInputSelection.hasSelectionCapabilities(node)
-  ) {
+  if ('selectionStart' in node && hasSelectionCapabilities(node)) {
     return {
       start: node.selectionStart,
       end: node.selectionEnd,
     };
-  } else if (window.getSelection) {
-    var selection = window.getSelection();
-    return {
-      anchorNode: selection.anchorNode,
-      anchorOffset: selection.anchorOffset,
-      focusNode: selection.focusNode,
-      focusOffset: selection.focusOffset,
-    };
+  } else {
+    var win = window;
+    if (node.ownerDocument && node.ownerDocument.defaultView) {
+      win = node.ownerDocument.defaultView;
+    }
+    if (win.getSelection) {
+      var selection = win.getSelection();
+      return {
+        anchorNode: selection.anchorNode,
+        anchorOffset: selection.anchorOffset,
+        focusNode: selection.focusNode,
+        focusOffset: selection.focusOffset,
+      };
+    }
   }
 }
 
@@ -86,6 +104,7 @@ function getSelection(node) {
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
+ * @param {object} nativeEventTarget
  * @return {?SyntheticEvent}
  */
 function constructSelectEvent(nativeEvent, nativeEventTarget) {
@@ -93,10 +112,15 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
+  var doc =
+    nativeEventTarget.ownerDocument ||
+    nativeEventTarget.document ||
+    nativeEventTarget;
+
   if (
     mouseDown ||
     activeElement == null ||
-    activeElement !== getActiveElement()
+    activeElement !== getActiveElement(doc)
   ) {
     return null;
   }
