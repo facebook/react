@@ -304,7 +304,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   function useFiber(
     fiber: Fiber,
     expirationTime: ExpirationTime,
-    pendingProps: any,
+    pendingProps: mixed,
   ): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
@@ -1259,9 +1259,13 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
             : child.type === element.type
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, expirationTime, element.type === REACT_FRAGMENT_TYPE
-            ? element.props.children
-            : element.props);
+          const existing = useFiber(
+            child,
+            expirationTime,
+            element.type === REACT_FRAGMENT_TYPE
+              ? element.props.children
+              : element.props,
+          );
           existing.ref = coerceRef(child, element);
           existing.return = returnFiber;
           if (__DEV__) {
