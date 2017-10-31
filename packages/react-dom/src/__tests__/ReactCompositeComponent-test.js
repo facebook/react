@@ -326,6 +326,26 @@ describe('ReactCompositeComponent', () => {
     expect(cbCalled).toBe(false);
   });
 
+  it('should warn when rendering a class with a render method that does not extend React.Component', () => {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    class ClassWithRenderNotExtended {
+      render() {
+        return <div />;
+      }
+    }
+    expectDev(console.error.calls.count()).toBe(0);
+    expect(() => {
+      ReactDOM.render(<ClassWithRenderNotExtended />, container);
+    }).toThrow(TypeError);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+        "but doesn't extend React.Component. This is likely to cause errors. " +
+        'Change ClassWithRenderNotExtended to extend React.Component instead.',
+    );
+  });
+
   it('should warn about `setState` in render', () => {
     spyOn(console, 'error');
 
