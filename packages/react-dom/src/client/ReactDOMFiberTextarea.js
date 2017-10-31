@@ -4,26 +4,28 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDOMFiberTextarea
  * @flow
  */
 
 'use strict';
+
+var invariant = require('fbjs/lib/invariant');
+
+var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+
+if (__DEV__) {
+  // TODO: direct imports like some-package/src/* are bad. Fix me.
+  var {
+    getCurrentFiberStackAddendum,
+  } = require('react-reconciler/src/ReactDebugCurrentFiber');
+  var warning = require('fbjs/lib/warning');
+}
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
     initialValue: string,
   },
 };
-
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
-
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-}
 
 var didWarnValDefaultVal = false;
 

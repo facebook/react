@@ -4,36 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberBeginWork
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCoroutine} from 'ReactTypes';
-import type {Fiber} from 'ReactFiber';
-import type {HostContext} from 'ReactFiberHostContext';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {ReactCall} from 'shared/ReactTypes';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {HostContext} from './ReactFiberHostContext';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-var {
-  mountChildFibersInPlace,
-  reconcileChildFibers,
-  reconcileChildFibersInPlace,
-  cloneChildFibers,
-} = require('ReactChildFiber');
-var {processUpdateQueue} = require('ReactFiberUpdateQueue');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
-  getMaskedContext,
-  getUnmaskedContext,
-  hasContextChanged,
-  pushContextProvider,
-  pushTopLevelContextObject,
-  invalidateContextProvider,
-} = require('ReactFiberContext');
 var {
   IndeterminateComponent,
   FunctionalComponent,
@@ -42,27 +25,45 @@ var {
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-  CoroutineHandlerPhase,
-  YieldComponent,
+  CallComponent,
+  CallHandlerPhase,
+  ReturnComponent,
   Fragment,
-} = ReactTypeOfWork;
-var {NoWork, Never} = require('ReactFiberExpirationTime');
+} = require('shared/ReactTypeOfWork');
 var {
   PerformedWork,
   Placement,
   ContentReset,
   Err,
   Ref,
-} = require('ReactTypeOfSideEffect');
-var ReactFiberClassComponent = require('ReactFiberClassComponent');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
+} = require('shared/ReactTypeOfSideEffect');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
 var invariant = require('fbjs/lib/invariant');
+var getComponentName = require('shared/getComponentName');
+
+var ReactFiberClassComponent = require('./ReactFiberClassComponent');
+var {
+  mountChildFibersInPlace,
+  reconcileChildFibers,
+  reconcileChildFibersInPlace,
+  cloneChildFibers,
+} = require('./ReactChildFiber');
+var {processUpdateQueue} = require('./ReactFiberUpdateQueue');
+var {
+  getMaskedContext,
+  getUnmaskedContext,
+  hasContextChanged,
+  pushContextProvider,
+  pushTopLevelContextObject,
+  invalidateContextProvider,
+} = require('./ReactFiberContext');
+var {NoWork, Never} = require('./ReactFiberExpirationTime');
 
 if (__DEV__) {
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
-  var {cancelWorkTimer} = require('ReactDebugFiberPerf');
   var warning = require('fbjs/lib/warning');
+
+  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
+  var {cancelWorkTimer} = require('./ReactDebugFiberPerf');
 
   var warnedAboutStatelessRefs = {};
 }
@@ -471,6 +472,16 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     var value;
 
     if (__DEV__) {
+      if (fn.prototype && typeof fn.prototype.render === 'function') {
+        const componentName = getComponentName(workInProgress);
+        warning(
+          false,
+          "The <%s /> component appears to have a render method, but doesn't extend React.Component. " +
+            'This is likely to cause errors. Change %s to extend React.Component instead.',
+          componentName,
+          componentName,
+        );
+      }
       ReactCurrentOwner.current = workInProgress;
       value = fn(props, context);
     } else {
@@ -537,34 +548,27 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateCoroutineComponent(
-    current,
-    workInProgress,
-    renderExpirationTime,
-  ) {
-    var nextCoroutine = (workInProgress.pendingProps: null | ReactCoroutine);
+  function updateCallComponent(current, workInProgress, renderExpirationTime) {
+    var nextCall = (workInProgress.pendingProps: null | ReactCall);
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-      if (nextCoroutine === null) {
-        nextCoroutine = current && current.memoizedProps;
+      if (nextCall === null) {
+        nextCall = current && current.memoizedProps;
         invariant(
-          nextCoroutine !== null,
+          nextCall !== null,
           'We should always have pending or current props. This error is ' +
             'likely caused by a bug in React. Please file an issue.',
         );
       }
-    } else if (
-      nextCoroutine === null ||
-      workInProgress.memoizedProps === nextCoroutine
-    ) {
-      nextCoroutine = workInProgress.memoizedProps;
+    } else if (nextCall === null || workInProgress.memoizedProps === nextCall) {
+      nextCall = workInProgress.memoizedProps;
       // TODO: When bailing out, we might need to return the stateNode instead
       // of the child. To check it for work.
       // return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
-    const nextChildren = nextCoroutine.children;
+    const nextChildren = nextCall.children;
 
     // The following is a fork of reconcileChildrenAtExpirationTime but using
     // stateNode to store the child.
@@ -591,7 +595,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       );
     }
 
-    memoizeProps(workInProgress, nextCoroutine);
+    memoizeProps(workInProgress, nextCall);
     // This doesn't take arbitrary time so we could synchronously just begin
     // eagerly do the work of workInProgress.child as an optimization.
     return workInProgress.stateNode;
@@ -761,18 +765,18 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         );
       case HostText:
         return updateHostText(current, workInProgress);
-      case CoroutineHandlerPhase:
+      case CallHandlerPhase:
         // This is a restart. Reset the tag to the initial phase.
-        workInProgress.tag = CoroutineComponent;
+        workInProgress.tag = CallComponent;
       // Intentionally fall through since this is now the same.
-      case CoroutineComponent:
-        return updateCoroutineComponent(
+      case CallComponent:
+        return updateCallComponent(
           current,
           workInProgress,
           renderExpirationTime,
         );
-      case YieldComponent:
-        // A yield component is just a placeholder, we can just run through the
+      case ReturnComponent:
+        // A return component is just a placeholder, we can just run through the
         // next one immediately.
         return null;
       case HostPortal:

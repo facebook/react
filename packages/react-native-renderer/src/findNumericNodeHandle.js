@@ -4,12 +4,11 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule findNumericNodeHandle
  * @flow
  */
 'use strict';
 
-var findNodeHandle = require('findNodeHandle');
+var findNodeHandle = require('./findNodeHandle');
 
 /**
  * External users of findNodeHandle() expect the host tag number return type.
