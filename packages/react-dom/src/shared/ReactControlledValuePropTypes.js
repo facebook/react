@@ -12,13 +12,9 @@ var ReactControlledValuePropTypes = {
 };
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var emptyFunction = require('fbjs/lib/emptyFunction');
+  var checkPropTypes = require('prop-types/checkPropTypes');
   var PropTypes = require('prop-types');
 
-  var ReactPropTypesSecret = 'SECRET_DO_NOT_PASS_THIS_OR_YOU_WILL_BE_FIRED';
-
-  ReactControlledValuePropTypes.checkPropTypes = emptyFunction;
   var hasReadOnlyValue = {
     button: true,
     checkbox: true,
@@ -66,8 +62,6 @@ if (__DEV__) {
     onChange: PropTypes.func,
   };
 
-  var loggedTypeFailures = {};
-
   /**
    * Provide a linked `value` attribute for controlled forms. You should not use
    * this outside of the ReactDOM controlled form components.
@@ -77,25 +71,7 @@ if (__DEV__) {
     props,
     getStack,
   ) {
-    for (var propName in propTypes) {
-      if (propTypes.hasOwnProperty(propName)) {
-        var error = propTypes[propName](
-          props,
-          propName,
-          tagName,
-          'prop',
-          null,
-          ReactPropTypesSecret,
-        );
-      }
-      if (error instanceof Error && !(error.message in loggedTypeFailures)) {
-        // Only monitor this failure once because there tends to be a lot of the
-        // same error.
-        loggedTypeFailures[error.message] = true;
-
-        warning(false, 'Failed form propType: %s%s', error.message, getStack());
-      }
-    }
+    checkPropTypes(propTypes, props, 'prop', tagName, getStack);
   };
 }
 
