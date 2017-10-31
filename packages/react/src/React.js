@@ -8,6 +8,7 @@
 'use strict';
 
 var ReactVersion = require('shared/ReactVersion');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 var ReactBaseClasses = require('./ReactBaseClasses');
 var ReactChildren = require('./ReactChildren');
@@ -43,7 +44,9 @@ var React = {
   Component: ReactBaseClasses.Component,
   PureComponent: ReactBaseClasses.PureComponent,
   unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
-  Fragment: REACT_FRAGMENT_TYPE,
+  Fragment: ReactFeatureFlags.enableReactFragment
+    ? REACT_FRAGMENT_TYPE
+    : undefined,
 
   createElement: createElement,
   cloneElement: cloneElement,
