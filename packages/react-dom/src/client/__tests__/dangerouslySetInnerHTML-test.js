@@ -37,7 +37,10 @@ describe('dangerouslySetInnerHTML', () => {
     it('sets innerHTML on it', () => {
       const html = '<circle></circle>';
 
-      ReactDOM.render(<g dangerouslySetInnerHTML={{__html: html}} />, container);
+      ReactDOM.render(
+        <g dangerouslySetInnerHTML={{__html: html}} />,
+        container,
+      );
 
       expect(container.appendChild.calls.argsFor(0)[0].innerHTML).toBe(
         '<circle></circle>',
