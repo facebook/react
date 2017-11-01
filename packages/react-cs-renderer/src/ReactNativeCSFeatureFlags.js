@@ -15,6 +15,7 @@ var ReactNativeCSFeatureFlags: FeatureFlags = {
   enableAsyncSubtreeAPI: true,
   enableAsyncSchedulingByDefaultInReactDOM: false,
   enableReactFragment: false,
+  enableCreateRoot: false,
   // React Native CS uses persistent reconciler.
   enableMutatingReconciler: false,
   enableNoopReconciler: false,
