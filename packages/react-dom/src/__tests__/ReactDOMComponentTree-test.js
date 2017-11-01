@@ -79,10 +79,11 @@ describe('ReactDOMComponentTree', () => {
   });
 
   it('finds closest instance for node when an event happens', () => {
-    const elemID = 'aID';
-    const innerHTML = {__html: `<div id="${elemID}"></div>`};
-    const testID = 'closestInstance';
+    const nonReactElemID = 'aID';
+    const innerHTML = {__html: `<div id="${nonReactElemID}"></div>`};
+    const closestInstanceID = 'closestInstance';
     let currentTargetID = null;
+
     class ClosestInstance extends React.Component {
       _onClick = e => {
         currentTargetID = e.currentTarget.id;
@@ -90,7 +91,7 @@ describe('ReactDOMComponentTree', () => {
       render() {
         return (
           <div
-            id={testID}
+            id={closestInstanceID}
             onClick={this._onClick}
             dangerouslySetInnerHTML={innerHTML}
           />
@@ -103,8 +104,8 @@ describe('ReactDOMComponentTree', () => {
     ReactDOM.render(<section>{component}</section>, container);
     document.body.appendChild(container);
     expect(currentTargetID).toBe(null);
-    simulateClick(document.getElementById(elemID));
-    expect(currentTargetID).toBe(testID);
+    simulateClick(document.getElementById(nonReactElemID));
+    expect(currentTargetID).toBe(closestInstanceID);
   });
 
   it('finds a controlled instance from node and gets its current fiber props', () => {
