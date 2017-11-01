@@ -124,7 +124,7 @@ if (__DEV__) {
     ) {
       warning(
         false,
-        'Received a `%s` for string attribute `is`. If this is expected, cast ' +
+        'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.%s',
         typeof value,
         getStackAddendum(),
@@ -136,7 +136,7 @@ if (__DEV__) {
     if (typeof value === 'number' && isNaN(value)) {
       warning(
         false,
-        'Received NaN for numeric attribute `%s`. If this is expected, cast ' +
+        'Received NaN for the `%s` attribute. If this is expected, cast ' +
           'the value to a string.%s',
         name,
         getStackAddendum(),
@@ -179,15 +179,41 @@ if (__DEV__) {
       return true;
     }
 
-    if (typeof value === 'boolean') {
-      warning(
-        DOMProperty.shouldAttributeAcceptBooleanValue(name),
-        'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
-          'the value to a string.%s',
-        value,
-        name,
-        getStackAddendum(),
-      );
+    if (
+      typeof value === 'boolean' &&
+      !DOMProperty.shouldAttributeAcceptBooleanValue(name)
+    ) {
+      if (value) {
+        warning(
+          false,
+          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            '%s="%s" or %s={value.toString()}.%s',
+          value,
+          name,
+          name,
+          value,
+          name,
+          getStackAddendum(),
+        );
+      } else {
+        warning(
+          false,
+          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            '%s="%s" or %s={value.toString()}.\n\n' +
+            'If you used to conditionally omit it with %s={condition && value}, ' +
+            'pass %s={condition ? value : undefined} instead.%s',
+          value,
+          name,
+          name,
+          value,
+          name,
+          name,
+          name,
+          getStackAddendum(),
+        );
+      }
       warnedProperties[name] = true;
       return true;
     }

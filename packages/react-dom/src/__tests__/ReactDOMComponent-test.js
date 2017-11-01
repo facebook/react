@@ -714,7 +714,7 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received a `function` for string attribute `is`. If this is expected, cast ' +
+        'Received a `function` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.',
       );
     });
@@ -2042,7 +2042,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`',
+        'Received `true` for a non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="true" or whatever={value.toString()}.',
       );
     });
 
@@ -2055,7 +2057,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`',
+        'Received `true` for a non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="true" or whatever={value.toString()}.',
       );
     });
 
@@ -2128,7 +2132,7 @@ describe('ReactDOMComponent', () => {
       expect(el.getAttribute('whatever')).toBe('NaN');
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received NaN for numeric attribute `whatever`. If this is ' +
+        'Warning: Received NaN for the `whatever` attribute. If this is ' +
           'expected, cast the value to a string.\n    in div',
       );
     });
@@ -2230,7 +2234,9 @@ describe('ReactDOMComponent', () => {
       expect(el.hasAttribute('whatever')).toBe(false);
 
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `true` for non-boolean attribute `whatever`.',
+        'Received `true` for a non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="true" or whatever={value.toString()}.',
       );
     });
 
@@ -2283,7 +2289,11 @@ describe('ReactDOMComponent', () => {
 
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received `false` for non-boolean attribute `whatever`.',
+        'Received `false` for a non-boolean attribute `whatever`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'whatever="false" or whatever={value.toString()}.\n\n' +
+          'If you used to conditionally omit it with whatever={condition && value}, ' +
+          'pass whatever={condition ? value : undefined} instead.',
       );
     });
   });
