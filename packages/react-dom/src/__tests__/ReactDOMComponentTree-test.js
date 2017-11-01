@@ -145,7 +145,6 @@ describe('ReactDOMComponentTree', () => {
         'element for the lifetime of the component. More info: ' +
         'https://fb.me/react-controlled-components',
     );
-
   });
 
   it('finds instance of node that is attempted to be unmounted', () => {
