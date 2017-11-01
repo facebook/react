@@ -202,12 +202,25 @@ module.exports = function(
     if (__DEV__) {
       const name = getComponentName(workInProgress);
       const renderPresent = instance.render;
-      warning(
-        renderPresent,
-        '%s(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
-        name,
-      );
+
+      if (!renderPresent) {
+        if (type.prototype && typeof type.prototype.render === 'function') {
+          warning(
+            false,
+            '%s(...): No `render` method found on the returned component ' +
+              'instance: did you accidentally return an object from the constructor?',
+            name,
+          );
+        } else {
+          warning(
+            false,
+            '%s(...): No `render` method found on the returned component ' +
+              'instance: you may have forgotten to define `render`.',
+            name,
+          );
+        }
+      }
+
       const noGetInitialStateOnES6 =
         !instance.getInitialState ||
         instance.getInitialState.isReactClassApproved ||
