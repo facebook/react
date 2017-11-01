@@ -78,21 +78,19 @@ describe('ReactDOMComponentTree', () => {
     expect(renderAndGetRef('input')).toBe('INPUT');
   });
 
-  it('finds closest instance for node when an event happens', done => {
+  it('finds closest instance for node when an event happens', () => {
     const elemID = 'aID';
     const innerHTML = {__html: `<div id="${elemID}"></div>`};
-
+    const testID = 'closestInstance';
+    let currentTargetID = null;
     class ClosestInstance extends React.Component {
-      id = 'closestInstance';
       _onClick = e => {
-        const node = e.currentTarget;
-        expect(node.id).toBe(this.id);
-        done();
+        currentTargetID = e.currentTarget.id;
       };
       render() {
         return (
           <div
-            id="closestInstance"
+            id={testID}
             onClick={this._onClick}
             dangerouslySetInnerHTML={innerHTML}
           />
@@ -104,10 +102,12 @@ describe('ReactDOMComponentTree', () => {
     const container = document.createElement('div');
     ReactDOM.render(<section>{component}</section>, container);
     document.body.appendChild(container);
+    expect(currentTargetID).toBe(null);
     simulateClick(document.getElementById(elemID));
+    expect(currentTargetID).toBe(testID);
   });
 
-  it('finds a controlled instance from node and gets its current fiber props', done => {
+  it('finds a controlled instance from node and gets its current fiber props', () => {
     const inputID = 'inputID';
     const startValue = undefined;
     const finishValue = 'finish';
@@ -115,30 +115,7 @@ describe('ReactDOMComponentTree', () => {
     class Controlled extends React.Component {
       state = {value: startValue};
       a = null;
-      _onChange = e => {
-        const node = e.currentTarget;
-        expect(node.value).toEqual(finishValue);
-        expect(node.id).toBe(inputID);
-        spyOn(console, 'error');
-        expectDev(console.error.calls.count()).toBe(0);
-        this.setState(
-          {
-            value: node.value,
-          },
-          () => {
-            expectDev(console.error.calls.count()).toBe(1);
-            expectDev(console.error.calls.argsFor(0)[0]).toContain(
-              'Warning: A component is changing an uncontrolled input of ' +
-                'type text to be controlled. Input elements should not ' +
-                'switch from uncontrolled to controlled (or vice versa). ' +
-                'Decide between using a controlled or uncontrolled input ' +
-                'element for the lifetime of the component. More info: ' +
-                'https://fb.me/react-controlled-components',
-            );
-            done();
-          },
-        );
-      };
+      _onChange = e => this.setState({value: e.currentTarget.value});
       render() {
         return (
           <input
@@ -156,7 +133,19 @@ describe('ReactDOMComponentTree', () => {
     const container = document.createElement('div');
     const instance = ReactDOM.render(component, container);
     document.body.appendChild(container);
+    spyOn(console, 'error');
+    expectDev(console.error.calls.count()).toBe(0);
     simulateInput(instance.a, finishValue);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: A component is changing an uncontrolled input of ' +
+        'type text to be controlled. Input elements should not ' +
+        'switch from uncontrolled to controlled (or vice versa). ' +
+        'Decide between using a controlled or uncontrolled input ' +
+        'element for the lifetime of the component. More info: ' +
+        'https://fb.me/react-controlled-components',
+    );
+
   });
 
   it('finds instance of node that is attempted to be unmounted', () => {
