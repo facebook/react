@@ -44,9 +44,6 @@ var React = {
   Component: ReactBaseClasses.Component,
   PureComponent: ReactBaseClasses.PureComponent,
   unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
-  Fragment: ReactFeatureFlags.enableReactFragment
-    ? REACT_FRAGMENT_TYPE
-    : undefined,
 
   createElement: createElement,
   cloneElement: cloneElement,
@@ -62,6 +59,10 @@ var React = {
     assign: require('object-assign'),
   },
 };
+
+if (ReactFeatureFlags.enableReactFragment) {
+  React.Fragment = REACT_FRAGMENT_TYPE;
+}
 
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
