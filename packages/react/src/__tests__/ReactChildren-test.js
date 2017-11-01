@@ -23,20 +23,6 @@ describe('ReactChildren', () => {
     ReactTestUtils = require('react-dom/test-utils');
   });
 
-  const checkReactChildrenFunctionality = (element, callback, context) => {
-    const parentInstance = <div>{element}</div>;
-    React.Children.forEach(parentInstance.props.children, callback, context);
-    expect(callback).toHaveBeenCalledWith(element, 0);
-    callback.calls.reset();
-    const mappedChildren = React.Children.map(
-      parentInstance.props.children,
-      callback,
-      context,
-    );
-    expect(callback).toHaveBeenCalledWith(element, 0);
-    expect(mappedChildren[0]).toEqual(element);
-  };
-
   it('should support identity for simple', () => {
     var context = {};
     var callback = jasmine.createSpy().and.callFake(function(kid, index) {
@@ -74,7 +60,17 @@ describe('ReactChildren', () => {
     const simpleChild = <span key="simple" />;
     const reactPortal = ReactDOM.createPortal(simpleChild, portalContainer);
 
-    checkReactChildrenFunctionality(reactPortal, callback, context);
+    const parentInstance = <div>{reactPortal}</div>;
+    React.Children.forEach(parentInstance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(reactPortal, 0);
+    callback.calls.reset();
+    const mappedChildren = React.Children.map(
+      parentInstance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(reactPortal, 0);
+    expect(mappedChildren[0]).toEqual(reactPortal);
   });
 
   it('should support Call components', () => {
@@ -84,12 +80,22 @@ describe('ReactChildren', () => {
       return kid;
     });
     const ReactCallReturn = require('react-call-return');
-    const reactReturn = ReactCallReturn.unstable_createCall(
+    const reactCall = ReactCallReturn.unstable_createCall(
       <span key="simple" />,
       () => {},
     );
 
-    checkReactChildrenFunctionality(reactReturn, callback, context);
+    const parentInstance = <div>{reactCall}</div>;
+    React.Children.forEach(parentInstance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(reactCall, 0);
+    callback.calls.reset();
+    const mappedChildren = React.Children.map(
+      parentInstance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(reactCall, 0);
+    expect(mappedChildren[0]).toEqual(reactCall);
   });
 
   it('should support Return components', () => {
@@ -103,7 +109,17 @@ describe('ReactChildren', () => {
       <span key="simple" />,
     );
 
-    checkReactChildrenFunctionality(reactReturn, callback, context);
+    const parentInstance = <div>{reactReturn}</div>;
+    React.Children.forEach(parentInstance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(reactReturn, 0);
+    callback.calls.reset();
+    const mappedChildren = React.Children.map(
+      parentInstance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(reactReturn, 0);
+    expect(mappedChildren[0]).toEqual(reactReturn);
   });
 
   it('should treat single arrayless child as being in array', () => {
