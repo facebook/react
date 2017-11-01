@@ -1500,4 +1500,45 @@ describe('ReactCompositeComponent', () => {
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(mockArgs.length).toEqual(0);
   });
+
+  it('should return a meaningful warning when constructor is returned', () => {
+    spyOn(console, 'error');
+    class RenderTextInvalidConstructor extends React.Component {
+      constructor(props) {
+        super(props);
+        return {something: false};
+      }
+
+      render() {
+        return <div />;
+      }
+    }
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
+    }).toThrow();
+
+    const error = console.error.calls.mostRecent().args[0];
+
+    expectDev(error).toBe(
+      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+        'did you accidentally return an object from the constructor?',
+    );
+  });
+
+  it('should return error if render is not defined', () => {
+    spyOn(console, 'error');
+    class RenderTestUndefinedRender extends React.Component {}
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
+    }).toThrow();
+
+    const error = console.error.calls.mostRecent().args[0];
+
+    expectDev(error).toBe(
+      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
+        'component instance: you may have forgotten to define `render`.',
+    );
+  });
 });
