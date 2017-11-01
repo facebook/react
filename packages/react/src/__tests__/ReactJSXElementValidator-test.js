@@ -9,6 +9,8 @@
 
 'use strict';
 
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
 var React;
@@ -85,48 +87,50 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('warns for fragments with illegal attributes', () => {
-    spyOn(console, 'error');
+  if (ReactFeatureFlags.enableReactFragment) {
+    it('warns for fragments with illegal attributes', () => {
+      spyOn(console, 'error');
 
-    class Foo extends React.Component {
-      render() {
-        return <React.Fragment a={1} b={2}>hello</React.Fragment>;
+      class Foo extends React.Component {
+        render() {
+          return <React.Fragment a={1} b={2}>hello</React.Fragment>;
+        }
       }
-    }
 
-    ReactTestUtils.renderIntoDocument(<Foo />);
+      ReactTestUtils.renderIntoDocument(<Foo />);
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain('Invalid prop `');
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      '` supplied to `React.Fragment`. React.Fragment ' +
-        'can only have `key` and `children` props.',
-    );
-  });
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain('Invalid prop `');
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        '` supplied to `React.Fragment`. React.Fragment ' +
+          'can only have `key` and `children` props.',
+      );
+    });
 
-  it('warns for fragments with refs', () => {
-    spyOn(console, 'error');
+    it('warns for fragments with refs', () => {
+      spyOn(console, 'error');
 
-    class Foo extends React.Component {
-      render() {
-        return (
-          <React.Fragment
-            ref={bar => {
-              this.foo = bar;
-            }}>
-            hello
-          </React.Fragment>
-        );
+      class Foo extends React.Component {
+        render() {
+          return (
+            <React.Fragment
+              ref={bar => {
+                this.foo = bar;
+              }}>
+              hello
+            </React.Fragment>
+          );
+        }
       }
-    }
 
-    ReactTestUtils.renderIntoDocument(<Foo />);
+      ReactTestUtils.renderIntoDocument(<Foo />);
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Invalid attribute `ref` supplied to `React.Fragment`.',
-    );
-  });
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Invalid attribute `ref` supplied to `React.Fragment`.',
+      );
+    });
+  }
 
   it('warns for keys for iterables of elements in rest args', () => {
     spyOn(console, 'error');
@@ -151,31 +155,33 @@ describe('ReactJSXElementValidator', () => {
     );
   });
 
-  it('does not warn for fragments of multiple elements without keys', () => {
-    ReactTestUtils.renderIntoDocument(
-      <React.Fragment>
-        <span>1</span>
-        <span>2</span>
-      </React.Fragment>,
-    );
-  });
+  if (ReactFeatureFlags.enableReactFragment) {
+    it('does not warn for fragments of multiple elements without keys', () => {
+      ReactTestUtils.renderIntoDocument(
+        <React.Fragment>
+          <span>1</span>
+          <span>2</span>
+        </React.Fragment>,
+      );
+    });
 
-  it('warns for fragments of multiple elements with same key', () => {
-    spyOn(console, 'error');
+    it('warns for fragments of multiple elements with same key', () => {
+      spyOn(console, 'error');
 
-    ReactTestUtils.renderIntoDocument(
-      <React.Fragment>
-        <span key="a">1</span>
-        <span key="a">2</span>
-        <span key="b">3</span>
-      </React.Fragment>,
-    );
+      ReactTestUtils.renderIntoDocument(
+        <React.Fragment>
+          <span key="a">1</span>
+          <span key="a">2</span>
+          <span key="b">3</span>
+        </React.Fragment>,
+      );
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Encountered two children with the same key, `a`.',
-    );
-  });
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.argsFor(0)[0]).toContain(
+        'Encountered two children with the same key, `a`.',
+      );
+    });
+  }
 
   it('does not warn for arrays of elements with keys', () => {
     spyOn(console, 'error');

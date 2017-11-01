@@ -18,6 +18,7 @@ import type {
 
 var ReactTypeOfSideEffect = require('shared/ReactTypeOfSideEffect');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var emptyObject = require('fbjs/lib/emptyObject');
 var invariant = require('fbjs/lib/invariant');
 var {REACT_PORTAL_TYPE} = require('./ReactPortal');
@@ -1432,6 +1433,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
+      ReactFeatureFlags.enableReactFragment &&
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&

@@ -15,6 +15,7 @@ export type FeatureFlags = {|
   enableMutatingReconciler: boolean,
   enableNoopReconciler: boolean,
   enablePersistentReconciler: boolean,
+  enableReactFragment: boolean,
 |};
 
 var ReactFeatureFlags: FeatureFlags = {
@@ -26,6 +27,8 @@ var ReactFeatureFlags: FeatureFlags = {
   enableNoopReconciler: false,
   // Experimental persistent mode (CS):
   enablePersistentReconciler: false,
+  // Exports React.Fragment
+  enableReactFragment: false,
 };
 
 if (__DEV__) {
