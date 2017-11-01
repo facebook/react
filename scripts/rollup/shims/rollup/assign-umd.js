@@ -1,4 +1,5 @@
-var ReactInternals = require('react')
-  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+import React from 'react';
 
-module.exports = ReactInternals.assign;
+const ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+
+export default ReactInternals.assign;

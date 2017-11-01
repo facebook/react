@@ -84,19 +84,16 @@ function getShims(bundleType, entry, featureFlags) {
       // so we resort to using a shim that re-exports the www module, and then
       // treating shim's target destinations as external (see getDependencies).
       forkedFBModules.forEach(srcPath => {
-        const resolvedSrcPath = require.resolve(srcPath);
-        const wwwName = path.parse(resolvedSrcPath).name;
+        const wwwName = path.parse(srcPath).name;
         const shimPath = path.resolve(
           __dirname + `/shims/rollup/${wwwName}-www.js`
         );
-        shims[resolvedSrcPath] = shimPath;
+        shims[srcPath] = shimPath;
       });
       break;
   }
   if (featureFlags) {
-    shims[require.resolve('shared/ReactFeatureFlags')] = require.resolve(
-      featureFlags
-    );
+    shims['shared/ReactFeatureFlags'] = require.resolve(featureFlags);
   }
   return shims;
 }
