@@ -15,7 +15,9 @@ var ReactDOMSelection = require('./ReactDOMSelection');
 var {ELEMENT_NODE} = require('../shared/HTMLNodeType');
 
 function isInDocument(node) {
-  return node.ownerDocument && containsNode(node.ownerDocument.documentElement, node);
+  return (
+    node.ownerDocument && containsNode(node.ownerDocument.documentElement, node)
+  );
 }
 
 function getFocusedElement() {
@@ -53,12 +55,14 @@ function getElementsWithSelections(acc, win) {
       var startOffset = selection.anchorOffset;
       var endOffset = selection.focusOffset;
       if (startNode && startNode.childNodes.length) {
-          if (startNode.childNodes[startOffset] === endNode.childNodes[endOffset]) {
-              element = startNode.childNodes[startOffset];
-          }
+        if (
+          startNode.childNodes[startOffset] === endNode.childNodes[endOffset]
+        ) {
+          element = startNode.childNodes[startOffset];
+        }
       } else {
-          element = startNode;
-      }    
+        element = startNode;
+      }
     }
   } else if (doc.selection) {
     var range = doc.selection.createRange();
@@ -67,7 +71,11 @@ function getElementsWithSelections(acc, win) {
   if (ReactInputSelection.hasSelectionCapabilities(element)) {
     acc = acc.concat(element);
   }
-  return Array.prototype.reduce.call(win.frames, getElementsWithSelections, acc);
+  return Array.prototype.reduce.call(
+    win.frames,
+    getElementsWithSelections,
+    acc,
+  );
 }
 
 function focusNodePreservingScroll(element) {
@@ -133,12 +141,14 @@ var ReactInputSelection = {
   restoreSelection: function(priorSelectionInformation) {
     priorSelectionInformation.activeElements.forEach(function(activeElement) {
       var element = activeElement.element;
-      if (isInDocument(element) &&
-          getActiveElement(element.ownerDocument) !== element) {
+      if (
+        isInDocument(element) &&
+        getActiveElement(element.ownerDocument) !== element
+      ) {
         if (ReactInputSelection.hasSelectionCapabilities(element)) {
           ReactInputSelection.setSelection(
             element,
-            activeElement.selectionRange
+            activeElement.selectionRange,
           );
           focusNodePreservingScroll(element);
         }
@@ -147,8 +157,10 @@ var ReactInputSelection = {
 
     var curFocusedElement = getFocusedElement();
     var priorFocusedElement = priorSelectionInformation.focusedElement;
-    if (curFocusedElement !== priorFocusedElement &&
-        isInDocument(priorFocusedElement)) {
+    if (
+      curFocusedElement !== priorFocusedElement &&
+      isInDocument(priorFocusedElement)
+    ) {
       focusNodePreservingScroll(priorFocusedElement);
     }
   },

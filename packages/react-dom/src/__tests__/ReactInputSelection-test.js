@@ -26,8 +26,10 @@ describe('ReactInputSelection', () => {
   var makeGetSelection = (win = window) => () => ({
     anchorNode: win.document.activeElement,
     focusNode: win.document.activeElement,
-    anchorOffset: win.document.activeElement && win.document.activeElement.selectionStart,
-    focusOffset: win.document.activeElement && win.document.activeElement.selectionEnd,
+    anchorOffset: win.document.activeElement &&
+      win.document.activeElement.selectionStart,
+    focusOffset: win.document.activeElement &&
+      win.document.activeElement.selectionEnd,
   });
 
   describe('hasSelectionCapabilities', () => {
@@ -49,12 +51,24 @@ describe('ReactInputSelection', () => {
       var inputHidden = document.createElement('input');
       inputHidden.type = 'hidden';
 
-      expect(ReactInputSelection.hasSelectionCapabilities(inputText)).toBe(true);
-      expect(ReactInputSelection.hasSelectionCapabilities(inputReadOnly)).toBe(true);
-      expect(ReactInputSelection.hasSelectionCapabilities(inputNumber)).toBe(false);
-      expect(ReactInputSelection.hasSelectionCapabilities(inputEmail)).toBe(false);
-      expect(ReactInputSelection.hasSelectionCapabilities(inputPassword)).toBe(false);
-      expect(ReactInputSelection.hasSelectionCapabilities(inputHidden)).toBe(false);
+      expect(ReactInputSelection.hasSelectionCapabilities(inputText)).toBe(
+        true,
+      );
+      expect(ReactInputSelection.hasSelectionCapabilities(inputReadOnly)).toBe(
+        true,
+      );
+      expect(ReactInputSelection.hasSelectionCapabilities(inputNumber)).toBe(
+        false,
+      );
+      expect(ReactInputSelection.hasSelectionCapabilities(inputEmail)).toBe(
+        false,
+      );
+      expect(ReactInputSelection.hasSelectionCapabilities(inputPassword)).toBe(
+        false,
+      );
+      expect(ReactInputSelection.hasSelectionCapabilities(inputHidden)).toBe(
+        false,
+      );
     });
 
     it('returns true for contentEditable elements', () => {
@@ -86,23 +100,37 @@ describe('ReactInputSelection', () => {
     it('gets selection offsets from a textarea or input', () => {
       var input = createAndMountElement('input', {defaultValue: textValue});
       input.setSelectionRange(6, 11);
-      expect(ReactInputSelection.getSelection(input)).toEqual({start: 6, end: 11});
+      expect(ReactInputSelection.getSelection(input)).toEqual({
+        start: 6,
+        end: 11,
+      });
 
-      var textarea = createAndMountElement('textarea', {defaultValue: textValue});
+      var textarea = createAndMountElement('textarea', {
+        defaultValue: textValue,
+      });
       textarea.setSelectionRange(6, 11);
-      expect(ReactInputSelection.getSelection(textarea)).toEqual({start: 6, end: 11});
+      expect(ReactInputSelection.getSelection(textarea)).toEqual({
+        start: 6,
+        end: 11,
+      });
     });
 
     it('gets selection offsets from a contentEditable element', () => {
       var node = createAndMountElement('div', null, textValue);
       node.selectionStart = 6;
       node.selectionEnd = 11;
-      expect(ReactInputSelection.getSelection(node)).toEqual({start: 6, end: 11});
+      expect(ReactInputSelection.getSelection(node)).toEqual({
+        start: 6,
+        end: 11,
+      });
     });
 
     it('gets selection offsets as start: 0, end: 0 if no selection', () => {
       var node = createAndMountElement('select');
-      expect(ReactInputSelection.getSelection(node)).toEqual({start: 0, end: 0});
+      expect(ReactInputSelection.getSelection(node)).toEqual({
+        start: 0,
+        end: 0,
+      });
     });
 
     it('gets selection on inputs in iframes', () => {
@@ -126,7 +154,9 @@ describe('ReactInputSelection', () => {
       expect(input.selectionStart).toEqual(1);
       expect(input.selectionEnd).toEqual(10);
 
-      var textarea = createAndMountElement('textarea', {defaultValue: textValue});
+      var textarea = createAndMountElement('textarea', {
+        defaultValue: textValue,
+      });
       ReactInputSelection.setSelection(textarea, {start: 1, end: 10});
       expect(textarea.selectionStart).toEqual(1);
       expect(textarea.selectionEnd).toEqual(10);
@@ -160,7 +190,10 @@ describe('ReactInputSelection', () => {
       var selectionInfo = ReactInputSelection.getSelectionInformation();
       expect(selectionInfo.focusedElement).toBe(input);
       expect(selectionInfo.activeElements[0].element).toBe(input);
-      expect(selectionInfo.activeElements[0].selectionRange).toEqual({start: 1, end: 10});
+      expect(selectionInfo.activeElements[0].selectionRange).toEqual({
+        start: 1,
+        end: 10,
+      });
       expect(document.activeElement).toBe(input);
       input.setSelectionRange(0, 0);
       document.body.removeChild(input);
@@ -186,7 +219,8 @@ describe('ReactInputSelection', () => {
       var originalGetSelection = window.getSelection;
       var originalIframeGetSelection = iframeWin.getSelection;
       window.getSelection = window.getSelection || makeGetSelection(window);
-      iframeWin.getSelection = iframeWin.getSelection || makeGetSelection(iframeWin);
+      iframeWin.getSelection =
+        iframeWin.getSelection || makeGetSelection(iframeWin);
 
       var input = document.createElement('input');
       input.value = textValue;
@@ -196,7 +230,10 @@ describe('ReactInputSelection', () => {
       input.selectionEnd = 10;
       var selectionInfo = ReactInputSelection.getSelectionInformation();
       expect(selectionInfo.focusedElement === input).toBe(true);
-      expect(selectionInfo.activeElements[0].selectionRange).toEqual({start: 1, end: 10});
+      expect(selectionInfo.activeElements[0].selectionRange).toEqual({
+        start: 1,
+        end: 10,
+      });
       expect(document.activeElement).toBe(iframe);
       expect(iframeDoc.activeElement).toBe(input);
 
