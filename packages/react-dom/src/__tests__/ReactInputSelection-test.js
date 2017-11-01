@@ -186,9 +186,9 @@ describe('ReactInputSelection', () => {
       input.selectionStart = 1;
       input.selectionEnd = 10;
       var selectionInfo = ReactInputSelection.getSelectionInformation();
-      expect(selectionInfo.focusedElement).toBe(input);
-      expect(selectionInfo.activeElements[0].element).toBe(input);
-      expect(selectionInfo.activeElements[0].selectionRange).toEqual({
+      expect(selectionInfo.activeElement).toBe(input);
+      expect(selectionInfo.elementSelections[0].element).toBe(input);
+      expect(selectionInfo.elementSelections[0].selectionRange).toEqual({
         start: 1,
         end: 10,
       });
@@ -227,8 +227,8 @@ describe('ReactInputSelection', () => {
       input.selectionStart = 1;
       input.selectionEnd = 10;
       var selectionInfo = ReactInputSelection.getSelectionInformation();
-      expect(selectionInfo.focusedElement === input).toBe(true);
-      expect(selectionInfo.activeElements[0].selectionRange).toEqual({
+      expect(selectionInfo.activeElement === input).toBe(true);
+      expect(selectionInfo.elementSelections[0].selectionRange).toEqual({
         start: 1,
         end: 10,
       });

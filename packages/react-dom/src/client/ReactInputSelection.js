@@ -20,18 +20,18 @@ function isInDocument(node) {
   );
 }
 
-function getFocusedElement() {
+function getActiveElementDeep() {
   var win = window;
-  var focusedElem = getActiveElement();
-  while (focusedElem instanceof win.HTMLIFrameElement) {
+  var element = getActiveElement();
+  while (element instanceof win.HTMLIFrameElement) {
     try {
-      win = focusedElem.contentDocument.defaultView;
+      win = element.contentDocument.defaultView;
     } catch (e) {
-      return focusedElem;
+      return element;
     }
-    focusedElem = getActiveElement(win.document);
+    element = getActiveElement(win.document);
   }
-  return focusedElem;
+  return element;
 }
 
 function getElementsWithSelections(acc, win) {
@@ -68,14 +68,19 @@ function getElementsWithSelections(acc, win) {
     var range = doc.selection.createRange();
     element = range.parentElement();
   }
+
   if (ReactInputSelection.hasSelectionCapabilities(element)) {
-    acc = acc.concat(element);
+    acc = acc.concat({
+      element: element,
+      selectionRange: ReactInputSelection.getSelection(element),
+    });
   }
-  return Array.prototype.reduce.call(
-    win.frames,
-    getElementsWithSelections,
-    acc,
-  );
+
+  for (var i = 0; i < win.frames.length; i++) {
+    acc = getElementsWithSelections(acc, win.frames[i]);
+  }
+
+  return acc;
 }
 
 function focusNodePreservingScroll(element) {
@@ -119,17 +124,9 @@ var ReactInputSelection = {
   },
 
   getSelectionInformation: function() {
-    var focusedElement = getFocusedElement();
     return {
-      focusedElement: focusedElement,
-      activeElements: getElementsWithSelections().map(function(element) {
-        return {
-          element: element,
-          selectionRange: ReactInputSelection.hasSelectionCapabilities(element)
-            ? ReactInputSelection.getSelection(element)
-            : null,
-        };
-      }),
+      activeElement: getActiveElementDeep(),
+      elementSelections: getElementsWithSelections(),
     };
   },
 
@@ -139,29 +136,31 @@ var ReactInputSelection = {
    * nodes and place them back in, resulting in focus being lost.
    */
   restoreSelection: function(priorSelectionInformation) {
-    priorSelectionInformation.activeElements.forEach(function(activeElement) {
-      var element = activeElement.element;
+    var priorActiveElement = priorSelectionInformation.activeElement;
+    if (
+      !isInDocument(priorActiveElement) ||
+      priorActiveElement === priorActiveElement.ownerDocument.body
+    ) {
+      return;
+    }
+    priorSelectionInformation.elementSelections.forEach(function(selection) {
+      var element = selection.element;
       if (
         isInDocument(element) &&
         getActiveElement(element.ownerDocument) !== element
       ) {
-        if (ReactInputSelection.hasSelectionCapabilities(element)) {
-          ReactInputSelection.setSelection(
-            element,
-            activeElement.selectionRange,
-          );
+        ReactInputSelection.setSelection(element, selection.selectionRange);
+        if (element !== priorActiveElement) {
           focusNodePreservingScroll(element);
         }
       }
     });
 
-    var curFocusedElement = getFocusedElement();
-    var priorFocusedElement = priorSelectionInformation.focusedElement;
     if (
-      curFocusedElement !== priorFocusedElement &&
-      isInDocument(priorFocusedElement)
+      getActiveElementDeep() !== priorActiveElement &&
+      isInDocument(priorActiveElement)
     ) {
-      focusNodePreservingScroll(priorFocusedElement);
+      focusNodePreservingScroll(priorActiveElement);
     }
   },
 
