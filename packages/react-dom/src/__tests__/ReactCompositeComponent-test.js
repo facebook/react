@@ -1518,9 +1518,8 @@ describe('ReactCompositeComponent', () => {
       ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
     }).toThrow();
 
-    const error = console.error.calls.mostRecent().args[0];
-
-    expectDev(error).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
         'did you accidentally return an object from the constructor?',
     );
@@ -1534,9 +1533,8 @@ describe('ReactCompositeComponent', () => {
       ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
     }).toThrow();
 
-    const error = console.error.calls.mostRecent().args[0];
-
-    expectDev(error).toBe(
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
       'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
         'component instance: you may have forgotten to define `render`.',
     );
