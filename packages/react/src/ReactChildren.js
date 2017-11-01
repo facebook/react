@@ -25,15 +25,15 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
-const REACT_PORTAL_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
-  0xeaca;
 const REACT_CALL_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.call')) ||
   0xeac8;
 const REACT_RETURN_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.return')) ||
   0xeac9;
+const REACT_PORTAL_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
+  0xeaca;
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
@@ -134,9 +134,9 @@ function traverseAllChildrenImpl(
     // The following is inlined from ReactElement. This means we can optimize
     // some checks. React Fiber also inlines this logic for similar purposes.
     (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE) ||
-    (type === 'object' && children.$$typeof === REACT_PORTAL_TYPE) ||
     (type === 'object' && children.$$typeof === REACT_CALL_TYPE) ||
-    (type === 'object' && children.$$typeof === REACT_RETURN_TYPE)
+    (type === 'object' && children.$$typeof === REACT_RETURN_TYPE) ||
+    (type === 'object' && children.$$typeof === REACT_PORTAL_TYPE)
   ) {
     callback(
       traverseContext,
