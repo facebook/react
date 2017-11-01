@@ -137,13 +137,19 @@ var ReactInputSelection = {
    */
   restoreSelection: function(priorSelectionInformation) {
     var priorActiveElement = priorSelectionInformation.activeElement;
+    var elementSelections = priorSelectionInformation.elementSelections;
+    var curActiveElement = getActiveElementDeep();
+    var isActiveElementOnlySelection =
+      elementSelections.length === 1 &&
+      elementSelections[0] === priorActiveElement;
     if (
       !isInDocument(priorActiveElement) ||
-      priorActiveElement === priorActiveElement.ownerDocument.body
+      priorActiveElement === priorActiveElement.ownerDocument.body ||
+      (isActiveElementOnlySelection && curActiveElement === priorActiveElement)
     ) {
       return;
     }
-    priorSelectionInformation.elementSelections.forEach(function(selection) {
+    elementSelections.forEach(function(selection) {
       var element = selection.element;
       if (
         isInDocument(element) &&
@@ -152,12 +158,13 @@ var ReactInputSelection = {
         ReactInputSelection.setSelection(element, selection.selectionRange);
         if (element !== priorActiveElement) {
           focusNodePreservingScroll(element);
+          curActiveElement = element;
         }
       }
     });
 
     if (
-      getActiveElementDeep() !== priorActiveElement &&
+      curActiveElement !== priorActiveElement &&
       isInDocument(priorActiveElement)
     ) {
       focusNodePreservingScroll(priorActiveElement);
