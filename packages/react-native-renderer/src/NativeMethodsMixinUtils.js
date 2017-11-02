@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 /**
  * In the future, we should cleanup callbacks by cancelling them instead of

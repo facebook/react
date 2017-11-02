@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import React from 'react';
 import warning from 'fbjs/lib/warning';
 

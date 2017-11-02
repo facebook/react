@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 var ReactNativeRT = require('./src/ReactNativeRT');
 
 // TODO: decide on the top-level export form.

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {ReactElement} from 'shared/ReactElementType';
 
 import React from 'react';

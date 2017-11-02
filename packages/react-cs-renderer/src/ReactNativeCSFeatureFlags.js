@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {FeatureFlags} from 'shared/ReactFeatureFlags';
 
 var ReactNativeCSFeatureFlags: FeatureFlags = {

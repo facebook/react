@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactCall, ReactPortal, ReactReturn} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';

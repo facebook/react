@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';

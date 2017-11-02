@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 import ReactGenericBatching from 'events/ReactGenericBatching';
 // Module provided by RN:

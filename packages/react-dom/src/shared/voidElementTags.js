@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import omittedCloseTags from './omittedCloseTags';
 
 // For HTML, certain tags cannot have children. This has the same purpose as

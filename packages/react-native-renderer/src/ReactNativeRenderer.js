@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {ReactNativeType} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 

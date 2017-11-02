@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import dangerousStyleValue from './dangerousStyleValue';
 import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
 import warnValidStyle from './warnValidStyle';

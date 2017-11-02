@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 var ariaProperties = {
   'aria-current': 0, // state
   'aria-details': 0,

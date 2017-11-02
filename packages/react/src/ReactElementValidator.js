@@ -12,8 +12,6 @@
  * that support it.
  */
 
-'use strict';
-
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';

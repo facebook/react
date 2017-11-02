@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import * as ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 // TODO: direct imports like some-package/src/* are bad. Fix me.

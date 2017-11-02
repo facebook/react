@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {ViewConfigGetter} from './ReactNativeTypes';
 
 import {register} from './ReactNativeViewConfigRegistry';

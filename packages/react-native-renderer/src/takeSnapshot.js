@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 // Module provided by RN:
 import UIManager from 'UIManager';

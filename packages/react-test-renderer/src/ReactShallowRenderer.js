@@ -6,8 +6,6 @@
  *
  */
 
-'use strict';
-
 import React from 'react';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';

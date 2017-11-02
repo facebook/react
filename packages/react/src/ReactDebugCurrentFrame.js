@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {

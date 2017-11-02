@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 // Modules provided by RN:
 import deepDiffer from 'deepDiffer';

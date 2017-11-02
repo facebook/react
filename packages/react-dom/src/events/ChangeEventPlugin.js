@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import EventPluginHub from 'events/EventPluginHub';
 import EventPropagators from 'events/EventPropagators';
 import ReactControlledComponent from 'events/ReactControlledComponent';

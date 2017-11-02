@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import DOMProperty from './DOMProperty';
 
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;

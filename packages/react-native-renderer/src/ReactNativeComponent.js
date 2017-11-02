@@ -8,8 +8,6 @@
  * @format
  */
 
-'use strict';
-
 import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,

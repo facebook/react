@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 // This is a built-in polyfill for requestIdleCallback. It works by scheduling
 // a requestAnimationFrame, storing the time for the start of the frame, then
 // scheduling a postMessage which gets scheduled after paint. Within the

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
 import ReactFiberReconciler from 'react-reconciler';

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 export type FeatureFlags = {|
   enableAsyncSubtreeAPI: boolean,
   enableAsyncSchedulingByDefaultInReactDOM: boolean,

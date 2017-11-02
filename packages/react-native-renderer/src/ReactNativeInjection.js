@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 /**
  * Make sure essential globals are available and are patched correctly. Please don't remove this

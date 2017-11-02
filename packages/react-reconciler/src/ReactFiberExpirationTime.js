@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 // TODO: Use an opaque type once ESLint et al support the syntax
 export type ExpirationTime = number;
 

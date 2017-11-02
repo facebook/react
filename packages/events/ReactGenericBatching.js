@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import ReactControlledComponent from './ReactControlledComponent';
 
 // Used as a way to call batchedUpdates when we don't have a reference to

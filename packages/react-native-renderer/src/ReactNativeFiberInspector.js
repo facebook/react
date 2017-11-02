@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
