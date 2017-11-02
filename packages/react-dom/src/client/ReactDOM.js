@@ -787,12 +787,7 @@ ReactRoot.prototype.unmount = function(callback) {
   DOMRenderer.updateContainer(null, root, null, callback);
 };
 
-var ReactDOM = {
-  createRoot(container: DOMContainer, options?: RootOptions): ReactRootNode {
-    const hydrate = options != null && options.hydrate === true;
-    return new ReactRoot(container, hydrate);
-  },
-
+var ReactDOM: Object = {
   createPortal,
 
   findDOMNode(
@@ -951,6 +946,16 @@ var ReactDOM = {
     ReactDOMEventListener,
   },
 };
+
+if (ReactFeatureFlags.enableCreateRoot) {
+  ReactDOM.createRoot = function createRoot(
+    container: DOMContainer,
+    options?: RootOptions,
+  ): ReactRootNode {
+    const hydrate = options != null && options.hydrate === true;
+    return new ReactRoot(container, hydrate);
+  };
+}
 
 const foundDevTools = injectInternals({
   findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,

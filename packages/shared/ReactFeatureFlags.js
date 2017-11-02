@@ -14,6 +14,7 @@ export type FeatureFlags = {|
   enableNoopReconciler: boolean,
   enablePersistentReconciler: boolean,
   enableReactFragment: boolean,
+  enableCreateRoot: boolean,
 |};
 
 var ReactFeatureFlags: FeatureFlags = {
@@ -27,6 +28,8 @@ var ReactFeatureFlags: FeatureFlags = {
   enablePersistentReconciler: false,
   // Exports React.Fragment
   enableReactFragment: false,
+  // Exports ReactDOM.createRoot
+  enableCreateRoot: false,
 };
 
 if (__DEV__) {
