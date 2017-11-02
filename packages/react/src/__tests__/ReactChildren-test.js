@@ -48,6 +48,31 @@ describe('ReactChildren', () => {
     expect(mappedChildren[0]).toEqual(<span key=".$simple" />);
   });
 
+  it('should support Portal components', () => {
+    const context = {};
+    const callback = jasmine.createSpy().and.callFake(function(kid, index) {
+      expect(this).toBe(context);
+      return kid;
+    });
+    const ReactDOM = require('react-dom');
+    const portalContainer = document.createElement('div');
+
+    const simpleChild = <span key="simple" />;
+    const portal = ReactDOM.createPortal(simpleChild, portalContainer);
+    const instance = <div>{portal}</div>;
+
+    React.Children.forEach(instance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(portal, 0);
+    callback.calls.reset();
+    const mappedChildren = React.Children.map(
+      instance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(portal, 0);
+    expect(mappedChildren[0]).toEqual(portal);
+  });
+
   it('should treat single arrayless child as being in array', () => {
     var context = {};
     var callback = jasmine.createSpy().and.callFake(function(kid, index) {

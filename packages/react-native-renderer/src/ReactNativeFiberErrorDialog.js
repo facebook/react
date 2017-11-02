@@ -4,21 +4,19 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberErrorDialog
  * @flow
  */
 
-'use strict';
+import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
 
-const ExceptionsManager = require('ExceptionsManager');
-
-import type {CapturedError} from 'ReactFiberScheduler';
+// Module provided by RN:
+import ExceptionsManager from 'ExceptionsManager';
 
 /**
  * Intercept lifecycle errors and ensure they are shown with the correct stack
  * trace within the native redbox component.
  */
-function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
+export function showDialog(capturedError: CapturedError): boolean {
   const {componentStack, error} = capturedError;
 
   let errorToHandle: Error;
@@ -50,5 +48,3 @@ function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
   // done above by calling ExceptionsManager.
   return false;
 }
-
-module.exports.showDialog = ReactNativeFiberErrorDialog;

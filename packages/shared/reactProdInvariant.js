@@ -4,10 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule reactProdInvariant
  * @flow
  */
-'use strict';
 
 /**
  * WARNING: DO NOT manually require this module.
@@ -40,4 +38,4 @@ function reactProdInvariant(code: string): void {
   throw error;
 }
 
-module.exports = reactProdInvariant;
+export default reactProdInvariant;

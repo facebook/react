@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticTransitionEvent
  */
 
-'use strict';
-
-var SyntheticEvent = require('SyntheticEvent');
+import SyntheticEvent from 'events/SyntheticEvent';
 
 /**
  * @interface Event
@@ -45,4 +41,4 @@ function SyntheticTransitionEvent(
 
 SyntheticEvent.augmentClass(SyntheticTransitionEvent, TransitionEventInterface);
 
-module.exports = SyntheticTransitionEvent;
+export default SyntheticTransitionEvent;

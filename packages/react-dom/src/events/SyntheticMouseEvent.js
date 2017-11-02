@@ -3,15 +3,10 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticMouseEvent
  */
 
-'use strict';
-
-var SyntheticUIEvent = require('SyntheticUIEvent');
-
-var getEventModifierState = require('getEventModifierState');
+import SyntheticUIEvent from './SyntheticUIEvent';
+import getEventModifierState from './getEventModifierState';
 
 /**
  * @interface MouseEvent
@@ -64,4 +59,4 @@ function SyntheticMouseEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticMouseEvent, MouseEventInterface);
 
-module.exports = SyntheticMouseEvent;
+export default SyntheticMouseEvent;

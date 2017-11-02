@@ -3,17 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticKeyboardEvent
  */
 
-'use strict';
-
-var SyntheticUIEvent = require('SyntheticUIEvent');
-
-var getEventCharCode = require('getEventCharCode');
-var getEventKey = require('getEventKey');
-var getEventModifierState = require('getEventModifierState');
+import SyntheticUIEvent from './SyntheticUIEvent';
+import getEventCharCode from './getEventCharCode';
+import getEventKey from './getEventKey';
+import getEventModifierState from './getEventModifierState';
 
 /**
  * @interface KeyboardEvent
@@ -90,4 +85,4 @@ function SyntheticKeyboardEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);
 
-module.exports = SyntheticKeyboardEvent;
+export default SyntheticKeyboardEvent;

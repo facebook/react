@@ -4,25 +4,25 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeFiberInspector
  * @flow
  */
-'use strict';
 
-const ReactNativeComponentTree = require('ReactNativeComponentTree');
-const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
-const UIManager = require('UIManager');
-const invariant = require('fbjs/lib/invariant');
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+
+import {
+  findCurrentHostFiber,
+  findCurrentFiberUsingSlowPath,
+} from 'shared/ReactFiberTreeReflection';
+import getComponentName from 'shared/getComponentName';
+import {HostComponent} from 'shared/ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+// Module provided by RN:
+import UIManager from 'UIManager';
+
+import ReactNativeComponentTree from './ReactNativeComponentTree';
 
 const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
-
-import type {Fiber} from 'ReactFiber';
-
 let getInspectorDataForViewTag;
 
 if (__DEV__) {
@@ -51,7 +51,7 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+    const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }
@@ -123,6 +123,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = {
-  getInspectorDataForViewTag,
-};
+export {getInspectorDataForViewTag};

@@ -4,13 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactErrorUtils
  * @flow
  */
 
-'use strict';
-
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
@@ -273,4 +270,4 @@ let rethrowCaughtError = function() {
   }
 };
 
-module.exports = ReactErrorUtils;
+export default ReactErrorUtils;

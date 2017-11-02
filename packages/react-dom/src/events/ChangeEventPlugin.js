@@ -3,24 +3,20 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ChangeEventPlugin
  */
 
-'use strict';
+import EventPluginHub from 'events/EventPluginHub';
+import EventPropagators from 'events/EventPropagators';
+import ReactControlledComponent from 'events/ReactControlledComponent';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var EventPluginHub = require('EventPluginHub');
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactGenericBatching = require('ReactGenericBatching');
-var SyntheticEvent = require('SyntheticEvent');
-
-var inputValueTracking = require('inputValueTracking');
-var getEventTarget = require('getEventTarget');
-var isEventSupported = require('isEventSupported');
-var isTextInputElement = require('isTextInputElement');
+import getEventTarget from './getEventTarget';
+import isEventSupported from './isEventSupported';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import * as inputValueTracking from '../client/inputValueTracking';
 
 var eventTypes = {
   change: {
@@ -307,4 +303,4 @@ var ChangeEventPlugin = {
   },
 };
 
-module.exports = ChangeEventPlugin;
+export default ChangeEventPlugin;

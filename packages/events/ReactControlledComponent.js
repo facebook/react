@@ -3,15 +3,11 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactControlledComponent
  */
 
-'use strict';
+import invariant from 'fbjs/lib/invariant';
 
-var EventPluginUtils = require('EventPluginUtils');
-
-var invariant = require('fbjs/lib/invariant');
+import EventPluginUtils from './EventPluginUtils';
 
 // Use to restore controlled state after a change event has fired.
 
@@ -85,4 +81,4 @@ var ReactControlledComponent = {
   },
 };
 
-module.exports = ReactControlledComponent;
+export default ReactControlledComponent;

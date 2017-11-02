@@ -3,15 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule EnterLeaveEventPlugin
  */
 
-'use strict';
+import EventPropagators from 'events/EventPropagators';
 
-var EventPropagators = require('EventPropagators');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
+import SyntheticMouseEvent from './SyntheticMouseEvent';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
 
 var eventTypes = {
   mouseEnter: {
@@ -117,4 +114,4 @@ var EnterLeaveEventPlugin = {
   },
 };
 
-module.exports = EnterLeaveEventPlugin;
+export default EnterLeaveEventPlugin;

@@ -3,11 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule DOMEventPluginOrder
  */
-
-'use strict';
 
 /**
  * Module that is injectable into `EventPluginHub`, that specifies a
@@ -28,4 +24,4 @@ var DOMEventPluginOrder = [
   'BeforeInputEventPlugin',
 ];
 
-module.exports = DOMEventPluginOrder;
+export default DOMEventPluginOrder;

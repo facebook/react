@@ -62,7 +62,77 @@ describe('ReactIncrementalTriangle', () => {
     };
   }
 
-  function TriangleSimulator() {
+  const STOP = 'STOP';
+
+  function randomInteger(min, max) {
+    min = Math.ceil(min);
+    max = Math.floor(max);
+    return Math.floor(Math.random() * (max - min)) + min;
+  }
+
+  function formatAction(action) {
+    switch (action.type) {
+      case FLUSH:
+        return `flush(${action.unitsOfWork})`;
+      case STEP:
+        return `step(${action.counter})`;
+      case INTERRUPT:
+        return 'interrupt()';
+      case TOGGLE:
+        return `toggle(${action.childIndex})`;
+      case EXPIRE:
+        return `expire(${action.ms})`;
+      default:
+        throw new Error('Switch statement should be exhaustive');
+    }
+  }
+
+  function formatActions(actions) {
+    let result = 'simulate(';
+    for (let i = 0; i < actions.length; i++) {
+      const action = actions[i];
+      result += formatAction(action);
+      if (i !== actions.length - 1) {
+        result += ', ';
+      }
+    }
+    result += ')';
+    return result;
+  }
+
+  const MAX_DEPTH = 3;
+  const TOTAL_CHILDREN = Math.pow(3, MAX_DEPTH);
+  let TOTAL_TRIANGLES = 0;
+  for (let i = 0; i <= MAX_DEPTH; i++) {
+    TOTAL_TRIANGLES += Math.pow(3, i);
+  }
+
+  function randomAction() {
+    switch (randomInteger(0, 5)) {
+      case 0:
+        return flush(randomInteger(0, TOTAL_TRIANGLES * 1.5));
+      case 1:
+        return step(randomInteger(0, 10));
+      case 2:
+        return interrupt();
+      case 3:
+        return toggle(randomInteger(0, TOTAL_CHILDREN));
+      case 4:
+        return expire(randomInteger(0, 1500));
+      default:
+        throw new Error('Switch statement should be exhaustive');
+    }
+  }
+
+  function randomActions(n) {
+    let actions = [];
+    for (let i = 0; i < n; i++) {
+      actions.push(randomAction());
+    }
+    return actions;
+  }
+
+  function TriangleSimulator(rootID) {
     let triangles = [];
     let leafTriangles = [];
     let yieldAfterEachRender = false;
@@ -132,27 +202,35 @@ describe('ReactIncrementalTriangle', () => {
       }
     }
 
-    const depth = 3;
-
     let keyCounter = 0;
     function reset(nextStep = 0) {
       triangles = [];
       leafTriangles = [];
       // Remounts the whole tree by changing the key
-      ReactNoop.render(<App depth={depth} key={keyCounter++} />);
+      if (rootID) {
+        ReactNoop.renderToRootWithID(
+          <App depth={MAX_DEPTH} key={keyCounter++} />,
+          rootID,
+        );
+      } else {
+        ReactNoop.render(<App depth={MAX_DEPTH} key={keyCounter++} />);
+      }
       ReactNoop.flush();
       assertConsistentTree();
       return appInstance;
     }
 
     reset();
-    const totalChildren = leafTriangles.length;
-    const totalTriangles = triangles.length;
 
     function assertConsistentTree(activeTriangle, counter) {
       const activeIndex = activeTriangle ? activeTriangle.leafIndex : -1;
 
-      const children = ReactNoop.getChildren();
+      const children = ReactNoop.getChildren(rootID);
+
+      if (children.length !== TOTAL_CHILDREN) {
+        throw new Error('Wrong number of children.');
+      }
+
       for (let i = 0; i < children.length; i++) {
         let child = children[i];
         let num = child.prop;
@@ -183,14 +261,17 @@ describe('ReactIncrementalTriangle', () => {
       }
     }
 
-    function simulate(...actions) {
+    function* simulateAndYield() {
       const app = reset();
       let expectedCounterAtEnd = app.state.counter;
 
       let activeTriangle = null;
-      for (var i = 0; i < actions.length; i++) {
+      while (true) {
+        var action = yield;
+        if (action === STOP) {
+          break;
+        }
         ReactNoop.flushSync(() => {
-          const action = actions[i];
           switch (action.type) {
             case FLUSH:
               ReactNoop.flushUnitsOfWork(action.unitsOfWork);
@@ -234,84 +315,83 @@ describe('ReactIncrementalTriangle', () => {
       assertConsistentTree(activeTriangle, expectedCounterAtEnd);
     }
 
-    return {simulate, totalChildren, totalTriangles};
+    function simulate(...actions) {
+      const gen = simulateAndYield();
+      for (let action of actions) {
+        gen.next(action);
+      }
+      gen.next(STOP);
+    }
+
+    return {
+      simulateAndYield,
+      simulate,
+      randomAction,
+      randomActions,
+    };
   }
 
-  it('renders the triangle demo without inconsistencies', () => {
-    const {simulate} = TriangleSimulator();
-    simulate(step(1));
-    simulate(toggle(0), step(1), toggle(0));
-    simulate(step(1), toggle(0), flush(2), step(2), toggle(0));
-    simulate(step(1), flush(3), toggle(0), step(0));
-    simulate(step(1), flush(3), toggle(18), step(0));
-    simulate(step(4), flush(52), expire(1476), flush(17), step(0));
-    simulate(interrupt(), toggle(10), step(2), expire(990), flush(46));
-    simulate(interrupt(), step(6), step(7), toggle(6), interrupt());
+  describe('single root', () => {
+    // These tests are not deterministic because the inputs are randomized. It
+    // runs a limited number of tests on every run. If it fails, it will output
+    // the case that led to the failure. Add the failing case to the test above
+    // to prevent future regressions.
+    it('hard-coded tests', () => {
+      const {simulate} = TriangleSimulator();
+      simulate(step(1));
+      simulate(toggle(0), step(1), toggle(0));
+      simulate(step(1), toggle(0), flush(2), step(2), toggle(0));
+      simulate(step(1), flush(3), toggle(0), step(0));
+      simulate(step(1), flush(3), toggle(18), step(0));
+      simulate(step(4), flush(52), expire(1476), flush(17), step(0));
+      simulate(interrupt(), toggle(10), step(2), expire(990), flush(46));
+      simulate(interrupt(), step(6), step(7), toggle(6), interrupt());
+    });
+
+    it('generative tests', () => {
+      const {simulate} = TriangleSimulator();
+
+      const limit = 1000;
+
+      for (let i = 0; i < limit; i++) {
+        const actions = randomActions(5);
+        try {
+          simulate(...actions);
+        } catch (e) {
+          console.error(
+            `Triangle fuzz tester error! Copy and paste the following line into the test suite:         
+${formatActions(actions)}
+          `,
+          );
+          throw e;
+        }
+      }
+    });
   });
 
-  it('fuzz tester', () => {
-    // This test is not deterministic because the inputs are randomized. It runs
-    // a limited number of tests on every run. If it fails, it will output the
-    // case that led to the failure. Add the failing case to the test above
-    // to prevent future regressions.
-    const {simulate, totalTriangles, totalChildren} = TriangleSimulator();
+  describe('multiple roots', () => {
+    const rootIDs = ['a', 'b', 'c'];
 
-    const limit = 1000;
-
-    function randomInteger(min, max) {
-      min = Math.ceil(min);
-      max = Math.floor(max);
-      return Math.floor(Math.random() * (max - min)) + min;
-    }
-
-    function randomAction() {
-      switch (randomInteger(0, 5)) {
-        case 0:
-          return flush(randomInteger(0, totalTriangles * 1.5));
-        case 1:
-          return step(randomInteger(0, 10));
-        case 2:
-          return interrupt();
-        case 3:
-          return toggle(randomInteger(0, totalChildren));
-        case 4:
-          return expire(randomInteger(0, 1500));
-        default:
-          throw new Error('Switch statement should be exhaustive');
+    function randomActionsPerRoot() {
+      function randomRootID() {
+        const index = randomInteger(0, rootIDs.length);
+        return rootIDs[index];
       }
-    }
 
-    function randomActions(n) {
-      let actions = [];
-      for (let i = 0; i < n; i++) {
-        actions.push(randomAction());
+      const actions = [];
+      for (let i = 0; i < 10; i++) {
+        const rootID = randomRootID();
+        const action = randomAction();
+        actions.push([rootID, action]);
       }
       return actions;
     }
 
-    function formatActions(actions) {
-      let result = 'simulate(';
+    function formatActionsPerRoot(actions) {
+      let result = 'simulateMultipleRoots(';
       for (let i = 0; i < actions.length; i++) {
-        const action = actions[i];
-        switch (action.type) {
-          case FLUSH:
-            result += `flush(${action.unitsOfWork})`;
-            break;
-          case STEP:
-            result += `step(${action.counter})`;
-            break;
-          case INTERRUPT:
-            result += 'interrupt()';
-            break;
-          case TOGGLE:
-            result += `toggle(${action.childIndex})`;
-            break;
-          case EXPIRE:
-            result += `expire(${action.ms})`;
-            break;
-          default:
-            throw new Error('Switch statement should be exhaustive');
-        }
+        const [rootID, action] = actions[i];
+        result += `['${rootID}', ${formatAction(action)}]`;
         if (i !== actions.length - 1) {
           result += ', ';
         }
@@ -320,19 +400,52 @@ describe('ReactIncrementalTriangle', () => {
       return result;
     }
 
-    for (let i = 0; i < limit; i++) {
-      const actions = randomActions(5);
-      try {
-        simulate(...actions);
-      } catch (e) {
-        console.error(
-          `
-Triangle fuzz tester error! Copy and paste the following line into the test suite:
-  ${formatActions(actions)}
-        `,
-        );
-        throw e;
+    function simulateMultipleRoots(...actions) {
+      const roots = new Map();
+      for (let rootID of rootIDs) {
+        const simulator = TriangleSimulator(rootID);
+        const generator = simulator.simulateAndYield();
+        // Call this once to prepare the generator
+        generator.next();
+        roots.set(rootID, generator);
       }
+
+      actions.forEach(([rootID, action]) => {
+        const generator = roots.get(rootID);
+        generator.next(action);
+      });
+      roots.forEach(generator => {
+        generator.next(STOP);
+      });
     }
+
+    it('hard-coded tests', () => {
+      simulateMultipleRoots(
+        ['b', interrupt()],
+        ['a', toggle(22)],
+        ['c', step(4)],
+        ['a', expire(10)],
+        ['a', interrupt()],
+        ['c', step(2)],
+        ['b', interrupt()],
+      );
+    });
+
+    it('generative tests', () => {
+      const limit = 100;
+      for (let i = 0; i < limit; i++) {
+        const actions = randomActionsPerRoot();
+        try {
+          simulateMultipleRoots(...actions);
+        } catch (e) {
+          console.error(
+            `Triangle fuzz tester error! Copy and paste the following line into the test suite:
+${formatActionsPerRoot(actions)}
+              `,
+          );
+          throw e;
+        }
+      }
+    });
   });
 });

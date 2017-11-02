@@ -4,21 +4,18 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberErrorLogger
  * @flow
  */
 
-'use strict';
+import type {CapturedError} from './ReactFiberScheduler';
 
-const invariant = require('fbjs/lib/invariant');
-
-import type {CapturedError} from 'ReactFiberScheduler';
+import invariant from 'fbjs/lib/invariant';
 
 const defaultShowDialog = (capturedError: CapturedError) => true;
 
 let showDialog = defaultShowDialog;
 
-function logCapturedError(capturedError: CapturedError): void {
+export function logCapturedError(capturedError: CapturedError): void {
   const logError = showDialog(capturedError);
 
   // Allow injected showDialog() to prevent default console.error logging.
@@ -56,7 +53,7 @@ function logCapturedError(capturedError: CapturedError): void {
     } else {
       errorBoundaryMessage =
         'Consider adding an error boundary to your tree to customize error handling behavior.\n' +
-        'You can learn more about error boundaries at https://fb.me/react-error-boundaries.';
+        'Visit https://fb.me/react-error-boundaries to learn more about error boundaries.';
     }
     const combinedMessage =
       `${componentNameMessage}${componentStack}\n\n` +
@@ -75,7 +72,7 @@ function logCapturedError(capturedError: CapturedError): void {
   }
 }
 
-exports.injection = {
+export const injection = {
   /**
    * Display custom dialog for lifecycle errors.
    * Return false to prevent default behavior of logging to console.error.
@@ -92,5 +89,3 @@ exports.injection = {
     showDialog = fn;
   },
 };
-
-exports.logCapturedError = logCapturedError;

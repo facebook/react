@@ -3,24 +3,17 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticEvent
  */
 
 /* eslint valid-typeof: 0 */
 
-'use strict';
-
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var invariant = require('fbjs/lib/invariant');
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 var didWarnForAddedNewProperty = false;
 var isProxySupported = typeof Proxy === 'function';
 var EVENT_POOL_SIZE = 10;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 var shouldBeReleasedProperties = [
   'dispatchConfig',
@@ -273,8 +266,6 @@ if (__DEV__) {
 
 addEventPoolingTo(SyntheticEvent);
 
-module.exports = SyntheticEvent;
-
 /**
   * Helper to nullify syntheticEvent instance properties when destructing
   *
@@ -358,3 +349,5 @@ function addEventPoolingTo(EventConstructor) {
   EventConstructor.getPooled = getPooledEvent;
   EventConstructor.release = releasePooledEvent;
 }
+
+export default SyntheticEvent;

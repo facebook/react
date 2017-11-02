@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticFocusEvent
  */
 
-'use strict';
-
-var SyntheticUIEvent = require('SyntheticUIEvent');
+import SyntheticUIEvent from './SyntheticUIEvent';
 
 /**
  * @interface FocusEvent
@@ -42,4 +38,4 @@ function SyntheticFocusEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticFocusEvent, FocusEventInterface);
 
-module.exports = SyntheticFocusEvent;
+export default SyntheticFocusEvent;

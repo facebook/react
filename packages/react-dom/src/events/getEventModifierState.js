@@ -3,11 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule getEventModifierState
  */
-
-'use strict';
 
 /**
  * Translation from modifier key to the associated property in the event.
@@ -38,4 +34,4 @@ function getEventModifierState(nativeEvent) {
   return modifierStateGetter;
 }
 
-module.exports = getEventModifierState;
+export default getEventModifierState;

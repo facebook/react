@@ -34,7 +34,8 @@ describe('ReactDOMServer', () => {
     ExecutionEnvironment.canUseDOM = false;
     ReactDOMServer = require('react-dom/server');
 
-    var DOMProperty = require('DOMProperty');
+    // TODO: can we express this test with only public API?
+    var DOMProperty = require('../shared/DOMProperty').default;
     ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
@@ -655,8 +656,11 @@ describe('ReactDOMServer', () => {
         ' This usually means you called setState() outside componentWillMount() on the server.' +
         ' This is a no-op.\n\nPlease check the code for the Foo component.',
     );
+
     var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
+    jest.runOnlyPendingTimers();
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('warns with a no-op when an async forceUpdate is triggered', () => {

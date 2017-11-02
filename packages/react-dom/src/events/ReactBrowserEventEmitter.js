@@ -3,18 +3,16 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactBrowserEventEmitter
  */
 
-'use strict';
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 
-var EventPluginRegistry = require('EventPluginRegistry');
-var ReactDOMEventListener = require('ReactDOMEventListener');
-var ReactEventEmitterMixin = require('ReactEventEmitterMixin');
+import ReactDOMEventListener from './ReactDOMEventListener';
+import isEventSupported from './isEventSupported';
+import BrowserEventConstants from './BrowserEventConstants';
 
-var isEventSupported = require('isEventSupported');
-var {topLevelTypes} = require('BrowserEventConstants');
+var {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -239,4 +237,4 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 });
 
-module.exports = ReactBrowserEventEmitter;
+export default ReactBrowserEventEmitter;

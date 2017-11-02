@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule createMicrosoftUnsafeLocalFunction
  */
 
 /* globals MSApp */
-
-'use strict';
 
 /**
  * Create a function which has 'unsafe' privileges (required by windows8 apps)
@@ -26,4 +22,4 @@ var createMicrosoftUnsafeLocalFunction = function(func) {
   }
 };
 
-module.exports = createMicrosoftUnsafeLocalFunction;
+export default createMicrosoftUnsafeLocalFunction;

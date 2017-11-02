@@ -4,21 +4,20 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule EventPluginRegistry
  * @flow
  */
 
-'use strict';
+import type {DispatchConfig} from './ReactSyntheticEventType';
+import type {
+  AnyNativeEvent,
+  PluginName,
+  PluginModule,
+} from './PluginModuleType';
 
-import type {DispatchConfig} from 'ReactSyntheticEventType';
-
-import type {AnyNativeEvent, PluginName, PluginModule} from 'PluginModuleType';
+import invariant from 'fbjs/lib/invariant';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
-
 type EventPluginOrder = null | Array<PluginName>;
-
-var invariant = require('fbjs/lib/invariant');
 
 /**
  * Injectable ordering of event plugins.
@@ -250,4 +249,4 @@ var EventPluginRegistry = {
   },
 };
 
-module.exports = EventPluginRegistry;
+export default EventPluginRegistry;

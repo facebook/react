@@ -4,44 +4,43 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberClassComponent
  * @flow
  */
 
-'use strict';
+import type {Fiber} from './ReactFiber';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import type {Fiber} from 'ReactFiber';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import {Update} from 'shared/ReactTypeOfSideEffect';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {isMounted} from 'shared/ReactFiberTreeReflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
+import getComponentName from 'shared/getComponentName';
+import shallowEqual from 'fbjs/lib/shallowEqual';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var {Update} = require('ReactTypeOfSideEffect');
-
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
-var {
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   isContextConsumer,
-} = require('ReactFiberContext');
-var {
+} from './ReactFiberContext';
+import {
   insertUpdateIntoFiber,
   processUpdateQueue,
-} = require('ReactFiberUpdateQueue');
-var {hasContextChanged} = require('ReactFiberContext');
-var {isMounted} = require('ReactFiberTreeReflection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('getComponentName');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-var invariant = require('fbjs/lib/invariant');
+} from './ReactFiberUpdateQueue';
+import {hasContextChanged} from './ReactFiberContext';
 
+var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
-  var warning = require('fbjs/lib/warning');
+  var didWarnAboutStateAssignmentForComponent = {};
+
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
@@ -74,7 +73,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-module.exports = function(
+export default function(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
@@ -201,12 +200,25 @@ module.exports = function(
     if (__DEV__) {
       const name = getComponentName(workInProgress);
       const renderPresent = instance.render;
-      warning(
-        renderPresent,
-        '%s(...): No `render` method found on the returned component ' +
-          'instance: you may have forgotten to define `render`.',
-        name,
-      );
+
+      if (!renderPresent) {
+        if (type.prototype && typeof type.prototype.render === 'function') {
+          warning(
+            false,
+            '%s(...): No `render` method found on the returned component ' +
+              'instance: did you accidentally return an object from the constructor?',
+            name,
+          );
+        } else {
+          warning(
+            false,
+            '%s(...): No `render` method found on the returned component ' +
+              'instance: you may have forgotten to define `render`.',
+            name,
+          );
+        }
+      }
+
       const noGetInitialStateOnES6 =
         !instance.getInitialState ||
         instance.getInitialState.isReactClassApproved ||
@@ -393,13 +405,17 @@ module.exports = function(
 
     if (instance.state !== oldState) {
       if (__DEV__) {
-        warning(
-          false,
-          '%s.componentWillReceiveProps(): Assigning directly to ' +
-            "this.state is deprecated (except inside a component's " +
-            'constructor). Use setState instead.',
-          getComponentName(workInProgress),
-        );
+        const componentName = getComponentName(workInProgress) || 'Component';
+        if (!didWarnAboutStateAssignmentForComponent[componentName]) {
+          warning(
+            false,
+            '%s.componentWillReceiveProps(): Assigning directly to ' +
+              "this.state is deprecated (except inside a component's " +
+              'constructor). Use setState instead.',
+            componentName,
+          );
+          didWarnAboutStateAssignmentForComponent[componentName] = true;
+        }
       }
       updater.enqueueReplaceState(instance, instance.state, null);
     }
@@ -702,4 +718,4 @@ module.exports = function(
     // resumeMountClassInstance,
     updateClassInstance,
   };
-};
+}

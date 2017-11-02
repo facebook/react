@@ -4,13 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule getComponentName
  * @flow
  */
 
-'use strict';
-
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 function getComponentName(fiber: Fiber): string | null {
   const {type} = fiber;
@@ -23,4 +20,4 @@ function getComponentName(fiber: Fiber): string | null {
   return null;
 }
 
-module.exports = getComponentName;
+export default getComponentName;

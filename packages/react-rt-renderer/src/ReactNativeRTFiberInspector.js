@@ -4,22 +4,21 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTFiberInspector
  * @flow
  */
-'use strict';
 
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-const getComponentName = require('getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
-const ReactTypeOfWork = require('ReactTypeOfWork');
-const invariant = require('fbjs/lib/invariant');
+import {
+  findCurrentFiberUsingSlowPath,
+  findCurrentHostFiber,
+} from 'shared/ReactFiberTreeReflection';
+import getComponentName from 'shared/getComponentName';
+import {HostComponent} from 'shared/ReactTypeOfWork';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+
+import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
 
 const {getFiberFromTag} = ReactNativeRTComponentTree;
-const {findCurrentFiberUsingSlowPath} = ReactFiberTreeReflection;
-const {HostComponent} = ReactTypeOfWork;
-
 let getInspectorDataForViewTag;
 
 if (__DEV__) {
@@ -48,7 +47,7 @@ if (__DEV__) {
   };
 
   var getHostProps = function(fiber) {
-    const host = ReactFiberTreeReflection.findCurrentHostFiber(fiber);
+    const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
     }
@@ -103,6 +102,6 @@ if (__DEV__) {
   };
 }
 
-module.exports = {
+export default {
   getInspectorDataForViewTag,
 };

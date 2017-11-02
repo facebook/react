@@ -4,38 +4,32 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule SimpleEventPlugin
  * @flow
  */
 
-'use strict';
-
-var EventPropagators = require('EventPropagators');
-var SyntheticAnimationEvent = require('SyntheticAnimationEvent');
-var SyntheticClipboardEvent = require('SyntheticClipboardEvent');
-var SyntheticEvent = require('SyntheticEvent');
-var SyntheticFocusEvent = require('SyntheticFocusEvent');
-var SyntheticKeyboardEvent = require('SyntheticKeyboardEvent');
-var SyntheticMouseEvent = require('SyntheticMouseEvent');
-var SyntheticDragEvent = require('SyntheticDragEvent');
-var SyntheticTouchEvent = require('SyntheticTouchEvent');
-var SyntheticTransitionEvent = require('SyntheticTransitionEvent');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var SyntheticWheelEvent = require('SyntheticWheelEvent');
-
-var getEventCharCode = require('getEventCharCode');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
-
-import type {TopLevelTypes} from 'BrowserEventConstants';
+import type {TopLevelTypes} from './BrowserEventConstants';
 import type {
   DispatchConfig,
   ReactSyntheticEvent,
-} from 'ReactSyntheticEventType';
-import type {Fiber} from 'ReactFiber';
-import type {EventTypes, PluginModule} from 'PluginModuleType';
+} from 'events/ReactSyntheticEventType';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {EventTypes, PluginModule} from 'events/PluginModuleType';
+
+import EventPropagators from 'events/EventPropagators';
+import SyntheticEvent from 'events/SyntheticEvent';
+import warning from 'fbjs/lib/warning';
+
+import SyntheticAnimationEvent from './SyntheticAnimationEvent';
+import SyntheticClipboardEvent from './SyntheticClipboardEvent';
+import SyntheticFocusEvent from './SyntheticFocusEvent';
+import SyntheticKeyboardEvent from './SyntheticKeyboardEvent';
+import SyntheticMouseEvent from './SyntheticMouseEvent';
+import SyntheticDragEvent from './SyntheticDragEvent';
+import SyntheticTouchEvent from './SyntheticTouchEvent';
+import SyntheticTransitionEvent from './SyntheticTransitionEvent';
+import SyntheticUIEvent from './SyntheticUIEvent';
+import SyntheticWheelEvent from './SyntheticWheelEvent';
+import getEventCharCode from './getEventCharCode';
 
 /**
  * Turns
@@ -285,4 +279,4 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
   },
 };
 
-module.exports = SimpleEventPlugin;
+export default SimpleEventPlugin;

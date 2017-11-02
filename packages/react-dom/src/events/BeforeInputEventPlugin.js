@@ -3,19 +3,16 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule BeforeInputEventPlugin
  */
 
-'use strict';
+import type {TopLevelTypes} from './BrowserEventConstants';
 
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var FallbackCompositionState = require('FallbackCompositionState');
-var SyntheticCompositionEvent = require('SyntheticCompositionEvent');
-var SyntheticInputEvent = require('SyntheticInputEvent');
+import EventPropagators from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-import type {TopLevelTypes} from 'BrowserEventConstants';
+import FallbackCompositionState from './FallbackCompositionState';
+import SyntheticCompositionEvent from './SyntheticCompositionEvent';
+import SyntheticInputEvent from './SyntheticInputEvent';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
@@ -473,4 +470,4 @@ var BeforeInputEventPlugin = {
   },
 };
 
-module.exports = BeforeInputEventPlugin;
+export default BeforeInputEventPlugin;

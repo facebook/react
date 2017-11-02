@@ -5,18 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import '../shared/ReactDOMInjection';
+import ReactVersion from 'shared/ReactVersion';
 
-var ReactDOMStringRenderer = require('ReactDOMStringRenderer');
-var ReactDOMNodeStreamRenderer = require('ReactDOMNodeStreamRenderer');
-var ReactVersion = require('ReactVersion');
+import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
+import {
+  renderToNodeStream,
+  renderToStaticNodeStream,
+} from './ReactDOMNodeStreamRenderer';
 
-require('ReactDOMInjection');
-
-module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToNodeStream: ReactDOMNodeStreamRenderer.renderToNodeStream,
-  renderToStaticNodeStream: ReactDOMNodeStreamRenderer.renderToStaticNodeStream,
-  version: ReactVersion,
+export {
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
 };
+
+export const version = ReactVersion;

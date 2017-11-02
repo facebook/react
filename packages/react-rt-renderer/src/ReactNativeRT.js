@@ -4,25 +4,26 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeRTFiberEntry
  * @flow
  */
 
-'use strict';
+import type {ReactNativeRTType} from './ReactNativeRTTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-const ReactFiberErrorLogger = require('ReactFiberErrorLogger');
-const ReactGenericBatching = require('ReactGenericBatching');
-const ReactNativeFiberErrorDialog = require('ReactNativeFiberErrorDialog'); // Reused from RN, seems fine?
-const ReactPortal = require('ReactPortal');
-const ReactNativeRTComponentTree = require('ReactNativeRTComponentTree');
-const ReactNativeRTFiberRenderer = require('ReactNativeRTFiberRenderer');
-const ReactNativeRTFiberInspector = require('ReactNativeRTFiberInspector');
-const ReactVersion = require('ReactVersion');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import * as ReactFiberErrorLogger
+  from 'react-reconciler/src/ReactFiberErrorLogger';
+import {
+  showDialog,
+} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import ReactVersion from 'shared/ReactVersion';
 
-const {injectInternals} = require('ReactFiberDevToolsHook');
-
-import type {ReactNativeRTType} from 'ReactNativeRTTypes';
-import type {ReactNodeList} from 'ReactTypes';
+import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import ReactNativeRTFiberRenderer from './ReactNativeRTFiberRenderer';
+import ReactNativeRTFiberInspector from './ReactNativeRTFiberInspector';
 
 /**
  * Make sure essential globals are available and are patched correctly. Please don't remove this
@@ -32,7 +33,7 @@ import type {ReactNodeList} from 'ReactTypes';
  */
 require('InitializeCore');
 
-require('ReactNativeRTEventEmitter');
+require('./ReactNativeRTEventEmitter');
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeRTFiberRenderer.batchedUpdates,
@@ -42,9 +43,7 @@ const roots = new Map();
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(
-  ReactNativeFiberErrorDialog.showDialog,
-);
+ReactFiberErrorLogger.injection.injectDialog(showDialog);
 
 const ReactNativeRTFiber: ReactNativeRTType = {
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
@@ -94,4 +93,4 @@ injectInternals({
   rendererPackageName: 'react-rt-renderer',
 });
 
-module.exports = ReactNativeRTFiber;
+export default ReactNativeRTFiber;

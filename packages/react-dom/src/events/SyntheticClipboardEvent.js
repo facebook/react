@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SyntheticClipboardEvent
  */
 
-'use strict';
-
-var SyntheticEvent = require('SyntheticEvent');
+import SyntheticEvent from 'events/SyntheticEvent';
 
 /**
  * @interface Event
@@ -46,4 +42,4 @@ function SyntheticClipboardEvent(
 
 SyntheticEvent.augmentClass(SyntheticClipboardEvent, ClipboardEventInterface);
 
-module.exports = SyntheticClipboardEvent;
+export default SyntheticClipboardEvent;

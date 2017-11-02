@@ -3,20 +3,18 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule validateDOMNesting
  */
 
-'use strict';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import warning from 'fbjs/lib/warning';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import ReactDebugCurrentFiber
+  from 'react-reconciler/src/ReactDebugCurrentFiber';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
-
+var {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 var validateDOMNesting = emptyFunction;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {getCurrentFiberStackAddendum} = require('ReactDebugCurrentFiber');
-
   // This validation code was written based on the HTML5 parsing spec:
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   //
@@ -483,6 +481,7 @@ if (__DEV__) {
     }
   };
 
+  // TODO: turn this into a named export
   validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
 
   // For testing
@@ -497,4 +496,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = validateDOMNesting;
+export default validateDOMNesting;

@@ -3,16 +3,13 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule setTextContent
  */
 
-'use strict';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var setInnerHTML = require('setInnerHTML');
-var {TEXT_NODE} = require('HTMLNodeType');
+import setInnerHTML from './setInnerHTML';
+import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -52,4 +49,4 @@ if (ExecutionEnvironment.canUseDOM) {
   }
 }
 
-module.exports = setTextContent;
+export default setTextContent;

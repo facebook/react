@@ -3,21 +3,15 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactDOMEventListener
  */
 
-'use strict';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {HostRoot} from 'shared/ReactTypeOfWork';
+import EventListener from 'fbjs/lib/EventListener';
 
-var EventListener = require('fbjs/lib/EventListener');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactFiberTreeReflection = require('ReactFiberTreeReflection');
-var ReactGenericBatching = require('ReactGenericBatching');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-
-var getEventTarget = require('getEventTarget');
-
-var {HostRoot} = ReactTypeOfWork;
+import getEventTarget from './getEventTarget';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
 
 var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 var callbackBookkeepingPool = [];
@@ -170,7 +164,7 @@ var ReactDOMEventListener = {
     if (
       targetInst !== null &&
       typeof targetInst.tag === 'number' &&
-      !ReactFiberTreeReflection.isFiberMounted(targetInst)
+      !isFiberMounted(targetInst)
     ) {
       // If we get an event (ex: img onload) before committing that
       // component's mount, ignore it for now (that is, treat it as if it was an
@@ -195,4 +189,4 @@ var ReactDOMEventListener = {
   },
 };
 
-module.exports = ReactDOMEventListener;
+export default ReactDOMEventListener;

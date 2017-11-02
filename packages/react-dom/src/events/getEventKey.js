@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule getEventKey
  */
 
-'use strict';
-
-var getEventCharCode = require('getEventCharCode');
+import getEventCharCode from './getEventCharCode';
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -107,4 +103,4 @@ function getEventKey(nativeEvent) {
   return '';
 }
 
-module.exports = getEventKey;
+export default getEventKey;

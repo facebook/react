@@ -9,7 +9,7 @@
 
 'use strict';
 
-var {HostComponent} = require('ReactTypeOfWork');
+var {HostComponent} = require('shared/ReactTypeOfWork');
 
 var EventPluginHub;
 var ResponderEventPlugin;

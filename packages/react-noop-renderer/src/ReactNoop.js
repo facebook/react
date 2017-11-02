@@ -4,7 +4,6 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNoop
  * @flow
  */
 
@@ -15,18 +14,17 @@
  * environment.
  */
 
-'use strict';
+import type {Fiber} from 'react-reconciler/src/ReactFiber';
+import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
-import type {Fiber} from 'ReactFiber';
-import type {UpdateQueue} from 'ReactFiberUpdateQueue';
-
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-var ReactFiberReconciler = require('react-reconciler');
-var ReactInstanceMap = require('ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-
-var expect = require('jest-matchers');
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import ReactFiberInstrumentation
+  from 'react-reconciler/src/ReactFiberInstrumentation';
+import ReactFiberReconciler from 'react-reconciler';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
+import expect from 'expect';
 
 const UPDATE_SIGNAL = {};
 
@@ -513,7 +511,8 @@ var ReactNoop = {
       log(
         '  '.repeat(depth) +
           '- ' +
-          (fiber.type ? fiber.type.name || fiber.type : '[root]'),
+          // need to explicitly coerce Symbol to a string
+          (fiber.type ? fiber.type.name || fiber.type.toString() : '[root]'),
         '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']',
       );
       if (fiber.updateQueue) {
@@ -558,9 +557,8 @@ var ReactNoop = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Private. Used only by fixtures/fiber-debugger.
-    // (To be fair, it's the only place where `react-noop-renderer` package is used at all.)
     ReactFiberInstrumentation,
   },
 };
 
-module.exports = ReactNoop;
+export default ReactNoop;

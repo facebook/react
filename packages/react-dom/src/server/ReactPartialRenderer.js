@@ -4,54 +4,67 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactPartialRenderer
+ * @flow
  */
 
-'use strict';
+import type {ReactElement} from 'shared/ReactElementType';
 
-var {
+import React from 'react';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import emptyObject from 'fbjs/lib/emptyObject';
+import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
+import invariant from 'fbjs/lib/invariant';
+import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
+import warning from 'fbjs/lib/warning';
+import checkPropTypes from 'prop-types/checkPropTypes';
+import describeComponentFrame from 'shared/describeComponentFrame';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+
+import DOMMarkupOperations from './DOMMarkupOperations';
+import {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
-} = require('DOMNamespaces');
-var DOMMarkupOperations = require('DOMMarkupOperations');
-var React = require('react');
-var ReactControlledValuePropTypes = require('ReactControlledValuePropTypes');
+} from '../shared/DOMNamespaces';
+import ReactControlledValuePropTypes
+  from '../shared/ReactControlledValuePropTypes';
+import assertValidProps from '../shared/assertValidProps';
+import dangerousStyleValue from '../shared/dangerousStyleValue';
+import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
+import isCustomComponent from '../shared/isCustomComponent';
+import omittedCloseTags from '../shared/omittedCloseTags';
+import warnValidStyle from '../shared/warnValidStyle';
+import {
+  validateProperties as validateARIAProperties,
+} from '../shared/ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputProperties,
+} from '../shared/ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownProperties,
+} from '../shared/ReactDOMUnknownPropertyHook';
 
-var assertValidProps = require('assertValidProps');
-var dangerousStyleValue = require('dangerousStyleValue');
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var emptyObject = require('fbjs/lib/emptyObject');
-var escapeTextContentForBrowser = require('escapeTextContentForBrowser');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var invariant = require('fbjs/lib/invariant');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
-var omittedCloseTags = require('omittedCloseTags');
-var isCustomComponent = require('isCustomComponent');
+var REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xeacb;
 
-var toArray = React.Children.toArray;
+// Based on reading the React.Children implementation. TODO: type this somewhere?
+type ReactNode = string | number | ReactElement;
+type FlatReactChildren = Array<null | ReactNode>;
+type toArrayType = (children: mixed) => FlatReactChildren;
+var toArray = ((React.Children.toArray: any): toArrayType);
+
 var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var checkPropTypes = require('prop-types/checkPropTypes');
-  var warnValidStyle = require('warnValidStyle');
-  var {
-    validateProperties: validateARIAProperties,
-  } = require('ReactDOMInvalidARIAHook');
-  var {
-    validateProperties: validateInputProperties,
-  } = require('ReactDOMNullInputValuePropHook');
-  var {
-    validateProperties: validateUnknownProperties,
-  } = require('ReactDOMUnknownPropertyHook');
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props);
   };
 
-  var describeComponentFrame = require('describeComponentFrame');
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
@@ -60,17 +73,17 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
-  var setCurrentDebugStack = function(stack) {
-    currentDebugElementStack = stack[stack.length - 1].debugElementStack;
+  var setCurrentDebugStack = function(stack: Array<Frame>) {
+    var frame: Frame = stack[stack.length - 1];
+    currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
     // We are about to enter a new composite stack, reset the array.
     currentDebugElementStack.length = 0;
     currentDebugStack = stack;
     ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
   };
-  var pushElementToDebugStack = function(element) {
+  var pushElementToDebugStack = function(element: ReactElement) {
     if (currentDebugElementStack !== null) {
       currentDebugElementStack.push(element);
     }
@@ -87,7 +100,8 @@ if (__DEV__) {
     let stack = '';
     let debugStack = currentDebugStack;
     for (let i = debugStack.length - 1; i >= 0; i--) {
-      let debugElementStack = debugStack[i].debugElementStack;
+      const frame: Frame = debugStack[i];
+      let debugElementStack = ((frame: any): FrameDev).debugElementStack;
       for (let ii = debugElementStack.length - 1; ii >= 0; ii--) {
         stack += describeStackFrame(debugElementStack[ii]);
       }
@@ -101,6 +115,7 @@ var didWarnDefaultChecked = false;
 var didWarnDefaultSelectValue = false;
 var didWarnDefaultTextareaValue = false;
 var didWarnInvalidOptionChildren = false;
+var didWarnAboutNoopUpdateForComponent = {};
 var valuePropNames = ['value', 'defaultValue'];
 var newlineEatingTags = {
   listing: true,
@@ -130,7 +145,7 @@ var processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
-function createMarkupForStyles(styles) {
+function createMarkupForStyles(styles): string | null {
   var serialized = '';
   var delimiter = '';
   for (var styleName in styles) {
@@ -159,11 +174,18 @@ function createMarkupForStyles(styles) {
 }
 
 function warnNoop(
-  publicInstance: ReactComponent<any, any, any>,
+  publicInstance: React$Component<any, any>,
   callerName: string,
 ) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
+    const componentName =
+      (constructor && getComponentName(constructor)) || 'ReactClass';
+    const warningKey = `${componentName}.${callerName}`;
+    if (didWarnAboutNoopUpdateForComponent[warningKey]) {
+      return;
+    }
+
     warning(
       false,
       '%s(...): Can only update a mounting component. ' +
@@ -171,8 +193,9 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && getComponentName(constructor)) || 'ReactClass',
+      componentName,
     );
+    didWarnAboutNoopUpdateForComponent[warningKey] = true;
   }
 }
 
@@ -195,7 +218,23 @@ function getNonChildrenInnerMarkup(props) {
   return null;
 }
 
-function flattenOptionChildren(children) {
+function flattenTopLevelChildren(children: mixed): FlatReactChildren {
+  if (!React.isValidElement(children)) {
+    return toArray(children);
+  }
+  const element = ((children: any): ReactElement);
+  if (element.type !== REACT_FRAGMENT_TYPE) {
+    return [element];
+  }
+  const fragmentChildren = element.props.children;
+  if (!React.isValidElement(fragmentChildren)) {
+    return toArray(fragmentChildren);
+  }
+  const fragmentChildElement = ((fragmentChildren: any): ReactElement);
+  return [fragmentChildElement];
+}
+
+function flattenOptionChildren(children: mixed): string {
   var content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -257,13 +296,13 @@ var RESERVED_PROPS = {
 };
 
 function createOpenTagMarkup(
-  tagVerbatim,
-  tagLowercase,
-  props,
-  namespace,
-  makeStaticMarkup,
-  isRootElement,
-) {
+  tagVerbatim: string,
+  tagLowercase: string,
+  props: Object,
+  namespace: string,
+  makeStaticMarkup: boolean,
+  isRootElement: boolean,
+): string {
   var ret = '<' + tagVerbatim;
 
   for (var propKey in props) {
@@ -317,12 +356,20 @@ function validateRenderResult(child, type) {
   }
 }
 
-function resolve(child, context) {
+function resolve(
+  child: mixed,
+  context: Object,
+): {|
+  child: mixed,
+  context: Object,
+|} {
   while (React.isValidElement(child)) {
+    // Safe because we just checked it's an element.
+    var element: ReactElement = ((child: any): ReactElement);
     if (__DEV__) {
-      pushElementToDebugStack(child);
+      pushElementToDebugStack(element);
     }
-    var Component = child.type;
+    var Component = element.type;
     if (typeof Component !== 'function') {
       break;
     }
@@ -354,9 +401,9 @@ function resolve(child, context) {
     };
 
     if (shouldConstruct(Component)) {
-      inst = new Component(child.props, publicContext, updater);
+      inst = new Component(element.props, publicContext, updater);
     } else {
-      inst = Component(child.props, publicContext, updater);
+      inst = Component(element.props, publicContext, updater);
       if (inst == null || inst.render == null) {
         child = inst;
         validateRenderResult(child, Component);
@@ -364,7 +411,7 @@ function resolve(child, context) {
       }
     }
 
-    inst.props = child.props;
+    inst.props = element.props;
     inst.context = publicContext;
     inst.updater = updater;
 
@@ -388,7 +435,7 @@ function resolve(child, context) {
           for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
             var partial = oldQueue[i];
             var partialState = typeof partial === 'function'
-              ? partial.call(inst, nextState, child.props, publicContext)
+              ? partial.call(inst, nextState, element.props, publicContext)
               : partial;
             if (partialState) {
               if (dontMutate) {
@@ -442,20 +489,40 @@ function resolve(child, context) {
   return {child, context};
 }
 
+type Frame = {
+  domNamespace: string,
+  children: FlatReactChildren,
+  childIndex: number,
+  context: Object,
+  footer: string,
+};
+
+type FrameDev = Frame & {
+  debugElementStack: Array<ReactElement>,
+};
+
 class ReactDOMServerRenderer {
-  constructor(element, makeStaticMarkup) {
-    var children = React.isValidElement(element) ? [element] : toArray(element);
-    var topFrame = {
+  stack: Array<Frame>;
+  exhausted: boolean;
+  // TODO: type this more strictly:
+  currentSelectValue: any;
+  previousWasTextNode: boolean;
+  makeStaticMarkup: boolean;
+
+  constructor(children: mixed, makeStaticMarkup: boolean) {
+    const flatChildren = flattenTopLevelChildren(children);
+
+    var topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
       domNamespace: Namespaces.html,
-      children,
+      children: flatChildren,
       childIndex: 0,
       context: emptyObject,
       footer: '',
     };
     if (__DEV__) {
-      topFrame.debugElementStack = [];
+      ((topFrame: any): FrameDev).debugElementStack = [];
     }
     this.stack = [topFrame];
     this.exhausted = false;
@@ -464,7 +531,7 @@ class ReactDOMServerRenderer {
     this.makeStaticMarkup = makeStaticMarkup;
   }
 
-  read(bytes) {
+  read(bytes: number): string | null {
     if (this.exhausted) {
       return null;
     }
@@ -475,7 +542,7 @@ class ReactDOMServerRenderer {
         this.exhausted = true;
         break;
       }
-      var frame = this.stack[this.stack.length - 1];
+      var frame: Frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
         var footer = frame.footer;
         out += footer;
@@ -501,7 +568,11 @@ class ReactDOMServerRenderer {
     return out;
   }
 
-  render(child, context, parentNamespace) {
+  render(
+    child: ReactNode | null,
+    context: Object,
+    parentNamespace: string,
+  ): string {
     if (typeof child === 'string' || typeof child === 'number') {
       var text = '' + child;
       if (text === '') {
@@ -516,32 +587,55 @@ class ReactDOMServerRenderer {
       this.previousWasTextNode = true;
       return escapeTextContentForBrowser(text);
     } else {
-      ({child, context} = resolve(child, context));
-      if (child === null || child === false) {
+      var nextChild;
+      ({child: nextChild, context} = resolve(child, context));
+      if (nextChild === null || nextChild === false) {
+        return '';
+      } else if (!React.isValidElement(nextChild)) {
+        const nextChildren = toArray(nextChild);
+        const frame: Frame = {
+          domNamespace: parentNamespace,
+          children: nextChildren,
+          childIndex: 0,
+          context: context,
+          footer: '',
+        };
+        if (__DEV__) {
+          ((frame: any): FrameDev).debugElementStack = [];
+        }
+        this.stack.push(frame);
+        return '';
+      } else if (
+        ((nextChild: any): ReactElement).type === REACT_FRAGMENT_TYPE
+      ) {
+        const nextChildren = toArray(
+          ((nextChild: any): ReactElement).props.children,
+        );
+        const frame: Frame = {
+          domNamespace: parentNamespace,
+          children: nextChildren,
+          childIndex: 0,
+          context: context,
+          footer: '',
+        };
+        if (__DEV__) {
+          ((frame: any): FrameDev).debugElementStack = [];
+        }
+        this.stack.push(frame);
         return '';
       } else {
-        if (React.isValidElement(child)) {
-          return this.renderDOM(child, context, parentNamespace);
-        } else {
-          var children = toArray(child);
-          var frame = {
-            domNamespace: parentNamespace,
-            children,
-            childIndex: 0,
-            context: context,
-            footer: '',
-          };
-          if (__DEV__) {
-            frame.debugElementStack = [];
-          }
-          this.stack.push(frame);
-          return '';
-        }
+        // Safe because we just checked it's an element.
+        var nextElement = ((nextChild: any): ReactElement);
+        return this.renderDOM(nextElement, context, parentNamespace);
       }
     }
   }
 
-  renderDOM(element, context, parentNamespace) {
+  renderDOM(
+    element: ReactElement,
+    context: Object,
+    parentNamespace: string,
+  ): string {
     var tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
@@ -828,7 +922,7 @@ class ReactDOMServerRenderer {
       footer: footer,
     };
     if (__DEV__) {
-      frame.debugElementStack = [];
+      ((frame: any): FrameDev).debugElementStack = [];
     }
     this.stack.push(frame);
     this.previousWasTextNode = false;
@@ -836,4 +930,4 @@ class ReactDOMServerRenderer {
   }
 }
 
-module.exports = ReactDOMServerRenderer;
+export default ReactDOMServerRenderer;

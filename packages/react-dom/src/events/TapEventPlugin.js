@@ -4,16 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule TapEventPlugin
  * @flow
  */
 
-'use strict';
+import EventPluginUtils from 'events/EventPluginUtils';
+import EventPropagators from 'events/EventPropagators';
+import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 
-var EventPluginUtils = require('EventPluginUtils');
-var EventPropagators = require('EventPropagators');
-var SyntheticUIEvent = require('SyntheticUIEvent');
-var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
+import SyntheticUIEvent from './SyntheticUIEvent';
 
 var isStartish = EventPluginUtils.isStartish;
 var isEndish = EventPluginUtils.isEndish;
@@ -151,4 +149,4 @@ var TapEventPlugin = {
   },
 };
 
-module.exports = TapEventPlugin;
+export default TapEventPlugin;

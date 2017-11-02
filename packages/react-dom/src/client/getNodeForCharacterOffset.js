@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule getNodeForCharacterOffset
  */
 
-'use strict';
-
-var {TEXT_NODE} = require('HTMLNodeType');
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Given any node return the first leaf node without children.
@@ -70,4 +66,4 @@ function getNodeForCharacterOffset(root, offset) {
   }
 }
 
-module.exports = getNodeForCharacterOffset;
+export default getNodeForCharacterOffset;

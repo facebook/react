@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule getEventTarget
  */
 
-'use strict';
-
-var {TEXT_NODE} = require('HTMLNodeType');
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Gets the target node from a native browser event by accounting for
@@ -31,4 +27,4 @@ function getEventTarget(nativeEvent) {
   return target.nodeType === TEXT_NODE ? target.parentNode : target;
 }
 
-module.exports = getEventTarget;
+export default getEventTarget;

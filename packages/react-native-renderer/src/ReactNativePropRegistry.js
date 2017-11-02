@@ -4,10 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativePropRegistry
  * @flow
  */
-'use strict';
 
 var objects = {};
 var uniqueID = 1;
@@ -39,4 +37,4 @@ class ReactNativePropRegistry {
   }
 }
 
-module.exports = ReactNativePropRegistry;
+export default ReactNativePropRegistry;

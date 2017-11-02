@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SVGDOMPropertyConfig
  */
 
-'use strict';
-
-var DOMProperty = require('DOMProperty');
+import DOMProperty from './DOMProperty';
 
 var {HAS_STRING_BOOLEAN_VALUE} = DOMProperty.injection;
 
@@ -152,4 +148,4 @@ ATTRS.forEach(original => {
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
 });
 
-module.exports = SVGDOMPropertyConfig;
+export default SVGDOMPropertyConfig;

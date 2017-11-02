@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule HTMLDOMPropertyConfig
  */
 
-'use strict';
-
-var DOMProperty = require('DOMProperty');
+import DOMProperty from './DOMProperty';
 
 var MUST_USE_PROPERTY = DOMProperty.injection.MUST_USE_PROPERTY;
 var HAS_BOOLEAN_VALUE = DOMProperty.injection.HAS_BOOLEAN_VALUE;
@@ -119,4 +115,4 @@ var HTMLDOMPropertyConfig = {
   },
 };
 
-module.exports = HTMLDOMPropertyConfig;
+export default HTMLDOMPropertyConfig;

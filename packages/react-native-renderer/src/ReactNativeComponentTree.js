@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ReactNativeComponentTree
  */
 
-'use strict';
-
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 var instanceCache = {};
 var instanceProps = {};
@@ -51,4 +47,4 @@ var ReactNativeComponentTree = {
   updateFiberProps,
 };
 
-module.exports = ReactNativeComponentTree;
+export default ReactNativeComponentTree;

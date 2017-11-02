@@ -4,19 +4,17 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactNativeBridgeEventPlugin
  * @flow
  */
-'use strict';
 
-const EventPropagators = require('EventPropagators');
-const SyntheticEvent = require('SyntheticEvent');
-const invariant = require('fbjs/lib/invariant');
+import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
+
+import EventPropagators from 'events/EventPropagators';
+import SyntheticEvent from 'events/SyntheticEvent';
+import invariant from 'fbjs/lib/invariant';
 
 const customBubblingEventTypes = {};
 const customDirectEventTypes = {};
-
-import type {ReactNativeBaseComponentViewConfig} from 'ReactNativeTypes';
 
 const ReactNativeBridgeEventPlugin = {
   eventTypes: {},
@@ -94,4 +92,4 @@ const ReactNativeBridgeEventPlugin = {
   },
 };
 
-module.exports = ReactNativeBridgeEventPlugin;
+export default ReactNativeBridgeEventPlugin;

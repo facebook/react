@@ -4,21 +4,17 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberHydrationContext
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
-var invariant = require('fbjs/lib/invariant');
+import {HostComponent, HostText, HostRoot} from 'shared/ReactTypeOfWork';
+import {Deletion, Placement} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-const {HostComponent, HostText, HostRoot} = require('ReactTypeOfWork');
-const {Deletion, Placement} = require('ReactTypeOfSideEffect');
-
-const {createFiberFromHostInstanceForDeletion} = require('ReactFiber');
+import {createFiberFromHostInstanceForDeletion} from './ReactFiber';
 
 export type HydrationContext<C, CX> = {
   enterHydrationState(fiber: Fiber): boolean,
@@ -33,7 +29,7 @@ export type HydrationContext<C, CX> = {
   popHydrationState(fiber: Fiber): boolean,
 };
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ): HydrationContext<C, CX> {
   const {shouldSetTextContent, hydration} = config;
@@ -378,4 +374,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     prepareToHydrateHostTextInstance,
     popHydrationState,
   };
-};
+}

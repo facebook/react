@@ -4,42 +4,33 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberCommitWork
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
 
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactTypeOfWork = require('ReactTypeOfWork');
-var {
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {
   ClassComponent,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
-  CoroutineComponent,
-} = ReactTypeOfWork;
-var {commitCallbacks} = require('ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('ReactFiberDevToolsHook');
-var {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = require('ReactErrorUtils');
+  CallComponent,
+} from 'shared/ReactTypeOfWork';
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-var {Placement, Update, ContentReset} = require('ReactTypeOfSideEffect');
+import {commitCallbacks} from './ReactFiberUpdateQueue';
+import {onCommitUnmount} from './ReactFiberDevToolsHook';
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
 
-var invariant = require('fbjs/lib/invariant');
+var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
+var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
-if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('ReactDebugFiberPerf');
-}
-
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
@@ -219,7 +210,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         safelyDetachRef(current);
         return;
       }
-      case CoroutineComponent: {
+      case CallComponent: {
         commitNestedUnmounts(current.stateNode);
         return;
       }
@@ -682,4 +673,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   } else {
     invariant(false, 'Mutating reconciler is disabled.');
   }
-};
+}

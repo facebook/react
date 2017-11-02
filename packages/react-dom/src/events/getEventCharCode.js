@@ -3,11 +3,7 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule getEventCharCode
  */
-
-'use strict';
 
 /**
  * `charCode` represents the actual "character code" and is safe to use with
@@ -44,4 +40,4 @@ function getEventCharCode(nativeEvent) {
   return 0;
 }
 
-module.exports = getEventCharCode;
+export default getEventCharCode;

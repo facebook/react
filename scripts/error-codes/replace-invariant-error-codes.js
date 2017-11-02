@@ -6,11 +6,9 @@
  */
 'use strict';
 
+var fs = require('fs');
 var evalToString = require('../shared/evalToString');
-var existingErrorMap = require('./codes.json');
 var invertObject = require('./invertObject');
-
-var errorMap = invertObject(existingErrorMap);
 
 module.exports = function(babel) {
   var t = babel.types;
@@ -18,17 +16,13 @@ module.exports = function(babel) {
   var SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
   // Generate a hygienic identifier
-  function getProdInvariantIdentifier(path, localState) {
+  function getProdInvariantIdentifier(path, file, localState) {
     if (!localState.prodInvariantIdentifier) {
-      localState.prodInvariantIdentifier = path.scope.generateUidIdentifier(
+      localState.prodInvariantIdentifier = file.addImport(
+        'shared/reactProdInvariant',
+        'default',
         'prodInvariant'
       );
-      path.scope.getProgramParent().push({
-        id: localState.prodInvariantIdentifier,
-        init: t.callExpression(t.identifier('require'), [
-          t.stringLiteral('reactProdInvariant'),
-        ]),
-      });
     }
     return localState.prodInvariantIdentifier;
   }
@@ -42,23 +36,15 @@ module.exports = function(babel) {
 
     visitor: {
       CallExpression: {
-        exit: function(path) {
+        exit: function(path, file) {
           var node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
             return;
           }
-          // Insert `var PROD_INVARIANT = require('reactProdInvariant');`
-          // before all `require('invariant')`s.
-          // NOTE it doesn't support ES6 imports yet.
-          if (
-            path.get('callee').isIdentifier({name: 'require'}) &&
-            path.get('arguments')[0] &&
-            path.get('arguments')[0].isStringLiteral({value: 'invariant'})
-          ) {
-            node[SEEN_SYMBOL] = true;
-            getProdInvariantIdentifier(path, this);
-          } else if (path.get('callee').isIdentifier({name: 'invariant'})) {
+          // Insert `import PROD_INVARIANT from 'reactProdInvariant';`
+          // before all `invariant()` calls.
+          if (path.get('callee').isIdentifier({name: 'invariant'})) {
             // Turns this code:
             //
             // invariant(condition, argument, 'foo', 'bar');
@@ -101,35 +87,40 @@ module.exports = function(babel) {
 
             devInvariant[SEEN_SYMBOL] = true;
 
-            var localInvariantId = getProdInvariantIdentifier(path, this);
+            // Avoid caching because we write it as we go.
+            var existingErrorMap = JSON.parse(
+              fs.readFileSync(__dirname + '/codes.json', 'utf-8')
+            );
+            var errorMap = invertObject(existingErrorMap);
 
+            var localInvariantId = getProdInvariantIdentifier(path, file, this);
             var prodErrorId = errorMap[errorMsgLiteral];
-            var prodInvariant;
+            var body = null;
+
             if (prodErrorId === undefined) {
-              // The error cannot be found in the map.
-              // (This case isn't expected to occur.)
-              // Even if it does, it's best to transform the invariant to a ternary,
-              // So we don't risk executing any slow code unnecessarily
-              // (eg generating an invariant message we don't actually need).
-              prodInvariant = path.node.arguments[1];
+              // The error wasn't found in the map.
+              // This is only expected to occur on master since we extract codes before releases.
+              // Keep the original invariant.
+              body = t.expressionStatement(devInvariant);
             } else {
-              prodInvariant = t.callExpression(
+              var prodInvariant = t.callExpression(
                 localInvariantId,
                 [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
               );
+              prodInvariant[SEEN_SYMBOL] = true;
+              // The error was found in the map.
+              // Switch between development and production versions depending on the env.
+              body = t.ifStatement(
+                DEV_EXPRESSION,
+                t.blockStatement([t.expressionStatement(devInvariant)]),
+                t.blockStatement([t.expressionStatement(prodInvariant)])
+              );
             }
 
-            prodInvariant[SEEN_SYMBOL] = true;
             path.replaceWith(
               t.ifStatement(
                 t.unaryExpression('!', condition),
-                t.blockStatement([
-                  t.ifStatement(
-                    DEV_EXPRESSION,
-                    t.blockStatement([t.expressionStatement(devInvariant)]),
-                    t.blockStatement([t.expressionStatement(prodInvariant)])
-                  ),
-                ])
+                t.blockStatement([body])
               )
             );
           }

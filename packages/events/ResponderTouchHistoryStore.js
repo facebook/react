@@ -4,21 +4,15 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ResponderTouchHistoryStore
  * @flow
  */
 
-'use strict';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-const EventPluginUtils = require('EventPluginUtils');
-
-const invariant = require('fbjs/lib/invariant');
+import EventPluginUtils from './EventPluginUtils';
 
 const {isEndish, isMoveish, isStartish} = EventPluginUtils;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -220,4 +214,4 @@ const ResponderTouchHistoryStore = {
   touchHistory,
 };
 
-module.exports = ResponderTouchHistoryStore;
+export default ResponderTouchHistoryStore;

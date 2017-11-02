@@ -4,11 +4,23 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDebugFiberPerf
  * @flow
  */
 
-import type {Fiber} from 'ReactFiber';
+import type {Fiber} from './ReactFiber';
+
+import getComponentName from 'shared/getComponentName';
+import {
+  HostRoot,
+  HostComponent,
+  HostText,
+  HostPortal,
+  ReturnComponent,
+  Fragment,
+} from 'shared/ReactTypeOfWork';
+
+// Trust the developer to only use this with a __DEV__ check
+let ReactDebugFiberPerf = (({}: any): typeof ReactDebugFiberPerf);
 
 type MeasurementPhase =
   | 'componentWillMount'
@@ -20,21 +32,7 @@ type MeasurementPhase =
   | 'componentDidMount'
   | 'getChildContext';
 
-// Trust the developer to only use this with a __DEV__ check
-let ReactDebugFiberPerf = ((null: any): typeof ReactDebugFiberPerf);
-
 if (__DEV__) {
-  const {
-    HostRoot,
-    HostComponent,
-    HostText,
-    HostPortal,
-    YieldComponent,
-    Fragment,
-  } = require('ReactTypeOfWork');
-
-  const getComponentName = require('getComponentName');
-
   // Prefix measurements so that it's possible to filter them.
   // Longer prefixes are hard to read in DevTools.
   const reactEmoji = '\u269B';
@@ -170,7 +168,7 @@ if (__DEV__) {
       case HostComponent:
       case HostText:
       case HostPortal:
-      case YieldComponent:
+      case ReturnComponent:
       case Fragment:
         return true;
       default:
@@ -410,4 +408,6 @@ if (__DEV__) {
   };
 }
 
-module.exports = ReactDebugFiberPerf;
+// TODO: convert to named exports
+// if this doesn't inflate the bundle.
+export default ReactDebugFiberPerf;

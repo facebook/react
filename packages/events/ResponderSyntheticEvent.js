@@ -3,13 +3,9 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule ResponderSyntheticEvent
  */
 
-'use strict';
-
-var SyntheticEvent = require('SyntheticEvent');
+import SyntheticEvent from './SyntheticEvent';
 
 /**
  * `touchHistory` isn't actually on the native event, but putting it in the
@@ -45,4 +41,4 @@ function ResponderSyntheticEvent(
 
 SyntheticEvent.augmentClass(ResponderSyntheticEvent, ResponderEventInterface);
 
-module.exports = ResponderSyntheticEvent;
+export default ResponderSyntheticEvent;

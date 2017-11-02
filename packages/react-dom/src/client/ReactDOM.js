@@ -7,40 +7,50 @@
  * @flow
  */
 
-'use strict';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
-import type {ReactNodeList} from 'ReactTypes';
+import '../shared/checkReact';
+import '../shared/ReactDOMInjection';
+import './ReactDOMClientInjection';
 
-require('checkReact');
-var DOMNamespaces = require('DOMNamespaces');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactControlledComponent = require('ReactControlledComponent');
-var ReactFeatureFlags = require('ReactFeatureFlags');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactDOMFiberComponent = require('ReactDOMFiberComponent');
-var ReactDOMFrameScheduling = require('ReactDOMFrameScheduling');
-var ReactGenericBatching = require('ReactGenericBatching');
-var ReactFiberReconciler = require('react-reconciler');
-var ReactInputSelection = require('ReactInputSelection');
-var ReactInstanceMap = require('ReactInstanceMap');
-var ReactPortal = require('ReactPortal');
-var ReactVersion = require('ReactVersion');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var {injectInternals} = require('ReactFiberDevToolsHook');
-var {
+import ReactFiberReconciler from 'react-reconciler';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import ReactControlledComponent from 'events/ReactControlledComponent';
+import EventPluginHub from 'events/EventPluginHub';
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import EventPropagators from 'events/EventPropagators';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import ReactVersion from 'shared/ReactVersion';
+import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import getComponentName from 'shared/getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
+import warning from 'fbjs/lib/warning';
+
+import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
+import * as ReactInputSelection from './ReactInputSelection';
+import validateDOMNesting from './validateDOMNesting';
+import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import {getChildNamespace} from '../shared/DOMNamespaces';
+import {
   ELEMENT_NODE,
   TEXT_NODE,
   COMMENT_NODE,
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
-} = require('HTMLNodeType');
-var {ROOT_ATTRIBUTE_NAME} = require('DOMProperty');
+} from '../shared/HTMLNodeType';
+import DOMProperty from '../shared/DOMProperty';
 
-var getComponentName = require('getComponentName');
-var invariant = require('fbjs/lib/invariant');
-
-var {getChildNamespace} = DOMNamespaces;
+var {ROOT_ATTRIBUTE_NAME} = DOMProperty;
 var {
   createElement,
   createTextNode,
@@ -55,15 +65,11 @@ var {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
+var {updatedAncestorInfo} = validateDOMNesting;
 var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
-  var lowPriorityWarning = require('lowPriorityWarning');
-  var warning = require('fbjs/lib/warning');
-  var validateDOMNesting = require('validateDOMNesting');
-  var {updatedAncestorInfo} = validateDOMNesting;
-
   if (
     typeof Map !== 'function' ||
     Map.prototype == null ||
@@ -81,8 +87,6 @@ if (__DEV__) {
   }
 }
 
-require('ReactDOMClientInjection');
-require('ReactDOMInjection');
 ReactControlledComponent.injection.injectFiberControlledHostComponent(
   ReactDOMFiberComponent,
 );
@@ -783,12 +787,7 @@ ReactRoot.prototype.unmount = function(callback) {
   DOMRenderer.updateContainer(null, root, null, callback);
 };
 
-var ReactDOM = {
-  createRoot(container: DOMContainer, options?: RootOptions): ReactRootNode {
-    const hydrate = options != null && options.hydrate === true;
-    return new ReactRoot(container, hydrate);
-  },
-
+var ReactDOM: Object = {
   createPortal,
 
   findDOMNode(
@@ -938,15 +937,25 @@ var ReactDOM = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // For TapEventPlugin which is popular in open source
-    EventPluginHub: require('EventPluginHub'),
+    EventPluginHub,
     // Used by test-utils
-    EventPluginRegistry: require('EventPluginRegistry'),
-    EventPropagators: require('EventPropagators'),
+    EventPluginRegistry,
+    EventPropagators,
     ReactControlledComponent,
     ReactDOMComponentTree,
-    ReactDOMEventListener: require('ReactDOMEventListener'),
+    ReactDOMEventListener,
   },
 };
+
+if (ReactFeatureFlags.enableCreateRoot) {
+  ReactDOM.createRoot = function createRoot(
+    container: DOMContainer,
+    options?: RootOptions,
+  ): ReactRootNode {
+    const hydrate = options != null && options.hydrate === true;
+    return new ReactRoot(container, hydrate);
+  };
+}
 
 const foundDevTools = injectInternals({
   findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
@@ -987,4 +996,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactDOM;
+export default ReactDOM;

@@ -4,11 +4,8 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule forEachAccumulated
  * @flow
  */
-
-'use strict';
 
 /**
  * @param {array} arr an "accumulation" of items which is either an Array or
@@ -31,4 +28,4 @@ function forEachAccumulated<T>(
   }
 }
 
-module.exports = forEachAccumulated;
+export default forEachAccumulated;

@@ -3,23 +3,19 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule SelectEventPlugin
  */
 
-'use strict';
+import EventPropagators from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import getActiveElement from 'fbjs/lib/getActiveElement';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 
-var EventPropagators = require('EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var ReactBrowserEventEmitter = require('ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('ReactDOMComponentTree');
-var ReactInputSelection = require('ReactInputSelection');
-var SyntheticEvent = require('SyntheticEvent');
-var {DOCUMENT_NODE} = require('HTMLNodeType');
-
-var getActiveElement = require('fbjs/lib/getActiveElement');
-var isTextInputElement = require('isTextInputElement');
-var shallowEqual = require('fbjs/lib/shallowEqual');
+import ReactBrowserEventEmitter from './ReactBrowserEventEmitter';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import * as ReactInputSelection from '../client/ReactInputSelection';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 var skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&
@@ -211,4 +207,4 @@ var SelectEventPlugin = {
   },
 };
 
-module.exports = SelectEventPlugin;
+export default SelectEventPlugin;

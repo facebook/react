@@ -3,19 +3,12 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule DOMMarkupOperations
  */
 
-'use strict';
-
-var DOMProperty = require('DOMProperty');
-
-var quoteAttributeValueForBrowser = require('quoteAttributeValueForBrowser');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import DOMProperty from '../shared/DOMProperty';
+import quoteAttributeValueForBrowser
+  from '../shared/quoteAttributeValueForBrowser';
+import warning from 'fbjs/lib/warning';
 
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
@@ -127,4 +120,4 @@ var DOMMarkupOperations = {
   },
 };
 
-module.exports = DOMMarkupOperations;
+export default DOMMarkupOperations;

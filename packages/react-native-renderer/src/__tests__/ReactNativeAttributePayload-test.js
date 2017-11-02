@@ -7,8 +7,8 @@
  */
 'use strict';
 
-var ReactNativeAttributePayload = require('ReactNativeAttributePayload');
-var ReactNativePropRegistry = require('ReactNativePropRegistry');
+var ReactNativeAttributePayload = require('../ReactNativeAttributePayload');
+var ReactNativePropRegistry = require('../ReactNativePropRegistry').default;
 
 var diff = ReactNativeAttributePayload.diff;
 
