@@ -19,7 +19,6 @@ var {
   getStackAddendumByWorkInProgressFiber,
 } = require('shared/ReactFiberComponentTreeHook');
 var {
-  wrapEventListener,
   invokeGuardedCallback,
   hasCaughtError,
   clearCaughtError,
@@ -1286,17 +1285,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   // TODO: Everything below this is written as if it has been lifted to the
   // renderers. I'll do this in a follow-up.
 
-  // Ensure performAsyncWork gets wrapped. This currently needs to be lazy because
-  // we use dynamic injection. TODO: Make this eagerly wrapping this callback once
-  // we have static injection.
-  let hasCallbackBeenScheduled: boolean = false;
-  function ensureCallbackWrapped() {
-    if (!hasCallbackBeenScheduled) {
-      performAsyncWork = wrapEventListener('reactAsyncWork', performAsyncWork);
-      hasCallbackBeenScheduled = true;
-    }
-  }
-
   // Linked-list of roots
   let firstScheduledRoot: FiberRoot | null = null;
   let lastScheduledRoot: FiberRoot | null = null;
@@ -1378,7 +1366,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       performWork(Sync, null);
     } else if (!isCallbackScheduled) {
       isCallbackScheduled = true;
-      ensureCallbackWrapped();
       scheduleDeferredCallback(performAsyncWork);
     }
   }
@@ -1459,9 +1446,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     nextFlushedExpirationTime = highestPriorityWork;
   }
 
-  let performAsyncWork = function(dl) {
+  function performAsyncWork(dl) {
     performWork(NoWork, dl);
-  };
+  }
 
   function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
     deadline = dl;
@@ -1491,7 +1478,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // If there's work left over, schedule a new callback.
     if (nextFlushedRoot !== null && !isCallbackScheduled) {
       isCallbackScheduled = true;
-      ensureCallbackWrapped();
       scheduleDeferredCallback(performAsyncWork);
     }
 
