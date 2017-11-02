@@ -9,8 +9,6 @@
 
 'use strict';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
 var React;

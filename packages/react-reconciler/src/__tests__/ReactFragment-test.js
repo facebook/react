@@ -8,8 +8,6 @@
  */
 'use strict';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-
 let React;
 let ReactNoop;
 

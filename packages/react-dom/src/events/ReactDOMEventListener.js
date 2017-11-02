@@ -11,7 +11,6 @@ var ReactGenericBatching = require('events/ReactGenericBatching');
 var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
 var ReactTypeOfWork = require('shared/ReactTypeOfWork');
 var EventListener = require('fbjs/lib/EventListener');
-var warning = require('fbjs/lib/warning');
 var {HostRoot} = ReactTypeOfWork;
 
 var getEventTarget = require('./getEventTarget');

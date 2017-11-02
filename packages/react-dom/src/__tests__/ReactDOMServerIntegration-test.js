@@ -17,7 +17,6 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 const stream = require('stream');
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 const TEXT_NODE_TYPE = 3;
 
