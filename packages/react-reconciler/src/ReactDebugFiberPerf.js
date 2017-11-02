@@ -408,5 +408,6 @@ if (__DEV__) {
   };
 }
 
-// TODO: named exports maybe?
+// TODO: convert to named exports
+// if this doesn't inflate the bundle.
 export default ReactDebugFiberPerf;

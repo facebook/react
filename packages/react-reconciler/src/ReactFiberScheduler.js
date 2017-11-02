@@ -65,7 +65,6 @@ import {AsyncUpdates} from './ReactTypeOfInternalContext';
 import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
 
-// TODO: named imports
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
 var {
   recordEffect,

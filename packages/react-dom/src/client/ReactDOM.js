@@ -52,7 +52,6 @@ import {
 } from '../shared/HTMLNodeType';
 import DOMProperty from '../shared/DOMProperty';
 
-// TODO: convert some of these to named imports
 var {ROOT_ATTRIBUTE_NAME} = DOMProperty;
 var {
   createElement,

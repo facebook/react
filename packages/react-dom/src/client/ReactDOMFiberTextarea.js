@@ -18,16 +18,14 @@ import ReactDebugCurrentFiber
 import ReactControlledValuePropTypes
   from '../shared/ReactControlledValuePropTypes';
 
-// TODO: named imports
 var {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
+var didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
     initialValue: string,
   },
 };
-
-var didWarnValDefaultVal = false;
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and

@@ -17,7 +17,6 @@ import warning from 'fbjs/lib/warning';
 import ReactControlledValuePropTypes
   from '../shared/ReactControlledValuePropTypes';
 
-// TODO: named imports
 var {
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,

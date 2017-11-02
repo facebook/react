@@ -14,7 +14,6 @@ import ReactDOMEventListener from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 import BrowserEventConstants from './BrowserEventConstants';
 
-// TODO: named import?
 var {topLevelTypes} = BrowserEventConstants;
 
 /**

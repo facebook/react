@@ -43,7 +43,6 @@ import {
 } from './ReactFiber';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
-// TODO: named import?
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
 if (__DEV__) {

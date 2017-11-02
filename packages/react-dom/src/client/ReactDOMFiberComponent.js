@@ -41,12 +41,10 @@ import {
   validateProperties as validateUnknownProperties,
 } from '../shared/ReactDOMUnknownPropertyHook';
 
-// TODO: convert to named imports
 var {
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 } = ReactDebugCurrentFiber;
-
 var didWarnInvalidHydration = false;
 var didWarnShadyDOM = false;
 

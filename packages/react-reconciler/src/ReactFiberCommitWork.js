@@ -29,7 +29,6 @@ import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
 import ReactDebugFiberPerf from './ReactDebugFiberPerf';
 
-// TODO: named imports
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
 var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 

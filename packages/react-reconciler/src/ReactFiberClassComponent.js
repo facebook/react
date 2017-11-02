@@ -36,9 +36,7 @@ import {
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
 
-// TODO: named imports?
 var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
-
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 

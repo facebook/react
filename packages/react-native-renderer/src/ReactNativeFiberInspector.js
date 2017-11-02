@@ -23,9 +23,7 @@ import UIManager from 'UIManager';
 
 import ReactNativeComponentTree from './ReactNativeComponentTree';
 
-// TODO: named imports?
 const {getClosestInstanceFromNode} = ReactNativeComponentTree;
-
 let getInspectorDataForViewTag;
 
 if (__DEV__) {

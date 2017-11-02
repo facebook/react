@@ -20,12 +20,6 @@ import ReactDOMComponentTree from './ReactDOMComponentTree';
 import ReactControlledValuePropTypes
   from '../shared/ReactControlledValuePropTypes';
 
-// TODO: named imports
-var {
-  getCurrentFiberOwnerName,
-  getCurrentFiberStackAddendum,
-} = ReactDebugCurrentFiber;
-
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
     initialValue: ?string,
@@ -34,6 +28,10 @@ type InputWithWrapperState = HTMLInputElement & {
   },
 };
 
+var {
+  getCurrentFiberOwnerName,
+  getCurrentFiberStackAddendum,
+} = ReactDebugCurrentFiber;
 var didWarnValueDefaultValue = false;
 var didWarnCheckedDefaultChecked = false;
 var didWarnControlledToUncontrolled = false;

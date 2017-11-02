@@ -24,7 +24,6 @@ import {createCursor, pop, push} from './ReactFiberStack';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import ReactDebugFiberPerf from './ReactDebugFiberPerf';
 
-// TODO: named imports?
 const {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 if (__DEV__) {

@@ -19,9 +19,7 @@ import invariant from 'fbjs/lib/invariant';
 
 import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
 
-// TODO: named imports?
 const {getFiberFromTag} = ReactNativeRTComponentTree;
-
 let getInspectorDataForViewTag;
 
 if (__DEV__) {

@@ -13,9 +13,7 @@ import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber
   from 'react-reconciler/src/ReactDebugCurrentFiber';
 
-// TODO: named import
 var {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
-
 var validateDOMNesting = emptyFunction;
 
 if (__DEV__) {

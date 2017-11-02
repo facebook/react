@@ -62,9 +62,7 @@ import {
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 
-// TODO: named imports
 var {cancelWorkTimer} = ReactDebugFiberPerf;
-
 if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
