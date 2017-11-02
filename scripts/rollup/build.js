@@ -372,6 +372,17 @@ function rewriteFBReactImport() {
   };
 }
 
+// Strip 'use strict' directives in individual modules
+// because we always emit them in the file headers.
+// The whole bundle is strict.
+function stripUseStrict() {
+  return {
+    transform(source) {
+      return source.replace(/['"]use strict['"']/g, '');
+    },
+  };
+}
+
 // Plugin that writes to the error code file so that by the time it is picked
 // up by Babel, the errors are already extracted.
 function writeErrorCodes() {
@@ -403,6 +414,7 @@ function getPlugins(
       skip: externals,
     }),
     babel(getBabelConfig(updateBabelOptions, bundleType)),
+    stripUseStrict(),
   ].filter(Boolean);
 
   const headerSanityCheck = getHeaderSanityCheck(bundleType, globalName);
