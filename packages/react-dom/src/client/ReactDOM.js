@@ -10,6 +10,7 @@
 'use strict';
 
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {HostConfig} from 'react-reconciler';
 
 require('../shared/checkReact');
 
@@ -164,7 +165,292 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
-var DOMRenderer = ReactFiberReconciler({
+const mutationHostConfig = {
+  commitMount(
+    domElement: Instance,
+    type: string,
+    newProps: Props,
+    internalInstanceHandle: Object,
+  ): void {
+    ((domElement: any):
+      | HTMLButtonElement
+      | HTMLInputElement
+      | HTMLSelectElement
+      | HTMLTextAreaElement).focus();
+  },
+
+  commitUpdate(
+    domElement: Instance,
+    updatePayload: Array<mixed>,
+    type: string,
+    oldProps: Props,
+    newProps: Props,
+    internalInstanceHandle: Object,
+  ): void {
+    // Update the props handle so that we know which props are the ones with
+    // with current event handlers.
+    updateFiberProps(domElement, newProps);
+    // Apply the diff to the DOM node.
+    updateProperties(domElement, updatePayload, type, oldProps, newProps);
+  },
+
+  resetTextContent(domElement: Instance): void {
+    domElement.textContent = '';
+  },
+
+  commitTextUpdate(
+    textInstance: TextInstance,
+    oldText: string,
+    newText: string,
+  ): void {
+    textInstance.nodeValue = newText;
+  },
+
+  appendChild(parentInstance: Instance, child: Instance | TextInstance): void {
+    parentInstance.appendChild(child);
+  },
+
+  appendChildToContainer(
+    container: Container,
+    child: Instance | TextInstance,
+  ): void {
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).insertBefore(child, container);
+    } else {
+      container.appendChild(child);
+    }
+  },
+
+  insertBefore(
+    parentInstance: Instance,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ): void {
+    parentInstance.insertBefore(child, beforeChild);
+  },
+
+  insertInContainerBefore(
+    container: Container,
+    child: Instance | TextInstance,
+    beforeChild: Instance | TextInstance,
+  ): void {
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).insertBefore(child, beforeChild);
+    } else {
+      container.insertBefore(child, beforeChild);
+    }
+  },
+
+  removeChild(parentInstance: Instance, child: Instance | TextInstance): void {
+    parentInstance.removeChild(child);
+  },
+
+  removeChildFromContainer(
+    container: Container,
+    child: Instance | TextInstance,
+  ): void {
+    if (container.nodeType === COMMENT_NODE) {
+      (container.parentNode: any).removeChild(child);
+    } else {
+      container.removeChild(child);
+    }
+  },
+};
+
+const hydrationHostConfig = {
+  canHydrateInstance(
+    instance: Instance | TextInstance,
+    type: string,
+    props: Props,
+  ): boolean {
+    return (
+      instance.nodeType === ELEMENT_NODE &&
+      type.toLowerCase() === instance.nodeName.toLowerCase()
+    );
+  },
+
+  canHydrateTextInstance(
+    instance: Instance | TextInstance,
+    text: string,
+  ): boolean {
+    if (text === '') {
+      // Empty strings are not parsed by HTML so there won't be a correct match here.
+      return false;
+    }
+    return instance.nodeType === TEXT_NODE;
+  },
+
+  getNextHydratableSibling(
+    instance: Instance | TextInstance,
+  ): null | Instance | TextInstance {
+    let node = instance.nextSibling;
+    // Skip non-hydratable nodes.
+    while (
+      node &&
+      node.nodeType !== ELEMENT_NODE &&
+      node.nodeType !== TEXT_NODE
+    ) {
+      node = node.nextSibling;
+    }
+    return (node: any);
+  },
+
+  getFirstHydratableChild(
+    parentInstance: Container | Instance,
+  ): null | Instance | TextInstance {
+    let next = parentInstance.firstChild;
+    // Skip non-hydratable nodes.
+    while (
+      next &&
+      next.nodeType !== ELEMENT_NODE &&
+      next.nodeType !== TEXT_NODE
+    ) {
+      next = next.nextSibling;
+    }
+    return (next: any);
+  },
+
+  hydrateInstance(
+    instance: Instance,
+    type: string,
+    props: Props,
+    rootContainerInstance: Container,
+    hostContext: HostContext,
+    internalInstanceHandle: Object,
+  ): null | Array<mixed> {
+    precacheFiberNode(internalInstanceHandle, instance);
+    // TODO: Possibly defer this until the commit phase where all the events
+    // get attached.
+    updateFiberProps(instance, props);
+    let parentNamespace: string;
+    if (__DEV__) {
+      const hostContextDev = ((hostContext: any): HostContextDev);
+      parentNamespace = hostContextDev.namespace;
+    } else {
+      parentNamespace = ((hostContext: any): HostContextProd);
+    }
+    return diffHydratedProperties(
+      instance,
+      type,
+      props,
+      parentNamespace,
+      rootContainerInstance,
+    );
+  },
+
+  hydrateTextInstance(
+    textInstance: TextInstance,
+    text: string,
+    internalInstanceHandle: Object,
+  ): boolean {
+    precacheFiberNode(internalInstanceHandle, textInstance);
+    return diffHydratedText(textInstance, text);
+  },
+
+  didNotMatchHydratedContainerTextInstance(
+    parentContainer: Container,
+    textInstance: TextInstance,
+    text: string,
+  ) {
+    if (__DEV__) {
+      warnForUnmatchedText(textInstance, text);
+    }
+  },
+
+  didNotMatchHydratedTextInstance(
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
+    textInstance: TextInstance,
+    text: string,
+  ) {
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForUnmatchedText(textInstance, text);
+    }
+  },
+
+  didNotHydrateContainerInstance(
+    parentContainer: Container,
+    instance: Instance | TextInstance,
+  ) {
+    if (__DEV__) {
+      if (instance.nodeType === 1) {
+        warnForDeletedHydratableElement(parentContainer, (instance: any));
+      } else {
+        warnForDeletedHydratableText(parentContainer, (instance: any));
+      }
+    }
+  },
+
+  didNotHydrateInstance(
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
+    instance: Instance | TextInstance,
+  ) {
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      if (instance.nodeType === 1) {
+        warnForDeletedHydratableElement(parentInstance, (instance: any));
+      } else {
+        warnForDeletedHydratableText(parentInstance, (instance: any));
+      }
+    }
+  },
+
+  didNotFindHydratableContainerInstance(
+    parentContainer: Container,
+    type: string,
+    props: Props,
+  ) {
+    if (__DEV__) {
+      warnForInsertedHydratedElement(parentContainer, type, props);
+    }
+  },
+
+  didNotFindHydratableContainerTextInstance(
+    parentContainer: Container,
+    text: string,
+  ) {
+    if (__DEV__) {
+      warnForInsertedHydratedText(parentContainer, text);
+    }
+  },
+
+  didNotFindHydratableInstance(
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
+    type: string,
+    props: Props,
+  ) {
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForInsertedHydratedElement(parentInstance, type, props);
+    }
+  },
+
+  didNotFindHydratableTextInstance(
+    parentType: string,
+    parentProps: Props,
+    parentInstance: Instance,
+    text: string,
+  ) {
+    if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
+      warnForInsertedHydratedText(parentInstance, text);
+    }
+  },
+};
+
+const hostConfig: HostConfig<
+  string, // T
+  Props, // P
+  Instance, // I
+  TextInstance, // TI
+  Instance | TextInstance, // PI
+  Container, // C
+  void, // CC
+  HostContext, // CX
+  Array<mixed> // PL
+> = {
   getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
@@ -351,291 +637,16 @@ var DOMRenderer = ReactFiberReconciler({
 
   now: ReactDOMFrameScheduling.now,
 
-  mutation: {
-    commitMount(
-      domElement: Instance,
-      type: string,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      ((domElement: any):
-        | HTMLButtonElement
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement).focus();
-    },
+  mutation: mutationHostConfig,
 
-    commitUpdate(
-      domElement: Instance,
-      updatePayload: Array<mixed>,
-      type: string,
-      oldProps: Props,
-      newProps: Props,
-      internalInstanceHandle: Object,
-    ): void {
-      // Update the props handle so that we know which props are the ones with
-      // with current event handlers.
-      updateFiberProps(domElement, newProps);
-      // Apply the diff to the DOM node.
-      updateProperties(domElement, updatePayload, type, oldProps, newProps);
-    },
-
-    resetTextContent(domElement: Instance): void {
-      domElement.textContent = '';
-    },
-
-    commitTextUpdate(
-      textInstance: TextInstance,
-      oldText: string,
-      newText: string,
-    ): void {
-      textInstance.nodeValue = newText;
-    },
-
-    appendChild(
-      parentInstance: Instance,
-      child: Instance | TextInstance,
-    ): void {
-      parentInstance.appendChild(child);
-    },
-
-    appendChildToContainer(
-      container: Container,
-      child: Instance | TextInstance,
-    ): void {
-      if (container.nodeType === COMMENT_NODE) {
-        (container.parentNode: any).insertBefore(child, container);
-      } else {
-        container.appendChild(child);
-      }
-    },
-
-    insertBefore(
-      parentInstance: Instance,
-      child: Instance | TextInstance,
-      beforeChild: Instance | TextInstance,
-    ): void {
-      parentInstance.insertBefore(child, beforeChild);
-    },
-
-    insertInContainerBefore(
-      container: Container,
-      child: Instance | TextInstance,
-      beforeChild: Instance | TextInstance,
-    ): void {
-      if (container.nodeType === COMMENT_NODE) {
-        (container.parentNode: any).insertBefore(child, beforeChild);
-      } else {
-        container.insertBefore(child, beforeChild);
-      }
-    },
-
-    removeChild(
-      parentInstance: Instance,
-      child: Instance | TextInstance,
-    ): void {
-      parentInstance.removeChild(child);
-    },
-
-    removeChildFromContainer(
-      container: Container,
-      child: Instance | TextInstance,
-    ): void {
-      if (container.nodeType === COMMENT_NODE) {
-        (container.parentNode: any).removeChild(child);
-      } else {
-        container.removeChild(child);
-      }
-    },
-  },
-
-  hydration: {
-    canHydrateInstance(
-      instance: Instance | TextInstance,
-      type: string,
-      props: Props,
-    ): boolean {
-      return (
-        instance.nodeType === ELEMENT_NODE &&
-        type.toLowerCase() === instance.nodeName.toLowerCase()
-      );
-    },
-
-    canHydrateTextInstance(
-      instance: Instance | TextInstance,
-      text: string,
-    ): boolean {
-      if (text === '') {
-        // Empty strings are not parsed by HTML so there won't be a correct match here.
-        return false;
-      }
-      return instance.nodeType === TEXT_NODE;
-    },
-
-    getNextHydratableSibling(
-      instance: Instance | TextInstance,
-    ): null | Instance | TextInstance {
-      let node = instance.nextSibling;
-      // Skip non-hydratable nodes.
-      while (
-        node &&
-        node.nodeType !== ELEMENT_NODE &&
-        node.nodeType !== TEXT_NODE
-      ) {
-        node = node.nextSibling;
-      }
-      return (node: any);
-    },
-
-    getFirstHydratableChild(
-      parentInstance: Container | Instance,
-    ): null | Instance | TextInstance {
-      let next = parentInstance.firstChild;
-      // Skip non-hydratable nodes.
-      while (
-        next &&
-        next.nodeType !== ELEMENT_NODE &&
-        next.nodeType !== TEXT_NODE
-      ) {
-        next = next.nextSibling;
-      }
-      return (next: any);
-    },
-
-    hydrateInstance(
-      instance: Instance,
-      type: string,
-      props: Props,
-      rootContainerInstance: Container,
-      hostContext: HostContext,
-      internalInstanceHandle: Object,
-    ): null | Array<mixed> {
-      precacheFiberNode(internalInstanceHandle, instance);
-      // TODO: Possibly defer this until the commit phase where all the events
-      // get attached.
-      updateFiberProps(instance, props);
-      let parentNamespace: string;
-      if (__DEV__) {
-        const hostContextDev = ((hostContext: any): HostContextDev);
-        parentNamespace = hostContextDev.namespace;
-      } else {
-        parentNamespace = ((hostContext: any): HostContextProd);
-      }
-      return diffHydratedProperties(
-        instance,
-        type,
-        props,
-        parentNamespace,
-        rootContainerInstance,
-      );
-    },
-
-    hydrateTextInstance(
-      textInstance: TextInstance,
-      text: string,
-      internalInstanceHandle: Object,
-    ): boolean {
-      precacheFiberNode(internalInstanceHandle, textInstance);
-      return diffHydratedText(textInstance, text);
-    },
-
-    didNotMatchHydratedContainerTextInstance(
-      parentContainer: Container,
-      textInstance: TextInstance,
-      text: string,
-    ) {
-      if (__DEV__) {
-        warnForUnmatchedText(textInstance, text);
-      }
-    },
-
-    didNotMatchHydratedTextInstance(
-      parentType: string,
-      parentProps: Props,
-      parentInstance: Instance,
-      textInstance: TextInstance,
-      text: string,
-    ) {
-      if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-        warnForUnmatchedText(textInstance, text);
-      }
-    },
-
-    didNotHydrateContainerInstance(
-      parentContainer: Container,
-      instance: Instance | TextInstance,
-    ) {
-      if (__DEV__) {
-        if (instance.nodeType === 1) {
-          warnForDeletedHydratableElement(parentContainer, (instance: any));
-        } else {
-          warnForDeletedHydratableText(parentContainer, (instance: any));
-        }
-      }
-    },
-
-    didNotHydrateInstance(
-      parentType: string,
-      parentProps: Props,
-      parentInstance: Instance,
-      instance: Instance | TextInstance,
-    ) {
-      if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-        if (instance.nodeType === 1) {
-          warnForDeletedHydratableElement(parentInstance, (instance: any));
-        } else {
-          warnForDeletedHydratableText(parentInstance, (instance: any));
-        }
-      }
-    },
-
-    didNotFindHydratableContainerInstance(
-      parentContainer: Container,
-      type: string,
-      props: Props,
-    ) {
-      if (__DEV__) {
-        warnForInsertedHydratedElement(parentContainer, type, props);
-      }
-    },
-
-    didNotFindHydratableContainerTextInstance(
-      parentContainer: Container,
-      text: string,
-    ) {
-      if (__DEV__) {
-        warnForInsertedHydratedText(parentContainer, text);
-      }
-    },
-
-    didNotFindHydratableInstance(
-      parentType: string,
-      parentProps: Props,
-      parentInstance: Instance,
-      type: string,
-      props: Props,
-    ) {
-      if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-        warnForInsertedHydratedElement(parentInstance, type, props);
-      }
-    },
-
-    didNotFindHydratableTextInstance(
-      parentType: string,
-      parentProps: Props,
-      parentInstance: Instance,
-      text: string,
-    ) {
-      if (__DEV__ && parentProps[SUPPRESS_HYDRATION_WARNING] !== true) {
-        warnForInsertedHydratedText(parentInstance, text);
-      }
-    },
-  },
+  hydration: hydrationHostConfig,
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
 
   useSyncScheduling: !ReactFeatureFlags.enableAsyncSchedulingByDefaultInReactDOM,
-});
+};
+
+var DOMRenderer = ReactFiberReconciler(hostConfig);
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   DOMRenderer.batchedUpdates,

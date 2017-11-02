@@ -370,7 +370,7 @@ function updateDOMProperties(
 
 var ReactDOMFiberComponent = {
   createElement(
-    type: *,
+    type: string,
     props: Object,
     rootContainerElement: Element | Document,
     parentNamespace: string,

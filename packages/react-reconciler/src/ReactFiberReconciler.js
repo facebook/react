@@ -310,9 +310,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (
       ReactFeatureFlags.enableAsyncSubtreeAPI &&
       element != null &&
-      element.type != null &&
-      element.type.prototype != null &&
-      (element.type.prototype: any).unstable_isAsyncReactComponent === true
+      (element: any).type != null &&
+      (element: any).type.prototype != null &&
+      (element: any).type.prototype.unstable_isAsyncReactComponent === true
     ) {
       expirationTime = computeAsyncExpiration();
     } else {
