@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 var ReactNativeEventPluginOrder = [
   'ResponderEventPlugin',

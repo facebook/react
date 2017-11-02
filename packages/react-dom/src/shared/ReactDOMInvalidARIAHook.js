@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import warning from 'fbjs/lib/warning';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 

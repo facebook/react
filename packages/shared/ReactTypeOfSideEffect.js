@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 export type TypeOfSideEffect = number;
 
 // Don't change these two values:

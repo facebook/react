@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import ReactFiberReconciler from 'react-reconciler';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';

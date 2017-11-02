@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import containsNode from 'fbjs/lib/containsNode';
 import focusNode from 'fbjs/lib/focusNode';
 import getActiveElement from 'fbjs/lib/getActiveElement';

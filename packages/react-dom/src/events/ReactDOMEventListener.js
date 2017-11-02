@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';

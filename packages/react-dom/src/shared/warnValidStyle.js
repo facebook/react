@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import camelizeStyleName from 'fbjs/lib/camelizeStyleName';
 import warning from 'fbjs/lib/warning';

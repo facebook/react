@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';

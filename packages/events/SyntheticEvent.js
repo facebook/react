@@ -7,8 +7,6 @@
 
 /* eslint valid-typeof: 0 */
 
-'use strict';
-
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';

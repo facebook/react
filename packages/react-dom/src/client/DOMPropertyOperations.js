@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import DOMProperty from '../shared/DOMProperty';
 import warning from 'fbjs/lib/warning';
 

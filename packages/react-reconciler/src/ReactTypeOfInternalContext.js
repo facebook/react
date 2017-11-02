@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 export type TypeOfInternalContext = number;
 
 export const NoContext = 0;

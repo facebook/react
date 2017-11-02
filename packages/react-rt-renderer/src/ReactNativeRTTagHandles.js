@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 import invariant from 'fbjs/lib/invariant';
 

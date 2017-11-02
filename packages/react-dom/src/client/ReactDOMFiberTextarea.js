@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import {
   getStackAddendumByWorkInProgressFiber,

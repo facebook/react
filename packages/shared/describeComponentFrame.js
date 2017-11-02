@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 export default function(
   name: null | string,
   source: any,

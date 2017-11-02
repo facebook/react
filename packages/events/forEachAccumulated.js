@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 /**
  * @param {array} arr an "accumulation" of items which is either an Array or
  * a single item. Useful when paired with the `accumulate` module. This is a

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import EventPluginUtils from 'events/EventPluginUtils';
 import EventPropagators from 'events/EventPropagators';
 import TouchEventUtils from 'fbjs/lib/TouchEventUtils';

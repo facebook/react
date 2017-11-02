@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Deadline} from 'react-reconciler';
 
 const hasNativePerformanceNow =

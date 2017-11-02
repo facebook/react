@@ -6,8 +6,6 @@
  *
  */
 
-'use strict';
-
 import type {ReactElement, Source} from 'shared/ReactElementType';
 import type {
   ReactCall,

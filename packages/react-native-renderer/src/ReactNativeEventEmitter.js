@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 import EventPluginHub from 'events/EventPluginHub';
 import EventPluginRegistry from 'events/EventPluginRegistry';

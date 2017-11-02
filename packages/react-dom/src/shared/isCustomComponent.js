@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 function isCustomComponent(tagName: string, props: Object) {
   if (tagName.indexOf('-') === -1) {
     return typeof props.is === 'string';

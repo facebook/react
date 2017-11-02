@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from './ReactFiber';
 
 import warning from 'fbjs/lib/warning';

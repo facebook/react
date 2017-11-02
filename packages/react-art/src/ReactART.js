@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import React from 'react';
 import ReactFiberReconciler from 'react-reconciler';
 import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';

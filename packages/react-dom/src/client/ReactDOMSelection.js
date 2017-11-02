@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import getNodeForCharacterOffset from './getNodeForCharacterOffset';
 import getTextContentAccessor from './getTextContentAccessor';
 import {TEXT_NODE} from '../shared/HTMLNodeType';

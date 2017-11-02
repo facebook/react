@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
 import type {ReactCall} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';

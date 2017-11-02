@@ -30,8 +30,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-'use strict';
-
 // code copied and modified from escape-html
 /**
  * Module variables.

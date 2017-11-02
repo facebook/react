@@ -7,8 +7,6 @@
 
 /* globals MSApp */
 
-'use strict';
-
 /**
  * Create a function which has 'unsafe' privileges (required by windows8 apps)
  */

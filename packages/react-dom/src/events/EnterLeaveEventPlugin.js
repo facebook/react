@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import EventPropagators from 'events/EventPropagators';
 
 import SyntheticMouseEvent from './SyntheticMouseEvent';

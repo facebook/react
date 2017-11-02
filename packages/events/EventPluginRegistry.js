@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {DispatchConfig} from './ReactSyntheticEventType';
 import type {
   AnyNativeEvent,

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 type ValueTracker = {
   getValue(): string,
   setValue(value: string): void,

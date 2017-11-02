@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
 
 // Module provided by RN:
