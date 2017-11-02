@@ -237,7 +237,7 @@ function getRollupOutputOptions(
     {
       banner: getBanner(bundleType, globalName, filename, moduleType),
       destDir: 'build/',
-      dest: 'build/' +
+      file: 'build/' +
         Packaging.getOutputPathRelativeToBuildFolder(
           bundleType,
           filename,
@@ -247,8 +247,8 @@ function getRollupOutputOptions(
       format,
       globals,
       interop: false,
-      moduleName: globalName,
-      sourceMap: false,
+      name: globalName,
+      sourcemap: false,
     }
   );
 }
@@ -535,7 +535,7 @@ function createBundle(bundle, bundleType) {
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
-    entry: resolvedEntry,
+    input: resolvedEntry,
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
