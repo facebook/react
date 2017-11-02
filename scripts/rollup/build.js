@@ -221,6 +221,27 @@ function handleRollupWarnings(warning) {
     console.error(warning.message);
     process.exit(1);
   }
+  if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
+    const match = warning.message.match(/external module '([^']+)'/);
+    if (!match || typeof match[1] !== 'string') {
+      throw new Error(
+        'Could not parse a Rollup warning. ' + 'Fix this method.'
+      );
+    }
+    const importSideEffects = Modules.getImportSideEffects();
+    const path = match[1];
+    if (typeof importSideEffects[path] !== 'boolean') {
+      throw new Error(
+        'An external module "' +
+          path +
+          '" is used in a DEV-only code path ' +
+          'but we do not know if it is safe to omit an unused require() to it in production. ' +
+          'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
+      );
+    }
+    // Don't warn. We will remove side effectless require() in a later pass.
+    return;
+  }
   console.warn(warning.message || warning);
 }
 
@@ -532,9 +553,15 @@ function createBundle(bundle, bundleType) {
     externals = externals.concat(deps);
   }
 
+  const importSideEffects = Modules.getImportSideEffects();
+  const pureExternalModules = Object.keys(importSideEffects).filter(
+    module => !importSideEffects[module]
+  );
+
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
     input: resolvedEntry,
+    pureExternalModules,
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);

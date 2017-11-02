@@ -27,6 +27,20 @@ const forkedFBModules = Object.freeze([
   'react/src/ReactCurrentOwner',
 ]);
 
+// For any external that is used in a DEV-only condition, explicitly
+// specify whether it has side effects during import or not. This lets
+// us know whether we can safely omit them when they are unused.
+const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
+// const HAS_SIDE_EFFECTS_ON_IMPORT = true;
+const importSideEffects = Object.freeze({
+  'fbjs/lib/invariant': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fbjs/lib/warning': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fbjs/lib/camelizeStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fbjs/lib/hyphenateStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+});
+
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
 function getPeerGlobals(externals, moduleType) {
   const peerGlobals = {};
@@ -59,6 +73,10 @@ function getDependencies(bundleType, entry) {
     deps = [...deps, ...forkedFBModules.map(name => path.basename(name))];
   }
   return deps;
+}
+
+function getImportSideEffects() {
+  return importSideEffects;
 }
 
 // Hijacks some modules for optimization and integration reasons.
@@ -99,6 +117,7 @@ function getShims(bundleType, entry, featureFlags) {
 }
 
 module.exports = {
+  getImportSideEffects,
   getPeerGlobals,
   getDependencies,
   getShims,
