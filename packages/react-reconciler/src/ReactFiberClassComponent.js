@@ -30,7 +30,7 @@ var {
 } = require('./ReactFiberContext');
 var {
   insertUpdateIntoFiber,
-  processUpdateQueue,
+  processFiberUpdateQueue,
 } = require('./ReactFiberUpdateQueue');
 var {hasContextChanged} = require('./ReactFiberContext');
 
@@ -466,7 +466,7 @@ module.exports = function(
       // process them now.
       const updateQueue = workInProgress.updateQueue;
       if (updateQueue !== null) {
-        instance.state = processUpdateQueue(
+        instance.state = processFiberUpdateQueue(
           current,
           workInProgress,
           updateQueue,
@@ -523,7 +523,7 @@ module.exports = function(
   //   // Process the update queue before calling shouldComponentUpdate
   //   const updateQueue = workInProgress.updateQueue;
   //   if (updateQueue !== null) {
-  //     newState = processUpdateQueue(
+  //     newState = processFiberUpdateQueue(
   //       workInProgress,
   //       updateQueue,
   //       instance,
@@ -566,7 +566,7 @@ module.exports = function(
   //     // componentWillMount may have called setState. Process the update queue.
   //     const newUpdateQueue = workInProgress.updateQueue;
   //     if (newUpdateQueue !== null) {
-  //       newState = processUpdateQueue(
+  //       newState = processFiberUpdateQueue(
   //         workInProgress,
   //         newUpdateQueue,
   //         instance,
@@ -632,7 +632,7 @@ module.exports = function(
     // TODO: Previous state can be null.
     let newState;
     if (workInProgress.updateQueue !== null) {
-      newState = processUpdateQueue(
+      newState = processFiberUpdateQueue(
         current,
         workInProgress,
         workInProgress.updateQueue,

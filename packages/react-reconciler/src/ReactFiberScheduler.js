@@ -11,7 +11,7 @@
 
 import type {HostConfig, Deadline} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
-import type {FiberRoot} from './ReactFiberRoot';
+import type {FiberRoot, WorkNode} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
@@ -62,7 +62,7 @@ var {
   computeExpirationBucket,
 } = require('./ReactFiberExpirationTime');
 var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
-var {getUpdateExpirationTime} = require('./ReactFiberUpdateQueue');
+var {getFiberUpdateQueueExpirationTime} = require('./ReactFiberUpdateQueue');
 var {resetContext} = require('./ReactFiberContext');
 
 export type CapturedError = {
@@ -512,7 +512,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     // Check for pending updates.
-    let newExpirationTime = getUpdateExpirationTime(workInProgress);
+    let newExpirationTime = getFiberUpdateQueueExpirationTime(workInProgress);
 
     // TODO: Calls need to visit stateNode
 
@@ -1301,6 +1301,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isBatchingUpdates: boolean = false;
   let isUnbatchingUpdates: boolean = false;
 
+  let completionCallbacks: Array<WorkNode> | null = null;
+
   // Use these to prevent an infinite loop of nested updates
   const NESTED_UPDATE_LIMIT = 1000;
   let nestedUpdateCount: number = 0;
@@ -1356,7 +1358,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       if (isUnbatchingUpdates) {
         // ...unless we're inside unbatchedUpdates, in which case we should
         // flush it now.
-        performWorkOnRoot(root, Sync);
+        performWorkOnRoot(root, Sync, recalculateCurrentTime());
       }
       return;
     }
@@ -1463,7 +1465,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         nextFlushedExpirationTime <= minExpirationTime) &&
       !deadlineDidExpire
     ) {
-      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime);
+      performWorkOnRoot(
+        nextFlushedRoot,
+        nextFlushedExpirationTime,
+        recalculateCurrentTime(),
+      );
       // Find the next highest priority work.
       findHighestPriorityRoot();
     }
@@ -1486,6 +1492,38 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     deadlineDidExpire = false;
     nestedUpdateCount = 0;
 
+    finishRendering();
+  }
+
+  function flushRoot(root: FiberRoot, expirationTime: ExpirationTime) {
+    invariant(
+      !isRendering,
+      'work.commit(): Cannot commit while already rendering. This likely ' +
+        'means you attempted to commit from inside a lifecycle method.',
+    );
+    // Perform work on root as if the given expiration time is the current time.
+    // This has the effect of synchronously flushing all work up to and
+    // including the given time.
+    performWorkOnRoot(root, expirationTime, expirationTime);
+    finishRendering();
+  }
+
+  function finishRendering() {
+    if (completionCallbacks !== null) {
+      const callbackNodes = completionCallbacks;
+      completionCallbacks = null;
+      for (let i = 0; i < callbackNodes.length; i++) {
+        // This node might be processed again. Clear the callback so it's
+        // only called once.
+        const callbackNode = callbackNodes[i];
+        const callback = callbackNode._onComplete;
+        if (typeof callback === 'function') {
+          // TODO: How should errors be handled?
+          callback.call(callbackNode);
+        }
+      }
+    }
+
     if (hasUnhandledError) {
       const error = unhandledError;
       unhandledError = null;
@@ -1494,7 +1532,11 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function performWorkOnRoot(root, expirationTime) {
+  function performWorkOnRoot(
+    root: FiberRoot,
+    expirationTime: ExpirationTime,
+    currentTime: ExpirationTime,
+  ) {
     invariant(
       !isRendering,
       'performWorkOnRoot was called recursively. This error is likely caused ' +
@@ -1504,20 +1546,18 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     isRendering = true;
 
     // Check if this is async work or sync/expired work.
-    // TODO: Pass current time as argument to renderRoot, commitRoot
-    if (expirationTime <= recalculateCurrentTime()) {
+    if (expirationTime <= currentTime) {
       // Flush sync work.
       let finishedWork = root.finishedWork;
       if (finishedWork !== null) {
         // This root is already complete. We can commit it.
-        root.finishedWork = null;
-        root.remainingExpirationTime = commitRoot(finishedWork);
+        completeRoot(root, finishedWork, expirationTime);
       } else {
         root.finishedWork = null;
         finishedWork = renderRoot(root, expirationTime);
         if (finishedWork !== null) {
           // We've completed the root. Commit it.
-          root.remainingExpirationTime = commitRoot(finishedWork);
+          completeRoot(root, finishedWork, expirationTime);
         }
       }
     } else {
@@ -1525,8 +1565,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       let finishedWork = root.finishedWork;
       if (finishedWork !== null) {
         // This root is already complete. We can commit it.
-        root.finishedWork = null;
-        root.remainingExpirationTime = commitRoot(finishedWork);
+        completeRoot(root, finishedWork, expirationTime);
       } else {
         root.finishedWork = null;
         finishedWork = renderRoot(root, expirationTime);
@@ -1535,7 +1574,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
           // before committing.
           if (!shouldYield()) {
             // Still time left. Commit the root.
-            root.remainingExpirationTime = commitRoot(finishedWork);
+            completeRoot(root, finishedWork, expirationTime);
           } else {
             // There's no time left. Mark this root as complete. We'll come
             // back and commit it later.
@@ -1546,6 +1585,51 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     isRendering = false;
+  }
+
+  function completeRoot(
+    root: FiberRoot,
+    finishedWork: Fiber,
+    expirationTime: ExpirationTime,
+  ): void {
+    // If there are top-level work nodes, check if the commit is deferred by
+    // traversing the list.
+    let firstDeferredNode = null;
+    let firstIncompleteNode = root.firstTopLevelWork;
+    while (
+      firstIncompleteNode !== null &&
+      firstIncompleteNode._expirationTime <= expirationTime
+    ) {
+      if (firstIncompleteNode._defer && firstDeferredNode === null) {
+        // This node's expiration matches, but its commit is deferred. We're
+        // blocked from committing at this level.
+        firstDeferredNode = firstIncompleteNode;
+      }
+      if (typeof firstIncompleteNode._onComplete === 'function') {
+        // This node has a callback. Add it to the list of completion callbacks.
+        if (completionCallbacks === null) {
+          completionCallbacks = [];
+        }
+        completionCallbacks.push(firstIncompleteNode);
+      }
+      firstIncompleteNode = firstIncompleteNode._next;
+    }
+
+    // The new first node is the first one that can't be committed.
+    root.firstTopLevelWork = firstDeferredNode === null
+      ? firstIncompleteNode
+      : firstDeferredNode;
+
+    if (firstDeferredNode === null) {
+      // Commit the root.
+      root.finishedWork = null;
+      root.remainingExpirationTime = commitRoot(finishedWork);
+    } else {
+      // This root is not ready to commit. Unschedule it until we receive
+      // another update.
+      root.finishedWork = finishedWork;
+      root.remainingExpirationTime = NoWork;
+    }
   }
 
   // When working on async work, the reconciler asks the renderer if it should
@@ -1629,6 +1713,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    requestWork,
+    flushRoot,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,

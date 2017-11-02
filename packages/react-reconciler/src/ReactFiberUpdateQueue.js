@@ -83,6 +83,7 @@ function createUpdateQueue<State>(baseState: State): UpdateQueue<State> {
   }
   return queue;
 }
+exports.createUpdateQueue = createUpdateQueue;
 
 function insertUpdateIntoQueue<State>(
   queue: UpdateQueue<State>,
@@ -170,7 +171,7 @@ function insertUpdateIntoFiber<State>(
 }
 exports.insertUpdateIntoFiber = insertUpdateIntoFiber;
 
-function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
+function getFiberUpdateQueueExpirationTime(fiber: Fiber): ExpirationTime {
   if (fiber.tag !== ClassComponent && fiber.tag !== HostRoot) {
     return NoWork;
   }
@@ -180,7 +181,7 @@ function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   }
   return updateQueue.expirationTime;
 }
-exports.getUpdateExpirationTime = getUpdateExpirationTime;
+exports.getFiberUpdateQueueExpirationTime = getFiberUpdateQueueExpirationTime;
 
 function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
@@ -193,29 +194,11 @@ function getStateFromUpdate(update, instance, prevState, props) {
 }
 
 function processUpdateQueue<State>(
-  current: Fiber | null,
-  workInProgress: Fiber,
   queue: UpdateQueue<State>,
-  instance: any,
+  context: any,
   props: any,
   renderExpirationTime: ExpirationTime,
 ): State {
-  if (current !== null && current.updateQueue === queue) {
-    // We need to create a work-in-progress queue, by cloning the current queue.
-    const currentQueue = queue;
-    queue = workInProgress.updateQueue = {
-      baseState: currentQueue.baseState,
-      expirationTime: currentQueue.expirationTime,
-      first: currentQueue.first,
-      last: currentQueue.last,
-      isInitialized: currentQueue.isInitialized,
-      // These fields are no longer valid because they were already committed.
-      // Reset them.
-      callbackList: null,
-      hasForceUpdate: false,
-    };
-  }
-
   if (__DEV__) {
     // Set this flag so we can warn if setState is called inside the update
     // function of another setState.
@@ -226,17 +209,7 @@ function processUpdateQueue<State>(
   // increase this accordingly.
   queue.expirationTime = NoWork;
 
-  // TODO: We don't know what the base state will be until we begin work.
-  // It depends on which fiber is the next current. Initialize with an empty
-  // base state, then set to the memoizedState when rendering. Not super
-  // happy with this approach.
-  let state;
-  if (queue.isInitialized) {
-    state = queue.baseState;
-  } else {
-    state = queue.baseState = workInProgress.memoizedState;
-    queue.isInitialized = true;
-  }
+  let state = queue.baseState;
   let dontMutatePrevState = true;
   let update = queue.first;
   let didSkip = false;
@@ -275,10 +248,10 @@ function processUpdateQueue<State>(
     // Process the update
     let partialState;
     if (update.isReplace) {
-      state = getStateFromUpdate(update, instance, state, props);
+      state = getStateFromUpdate(update, context, state, props);
       dontMutatePrevState = true;
     } else {
-      partialState = getStateFromUpdate(update, instance, state, props);
+      partialState = getStateFromUpdate(update, context, state, props);
       if (partialState) {
         if (dontMutatePrevState) {
           // $FlowFixMe: Idk how to type this properly.
@@ -303,13 +276,6 @@ function processUpdateQueue<State>(
     update = update.next;
   }
 
-  if (queue.callbackList !== null) {
-    workInProgress.effectTag |= CallbackEffect;
-  } else if (queue.first === null && !queue.hasForceUpdate) {
-    // The queue is empty. We can reset it.
-    workInProgress.updateQueue = null;
-  }
-
   if (!didSkip) {
     didSkip = true;
     queue.baseState = state;
@@ -323,6 +289,57 @@ function processUpdateQueue<State>(
   return state;
 }
 exports.processUpdateQueue = processUpdateQueue;
+
+function processFiberUpdateQueue<State>(
+  current: Fiber | null,
+  workInProgress: Fiber,
+  queue: UpdateQueue<State>,
+  instance: any,
+  props: any,
+  renderExpirationTime: ExpirationTime,
+): State {
+  if (current !== null && current.updateQueue === queue) {
+    // We need to create a work-in-progress queue, by cloning the current queue.
+    const currentQueue = queue;
+    queue = workInProgress.updateQueue = {
+      baseState: currentQueue.baseState,
+      expirationTime: currentQueue.expirationTime,
+      first: currentQueue.first,
+      last: currentQueue.last,
+      isInitialized: currentQueue.isInitialized,
+      // These fields are no longer valid because they were already committed.
+      // Reset them.
+      callbackList: null,
+      hasForceUpdate: false,
+    };
+  }
+
+  // TODO: We don't know what the base state will be until we begin work.
+  // It depends on which fiber is the next current. Initialize with an empty
+  // base state, then set to the memoizedState when rendering. Not super
+  // happy with this approach.
+  if (!queue.isInitialized) {
+    queue.baseState = workInProgress.memoizedState;
+    queue.isInitialized = true;
+  }
+
+  const state = processUpdateQueue(
+    queue,
+    instance,
+    props,
+    renderExpirationTime,
+  );
+
+  if (queue.callbackList !== null) {
+    workInProgress.effectTag |= CallbackEffect;
+  } else if (queue.first === null && !queue.hasForceUpdate) {
+    // The queue is empty. We can reset it.
+    workInProgress.updateQueue = null;
+  }
+
+  return state;
+}
+exports.processFiberUpdateQueue = processFiberUpdateQueue;
 
 function commitCallbacks<State>(queue: UpdateQueue<State>, context: any) {
   const callbackList = queue.callbackList;

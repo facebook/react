@@ -15,6 +15,14 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 const {createHostRootFiber} = require('./ReactFiber');
 const {NoWork} = require('./ReactFiberExpirationTime');
 
+// TODO: This should be lifted into the renderer.
+export type WorkNode = {
+  _defer: boolean,
+  _expirationTime: ExpirationTime,
+  _onComplete: () => mixed,
+  _next: WorkNode | null,
+};
+
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
   containerInfo: any,
@@ -36,6 +44,10 @@ export type FiberRoot = {
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
+  // List of top-level work nodes. This list indicates whether a commit should
+  // be deferred. Also contains completion callbacks.
+  // TODO: Lift this into the renderer
+  firstTopLevelWork: WorkNode | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
 };
@@ -57,6 +69,7 @@ exports.createFiberRoot = function(
     context: null,
     pendingContext: null,
     hydrate,
+    firstTopLevelWork: null,
     nextScheduledRoot: null,
   };
   uninitializedFiber.stateNode = root;

@@ -12,6 +12,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 var ReactInstanceMap = require('shared/ReactInstanceMap');
@@ -223,7 +224,9 @@ export type Reconciler<C, I, TI> = {
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
-  ): void,
+  ): ExpirationTime,
+  flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
+  requestWork(root: OpaqueRoot, expirationTime: ExpirationTime): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
@@ -264,6 +267,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    requestWork,
+    flushRoot,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
@@ -325,11 +330,12 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       callback,
       isReplace: false,
       isForced: false,
-      nextCallback: null,
       next: null,
     };
     insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
+
+    return expirationTime;
   }
 
   return {
@@ -342,7 +348,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
       callback: ?Function,
-    ): void {
+    ): ExpirationTime {
       // TODO: If this is a nested container, this won't be the root.
       const current = container.current;
 
@@ -365,8 +371,12 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         container.pendingContext = context;
       }
 
-      scheduleTopLevelUpdate(current, element, callback);
+      return scheduleTopLevelUpdate(current, element, callback);
     },
+
+    flushRoot,
+
+    requestWork,
 
     batchedUpdates,
 

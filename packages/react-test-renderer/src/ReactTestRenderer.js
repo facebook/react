@@ -607,7 +607,7 @@ var ReactTestRendererFiber = {
         if (root == null || root.current == null) {
           return;
         }
-        TestRenderer.updateContainer(null, root, null);
+        TestRenderer.updateContainer(null, root, null, null);
         container = null;
         root = null;
       },
