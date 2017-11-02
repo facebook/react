@@ -36,4 +36,4 @@ Object.assign(
   },
 );
 
-module.exports = ReactDOM;
+export default ReactDOM;
