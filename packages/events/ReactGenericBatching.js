@@ -7,7 +7,7 @@
 
 'use strict';
 
-var ReactControlledComponent = require('./ReactControlledComponent');
+import ReactControlledComponent from './ReactControlledComponent';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -58,4 +58,4 @@ var ReactGenericBatching = {
   injection: ReactGenericBatchingInjection,
 };
 
-module.exports = ReactGenericBatching;
+export default ReactGenericBatching;

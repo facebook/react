@@ -136,7 +136,7 @@ describe('ReactContextValidator', () => {
     jest.resetModules();
 
     // TODO: can we express this test with only public API?
-    validateDOMNesting = require('../client/validateDOMNesting');
+    validateDOMNesting = require('../client/validateDOMNesting').default;
   });
 
   it('allows any tag with no context', () => {

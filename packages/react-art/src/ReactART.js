@@ -7,19 +7,19 @@
 
 'use strict';
 
-require('art/modes/current').setCurrent(
-  // Change to 'art/modes/dom' for easier debugging via SVG
-  require('art/modes/fast-noSideEffects'),
-);
+import React from 'react';
+import ReactFiberReconciler from 'react-reconciler';
+import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
+import Mode from 'art/modes/current';
+import FastNoSideEffects from 'art/modes/fast-noSideEffects';
+import Transform from 'art/core/transform';
+import invariant from 'fbjs/lib/invariant';
+import emptyObject from 'fbjs/lib/emptyObject';
 
-const React = require('react');
-const ReactFiberReconciler = require('react-reconciler');
-const ReactDOMFrameScheduling = require('shared/ReactDOMFrameScheduling');
-const Mode = require('art/modes/current');
-const Transform = require('art/core/transform');
-const invariant = require('fbjs/lib/invariant');
-const emptyObject = require('fbjs/lib/emptyObject');
-const {Component} = React;
+Mode.setCurrent(
+  // Change to 'art/modes/dom' for easier debugging via SVG
+  FastNoSideEffects,
+);
 
 const pooledTransform = new Transform();
 
@@ -306,7 +306,7 @@ class Pattern {
 
 /** React Components */
 
-class Surface extends Component {
+class Surface extends React.Component {
   componentDidMount() {
     const {height, width} = this.props;
 
@@ -539,15 +539,8 @@ const ARTRenderer = ReactFiberReconciler({
 
 /** API */
 
-module.exports = {
-  ClippingRectangle: TYPES.CLIPPING_RECTANGLE,
-  Group: TYPES.GROUP,
-  LinearGradient,
-  Path: Mode.Path,
-  Pattern,
-  RadialGradient,
-  Shape: TYPES.SHAPE,
-  Surface,
-  Text: Text,
-  Transform,
-};
+export const ClippingRectangle = TYPES.CLIPPING_RECTANGLE;
+export const Group = TYPES.GROUP;
+export const Shape = TYPES.SHAPE;
+export const Path = Mode.Path;
+export {LinearGradient, Pattern, RadialGradient, Surface, Text, Transform};

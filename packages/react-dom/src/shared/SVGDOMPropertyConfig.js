@@ -7,7 +7,7 @@
 
 'use strict';
 
-var DOMProperty = require('./DOMProperty');
+import DOMProperty from './DOMProperty';
 
 var {HAS_STRING_BOOLEAN_VALUE} = DOMProperty.injection;
 
@@ -150,4 +150,4 @@ ATTRS.forEach(original => {
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
 });
 
-module.exports = SVGDOMPropertyConfig;
+export default SVGDOMPropertyConfig;

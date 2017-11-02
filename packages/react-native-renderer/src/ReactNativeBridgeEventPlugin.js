@@ -10,9 +10,9 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-const EventPropagators = require('events/EventPropagators');
-const SyntheticEvent = require('events/SyntheticEvent');
-const invariant = require('fbjs/lib/invariant');
+import EventPropagators from 'events/EventPropagators';
+import SyntheticEvent from 'events/SyntheticEvent';
+import invariant from 'fbjs/lib/invariant';
 
 const customBubblingEventTypes = {};
 const customDirectEventTypes = {};
@@ -93,4 +93,4 @@ const ReactNativeBridgeEventPlugin = {
   },
 };
 
-module.exports = ReactNativeBridgeEventPlugin;
+export default ReactNativeBridgeEventPlugin;

@@ -16,19 +16,19 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 // Modules provided by RN:
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
 
-const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-const {
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {
   mountSafeCallback,
   throwOnStylesProp,
   warnForStyleProps,
-} = require('./NativeMethodsMixinUtils');
-const findNodeHandle = require('./findNodeHandle');
-const findNumericNodeHandle = require('./findNumericNodeHandle');
+} from './NativeMethodsMixinUtils';
+import findNodeHandle from './findNodeHandle';
+import findNumericNodeHandle from './findNumericNodeHandle';
 
 /**
  * `NativeMethodsMixin` provides methods to access the underlying native
@@ -199,4 +199,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = NativeMethodsMixin;
+export default NativeMethodsMixin;

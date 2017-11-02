@@ -7,12 +7,9 @@
 
 'use strict';
 
-var ReactErrorUtils = require('shared/ReactErrorUtils');
-var invariant = require('fbjs/lib/invariant');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 /**
  * Injected dependencies:
@@ -228,4 +225,4 @@ var EventPluginUtils = {
   injection: injection,
 };
 
-module.exports = EventPluginUtils;
+export default EventPluginUtils;

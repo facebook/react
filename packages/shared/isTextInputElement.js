@@ -44,4 +44,4 @@ function isTextInputElement(elem: ?HTMLElement): boolean {
   return false;
 }
 
-module.exports = isTextInputElement;
+export default isTextInputElement;

@@ -18,15 +18,15 @@ import type {
   ReactNativeBaseComponentViewConfig,
 } from './ReactNativeTypes';
 
-const React = require('react');
+import React from 'react';
 // Modules provided by RN:
-const TextInputState = require('TextInputState');
-const UIManager = require('UIManager');
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
 
-const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-const {mountSafeCallback} = require('./NativeMethodsMixinUtils');
-const findNodeHandle = require('./findNodeHandle');
-const findNumericNodeHandle = require('./findNumericNodeHandle');
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {mountSafeCallback} from './NativeMethodsMixinUtils';
+import findNodeHandle from './findNodeHandle';
+import findNumericNodeHandle from './findNumericNodeHandle';
 
 /**
  * Superclass that provides methods to access the underlying native component.
@@ -172,4 +172,4 @@ class ReactNativeComponent<DefaultProps, Props, State>
 // eslint-disable-next-line no-unused-expressions
 (ReactNativeComponent.prototype: NativeMethodsMixinType);
 
-module.exports = ReactNativeComponent;
+export default ReactNativeComponent;

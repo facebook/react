@@ -12,11 +12,9 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 
-declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
+import warning from 'fbjs/lib/warning';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: Object | void;
 
 let onCommitFiberRoot = null;
 let onCommitFiberUnmount = null;
@@ -35,7 +33,7 @@ function catchErrors(fn) {
   };
 }
 
-function injectInternals(internals: Object): boolean {
+export function injectInternals(internals: Object): boolean {
   if (typeof __REACT_DEVTOOLS_GLOBAL_HOOK__ === 'undefined') {
     // No DevTools
     return false;
@@ -72,18 +70,14 @@ function injectInternals(internals: Object): boolean {
   return true;
 }
 
-function onCommitRoot(root: FiberRoot) {
+export function onCommitRoot(root: FiberRoot) {
   if (typeof onCommitFiberRoot === 'function') {
     onCommitFiberRoot(root);
   }
 }
 
-function onCommitUnmount(fiber: Fiber) {
+export function onCommitUnmount(fiber: Fiber) {
   if (typeof onCommitFiberUnmount === 'function') {
     onCommitFiberUnmount(fiber);
   }
 }
-
-exports.injectInternals = injectInternals;
-exports.onCommitRoot = onCommitRoot;
-exports.onCommitUnmount = onCommitUnmount;

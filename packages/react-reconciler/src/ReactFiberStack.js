@@ -11,13 +11,11 @@
 
 import type {Fiber} from './ReactFiber';
 
+import warning from 'fbjs/lib/warning';
+
 export type StackCursor<T> = {
   current: T,
 };
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 const valueStack: Array<any> = [];
 
@@ -27,17 +25,17 @@ if (__DEV__) {
 
 let index = -1;
 
-exports.createCursor = function<T>(defaultValue: T): StackCursor<T> {
+export function createCursor<T>(defaultValue: T): StackCursor<T> {
   return {
     current: defaultValue,
   };
-};
+}
 
-exports.isEmpty = function(): boolean {
+export function isEmpty(): boolean {
   return index === -1;
-};
+}
 
-exports.pop = function<T>(cursor: StackCursor<T>, fiber: Fiber): void {
+export function pop<T>(cursor: StackCursor<T>, fiber: Fiber): void {
   if (index < 0) {
     if (__DEV__) {
       warning(false, 'Unexpected pop.');
@@ -60,13 +58,9 @@ exports.pop = function<T>(cursor: StackCursor<T>, fiber: Fiber): void {
   }
 
   index--;
-};
+}
 
-exports.push = function<T>(
-  cursor: StackCursor<T>,
-  value: T,
-  fiber: Fiber,
-): void {
+export function push<T>(cursor: StackCursor<T>, value: T, fiber: Fiber): void {
   index++;
 
   valueStack[index] = cursor.current;
@@ -76,9 +70,9 @@ exports.push = function<T>(
   }
 
   cursor.current = value;
-};
+}
 
-exports.reset = function(): void {
+export function reset(): void {
   while (index > -1) {
     valueStack[index] = null;
 
@@ -88,4 +82,4 @@ exports.reset = function(): void {
 
     index--;
   }
-};
+}

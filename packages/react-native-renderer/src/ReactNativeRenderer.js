@@ -12,24 +12,31 @@
 import type {ReactNativeType} from './ReactNativeTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-require('./ReactNativeInjection');
+import './ReactNativeInjection';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
-const ReactPortal = require('react-reconciler/src/ReactPortal');
-const {
-  injectInternals,
-} = require('react-reconciler/src/ReactFiberDevToolsHook');
-const ReactGenericBatching = require('events/ReactGenericBatching');
-const ReactVersion = require('shared/ReactVersion');
+import * as ReactFiberErrorLogger
+  from 'react-reconciler/src/ReactFiberErrorLogger';
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import TouchHistoryMath from 'events/TouchHistoryMath';
+import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
+import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
-const UIManager = require('UIManager');
+import UIManager from 'UIManager';
 
-const ReactNativeFiberErrorDialog = require('./ReactNativeFiberErrorDialog');
-const ReactNativeComponentTree = require('./ReactNativeComponentTree');
-const ReactNativeFiberRenderer = require('./ReactNativeFiberRenderer');
-const ReactNativeFiberInspector = require('./ReactNativeFiberInspector');
-const findNumericNodeHandle = require('./findNumericNodeHandle');
+import {showDialog} from './ReactNativeFiberErrorDialog';
+import NativeMethodsMixin from './NativeMethodsMixin';
+import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
+import ReactNativeComponent from './ReactNativeComponent';
+import ReactNativeComponentTree from './ReactNativeComponentTree';
+import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
+import ReactNativePropRegistry from './ReactNativePropRegistry';
+import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
+import createReactNativeComponentClass from './createReactNativeComponentClass';
+import findNumericNodeHandle from './findNumericNodeHandle';
+import takeSnapshot from './takeSnapshot';
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
   ReactNativeFiberRenderer.batchedUpdates,
@@ -39,12 +46,10 @@ const roots = new Map();
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(
-  ReactNativeFiberErrorDialog.showDialog,
-);
+ReactFiberErrorLogger.injection.injectDialog(showDialog);
 
 const ReactNativeRenderer: ReactNativeType = {
-  NativeComponent: require('./ReactNativeComponent'),
+  NativeComponent: ReactNativeComponent,
 
   findNodeHandle: findNumericNodeHandle,
 
@@ -93,16 +98,15 @@ const ReactNativeRenderer: ReactNativeType = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Used as a mixin in many createClass-based components
-    NativeMethodsMixin: require('./NativeMethodsMixin'),
-
+    NativeMethodsMixin,
     // Used by react-native-github/Libraries/ components
-    ReactNativeBridgeEventPlugin: require('./ReactNativeBridgeEventPlugin'), // requireNativeComponent
-    ReactGlobalSharedState: require('shared/ReactGlobalSharedState'), // Systrace
-    ReactNativeComponentTree: require('./ReactNativeComponentTree'), // InspectorUtils, ScrollResponder
-    ReactNativePropRegistry: require('./ReactNativePropRegistry'), // flattenStyle, Stylesheet
-    TouchHistoryMath: require('events/TouchHistoryMath'), // PanResponder
-    createReactNativeComponentClass: require('./createReactNativeComponentClass'), // RCTText, RCTView, ReactNativeART
-    takeSnapshot: require('./takeSnapshot'), // react-native-implementation
+    ReactNativeBridgeEventPlugin, // requireNativeComponent
+    ReactGlobalSharedState, // Systrace
+    ReactNativeComponentTree, // InspectorUtils, ScrollResponder
+    ReactNativePropRegistry, // flattenStyle, Stylesheet
+    TouchHistoryMath, // PanResponder
+    createReactNativeComponentClass, // RCTText, RCTView, ReactNativeART
+    takeSnapshot, // react-native-implementation
   },
 };
 
@@ -131,11 +135,11 @@ if (__DEV__) {
 injectInternals({
   findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
   findHostInstanceByFiber: ReactNativeFiberRenderer.findHostInstance,
-  getInspectorDataForViewTag: ReactNativeFiberInspector.getInspectorDataForViewTag,
+  getInspectorDataForViewTag: getInspectorDataForViewTag,
   // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-native-renderer',
 });
 
-module.exports = ReactNativeRenderer;
+export default ReactNativeRenderer;

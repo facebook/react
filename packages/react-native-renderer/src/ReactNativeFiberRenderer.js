@@ -11,19 +11,22 @@
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-const ReactFiberReconciler = require('react-reconciler');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+import ReactFiberReconciler from 'react-reconciler';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
 // Modules provided by RN:
-const UIManager = require('UIManager');
-const deepFreezeAndThrowOnMutationInDev = require('deepFreezeAndThrowOnMutationInDev');
+import UIManager from 'UIManager';
+import deepFreezeAndThrowOnMutationInDev
+  from 'deepFreezeAndThrowOnMutationInDev';
 
-const ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-const ReactNativeComponentTree = require('./ReactNativeComponentTree');
-const ReactNativeFiberHostComponent = require('./ReactNativeFiberHostComponent');
-const ReactNativeFrameScheduling = require('./ReactNativeFrameScheduling');
-const ReactNativeTagHandles = require('./ReactNativeTagHandles');
-const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
+import * as ReactNativeViewConfigRegistry
+  from './ReactNativeViewConfigRegistry';
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import ReactNativeComponentTree from './ReactNativeComponentTree';
+import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
+import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
+import ReactNativeTagHandles from './ReactNativeTagHandles';
+
 const {
   precacheFiberNode,
   uncacheFiberNode,
@@ -389,4 +392,4 @@ const NativeRenderer = ReactFiberReconciler({
   },
 });
 
-module.exports = NativeRenderer;
+export default NativeRenderer;

@@ -59,7 +59,4 @@ function scheduleDeferredCallback(callback: Callback): number {
   return 0;
 }
 
-module.exports = {
-  now,
-  scheduleDeferredCallback,
-};
+export {now, scheduleDeferredCallback};

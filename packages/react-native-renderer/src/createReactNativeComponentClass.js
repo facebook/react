@@ -11,7 +11,7 @@
 
 import type {ViewConfigGetter} from './ReactNativeTypes';
 
-const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
+import {register} from './ReactNativeViewConfigRegistry';
 
 /**
  * Creates a renderable ReactNative host component.
@@ -25,7 +25,7 @@ const createReactNativeComponentClass = function(
   name: string,
   callback: ViewConfigGetter,
 ): string {
-  return ReactNativeViewConfigRegistry.register(name, callback);
+  return register(name, callback);
 };
 
-module.exports = createReactNativeComponentClass;
+export default createReactNativeComponentClass;

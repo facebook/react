@@ -12,8 +12,8 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-const {createHostRootFiber} = require('./ReactFiber');
-const {NoWork} = require('./ReactFiberExpirationTime');
+import {createHostRootFiber} from './ReactFiber';
+import {NoWork} from './ReactFiberExpirationTime';
 
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
@@ -40,7 +40,7 @@ export type FiberRoot = {
   nextScheduledRoot: FiberRoot | null,
 };
 
-exports.createFiberRoot = function(
+export function createFiberRoot(
   containerInfo: any,
   hydrate: boolean,
 ): FiberRoot {
@@ -61,4 +61,4 @@ exports.createFiberRoot = function(
   };
   uninitializedFiber.stateNode = root;
   return root;
-};
+}

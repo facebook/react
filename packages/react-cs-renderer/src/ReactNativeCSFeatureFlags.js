@@ -21,4 +21,4 @@ var ReactNativeCSFeatureFlags: FeatureFlags = {
   enablePersistentReconciler: true,
 };
 
-module.exports = ReactNativeCSFeatureFlags;
+export default ReactNativeCSFeatureFlags;

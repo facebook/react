@@ -12,35 +12,35 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-var {Update} = require('shared/ReactTypeOfSideEffect');
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var {isMounted} = require('shared/ReactFiberTreeReflection');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-var getComponentName = require('shared/getComponentName');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-var invariant = require('fbjs/lib/invariant');
+import {Update} from 'shared/ReactTypeOfSideEffect';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {isMounted} from 'shared/ReactFiberTreeReflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
+import getComponentName from 'shared/getComponentName';
+import shallowEqual from 'fbjs/lib/shallowEqual';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
-var {
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {
   cacheContext,
   getMaskedContext,
   getUnmaskedContext,
   isContextConsumer,
-} = require('./ReactFiberContext');
-var {
+} from './ReactFiberContext';
+import {
   insertUpdateIntoFiber,
   processUpdateQueue,
-} = require('./ReactFiberUpdateQueue');
-var {hasContextChanged} = require('./ReactFiberContext');
+} from './ReactFiberUpdateQueue';
+import {hasContextChanged} from './ReactFiberContext';
 
+var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
-  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
   var didWarnAboutStateAssignmentForComponent = {};
 
   var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
@@ -75,7 +75,7 @@ if (__DEV__) {
   Object.freeze(fakeInternalInstance);
 }
 
-module.exports = function(
+export default function(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
   memoizeProps: (workInProgress: Fiber, props: any) => void,
@@ -720,4 +720,4 @@ module.exports = function(
     // resumeMountClassInstance,
     updateClassInstance,
   };
-};
+}

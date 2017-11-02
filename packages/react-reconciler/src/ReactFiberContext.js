@@ -12,21 +12,21 @@
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
-var {isFiberMounted} = require('shared/ReactFiberTreeReflection');
-var {ClassComponent, HostRoot} = require('shared/ReactTypeOfWork');
-var getComponentName = require('shared/getComponentName');
-var emptyObject = require('fbjs/lib/emptyObject');
-var invariant = require('fbjs/lib/invariant');
+import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
+import getComponentName from 'shared/getComponentName';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
+import checkPropTypes from 'prop-types/checkPropTypes';
 
-const {createCursor, pop, push} = require('./ReactFiberStack');
+import {createCursor, pop, push} from './ReactFiberStack';
+import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+
+const {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var checkPropTypes = require('prop-types/checkPropTypes');
-
-  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
-  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
-
   var warnedAboutMissingGetChildContext = {};
 }
 
@@ -39,7 +39,7 @@ let didPerformWorkStackCursor: StackCursor<boolean> = createCursor(false);
 // pushed the next context provider, and now need to merge their contexts.
 let previousContext: Object = emptyObject;
 
-function getUnmaskedContext(workInProgress: Fiber): Object {
+export function getUnmaskedContext(workInProgress: Fiber): Object {
   const hasOwnContext = isContextProvider(workInProgress);
   if (hasOwnContext) {
     // If the fiber is a context provider itself, when we read its context
@@ -50,9 +50,8 @@ function getUnmaskedContext(workInProgress: Fiber): Object {
   }
   return contextStackCursor.current;
 }
-exports.getUnmaskedContext = getUnmaskedContext;
 
-function cacheContext(
+export function cacheContext(
   workInProgress: Fiber,
   unmaskedContext: Object,
   maskedContext: Object,
@@ -61,9 +60,8 @@ function cacheContext(
   instance.__reactInternalMemoizedUnmaskedChildContext = unmaskedContext;
   instance.__reactInternalMemoizedMaskedChildContext = maskedContext;
 }
-exports.cacheContext = cacheContext;
 
-exports.getMaskedContext = function(
+export function getMaskedContext(
   workInProgress: Fiber,
   unmaskedContext: Object,
 ) {
@@ -107,23 +105,21 @@ exports.getMaskedContext = function(
   }
 
   return context;
-};
+}
 
-exports.hasContextChanged = function(): boolean {
+export function hasContextChanged(): boolean {
   return didPerformWorkStackCursor.current;
-};
+}
 
-function isContextConsumer(fiber: Fiber): boolean {
+export function isContextConsumer(fiber: Fiber): boolean {
   return fiber.tag === ClassComponent && fiber.type.contextTypes != null;
 }
-exports.isContextConsumer = isContextConsumer;
 
-function isContextProvider(fiber: Fiber): boolean {
+export function isContextProvider(fiber: Fiber): boolean {
   return fiber.tag === ClassComponent && fiber.type.childContextTypes != null;
 }
-exports.isContextProvider = isContextProvider;
 
-function popContextProvider(fiber: Fiber): void {
+export function popContextProvider(fiber: Fiber): void {
   if (!isContextProvider(fiber)) {
     return;
   }
@@ -131,14 +127,13 @@ function popContextProvider(fiber: Fiber): void {
   pop(didPerformWorkStackCursor, fiber);
   pop(contextStackCursor, fiber);
 }
-exports.popContextProvider = popContextProvider;
 
-exports.popTopLevelContextObject = function(fiber: Fiber) {
+export function popTopLevelContextObject(fiber: Fiber) {
   pop(didPerformWorkStackCursor, fiber);
   pop(contextStackCursor, fiber);
-};
+}
 
-exports.pushTopLevelContextObject = function(
+export function pushTopLevelContextObject(
   fiber: Fiber,
   context: Object,
   didChange: boolean,
@@ -151,9 +146,12 @@ exports.pushTopLevelContextObject = function(
 
   push(contextStackCursor, context, fiber);
   push(didPerformWorkStackCursor, didChange, fiber);
-};
+}
 
-function processChildContext(fiber: Fiber, parentContext: Object): Object {
+export function processChildContext(
+  fiber: Fiber,
+  parentContext: Object,
+): Object {
   const instance = fiber.stateNode;
   const childContextTypes = fiber.type.childContextTypes;
 
@@ -214,9 +212,8 @@ function processChildContext(fiber: Fiber, parentContext: Object): Object {
 
   return {...parentContext, ...childContext};
 }
-exports.processChildContext = processChildContext;
 
-exports.pushContextProvider = function(workInProgress: Fiber): boolean {
+export function pushContextProvider(workInProgress: Fiber): boolean {
   if (!isContextProvider(workInProgress)) {
     return false;
   }
@@ -240,9 +237,9 @@ exports.pushContextProvider = function(workInProgress: Fiber): boolean {
   );
 
   return true;
-};
+}
 
-exports.invalidateContextProvider = function(
+export function invalidateContextProvider(
   workInProgress: Fiber,
   didChange: boolean,
 ): void {
@@ -271,15 +268,15 @@ exports.invalidateContextProvider = function(
     pop(didPerformWorkStackCursor, workInProgress);
     push(didPerformWorkStackCursor, didChange, workInProgress);
   }
-};
+}
 
-exports.resetContext = function(): void {
+export function resetContext(): void {
   previousContext = emptyObject;
   contextStackCursor.current = emptyObject;
   didPerformWorkStackCursor.current = false;
-};
+}
 
-exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
+export function findCurrentUnmaskedContext(fiber: Fiber): Object {
   // Currently this is only used with renderSubtreeIntoContainer; not sure if it
   // makes sense elsewhere
   invariant(
@@ -302,4 +299,4 @@ exports.findCurrentUnmaskedContext = function(fiber: Fiber): Object {
     node = parent;
   }
   return node.stateNode.context;
-};
+}

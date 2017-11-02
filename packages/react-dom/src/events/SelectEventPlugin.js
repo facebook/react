@@ -7,17 +7,17 @@
 
 'use strict';
 
-var EventPropagators = require('events/EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var SyntheticEvent = require('events/SyntheticEvent');
-var isTextInputElement = require('shared/isTextInputElement');
-var getActiveElement = require('fbjs/lib/getActiveElement');
-var shallowEqual = require('fbjs/lib/shallowEqual');
+import EventPropagators from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import getActiveElement from 'fbjs/lib/getActiveElement';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 
-var ReactBrowserEventEmitter = require('./ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-var ReactInputSelection = require('../client/ReactInputSelection');
-var {DOCUMENT_NODE} = require('../shared/HTMLNodeType');
+import ReactBrowserEventEmitter from './ReactBrowserEventEmitter';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import * as ReactInputSelection from '../client/ReactInputSelection';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 var skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&
@@ -209,4 +209,4 @@ var SelectEventPlugin = {
   },
 };
 
-module.exports = SelectEventPlugin;
+export default SelectEventPlugin;

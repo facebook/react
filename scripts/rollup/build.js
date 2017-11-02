@@ -221,6 +221,27 @@ function handleRollupWarnings(warning) {
     console.error(warning.message);
     process.exit(1);
   }
+  if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
+    const match = warning.message.match(/external module '([^']+)'/);
+    if (!match || typeof match[1] !== 'string') {
+      throw new Error(
+        'Could not parse a Rollup warning. ' + 'Fix this method.'
+      );
+    }
+    const importSideEffects = Modules.getImportSideEffects();
+    const path = match[1];
+    if (typeof importSideEffects[path] !== 'boolean') {
+      throw new Error(
+        'An external module "' +
+          path +
+          '" is used in a DEV-only code path ' +
+          'but we do not know if it is safe to omit an unused require() to it in production. ' +
+          'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
+      );
+    }
+    // Don't warn. We will remove side effectless require() in a later pass.
+    return;
+  }
   console.warn(warning.message || warning);
 }
 
@@ -345,23 +366,6 @@ function getUglifyConfig(configs) {
   };
 }
 
-// We use this for various shims, such as www forks of the code,
-// renderer-specific feature flag overrides, and UMD optimizations.
-function shimModules(shims) {
-  // For some reason, even if we use the alias plugin,
-  // Rollup still attempts to bundle unused original code
-  // if it exists. We have to explicitly stub it out.
-  const nullStub = {
-    transform(source, id) {
-      if (shims[id]) {
-        return 'module.exports = null;';
-      }
-      return source;
-    },
-  };
-  return [nullStub, alias(shims)];
-}
-
 // FB uses require('React') instead of require('react').
 // We can't set up a forwarding module due to case sensitivity issues.
 function rewriteFBReactImport() {
@@ -408,11 +412,15 @@ function getPlugins(
 ) {
   const shims = Modules.getShims(bundleType, entry, featureFlags);
   const plugins = [
+    // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && writeErrorCodes(),
-    ...shimModules(shims),
+    // Shim some modules for www custom behavior and optimizations.
+    alias(shims),
+    // Use Node resolution mechanism.
     resolvePlugin({
       skip: externals,
     }),
+    // Compile to ES5.
     babel(getBabelConfig(updateBabelOptions, bundleType)),
     stripUseStrict(),
   ].filter(Boolean);
@@ -545,9 +553,15 @@ function createBundle(bundle, bundleType) {
     externals = externals.concat(deps);
   }
 
+  const importSideEffects = Modules.getImportSideEffects();
+  const pureExternalModules = Object.keys(importSideEffects).filter(
+    module => !importSideEffects[module]
+  );
+
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
     input: resolvedEntry,
+    pureExternalModules,
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);

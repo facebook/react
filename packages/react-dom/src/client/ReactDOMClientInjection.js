@@ -7,18 +7,18 @@
 
 'use strict';
 
-var EventPluginHub = require('events/EventPluginHub');
-var EventPluginUtils = require('events/EventPluginUtils');
+import EventPluginHub from 'events/EventPluginHub';
+import EventPluginUtils from 'events/EventPluginUtils';
 
-var ReactDOMComponentTree = require('./ReactDOMComponentTree');
-var BeforeInputEventPlugin = require('../events/BeforeInputEventPlugin');
-var ChangeEventPlugin = require('../events/ChangeEventPlugin');
-var DOMEventPluginOrder = require('../events/DOMEventPluginOrder');
-var EnterLeaveEventPlugin = require('../events/EnterLeaveEventPlugin');
-var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
-var ReactDOMEventListener = require('../events/ReactDOMEventListener');
-var SelectEventPlugin = require('../events/SelectEventPlugin');
-var SimpleEventPlugin = require('../events/SimpleEventPlugin');
+import ReactDOMComponentTree from './ReactDOMComponentTree';
+import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
+import ChangeEventPlugin from '../events/ChangeEventPlugin';
+import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
+import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
+import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import SelectEventPlugin from '../events/SelectEventPlugin';
+import SimpleEventPlugin from '../events/SimpleEventPlugin';
 
 ReactDOMEventListener.setHandleTopLevel(
   ReactBrowserEventEmitter.handleTopLevel,

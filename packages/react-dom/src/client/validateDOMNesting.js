@@ -7,17 +7,16 @@
 
 'use strict';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import warning from 'fbjs/lib/warning';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import ReactDebugCurrentFiber
+  from 'react-reconciler/src/ReactDebugCurrentFiber';
 
+var {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 var validateDOMNesting = emptyFunction;
 
 if (__DEV__) {
-  // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {
-    getCurrentFiberStackAddendum,
-  } = require('react-reconciler/src/ReactDebugCurrentFiber');
-  var warning = require('fbjs/lib/warning');
-
   // This validation code was written based on the HTML5 parsing spec:
   // https://html.spec.whatwg.org/multipage/syntax.html#has-an-element-in-scope
   //
@@ -484,6 +483,7 @@ if (__DEV__) {
     }
   };
 
+  // TODO: turn this into a named export
   validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
 
   // For testing
@@ -498,4 +498,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = validateDOMNesting;
+export default validateDOMNesting;

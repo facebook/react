@@ -43,4 +43,4 @@ var ReactNativeRTComponentTree = {
   updateFiberProps,
 };
 
-module.exports = ReactNativeRTComponentTree;
+export default ReactNativeRTComponentTree;

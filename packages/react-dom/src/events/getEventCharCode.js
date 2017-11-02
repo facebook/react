@@ -42,4 +42,4 @@ function getEventCharCode(nativeEvent) {
   return 0;
 }
 
-module.exports = getEventCharCode;
+export default getEventCharCode;

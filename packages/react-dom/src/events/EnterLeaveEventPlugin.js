@@ -7,10 +7,10 @@
 
 'use strict';
 
-var EventPropagators = require('events/EventPropagators');
+import EventPropagators from 'events/EventPropagators';
 
-var SyntheticMouseEvent = require('./SyntheticMouseEvent');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+import SyntheticMouseEvent from './SyntheticMouseEvent';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
 
 var eventTypes = {
   mouseEnter: {
@@ -116,4 +116,4 @@ var EnterLeaveEventPlugin = {
   },
 };
 
-module.exports = EnterLeaveEventPlugin;
+export default EnterLeaveEventPlugin;

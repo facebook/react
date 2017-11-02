@@ -110,4 +110,4 @@ function escapeTextContentForBrowser(text) {
   return escapeHtml(text);
 }
 
-module.exports = escapeTextContentForBrowser;
+export default escapeTextContentForBrowser;

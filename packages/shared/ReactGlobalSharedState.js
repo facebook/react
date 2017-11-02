@@ -7,17 +7,11 @@
 
 'use strict';
 
-var ReactInternals = require('react')
-  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+import React from 'react';
 
-var ReactGlobalSharedState = {
-  ReactCurrentOwner: ReactInternals.ReactCurrentOwner,
-};
+var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-if (__DEV__) {
-  Object.assign(ReactGlobalSharedState, {
-    ReactDebugCurrentFrame: ReactInternals.ReactDebugCurrentFrame,
-  });
-}
-
-module.exports = ReactGlobalSharedState;
+export const ReactCurrentOwner = ReactInternals.ReactCurrentOwner;
+export const ReactDebugCurrentFrame = __DEV__
+  ? ReactInternals.ReactDebugCurrentFrame
+  : null;

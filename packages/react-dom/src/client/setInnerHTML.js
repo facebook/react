@@ -7,8 +7,9 @@
 
 'use strict';
 
-var Namespaces = require('../shared/DOMNamespaces').Namespaces;
-var createMicrosoftUnsafeLocalFunction = require('../shared/createMicrosoftUnsafeLocalFunction');
+import {Namespaces} from '../shared/DOMNamespaces';
+import createMicrosoftUnsafeLocalFunction
+  from '../shared/createMicrosoftUnsafeLocalFunction';
 
 // SVG temp container for IE lacking innerHTML
 var reusableSVGContainer;
@@ -40,4 +41,4 @@ var setInnerHTML = createMicrosoftUnsafeLocalFunction(function(node, html) {
   }
 });
 
-module.exports = setInnerHTML;
+export default setInnerHTML;

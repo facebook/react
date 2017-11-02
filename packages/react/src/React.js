@@ -7,24 +7,25 @@
 
 'use strict';
 
-var ReactVersion = require('shared/ReactVersion');
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+import assign from 'object-assign';
+import ReactVersion from 'shared/ReactVersion';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
 
-var ReactBaseClasses = require('./ReactBaseClasses');
-var ReactChildren = require('./ReactChildren');
-var ReactElement = require('./ReactElement');
-var onlyChild = require('./onlyChild');
-
-var createElement = ReactElement.createElement;
-var createFactory = ReactElement.createFactory;
-var cloneElement = ReactElement.cloneElement;
-
-if (__DEV__) {
-  var ReactElementValidator = require('./ReactElementValidator');
-  createElement = ReactElementValidator.createElement;
-  createFactory = ReactElementValidator.createFactory;
-  cloneElement = ReactElementValidator.cloneElement;
-}
+import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
+import {forEach, map, count, toArray, only} from './ReactChildren';
+import ReactCurrentOwner from './ReactCurrentOwner';
+import {
+  createElement,
+  createFactory,
+  cloneElement,
+  isValidElement,
+} from './ReactElement';
+import {
+  createElementWithValidation,
+  createFactoryWithValidation,
+  cloneElementWithValidation,
+} from './ReactElementValidator';
+import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 const REACT_FRAGMENT_TYPE =
   (typeof Symbol === 'function' &&
@@ -34,29 +35,28 @@ const REACT_FRAGMENT_TYPE =
 
 var React = {
   Children: {
-    map: ReactChildren.map,
-    forEach: ReactChildren.forEach,
-    count: ReactChildren.count,
-    toArray: ReactChildren.toArray,
-    only: onlyChild,
+    map,
+    forEach,
+    count,
+    toArray,
+    only,
   },
 
-  Component: ReactBaseClasses.Component,
-  PureComponent: ReactBaseClasses.PureComponent,
-  unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
+  Component,
+  PureComponent,
+  unstable_AsyncComponent: AsyncComponent,
 
-  createElement: createElement,
-  cloneElement: cloneElement,
-  isValidElement: ReactElement.isValidElement,
-
-  createFactory: createFactory,
+  createElement: __DEV__ ? createElementWithValidation : createElement,
+  cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
+  createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
+  isValidElement: isValidElement,
 
   version: ReactVersion,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactCurrentOwner: require('./ReactCurrentOwner'),
+    ReactCurrentOwner,
     // Used by renderers to avoid bundling object-assign twice in UMD bundles:
-    assign: require('object-assign'),
+    assign,
   },
 };
 
@@ -67,11 +67,11 @@ if (ReactFeatureFlags.enableReactFragment) {
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
     // These should not be included in production.
-    ReactDebugCurrentFrame: require('./ReactDebugCurrentFrame'),
+    ReactDebugCurrentFrame,
     // Shim for React DOM 16.0.0 which still destructured (but not used) this.
     // TODO: remove in React 17.0.
     ReactComponentTreeHook: {},
   });
 }
 
-module.exports = React;
+export default React;

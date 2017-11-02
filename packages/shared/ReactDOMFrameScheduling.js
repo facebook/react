@@ -19,11 +19,10 @@
 
 import type {Deadline} from 'react-reconciler';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
   if (
     ExecutionEnvironment.canUseDOM &&
     typeof requestAnimationFrame !== 'function'
@@ -164,5 +163,4 @@ if (!ExecutionEnvironment.canUseDOM) {
   rIC = requestIdleCallback;
 }
 
-exports.now = now;
-exports.rIC = rIC;
+export {now, rIC};

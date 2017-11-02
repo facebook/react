@@ -24,4 +24,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = ReactDebugCurrentFrame;
+export default ReactDebugCurrentFrame;

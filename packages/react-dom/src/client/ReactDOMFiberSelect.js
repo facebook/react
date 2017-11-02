@@ -9,19 +9,20 @@
 
 'use strict';
 
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import ReactDebugCurrentFiber
+  from 'react-reconciler/src/ReactDebugCurrentFiber';
+import warning from 'fbjs/lib/warning';
+
+import ReactControlledValuePropTypes
+  from '../shared/ReactControlledValuePropTypes';
+
 var {
   getCurrentFiberOwnerName,
-} = require('react-reconciler/src/ReactDebugCurrentFiber');
-
-var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+  getCurrentFiberStackAddendum,
+} = ReactDebugCurrentFiber;
 
 if (__DEV__) {
-  // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {
-    getCurrentFiberStackAddendum,
-  } = require('react-reconciler/src/ReactDebugCurrentFiber');
-  var warning = require('fbjs/lib/warning');
-
   var didWarnValueDefaultValue = false;
 }
 
@@ -143,86 +144,83 @@ function updateOptions(
  * If `defaultValue` is provided, any options with the supplied values will be
  * selected.
  */
-var ReactDOMSelect = {
-  getHostProps: function(element: Element, props: Object) {
-    return Object.assign({}, props, {
-      value: undefined,
-    });
-  },
 
-  initWrapperState: function(element: Element, props: Object) {
-    var node = ((element: any): SelectWithWrapperState);
-    if (__DEV__) {
-      checkSelectPropTypes(props);
+export function getHostProps(element: Element, props: Object) {
+  return Object.assign({}, props, {
+    value: undefined,
+  });
+}
+
+export function initWrapperState(element: Element, props: Object) {
+  var node = ((element: any): SelectWithWrapperState);
+  if (__DEV__) {
+    checkSelectPropTypes(props);
+  }
+
+  var value = props.value;
+  node._wrapperState = {
+    initialValue: value != null ? value : props.defaultValue,
+    wasMultiple: !!props.multiple,
+  };
+
+  if (__DEV__) {
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValueDefaultValue
+    ) {
+      warning(
+        false,
+        'Select elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+      );
+      didWarnValueDefaultValue = true;
     }
+  }
+}
 
-    var value = props.value;
-    node._wrapperState = {
-      initialValue: value != null ? value : props.defaultValue,
-      wasMultiple: !!props.multiple,
-    };
+export function postMountWrapper(element: Element, props: Object) {
+  var node = ((element: any): SelectWithWrapperState);
+  node.multiple = !!props.multiple;
+  var value = props.value;
+  if (value != null) {
+    updateOptions(node, !!props.multiple, value, false);
+  } else if (props.defaultValue != null) {
+    updateOptions(node, !!props.multiple, props.defaultValue, true);
+  }
+}
 
-    if (__DEV__) {
-      if (
-        props.value !== undefined &&
-        props.defaultValue !== undefined &&
-        !didWarnValueDefaultValue
-      ) {
-        warning(
-          false,
-          'Select elements must be either controlled or uncontrolled ' +
-            '(specify either the value prop, or the defaultValue prop, but not ' +
-            'both). Decide between using a controlled or uncontrolled select ' +
-            'element and remove one of these props. More info: ' +
-            'https://fb.me/react-controlled-components',
-        );
-        didWarnValueDefaultValue = true;
-      }
-    }
-  },
+export function postUpdateWrapper(element: Element, props: Object) {
+  var node = ((element: any): SelectWithWrapperState);
+  // After the initial mount, we control selected-ness manually so don't pass
+  // this value down
+  node._wrapperState.initialValue = undefined;
 
-  postMountWrapper: function(element: Element, props: Object) {
-    var node = ((element: any): SelectWithWrapperState);
-    node.multiple = !!props.multiple;
-    var value = props.value;
-    if (value != null) {
-      updateOptions(node, !!props.multiple, value, false);
-    } else if (props.defaultValue != null) {
+  var wasMultiple = node._wrapperState.wasMultiple;
+  node._wrapperState.wasMultiple = !!props.multiple;
+
+  var value = props.value;
+  if (value != null) {
+    updateOptions(node, !!props.multiple, value, false);
+  } else if (wasMultiple !== !!props.multiple) {
+    // For simplicity, reapply `defaultValue` if `multiple` is toggled.
+    if (props.defaultValue != null) {
       updateOptions(node, !!props.multiple, props.defaultValue, true);
+    } else {
+      // Revert the select back to its default unselected state.
+      updateOptions(node, !!props.multiple, props.multiple ? [] : '', false);
     }
-  },
+  }
+}
 
-  postUpdateWrapper: function(element: Element, props: Object) {
-    var node = ((element: any): SelectWithWrapperState);
-    // After the initial mount, we control selected-ness manually so don't pass
-    // this value down
-    node._wrapperState.initialValue = undefined;
+export function restoreControlledState(element: Element, props: Object) {
+  var node = ((element: any): SelectWithWrapperState);
+  var value = props.value;
 
-    var wasMultiple = node._wrapperState.wasMultiple;
-    node._wrapperState.wasMultiple = !!props.multiple;
-
-    var value = props.value;
-    if (value != null) {
-      updateOptions(node, !!props.multiple, value, false);
-    } else if (wasMultiple !== !!props.multiple) {
-      // For simplicity, reapply `defaultValue` if `multiple` is toggled.
-      if (props.defaultValue != null) {
-        updateOptions(node, !!props.multiple, props.defaultValue, true);
-      } else {
-        // Revert the select back to its default unselected state.
-        updateOptions(node, !!props.multiple, props.multiple ? [] : '', false);
-      }
-    }
-  },
-
-  restoreControlledState: function(element: Element, props: Object) {
-    var node = ((element: any): SelectWithWrapperState);
-    var value = props.value;
-
-    if (value != null) {
-      updateOptions(node, !!props.multiple, value, false);
-    }
-  },
-};
-
-module.exports = ReactDOMSelect;
+  if (value != null) {
+    updateOptions(node, !!props.multiple, value, false);
+  }
+}

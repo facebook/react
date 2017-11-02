@@ -8,12 +8,12 @@
 
 'use strict';
 
-const React = require('react');
-const describeComponentFrame = require('shared/describeComponentFrame');
-const getComponentName = require('shared/getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
-const checkPropTypes = require('prop-types/checkPropTypes');
+import React from 'react';
+import describeComponentFrame from 'shared/describeComponentFrame';
+import getComponentName from 'shared/getComponentName';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import checkPropTypes from 'prop-types/checkPropTypes';
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -267,4 +267,4 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
-module.exports = ReactShallowRenderer;
+export default ReactShallowRenderer;

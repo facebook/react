@@ -12,13 +12,13 @@
 import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
 
 // Module provided by RN:
-const ExceptionsManager = require('ExceptionsManager');
+import ExceptionsManager from 'ExceptionsManager';
 
 /**
  * Intercept lifecycle errors and ensure they are shown with the correct stack
  * trace within the native redbox component.
  */
-function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
+export function showDialog(capturedError: CapturedError): boolean {
   const {componentStack, error} = capturedError;
 
   let errorToHandle: Error;
@@ -50,5 +50,3 @@ function ReactNativeFiberErrorDialog(capturedError: CapturedError): boolean {
   // done above by calling ExceptionsManager.
   return false;
 }
-
-module.exports.showDialog = ReactNativeFiberErrorDialog;

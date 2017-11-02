@@ -25,7 +25,7 @@ if (typeof Symbol === 'function' && Symbol.for) {
 
 type CallHandler<T> = (props: T, returns: Array<mixed>) => ReactNodeList;
 
-exports.unstable_createCall = function<T>(
+export function unstable_createCall<T>(
   children: mixed,
   handler: CallHandler<T>,
   props: T,
@@ -49,9 +49,9 @@ exports.unstable_createCall = function<T>(
   }
 
   return call;
-};
+}
 
-exports.unstable_createReturn = function(value: mixed): ReactReturn {
+export function unstable_createReturn(value: mixed): ReactReturn {
   var returnNode = {
     // This tag allow us to uniquely identify this as a React Return
     $$typeof: REACT_RETURN_TYPE,
@@ -66,29 +66,29 @@ exports.unstable_createReturn = function(value: mixed): ReactReturn {
   }
 
   return returnNode;
-};
+}
 
 /**
  * Verifies the object is a call object.
  */
-exports.unstable_isCall = function(object: mixed): boolean {
+export function unstable_isCall(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_CALL_TYPE
   );
-};
+}
 
 /**
  * Verifies the object is a return object.
  */
-exports.unstable_isReturn = function(object: mixed): boolean {
+export function unstable_isReturn(object: mixed): boolean {
   return (
     typeof object === 'object' &&
     object !== null &&
     object.$$typeof === REACT_RETURN_TYPE
   );
-};
+}
 
-exports.unstable_REACT_RETURN_TYPE = REACT_RETURN_TYPE;
-exports.unstable_REACT_CALL_TYPE = REACT_CALL_TYPE;
+export const unstable_REACT_RETURN_TYPE = REACT_RETURN_TYPE;
+export const unstable_REACT_CALL_TYPE = REACT_CALL_TYPE;

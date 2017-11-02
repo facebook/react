@@ -11,23 +11,20 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var ReactInstanceMap = require('./ReactInstanceMap');
-var {ReactCurrentOwner} = require('./ReactGlobalSharedState');
-var getComponentName = require('./getComponentName');
-var {
+import * as ReactInstanceMap from './ReactInstanceMap';
+import {ReactCurrentOwner} from './ReactGlobalSharedState';
+import getComponentName from './getComponentName';
+import {
   ClassComponent,
   HostComponent,
   HostRoot,
   HostPortal,
   HostText,
-} = require('./ReactTypeOfWork');
-var {NoEffect, Placement} = require('./ReactTypeOfSideEffect');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+} from './ReactTypeOfWork';
+import {NoEffect, Placement} from './ReactTypeOfSideEffect';
 
 var MOUNTING = 1;
 var MOUNTED = 2;
@@ -61,11 +58,12 @@ function isFiberMountedImpl(fiber: Fiber): number {
   // that has been unmounted.
   return UNMOUNTED;
 }
-exports.isFiberMounted = function(fiber: Fiber): boolean {
-  return isFiberMountedImpl(fiber) === MOUNTED;
-};
 
-exports.isMounted = function(component: React$Component<any, any>): boolean {
+export function isFiberMounted(fiber: Fiber): boolean {
+  return isFiberMountedImpl(fiber) === MOUNTED;
+}
+
+export function isMounted(component: React$Component<any, any>): boolean {
   if (__DEV__) {
     const owner = (ReactCurrentOwner.current: any);
     if (owner !== null && owner.tag === ClassComponent) {
@@ -89,7 +87,7 @@ exports.isMounted = function(component: React$Component<any, any>): boolean {
     return false;
   }
   return isFiberMountedImpl(fiber) === MOUNTED;
-};
+}
 
 function assertIsMounted(fiber) {
   invariant(
@@ -98,7 +96,7 @@ function assertIsMounted(fiber) {
   );
 }
 
-function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
+export function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   let alternate = fiber.alternate;
   if (!alternate) {
     // If there is no alternate, then we only need to check if it is mounted.
@@ -223,9 +221,8 @@ function findCurrentFiberUsingSlowPath(fiber: Fiber): Fiber | null {
   // Otherwise B has to be current branch.
   return alternate;
 }
-exports.findCurrentFiberUsingSlowPath = findCurrentFiberUsingSlowPath;
 
-exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
+export function findCurrentHostFiber(parent: Fiber): Fiber | null {
   const currentParent = findCurrentFiberUsingSlowPath(parent);
   if (!currentParent) {
     return null;
@@ -256,11 +253,9 @@ exports.findCurrentHostFiber = function(parent: Fiber): Fiber | null {
   // Flow needs the return null here, but ESLint complains about it.
   // eslint-disable-next-line no-unreachable
   return null;
-};
+}
 
-exports.findCurrentHostFiberWithNoPortals = function(
-  parent: Fiber,
-): Fiber | null {
+export function findCurrentHostFiberWithNoPortals(parent: Fiber): Fiber | null {
   const currentParent = findCurrentFiberUsingSlowPath(parent);
   if (!currentParent) {
     return null;
@@ -291,4 +286,4 @@ exports.findCurrentHostFiberWithNoPortals = function(
   // Flow needs the return null here, but ESLint complains about it.
   // eslint-disable-next-line no-unreachable
   return null;
-};
+}

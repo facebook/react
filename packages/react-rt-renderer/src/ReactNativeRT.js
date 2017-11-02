@@ -13,18 +13,19 @@ import type {ReactNativeRTType} from './ReactNativeRTTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-const ReactFiberErrorLogger = require('react-reconciler/src/ReactFiberErrorLogger');
-const ReactNativeFiberErrorDialog = require('react-native-renderer/src/ReactNativeFiberErrorDialog');
-const ReactPortal = require('react-reconciler/src/ReactPortal');
-const {
-  injectInternals,
-} = require('react-reconciler/src/ReactFiberDevToolsHook');
-const ReactGenericBatching = require('events/ReactGenericBatching');
-const ReactVersion = require('shared/ReactVersion');
+import * as ReactFiberErrorLogger
+  from 'react-reconciler/src/ReactFiberErrorLogger';
+import {
+  showDialog,
+} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
+import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import ReactVersion from 'shared/ReactVersion';
 
-const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
-const ReactNativeRTFiberRenderer = require('./ReactNativeRTFiberRenderer');
-const ReactNativeRTFiberInspector = require('./ReactNativeRTFiberInspector');
+import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import ReactNativeRTFiberRenderer from './ReactNativeRTFiberRenderer';
+import ReactNativeRTFiberInspector from './ReactNativeRTFiberInspector';
 
 /**
  * Make sure essential globals are available and are patched correctly. Please don't remove this
@@ -44,9 +45,7 @@ const roots = new Map();
 
 // Intercept lifecycle errors and ensure they are shown with the correct stack
 // trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(
-  ReactNativeFiberErrorDialog.showDialog,
-);
+ReactFiberErrorLogger.injection.injectDialog(showDialog);
 
 const ReactNativeRTFiber: ReactNativeRTType = {
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {
@@ -96,4 +95,4 @@ injectInternals({
   rendererPackageName: 'react-rt-renderer',
 });
 
-module.exports = ReactNativeRTFiber;
+export default ReactNativeRTFiber;

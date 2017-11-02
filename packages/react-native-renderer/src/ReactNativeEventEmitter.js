@@ -8,17 +8,14 @@
  */
 'use strict';
 
-var EventPluginHub = require('events/EventPluginHub');
-var EventPluginRegistry = require('events/EventPluginRegistry');
-var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
-var ReactGenericBatching = require('events/ReactGenericBatching');
+import EventPluginHub from 'events/EventPluginHub';
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import warning from 'fbjs/lib/warning';
 
-var ReactNativeComponentTree = require('./ReactNativeComponentTree');
-var ReactNativeTagHandles = require('./ReactNativeTagHandles');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import ReactNativeComponentTree from './ReactNativeComponentTree';
+import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -197,4 +194,4 @@ var ReactNativeEventEmitter = {
   },
 };
 
-module.exports = ReactNativeEventEmitter;
+export default ReactNativeEventEmitter;

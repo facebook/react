@@ -1,1 +1,1 @@
-module.exports = require('ReactFeatureFlags');
+export default require('ReactFeatureFlags');

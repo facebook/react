@@ -38,4 +38,4 @@ class ReactNativePropRegistry {
   }
 }
 
-module.exports = ReactNativePropRegistry;
+export default ReactNativePropRegistry;

@@ -9,25 +9,23 @@
 
 'use strict';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
+// TODO: direct imports like some-package/src/* are bad. Fix me.
+import ReactDebugCurrentFiber
+  from 'react-reconciler/src/ReactDebugCurrentFiber';
 
-var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
+import ReactControlledValuePropTypes
+  from '../shared/ReactControlledValuePropTypes';
 
-if (__DEV__) {
-  // TODO: direct imports like some-package/src/* are bad. Fix me.
-  var {
-    getCurrentFiberStackAddendum,
-  } = require('react-reconciler/src/ReactDebugCurrentFiber');
-  var warning = require('fbjs/lib/warning');
-}
+var {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
+var didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
     initialValue: string,
   },
 };
-
-var didWarnValDefaultVal = false;
 
 /**
  * Implements a <textarea> host component that allows setting `value`, and
@@ -44,135 +42,132 @@ var didWarnValDefaultVal = false;
  * The rendered element will be initialized with an empty value, the prop
  * `defaultValue` if specified, or the children content (deprecated).
  */
-var ReactDOMTextarea = {
-  getHostProps: function(element: Element, props: Object) {
-    var node = ((element: any): TextAreaWithWrapperState);
-    invariant(
-      props.dangerouslySetInnerHTML == null,
-      '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+
+export function getHostProps(element: Element, props: Object) {
+  var node = ((element: any): TextAreaWithWrapperState);
+  invariant(
+    props.dangerouslySetInnerHTML == null,
+    '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
+  );
+
+  // Always set children to the same thing. In IE9, the selection range will
+  // get reset if `textContent` is mutated.  We could add a check in setTextContent
+  // to only set the value if/when the value differs from the node value (which would
+  // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
+  // solution. The value can be a boolean or object so that's why it's forced
+  // to be a string.
+  var hostProps = Object.assign({}, props, {
+    value: undefined,
+    defaultValue: undefined,
+    children: '' + node._wrapperState.initialValue,
+  });
+
+  return hostProps;
+}
+
+export function initWrapperState(element: Element, props: Object) {
+  var node = ((element: any): TextAreaWithWrapperState);
+  if (__DEV__) {
+    ReactControlledValuePropTypes.checkPropTypes(
+      'textarea',
+      props,
+      getCurrentFiberStackAddendum,
     );
-
-    // Always set children to the same thing. In IE9, the selection range will
-    // get reset if `textContent` is mutated.  We could add a check in setTextContent
-    // to only set the value if/when the value differs from the node value (which would
-    // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
-    // solution. The value can be a boolean or object so that's why it's forced
-    // to be a string.
-    var hostProps = Object.assign({}, props, {
-      value: undefined,
-      defaultValue: undefined,
-      children: '' + node._wrapperState.initialValue,
-    });
-
-    return hostProps;
-  },
-
-  initWrapperState: function(element: Element, props: Object) {
-    var node = ((element: any): TextAreaWithWrapperState);
-    if (__DEV__) {
-      ReactControlledValuePropTypes.checkPropTypes(
-        'textarea',
-        props,
-        getCurrentFiberStackAddendum,
+    if (
+      props.value !== undefined &&
+      props.defaultValue !== undefined &&
+      !didWarnValDefaultVal
+    ) {
+      warning(
+        false,
+        'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
       );
-      if (
-        props.value !== undefined &&
-        props.defaultValue !== undefined &&
-        !didWarnValDefaultVal
-      ) {
+      didWarnValDefaultVal = true;
+    }
+  }
+
+  var value = props.value;
+  var initialValue = value;
+
+  // Only bother fetching default value if we're going to use it
+  if (value == null) {
+    var defaultValue = props.defaultValue;
+    // TODO (yungsters): Remove support for children content in <textarea>.
+    var children = props.children;
+    if (children != null) {
+      if (__DEV__) {
         warning(
           false,
-          'Textarea elements must be either controlled or uncontrolled ' +
-            '(specify either the value prop, or the defaultValue prop, but not ' +
-            'both). Decide between using a controlled or uncontrolled textarea ' +
-            'and remove one of these props. More info: ' +
-            'https://fb.me/react-controlled-components',
+          'Use the `defaultValue` or `value` props instead of setting ' +
+            'children on <textarea>.',
         );
-        didWarnValDefaultVal = true;
       }
-    }
-
-    var value = props.value;
-    var initialValue = value;
-
-    // Only bother fetching default value if we're going to use it
-    if (value == null) {
-      var defaultValue = props.defaultValue;
-      // TODO (yungsters): Remove support for children content in <textarea>.
-      var children = props.children;
-      if (children != null) {
-        if (__DEV__) {
-          warning(
-            false,
-            'Use the `defaultValue` or `value` props instead of setting ' +
-              'children on <textarea>.',
-          );
-        }
+      invariant(
+        defaultValue == null,
+        'If you supply `defaultValue` on a <textarea>, do not pass children.',
+      );
+      if (Array.isArray(children)) {
         invariant(
-          defaultValue == null,
-          'If you supply `defaultValue` on a <textarea>, do not pass children.',
+          children.length <= 1,
+          '<textarea> can only have at most one child.',
         );
-        if (Array.isArray(children)) {
-          invariant(
-            children.length <= 1,
-            '<textarea> can only have at most one child.',
-          );
-          children = children[0];
-        }
-
-        defaultValue = '' + children;
+        children = children[0];
       }
-      if (defaultValue == null) {
-        defaultValue = '';
-      }
-      initialValue = defaultValue;
+
+      defaultValue = '' + children;
     }
-
-    node._wrapperState = {
-      initialValue: '' + initialValue,
-    };
-  },
-
-  updateWrapper: function(element: Element, props: Object) {
-    var node = ((element: any): TextAreaWithWrapperState);
-    var value = props.value;
-    if (value != null) {
-      // Cast `value` to a string to ensure the value is set correctly. While
-      // browsers typically do this as necessary, jsdom doesn't.
-      var newValue = '' + value;
-
-      // To avoid side effects (such as losing text selection), only set value if changed
-      if (newValue !== node.value) {
-        node.value = newValue;
-      }
-      if (props.defaultValue == null) {
-        node.defaultValue = newValue;
-      }
+    if (defaultValue == null) {
+      defaultValue = '';
     }
-    if (props.defaultValue != null) {
-      node.defaultValue = props.defaultValue;
+    initialValue = defaultValue;
+  }
+
+  node._wrapperState = {
+    initialValue: '' + initialValue,
+  };
+}
+
+export function updateWrapper(element: Element, props: Object) {
+  var node = ((element: any): TextAreaWithWrapperState);
+  var value = props.value;
+  if (value != null) {
+    // Cast `value` to a string to ensure the value is set correctly. While
+    // browsers typically do this as necessary, jsdom doesn't.
+    var newValue = '' + value;
+
+    // To avoid side effects (such as losing text selection), only set value if changed
+    if (newValue !== node.value) {
+      node.value = newValue;
     }
-  },
-
-  postMountWrapper: function(element: Element, props: Object) {
-    var node = ((element: any): TextAreaWithWrapperState);
-    // This is in postMount because we need access to the DOM node, which is not
-    // available until after the component has mounted.
-    var textContent = node.textContent;
-
-    // Only set node.value if textContent is equal to the expected
-    // initial value. In IE10/IE11 there is a bug where the placeholder attribute
-    // will populate textContent as well.
-    // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
-    if (textContent === node._wrapperState.initialValue) {
-      node.value = textContent;
+    if (props.defaultValue == null) {
+      node.defaultValue = newValue;
     }
-  },
+  }
+  if (props.defaultValue != null) {
+    node.defaultValue = props.defaultValue;
+  }
+}
 
-  restoreControlledState: function(element: Element, props: Object) {
-    // DOM component is still mounted; update
-    ReactDOMTextarea.updateWrapper(element, props);
-  },
-};
+export function postMountWrapper(element: Element, props: Object) {
+  var node = ((element: any): TextAreaWithWrapperState);
+  // This is in postMount because we need access to the DOM node, which is not
+  // available until after the component has mounted.
+  var textContent = node.textContent;
 
-module.exports = ReactDOMTextarea;
+  // Only set node.value if textContent is equal to the expected
+  // initial value. In IE10/IE11 there is a bug where the placeholder attribute
+  // will populate textContent as well.
+  // https://developer.microsoft.com/microsoft-edge/platform/issues/101525/
+  if (textContent === node._wrapperState.initialValue) {
+    node.value = textContent;
+  }
+}
+
+export function restoreControlledState(element: Element, props: Object) {
+  // DOM component is still mounted; update
+  updateWrapper(element, props);
+}

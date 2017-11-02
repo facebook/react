@@ -11,25 +11,40 @@
 
 import type {ReactElement} from 'shared/ReactElementType';
 
-var React = require('react');
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var emptyObject = require('fbjs/lib/emptyObject');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var invariant = require('fbjs/lib/invariant');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+import React from 'react';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import emptyObject from 'fbjs/lib/emptyObject';
+import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
+import invariant from 'fbjs/lib/invariant';
+import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
+import warning from 'fbjs/lib/warning';
+import checkPropTypes from 'prop-types/checkPropTypes';
+import describeComponentFrame from 'shared/describeComponentFrame';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
-var DOMMarkupOperations = require('./DOMMarkupOperations');
-var {
+import DOMMarkupOperations from './DOMMarkupOperations';
+import {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
-} = require('../shared/DOMNamespaces');
-var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
-var assertValidProps = require('../shared/assertValidProps');
-var dangerousStyleValue = require('../shared/dangerousStyleValue');
-var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
-var isCustomComponent = require('../shared/isCustomComponent');
-var omittedCloseTags = require('../shared/omittedCloseTags');
+} from '../shared/DOMNamespaces';
+import ReactControlledValuePropTypes
+  from '../shared/ReactControlledValuePropTypes';
+import assertValidProps from '../shared/assertValidProps';
+import dangerousStyleValue from '../shared/dangerousStyleValue';
+import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
+import isCustomComponent from '../shared/isCustomComponent';
+import omittedCloseTags from '../shared/omittedCloseTags';
+import warnValidStyle from '../shared/warnValidStyle';
+import {
+  validateProperties as validateARIAProperties,
+} from '../shared/ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputProperties,
+} from '../shared/ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownProperties,
+} from '../shared/ReactDOMUnknownPropertyHook';
 
 var REACT_FRAGMENT_TYPE =
   (typeof Symbol === 'function' &&
@@ -46,27 +61,12 @@ var toArray = ((React.Children.toArray: any): toArrayType);
 var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var checkPropTypes = require('prop-types/checkPropTypes');
-
-  var warnValidStyle = require('../shared/warnValidStyle');
-  var {
-    validateProperties: validateARIAProperties,
-  } = require('../shared/ReactDOMInvalidARIAHook');
-  var {
-    validateProperties: validateInputProperties,
-  } = require('../shared/ReactDOMNullInputValuePropHook');
-  var {
-    validateProperties: validateUnknownProperties,
-  } = require('../shared/ReactDOMUnknownPropertyHook');
-
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props);
   };
 
-  var describeComponentFrame = require('shared/describeComponentFrame');
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
@@ -75,7 +75,6 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
   var setCurrentDebugStack = function(stack: Array<Frame>) {
@@ -933,4 +932,4 @@ class ReactDOMServerRenderer {
   }
 }
 
-module.exports = ReactDOMServerRenderer;
+export default ReactDOMServerRenderer;

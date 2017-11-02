@@ -7,7 +7,7 @@
 
 'use strict';
 
-var SyntheticMouseEvent = require('./SyntheticMouseEvent');
+import SyntheticMouseEvent from './SyntheticMouseEvent';
 
 /**
  * @interface WheelEvent
@@ -61,4 +61,4 @@ function SyntheticWheelEvent(
 
 SyntheticMouseEvent.augmentClass(SyntheticWheelEvent, WheelEventInterface);
 
-module.exports = SyntheticWheelEvent;
+export default SyntheticWheelEvent;

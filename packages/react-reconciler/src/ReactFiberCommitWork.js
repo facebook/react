@@ -12,32 +12,27 @@
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var {
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {
   ClassComponent,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   CallComponent,
-} = ReactTypeOfWork;
-var {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = require('shared/ReactErrorUtils');
-var {Placement, Update, ContentReset} = require('shared/ReactTypeOfSideEffect');
-var invariant = require('fbjs/lib/invariant');
+} from 'shared/ReactTypeOfWork';
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-var {commitCallbacks} = require('./ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('./ReactFiberDevToolsHook');
+import {commitCallbacks} from './ReactFiberUpdateQueue';
+import {onCommitUnmount} from './ReactFiberDevToolsHook';
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
 
-if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
-}
+var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
+var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
@@ -680,4 +675,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   } else {
     invariant(false, 'Mutating reconciler is disabled.');
   }
-};
+}

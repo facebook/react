@@ -12,7 +12,7 @@
  * In the future, we should cleanup callbacks by cancelling them instead of
  * using this.
  */
-function mountSafeCallback(context: any, callback: ?Function): any {
+export function mountSafeCallback(context: any, callback: ?Function): any {
   return function() {
     if (!callback) {
       return undefined;
@@ -36,7 +36,7 @@ function mountSafeCallback(context: any, callback: ?Function): any {
   };
 }
 
-function throwOnStylesProp(component: any, props: any) {
+export function throwOnStylesProp(component: any, props: any) {
   if (props.styles !== undefined) {
     var owner = component._owner || null;
     var name = component.constructor.displayName;
@@ -56,7 +56,7 @@ function throwOnStylesProp(component: any, props: any) {
   }
 }
 
-function warnForStyleProps(props: any, validAttributes: any) {
+export function warnForStyleProps(props: any, validAttributes: any) {
   for (var key in validAttributes.style) {
     if (!(validAttributes[key] || props[key] === undefined)) {
       console.error(
@@ -71,9 +71,3 @@ function warnForStyleProps(props: any, validAttributes: any) {
     }
   }
 }
-
-module.exports = {
-  mountSafeCallback,
-  throwOnStylesProp,
-  warnForStyleProps,
-};

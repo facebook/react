@@ -7,7 +7,7 @@
 
 'use strict';
 
-var {HostComponent} = require('./ReactTypeOfWork');
+import {HostComponent} from './ReactTypeOfWork';
 
 function getParent(inst) {
   do {
@@ -28,7 +28,7 @@ function getParent(inst) {
  * Return the lowest common ancestor of A and B, or null if they are in
  * different trees.
  */
-function getLowestCommonAncestor(instA, instB) {
+export function getLowestCommonAncestor(instA, instB) {
   var depthA = 0;
   for (var tempA = instA; tempA; tempA = getParent(tempA)) {
     depthA++;
@@ -65,7 +65,7 @@ function getLowestCommonAncestor(instA, instB) {
 /**
  * Return if A is an ancestor of B.
  */
-function isAncestor(instA, instB) {
+export function isAncestor(instA, instB) {
   while (instB) {
     if (instA === instB || instA === instB.alternate) {
       return true;
@@ -78,14 +78,14 @@ function isAncestor(instA, instB) {
 /**
  * Return the parent instance of the passed-in instance.
  */
-function getParentInstance(inst) {
+export function getParentInstance(inst) {
   return getParent(inst);
 }
 
 /**
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
-function traverseTwoPhase(inst, fn, arg) {
+export function traverseTwoPhase(inst, fn, arg) {
   var path = [];
   while (inst) {
     path.push(inst);
@@ -107,7 +107,7 @@ function traverseTwoPhase(inst, fn, arg) {
  * Does not invoke the callback on the nearest common ancestor because nothing
  * "entered" or "left" that element.
  */
-function traverseEnterLeave(from, to, fn, argFrom, argTo) {
+export function traverseEnterLeave(from, to, fn, argFrom, argTo) {
   const common = from && to ? getLowestCommonAncestor(from, to) : null;
   const pathFrom = [];
   while (true) {
@@ -146,11 +146,3 @@ function traverseEnterLeave(from, to, fn, argFrom, argTo) {
     fn(pathTo[i], 'captured', argTo);
   }
 }
-
-module.exports = {
-  isAncestor: isAncestor,
-  getLowestCommonAncestor: getLowestCommonAncestor,
-  getParentInstance: getParentInstance,
-  traverseTwoPhase: traverseTwoPhase,
-  traverseEnterLeave: traverseEnterLeave,
-};

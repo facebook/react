@@ -7,7 +7,7 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Given any node return the first leaf node without children.
@@ -68,4 +68,4 @@ function getNodeForCharacterOffset(root, offset) {
   }
 }
 
-module.exports = getNodeForCharacterOffset;
+export default getNodeForCharacterOffset;

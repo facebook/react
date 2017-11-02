@@ -7,15 +7,13 @@
 
 'use strict';
 
-var EventPluginRegistry = require('events/EventPluginRegistry');
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import warning from 'fbjs/lib/warning';
 
-var DOMProperty = require('./DOMProperty');
-var isCustomComponent = require('./isCustomComponent');
-
-if (__DEV__) {
-  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
-  var warning = require('fbjs/lib/warning');
-}
+import DOMProperty from './DOMProperty';
+import isCustomComponent from './isCustomComponent';
+import possibleStandardNames from './possibleStandardNames';
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -30,7 +28,6 @@ if (__DEV__) {
   var rARIACamel = new RegExp(
     '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
   );
-  var possibleStandardNames = require('./possibleStandardNames');
 
   var validateProperty = function(tagName, name, value) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
@@ -267,15 +264,9 @@ var warnUnknownProperties = function(type, props) {
   }
 };
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
   warnUnknownProperties(type, props);
 }
-
-var ReactDOMUnknownPropertyHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMUnknownPropertyHook;

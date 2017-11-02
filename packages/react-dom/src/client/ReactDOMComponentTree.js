@@ -7,8 +7,8 @@
 
 'use strict';
 
-var {HostComponent, HostText} = require('shared/ReactTypeOfWork');
-var invariant = require('fbjs/lib/invariant');
+import {HostComponent, HostText} from 'shared/ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
 
 var randomKey = Math.random().toString(36).slice(2);
 var internalInstanceKey = '__reactInternalInstance$' + randomKey;
@@ -102,4 +102,4 @@ var ReactDOMComponentTree = {
   updateFiberProps,
 };
 
-module.exports = ReactDOMComponentTree;
+export default ReactDOMComponentTree;

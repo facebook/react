@@ -7,7 +7,7 @@
 
 'use strict';
 
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Gets the target node from a native browser event by accounting for
@@ -29,4 +29,4 @@ function getEventTarget(nativeEvent) {
   return target.nodeType === TEXT_NODE ? target.parentNode : target;
 }
 
-module.exports = getEventTarget;
+export default getEventTarget;

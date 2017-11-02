@@ -9,16 +9,15 @@
 
 'use strict';
 
-const {CSStatefulComponent} = require('CSStatefulComponent');
-const ReactFiberReconciler = require('react-reconciler');
-const ReactVersion = require('shared/ReactVersion');
-
-const {
-  injectInternals,
-} = require('react-reconciler/src/ReactFiberDevToolsHook');
-
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ReactNativeCSType} from './ReactNativeCSTypes';
+
+// Provided by CS:
+import {CSStatefulComponent} from 'CSStatefulComponent';
+
+import ReactFiberReconciler from 'react-reconciler';
+import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import ReactVersion from 'shared/ReactVersion';
 
 const emptyObject = {};
 
@@ -300,4 +299,4 @@ const ReactCS = CSStatefulComponent({
   // TODO: Unmount hook. E.g. finalizer.
 });
 
-module.exports = (ReactCS: ReactNativeCSType);
+export default (ReactCS: ReactNativeCSType);

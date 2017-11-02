@@ -9,12 +9,12 @@
 
 import type {TopLevelTypes} from './BrowserEventConstants';
 
-var EventPropagators = require('events/EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import EventPropagators from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var FallbackCompositionState = require('./FallbackCompositionState');
-var SyntheticCompositionEvent = require('./SyntheticCompositionEvent');
-var SyntheticInputEvent = require('./SyntheticInputEvent');
+import FallbackCompositionState from './FallbackCompositionState';
+import SyntheticCompositionEvent from './SyntheticCompositionEvent';
+import SyntheticInputEvent from './SyntheticInputEvent';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
@@ -472,4 +472,4 @@ var BeforeInputEventPlugin = {
   },
 };
 
-module.exports = BeforeInputEventPlugin;
+export default BeforeInputEventPlugin;

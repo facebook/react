@@ -7,12 +7,10 @@
 
 'use strict';
 
-var DOMProperty = require('../shared/DOMProperty');
-var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+import DOMProperty from '../shared/DOMProperty';
+import quoteAttributeValueForBrowser
+  from '../shared/quoteAttributeValueForBrowser';
+import warning from 'fbjs/lib/warning';
 
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
@@ -124,4 +122,4 @@ var DOMMarkupOperations = {
   },
 };
 
-module.exports = DOMMarkupOperations;
+export default DOMMarkupOperations;

@@ -20,12 +20,13 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-var ReactFiberInstrumentation = require('react-reconciler/src/ReactFiberInstrumentation');
-var ReactFiberReconciler = require('react-reconciler');
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var emptyObject = require('fbjs/lib/emptyObject');
-var expect = require('expect');
+import ReactFiberInstrumentation
+  from 'react-reconciler/src/ReactFiberInstrumentation';
+import ReactFiberReconciler from 'react-reconciler';
+import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
+import expect from 'expect';
 
 const UPDATE_SIGNAL = {};
 
@@ -558,9 +559,8 @@ var ReactNoop = {
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
     // Private. Used only by fixtures/fiber-debugger.
-    // (To be fair, it's the only place where `react-noop-renderer` package is used at all.)
     ReactFiberInstrumentation,
   },
 };
 
-module.exports = ReactNoop;
+export default ReactNoop;

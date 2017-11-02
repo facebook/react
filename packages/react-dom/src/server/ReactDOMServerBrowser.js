@@ -7,29 +7,33 @@
 
 'use strict';
 
-require('../shared/ReactDOMInjection');
+import '../shared/ReactDOMInjection';
+import ReactVersion from 'shared/ReactVersion';
+import invariant from 'fbjs/lib/invariant';
 
-var ReactVersion = require('shared/ReactVersion');
-var invariant = require('fbjs/lib/invariant');
+import {renderToString, renderToStaticMarkup} from './ReactDOMStringRenderer';
 
-var ReactDOMStringRenderer = require('./ReactDOMStringRenderer');
+function renderToNodeStream() {
+  invariant(
+    false,
+    'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
+      'in the browser. Use ReactDOMServer.renderToString() instead.',
+  );
+}
 
-module.exports = {
-  renderToString: ReactDOMStringRenderer.renderToString,
-  renderToStaticMarkup: ReactDOMStringRenderer.renderToStaticMarkup,
-  renderToNodeStream() {
-    invariant(
-      false,
-      'ReactDOMServer.renderToNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToString() instead.',
-    );
-  },
-  renderToStaticNodeStream() {
-    invariant(
-      false,
-      'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
-        'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
-    );
-  },
-  version: ReactVersion,
+function renderToStaticNodeStream() {
+  invariant(
+    false,
+    'ReactDOMServer.renderToStaticNodeStream(): The streaming API is not available ' +
+      'in the browser. Use ReactDOMServer.renderToStaticMarkup() instead.',
+  );
+}
+
+export {
+  renderToString,
+  renderToStaticMarkup,
+  renderToNodeStream,
+  renderToStaticNodeStream,
 };
+
+export const version = ReactVersion;

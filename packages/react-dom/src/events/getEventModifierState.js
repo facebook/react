@@ -36,4 +36,4 @@ function getEventModifierState(nativeEvent) {
   return modifierStateGetter;
 }
 
-module.exports = getEventModifierState;
+export default getEventModifierState;

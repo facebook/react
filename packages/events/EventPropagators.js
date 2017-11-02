@@ -7,19 +7,20 @@
 
 'use strict';
 
-var ReactTreeTraversal = require('shared/ReactTreeTraversal');
+import {
+  getParentInstance,
+  traverseTwoPhase,
+  traverseEnterLeave,
+} from 'shared/ReactTreeTraversal';
+import warning from 'fbjs/lib/warning';
 
-var EventPluginHub = require('./EventPluginHub');
-var accumulateInto = require('./accumulateInto');
-var forEachAccumulated = require('./forEachAccumulated');
+import EventPluginHub from './EventPluginHub';
+import accumulateInto from './accumulateInto';
+import forEachAccumulated from './forEachAccumulated';
 
 type PropagationPhases = 'bubbled' | 'captured';
 
 var getListener = EventPluginHub.getListener;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 /**
  * Some event types have a notion of different registration names for different
@@ -60,11 +61,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
  */
 function accumulateTwoPhaseDispatchesSingle(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    ReactTreeTraversal.traverseTwoPhase(
-      event._targetInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    traverseTwoPhase(event._targetInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -74,14 +71,8 @@ function accumulateTwoPhaseDispatchesSingle(event) {
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
     var targetInst = event._targetInst;
-    var parentInst = targetInst
-      ? ReactTreeTraversal.getParentInstance(targetInst)
-      : null;
-    ReactTreeTraversal.traverseTwoPhase(
-      parentInst,
-      accumulateDirectionalDispatches,
-      event,
-    );
+    var parentInst = targetInst ? getParentInstance(targetInst) : null;
+    traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
   }
 }
 
@@ -124,13 +115,7 @@ function accumulateTwoPhaseDispatchesSkipTarget(events) {
 }
 
 function accumulateEnterLeaveDispatches(leave, enter, from, to) {
-  ReactTreeTraversal.traverseEnterLeave(
-    from,
-    to,
-    accumulateDispatches,
-    leave,
-    enter,
-  );
+  traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
 }
 
 function accumulateDirectDispatches(events) {
@@ -155,4 +140,4 @@ var EventPropagators = {
   accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
 };
 
-module.exports = EventPropagators;
+export default EventPropagators;
