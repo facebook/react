@@ -122,24 +122,64 @@ describe('ReactShallowRenderer', () => {
     expect(shallowRenderer.getRenderOutput()).toEqual(<div>2</div>);
   });
 
+  it('should enable PureComponent to prevent a re-render', () => {
+    let renderCounter = 0;
+    class SimpleComponent extends React.PureComponent {
+      state = {update: false};
+      render() {
+        renderCounter++;
+        return <div>{`${renderCounter}`}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+
+    const instance = shallowRenderer.getMountedInstance();
+    instance.setState({update: false});
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+
+    instance.setState({update: true});
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>2</div>);
+  });
+
   it('should not run shouldComponentUpdate during forced update', () => {
     let scuCounter = 0;
     class SimpleComponent extends React.Component {
+      state = {count: 1};
       shouldComponentUpdate() {
         scuCounter++;
+        return false;
       }
       render() {
-        return <div />;
+        return <div>{`${this.state.count}`}</div>;
       }
     }
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
     expect(scuCounter).toEqual(0);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
 
+    // Force update the initial state. sCU should not fire.
     const instance = shallowRenderer.getMountedInstance();
     instance.forceUpdate();
     expect(scuCounter).toEqual(0);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+
+    // Setting state updates the instance, but doesn't re-render
+    // because sCU returned false.
+    instance.setState(state => ({count: state.count + 1}));
+    expect(scuCounter).toEqual(1);
+    expect(instance.state.count).toEqual(2);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>1</div>);
+
+    // A force update updates the render output, but doesn't call sCU.
+    instance.forceUpdate();
+    expect(scuCounter).toEqual(1);
+    expect(instance.state.count).toEqual(2);
+    expect(shallowRenderer.getRenderOutput()).toEqual(<div>2</div>);
   });
 
   it('should rerender when calling forceUpdate', () => {
