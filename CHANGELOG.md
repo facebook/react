@@ -16,7 +16,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React
 
 * Add support for portals in `React.Children` utilities. ([@MatteoVH](https://github.com/MatteoVH) in [#11378](https://github.com/facebook/react/pull/11378))
-* Warn when class has a `render` method but doesn't extend a base classes. ([@sw-yx](https://github.com/sw-yx) in [#11168](https://github.com/facebook/react/pull/11168))
+* Warn when a class has a `render` method but doesn't extend a known base class. ([@sw-yx](https://github.com/sw-yx) in [#11168](https://github.com/facebook/react/pull/11168))
 * Improve the warning when accidentally returning an object from constructor. ([@deanbrophy](https://github.com/deanbrophy) in [#11395](https://github.com/facebook/react/pull/11395))
 
 ### React DOM
