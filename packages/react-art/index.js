@@ -9,4 +9,6 @@
 
 'use strict';
 
-module.exports = require('./src/ReactART');
+var ReactART = require('./src/ReactART');
+
+module.exports = ReactART;

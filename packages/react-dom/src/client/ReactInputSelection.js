@@ -5,14 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import containsNode from 'fbjs/lib/containsNode';
+import focusNode from 'fbjs/lib/focusNode';
+import getActiveElement from 'fbjs/lib/getActiveElement';
 
-var containsNode = require('fbjs/lib/containsNode');
-var focusNode = require('fbjs/lib/focusNode');
-var getActiveElement = require('fbjs/lib/getActiveElement');
-
-var ReactDOMSelection = require('./ReactDOMSelection');
-var {ELEMENT_NODE} = require('../shared/HTMLNodeType');
+import * as ReactDOMSelection from './ReactDOMSelection';
+import {ELEMENT_NODE} from '../shared/HTMLNodeType';
 
 function isInDocument(node) {
   return (
@@ -69,10 +67,10 @@ function getElementsWithSelections(acc, win) {
     element = range.parentElement();
   }
 
-  if (ReactInputSelection.hasSelectionCapabilities(element)) {
+  if (hasSelectionCapabilities(element)) {
     acc = acc.concat({
       element: element,
-      selectionRange: ReactInputSelection.getSelection(element),
+      selectionRange: getSelection(element),
     });
   }
 
@@ -112,108 +110,105 @@ function focusNodePreservingScroll(element) {
  * assume buttons have range selections allowed).
  * Input selection module for React.
  */
-var ReactInputSelection = {
-  hasSelectionCapabilities: function(elem) {
-    var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
-    return (
-      nodeName &&
-      ((nodeName === 'input' && elem.type === 'text') ||
-        nodeName === 'textarea' ||
-        elem.contentEditable === 'true')
-    );
-  },
 
-  getSelectionInformation: function() {
-    return {
-      activeElement: getActiveElementDeep(),
-      elementSelections: getElementsWithSelections(),
-    };
-  },
+export function hasSelectionCapabilities(elem) {
+  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  return (
+    nodeName &&
+    ((nodeName === 'input' && elem.type === 'text') ||
+      nodeName === 'textarea' ||
+      elem.contentEditable === 'true')
+  );
+}
 
-  /**
-   * @restoreSelection: If any selection information was potentially lost,
-   * restore it. This is useful when performing operations that could remove dom
-   * nodes and place them back in, resulting in focus being lost.
-   */
-  restoreSelection: function(priorSelectionInformation) {
-    var priorActiveElement = priorSelectionInformation.activeElement;
-    var elementSelections = priorSelectionInformation.elementSelections;
-    var curActiveElement = getActiveElementDeep();
-    var isActiveElementOnlySelection =
-      elementSelections.length === 1 &&
-      elementSelections[0] === priorActiveElement;
+export function getSelectionInformation() {
+  return {
+    activeElement: getActiveElementDeep(),
+    elementSelections: getElementsWithSelections(),
+  };
+}
+
+/**
+ * @restoreSelection: If any selection information was potentially lost,
+ * restore it. This is useful when performing operations that could remove dom
+ * nodes and place them back in, resulting in focus being lost.
+ */
+export function restoreSelection(priorSelectionInformation) {
+  var priorActiveElement = priorSelectionInformation.activeElement;
+  var elementSelections = priorSelectionInformation.elementSelections;
+  var curActiveElement = getActiveElementDeep();
+  var isActiveElementOnlySelection =
+    elementSelections.length === 1 &&
+    elementSelections[0] === priorActiveElement;
+  if (
+    !isInDocument(priorActiveElement) ||
+    priorActiveElement === priorActiveElement.ownerDocument.body ||
+    (isActiveElementOnlySelection && curActiveElement === priorActiveElement)
+  ) {
+    return;
+  }
+  elementSelections.forEach(function(selection) {
+    var element = selection.element;
     if (
-      !isInDocument(priorActiveElement) ||
-      priorActiveElement === priorActiveElement.ownerDocument.body ||
-      (isActiveElementOnlySelection && curActiveElement === priorActiveElement)
+      isInDocument(element) &&
+      getActiveElement(element.ownerDocument) !== element
     ) {
-      return;
-    }
-    elementSelections.forEach(function(selection) {
-      var element = selection.element;
-      if (
-        isInDocument(element) &&
-        getActiveElement(element.ownerDocument) !== element
-      ) {
-        ReactInputSelection.setSelection(element, selection.selectionRange);
-        if (element !== priorActiveElement) {
-          focusNodePreservingScroll(element);
-          curActiveElement = element;
-        }
+      setSelection(element, selection.selectionRange);
+      if (element !== priorActiveElement) {
+        focusNodePreservingScroll(element);
+        curActiveElement = element;
       }
-    });
-
-    if (
-      curActiveElement !== priorActiveElement &&
-      isInDocument(priorActiveElement)
-    ) {
-      focusNodePreservingScroll(priorActiveElement);
     }
-  },
+  });
 
-  /**
-   * @getSelection: Gets the selection bounds of a focused textarea, input or
-   * contentEditable node.
-   * -@input: Look up selection bounds of this input
-   * -@return {start: selectionStart, end: selectionEnd}
-   */
-  getSelection: function(input) {
-    var selection;
+  if (
+    curActiveElement !== priorActiveElement &&
+    isInDocument(priorActiveElement)
+  ) {
+    focusNodePreservingScroll(priorActiveElement);
+  }
+}
 
-    if ('selectionStart' in input) {
-      // Modern browser with input or textarea.
-      selection = {
-        start: input.selectionStart,
-        end: input.selectionEnd,
-      };
-    } else {
-      // Content editable or old IE textarea.
-      selection = ReactDOMSelection.getOffsets(input);
-    }
+/**
+ * @getSelection: Gets the selection bounds of a focused textarea, input or
+ * contentEditable node.
+ * -@input: Look up selection bounds of this input
+ * -@return {start: selectionStart, end: selectionEnd}
+ */
+export function getSelection(input) {
+  var selection;
 
-    return selection || {start: 0, end: 0};
-  },
+  if ('selectionStart' in input) {
+    // Modern browser with input or textarea.
+    selection = {
+      start: input.selectionStart,
+      end: input.selectionEnd,
+    };
+  } else {
+    // Content editable or old IE textarea.
+    selection = ReactDOMSelection.getOffsets(input);
+  }
 
-  /**
-   * @setSelection: Sets the selection bounds of a textarea or input and focuses
-   * the input.
-   * -@input     Set selection bounds of this input or textarea
-   * -@offsets   Object of same form that is returned from get*
-   */
-  setSelection: function(input, offsets) {
-    var start = offsets.start;
-    var end = offsets.end;
-    if (end === undefined) {
-      end = start;
-    }
+  return selection || {start: 0, end: 0};
+}
 
-    if ('selectionStart' in input) {
-      input.selectionStart = start;
-      input.selectionEnd = Math.min(end, input.value.length);
-    } else {
-      ReactDOMSelection.setOffsets(input, offsets);
-    }
-  },
-};
+/**
+ * @setSelection: Sets the selection bounds of a textarea or input and focuses
+ * the input.
+ * -@input     Set selection bounds of this input or textarea
+ * -@offsets   Object of same form that is returned from get*
+ */
+export function setSelection(input, offsets) {
+  var start = offsets.start;
+  var end = offsets.end;
+  if (end === undefined) {
+    end = start;
+  }
 
-module.exports = ReactInputSelection;
+  if ('selectionStart' in input) {
+    input.selectionStart = start;
+    input.selectionEnd = Math.min(end, input.value.length);
+  } else {
+    ReactDOMSelection.setOffsets(input, offsets);
+  }
+}

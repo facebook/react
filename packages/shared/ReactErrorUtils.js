@@ -7,9 +7,7 @@
  * @flow
  */
 
-'use strict';
-
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
@@ -27,7 +25,6 @@ const ReactErrorUtils = {
         'Injected invokeGuardedCallback() must be a function.',
       );
       invokeGuardedCallback = injectedErrorUtils.invokeGuardedCallback;
-      wrapEventListener = injectedErrorUtils.wrapEventListener;
     },
   },
 
@@ -56,13 +53,6 @@ const ReactErrorUtils = {
     f: F,
   ): void {
     invokeGuardedCallback.apply(ReactErrorUtils, arguments);
-  },
-
-  /**
-   * Wrap a callback in whatever logic it needs. Used in FB to polyfill Promises.
-   */
-  wrapEventListener: function<T>(name: string, callback: T): T {
-    return wrapEventListener(name, callback);
   },
 
   /**
@@ -122,10 +112,6 @@ const ReactErrorUtils = {
       );
     }
   },
-};
-
-let wrapEventListener = function<T>(name: string, callback: T): T {
-  return callback;
 };
 
 let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
@@ -284,4 +270,4 @@ let rethrowCaughtError = function() {
   }
 };
 
-module.exports = ReactErrorUtils;
+export default ReactErrorUtils;

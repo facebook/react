@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var SyntheticUIEvent = require('./SyntheticUIEvent');
+import SyntheticUIEvent from './SyntheticUIEvent';
 
 /**
  * @interface FocusEvent
@@ -40,4 +38,4 @@ function SyntheticFocusEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticFocusEvent, FocusEventInterface);
 
-module.exports = SyntheticFocusEvent;
+export default SyntheticFocusEvent;

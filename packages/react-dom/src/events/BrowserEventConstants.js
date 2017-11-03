@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var getVendorPrefixedEventName = require('./getVendorPrefixedEventName');
+import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
  * Types of raw signals from the browser caught at the top level.
@@ -96,4 +94,4 @@ var BrowserEventConstants = {
   topLevelTypes,
 };
 
-module.exports = BrowserEventConstants;
+export default BrowserEventConstants;

@@ -8,8 +8,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 export type DispatchConfig = {

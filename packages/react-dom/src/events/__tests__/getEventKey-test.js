@@ -10,7 +10,7 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var getEventKey = require('../getEventKey');
+var getEventKey = require('../getEventKey').default;
 
 describe('getEventKey', () => {
   describe('when key is implemented in a browser', () => {

@@ -5,17 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var getNodeForCharacterOffset = require('./getNodeForCharacterOffset');
-var getTextContentAccessor = require('./getTextContentAccessor');
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import getNodeForCharacterOffset from './getNodeForCharacterOffset';
+import getTextContentAccessor from './getTextContentAccessor';
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * @param {DOMElement} outerNode
  * @return {?object}
  */
-function getModernOffsets(outerNode) {
+export function getOffsets(outerNode) {
   var win = window;
   if (outerNode.ownerDocument && outerNode.ownerDocument.defaultView) {
     win = outerNode.ownerDocument.defaultView;
@@ -62,8 +60,10 @@ function getModernOffsets(outerNode) {
  * `end` is the index of (focusNode, focusOffset).
  *
  * Returns null if you pass in garbage input but we should probably just crash.
+ *
+ * Exported only for testing.
  */
-function getModernOffsetsFromPoints(
+export function getModernOffsetsFromPoints(
   outerNode,
   anchorNode,
   anchorOffset,
@@ -156,7 +156,7 @@ function getModernOffsetsFromPoints(
  * @param {DOMElement|DOMTextNode} node
  * @param {object} offsets
  */
-function setModernOffsets(node, offsets) {
+export function setOffsets(node, offsets) {
   var doc = node.ownerDocument || document;
 
   if (!doc.defaultView.getSelection) {
@@ -202,21 +202,3 @@ function setModernOffsets(node, offsets) {
     }
   }
 }
-
-var ReactDOMSelection = {
-  /**
-   * @param {DOMElement} node
-   */
-  getOffsets: getModernOffsets,
-
-  // For tests.
-  getModernOffsetsFromPoints: getModernOffsetsFromPoints,
-
-  /**
-   * @param {DOMElement|DOMTextNode} node
-   * @param {object} offsets
-   */
-  setOffsets: setModernOffsets,
-};
-
-module.exports = ReactDOMSelection;

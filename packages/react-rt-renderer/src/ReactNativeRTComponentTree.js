@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 var instanceCache: {[key: number]: Fiber} = {};
@@ -43,4 +41,4 @@ var ReactNativeRTComponentTree = {
   updateFiberProps,
 };
 
-module.exports = ReactNativeRTComponentTree;
+export default ReactNativeRTComponentTree;

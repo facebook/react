@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 const ReactDebugCurrentFrame = {};
 
 if (__DEV__) {
@@ -24,4 +22,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = ReactDebugCurrentFrame;
+export default ReactDebugCurrentFrame;

@@ -13,7 +13,7 @@ var accumulateInto;
 
 describe('accumulateInto', () => {
   beforeEach(() => {
-    accumulateInto = require('events/accumulateInto');
+    accumulateInto = require('events/accumulateInto').default;
   });
 
   it('throws if the second item is null', () => {

@@ -7,16 +7,12 @@
  * @flow
  */
 
-'use strict';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-const invariant = require('fbjs/lib/invariant');
+import EventPluginUtils from './EventPluginUtils';
 
-const EventPluginUtils = require('./EventPluginUtils');
 const {isEndish, isMoveish, isStartish} = EventPluginUtils;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
 
 /**
  * Tracks the position and time of each active touch by `touch.identifier`. We
@@ -218,4 +214,4 @@ const ResponderTouchHistoryStore = {
   touchHistory,
 };
 
-module.exports = ResponderTouchHistoryStore;
+export default ResponderTouchHistoryStore;

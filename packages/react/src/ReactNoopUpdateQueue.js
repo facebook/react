@@ -5,12 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import warning from 'fbjs/lib/warning';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var didWarnStateUpdateForUnmountedComponent = {};
-}
+var didWarnStateUpdateForUnmountedComponent = {};
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
@@ -113,4 +110,4 @@ var ReactNoopUpdateQueue = {
   },
 };
 
-module.exports = ReactNoopUpdateQueue;
+export default ReactNoopUpdateQueue;

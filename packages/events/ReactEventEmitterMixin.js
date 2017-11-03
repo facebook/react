@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var EventPluginHub = require('./EventPluginHub');
+import EventPluginHub from './EventPluginHub';
 
 function runEventQueueInBatch(events) {
   EventPluginHub.enqueueEvents(events);
@@ -35,4 +33,4 @@ var ReactEventEmitterMixin = {
   },
 };
 
-module.exports = ReactEventEmitterMixin;
+export default ReactEventEmitterMixin;

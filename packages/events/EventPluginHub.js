@@ -5,15 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+import invariant from 'fbjs/lib/invariant';
 
-var ReactErrorUtils = require('shared/ReactErrorUtils');
-var invariant = require('fbjs/lib/invariant');
-
-var EventPluginRegistry = require('./EventPluginRegistry');
-var EventPluginUtils = require('./EventPluginUtils');
-var accumulateInto = require('./accumulateInto');
-var forEachAccumulated = require('./forEachAccumulated');
+import EventPluginRegistry from './EventPluginRegistry';
+import EventPluginUtils from './EventPluginUtils';
+import accumulateInto from './accumulateInto';
+import forEachAccumulated from './forEachAccumulated';
 
 /**
  * Internal queue of events that have accumulated their dispatches and are
@@ -220,4 +218,4 @@ var EventPluginHub = {
   },
 };
 
-module.exports = EventPluginHub;
+export default EventPluginHub;
