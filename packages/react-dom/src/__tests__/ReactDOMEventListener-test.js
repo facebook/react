@@ -141,38 +141,42 @@ describe('ReactDOMEventListener', () => {
       var mock = jest.fn();
 
       var childContainer = document.createElement('div');
-      var onMouseOut = () => {
-        var childNode = ReactDOM.render(<div>1</div>, childContainer);
+      var handleChildMouseOut = () => {
+        ReactDOM.render(<div>1</div>, childContainer);
         mock(childNode.textContent);
       };
 
       var parentContainer = document.createElement('div');
-      var onMouseOutParent = () => {
-        var childNode = ReactDOM.render(<div>2</div>, childContainer);
+      var handleParentMouseOut = () => {
+        ReactDOM.render(<div>2</div>, childContainer);
         mock(childNode.textContent);
       };
 
       var childNode = ReactDOM.render(
-        <div onMouseOut={onMouseOut}>Child</div>,
+        <div onMouseOut={handleChildMouseOut}>Child</div>,
         childContainer,
       );
       var parentNode = ReactDOM.render(
-        <div onMouseOut={onMouseOutParent}>Parent</div>,
+        <div onMouseOut={handleParentMouseOut}>Parent</div>,
         parentContainer,
       );
       parentNode.appendChild(childContainer);
-
       document.body.appendChild(parentContainer);
 
       var nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
       childNode.dispatchEvent(nativeEvent);
 
-      expect(mock).toBeCalled();
+      // Child and parent should both call from event handlers.
+      expect(mock.mock.calls.length).toBe(2);
+      // The first call schedules a render of '1' into the 'Child'.
+      // However, we're batching so it isn't flushed yet.
       expect(mock.mock.calls[0][0]).toBe('Child');
+      // The first call schedules a render of '2' into the 'Child'.
+      // We're still batching so it isn't flushed yet either.
       expect(mock.mock.calls[1][0]).toBe('Child');
+      // By the time we leave the handler, the second update is flushed.
       expect(childNode.textContent).toBe('2');
-
       document.body.removeChild(parentContainer);
     });
   });
