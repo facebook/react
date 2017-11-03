@@ -47,12 +47,21 @@ class ReactShallowRenderer {
             'it by passing it to React.createElement.'
         : '',
     );
+    // Show a special message for host elements since it's a common case.
     invariant(
       typeof element.type !== 'string',
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, not primitives (%s). Instead of calling `.render(el)` and ' +
         'inspecting the rendered output, look at `el.props` directly instead.',
       element.type,
+    );
+    invariant(
+      typeof element.type === 'function',
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'components, but the provided element type was `%s`.',
+      Array.isArray(element.type)
+        ? 'array'
+        : element.type === null ? 'null' : typeof element.type,
     );
 
     if (this._rendering) {
@@ -144,12 +153,8 @@ class ReactShallowRenderer {
     ) {
       this._instance.componentWillReceiveProps(props, context);
     }
-
     // Read state after cWRP in case it calls setState
-    // Fallback to previous instance state to support rendering React.cloneElement()
-    // TODO: the cloneElement() use case is broken and should be removed
-    // https://github.com/facebook/react/issues/11441
-    const state = this._newState || this._instance.state || emptyObject;
+    const state = this._newState || oldState;
 
     let shouldUpdate = true;
     if (this._forcedUpdate) {
@@ -161,9 +166,7 @@ class ReactShallowRenderer {
         state,
         context,
       );
-    } else if (type && type.prototype && type.prototype.isPureReactComponent) {
-      // TODO: we can remove the type existence check when we fix this:
-      // https://github.com/facebook/react/issues/11441
+    } else if (type.prototype && type.prototype.isPureReactComponent) {
       shouldUpdate =
         !shallowEqual(oldProps, props) || !shallowEqual(oldState, state);
     }
