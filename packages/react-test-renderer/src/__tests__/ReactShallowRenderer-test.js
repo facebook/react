@@ -844,12 +844,44 @@ describe('ReactShallowRenderer', () => {
     }
 
     const shallowRenderer = createRenderer();
-    let result = shallowRenderer.render(<SimpleComponent foo="foo" />);
+    const el = <SimpleComponent foo="foo" />;
+    let result = shallowRenderer.render(el);
     expect(result).toEqual(<div>foo:bar</div>);
 
-    const instance = shallowRenderer.getMountedInstance();
-    const cloned = React.cloneElement(instance, {foo: 'baz'});
+    const cloned = React.cloneElement(el, {foo: 'baz'});
     result = shallowRenderer.render(cloned);
     expect(result).toEqual(<div>baz:bar</div>);
+  });
+
+  it('throws usefully when rendering badly-typed elements', () => {
+    spyOn(console, 'error');
+    const shallowRenderer = createRenderer();
+
+    var Undef = undefined;
+    expect(() => shallowRenderer.render(<Undef />)).toThrowError(
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'components, but the provided element type was `undefined`.',
+    );
+
+    var Null = null;
+    expect(() => shallowRenderer.render(<Null />)).toThrowError(
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'components, but the provided element type was `null`.',
+    );
+
+    var Arr = [];
+    expect(() => shallowRenderer.render(<Arr />)).toThrowError(
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'components, but the provided element type was `array`.',
+    );
+
+    var Obj = {};
+    expect(() => shallowRenderer.render(<Obj />)).toThrowError(
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'components, but the provided element type was `object`.',
+    );
+
+    // One warning for each element creation
+    expectDev(console.error.calls.count()).toBe(4);
   });
 });
