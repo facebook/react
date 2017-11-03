@@ -3,6 +3,7 @@
 'use strict';
 
 const chalk = require('chalk');
+const {readJson} = require('fs-extra');
 const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
@@ -23,9 +24,20 @@ const push = async ({cwd, dry, version}) => {
         );
         const remoteVersion = status[tag];
 
-        if (remoteVersion !== version) {
+        // Compare remote version to package.json version,
+        // To better handle the case of pre-release versions.
+        const packagePath = join(
+          cwd,
+          'build',
+          'packages',
+          project,
+          'package.json'
+        );
+        const packageJSON = await readJson(packagePath);
+
+        if (remoteVersion !== packageJSON.version) {
           throw Error(
-            chalk`Publised version {yellow.bold ${version}} for ` +
+            chalk`Publised version {yellow.bold ${packageJSON.version}} for ` +
               `{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
           );
         }
@@ -48,5 +60,5 @@ const push = async ({cwd, dry, version}) => {
 };
 
 module.exports = async params => {
-  return logPromise(push(params), 'Pushing to git remote');
+  return logPromise(push(params), 'Publishing packages to NPM');
 };
