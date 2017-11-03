@@ -11,12 +11,23 @@ const {projects} = require('../config');
 
 const push = async ({cwd, dry, version}) => {
   const errors = [];
-  const tag = semver.prerelease(version) ? 'next' : 'latest';
+  const isPrerelease = semver.prerelease(version);
+  const tag = isPrerelease ? 'next' : 'latest';
 
   const publishProject = async project => {
     try {
       const path = join(cwd, 'build', 'packages', project);
       await execUnlessDry(`npm publish --tag ${tag}`, {cwd: path, dry});
+
+      const packagePath = join(
+        cwd,
+        'build',
+        'packages',
+        project,
+        'package.json'
+      );
+      const packageJSON = await readJson(packagePath);
+      const packageVersion = packageJSON.version;
 
       if (!dry) {
         const status = JSON.parse(
@@ -26,19 +37,18 @@ const push = async ({cwd, dry, version}) => {
 
         // Compare remote version to package.json version,
         // To better handle the case of pre-release versions.
-        const packagePath = join(
-          cwd,
-          'build',
-          'packages',
-          project,
-          'package.json'
-        );
-        const packageJSON = await readJson(packagePath);
-
-        if (remoteVersion !== packageJSON.version) {
+        if (remoteVersion !== packageVersion) {
           throw Error(
-            chalk`Publised version {yellow.bold ${packageJSON.version}} for ` +
+            chalk`Publised version {yellow.bold ${packageVersion}} for ` +
               `{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
+          );
+        }
+
+        // If we've just published a stable release,
+        // Update the @next tag to also point to it (so @next doens't lag behind).
+        if (!isPrerelease) {
+          await execUnlessDry(
+            `npm dist-tag add ${project}@${packageVersion} next`
           );
         }
       }
