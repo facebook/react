@@ -12,6 +12,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "devtools.js",
     "cjs/"
   ],
   "main": "index.js",

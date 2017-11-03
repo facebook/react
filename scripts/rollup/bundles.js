@@ -197,6 +197,15 @@ const bundles = [
     externals: ['react'],
   },
 
+  {
+    label: 'react-reconciler-devtools-hook',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-reconciler/devtools',
+    externals: ['react'],
+  },
+
+
   /******* React Call Return (experimental) *******/
   {
     label: 'react-call-return',
@@ -206,6 +215,7 @@ const bundles = [
     global: 'ReactCallReturn',
     externals: [],
   },
+
 ];
 
 // Based on deep-freeze by substack (public domain)
