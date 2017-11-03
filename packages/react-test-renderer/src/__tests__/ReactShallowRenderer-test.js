@@ -142,6 +142,24 @@ describe('ReactShallowRenderer', () => {
     expect(scuCounter).toEqual(0);
   });
 
+  it('should rerender when calling forceUpdate', () => {
+    let renderCounter = 0;
+    class SimpleComponent extends React.Component {
+      render() {
+        renderCounter += 1;
+        return <div />;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<SimpleComponent />);
+    expect(renderCounter).toEqual(1);
+
+    const instance = shallowRenderer.getMountedInstance();
+    instance.forceUpdate();
+    expect(renderCounter).toEqual(2);
+  });
+
   it('should shallow render a functional component', () => {
     function SomeComponent(props, context) {
       return (

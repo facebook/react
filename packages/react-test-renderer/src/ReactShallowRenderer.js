@@ -147,9 +147,11 @@ class ReactShallowRenderer {
     // Fallback to previous instance state to support rendering React.cloneElement()
     const state = this._newState || this._instance.state || emptyObject;
 
-    if (typeof this._instance.shouldComponentUpdate === 'function') {
+    if (
+      typeof this._instance.shouldComponentUpdate === 'function' &&
+      !this._forcedUpdate
+    ) {
       if (
-        this._forcedUpdate ||
         this._instance.shouldComponentUpdate(props, state, context) === false
       ) {
         this._instance.context = context;
