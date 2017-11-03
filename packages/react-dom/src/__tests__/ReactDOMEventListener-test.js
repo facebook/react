@@ -105,35 +105,36 @@ describe('ReactDOMEventListener', () => {
       document.body.removeChild(grandParentContainer);
     });
 
+    // Regression test for https://github.com/facebook/react/issues/1105
     it('should not get confused by disappearing elements', () => {
-      var mouseOut = jest.fn();
-      var onChildMouseOut = e => {
-        ReactDOM.unmountComponentAtNode(childContainer);
-        mouseOut(e.currentTarget);
-      };
-      var onParentMouseOut = e => mouseOut(e.currentTarget);
-
-      var childContainer = document.createElement('div');
-      var parentContainer = document.createElement('div');
-      var childNode = ReactDOM.render(
-        <div onMouseOut={onChildMouseOut}>Child</div>,
-        childContainer,
+      var container = document.createElement('div');
+      document.body.appendChild(container);
+      class MyComponent extends React.Component {
+        state = {clicked: false};
+        handleClick = () => {
+          this.setState({clicked: true});
+        };
+        componentDidMount() {
+          expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
+        }
+        componentDidUpdate() {
+          expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
+        }
+        render() {
+          if (this.state.clicked) {
+            return <span>clicked!</span>;
+          } else {
+            return <button onClick={this.handleClick}>not yet clicked</button>;
+          }
+        }
+      }
+      ReactDOM.render(<MyComponent />, container);
+      container.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
       );
-      var parentNode = ReactDOM.render(
-        <div onMouseOut={onParentMouseOut}>Parent</div>,
-        parentContainer,
-      );
-      parentNode.appendChild(childContainer);
-      document.body.appendChild(parentContainer);
-
-      var nativeEvent = document.createEvent('Event');
-      nativeEvent.initEvent('mouseout', true, true);
-      childNode.dispatchEvent(nativeEvent);
-      var calls = mouseOut.mock.calls;
-      expect(calls.length).toBe(2);
-      expect(calls[0][0]).toEqual(childNode);
-      expect(calls[1][0]).toEqual(parentNode);
-      document.body.removeChild(parentContainer);
+      expect(container.firstChild.textContent).toBe('clicked!');
     });
 
     it('should batch between handlers from different roots', () => {
