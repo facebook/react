@@ -125,6 +125,12 @@ describe('ReactShallowRenderer', () => {
   it('should not run shouldComponentUpdate during forced update', () => {
     let scuCounter = 0;
     class SimpleComponent extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = {
+          count: 1,
+        };
+      }
       shouldComponentUpdate() {
         scuCounter++;
       }
@@ -140,6 +146,11 @@ describe('ReactShallowRenderer', () => {
     const instance = shallowRenderer.getMountedInstance();
     instance.forceUpdate();
     expect(scuCounter).toEqual(0);
+
+    // shouldComponentUpdate should be called
+    instance.setState(state => ({count: state.count + 1}));
+    expect(scuCounter).toEqual(1);
+    expect(instance.state.count).toEqual(2);
   });
 
   it('should rerender when calling forceUpdate', () => {
