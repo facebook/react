@@ -36,7 +36,13 @@ const update = async ({cwd, dry, version}) => {
       // In order to simplify DX for the release engineer,
       // These packages are auto-incremented by a minor version number.
       if (semver.lt(json.version, '1.0.0')) {
-        json.version = `0.${semver.minor(json.version) + 1}.0`;
+        const prerelease = semver.prerelease(version);
+        let suffix = '';
+        if (prerelease) {
+          suffix = `-${prerelease.join('.')}`;
+        }
+
+        json.version = `0.${semver.minor(json.version) + 1}.0${suffix}`;
       } else {
         json.version = version;
       }
