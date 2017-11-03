@@ -135,6 +135,7 @@ describe('ReactDOMEventListener', () => {
         }),
       );
       expect(container.firstChild.textContent).toBe('clicked!');
+      document.body.removeChild(container);
     });
 
     it('should batch between handlers from different roots', () => {
