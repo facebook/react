@@ -1,1 +1,1 @@
-module.exports = require('ReactCurrentOwner');
+export default require('ReactCurrentOwner');

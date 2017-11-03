@@ -6,11 +6,10 @@
  *
  * @flow
  */
-'use strict';
 
 var ReactNativeEventPluginOrder = [
   'ResponderEventPlugin',
   'ReactNativeBridgeEventPlugin',
 ];
 
-module.exports = ReactNativeEventPluginOrder;
+export default ReactNativeEventPluginOrder;

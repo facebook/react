@@ -5,22 +5,18 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-const EventPluginUtils = require('events/EventPluginUtils');
-const ResponderEventPlugin = require('events/ResponderEventPlugin');
-const ResponderTouchHistoryStore = require('events/ResponderTouchHistoryStore');
+import ReactDOM from 'react-dom';
+import EventPluginUtils from 'events/EventPluginUtils';
+import ResponderEventPlugin from 'events/ResponderEventPlugin';
+import ResponderTouchHistoryStore from 'events/ResponderTouchHistoryStore';
 
 // This is used by react-native-web.
-const ReactDOMUnstableNativeDependencies = {
-  injectComponentTree: EventPluginUtils.injection.injectComponentTree,
-  ResponderEventPlugin,
-  ResponderTouchHistoryStore,
-};
+export const injectComponentTree =
+  EventPluginUtils.injection.injectComponentTree;
+export {ResponderEventPlugin, ResponderTouchHistoryStore};
 
 // Inject react-dom's ComponentTree into this module.
-const ReactDOM = require('react-dom');
 const {
   ReactDOMComponentTree,
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
-ReactDOMUnstableNativeDependencies.injectComponentTree(ReactDOMComponentTree);
-
-module.exports = ReactDOMUnstableNativeDependencies;
+injectComponentTree(ReactDOMComponentTree);

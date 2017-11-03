@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
@@ -262,4 +260,4 @@ var DOMProperty = {
   injection: DOMPropertyInjection,
 };
 
-module.exports = DOMProperty;
+export default DOMProperty;

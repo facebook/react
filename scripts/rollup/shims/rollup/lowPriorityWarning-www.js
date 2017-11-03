@@ -1,1 +1,1 @@
-module.exports = require('lowPriorityWarning');
+export default require('lowPriorityWarning');

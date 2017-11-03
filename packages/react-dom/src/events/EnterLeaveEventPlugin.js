@@ -5,12 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import EventPropagators from 'events/EventPropagators';
 
-var EventPropagators = require('events/EventPropagators');
-
-var SyntheticMouseEvent = require('./SyntheticMouseEvent');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+import SyntheticMouseEvent from './SyntheticMouseEvent';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
 
 var eventTypes = {
   mouseEnter: {
@@ -116,4 +114,4 @@ var EnterLeaveEventPlugin = {
   },
 };
 
-module.exports = EnterLeaveEventPlugin;
+export default EnterLeaveEventPlugin;

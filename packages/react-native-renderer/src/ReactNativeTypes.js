@@ -7,7 +7,6 @@
  * @flow
  * @providesModule ReactNativeTypes
  */
-'use strict';
 
 export type MeasureOnSuccessCallback = (
   x: number,

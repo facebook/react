@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 var TouchHistoryMath = {
   /**
    * This code is optimized and not intended to look beautiful. This allows
@@ -148,4 +146,4 @@ var TouchHistoryMath = {
   noCentroid: -1,
 };
 
-module.exports = TouchHistoryMath;
+export default TouchHistoryMath;
