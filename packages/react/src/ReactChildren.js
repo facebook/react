@@ -5,18 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var invariant = require('fbjs/lib/invariant');
-
-var ReactElement = require('./ReactElement');
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
-  var {getStackAddendum} = require('./ReactDebugCurrentFrame');
-}
+import {isValidElement, cloneAndReplaceKey} from './ReactElement';
+import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
 var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
@@ -25,7 +19,9 @@ var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
 var REACT_ELEMENT_TYPE =
   (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
   0xeac7;
-
+const REACT_PORTAL_TYPE =
+  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
+  0xeaca;
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
@@ -125,7 +121,8 @@ function traverseAllChildrenImpl(
     type === 'number' ||
     // The following is inlined from ReactElement. This means we can optimize
     // some checks. React Fiber also inlines this logic for similar purposes.
-    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE)
+    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE) ||
+    (type === 'object' && children.$$typeof === REACT_PORTAL_TYPE)
   ) {
     callback(
       traverseContext,
@@ -166,7 +163,7 @@ function traverseAllChildrenImpl(
             'Using Maps as children is unsupported and will likely yield ' +
               'unexpected results. Convert it to a sequence/iterable of keyed ' +
               'ReactElements instead.%s',
-            getStackAddendum(),
+            ReactDebugCurrentFrame.getStackAddendum(),
           );
           didWarnAboutMaps = true;
         }
@@ -191,7 +188,7 @@ function traverseAllChildrenImpl(
         addendum =
           ' If you meant to render a collection of children, use an array ' +
           'instead.' +
-          getStackAddendum();
+          ReactDebugCurrentFrame.getStackAddendum();
       }
       var childrenString = '' + children;
       invariant(
@@ -297,8 +294,8 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
       emptyFunction.thatReturnsArgument,
     );
   } else if (mappedChild != null) {
-    if (ReactElement.isValidElement(mappedChild)) {
-      mappedChild = ReactElement.cloneAndReplaceKey(
+    if (isValidElement(mappedChild)) {
+      mappedChild = cloneAndReplaceKey(
         mappedChild,
         // Keep both the (mapped) and old keys if they differ, just as
         // traverseAllChildren used to do for objects as children
@@ -380,11 +377,32 @@ function toArray(children) {
   return result;
 }
 
-var ReactChildren = {
-  forEach: forEachChildren,
-  map: mapChildren,
-  count: countChildren,
-  toArray: toArray,
-};
+/**
+ * Returns the first child in a collection of children and verifies that there
+ * is only one child in the collection.
+ *
+ * See https://reactjs.org/docs/react-api.html#react.children.only
+ *
+ * The current implementation of this function assumes that a single child gets
+ * passed without a wrapper, but the purpose of this helper function is to
+ * abstract away the particular structure of children.
+ *
+ * @param {?object} children Child collection structure.
+ * @return {ReactElement} The first and only `ReactElement` contained in the
+ * structure.
+ */
+function onlyChild(children) {
+  invariant(
+    isValidElement(children),
+    'React.Children.only expected to receive a single React element child.',
+  );
+  return children;
+}
 
-module.exports = ReactChildren;
+export {
+  forEachChildren as forEach,
+  mapChildren as map,
+  countChildren as count,
+  onlyChild as only,
+  toArray,
+};

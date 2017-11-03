@@ -5,10 +5,12 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import warning from 'fbjs/lib/warning';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
-var DOMProperty = require('./DOMProperty');
-var isCustomComponent = require('./isCustomComponent');
+import DOMProperty from './DOMProperty';
+import isCustomComponent from './isCustomComponent';
+import validAriaProperties from './validAriaProperties';
 
 var warnedProperties = {};
 var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
@@ -17,13 +19,6 @@ var rARIACamel = new RegExp(
 );
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
-
-  var validAriaProperties = require('./validAriaProperties');
-}
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -131,15 +126,9 @@ function warnInvalidARIAProps(type, props) {
   }
 }
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
   warnInvalidARIAProps(type, props);
 }
-
-var ReactDOMInvalidARIAHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMInvalidARIAHook;

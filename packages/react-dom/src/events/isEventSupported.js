@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 var useHasFeature;
 if (ExecutionEnvironment.canUseDOM) {
@@ -58,4 +56,4 @@ function isEventSupported(eventNameSuffix, capture) {
   return isSupported;
 }
 
-module.exports = isEventSupported;
+export default isEventSupported;

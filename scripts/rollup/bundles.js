@@ -154,7 +154,7 @@ const bundles = [
     moduleType: RENDERER,
     entry: 'react-cs-renderer',
     global: 'ReactCSRenderer',
-    externals: [],
+    externals: ['CSStatefulComponent'],
     featureFlags: 'react-cs-renderer/src/ReactNativeCSFeatureFlags',
   },
 

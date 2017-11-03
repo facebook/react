@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 var contentKey = null;
 
@@ -28,4 +26,4 @@ function getTextContentAccessor() {
   return contentKey;
 }
 
-module.exports = getTextContentAccessor;
+export default getTextContentAccessor;

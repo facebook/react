@@ -7,29 +7,48 @@
  * @flow
  */
 
-'use strict';
-
 import type {ReactElement} from 'shared/ReactElementType';
 
-var React = require('react');
-var emptyFunction = require('fbjs/lib/emptyFunction');
-var emptyObject = require('fbjs/lib/emptyObject');
-var hyphenateStyleName = require('fbjs/lib/hyphenateStyleName');
-var invariant = require('fbjs/lib/invariant');
-var memoizeStringOnly = require('fbjs/lib/memoizeStringOnly');
+import React from 'react';
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import emptyObject from 'fbjs/lib/emptyObject';
+import hyphenateStyleName from 'fbjs/lib/hyphenateStyleName';
+import invariant from 'fbjs/lib/invariant';
+import memoizeStringOnly from 'fbjs/lib/memoizeStringOnly';
+import warning from 'fbjs/lib/warning';
+import checkPropTypes from 'prop-types/checkPropTypes';
+import describeComponentFrame from 'shared/describeComponentFrame';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
-var DOMMarkupOperations = require('./DOMMarkupOperations');
-var {
+import DOMMarkupOperations from './DOMMarkupOperations';
+import {
   Namespaces,
   getIntrinsicNamespace,
   getChildNamespace,
-} = require('../shared/DOMNamespaces');
-var ReactControlledValuePropTypes = require('../shared/ReactControlledValuePropTypes');
-var assertValidProps = require('../shared/assertValidProps');
-var dangerousStyleValue = require('../shared/dangerousStyleValue');
-var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
-var isCustomComponent = require('../shared/isCustomComponent');
-var omittedCloseTags = require('../shared/omittedCloseTags');
+} from '../shared/DOMNamespaces';
+import ReactControlledValuePropTypes
+  from '../shared/ReactControlledValuePropTypes';
+import assertValidProps from '../shared/assertValidProps';
+import dangerousStyleValue from '../shared/dangerousStyleValue';
+import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
+import isCustomComponent from '../shared/isCustomComponent';
+import omittedCloseTags from '../shared/omittedCloseTags';
+import warnValidStyle from '../shared/warnValidStyle';
+import {
+  validateProperties as validateARIAProperties,
+} from '../shared/ReactDOMInvalidARIAHook';
+import {
+  validateProperties as validateInputProperties,
+} from '../shared/ReactDOMNullInputValuePropHook';
+import {
+  validateProperties as validateUnknownProperties,
+} from '../shared/ReactDOMUnknownPropertyHook';
+
+var REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xeacb;
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -40,27 +59,12 @@ var toArray = ((React.Children.toArray: any): toArrayType);
 var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-  var checkPropTypes = require('prop-types/checkPropTypes');
-
-  var warnValidStyle = require('../shared/warnValidStyle');
-  var {
-    validateProperties: validateARIAProperties,
-  } = require('../shared/ReactDOMInvalidARIAHook');
-  var {
-    validateProperties: validateInputProperties,
-  } = require('../shared/ReactDOMNullInputValuePropHook');
-  var {
-    validateProperties: validateUnknownProperties,
-  } = require('../shared/ReactDOMUnknownPropertyHook');
-
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props);
   };
 
-  var describeComponentFrame = require('shared/describeComponentFrame');
   var describeStackFrame = function(element): string {
     var source = element._source;
     var type = element.type;
@@ -69,7 +73,6 @@ if (__DEV__) {
     return describeComponentFrame(name, source, ownerName);
   };
 
-  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
   var currentDebugStack = null;
   var currentDebugElementStack = null;
   var setCurrentDebugStack = function(stack: Array<Frame>) {
@@ -112,6 +115,7 @@ var didWarnDefaultChecked = false;
 var didWarnDefaultSelectValue = false;
 var didWarnDefaultTextareaValue = false;
 var didWarnInvalidOptionChildren = false;
+var didWarnAboutNoopUpdateForComponent = {};
 var valuePropNames = ['value', 'defaultValue'];
 var newlineEatingTags = {
   listing: true,
@@ -175,6 +179,13 @@ function warnNoop(
 ) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
+    const componentName =
+      (constructor && getComponentName(constructor)) || 'ReactClass';
+    const warningKey = `${componentName}.${callerName}`;
+    if (didWarnAboutNoopUpdateForComponent[warningKey]) {
+      return;
+    }
+
     warning(
       false,
       '%s(...): Can only update a mounting component. ' +
@@ -182,8 +193,9 @@ function warnNoop(
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && getComponentName(constructor)) || 'ReactClass',
+      componentName,
     );
+    didWarnAboutNoopUpdateForComponent[warningKey] = true;
   }
 }
 
@@ -204,6 +216,22 @@ function getNonChildrenInnerMarkup(props) {
     }
   }
   return null;
+}
+
+function flattenTopLevelChildren(children: mixed): FlatReactChildren {
+  if (!React.isValidElement(children)) {
+    return toArray(children);
+  }
+  const element = ((children: any): ReactElement);
+  if (element.type !== REACT_FRAGMENT_TYPE) {
+    return [element];
+  }
+  const fragmentChildren = element.props.children;
+  if (!React.isValidElement(fragmentChildren)) {
+    return toArray(fragmentChildren);
+  }
+  const fragmentChildElement = ((fragmentChildren: any): ReactElement);
+  return [fragmentChildElement];
 }
 
 function flattenOptionChildren(children: mixed): string {
@@ -482,14 +510,8 @@ class ReactDOMServerRenderer {
   makeStaticMarkup: boolean;
 
   constructor(children: mixed, makeStaticMarkup: boolean) {
-    var flatChildren;
-    if (React.isValidElement(children)) {
-      // Safe because we just checked it's an element.
-      var element = ((children: any): ReactElement);
-      flatChildren = [element];
-    } else {
-      flatChildren = toArray(children);
-    }
+    const flatChildren = flattenTopLevelChildren(children);
+
     var topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
@@ -569,26 +591,42 @@ class ReactDOMServerRenderer {
       ({child: nextChild, context} = resolve(child, context));
       if (nextChild === null || nextChild === false) {
         return '';
-      } else {
-        if (React.isValidElement(nextChild)) {
-          // Safe because we just checked it's an element.
-          var nextElement = ((nextChild: any): ReactElement);
-          return this.renderDOM(nextElement, context, parentNamespace);
-        } else {
-          var nextChildren = toArray(nextChild);
-          var frame: Frame = {
-            domNamespace: parentNamespace,
-            children: nextChildren,
-            childIndex: 0,
-            context: context,
-            footer: '',
-          };
-          if (__DEV__) {
-            ((frame: any): FrameDev).debugElementStack = [];
-          }
-          this.stack.push(frame);
-          return '';
+      } else if (!React.isValidElement(nextChild)) {
+        const nextChildren = toArray(nextChild);
+        const frame: Frame = {
+          domNamespace: parentNamespace,
+          children: nextChildren,
+          childIndex: 0,
+          context: context,
+          footer: '',
+        };
+        if (__DEV__) {
+          ((frame: any): FrameDev).debugElementStack = [];
         }
+        this.stack.push(frame);
+        return '';
+      } else if (
+        ((nextChild: any): ReactElement).type === REACT_FRAGMENT_TYPE
+      ) {
+        const nextChildren = toArray(
+          ((nextChild: any): ReactElement).props.children,
+        );
+        const frame: Frame = {
+          domNamespace: parentNamespace,
+          children: nextChildren,
+          childIndex: 0,
+          context: context,
+          footer: '',
+        };
+        if (__DEV__) {
+          ((frame: any): FrameDev).debugElementStack = [];
+        }
+        this.stack.push(frame);
+        return '';
+      } else {
+        // Safe because we just checked it's an element.
+        var nextElement = ((nextChild: any): ReactElement);
+        return this.renderDOM(nextElement, context, parentNamespace);
       }
     }
   }
@@ -892,4 +930,4 @@ class ReactDOMServerRenderer {
   }
 }
 
-module.exports = ReactDOMServerRenderer;
+export default ReactDOMServerRenderer;

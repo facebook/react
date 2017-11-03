@@ -5,14 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import EventPluginRegistry from 'events/EventPluginRegistry';
+import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 
-var EventPluginRegistry = require('events/EventPluginRegistry');
-var ReactEventEmitterMixin = require('events/ReactEventEmitterMixin');
+import ReactDOMEventListener from './ReactDOMEventListener';
+import isEventSupported from './isEventSupported';
+import BrowserEventConstants from './BrowserEventConstants';
 
-var ReactDOMEventListener = require('./ReactDOMEventListener');
-var isEventSupported = require('./isEventSupported');
-var {topLevelTypes} = require('./BrowserEventConstants');
+var {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -237,4 +237,4 @@ var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
   },
 });
 
-module.exports = ReactBrowserEventEmitter;
+export default ReactBrowserEventEmitter;

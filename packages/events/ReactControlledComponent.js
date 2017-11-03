@@ -5,11 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import invariant from 'fbjs/lib/invariant';
 
-var invariant = require('fbjs/lib/invariant');
-
-var EventPluginUtils = require('./EventPluginUtils');
+import EventPluginUtils from './EventPluginUtils';
 
 // Use to restore controlled state after a change event has fired.
 
@@ -83,4 +81,4 @@ var ReactControlledComponent = {
   },
 };
 
-module.exports = ReactControlledComponent;
+export default ReactControlledComponent;

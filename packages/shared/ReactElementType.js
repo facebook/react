@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 export type Source = {
   fileName: string,
   lineNumber: number,

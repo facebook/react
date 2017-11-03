@@ -5,16 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var emptyFunction = require('fbjs/lib/emptyFunction');
+import emptyFunction from 'fbjs/lib/emptyFunction';
+import camelizeStyleName from 'fbjs/lib/camelizeStyleName';
+import warning from 'fbjs/lib/warning';
 
 var warnValidStyle = emptyFunction;
 
 if (__DEV__) {
-  var camelizeStyleName = require('fbjs/lib/camelizeStyleName');
-  var warning = require('fbjs/lib/warning');
-
   // 'msTransform' is correct, but the other prefixes should be capitalized
   var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 
@@ -119,4 +116,4 @@ if (__DEV__) {
   };
 }
 
-module.exports = warnValidStyle;
+export default warnValidStyle;

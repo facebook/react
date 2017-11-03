@@ -5,8 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *
  * @flow
+ * @providesModule ReactNativeTypes
  */
-'use strict';
 
 export type MeasureOnSuccessCallback = (
   x: number,

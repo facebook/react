@@ -7,14 +7,14 @@
  * @flow
  */
 
-'use strict';
-
 export type FeatureFlags = {|
   enableAsyncSubtreeAPI: boolean,
   enableAsyncSchedulingByDefaultInReactDOM: boolean,
   enableMutatingReconciler: boolean,
   enableNoopReconciler: boolean,
   enablePersistentReconciler: boolean,
+  enableReactFragment: boolean,
+  enableCreateRoot: boolean,
 |};
 
 var ReactFeatureFlags: FeatureFlags = {
@@ -26,6 +26,10 @@ var ReactFeatureFlags: FeatureFlags = {
   enableNoopReconciler: false,
   // Experimental persistent mode (CS):
   enablePersistentReconciler: false,
+  // Exports React.Fragment
+  enableReactFragment: false,
+  // Exports ReactDOM.createRoot
+  enableCreateRoot: false,
 };
 
 if (__DEV__) {
@@ -34,4 +38,4 @@ if (__DEV__) {
   }
 }
 
-module.exports = ReactFeatureFlags;
+export default ReactFeatureFlags;

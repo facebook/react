@@ -5,16 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var ReactPartialRenderer = require('./ReactPartialRenderer');
+import ReactPartialRenderer from './ReactPartialRenderer';
 
 /**
  * Render a ReactElement to its initial HTML. This should only be used on the
  * server.
  * See https://reactjs.org/docs/react-dom-server.html#rendertostring
  */
-function renderToString(element) {
+export function renderToString(element) {
   var renderer = new ReactPartialRenderer(element, false);
   var markup = renderer.read(Infinity);
   return markup;
@@ -25,13 +23,8 @@ function renderToString(element) {
  * such as data-react-id that React uses internally.
  * See https://reactjs.org/docs/react-dom-server.html#rendertostaticmarkup
  */
-function renderToStaticMarkup(element) {
+export function renderToStaticMarkup(element) {
   var renderer = new ReactPartialRenderer(element, true);
   var markup = renderer.read(Infinity);
   return markup;
 }
-
-module.exports = {
-  renderToString: renderToString,
-  renderToStaticMarkup: renderToStaticMarkup,
-};

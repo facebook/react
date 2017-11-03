@@ -12,29 +12,28 @@
  * that support it.
  */
 
-'use strict';
+import lowPriorityWarning from 'shared/lowPriorityWarning';
+import describeComponentFrame from 'shared/describeComponentFrame';
+import getComponentName from 'shared/getComponentName';
+import checkPropTypes from 'prop-types/checkPropTypes';
+import warning from 'fbjs/lib/warning';
 
-var ReactCurrentOwner = require('./ReactCurrentOwner');
-var ReactElement = require('./ReactElement');
+import ReactCurrentOwner from './ReactCurrentOwner';
+import {isValidElement, createElement, cloneElement} from './ReactElement';
+import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
 if (__DEV__) {
-  var lowPriorityWarning = require('shared/lowPriorityWarning');
-  var describeComponentFrame = require('shared/describeComponentFrame');
-  var getComponentName = require('shared/getComponentName');
-  var checkPropTypes = require('prop-types/checkPropTypes');
-  var warning = require('fbjs/lib/warning');
-
-  var ReactDebugCurrentFrame = require('./ReactDebugCurrentFrame');
-
   var currentlyValidatingElement = null;
 
-  var getDisplayName = function(element: ?ReactElement): string {
+  var getDisplayName = function(element): string {
     if (element == null) {
       return '#empty';
     } else if (typeof element === 'string' || typeof element === 'number') {
       return '#text';
     } else if (typeof element.type === 'string') {
       return element.type;
+    } else if (element.type === REACT_FRAGMENT_TYPE) {
+      return 'React.Fragment';
     } else {
       return element.type.displayName || element.type.name || 'Unknown';
     }
@@ -54,6 +53,14 @@ if (__DEV__) {
     stack += ReactDebugCurrentFrame.getStackAddendum() || '';
     return stack;
   };
+
+  var REACT_FRAGMENT_TYPE =
+    (typeof Symbol === 'function' &&
+      Symbol.for &&
+      Symbol.for('react.fragment')) ||
+    0xeacb;
+
+  var VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
 
 var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
@@ -170,11 +177,11 @@ function validateChildKeys(node, parentType) {
   if (Array.isArray(node)) {
     for (var i = 0; i < node.length; i++) {
       var child = node[i];
-      if (ReactElement.isValidElement(child)) {
+      if (isValidElement(child)) {
         validateExplicitKey(child, parentType);
       }
     }
-  } else if (ReactElement.isValidElement(node)) {
+  } else if (isValidElement(node)) {
     // This element was passed in a valid location.
     if (node._store) {
       node._store.validated = true;
@@ -189,7 +196,7 @@ function validateChildKeys(node, parentType) {
         var iterator = iteratorFn.call(node);
         var step;
         while (!(step = iterator.next()).done) {
-          if (ReactElement.isValidElement(step.value)) {
+          if (isValidElement(step.value)) {
             validateExplicitKey(step.value, parentType);
           }
         }
@@ -226,100 +233,135 @@ function validatePropTypes(element) {
   }
 }
 
-var ReactElementValidator = {
-  createElement: function(type, props, children) {
-    var validType = typeof type === 'string' || typeof type === 'function';
-    // We warn in this case but don't throw. We expect the element creation to
-    // succeed and there will likely be errors in render.
-    if (!validType) {
-      var info = '';
-      if (
-        type === undefined ||
-        (typeof type === 'object' &&
-          type !== null &&
-          Object.keys(type).length === 0)
-      ) {
-        info +=
-          ' You likely forgot to export your component from the file ' +
-          "it's defined in.";
-      }
+/**
+ * Given a fragment, validate that it can only be provided with fragment props
+ * @param {ReactElement} fragment
+ */
+function validateFragmentProps(fragment) {
+  currentlyValidatingElement = fragment;
 
-      var sourceInfo = getSourceInfoErrorAddendum(props);
-      if (sourceInfo) {
-        info += sourceInfo;
-      } else {
-        info += getDeclarationErrorAddendum();
-      }
-
-      info += ReactDebugCurrentFrame.getStackAddendum() || '';
-
+  for (const key of Object.keys(fragment.props)) {
+    if (!VALID_FRAGMENT_PROPS.has(key)) {
       warning(
         false,
-        'React.createElement: type is invalid -- expected a string (for ' +
-          'built-in components) or a class/function (for composite ' +
-          'components) but got: %s.%s',
-        type == null ? type : typeof type,
-        info,
+        'Invalid prop `%s` supplied to `React.Fragment`. ' +
+          'React.Fragment can only have `key` and `children` props.%s',
+        key,
+        getStackAddendum(),
       );
+      break;
+    }
+  }
+
+  if (fragment.ref !== null) {
+    warning(
+      false,
+      'Invalid attribute `ref` supplied to `React.Fragment`.%s',
+      getStackAddendum(),
+    );
+  }
+
+  currentlyValidatingElement = null;
+}
+
+export function createElementWithValidation(type, props, children) {
+  var validType =
+    typeof type === 'string' ||
+    typeof type === 'function' ||
+    typeof type === 'symbol' ||
+    typeof type === 'number';
+  // We warn in this case but don't throw. We expect the element creation to
+  // succeed and there will likely be errors in render.
+  if (!validType) {
+    var info = '';
+    if (
+      type === undefined ||
+      (typeof type === 'object' &&
+        type !== null &&
+        Object.keys(type).length === 0)
+    ) {
+      info +=
+        ' You likely forgot to export your component from the file ' +
+        "it's defined in.";
     }
 
-    var element = ReactElement.createElement.apply(this, arguments);
-
-    // The result can be nullish if a mock or a custom function is used.
-    // TODO: Drop this when these are no longer allowed as the type argument.
-    if (element == null) {
-      return element;
+    var sourceInfo = getSourceInfoErrorAddendum(props);
+    if (sourceInfo) {
+      info += sourceInfo;
+    } else {
+      info += getDeclarationErrorAddendum();
     }
 
-    // Skip key warning if the type isn't valid since our key validation logic
-    // doesn't expect a non-string/function type and can throw confusing errors.
-    // We don't want exception behavior to differ between dev and prod.
-    // (Rendering will throw with a helpful message and as soon as the type is
-    // fixed, the key warnings will appear.)
-    if (validType) {
-      for (var i = 2; i < arguments.length; i++) {
-        validateChildKeys(arguments[i], type);
-      }
-    }
+    info += getStackAddendum() || '';
 
-    validatePropTypes(element);
+    warning(
+      false,
+      'React.createElement: type is invalid -- expected a string (for ' +
+        'built-in components) or a class/function (for composite ' +
+        'components) but got: %s.%s',
+      type == null ? type : typeof type,
+      info,
+    );
+  }
 
+  var element = createElement.apply(this, arguments);
+
+  // The result can be nullish if a mock or a custom function is used.
+  // TODO: Drop this when these are no longer allowed as the type argument.
+  if (element == null) {
     return element;
-  },
+  }
 
-  createFactory: function(type) {
-    var validatedFactory = ReactElementValidator.createElement.bind(null, type);
-    // Legacy hook TODO: Warn if this is accessed
-    validatedFactory.type = type;
-
-    if (__DEV__) {
-      Object.defineProperty(validatedFactory, 'type', {
-        enumerable: false,
-        get: function() {
-          lowPriorityWarning(
-            false,
-            'Factory.type is deprecated. Access the class directly ' +
-              'before passing it to createFactory.',
-          );
-          Object.defineProperty(this, 'type', {
-            value: type,
-          });
-          return type;
-        },
-      });
-    }
-
-    return validatedFactory;
-  },
-
-  cloneElement: function(element, props, children) {
-    var newElement = ReactElement.cloneElement.apply(this, arguments);
+  // Skip key warning if the type isn't valid since our key validation logic
+  // doesn't expect a non-string/function type and can throw confusing errors.
+  // We don't want exception behavior to differ between dev and prod.
+  // (Rendering will throw with a helpful message and as soon as the type is
+  // fixed, the key warnings will appear.)
+  if (validType) {
     for (var i = 2; i < arguments.length; i++) {
-      validateChildKeys(arguments[i], newElement.type);
+      validateChildKeys(arguments[i], type);
     }
-    validatePropTypes(newElement);
-    return newElement;
-  },
-};
+  }
 
-module.exports = ReactElementValidator;
+  if (typeof type === 'symbol' && type === REACT_FRAGMENT_TYPE) {
+    validateFragmentProps(element);
+  } else {
+    validatePropTypes(element);
+  }
+
+  return element;
+}
+
+export function createFactoryWithValidation(type) {
+  var validatedFactory = createElementWithValidation.bind(null, type);
+  // Legacy hook TODO: Warn if this is accessed
+  validatedFactory.type = type;
+
+  if (__DEV__) {
+    Object.defineProperty(validatedFactory, 'type', {
+      enumerable: false,
+      get: function() {
+        lowPriorityWarning(
+          false,
+          'Factory.type is deprecated. Access the class directly ' +
+            'before passing it to createFactory.',
+        );
+        Object.defineProperty(this, 'type', {
+          value: type,
+        });
+        return type;
+      },
+    });
+  }
+
+  return validatedFactory;
+}
+
+export function cloneElementWithValidation(element, props, children) {
+  var newElement = cloneElement.apply(this, arguments);
+  for (var i = 2; i < arguments.length; i++) {
+    validateChildKeys(arguments[i], newElement.type);
+  }
+  validatePropTypes(newElement);
+  return newElement;
+}
