@@ -20,7 +20,7 @@ module.exports = ({cwd, dry, path, version}) => {
     (dry ? ' --dry' : '');
 
   const packagingFixturesPath = join(cwd, 'fixtures/packaging');
-  const standaloneFiturePath = join(
+  const standaloneFixturePath = join(
     cwd,
     'fixtures/packaging/babel-standalone/dev.html'
   );
@@ -40,7 +40,7 @@ module.exports = ({cwd, dry, path, version}) => {
 
     {bold.underline Step 2: Smoke test the packages}
 
-    1. Open {yellow.bold ${standaloneFiturePath}} in the browser.
+    1. Open {yellow.bold ${standaloneFixturePath}} in the browser.
     2. It should say {italic "Hello world!"}
     3. Next go to {yellow.bold ${packagingFixturesPath}} and run {bold node build-all.js}
     4. Install the "serve" module ({bold npm install -g serve})
