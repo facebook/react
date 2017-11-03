@@ -13,5 +13,4 @@ var DevToolsHook = require('./src/ReactFiberDevToolsHook');
 // This is hacky but makes it work with both Rollup and Jest.
 module.exports = (DevToolsHook.default
   ? DevToolsHook.default
-  : DevToolsHook
-).injectInternals;
+  : DevToolsHook).injectInternals;

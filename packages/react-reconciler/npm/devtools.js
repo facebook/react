@@ -1,4 +1,4 @@
- 'use strict';
+'use strict';
 
 module.exports = require('./cjs/react-reconciler/');
 if (process.env.NODE_ENV === 'production') {

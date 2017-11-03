@@ -205,7 +205,6 @@ const bundles = [
     externals: ['react'],
   },
 
-
   /******* React Call Return (experimental) *******/
   {
     label: 'react-call-return',
@@ -215,7 +214,6 @@ const bundles = [
     global: 'ReactCallReturn',
     externals: [],
   },
-
 ];
 
 // Based on deep-freeze by substack (public domain)
