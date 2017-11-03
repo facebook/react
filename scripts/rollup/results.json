@@ -177,16 +177,16 @@
       "gzip": 60118
     },
     "react-test-renderer-shallow.development.js (NODE_DEV)": {
-      "size": 10121,
-      "gzip": 2553
+      "size": 10657,
+      "gzip": 2680
     },
     "react-test-renderer-shallow.production.min.js (NODE_PROD)": {
-      "size": 4675,
-      "gzip": 1703
+      "size": 5004,
+      "gzip": 1865
     },
     "ReactShallowRenderer-dev.js (FB_DEV)": {
-      "size": 9619,
-      "gzip": 2387
+      "size": 10140,
+      "gzip": 2515
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
       "size": 280181,

@@ -13,7 +13,7 @@ function run(format, filePatterns) {
   const result = spawnSync(
     path.join('node_modules', '.bin', 'eslint' + extension),
     [
-      filePatterns,
+      ...filePatterns,
       '--config',
       path.join(__dirname, `eslintrc.${format}.js`),
       // Disregard our ESLint rules that apply to the source.
@@ -36,7 +36,7 @@ function run(format, filePatterns) {
   }
 }
 
-run('fb', `./build/facebook-www/*.js`);
-run('rn', `./build/{react-cs,react-native,react-rt}/*.js`);
-run('umd', `./build/packages/*/umd/*.js`);
+run('fb', [`./build/facebook-www/*.js`]);
+run('rn', [`./build/{react-cs,react-native,react-rt}/*.js`]);
+run('umd', [`./build/packages/*/umd/*.js`]);
 run('cjs', [`./build/packages/*/*.js`, `./build/packages/*/cjs/*.js`]);
