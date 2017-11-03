@@ -30,18 +30,16 @@ describe('EnterLeaveEventPlugin', () => {
     ReactDOM = require('react-dom');
   });
 
-  it('should set relatedTarget properly in iframe', () => {
+  it('should set onMouseLeave relatedTarget properly in iframe', () => {
     const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
     const iframeDocument = iframe.contentDocument;
-
     iframeDocument.write(
       '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
     );
     iframeDocument.close();
 
     let leaveEvents = [];
-
     const node = ReactDOM.render(
       <div
         onMouseLeave={e => {
@@ -52,12 +50,36 @@ describe('EnterLeaveEventPlugin', () => {
       iframeDocument.body.getElementsByTagName('div')[0],
     );
 
-    // Test onMouseLeave
     simulateMouseEvent(node, 'mouseout', iframe.contentWindow);
-
     expect(leaveEvents.length).toBe(1);
     expect(leaveEvents[0].target).toBe(node);
     expect(leaveEvents[0].relatedTarget).toBe(iframe.contentWindow);
+  });
+
+  it('should set onMouseEnter relatedTarget properly in iframe', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const iframeDocument = iframe.contentDocument;
+    iframeDocument.write(
+      '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
+    );
+    iframeDocument.close();
+
+    let enterEvents = [];
+    const node = ReactDOM.render(
+      <div
+        onMouseEnter={e => {
+          e.persist();
+          enterEvents.push(e);
+        }}
+      />,
+      iframeDocument.body.getElementsByTagName('div')[0],
+    );
+
+    simulateMouseEvent(node, 'mouseover', null);
+    expect(enterEvents.length).toBe(1);
+    expect(enterEvents[0].target).toBe(node);
+    expect(enterEvents[0].relatedTarget).toBe(iframe.contentWindow);
   });
 
   // Regression test for https://github.com/facebook/react/issues/10906.
