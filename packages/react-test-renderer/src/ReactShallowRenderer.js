@@ -149,7 +149,7 @@ class ReactShallowRenderer {
 
     if (
       typeof this._instance.shouldComponentUpdate === 'function' &&
-      this._forcedUpdate !== true
+      !this._forcedUpdate
     ) {
       if (
         this._instance.shouldComponentUpdate(props, state, context) === false
