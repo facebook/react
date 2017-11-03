@@ -35,7 +35,7 @@ const changedFiles = exec('git', [
   .split('\n');
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 try {
-  exec(eslint, [...jsFiles], { stdio: 'inherit' });
+  exec(eslint, jsFiles, { stdio: 'inherit' });
   console.log('Linc passed');
 } catch (e) {
   console.log('Linc failed');
