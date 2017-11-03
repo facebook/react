@@ -44,22 +44,26 @@ describe('ReactDOMEventListener', () => {
       var onMouseOut = event => mouseOut(event.currentTarget);
 
       var childContainer = document.createElement('div');
-      var childControl = <div onMouseOut={onMouseOut}>Child</div>;
       var parentContainer = document.createElement('div');
-      var parentControl = <div onMouseOut={onMouseOut}>div</div>;
-      childControl = ReactDOM.render(childControl, childContainer);
-      parentControl = ReactDOM.render(parentControl, parentContainer);
-      parentControl.appendChild(childContainer);
+      var childNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Child</div>,
+        childContainer,
+      );
+      var parentNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>div</div>,
+        parentContainer,
+      );
+      parentNode.appendChild(childContainer);
       document.body.appendChild(parentContainer);
 
       var nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
-      childControl.dispatchEvent(nativeEvent);
+      childNode.dispatchEvent(nativeEvent);
 
       expect(mouseOut).toBeCalled();
       expect(mouseOut.mock.calls.length).toBe(2);
-      expect(mouseOut.mock.calls[0][0]).toEqual(childControl);
-      expect(mouseOut.mock.calls[1][0]).toEqual(parentControl);
+      expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
+      expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
 
       document.body.removeChild(parentContainer);
     });
@@ -69,31 +73,34 @@ describe('ReactDOMEventListener', () => {
       var onMouseOut = event => mouseOut(event.currentTarget);
 
       var childContainer = document.createElement('div');
-      var childControl = <div onMouseOut={onMouseOut}>Child</div>;
       var parentContainer = document.createElement('div');
-      var parentControl = <div onMouseOut={onMouseOut}>Parent</div>;
       var grandParentContainer = document.createElement('div');
-      var grandParentControl = <div onMouseOut={onMouseOut}>Parent</div>;
-      childControl = ReactDOM.render(childControl, childContainer);
-      parentControl = ReactDOM.render(parentControl, parentContainer);
-      grandParentControl = ReactDOM.render(
-        grandParentControl,
+      var childNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Child</div>,
+        childContainer,
+      );
+      var parentNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Parent</div>,
+        parentContainer,
+      );
+      var grandParentNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Parent</div>,
         grandParentContainer,
       );
-      parentControl.appendChild(childContainer);
-      grandParentControl.appendChild(parentContainer);
+      parentNode.appendChild(childContainer);
+      grandParentNode.appendChild(parentContainer);
 
       document.body.appendChild(grandParentContainer);
 
       var nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
-      childControl.dispatchEvent(nativeEvent);
+      childNode.dispatchEvent(nativeEvent);
 
       expect(mouseOut).toBeCalled();
       expect(mouseOut.mock.calls.length).toBe(3);
-      expect(mouseOut.mock.calls[0][0]).toEqual(childControl);
-      expect(mouseOut.mock.calls[1][0]).toEqual(parentControl);
-      expect(mouseOut.mock.calls[2][0]).toEqual(grandParentControl);
+      expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
+      expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
+      expect(mouseOut.mock.calls[2][0]).toEqual(grandParentNode);
 
       document.body.removeChild(grandParentContainer);
     });
@@ -108,24 +115,24 @@ describe('ReactDOMEventListener', () => {
 
       var childContainer = document.createElement('div');
       var parentContainer = document.createElement('div');
-      var childControl = ReactDOM.render(
+      var childNode = ReactDOM.render(
         <div onMouseOut={onChildMouseOut}>Child</div>,
         childContainer,
       );
-      var parentControl = ReactDOM.render(
+      var parentNode = ReactDOM.render(
         <div onMouseOut={onParentMouseOut}>Parent</div>,
         parentContainer,
       );
-      parentControl.appendChild(childContainer);
+      parentNode.appendChild(childContainer);
       document.body.appendChild(parentContainer);
 
       var nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
-      childControl.dispatchEvent(nativeEvent);
+      childNode.dispatchEvent(nativeEvent);
       var calls = mouseOut.mock.calls;
       expect(calls.length).toBe(2);
-      expect(calls[0][0]).toEqual(childControl);
-      expect(calls[1][0]).toEqual(parentControl);
+      expect(calls[0][0]).toEqual(childNode);
+      expect(calls[1][0]).toEqual(parentNode);
       document.body.removeChild(parentContainer);
     });
 
@@ -144,26 +151,26 @@ describe('ReactDOMEventListener', () => {
         mock(childNode.textContent);
       };
 
-      var childControl = ReactDOM.render(
+      var childNode = ReactDOM.render(
         <div onMouseOut={onMouseOut}>Child</div>,
         childContainer,
       );
-      var parentControl = ReactDOM.render(
+      var parentNode = ReactDOM.render(
         <div onMouseOut={onMouseOutParent}>Parent</div>,
         parentContainer,
       );
-      parentControl.appendChild(childContainer);
+      parentNode.appendChild(childContainer);
 
       document.body.appendChild(parentContainer);
 
       var nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
-      childControl.dispatchEvent(nativeEvent);
+      childNode.dispatchEvent(nativeEvent);
 
       expect(mock).toBeCalled();
       expect(mock.mock.calls[0][0]).toBe('Child');
       expect(mock.mock.calls[1][0]).toBe('Child');
-      expect(childControl.textContent).toBe('2');
+      expect(childNode.textContent).toBe('2');
 
       document.body.removeChild(parentContainer);
     });
