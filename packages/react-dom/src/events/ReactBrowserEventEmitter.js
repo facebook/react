@@ -11,6 +11,8 @@ import ReactDOMEventListener from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 import BrowserEventConstants from './BrowserEventConstants';
 
+export * from 'events/ReactEventEmitterMixin';
+
 var {topLevelTypes} = BrowserEventConstants;
 
 /**
@@ -86,8 +88,6 @@ function getListeningForDocument(mountAt) {
   }
   return alreadyListeningTo[mountAt[topListenersIDKey]];
 }
-
-export * from 'events/ReactEventEmitterMixin';
 
 /**
  * Sets whether or not any created callbacks should be enabled.

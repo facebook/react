@@ -24,7 +24,7 @@ import RCTEventEmitter from 'RCTEventEmitter';
 
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactNativeEventEmitter from './ReactNativeEventEmitter';
+import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';
 import ReactNativeGlobalResponderHandler
   from './ReactNativeGlobalResponderHandler';
