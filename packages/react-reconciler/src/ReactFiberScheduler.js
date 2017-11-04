@@ -46,7 +46,21 @@ import ReactFiberHostContext from './ReactFiberHostContext';
 import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {
+  recordEffect,
+  recordScheduleUpdate,
+  startWorkTimer,
+  stopWorkTimer,
+  stopFailedWorkTimer,
+  startWorkLoopTimer,
+  stopWorkLoopTimer,
+  startCommitTimer,
+  stopCommitTimer,
+  startCommitHostEffectsTimer,
+  stopCommitHostEffectsTimer,
+  startCommitLifeCyclesTimer,
+  stopCommitLifeCyclesTimer,
+} from './ReactDebugFiberPerf';
 import {popContextProvider} from './ReactFiberContext';
 import {reset} from './ReactFiberStack';
 import {logCapturedError} from './ReactFiberErrorLogger';
@@ -64,21 +78,6 @@ import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
 
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
-var {
-  recordEffect,
-  recordScheduleUpdate,
-  startWorkTimer,
-  stopWorkTimer,
-  stopFailedWorkTimer,
-  startWorkLoopTimer,
-  stopWorkLoopTimer,
-  startCommitTimer,
-  stopCommitTimer,
-  startCommitHostEffectsTimer,
-  stopCommitHostEffectsTimer,
-  startCommitLifeCyclesTimer,
-  stopCommitLifeCyclesTimer,
-} = ReactDebugFiberPerf;
 
 export type CapturedError = {
   componentName: ?string,

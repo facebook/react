@@ -14,6 +14,7 @@ var ReactNativeCSFeatureFlags: FeatureFlags = {
   enableAsyncSchedulingByDefaultInReactDOM: false,
   enableReactFragment: false,
   enableCreateRoot: false,
+  enableUserTimingAPI: __DEV__,
   // React Native CS uses persistent reconciler.
   enableMutatingReconciler: false,
   enableNoopReconciler: false,

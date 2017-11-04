@@ -20,7 +20,7 @@ import shallowEqual from 'fbjs/lib/shallowEqual';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
 import {
   cacheContext,
@@ -34,7 +34,6 @@ import {
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
 
-var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 

@@ -15,6 +15,7 @@ export type FeatureFlags = {|
   enablePersistentReconciler: boolean,
   enableReactFragment: boolean,
   enableCreateRoot: boolean,
+  enableUserTimingAPI: boolean,
 |};
 
 var ReactFeatureFlags: FeatureFlags = {
@@ -30,6 +31,8 @@ var ReactFeatureFlags: FeatureFlags = {
   enableReactFragment: false,
   // Exports ReactDOM.createRoot
   enableCreateRoot: false,
+  // Enables User Timing integration
+  enableUserTimingAPI: __DEV__,
 };
 
 if (__DEV__) {

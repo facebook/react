@@ -20,9 +20,7 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {createCursor, pop, push} from './ReactFiberStack';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
-
-const {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
 if (__DEV__) {
   var warnedAboutMissingGetChildContext = {};
