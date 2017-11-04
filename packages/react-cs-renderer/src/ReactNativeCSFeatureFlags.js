@@ -14,6 +14,7 @@ export const enableAsyncSubtreeAPI = true;
 export const enableAsyncSchedulingByDefaultInReactDOM = false;
 export const enableReactFragment = false;
 export const enableCreateRoot = false;
+export const enableUserTimingAPI = __DEV__;
 
 // React Native CS uses persistent reconciler.
 export const enableMutatingReconciler = false;

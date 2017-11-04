@@ -16,6 +16,8 @@ export const {
   enableAsyncSchedulingByDefaultInReactDOM,
   enableReactFragment,
   enableCreateRoot,
+  enableUserTimingAPI,
+  // Reconciler flags
   enableMutatingReconciler,
   enableNoopReconciler,
   enablePersistentReconciler,

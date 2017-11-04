@@ -29,10 +29,9 @@ import invariant from 'fbjs/lib/invariant';
 
 import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
-var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
@@ -40,22 +39,20 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
 ) {
   const {getPublicInstance, mutation, persistence} = config;
 
-  if (__DEV__) {
-    var callComponentWillUnmountWithTimerInDev = function(current, instance) {
-      startPhaseTimer(current, 'componentWillUnmount');
-      instance.props = current.memoizedProps;
-      instance.state = current.memoizedState;
-      instance.componentWillUnmount();
-      stopPhaseTimer();
-    };
-  }
+  var callComponentWillUnmountWithTimer = function(current, instance) {
+    startPhaseTimer(current, 'componentWillUnmount');
+    instance.props = current.memoizedProps;
+    instance.state = current.memoizedState;
+    instance.componentWillUnmount();
+    stopPhaseTimer();
+  };
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
       invokeGuardedCallback(
         null,
-        callComponentWillUnmountWithTimerInDev,
+        callComponentWillUnmountWithTimer,
         null,
         current,
         instance,
@@ -66,9 +63,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       }
     } else {
       try {
-        instance.props = current.memoizedProps;
-        instance.state = current.memoizedState;
-        instance.componentWillUnmount();
+        callComponentWillUnmountWithTimer(current, instance);
       } catch (unmountError) {
         captureError(current, unmountError);
       }
@@ -100,27 +95,19 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
           if (current === null) {
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidMount');
-            }
+            startPhaseTimer(finishedWork, 'componentDidMount');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
             instance.componentDidMount();
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
+            stopPhaseTimer();
           } else {
             const prevProps = current.memoizedProps;
             const prevState = current.memoizedState;
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidUpdate');
-            }
+            startPhaseTimer(finishedWork, 'componentDidUpdate');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
             instance.componentDidUpdate(prevProps, prevState);
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
+            stopPhaseTimer();
           }
         }
         const updateQueue = finishedWork.updateQueue;
