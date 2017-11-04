@@ -3,12 +3,13 @@
 const chalk = require('chalk');
 const path = require('path');
 const spawnSync = require('child_process').spawnSync;
+const glob = require('glob');
 
 const extension = process.platform === 'win32' ? '.cmd' : '';
 
 // Performs sanity checks on bundles *built* by Rollup.
 // Helps catch Rollup regressions.
-function run(format, filePatterns) {
+function lint({format, filePatterns}) {
   console.log(`Linting ${format} bundles...`);
   const result = spawnSync(
     path.join('node_modules', '.bin', 'eslint' + extension),
@@ -36,7 +37,43 @@ function run(format, filePatterns) {
   }
 }
 
-run('fb', [`./build/facebook-www/*.js`]);
-run('rn', [`./build/{react-cs,react-native,react-rt}/*.js`]);
-run('umd', [`./build/packages/*/umd/*.js`]);
-run('cjs', [`./build/packages/*/*.js`, `./build/packages/*/cjs/*.js`]);
+function checkFilesExist(bundle) {
+  const {format, filePatterns} = bundle;
+  filePatterns.map(pattern => {
+    console.log(`Check if files exist in ${pattern}`);
+    const files = glob.sync(pattern);
+    if (files.length === 0) {
+      console.error(
+        chalk.red(
+          `No files found in glob pattern ${pattern} in ${format} bundle.`
+        )
+      );
+      process.exit();
+    } else {
+      console.log(chalk.green(`${files.length} files found.`));
+      console.log();
+    }
+  });
+  return bundle;
+}
+
+const bundles = [
+  {
+    format: 'fb',
+    filePatterns: [`./build/facebook-www/*.js`],
+  },
+  {
+    format: 'rn',
+    filePatterns: [`./build/{react-cs,react-native,react-rt}/*.js`],
+  },
+  {
+    format: 'umd',
+    filePatterns: [`./build/packages/*/umd/*.js`],
+  },
+  {
+    format: 'cjs',
+    filePatterns: [`./build/packages/*/*.js`, `./build/packages/*/cjs/*.js`],
+  },
+];
+
+bundles.map(checkFilesExist).map(lint);
