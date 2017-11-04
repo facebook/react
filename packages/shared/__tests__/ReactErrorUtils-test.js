@@ -14,7 +14,7 @@ var ReactErrorUtils;
 describe('ReactErrorUtils', () => {
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    ReactErrorUtils = require('shared/ReactErrorUtils');
+    ReactErrorUtils = require('shared/ReactErrorUtils').default;
   });
 
   // Run tests in both DEV and production
@@ -36,7 +36,7 @@ describe('ReactErrorUtils', () => {
       };
 
       jest.resetModules();
-      ReactErrorUtils = require('shared/ReactErrorUtils');
+      ReactErrorUtils = require('shared/ReactErrorUtils').default;
     });
 
     afterEach(() => {
@@ -161,9 +161,9 @@ describe('ReactErrorUtils', () => {
     });
 
     it('handles nested errors in separate renderers', () => {
-      const ReactErrorUtils1 = require('shared/ReactErrorUtils');
+      const ReactErrorUtils1 = require('shared/ReactErrorUtils').default;
       jest.resetModules();
-      const ReactErrorUtils2 = require('shared/ReactErrorUtils');
+      const ReactErrorUtils2 = require('shared/ReactErrorUtils').default;
       expect(ReactErrorUtils1).not.toEqual(ReactErrorUtils2);
 
       let ops = [];

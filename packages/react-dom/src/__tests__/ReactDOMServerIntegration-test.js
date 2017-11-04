@@ -315,6 +315,7 @@ function resetModules() {
 
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+  require('shared/ReactFeatureFlags').enableReactFragment = true;
 
   PropTypes = require('prop-types');
   React = require('react');
@@ -325,6 +326,7 @@ function resetModules() {
   // Resetting is important because we want to avoid any shared state
   // influencing the tests.
   jest.resetModuleRegistry();
+  require('shared/ReactFeatureFlags').enableReactFragment = true;
   ReactDOMServer = require('react-dom/server');
 }
 

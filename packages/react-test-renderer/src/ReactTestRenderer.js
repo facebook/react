@@ -7,25 +7,22 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
-var ReactFiberReconciler = require('react-reconciler');
-var ReactGenericBatching = require('events/ReactGenericBatching');
-var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
-var emptyObject = require('fbjs/lib/emptyObject');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var invariant = require('fbjs/lib/invariant');
-var {
+import ReactFiberReconciler from 'react-reconciler';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
+import emptyObject from 'fbjs/lib/emptyObject';
+import {
   Fragment,
   FunctionalComponent,
   ClassComponent,
   HostComponent,
   HostText,
   HostRoot,
-} = ReactTypeOfWork;
+} from 'shared/ReactTypeOfWork';
+import invariant from 'fbjs/lib/invariant';
 
 type TestRendererOptions = {
   createNodeMock: (element: React$Element<any>) => any,
@@ -372,9 +369,7 @@ class ReactTestInstance {
 
   _currentFiber(): Fiber {
     // Throws if this component has been unmounted.
-    const fiber = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-      this._fiber,
-    );
+    const fiber = findCurrentFiberUsingSlowPath(this._fiber);
     invariant(
       fiber !== null,
       "Can't read from currently-mounting component. This error is likely " +
@@ -642,4 +637,4 @@ var ReactTestRendererFiber = {
   /* eslint-enable camelcase */
 };
 
-module.exports = ReactTestRendererFiber;
+export default ReactTestRendererFiber;

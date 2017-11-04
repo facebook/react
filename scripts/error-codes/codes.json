@@ -240,5 +240,11 @@
   "238": "Task updates can only be scheduled as a nested update or inside batchedUpdates. This error is likely caused by a bug in React. Please file an issue.",
   "239": "Measure not implemented yet",
   "240": "Text components are not supported for now.",
-  "241": "Text components are not yet supported."
+  "241": "Text components are not yet supported.",
+  "242": "%s: %s type `%s` is invalid; it must be a function, usually from the `prop-types` package, but received `%s`.",
+  "243": "renderRoot was called recursively. This error is likely caused by a bug in React. Please file an issue.",
+  "244": "Should have a previous and last root. This error is likely caused by a bug in React. Please file an issue.",
+  "245": "performWorkOnRoot was called recursively. This error is likely caused by a bug in React. Please file an issue.",
+  "246": "Should be working on a root. This error is likely caused by a bug in React. Please file an issue.",
+  "247": "A call cannot have host component children."
 }

@@ -5,11 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var CSSProperty = require('./CSSProperty');
-
-var isUnitlessNumber = CSSProperty.isUnitlessNumber;
+import {isUnitlessNumber} from './CSSProperty';
 
 /**
  * Convert a value into the proper css writable value. The style name `name`
@@ -48,4 +44,4 @@ function dangerousStyleValue(name, value, isCustomProperty) {
   return ('' + value).trim();
 }
 
-module.exports = dangerousStyleValue;
+export default dangerousStyleValue;

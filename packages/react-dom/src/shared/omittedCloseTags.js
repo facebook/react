@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special-case tags.
 
@@ -29,4 +27,4 @@ var omittedCloseTags = {
   // NOTE: menuitem's close tag should be omitted, but that causes problems.
 };
 
-module.exports = omittedCloseTags;
+export default omittedCloseTags;

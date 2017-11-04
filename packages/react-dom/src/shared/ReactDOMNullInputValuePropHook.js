@@ -5,12 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-if (__DEV__) {
-  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
-  var warning = require('fbjs/lib/warning');
-}
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import warning from 'fbjs/lib/warning';
 
 var didWarnValueNull = false;
 
@@ -19,7 +15,7 @@ function getStackAddendum() {
   return stack != null ? stack : '';
 }
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (type !== 'input' && type !== 'textarea' && type !== 'select') {
     return;
   }
@@ -47,9 +43,3 @@ function validateProperties(type, props) {
     }
   }
 }
-
-var ReactDOMNullInputValuePropHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMNullInputValuePropHook;

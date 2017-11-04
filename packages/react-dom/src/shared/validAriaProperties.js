@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 var ariaProperties = {
   'aria-current': 0, // state
   'aria-details': 0,
@@ -62,4 +60,4 @@ var ariaProperties = {
   'aria-setsize': 0,
 };
 
-module.exports = ariaProperties;
+export default ariaProperties;

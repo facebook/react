@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 /**
  * Flat RT renderer bundles are too big for Flow to parse efficiently.

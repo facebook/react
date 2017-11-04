@@ -7,9 +7,7 @@
  * @flow
  */
 
-'use strict';
-
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
@@ -272,4 +270,4 @@ let rethrowCaughtError = function() {
   }
 };
 
-module.exports = ReactErrorUtils;
+export default ReactErrorUtils;

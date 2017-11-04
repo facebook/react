@@ -6,14 +6,13 @@
  *
  */
 
-'use strict';
-
-const React = require('react');
-const describeComponentFrame = require('shared/describeComponentFrame');
-const getComponentName = require('shared/getComponentName');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
-const checkPropTypes = require('prop-types/checkPropTypes');
+import React from 'react';
+import describeComponentFrame from 'shared/describeComponentFrame';
+import getComponentName from 'shared/getComponentName';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
+import shallowEqual from 'fbjs/lib/shallowEqual';
+import checkPropTypes from 'prop-types/checkPropTypes';
 
 class ReactShallowRenderer {
   static createRenderer = function() {
@@ -48,12 +47,21 @@ class ReactShallowRenderer {
             'it by passing it to React.createElement.'
         : '',
     );
+    // Show a special message for host elements since it's a common case.
     invariant(
       typeof element.type !== 'string',
       'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
         'components, not primitives (%s). Instead of calling `.render(el)` and ' +
         'inspecting the rendered output, look at `el.props` directly instead.',
       element.type,
+    );
+    invariant(
+      typeof element.type === 'function',
+      'ReactShallowRenderer render(): Shallow rendering works only with custom ' +
+        'components, but the provided element type was `%s`.',
+      Array.isArray(element.type)
+        ? 'array'
+        : element.type === null ? 'null' : typeof element.type,
     );
 
     if (this._rendering) {
@@ -65,7 +73,7 @@ class ReactShallowRenderer {
     this._context = context;
 
     if (this._instance) {
-      this._updateClassComponent(element.props, context);
+      this._updateClassComponent(element.type, element.props, context);
     } else {
       if (shouldConstruct(element.type)) {
         this._instance = new element.type(
@@ -135,7 +143,8 @@ class ReactShallowRenderer {
     // because DOM refs are not available.
   }
 
-  _updateClassComponent(props, context) {
+  _updateClassComponent(type, props, context) {
+    const oldState = this._instance.state || emptyObject;
     const oldProps = this._instance.props;
 
     if (
@@ -144,34 +153,37 @@ class ReactShallowRenderer {
     ) {
       this._instance.componentWillReceiveProps(props, context);
     }
-
     // Read state after cWRP in case it calls setState
-    // Fallback to previous instance state to support rendering React.cloneElement()
-    const state = this._newState || this._instance.state || emptyObject;
+    const state = this._newState || oldState;
 
-    if (typeof this._instance.shouldComponentUpdate === 'function') {
-      if (
-        this._forcedUpdate ||
-        this._instance.shouldComponentUpdate(props, state, context) === false
-      ) {
-        this._instance.context = context;
-        this._instance.props = props;
-        this._instance.state = state;
-        this._forcedUpdate = false;
-
-        return;
-      }
+    let shouldUpdate = true;
+    if (this._forcedUpdate) {
+      shouldUpdate = true;
+      this._forcedUpdate = false;
+    } else if (typeof this._instance.shouldComponentUpdate === 'function') {
+      shouldUpdate = !!this._instance.shouldComponentUpdate(
+        props,
+        state,
+        context,
+      );
+    } else if (type.prototype && type.prototype.isPureReactComponent) {
+      shouldUpdate =
+        !shallowEqual(oldProps, props) || !shallowEqual(oldState, state);
     }
 
-    if (typeof this._instance.componentWillUpdate === 'function') {
-      this._instance.componentWillUpdate(props, state, context);
+    if (shouldUpdate) {
+      if (typeof this._instance.componentWillUpdate === 'function') {
+        this._instance.componentWillUpdate(props, state, context);
+      }
     }
 
     this._instance.context = context;
     this._instance.props = props;
     this._instance.state = state;
 
-    this._rendered = this._instance.render();
+    if (shouldUpdate) {
+      this._rendered = this._instance.render();
+    }
     // Intentionally do not call componentDidUpdate()
     // because DOM refs are not available.
   }
@@ -267,4 +279,4 @@ function shouldConstruct(Component) {
   return !!(Component.prototype && Component.prototype.isReactComponent);
 }
 
-module.exports = ReactShallowRenderer;
+export default ReactShallowRenderer;
