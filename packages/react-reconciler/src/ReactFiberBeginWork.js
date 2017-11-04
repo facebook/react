@@ -40,7 +40,7 @@ import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import ReactFiberClassComponent from './ReactFiberClassComponent';
 import {
@@ -60,7 +60,6 @@ import {
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 
-var {cancelWorkTimer} = ReactDebugFiberPerf;
 if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }

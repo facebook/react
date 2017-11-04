@@ -25,10 +25,9 @@ import invariant from 'fbjs/lib/invariant';
 
 import {commitCallbacks} from './ReactFiberUpdateQueue';
 import {onCommitUnmount} from './ReactFiberDevToolsHook';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
-var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 
 export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
