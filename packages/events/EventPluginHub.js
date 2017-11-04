@@ -13,7 +13,10 @@ import {
   injectEventPluginsByName,
   plugins,
 } from './EventPluginRegistry';
-import EventPluginUtils from './EventPluginUtils';
+import {
+  executeDispatchesInOrder,
+  getFiberCurrentPropsFromNode,
+} from './EventPluginUtils';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 
@@ -32,7 +35,7 @@ var eventQueue = null;
  */
 var executeDispatchesAndRelease = function(event, simulated) {
   if (event) {
-    EventPluginUtils.executeDispatchesInOrder(event, simulated);
+    executeDispatchesInOrder(event, simulated);
 
     if (!event.isPersistent()) {
       event.constructor.release(event);
@@ -127,7 +130,7 @@ export function getListener(inst, registrationName) {
     // Work in progress (ex: onload events in incremental mode).
     return null;
   }
-  const props = EventPluginUtils.getFiberCurrentPropsFromNode(stateNode);
+  const props = getFiberCurrentPropsFromNode(stateNode);
   if (!props) {
     // Work in progress.
     return null;

@@ -7,14 +7,11 @@
  * @flow
  */
 
-import EventPluginUtils from 'events/EventPluginUtils';
+import {isStartish, isEndish} from 'events/EventPluginUtils';
 import EventPropagators from 'events/EventPropagators';
 import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 
 import SyntheticUIEvent from './SyntheticUIEvent';
-
-var isStartish = EventPluginUtils.isStartish;
-var isEndish = EventPluginUtils.isEndish;
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket

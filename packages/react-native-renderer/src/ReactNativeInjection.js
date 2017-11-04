@@ -17,7 +17,7 @@
 import 'InitializeCore';
 
 import * as EventPluginHub from 'events/EventPluginHub';
-import EventPluginUtils from 'events/EventPluginUtils';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';
 // Module provided by RN:
 import RCTEventEmitter from 'RCTEventEmitter';

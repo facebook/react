@@ -7,19 +7,19 @@
 
 import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
 
-import EventPluginUtils from './EventPluginUtils';
+import {
+  isStartish,
+  isMoveish,
+  isEndish,
+  executeDirectDispatch,
+  hasDispatches,
+  executeDispatchesInOrderStopAtTrue,
+  getInstanceFromNode,
+} from './EventPluginUtils';
 import EventPropagators from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
 import accumulate from './accumulate';
-
-var isStartish = EventPluginUtils.isStartish;
-var isMoveish = EventPluginUtils.isMoveish;
-var isEndish = EventPluginUtils.isEndish;
-var executeDirectDispatch = EventPluginUtils.executeDirectDispatch;
-var hasDispatches = EventPluginUtils.hasDispatches;
-var executeDispatchesInOrderStopAtTrue =
-  EventPluginUtils.executeDispatchesInOrderStopAtTrue;
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -447,7 +447,7 @@ function noResponderTouches(nativeEvent) {
     var target = activeTouch.target;
     if (target !== null && target !== undefined && target !== 0) {
       // Is the original touch location inside of the current responder?
-      var targetInst = EventPluginUtils.getInstanceFromNode(target);
+      var targetInst = getInstanceFromNode(target);
       if (isAncestor(responderInst, targetInst)) {
         return false;
       }

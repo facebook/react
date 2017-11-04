@@ -6,7 +6,7 @@
  */
 
 import * as EventPluginHub from 'events/EventPluginHub';
-import EventPluginUtils from 'events/EventPluginUtils';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 
 import ReactDOMComponentTree from './ReactDOMComponentTree';
 import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';

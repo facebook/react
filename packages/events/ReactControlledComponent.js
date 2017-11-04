@@ -7,7 +7,10 @@
 
 import invariant from 'fbjs/lib/invariant';
 
-import EventPluginUtils from './EventPluginUtils';
+import {
+  getInstanceFromNode,
+  getFiberCurrentPropsFromNode,
+} from './EventPluginUtils';
 
 // Use to restore controlled state after a change event has fired.
 
@@ -27,7 +30,7 @@ var restoreQueue = null;
 function restoreStateOfTarget(target) {
   // We perform this translation at the end of the event loop so that we
   // always receive the correct fiber here
-  var internalInstance = EventPluginUtils.getInstanceFromNode(target);
+  var internalInstance = getInstanceFromNode(target);
   if (!internalInstance) {
     // Unmounted
     return;
@@ -38,9 +41,7 @@ function restoreStateOfTarget(target) {
     'Fiber needs to be injected to handle a fiber target for controlled ' +
       'events. This error is likely caused by a bug in React. Please file an issue.',
   );
-  const props = EventPluginUtils.getFiberCurrentPropsFromNode(
-    internalInstance.stateNode,
-  );
+  const props = getFiberCurrentPropsFromNode(internalInstance.stateNode);
   fiberHostComponent.restoreControlledState(
     internalInstance.stateNode,
     internalInstance.type,
