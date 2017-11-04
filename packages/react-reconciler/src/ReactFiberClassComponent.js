@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {isMounted} from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -450,7 +450,7 @@ export default function(
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (
-      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      enableAsyncSubtreeAPI &&
       workInProgress.type != null &&
       workInProgress.type.prototype != null &&
       workInProgress.type.prototype.unstable_isAsyncReactComponent === true
