@@ -603,8 +603,7 @@ function createBundle(bundle, bundleType) {
       if (error.code) {
         console.error(`\x1b[31m-- ${error.code} (${error.plugin}) --`);
         console.error(error.message);
-        console.error(error.loc);
-        console.error(error.codeFrame);
+        console.error(error.frame);
       } else {
         console.error(error);
       }
