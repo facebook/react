@@ -25,48 +25,70 @@ describe('dangerouslySetInnerHTML', () => {
   });
 
   describe('when the node does not have an innerHTML property', () => {
-    let container;
-    beforeEach(() => {
-      // Create a mock container that looks like a svg in IE (without innerHTML)
-      container = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    let innerHTMLDescriptor;
 
-      spyOn(container, 'appendChild').and.callThrough();
-      spyOn(container, 'removeChild').and.callThrough();
+    // In some versions of IE (TODO: which ones?) SVG nodes don't have
+    // innerHTML. To simulate this, we will take it off the Element prototype
+    // and put it onto the HTMLDivElement prototype. We expect that the logic
+    // checks for existence of innerHTML on SVG, and if one doesn't exist, falls
+    // back to using appendChild and removeChild.
+
+    beforeEach(() => {
+      innerHTMLDescriptor = Object.getOwnPropertyDescriptor(
+        Element.prototype,
+        'innerHTML',
+      );
+      delete Element.prototype.innerHTML;
+      Object.defineProperty(
+        HTMLDivElement.prototype,
+        'innerHTML',
+        innerHTMLDescriptor,
+      );
+    });
+
+    afterEach(() => {
+      delete HTMLDivElement.prototype.innerHTML;
+      Object.defineProperty(
+        Element.prototype,
+        'innerHTML',
+        innerHTMLDescriptor,
+      );
     });
 
     it('sets innerHTML on it', () => {
       const html = '<circle></circle>';
-
+      const container = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'svg',
+      );
       ReactDOM.render(
         <g dangerouslySetInnerHTML={{__html: html}} />,
         container,
       );
-
-      expect(container.appendChild.calls.argsFor(0)[0].innerHTML).toBe(
-        '<circle></circle>',
-      );
+      const circle = container.firstChild.firstChild;
+      expect(circle.tagName).toBe('circle');
     });
 
     it('clears previous children', () => {
       const firstHtml = '<rect></rect>';
       const secondHtml = '<circle></circle>';
 
+      const container = document.createElementNS(
+        'http://www.w3.org/2000/svg',
+        'svg',
+      );
       ReactDOM.render(
         <g dangerouslySetInnerHTML={{__html: firstHtml}} />,
         container,
       );
-      ReactDOM.unmountComponentAtNode(container);
+      const rect = container.firstChild.firstChild;
+      expect(rect.tagName).toBe('rect');
       ReactDOM.render(
         <g dangerouslySetInnerHTML={{__html: secondHtml}} />,
         container,
       );
-
-      expect(container.removeChild.calls.argsFor(0)[0].innerHTML).toBe(
-        '<rect></rect>',
-      );
-      expect(container.appendChild.calls.argsFor(1)[0].innerHTML).toBe(
-        '<circle></circle>',
-      );
+      const circle = container.firstChild.firstChild;
+      expect(circle.tagName).toBe('circle');
     });
   });
 });
