@@ -49,37 +49,33 @@ function restoreStateOfTarget(target) {
   );
 }
 
-var ReactControlledComponent = {
-  injection: ReactControlledComponentInjection,
+export const injection = ReactControlledComponentInjection;
 
-  enqueueStateRestore(target) {
-    if (restoreTarget) {
-      if (restoreQueue) {
-        restoreQueue.push(target);
-      } else {
-        restoreQueue = [target];
-      }
+export function enqueueStateRestore(target) {
+  if (restoreTarget) {
+    if (restoreQueue) {
+      restoreQueue.push(target);
     } else {
-      restoreTarget = target;
+      restoreQueue = [target];
     }
-  },
+  } else {
+    restoreTarget = target;
+  }
+}
 
-  restoreStateIfNeeded() {
-    if (!restoreTarget) {
-      return;
+export function restoreStateIfNeeded() {
+  if (!restoreTarget) {
+    return;
+  }
+  var target = restoreTarget;
+  var queuedTargets = restoreQueue;
+  restoreTarget = null;
+  restoreQueue = null;
+
+  restoreStateOfTarget(target);
+  if (queuedTargets) {
+    for (var i = 0; i < queuedTargets.length; i++) {
+      restoreStateOfTarget(queuedTargets[i]);
     }
-    var target = restoreTarget;
-    var queuedTargets = restoreQueue;
-    restoreTarget = null;
-    restoreQueue = null;
-
-    restoreStateOfTarget(target);
-    if (queuedTargets) {
-      for (var i = 0; i < queuedTargets.length; i++) {
-        restoreStateOfTarget(queuedTargets[i]);
-      }
-    }
-  },
-};
-
-export default ReactControlledComponent;
+  }
+}

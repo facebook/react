@@ -20,7 +20,7 @@ import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import ReactGenericBatching from 'events/ReactGenericBatching';
-import ReactControlledComponent from 'events/ReactControlledComponent';
+import * as ReactControlledComponent from 'events/ReactControlledComponent';
 import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';

@@ -7,7 +7,7 @@
 
 import {enqueueEvents, processEventQueue} from 'events/EventPluginHub';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
-import ReactControlledComponent from 'events/ReactControlledComponent';
+import {enqueueStateRestore} from 'events/ReactControlledComponent';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
@@ -46,7 +46,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(target);
+  enqueueStateRestore(target);
   accumulateTwoPhaseDispatches(event);
   return event;
 }

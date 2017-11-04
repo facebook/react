@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactControlledComponent from './ReactControlledComponent';
+import {restoreStateIfNeeded} from './ReactControlledComponent';
 
 // Used as a way to call batchedUpdates when we don't have a reference to
 // the renderer. Such as when we're dispatching events or if third party
@@ -41,7 +41,7 @@ function batchedUpdatesWithControlledComponents(fn, bookkeeping) {
     // https://github.com/facebook/react/issues/1698
     // Then we restore state of any controlled component.
     isNestingBatched = false;
-    ReactControlledComponent.restoreStateIfNeeded();
+    restoreStateIfNeeded();
   }
 }
 
