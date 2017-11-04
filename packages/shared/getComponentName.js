@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 function getComponentName(fiber: Fiber): string | null {
@@ -22,4 +20,4 @@ function getComponentName(fiber: Fiber): string | null {
   return null;
 }
 
-module.exports = getComponentName;
+export default getComponentName;

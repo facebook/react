@@ -10,7 +10,7 @@
 'use strict';
 
 // TODO: can we express this test with only public API?
-var getEventCharCode = require('../getEventCharCode');
+var getEventCharCode = require('../getEventCharCode').default;
 
 describe('getEventCharCode', () => {
   describe('when charCode is present in nativeEvent', () => {

@@ -5,17 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import ReactGenericBatching from 'events/ReactGenericBatching';
+import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {HostRoot} from 'shared/ReactTypeOfWork';
+import EventListener from 'fbjs/lib/EventListener';
 
-var ReactGenericBatching = require('events/ReactGenericBatching');
-var ReactErrorUtils = require('shared/ReactErrorUtils');
-var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var warning = require('fbjs/lib/warning');
-var {HostRoot} = ReactTypeOfWork;
-
-var getEventTarget = require('./getEventTarget');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
+import getEventTarget from './getEventTarget';
+import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
 
 var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 var callbackBookkeepingPool = [];
@@ -128,18 +124,11 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    // TODO: Once we have static injection we should just wrap
-    // ReactDOMEventListener.dispatchEvent statically so we don't have to do
-    // it for every event type.
-    var callback = ReactErrorUtils.wrapEventListener(
+    return EventListener.listen(
+      element,
       handlerBaseName,
       ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
     );
-    if (element.addEventListener) {
-      element.addEventListener(handlerBaseName, callback, false);
-    } else if (element.attachEvent) {
-      element.attachEvent('on' + handlerBaseName, callback);
-    }
   },
 
   /**
@@ -156,25 +145,11 @@ var ReactDOMEventListener = {
     if (!element) {
       return null;
     }
-    if (element.addEventListener) {
-      // TODO: Once we have static injection we should just wrap
-      // ReactDOMEventListener.dispatchEvent statically so we don't have to do
-      // it for every event type.
-      var callback = ReactErrorUtils.wrapEventListener(
-        handlerBaseName,
-        ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
-      );
-      element.addEventListener(handlerBaseName, callback, true);
-    } else {
-      if (__DEV__) {
-        warning(
-          false,
-          'Attempted to listen to events during the capture phase on a ' +
-            'browser that does not support the capture phase. Your application ' +
-            'will not receive some events.',
-        );
-      }
-    }
+    return EventListener.capture(
+      element,
+      handlerBaseName,
+      ReactDOMEventListener.dispatchEvent.bind(null, topLevelType),
+    );
   },
 
   dispatchEvent: function(topLevelType, nativeEvent) {
@@ -189,7 +164,7 @@ var ReactDOMEventListener = {
     if (
       targetInst !== null &&
       typeof targetInst.tag === 'number' &&
-      !ReactFiberTreeReflection.isFiberMounted(targetInst)
+      !isFiberMounted(targetInst)
     ) {
       // If we get an event (ex: img onload) before committing that
       // component's mount, ignore it for now (that is, treat it as if it was an
@@ -214,4 +189,4 @@ var ReactDOMEventListener = {
   },
 };
 
-module.exports = ReactDOMEventListener;
+export default ReactDOMEventListener;

@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var getEventCharCode = require('./getEventCharCode');
+import getEventCharCode from './getEventCharCode';
 
 /**
  * Normalization of deprecated HTML5 `key` values
@@ -105,4 +103,4 @@ function getEventKey(nativeEvent) {
   return '';
 }
 
-module.exports = getEventKey;
+export default getEventKey;

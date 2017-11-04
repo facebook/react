@@ -493,4 +493,4 @@ var possibleStandardNames = {
   zoomandpan: 'zoomAndPan',
 };
 
-module.exports = possibleStandardNames;
+export default possibleStandardNames;

@@ -17,7 +17,6 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 const stream = require('stream');
-const ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 const TEXT_NODE_TYPE = 3;
 
@@ -316,6 +315,7 @@ function resetModules() {
 
   // TODO: can we express this test with only public API?
   ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+  require('shared/ReactFeatureFlags').enableReactFragment = true;
 
   PropTypes = require('prop-types');
   React = require('react');
@@ -326,6 +326,7 @@ function resetModules() {
   // Resetting is important because we want to avoid any shared state
   // influencing the tests.
   jest.resetModuleRegistry();
+  require('shared/ReactFeatureFlags').enableReactFragment = true;
   ReactDOMServer = require('react-dom/server');
 }
 
@@ -404,56 +405,54 @@ describe('ReactDOMServerIntegration', () => {
       expect(parent.childNodes[2].tagName).toBe('P');
     });
 
-    if (ReactFeatureFlags.enableReactFragment) {
-      itRenders('a fragment with one child', async render => {
-        let e = await render(<React.Fragment><div>text1</div></React.Fragment>);
-        let parent = e.parentNode;
-        expect(parent.childNodes[0].tagName).toBe('DIV');
-      });
+    itRenders('a fragment with one child', async render => {
+      let e = await render(<React.Fragment><div>text1</div></React.Fragment>);
+      let parent = e.parentNode;
+      expect(parent.childNodes[0].tagName).toBe('DIV');
+    });
 
-      itRenders('a fragment with several children', async render => {
-        let Header = props => {
-          return <p>header</p>;
-        };
-        let Footer = props => {
-          return <React.Fragment><h2>footer</h2><h3>about</h3></React.Fragment>;
-        };
-        let e = await render(
+    itRenders('a fragment with several children', async render => {
+      let Header = props => {
+        return <p>header</p>;
+      };
+      let Footer = props => {
+        return <React.Fragment><h2>footer</h2><h3>about</h3></React.Fragment>;
+      };
+      let e = await render(
+        <React.Fragment>
+          <div>text1</div>
+          <span>text2</span>
+          <Header />
+          <Footer />
+        </React.Fragment>,
+      );
+      let parent = e.parentNode;
+      expect(parent.childNodes[0].tagName).toBe('DIV');
+      expect(parent.childNodes[1].tagName).toBe('SPAN');
+      expect(parent.childNodes[2].tagName).toBe('P');
+      expect(parent.childNodes[3].tagName).toBe('H2');
+      expect(parent.childNodes[4].tagName).toBe('H3');
+    });
+
+    itRenders('a nested fragment', async render => {
+      let e = await render(
+        <React.Fragment>
           <React.Fragment>
             <div>text1</div>
-            <span>text2</span>
-            <Header />
-            <Footer />
-          </React.Fragment>,
-        );
-        let parent = e.parentNode;
-        expect(parent.childNodes[0].tagName).toBe('DIV');
-        expect(parent.childNodes[1].tagName).toBe('SPAN');
-        expect(parent.childNodes[2].tagName).toBe('P');
-        expect(parent.childNodes[3].tagName).toBe('H2');
-        expect(parent.childNodes[4].tagName).toBe('H3');
-      });
-
-      itRenders('a nested fragment', async render => {
-        let e = await render(
+          </React.Fragment>
+          <span>text2</span>
           <React.Fragment>
             <React.Fragment>
-              <div>text1</div>
+              <React.Fragment>{null}<p /></React.Fragment>{false}
             </React.Fragment>
-            <span>text2</span>
-            <React.Fragment>
-              <React.Fragment>
-                <React.Fragment>{null}<p /></React.Fragment>{false}
-              </React.Fragment>
-            </React.Fragment>
-          </React.Fragment>,
-        );
-        let parent = e.parentNode;
-        expect(parent.childNodes[0].tagName).toBe('DIV');
-        expect(parent.childNodes[1].tagName).toBe('SPAN');
-        expect(parent.childNodes[2].tagName).toBe('P');
-      });
-    }
+          </React.Fragment>
+        </React.Fragment>,
+      );
+      let parent = e.parentNode;
+      expect(parent.childNodes[0].tagName).toBe('DIV');
+      expect(parent.childNodes[1].tagName).toBe('SPAN');
+      expect(parent.childNodes[2].tagName).toBe('P');
+    });
 
     itRenders('an iterable', async render => {
       const threeDivIterable = {
@@ -487,9 +486,7 @@ describe('ReactDOMServerIntegration', () => {
       // but server returns empty HTML. So we compare parent text.
       expect((await render(<div>{''}</div>)).textContent).toBe('');
 
-      if (ReactFeatureFlags.enableReactFragment) {
-        expect(await render(<React.Fragment />)).toBe(null);
-      }
+      expect(await render(<React.Fragment />)).toBe(null);
       expect(await render([])).toBe(null);
       expect(await render(false)).toBe(null);
       expect(await render(true)).toBe(null);

@@ -7,26 +7,18 @@
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig, Deadline} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-var {
+import {
   getStackAddendumByWorkInProgressFiber,
-} = require('shared/ReactFiberComponentTreeHook');
-var {
-  wrapEventListener,
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = require('shared/ReactErrorUtils');
-var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
-var getComponentName = require('shared/getComponentName');
-var {
+} from 'shared/ReactFiberComponentTreeHook';
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
+import {
   PerformedWork,
   Placement,
   Update,
@@ -36,35 +28,57 @@ var {
   Callback,
   Err,
   Ref,
-} = require('shared/ReactTypeOfSideEffect');
-var {
+} from 'shared/ReactTypeOfSideEffect';
+import {
   HostRoot,
   HostComponent,
   HostPortal,
   ClassComponent,
-} = require('shared/ReactTypeOfWork');
-var invariant = require('fbjs/lib/invariant');
+} from 'shared/ReactTypeOfWork';
+import getComponentName from 'shared/getComponentName';
+import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
-var ReactFiberBeginWork = require('./ReactFiberBeginWork');
-var ReactFiberCompleteWork = require('./ReactFiberCompleteWork');
-var ReactFiberCommitWork = require('./ReactFiberCommitWork');
-var ReactFiberHostContext = require('./ReactFiberHostContext');
-var ReactFiberHydrationContext = require('./ReactFiberHydrationContext');
-var {popContextProvider} = require('./ReactFiberContext');
-const {reset} = require('./ReactFiberStack');
-var {logCapturedError} = require('./ReactFiberErrorLogger');
-var {createWorkInProgress} = require('./ReactFiber');
-var {onCommitRoot} = require('./ReactFiberDevToolsHook');
-var {
+import ReactFiberBeginWork from './ReactFiberBeginWork';
+import ReactFiberCompleteWork from './ReactFiberCompleteWork';
+import ReactFiberCommitWork from './ReactFiberCommitWork';
+import ReactFiberHostContext from './ReactFiberHostContext';
+import ReactFiberHydrationContext from './ReactFiberHydrationContext';
+import ReactFiberInstrumentation from './ReactFiberInstrumentation';
+import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
+import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {popContextProvider} from './ReactFiberContext';
+import {reset} from './ReactFiberStack';
+import {logCapturedError} from './ReactFiberErrorLogger';
+import {createWorkInProgress} from './ReactFiber';
+import {onCommitRoot} from './ReactFiberDevToolsHook';
+import {
   NoWork,
   Sync,
   Never,
   msToExpirationTime,
   computeExpirationBucket,
-} = require('./ReactFiberExpirationTime');
-var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
-var {getUpdateExpirationTime} = require('./ReactFiberUpdateQueue');
-var {resetContext} = require('./ReactFiberContext');
+} from './ReactFiberExpirationTime';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
+import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
+import {resetContext} from './ReactFiberContext';
+
+var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
+var {
+  recordEffect,
+  recordScheduleUpdate,
+  startWorkTimer,
+  stopWorkTimer,
+  stopFailedWorkTimer,
+  startWorkLoopTimer,
+  stopWorkLoopTimer,
+  startCommitTimer,
+  stopCommitTimer,
+  startCommitHostEffectsTimer,
+  stopCommitHostEffectsTimer,
+  startCommitLifeCyclesTimer,
+  stopCommitLifeCyclesTimer,
+} = ReactDebugFiberPerf;
 
 export type CapturedError = {
   componentName: ?string,
@@ -81,26 +95,6 @@ export type HandleErrorInfo = {
 };
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
-  var ReactFiberInstrumentation = require('./ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
-  var {
-    recordEffect,
-    recordScheduleUpdate,
-    startWorkTimer,
-    stopWorkTimer,
-    stopFailedWorkTimer,
-    startWorkLoopTimer,
-    stopWorkLoopTimer,
-    startCommitTimer,
-    stopCommitTimer,
-    startCommitHostEffectsTimer,
-    stopCommitHostEffectsTimer,
-    startCommitLifeCyclesTimer,
-    stopCommitLifeCyclesTimer,
-  } = require('./ReactDebugFiberPerf');
-
   var didWarnAboutStateTransition = false;
   var didWarnSetStateChildContext = false;
   var didWarnStateUpdateForUnmountedComponent = {};
@@ -150,7 +144,7 @@ if (__DEV__) {
   };
 }
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
@@ -1286,17 +1280,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   // TODO: Everything below this is written as if it has been lifted to the
   // renderers. I'll do this in a follow-up.
 
-  // Ensure performAsyncWork gets wrapped. This currently needs to be lazy because
-  // we use dynamic injection. TODO: Make this eagerly wrapping this callback once
-  // we have static injection.
-  let hasCallbackBeenScheduled: boolean = false;
-  function ensureCallbackWrapped() {
-    if (!hasCallbackBeenScheduled) {
-      performAsyncWork = wrapEventListener('reactAsyncWork', performAsyncWork);
-      hasCallbackBeenScheduled = true;
-    }
-  }
-
   // Linked-list of roots
   let firstScheduledRoot: FiberRoot | null = null;
   let lastScheduledRoot: FiberRoot | null = null;
@@ -1378,7 +1361,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       performWork(Sync, null);
     } else if (!isCallbackScheduled) {
       isCallbackScheduled = true;
-      ensureCallbackWrapped();
       scheduleDeferredCallback(performAsyncWork);
     }
   }
@@ -1459,9 +1441,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     nextFlushedExpirationTime = highestPriorityWork;
   }
 
-  let performAsyncWork = function(dl) {
+  function performAsyncWork(dl) {
     performWork(NoWork, dl);
-  };
+  }
 
   function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
     deadline = dl;
@@ -1491,7 +1473,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // If there's work left over, schedule a new callback.
     if (nextFlushedRoot !== null && !isCallbackScheduled) {
       isCallbackScheduled = true;
-      ensureCallbackWrapped();
       scheduleDeferredCallback(performAsyncWork);
     }
 
@@ -1648,4 +1629,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     flushSync,
     deferredUpdates,
   };
-};
+}

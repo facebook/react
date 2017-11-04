@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {
   MeasureInWindowOnSuccessCallback,
   MeasureLayoutOnSuccessCallback,
@@ -19,14 +17,11 @@ import type {
 import type {Instance} from './ReactNativeFiberRenderer';
 
 // Modules provided by RN:
-var TextInputState = require('TextInputState');
-var UIManager = require('UIManager');
+import TextInputState from 'TextInputState';
+import UIManager from 'UIManager';
 
-var ReactNativeAttributePayload = require('./ReactNativeAttributePayload');
-var {
-  mountSafeCallback,
-  warnForStyleProps,
-} = require('./NativeMethodsMixinUtils');
+import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
+import {mountSafeCallback, warnForStyleProps} from './NativeMethodsMixinUtils';
 
 /**
  * This component defines the same methods as NativeMethodsMixin but without the
@@ -104,4 +99,4 @@ class ReactNativeFiberHostComponent {
 // eslint-disable-next-line no-unused-expressions
 (ReactNativeFiberHostComponent.prototype: NativeMethodsMixinType);
 
-module.exports = ReactNativeFiberHostComponent;
+export default ReactNativeFiberHostComponent;
