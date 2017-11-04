@@ -17,7 +17,7 @@ import * as ReactFiberErrorLogger
   from 'react-reconciler/src/ReactFiberErrorLogger';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
 import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
 import ReactVersion from 'shared/ReactVersion';

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {batchedUpdates} from 'events/ReactGenericBatching';
 import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
 import EventListener from 'fbjs/lib/EventListener';
@@ -182,7 +182,7 @@ var ReactDOMEventListener = {
     try {
       // Event queue being processed in the same cycle allows
       // `preventDefault`.
-      ReactGenericBatching.batchedUpdates(handleTopLevelImpl, bookKeeping);
+      batchedUpdates(handleTopLevelImpl, bookKeeping);
     } finally {
       releaseTopLevelCallbackBookKeeping(bookKeeping);
     }

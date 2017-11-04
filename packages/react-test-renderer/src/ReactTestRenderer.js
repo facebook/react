@@ -11,7 +11,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import ReactFiberReconciler from 'react-reconciler';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
 import emptyObject from 'fbjs/lib/emptyObject';
 import {
@@ -633,7 +633,7 @@ var ReactTestRendererFiber = {
   },
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 };
 

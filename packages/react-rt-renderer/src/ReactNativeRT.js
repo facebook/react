@@ -18,7 +18,7 @@ import {
 } from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
 import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';

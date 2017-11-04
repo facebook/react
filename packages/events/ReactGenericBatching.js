@@ -18,23 +18,17 @@ var fiberBatchedUpdates = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
 
-function batchedUpdates(fn, bookkeeping) {
-  // If we have Fiber loaded, we need to wrap this in a batching call so that
-  // Fiber can apply its default priority for this call.
-  return fiberBatchedUpdates(fn, bookkeeping);
-}
-
 var isNestingBatched = false;
-function batchedUpdatesWithControlledComponents(fn, bookkeeping) {
+export function batchedUpdates(fn, bookkeeping) {
   if (isNestingBatched) {
     // If we are currently inside another batch, we need to wait until it
     // fully completes before restoring state. Therefore, we add the target to
     // a queue of work.
-    return batchedUpdates(fn, bookkeeping);
+    return fiberBatchedUpdates(fn, bookkeeping);
   }
   isNestingBatched = true;
   try {
-    return batchedUpdates(fn, bookkeeping);
+    return fiberBatchedUpdates(fn, bookkeeping);
   } finally {
     // Here we wait until all updates have propagated, which is important
     // when using controlled components within layers:
@@ -51,9 +45,4 @@ var ReactGenericBatchingInjection = {
   },
 };
 
-var ReactGenericBatching = {
-  batchedUpdates: batchedUpdatesWithControlledComponents,
-  injection: ReactGenericBatchingInjection,
-};
-
-export default ReactGenericBatching;
+export const injection = ReactGenericBatchingInjection;

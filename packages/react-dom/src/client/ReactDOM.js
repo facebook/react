@@ -19,7 +19,7 @@ import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactControlledComponent from 'events/ReactControlledComponent';
 import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginRegistry from 'events/EventPluginRegistry';

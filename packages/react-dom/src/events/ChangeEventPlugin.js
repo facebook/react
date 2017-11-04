@@ -8,7 +8,7 @@
 import {enqueueEvents, processEventQueue} from 'events/EventPluginHub';
 import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import {enqueueStateRestore} from 'events/ReactControlledComponent';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {batchedUpdates} from 'events/ReactGenericBatching';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
@@ -84,7 +84,7 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  ReactGenericBatching.batchedUpdates(runEventInBatch, event);
+  batchedUpdates(runEventInBatch, event);
 }
 
 function runEventInBatch(event) {

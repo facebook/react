@@ -7,7 +7,7 @@
  * @flow
  */
 
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {batchedUpdates} from 'events/ReactGenericBatching';
 // Module provided by RN:
 import BatchedBridge from 'BatchedBridge';
 
@@ -35,7 +35,7 @@ var ReactNativeRTEventEmitter = {
     if (typeof eventHandler !== 'function') {
       return;
     }
-    ReactGenericBatching.batchedUpdates(function() {
+    batchedUpdates(function() {
       eventHandler(nativeEvent);
     });
   },
