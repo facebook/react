@@ -39,18 +39,14 @@ function lint({format, filePatterns}) {
 
 function checkFilesExist(bundle) {
   const {format, filePatterns} = bundle;
-  filePatterns.map(pattern => {
-    console.log(`Check if files exist in ${pattern}`);
+  filePatterns.forEach(pattern => {
+    console.log(`Checking if files exist in ${pattern}...`);
     const files = glob.sync(pattern);
     if (files.length === 0) {
-      console.error(
-        chalk.red(
-          `No files found in glob pattern ${pattern} in ${format} bundle.`
-        )
-      );
-      process.exit();
+      console.error(chalk.red(`Found no ${format} bundles in ${pattern}`));
+      process.exit(1);
     } else {
-      console.log(chalk.green(`${files.length} files found.`));
+      console.log(chalk.green(`Found ${files.length} bundles.`));
       console.log();
     }
   });
