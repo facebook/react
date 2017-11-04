@@ -10,7 +10,7 @@
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import ReactDebugCurrentFiber
   from 'react-reconciler/src/ReactDebugCurrentFiber';
-import EventPluginRegistry from 'events/EventPluginRegistry';
+import {registrationNameModules} from 'events/EventPluginRegistry';
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 
@@ -47,7 +47,6 @@ var didWarnInvalidHydration = false;
 var didWarnShadyDOM = false;
 
 var listenTo = ReactBrowserEventEmitter.listenTo;
-var registrationNameModules = EventPluginRegistry.registrationNameModules;
 
 var DANGEROUSLY_SET_INNER_HTML = 'dangerouslySetInnerHTML';
 var SUPPRESS_CONTENT_EDITABLE_WARNING = 'suppressContentEditableWarning';

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginHub from 'events/EventPluginHub';
+import * as EventPluginHub from 'events/EventPluginHub';
 import EventPluginUtils from 'events/EventPluginUtils';
 
 import ReactDOMComponentTree from './ReactDOMComponentTree';

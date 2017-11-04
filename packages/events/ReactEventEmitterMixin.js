@@ -5,11 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginHub from './EventPluginHub';
+import {
+  enqueueEvents,
+  processEventQueue,
+  extractEvents,
+} from './EventPluginHub';
 
 function runEventQueueInBatch(events) {
-  EventPluginHub.enqueueEvents(events);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(events);
+  processEventQueue(false);
 }
 
 var ReactEventEmitterMixin = {
@@ -23,7 +27,7 @@ var ReactEventEmitterMixin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var events = EventPluginHub.extractEvents(
+    var events = extractEvents(
       topLevelType,
       targetInst,
       nativeEvent,

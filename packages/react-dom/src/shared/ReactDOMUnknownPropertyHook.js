@@ -5,7 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginRegistry from 'events/EventPluginRegistry';
+import {
+  registrationNameModules,
+  plugins,
+  possibleRegistrationNames,
+} from 'events/EventPluginRegistry';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import warning from 'fbjs/lib/warning';
 
@@ -32,24 +36,21 @@ if (__DEV__) {
       return true;
     }
 
-    if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
+    if (registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
 
-    if (
-      EventPluginRegistry.plugins.length === 0 &&
-      EVENT_NAME_REGEX.test(name)
-    ) {
+    if (plugins.length === 0 && EVENT_NAME_REGEX.test(name)) {
       // If no event plugins have been injected, we might be in a server environment.
       // Don't check events in this case.
       return true;
     }
 
     var lowerCasedName = name.toLowerCase();
-    var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+    var registrationName = possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
-      ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
+      ? possibleRegistrationNames[lowerCasedName]
       : null;
 
     if (registrationName != null) {

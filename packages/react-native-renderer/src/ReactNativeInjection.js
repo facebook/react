@@ -16,7 +16,7 @@
 // Module provided by RN:
 import 'InitializeCore';
 
-import EventPluginHub from 'events/EventPluginHub';
+import * as EventPluginHub from 'events/EventPluginHub';
 import EventPluginUtils from 'events/EventPluginUtils';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';
 // Module provided by RN:

@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginHub from 'events/EventPluginHub';
+import {enqueueEvents, processEventQueue} from 'events/EventPluginHub';
 import EventPropagators from 'events/EventPropagators';
 import ReactControlledComponent from 'events/ReactControlledComponent';
 import ReactGenericBatching from 'events/ReactGenericBatching';
@@ -88,8 +88,8 @@ function manualDispatchChangeEvent(nativeEvent) {
 }
 
 function runEventInBatch(event) {
-  EventPluginHub.enqueueEvents(event);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(event);
+  processEventQueue(false);
 }
 
 function getInstIfValueChanged(targetInst) {

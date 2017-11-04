@@ -12,13 +12,11 @@ import {
 } from 'shared/ReactTreeTraversal';
 import warning from 'fbjs/lib/warning';
 
-import EventPluginHub from './EventPluginHub';
+import {getListener} from './EventPluginHub';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 
 type PropagationPhases = 'bubbled' | 'captured';
-
-var getListener = EventPluginHub.getListener;
 
 /**
  * Some event types have a notion of different registration names for different

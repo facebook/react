@@ -7,8 +7,8 @@
  * @flow
  */
 
-import EventPluginHub from 'events/EventPluginHub';
-import EventPluginRegistry from 'events/EventPluginRegistry';
+import {getListener} from 'events/EventPluginHub';
+import {registrationNameModules} from 'events/EventPluginRegistry';
 import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import warning from 'fbjs/lib/warning';
@@ -77,9 +77,9 @@ var removeTouchesAtIndices = function(
 var ReactNativeEventEmitter = {
   ...ReactEventEmitterMixin,
 
-  registrationNames: EventPluginRegistry.registrationNameModules,
+  registrationNames: registrationNameModules,
 
-  getListener: EventPluginHub.getListener,
+  getListener,
 
   /**
    * Internal version of `receiveEvent` in terms of normalized (non-tag)
