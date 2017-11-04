@@ -9,7 +9,7 @@
 
 import {getListener} from 'events/EventPluginHub';
 import {registrationNameModules} from 'events/EventPluginRegistry';
-import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
+import * as ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import warning from 'fbjs/lib/warning';
 

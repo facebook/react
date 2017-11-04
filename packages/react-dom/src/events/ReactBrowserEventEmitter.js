@@ -6,7 +6,7 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
-import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
+import * as ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 
 import ReactDOMEventListener from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';

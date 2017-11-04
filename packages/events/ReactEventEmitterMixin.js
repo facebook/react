@@ -16,25 +16,21 @@ function runEventQueueInBatch(events) {
   processEventQueue(false);
 }
 
-var ReactEventEmitterMixin = {
-  /**
-   * Streams a fired top-level event to `EventPluginHub` where plugins have the
-   * opportunity to create `ReactEvent`s to be dispatched.
-   */
-  handleTopLevel: function(
+/**
+ * Streams a fired top-level event to `EventPluginHub` where plugins have the
+ * opportunity to create `ReactEvent`s to be dispatched.
+ */
+export function handleTopLevel(
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  var events = extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
-  ) {
-    var events = extractEvents(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    runEventQueueInBatch(events);
-  },
-};
-
-export default ReactEventEmitterMixin;
+  );
+  runEventQueueInBatch(events);
+}
