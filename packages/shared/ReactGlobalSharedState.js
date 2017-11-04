@@ -5,19 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import React from 'react';
 
-var ReactInternals = require('react')
-  .__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
+var ReactInternals = React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
-var ReactGlobalSharedState = {
-  ReactCurrentOwner: ReactInternals.ReactCurrentOwner,
-};
-
-if (__DEV__) {
-  Object.assign(ReactGlobalSharedState, {
-    ReactDebugCurrentFrame: ReactInternals.ReactDebugCurrentFrame,
-  });
-}
-
-module.exports = ReactGlobalSharedState;
+export const ReactCurrentOwner = ReactInternals.ReactCurrentOwner;
+export const ReactDebugCurrentFrame = __DEV__
+  ? ReactInternals.ReactDebugCurrentFrame
+  : null;

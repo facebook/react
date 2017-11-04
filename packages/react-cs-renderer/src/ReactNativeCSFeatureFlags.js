@@ -7,17 +7,17 @@
  * @flow
  */
 
-'use strict';
-
 import type {FeatureFlags} from 'shared/ReactFeatureFlags';
 
 var ReactNativeCSFeatureFlags: FeatureFlags = {
   enableAsyncSubtreeAPI: true,
   enableAsyncSchedulingByDefaultInReactDOM: false,
+  enableReactFragment: false,
+  enableCreateRoot: false,
   // React Native CS uses persistent reconciler.
   enableMutatingReconciler: false,
   enableNoopReconciler: false,
   enablePersistentReconciler: true,
 };
 
-module.exports = ReactNativeCSFeatureFlags;
+export default ReactNativeCSFeatureFlags;

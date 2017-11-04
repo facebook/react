@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 export type ReactNode =
   | React$Element<any>
   | ReactCall

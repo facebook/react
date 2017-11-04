@@ -221,6 +221,10 @@ describe('ReactComponentLifeCycle', () => {
         'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
         'StatefulComponent component.',
     );
+
+    // Check deduplication
+    ReactTestUtils.renderIntoDocument(<StatefulComponent />);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should correctly determine if a component is mounted', () => {

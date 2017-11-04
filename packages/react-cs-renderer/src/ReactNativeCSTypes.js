@@ -7,7 +7,6 @@
  * @flow
  * @providesModule ReactNativeCSTypes
  */
-'use strict';
 
 /**
  * Flat CS renderer bundles are too big for Flow to parse efficiently.

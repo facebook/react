@@ -30,8 +30,9 @@ describe('SelectEventPlugin', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../../client/ReactDOMComponentTree');
-    SelectEventPlugin = require('../SelectEventPlugin');
+    ReactDOMComponentTree = require('../../client/ReactDOMComponentTree')
+      .default;
+    SelectEventPlugin = require('../SelectEventPlugin').default;
   });
 
   it('should skip extraction if no listeners are present', () => {

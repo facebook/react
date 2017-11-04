@@ -5,12 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var SyntheticUIEvent = require('./SyntheticUIEvent');
-var getEventCharCode = require('./getEventCharCode');
-var getEventKey = require('./getEventKey');
-var getEventModifierState = require('./getEventModifierState');
+import SyntheticUIEvent from './SyntheticUIEvent';
+import getEventCharCode from './getEventCharCode';
+import getEventKey from './getEventKey';
+import getEventModifierState from './getEventModifierState';
 
 /**
  * @interface KeyboardEvent
@@ -87,4 +85,4 @@ function SyntheticKeyboardEvent(
 
 SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);
 
-module.exports = SyntheticKeyboardEvent;
+export default SyntheticKeyboardEvent;

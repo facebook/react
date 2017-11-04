@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {DispatchConfig} from './ReactSyntheticEventType';
 import type {
   AnyNativeEvent,
@@ -16,7 +14,7 @@ import type {
   PluginModule,
 } from './PluginModuleType';
 
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 type NamesToPlugins = {[key: PluginName]: PluginModule<AnyNativeEvent>};
 type EventPluginOrder = null | Array<PluginName>;
@@ -251,4 +249,4 @@ var EventPluginRegistry = {
   },
 };
 
-module.exports = EventPluginRegistry;
+export default EventPluginRegistry;
