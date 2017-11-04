@@ -4,24 +4,23 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactDebugCurrentFiber
  * @flow
  */
 
 'use strict';
 
-import type {Fiber} from 'ReactFiber';
-
-type LifeCyclePhase = 'render' | 'getChildContext';
-
-var {ReactDebugCurrentFrame} = require('ReactGlobalSharedState');
+var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
 
 if (__DEV__) {
-  var getComponentName = require('getComponentName');
+  var getComponentName = require('shared/getComponentName');
   var {
     getStackAddendumByWorkInProgressFiber,
-  } = require('ReactFiberComponentTreeHook');
+  } = require('shared/ReactFiberComponentTreeHook');
 }
+
+import type {Fiber} from './ReactFiber';
+
+type LifeCyclePhase = 'render' | 'getChildContext';
 
 function getCurrentFiberOwnerName(): string | null {
   if (__DEV__) {

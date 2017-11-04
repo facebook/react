@@ -252,6 +252,9 @@ describe('ReactCompositeComponent', () => {
         'component. This is a no-op.\n\nPlease check the code for the ' +
         'Component component.',
     );
+
+    instance.forceUpdate();
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn about `setState` on unmounted components', () => {
@@ -326,6 +329,26 @@ describe('ReactCompositeComponent', () => {
     expect(cbCalled).toBe(false);
   });
 
+  it('should warn when rendering a class with a render method that does not extend React.Component', () => {
+    spyOn(console, 'error');
+    var container = document.createElement('div');
+    class ClassWithRenderNotExtended {
+      render() {
+        return <div />;
+      }
+    }
+    expectDev(console.error.calls.count()).toBe(0);
+    expect(() => {
+      ReactDOM.render(<ClassWithRenderNotExtended />, container);
+    }).toThrow(TypeError);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: The <ClassWithRenderNotExtended /> component appears to have a render method, ' +
+        "but doesn't extend React.Component. This is likely to cause errors. " +
+        'Change ClassWithRenderNotExtended to extend React.Component instead.',
+    );
+  });
+
   it('should warn about `setState` in render', () => {
     spyOn(console, 'error');
 
@@ -371,6 +394,11 @@ describe('ReactCompositeComponent', () => {
     expect(instance).toBe(instance2);
     expect(renderedState).toBe(1);
     expect(instance2.state.value).toBe(1);
+
+    // Test deduplication
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<Component prop={123} />, container);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should warn about `setState` in getChildContext', () => {
@@ -404,6 +432,11 @@ describe('ReactCompositeComponent', () => {
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
       'Warning: setState(...): Cannot call setState() inside getChildContext()',
     );
+
+    // Test deduplication
+    ReactDOM.unmountComponentAtNode(container);
+    ReactDOM.render(<Component />, container);
+    expectDev(console.error.calls.count()).toBe(1);
   });
 
   it('should cleanup even if render() fatals', () => {

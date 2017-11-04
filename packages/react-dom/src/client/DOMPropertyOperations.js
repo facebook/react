@@ -3,13 +3,11 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
- *
- * @providesModule DOMPropertyOperations
  */
 
 'use strict';
 
-var DOMProperty = require('DOMProperty');
+var DOMProperty = require('../shared/DOMProperty');
 
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');

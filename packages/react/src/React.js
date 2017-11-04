@@ -7,23 +7,29 @@
 
 'use strict';
 
-var ReactBaseClasses = require('ReactBaseClasses');
-var ReactChildren = require('ReactChildren');
-var ReactElement = require('ReactElement');
-var ReactVersion = require('ReactVersion');
+var ReactVersion = require('shared/ReactVersion');
 
-var onlyChild = require('onlyChild');
+var ReactBaseClasses = require('./ReactBaseClasses');
+var ReactChildren = require('./ReactChildren');
+var ReactElement = require('./ReactElement');
+var onlyChild = require('./onlyChild');
 
 var createElement = ReactElement.createElement;
 var createFactory = ReactElement.createFactory;
 var cloneElement = ReactElement.cloneElement;
 
 if (__DEV__) {
-  var ReactElementValidator = require('ReactElementValidator');
+  var ReactElementValidator = require('./ReactElementValidator');
   createElement = ReactElementValidator.createElement;
   createFactory = ReactElementValidator.createFactory;
   cloneElement = ReactElementValidator.cloneElement;
 }
+
+const REACT_FRAGMENT_TYPE =
+  (typeof Symbol === 'function' &&
+    Symbol.for &&
+    Symbol.for('react.fragment')) ||
+  0xeacb;
 
 var React = {
   Children: {
@@ -37,6 +43,7 @@ var React = {
   Component: ReactBaseClasses.Component,
   PureComponent: ReactBaseClasses.PureComponent,
   unstable_AsyncComponent: ReactBaseClasses.AsyncComponent,
+  Fragment: REACT_FRAGMENT_TYPE,
 
   createElement: createElement,
   cloneElement: cloneElement,
@@ -47,7 +54,7 @@ var React = {
   version: ReactVersion,
 
   __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    ReactCurrentOwner: require('ReactCurrentOwner'),
+    ReactCurrentOwner: require('./ReactCurrentOwner'),
     // Used by renderers to avoid bundling object-assign twice in UMD bundles:
     assign: require('object-assign'),
   },
@@ -56,7 +63,10 @@ var React = {
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {
     // These should not be included in production.
-    ReactDebugCurrentFrame: require('ReactDebugCurrentFrame'),
+    ReactDebugCurrentFrame: require('./ReactDebugCurrentFrame'),
+    // Shim for React DOM 16.0.0 which still destructured (but not used) this.
+    // TODO: remove in React 17.0.
+    ReactComponentTreeHook: {},
   });
 }
 

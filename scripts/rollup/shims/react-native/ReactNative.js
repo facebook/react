@@ -14,9 +14,9 @@ import type {ReactNativeType} from 'ReactNativeTypes';
 let ReactNative;
 
 if (__DEV__) {
-  ReactNative = require('ReactNativeFiber-dev');
+  ReactNative = require('ReactNativeRenderer-dev');
 } else {
-  ReactNative = require('ReactNativeFiber-prod');
+  ReactNative = require('ReactNativeRenderer-prod');
 }
 
 module.exports = (ReactNative: ReactNativeType);

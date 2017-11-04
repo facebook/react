@@ -945,6 +945,25 @@ describe('ReactDOMFiber', () => {
     );
   });
 
+  it('should warn with a special message for `false` event listeners', () => {
+    spyOn(console, 'error');
+    class Example extends React.Component {
+      render() {
+        return <div onClick={false} />;
+      }
+    }
+    ReactDOM.render(<Example />, container);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(
+      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+    ).toContain(
+      'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
+        'If you used to conditionally omit it with onClick={condition && value}, ' +
+        'pass onClick={condition ? value : undefined} instead.\n',
+      '    in div (at **)\n' + '    in Example (at **)',
+    );
+  });
+
   it('should not update event handlers until commit', () => {
     let ops = [];
     const handlerA = () => ops.push('A');

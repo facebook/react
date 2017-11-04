@@ -1,5 +1,16 @@
+/**
+ * Copyright (c) 2013-present, Facebook, Inc.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ *
+ * @emails react-core
+ */
+
+'use strict';
+
 var React = require('react');
-var ReactFeatureFlags = require('ReactFeatureFlags');
+var ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
 var ReactDOM;
 
@@ -27,7 +38,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('with feature flag disabled', () => {
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('ReactFeatureFlags');
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
       ReactFeatureFlags.enableAsyncSubtreeAPI = false;
       ReactDOM = require('react-dom');
@@ -51,7 +62,7 @@ describe('ReactDOMFiberAsync', () => {
   describe('with feature flag enabled', () => {
     beforeEach(() => {
       jest.resetModules();
-      ReactFeatureFlags = require('ReactFeatureFlags');
+      ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
       ReactDOM = require('react-dom');

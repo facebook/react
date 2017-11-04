@@ -7,6 +7,7 @@ const resolvePath = require('./utils').resolvePath;
 const DEFAULT_FB_SOURCE_PATH = '~/fbsource/';
 const DEFAULT_WWW_PATH = '~/www/';
 const RELATIVE_RN_PATH = 'xplat/js/react-native-github/Libraries/Renderer/';
+const RELATIVE_RN_CS_PATH = 'xplat/js/RKJSModules/Libraries/CS/downstream/';
 const RELATIVE_RN_RT_PATH = 'xplat/js/RKJSModules/Libraries/RT/downstream/';
 const RELATIVE_WWW_PATH = 'html/shared/react/';
 
@@ -33,7 +34,7 @@ function syncReactDom(buildPath, wwwPath) {
   return doSync(buildPath, destPath);
 }
 
-function syncReactNative(buildPath, fbSourcePath) {
+function syncReactNativeHelper(buildPath, fbSourcePath, relativeDestPath) {
   fbSourcePath = typeof fbSourcePath === 'string'
     ? fbSourcePath
     : DEFAULT_FB_SOURCE_PATH;
@@ -42,27 +43,26 @@ function syncReactNative(buildPath, fbSourcePath) {
     fbSourcePath += '/';
   }
 
-  const destPath = resolvePath(fbSourcePath + RELATIVE_RN_PATH);
+  const destPath = resolvePath(fbSourcePath + relativeDestPath);
 
   return doSync(buildPath, destPath);
 }
 
+function syncReactNative(buildPath, fbSourcePath) {
+  return syncReactNativeHelper(buildPath, fbSourcePath, RELATIVE_RN_PATH);
+}
+
+function syncReactNativeCS(buildPath, fbSourcePath) {
+  return syncReactNativeHelper(buildPath, fbSourcePath, RELATIVE_RN_CS_PATH);
+}
+
 function syncReactNativeRT(buildPath, fbSourcePath) {
-  fbSourcePath = typeof fbSourcePath === 'string'
-    ? fbSourcePath
-    : DEFAULT_FB_SOURCE_PATH;
-
-  if (fbSourcePath.charAt(fbSourcePath.length - 1) !== '/') {
-    fbSourcePath += '/';
-  }
-
-  const destPath = resolvePath(fbSourcePath + RELATIVE_RN_RT_PATH);
-
-  return doSync(buildPath, destPath);
+  return syncReactNativeHelper(buildPath, fbSourcePath, RELATIVE_RN_RT_PATH);
 }
 
 module.exports = {
   syncReactDom,
   syncReactNative,
+  syncReactNativeCS,
   syncReactNativeRT,
 };

@@ -18,6 +18,7 @@ describe('ReactDOMSelect', () => {
   var noop = function() {};
 
   beforeEach(() => {
+    jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -514,12 +515,32 @@ describe('ReactDOMSelect', () => {
     );
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
       '`value` prop on `select` should not be null. ' +
-        'Consider using the empty string to clear the component or `undefined` ' +
+        'Consider using an empty string to clear the component or `undefined` ' +
         'for uncontrolled components.',
     );
 
     ReactTestUtils.renderIntoDocument(
       <select value={null}><option value="test" /></select>,
+    );
+    expectDev(console.error.calls.count()).toBe(1);
+  });
+
+  it('should warn if value is null and multiple is true', () => {
+    spyOn(console, 'error');
+    ReactTestUtils.renderIntoDocument(
+      <select value={null} multiple={true}><option value="test" /></select>,
+    );
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      '`value` prop on `select` should not be null. ' +
+        'Consider using an empty array when `multiple` is ' +
+        'set to `true` to clear the component or `undefined` ' +
+        'for uncontrolled components.',
+    );
+
+    ReactTestUtils.renderIntoDocument(
+      <select value={null} multiple={true}><option value="test" /></select>,
     );
     expectDev(console.error.calls.count()).toBe(1);
   });

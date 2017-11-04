@@ -4,15 +4,14 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule createReactNativeComponentClass
  * @flow
  */
 
 'use strict';
 
-const ReactNativeViewConfigRegistry = require('ReactNativeViewConfigRegistry');
+import type {ViewConfigGetter} from './ReactNativeTypes';
 
-import type {ViewConfigGetter} from 'ReactNativeTypes';
+const ReactNativeViewConfigRegistry = require('./ReactNativeViewConfigRegistry');
 
 /**
  * Creates a renderable ReactNative host component.

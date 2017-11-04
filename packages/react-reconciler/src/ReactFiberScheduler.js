@@ -4,17 +4,66 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  *
- * @providesModule ReactFiberScheduler
  * @flow
  */
 
 'use strict';
 
 import type {HostConfig, Deadline} from 'react-reconciler';
-import type {Fiber} from 'ReactFiber';
-import type {FiberRoot} from 'ReactFiberRoot';
-import type {HydrationContext} from 'ReactFiberHydrationContext';
-import type {ExpirationTime} from 'ReactFiberExpirationTime';
+import type {Fiber} from './ReactFiber';
+import type {FiberRoot} from './ReactFiberRoot';
+import type {HydrationContext} from './ReactFiberHydrationContext';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
+
+var {
+  getStackAddendumByWorkInProgressFiber,
+} = require('shared/ReactFiberComponentTreeHook');
+var {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = require('shared/ReactErrorUtils');
+var {ReactCurrentOwner} = require('shared/ReactGlobalSharedState');
+var getComponentName = require('shared/getComponentName');
+var {
+  PerformedWork,
+  Placement,
+  Update,
+  PlacementAndUpdate,
+  Deletion,
+  ContentReset,
+  Callback,
+  Err,
+  Ref,
+} = require('shared/ReactTypeOfSideEffect');
+var {
+  HostRoot,
+  HostComponent,
+  HostPortal,
+  ClassComponent,
+} = require('shared/ReactTypeOfWork');
+var invariant = require('fbjs/lib/invariant');
+
+var ReactFiberBeginWork = require('./ReactFiberBeginWork');
+var ReactFiberCompleteWork = require('./ReactFiberCompleteWork');
+var ReactFiberCommitWork = require('./ReactFiberCommitWork');
+var ReactFiberHostContext = require('./ReactFiberHostContext');
+var ReactFiberHydrationContext = require('./ReactFiberHydrationContext');
+var {popContextProvider} = require('./ReactFiberContext');
+const {reset} = require('./ReactFiberStack');
+var {logCapturedError} = require('./ReactFiberErrorLogger');
+var {createWorkInProgress} = require('./ReactFiber');
+var {onCommitRoot} = require('./ReactFiberDevToolsHook');
+var {
+  NoWork,
+  Sync,
+  Never,
+  msToExpirationTime,
+  computeExpirationBucket,
+} = require('./ReactFiberExpirationTime');
+var {AsyncUpdates} = require('./ReactTypeOfInternalContext');
+var {getUpdateExpirationTime} = require('./ReactFiberUpdateQueue');
+var {resetContext} = require('./ReactFiberContext');
 
 export type CapturedError = {
   componentName: ?string,
@@ -30,70 +79,11 @@ export type HandleErrorInfo = {
   componentStack: string,
 };
 
-var {popContextProvider} = require('ReactFiberContext');
-const {reset} = require('ReactFiberStack');
-var {
-  getStackAddendumByWorkInProgressFiber,
-} = require('ReactFiberComponentTreeHook');
-var {logCapturedError} = require('ReactFiberErrorLogger');
-var {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = require('ReactErrorUtils');
-
-var ReactFiberBeginWork = require('ReactFiberBeginWork');
-var ReactFiberCompleteWork = require('ReactFiberCompleteWork');
-var ReactFiberCommitWork = require('ReactFiberCommitWork');
-var ReactFiberHostContext = require('ReactFiberHostContext');
-var ReactFiberHydrationContext = require('ReactFiberHydrationContext');
-var {ReactCurrentOwner} = require('ReactGlobalSharedState');
-var getComponentName = require('getComponentName');
-
-var {createWorkInProgress} = require('ReactFiber');
-var {onCommitRoot} = require('ReactFiberDevToolsHook');
-
-var {
-  NoWork,
-  Task,
-  Sync,
-  Never,
-  msToExpirationTime,
-  computeExpirationBucket,
-  relativeExpirationTime,
-} = require('ReactFiberExpirationTime');
-
-var {AsyncUpdates} = require('ReactTypeOfInternalContext');
-
-var {
-  PerformedWork,
-  Placement,
-  Update,
-  PlacementAndUpdate,
-  Deletion,
-  ContentReset,
-  Callback,
-  Err,
-  Ref,
-} = require('ReactTypeOfSideEffect');
-
-var {
-  HostRoot,
-  HostComponent,
-  HostPortal,
-  ClassComponent,
-} = require('ReactTypeOfWork');
-
-var {getUpdateExpirationTime} = require('ReactFiberUpdateQueue');
-
-var {resetContext} = require('ReactFiberContext');
-
-var invariant = require('fbjs/lib/invariant');
-
 if (__DEV__) {
   var warning = require('fbjs/lib/warning');
-  var ReactFiberInstrumentation = require('ReactFiberInstrumentation');
-  var ReactDebugCurrentFiber = require('ReactDebugCurrentFiber');
+
+  var ReactFiberInstrumentation = require('./ReactFiberInstrumentation');
+  var ReactDebugCurrentFiber = require('./ReactDebugCurrentFiber');
   var {
     recordEffect,
     recordScheduleUpdate,
@@ -108,37 +98,44 @@ if (__DEV__) {
     stopCommitHostEffectsTimer,
     startCommitLifeCyclesTimer,
     stopCommitLifeCyclesTimer,
-  } = require('ReactDebugFiberPerf');
+  } = require('./ReactDebugFiberPerf');
 
   var didWarnAboutStateTransition = false;
+  var didWarnSetStateChildContext = false;
+  var didWarnStateUpdateForUnmountedComponent = {};
 
-  var warnAboutUpdateOnUnmounted = function(
-    instance: React$ComponentType<any>,
-  ) {
-    const ctor = instance.constructor;
+  var warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
+    const componentName = getComponentName(fiber) || 'ReactClass';
+    if (didWarnStateUpdateForUnmountedComponent[componentName]) {
+      return;
+    }
     warning(
       false,
-      'Can only update a mounted or mounting component. This usually means ' +
-        'you called setState, replaceState, or forceUpdate on an unmounted ' +
-        'component. This is a no-op.\n\nPlease check the code for the ' +
-        '%s component.',
-      (ctor && (ctor.displayName || ctor.name)) || 'ReactClass',
+      'Can only update a mounted or mounting ' +
+        'component. This usually means you called setState, replaceState, ' +
+        'or forceUpdate on an unmounted component. This is a no-op.\n\nPlease ' +
+        'check the code for the %s component.',
+      componentName,
     );
+    didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
 
-  var warnAboutInvalidUpdates = function(instance: React$ComponentType<any>) {
+  var warnAboutInvalidUpdates = function(instance: React$Component<any>) {
     switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
+        if (didWarnSetStateChildContext) {
+          return;
+        }
         warning(
           false,
           'setState(...): Cannot call setState() inside getChildContext()',
         );
+        didWarnSetStateChildContext = true;
         break;
       case 'render':
         if (didWarnAboutStateTransition) {
           return;
         }
-        didWarnAboutStateTransition = true;
         warning(
           false,
           'Cannot update during an existing state transition (such as within ' +
@@ -146,12 +143,11 @@ if (__DEV__) {
             'be a pure function of props and state; constructor side-effects are ' +
             'an anti-pattern, but can be moved to `componentWillMount`.',
         );
+        didWarnAboutStateTransition = true;
         break;
     }
   };
 }
-
-var timeHeuristicForUnitOfWork = 1;
 
 module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
@@ -199,35 +195,16 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   // updates in sync mode.)
   let expirationContext: ExpirationTime = NoWork;
 
-  // Keeps track of whether we're currently in a work loop.
-  let isPerformingWork: boolean = false;
-
-  // Keeps track of whether the current deadline has expired.
-  let deadlineHasExpired: boolean = false;
-
-  // Keeps track of whether we should should batch sync updates.
-  let isBatchingUpdates: boolean = false;
-
-  // This is needed for the weird case where the initial mount is synchronous
-  // even inside batchedUpdates :(
-  let isUnbatchingUpdates: boolean = false;
+  let isWorking: boolean = false;
 
   // The next work in progress fiber that we're currently working on.
   let nextUnitOfWork: Fiber | null = null;
+  let nextRoot: FiberRoot | null = null;
   // The time at which we're currently rendering work.
   let nextRenderExpirationTime: ExpirationTime = NoWork;
 
   // The next fiber with an effect that we're currently committing.
   let nextEffect: Fiber | null = null;
-
-  let pendingCommit: Fiber | null = null;
-
-  // Linked list of roots with scheduled work on them.
-  let nextScheduledRoot: FiberRoot | null = null;
-  let lastScheduledRoot: FiberRoot | null = null;
-
-  // Keep track of which host environment callbacks are scheduled.
-  let isCallbackScheduled: boolean = false;
 
   // Keep track of which fibers have captured an error that need to be handled.
   // Work is removed from this collection after componentDidCatch is called.
@@ -245,83 +222,12 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
-  // Use these to prevent an infinite loop of nested updates
-  const NESTED_UPDATE_LIMIT = 1000;
-  let nestedUpdateCount: number = 0;
-  let nextRenderedTree: FiberRoot | null = null;
-
   function resetContextStack() {
     // Reset the stack
     reset();
     // Reset the cursors
     resetContext();
     resetHostContainer();
-  }
-
-  function resetNextUnitOfWork() {
-    // Clear out roots with no more work on them, or if they have uncaught errors
-    while (
-      nextScheduledRoot !== null &&
-      nextScheduledRoot.current.expirationTime === NoWork
-    ) {
-      // Unschedule this root.
-      nextScheduledRoot.isScheduled = false;
-      // Read the next pointer now.
-      // We need to clear it in case this root gets scheduled again later.
-      const next = nextScheduledRoot.nextScheduledRoot;
-      nextScheduledRoot.nextScheduledRoot = null;
-      // Exit if we cleared all the roots and there's no work to do.
-      if (nextScheduledRoot === lastScheduledRoot) {
-        nextScheduledRoot = null;
-        lastScheduledRoot = null;
-        nextRenderExpirationTime = NoWork;
-        return null;
-      }
-      // Continue with the next root.
-      // If there's no work on it, it will get unscheduled too.
-      nextScheduledRoot = next;
-    }
-
-    let root = nextScheduledRoot;
-    let earliestExpirationRoot = null;
-    let earliestExpirationTime = NoWork;
-    while (root !== null) {
-      if (
-        root.current.expirationTime !== NoWork &&
-        (earliestExpirationTime === NoWork ||
-          earliestExpirationTime > root.current.expirationTime)
-      ) {
-        earliestExpirationTime = root.current.expirationTime;
-        earliestExpirationRoot = root;
-      }
-      // We didn't find anything to do in this root, so let's try the next one.
-      root = root.nextScheduledRoot;
-    }
-    if (earliestExpirationRoot !== null) {
-      nextRenderExpirationTime = earliestExpirationTime;
-      // Before we start any new work, let's make sure that we have a fresh
-      // stack to work from.
-      // TODO: This call is buried a bit too deep. It would be nice to have
-      // a single point which happens right before any new work and
-      // unfortunately this is it.
-      resetContextStack();
-
-      nextUnitOfWork = createWorkInProgress(
-        earliestExpirationRoot.current,
-        earliestExpirationTime,
-      );
-      if (earliestExpirationRoot !== nextRenderedTree) {
-        // We've switched trees. Reset the nested update counter.
-        nestedUpdateCount = 0;
-        nextRenderedTree = earliestExpirationRoot;
-      }
-      return;
-    }
-
-    nextRenderExpirationTime = NoWork;
-    nextUnitOfWork = null;
-    nextRenderedTree = null;
-    return;
   }
 
   function commitAllHostEffects() {
@@ -430,30 +336,25 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function commitAllWork(finishedWork: Fiber) {
+  function commitRoot(finishedWork: Fiber): ExpirationTime {
     // We keep track of this so that captureError can collect any boundaries
     // that capture an error during the commit phase. The reason these aren't
     // local to this function is because errors that occur during cWU are
     // captured elsewhere, to prevent the unmount from being interrupted.
+    isWorking = true;
     isCommitting = true;
     if (__DEV__) {
       startCommitTimer();
     }
 
-    pendingCommit = null;
-    const root: FiberRoot = (finishedWork.stateNode: any);
+    const root: FiberRoot = finishedWork.stateNode;
     invariant(
       root.current !== finishedWork,
       'Cannot commit the same tree as before. This is probably a bug ' +
         'related to the return field. This error is likely caused by a bug ' +
         'in React. Please file an issue.',
     );
-
-    if (nextRenderExpirationTime <= mostRecentCurrentTime) {
-      // Keep track of the number of iterations to prevent an infinite
-      // update loop.
-      nestedUpdateCount++;
-    }
+    root.isReadyForCommit = false;
 
     // Reset this to null before calling lifecycles
     ReactCurrentOwner.current = null;
@@ -565,6 +466,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     isCommitting = false;
+    isWorking = false;
     if (__DEV__) {
       stopCommitLifeCyclesTimer();
       stopCommitTimer();
@@ -583,9 +485,20 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       commitPhaseBoundaries = null;
     }
 
-    // This tree is done. Reset the unit of work pointer to the root that
-    // expires soonest. If there's no work left, the pointer is set to null.
-    resetNextUnitOfWork();
+    if (firstUncaughtError !== null) {
+      const error = firstUncaughtError;
+      firstUncaughtError = null;
+      onUncaughtError(error);
+    }
+
+    const remainingTime = root.current.expirationTime;
+
+    if (remainingTime === NoWork) {
+      capturedErrors = null;
+      failedBoundaries = null;
+    }
+
+    return remainingTime;
   }
 
   function resetExpirationTime(
@@ -601,7 +514,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     // Check for pending updates.
     let newExpirationTime = getUpdateExpirationTime(workInProgress);
 
-    // TODO: Coroutines need to visit stateNode
+    // TODO: Calls need to visit stateNode
 
     // Bubble up the earliest expiration time.
     let child = workInProgress.child;
@@ -702,10 +615,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         workInProgress = returnFiber;
         continue;
       } else {
-        // We've reached the root. Mark the root as pending commit. Depending
-        // on how much time we have left, we'll either commit it now or in
-        // the next frame.
-        pendingCommit = workInProgress;
+        // We've reached the root.
+        const root: FiberRoot = workInProgress.stateNode;
+        root.isReadyForCommit = true;
         return null;
       }
     }
@@ -780,26 +692,45 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     return next;
   }
 
-  function performDeferredWork(deadline: Deadline) {
-    performWork(Never, deadline);
+  function workLoop(expirationTime: ExpirationTime) {
+    if (capturedErrors !== null) {
+      // If there are unhandled errors, switch to the slow work loop.
+      // TODO: How to avoid this check in the fast path? Maybe the renderer
+      // could keep track of which roots have unhandled errors and call a
+      // forked version of renderRoot.
+      slowWorkLoopThatChecksForFailedWork(expirationTime);
+      return;
+    }
+    if (
+      nextRenderExpirationTime === NoWork ||
+      nextRenderExpirationTime > expirationTime
+    ) {
+      return;
+    }
+
+    if (nextRenderExpirationTime <= mostRecentCurrentTime) {
+      // Flush all expired work.
+      while (nextUnitOfWork !== null) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+    } else {
+      // Flush asynchronous work until the deadline runs out of time.
+      while (nextUnitOfWork !== null && !shouldYield()) {
+        nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
+      }
+    }
   }
 
-  function handleCommitPhaseErrors() {
-    // This is a special work loop for handling commit phase errors. It's
-    // similar to the syncrhonous work loop, but does an additional check on
-    // each fiber to see if it's an error boundary with an unhandled error. If
-    // so, it uses a forked version of performUnitOfWork that unmounts the
-    // failed subtree.
-    //
-    // The loop stops once the children have unmounted and error lifecycles are
-    // called. Then we return to the regular flow.
-
+  function slowWorkLoopThatChecksForFailedWork(expirationTime: ExpirationTime) {
     if (
-      capturedErrors !== null &&
-      capturedErrors.size > 0 &&
-      nextRenderExpirationTime !== NoWork &&
-      nextRenderExpirationTime <= mostRecentCurrentTime
+      nextRenderExpirationTime === NoWork ||
+      nextRenderExpirationTime > expirationTime
     ) {
+      return;
+    }
+
+    if (nextRenderExpirationTime <= mostRecentCurrentTime) {
+      // Flush all expired work.
       while (nextUnitOfWork !== null) {
         if (hasCapturedError(nextUnitOfWork)) {
           // Use a forked version of performUnitOfWork
@@ -807,158 +738,25 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         } else {
           nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         }
-        if (nextUnitOfWork === null) {
-          invariant(
-            pendingCommit !== null,
-            'Should have a pending commit. This error is likely caused by ' +
-              'a bug in React. Please file an issue.',
-          );
-          // We just completed a root. Commit it now.
-          commitAllWork(pendingCommit);
-          if (
-            capturedErrors === null ||
-            capturedErrors.size === 0 ||
-            nextRenderExpirationTime === NoWork ||
-            nextRenderExpirationTime > mostRecentCurrentTime
-          ) {
-            // There are no more unhandled errors. We can exit this special
-            // work loop. If there's still additional work, we'll perform it
-            // using one of the normal work loops.
-            break;
-          }
-          // The commit phase produced additional errors. Continue working.
+      }
+    } else {
+      // Flush asynchronous work until the deadline runs out of time.
+      while (nextUnitOfWork !== null && !shouldYield()) {
+        if (hasCapturedError(nextUnitOfWork)) {
+          // Use a forked version of performUnitOfWork
+          nextUnitOfWork = performFailedUnitOfWork(nextUnitOfWork);
+        } else {
+          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
         }
       }
     }
   }
 
-  function workLoop(
-    minExpirationTime: ExpirationTime,
-    deadline: Deadline | null,
-  ) {
-    loop: do {
-      if (pendingCommit !== null) {
-        commitAllWork(pendingCommit);
-        handleCommitPhaseErrors();
-      } else if (nextUnitOfWork === null) {
-        resetNextUnitOfWork();
-      }
-
-      if (
-        nextRenderExpirationTime === NoWork ||
-        nextRenderExpirationTime > minExpirationTime
-      ) {
-        return;
-      }
-
-      if (nextRenderExpirationTime <= mostRecentCurrentTime) {
-        // Flush all expired work.
-        while (nextUnitOfWork !== null) {
-          nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-          if (nextUnitOfWork === null) {
-            invariant(
-              pendingCommit !== null,
-              'Should have a pending commit. This error is likely caused by ' +
-                'a bug in React. Please file an issue.',
-            );
-            // We just completed a root. Commit it now.
-            commitAllWork(pendingCommit);
-            // Clear any errors that were scheduled during the commit phase.
-            handleCommitPhaseErrors();
-            // The render time may have changed. Check again.
-            if (
-              nextRenderExpirationTime === NoWork ||
-              nextRenderExpirationTime > minExpirationTime ||
-              nextRenderExpirationTime > mostRecentCurrentTime
-            ) {
-              // We've completed all the expired work.
-              break;
-            }
-          }
-        }
-      } else if (deadline !== null) {
-        // Flush asynchronous work until the deadline runs out of time.
-        while (nextUnitOfWork !== null && !deadlineHasExpired) {
-          if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-            nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
-            // In a deferred work batch, iff nextUnitOfWork returns null, we just
-            // completed a root and a pendingCommit exists. Logically, we could
-            // omit either of the checks in the following condition, but we need
-            // both to satisfy Flow.
-            if (nextUnitOfWork === null) {
-              invariant(
-                pendingCommit !== null,
-                'Should have a pending commit. This error is likely caused by ' +
-                  'a bug in React. Please file an issue.',
-              );
-              // We just completed a root. If we have time, commit it now.
-              // Otherwise, we'll commit it in the next frame.
-              if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
-                commitAllWork(pendingCommit);
-                // Clear any errors that were scheduled during the commit phase.
-                handleCommitPhaseErrors();
-                // The render time may have changed. Check again.
-                if (
-                  nextRenderExpirationTime === NoWork ||
-                  nextRenderExpirationTime > minExpirationTime ||
-                  nextRenderExpirationTime <= mostRecentCurrentTime
-                ) {
-                  // We've completed all the async work.
-                  break;
-                }
-              } else {
-                deadlineHasExpired = true;
-              }
-            }
-          } else {
-            deadlineHasExpired = true;
-          }
-        }
-      }
-
-      // There might be work left. Depending on the priority, we should
-      // either perform it now or schedule a callback to perform it later.
-      const currentTime = recalculateCurrentTime();
-      switch (relativeExpirationTime(currentTime, nextRenderExpirationTime)) {
-        case NoWork:
-          // No work left. We can exit.
-          break loop;
-        case Sync:
-        case Task:
-          // We have remaining synchronous or task work. Keep performing it,
-          // regardless of whether we're inside a callback.
-          if (nextRenderExpirationTime <= minExpirationTime) {
-            // Sometimes minExpirationTime is Sync, which means we should skip
-            // task work.
-            continue loop;
-          }
-          break loop;
-        default:
-          // We have remaining async work.
-          if (deadline === null) {
-            // We're not inside a callback. Exit and perform the work during
-            // the next callback.
-            break loop;
-          }
-          // We are inside a callback.
-          if (
-            !deadlineHasExpired &&
-            nextRenderExpirationTime <= minExpirationTime
-          ) {
-            // We still have time. Keep working.
-            continue loop;
-          }
-          // We've run out of time. Exit.
-          break loop;
-      }
-    } while (true);
-  }
-
-  function performWorkCatchBlock(
+  function renderRootCatchBlock(
+    root: FiberRoot,
     failedWork: Fiber,
     boundary: Fiber,
-    minExpirationTime: ExpirationTime,
-    deadline: Deadline | null,
+    expirationTime: ExpirationTime,
   ) {
     // We're going to restart the error boundary that captured the error.
     // Conceptually, we're unwinding the stack. We need to unwind the
@@ -973,37 +771,57 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     nextUnitOfWork = performFailedUnitOfWork(boundary);
 
     // Continue working.
-    workLoop(minExpirationTime, deadline);
+    workLoop(expirationTime);
   }
 
-  function performWork(
-    minExpirationTime: ExpirationTime,
-    deadline: Deadline | null,
-  ) {
+  function renderRoot(
+    root: FiberRoot,
+    expirationTime: ExpirationTime,
+  ): Fiber | null {
     if (__DEV__) {
       startWorkLoopTimer();
     }
 
     invariant(
-      !isPerformingWork,
-      'performWork was called recursively. This error is likely caused ' +
+      !isWorking,
+      'renderRoot was called recursively. This error is likely caused ' +
         'by a bug in React. Please file an issue.',
     );
-    isPerformingWork = true;
+    isWorking = true;
 
-    nestedUpdateCount = 0;
+    // We're about to mutate the work-in-progress tree. If the root was pending
+    // commit, it no longer is: we'll need to complete it again.
+    root.isReadyForCommit = false;
+
+    // Check if we're starting from a fresh stack, or if we're resuming from
+    // previously yielded work.
+    if (
+      root !== nextRoot ||
+      expirationTime !== nextRenderExpirationTime ||
+      nextUnitOfWork === null
+    ) {
+      // This is a restart. Reset the stack.
+      resetContextStack();
+      nextRoot = root;
+      nextRenderExpirationTime = expirationTime;
+      nextUnitOfWork = createWorkInProgress(
+        nextRoot.current,
+        null,
+        expirationTime,
+      );
+    }
 
     let didError = false;
     let error = null;
     if (__DEV__) {
-      invokeGuardedCallback(null, workLoop, null, minExpirationTime, deadline);
+      invokeGuardedCallback(null, workLoop, null, expirationTime);
       if (hasCaughtError()) {
         didError = true;
         error = clearCaughtError();
       }
     } else {
       try {
-        workLoop(minExpirationTime, deadline);
+        workLoop(expirationTime);
       } catch (e) {
         didError = true;
         error = e;
@@ -1046,12 +864,12 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       if (__DEV__) {
         invokeGuardedCallback(
           null,
-          performWorkCatchBlock,
+          renderRootCatchBlock,
           null,
+          root,
           failedWork,
           boundary,
-          minExpirationTime,
-          deadline,
+          expirationTime,
         );
         if (hasCaughtError()) {
           didError = true;
@@ -1060,12 +878,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         }
       } else {
         try {
-          performWorkCatchBlock(
-            failedWork,
-            boundary,
-            minExpirationTime,
-            deadline,
-          );
+          renderRootCatchBlock(root, failedWork, boundary, expirationTime);
           error = null;
         } catch (e) {
           didError = true;
@@ -1077,39 +890,22 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       break;
     }
 
-    // If we're inside a callback, set this to false, since we just flushed it.
-    if (deadline !== null) {
-      isCallbackScheduled = false;
-    }
-    // If there's remaining async work, make sure we schedule another callback.
-    if (
-      nextRenderExpirationTime > mostRecentCurrentTime &&
-      !isCallbackScheduled
-    ) {
-      scheduleDeferredCallback(performDeferredWork);
-      isCallbackScheduled = true;
-    }
-
-    const errorToThrow = firstUncaughtError;
+    const uncaughtError = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
-    isPerformingWork = false;
-    deadlineHasExpired = false;
+    isWorking = false;
     didFatal = false;
     firstUncaughtError = null;
-    capturedErrors = null;
-    failedBoundaries = null;
-    nextRenderedTree = null;
-    nestedUpdateCount = 0;
 
     if (__DEV__) {
       stopWorkLoopTimer();
     }
 
-    // It's safe to throw any unhandled errors.
-    if (errorToThrow !== null) {
-      throw errorToThrow;
+    if (uncaughtError !== null) {
+      onUncaughtError(uncaughtError);
     }
+
+    return root.isReadyForCommit ? root.current.alternate : null;
   }
 
   // Returns the boundary that captured the error, or null if the error is ignored
@@ -1310,9 +1106,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         return;
       case HostRoot:
         if (firstUncaughtError === null) {
-          // If this is the host container, we treat it as a no-op error
-          // boundary. We'll throw the first uncaught error once it's safe to
-          // do so, at the end of the batch.
           firstUncaughtError = capturedError.error;
         }
         return;
@@ -1354,25 +1147,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
-  function scheduleRoot(root: FiberRoot, expirationTime: ExpirationTime) {
-    if (expirationTime === NoWork) {
-      return;
-    }
-
-    if (!root.isScheduled) {
-      root.isScheduled = true;
-      if (lastScheduledRoot) {
-        // Schedule ourselves to the end.
-        lastScheduledRoot.nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      } else {
-        // We're the only work scheduled.
-        nextScheduledRoot = root;
-        lastScheduledRoot = root;
-      }
-    }
-  }
-
   function computeAsyncExpiration() {
     // Given the current clock time, returns an expiration time. We use rounding
     // to batch like updates together.
@@ -1388,7 +1162,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (expirationContext !== NoWork) {
       // An explicit expiration context was set;
       expirationTime = expirationContext;
-    } else if (isPerformingWork) {
+    } else if (isWorking) {
       if (isCommitting) {
         // Updates that occur during the commit phase should have sync priority
         // by default.
@@ -1409,14 +1183,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         expirationTime = computeAsyncExpiration();
       }
     }
-
-    if (
-      expirationTime === Sync &&
-      (isBatchingUpdates || (isUnbatchingUpdates && isCommitting))
-    ) {
-      // If we're in a batch, downgrade sync to task.
-      expirationTime = Task;
-    }
     return expirationTime;
   }
 
@@ -1433,24 +1199,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       recordScheduleUpdate();
     }
 
-    if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
-      didFatal = true;
-      invariant(
-        false,
-        'Maximum update depth exceeded. This can happen when a ' +
-          'component repeatedly calls setState inside componentWillUpdate or ' +
-          'componentDidUpdate. React limits the number of nested updates to ' +
-          'prevent infinite loops.',
-      );
-    }
-
-    if (!isPerformingWork && expirationTime <= nextRenderExpirationTime) {
-      // We must reset the current unit of work pointer so that we restart the
-      // search from the root during the next tick, in case there is now higher
-      // priority work somewhere earlier than before.
-      nextUnitOfWork = null;
-    }
-
     if (__DEV__) {
       if (!isErrorRecovery && fiber.tag === ClassComponent) {
         const instance = fiber.stateNode;
@@ -1459,19 +1207,13 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
 
     let node = fiber;
-    let shouldContinue = true;
-    while (node !== null && shouldContinue) {
-      // Walk the parent path to the root and update each node's expiration
-      // time. Once we reach a node whose expiration matches (and whose
-      // alternate's expiration matches) we can exit safely knowing that the
-      // rest of the path is correct.
-      shouldContinue = false;
+    while (node !== null) {
+      // Walk the parent path to the root and update each node's
+      // expiration time.
       if (
         node.expirationTime === NoWork ||
         node.expirationTime > expirationTime
       ) {
-        // Expiration time did not match. Update and keep going.
-        shouldContinue = true;
         node.expirationTime = expirationTime;
       }
       if (node.alternate !== null) {
@@ -1479,48 +1221,27 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
           node.alternate.expirationTime === NoWork ||
           node.alternate.expirationTime > expirationTime
         ) {
-          // Expiration time did not match. Update and keep going.
-          shouldContinue = true;
           node.alternate.expirationTime = expirationTime;
         }
       }
       if (node.return === null) {
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
-          scheduleRoot(root, expirationTime);
-          if (!isPerformingWork) {
-            switch (expirationTime) {
-              case Sync:
-                if (isUnbatchingUpdates) {
-                  // We're inside unbatchedUpdates, which is inside either
-                  // batchedUpdates or a lifecycle. We should only flush
-                  // synchronous work, not task work.
-                  performWork(Sync, null);
-                } else {
-                  // Flush both synchronous and task work.
-                  performWork(Task, null);
-                }
-                break;
-              case Task:
-                invariant(
-                  isBatchingUpdates,
-                  'Task updates can only be scheduled as a nested update or ' +
-                    'inside batchedUpdates. This error is likely caused by a ' +
-                    'bug in React. Please file an issue.',
-                );
-                break;
-              default:
-                // This update is async. Schedule a callback.
-                if (!isCallbackScheduled) {
-                  scheduleDeferredCallback(performDeferredWork);
-                  isCallbackScheduled = true;
-                }
-            }
+          if (
+            !isWorking &&
+            root === nextRoot &&
+            expirationTime <= nextRenderExpirationTime
+          ) {
+            // This is an interruption. Restart the root from the top.
+            nextRoot = null;
+            nextUnitOfWork = null;
+            nextRenderExpirationTime = NoWork;
           }
+          requestWork(root, expirationTime);
         } else {
           if (__DEV__) {
             if (!isErrorRecovery && fiber.tag === ClassComponent) {
-              warnAboutUpdateOnUnmounted(fiber.stateNode);
+              warnAboutUpdateOnUnmounted(fiber);
             }
           }
           return;
@@ -1531,7 +1252,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function scheduleErrorRecovery(fiber: Fiber) {
-    scheduleWorkImpl(fiber, Task, true);
+    scheduleWorkImpl(fiber, Sync, true);
   }
 
   function recalculateCurrentTime(): ExpirationTime {
@@ -1539,55 +1260,6 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     const ms = now() - startTime;
     mostRecentCurrentTime = msToExpirationTime(ms);
     return mostRecentCurrentTime;
-  }
-
-  function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
-    const previousIsBatchingUpdates = isBatchingUpdates;
-    isBatchingUpdates = true;
-    try {
-      return fn(a);
-    } finally {
-      isBatchingUpdates = previousIsBatchingUpdates;
-      // If we're not already inside a batch, we need to flush any task work
-      // that was created by the user-provided function.
-      if (!isPerformingWork && !isBatchingUpdates) {
-        performWork(Task, null);
-      }
-    }
-  }
-
-  function unbatchedUpdates<A>(fn: () => A): A {
-    const previousIsUnbatchingUpdates = isUnbatchingUpdates;
-    const previousIsBatchingUpdates = isBatchingUpdates;
-    // This is only true if we're nested inside batchedUpdates.
-    isUnbatchingUpdates = isBatchingUpdates;
-    isBatchingUpdates = false;
-    try {
-      return fn();
-    } finally {
-      isBatchingUpdates = previousIsBatchingUpdates;
-      isUnbatchingUpdates = previousIsUnbatchingUpdates;
-    }
-  }
-
-  function flushSync<A>(batch: () => A): A {
-    const previousIsBatchingUpdates = isBatchingUpdates;
-    const previousExpirationContext = expirationContext;
-    isBatchingUpdates = true;
-    expirationContext = Sync;
-    try {
-      return batch();
-    } finally {
-      isBatchingUpdates = previousIsBatchingUpdates;
-      expirationContext = previousExpirationContext;
-
-      invariant(
-        !isPerformingWork,
-        'flushSync was called from inside a lifecycle method. It cannot be ' +
-          'called when React is already rendering.',
-      );
-      performWork(Task, null);
-    }
   }
 
   function deferredUpdates<A>(fn: () => A): A {
@@ -1600,13 +1272,366 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     }
   }
 
+  function syncUpdates<A>(fn: () => A): A {
+    const previousExpirationContext = expirationContext;
+    expirationContext = Sync;
+    try {
+      return fn();
+    } finally {
+      expirationContext = previousExpirationContext;
+    }
+  }
+
+  // TODO: Everything below this is written as if it has been lifted to the
+  // renderers. I'll do this in a follow-up.
+
+  // Linked-list of roots
+  let firstScheduledRoot: FiberRoot | null = null;
+  let lastScheduledRoot: FiberRoot | null = null;
+
+  let isCallbackScheduled: boolean = false;
+  let isRendering: boolean = false;
+  let nextFlushedRoot: FiberRoot | null = null;
+  let nextFlushedExpirationTime: ExpirationTime = NoWork;
+  let deadlineDidExpire: boolean = false;
+  let hasUnhandledError: boolean = false;
+  let unhandledError: mixed | null = null;
+  let deadline: Deadline | null = null;
+
+  let isBatchingUpdates: boolean = false;
+  let isUnbatchingUpdates: boolean = false;
+
+  // Use these to prevent an infinite loop of nested updates
+  const NESTED_UPDATE_LIMIT = 1000;
+  let nestedUpdateCount: number = 0;
+
+  const timeHeuristicForUnitOfWork = 1;
+
+  // requestWork is called by the scheduler whenever a root receives an update.
+  // It's up to the renderer to call renderRoot at some point in the future.
+  function requestWork(root: FiberRoot, expirationTime: ExpirationTime) {
+    if (nestedUpdateCount > NESTED_UPDATE_LIMIT) {
+      invariant(
+        false,
+        'Maximum update depth exceeded. This can happen when a ' +
+          'component repeatedly calls setState inside componentWillUpdate or ' +
+          'componentDidUpdate. React limits the number of nested updates to ' +
+          'prevent infinite loops.',
+      );
+    }
+
+    // Add the root to the schedule.
+    // Check if this root is already part of the schedule.
+    if (root.nextScheduledRoot === null) {
+      // This root is not already scheduled. Add it.
+      root.remainingExpirationTime = expirationTime;
+      if (lastScheduledRoot === null) {
+        firstScheduledRoot = lastScheduledRoot = root;
+        root.nextScheduledRoot = root;
+      } else {
+        lastScheduledRoot.nextScheduledRoot = root;
+        lastScheduledRoot = root;
+        lastScheduledRoot.nextScheduledRoot = firstScheduledRoot;
+      }
+    } else {
+      // This root is already scheduled, but its priority may have increased.
+      const remainingExpirationTime = root.remainingExpirationTime;
+      if (
+        remainingExpirationTime === NoWork ||
+        expirationTime < remainingExpirationTime
+      ) {
+        // Update the priority.
+        root.remainingExpirationTime = expirationTime;
+      }
+    }
+
+    if (isRendering) {
+      // Prevent reentrancy. Remaining work will be scheduled at the end of
+      // the currently rendering batch.
+      return;
+    }
+
+    if (isBatchingUpdates) {
+      // Flush work at the end of the batch.
+      if (isUnbatchingUpdates) {
+        // ...unless we're inside unbatchedUpdates, in which case we should
+        // flush it now.
+        performWorkOnRoot(root, Sync);
+      }
+      return;
+    }
+
+    // TODO: Get rid of Sync and use current time?
+    if (expirationTime === Sync) {
+      performWork(Sync, null);
+    } else if (!isCallbackScheduled) {
+      isCallbackScheduled = true;
+      scheduleDeferredCallback(performAsyncWork);
+    }
+  }
+
+  function findHighestPriorityRoot() {
+    let highestPriorityWork = NoWork;
+    let highestPriorityRoot = null;
+
+    if (lastScheduledRoot !== null) {
+      let previousScheduledRoot = lastScheduledRoot;
+      let root = firstScheduledRoot;
+      while (root !== null) {
+        const remainingExpirationTime = root.remainingExpirationTime;
+        if (remainingExpirationTime === NoWork) {
+          // This root no longer has work. Remove it from the scheduler.
+
+          // TODO: This check is redudant, but Flow is confused by the branch
+          // below where we set lastScheduledRoot to null, even though we break
+          // from the loop right after.
+          invariant(
+            previousScheduledRoot !== null && lastScheduledRoot !== null,
+            'Should have a previous and last root. This error is likely ' +
+              'caused by a bug in React. Please file an issue.',
+          );
+          if (root === root.nextScheduledRoot) {
+            // This is the only root in the list.
+            root.nextScheduledRoot = null;
+            firstScheduledRoot = lastScheduledRoot = null;
+            break;
+          } else if (root === firstScheduledRoot) {
+            // This is the first root in the list.
+            const next = root.nextScheduledRoot;
+            firstScheduledRoot = next;
+            lastScheduledRoot.nextScheduledRoot = next;
+            root.nextScheduledRoot = null;
+          } else if (root === lastScheduledRoot) {
+            // This is the last root in the list.
+            lastScheduledRoot = previousScheduledRoot;
+            lastScheduledRoot.nextScheduledRoot = firstScheduledRoot;
+            root.nextScheduledRoot = null;
+            break;
+          } else {
+            previousScheduledRoot.nextScheduledRoot = root.nextScheduledRoot;
+            root.nextScheduledRoot = null;
+          }
+          root = previousScheduledRoot.nextScheduledRoot;
+        } else {
+          if (
+            highestPriorityWork === NoWork ||
+            remainingExpirationTime < highestPriorityWork
+          ) {
+            // Update the priority, if it's higher
+            highestPriorityWork = remainingExpirationTime;
+            highestPriorityRoot = root;
+          }
+          if (root === lastScheduledRoot) {
+            break;
+          }
+          previousScheduledRoot = root;
+          root = root.nextScheduledRoot;
+        }
+      }
+    }
+
+    // If the next root is the same as the previous root, this is a nested
+    // update. To prevent an infinite loop, increment the nested update count.
+    const previousFlushedRoot = nextFlushedRoot;
+    if (
+      previousFlushedRoot !== null &&
+      previousFlushedRoot === highestPriorityRoot
+    ) {
+      nestedUpdateCount++;
+    } else {
+      // Reset whenever we switch roots.
+      nestedUpdateCount = 0;
+    }
+    nextFlushedRoot = highestPriorityRoot;
+    nextFlushedExpirationTime = highestPriorityWork;
+  }
+
+  function performAsyncWork(dl) {
+    performWork(NoWork, dl);
+  }
+
+  function performWork(minExpirationTime: ExpirationTime, dl: Deadline | null) {
+    deadline = dl;
+
+    // Keep working on roots until there's no more work, or until the we reach
+    // the deadlne.
+    findHighestPriorityRoot();
+    while (
+      nextFlushedRoot !== null &&
+      nextFlushedExpirationTime !== NoWork &&
+      (minExpirationTime === NoWork ||
+        nextFlushedExpirationTime <= minExpirationTime) &&
+      !deadlineDidExpire
+    ) {
+      performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime);
+      // Find the next highest priority work.
+      findHighestPriorityRoot();
+    }
+
+    // We're done flushing work. Either we ran out of time in this callback,
+    // or there's no more work left with sufficient priority.
+
+    // If we're inside a callback, set this to false since we just completed it.
+    if (deadline !== null) {
+      isCallbackScheduled = false;
+    }
+    // If there's work left over, schedule a new callback.
+    if (nextFlushedRoot !== null && !isCallbackScheduled) {
+      isCallbackScheduled = true;
+      scheduleDeferredCallback(performAsyncWork);
+    }
+
+    // Clean-up.
+    deadline = null;
+    deadlineDidExpire = false;
+    nestedUpdateCount = 0;
+
+    if (hasUnhandledError) {
+      const error = unhandledError;
+      unhandledError = null;
+      hasUnhandledError = false;
+      throw error;
+    }
+  }
+
+  function performWorkOnRoot(root, expirationTime) {
+    invariant(
+      !isRendering,
+      'performWorkOnRoot was called recursively. This error is likely caused ' +
+        'by a bug in React. Please file an issue.',
+    );
+
+    isRendering = true;
+
+    // Check if this is async work or sync/expired work.
+    // TODO: Pass current time as argument to renderRoot, commitRoot
+    if (expirationTime <= recalculateCurrentTime()) {
+      // Flush sync work.
+      let finishedWork = root.finishedWork;
+      if (finishedWork !== null) {
+        // This root is already complete. We can commit it.
+        root.finishedWork = null;
+        root.remainingExpirationTime = commitRoot(finishedWork);
+      } else {
+        root.finishedWork = null;
+        finishedWork = renderRoot(root, expirationTime);
+        if (finishedWork !== null) {
+          // We've completed the root. Commit it.
+          root.remainingExpirationTime = commitRoot(finishedWork);
+        }
+      }
+    } else {
+      // Flush async work.
+      let finishedWork = root.finishedWork;
+      if (finishedWork !== null) {
+        // This root is already complete. We can commit it.
+        root.finishedWork = null;
+        root.remainingExpirationTime = commitRoot(finishedWork);
+      } else {
+        root.finishedWork = null;
+        finishedWork = renderRoot(root, expirationTime);
+        if (finishedWork !== null) {
+          // We've completed the root. Check the deadline one more time
+          // before committing.
+          if (!shouldYield()) {
+            // Still time left. Commit the root.
+            root.remainingExpirationTime = commitRoot(finishedWork);
+          } else {
+            // There's no time left. Mark this root as complete. We'll come
+            // back and commit it later.
+            root.finishedWork = finishedWork;
+          }
+        }
+      }
+    }
+
+    isRendering = false;
+  }
+
+  // When working on async work, the reconciler asks the renderer if it should
+  // yield execution. For DOM, we implement this with requestIdleCallback.
+  function shouldYield() {
+    if (deadline === null) {
+      return false;
+    }
+    if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+      return false;
+    }
+    deadlineDidExpire = true;
+    return true;
+  }
+
+  // TODO: Not happy about this hook. Conceptually, renderRoot should return a
+  // tuple of (isReadyForCommit, didError, error)
+  function onUncaughtError(error) {
+    invariant(
+      nextFlushedRoot !== null,
+      'Should be working on a root. This error is likely caused by a bug in ' +
+        'React. Please file an issue.',
+    );
+    // Unschedule this root so we don't work on it again until there's
+    // another update.
+    nextFlushedRoot.remainingExpirationTime = NoWork;
+    if (!hasUnhandledError) {
+      hasUnhandledError = true;
+      unhandledError = error;
+    }
+  }
+
+  // TODO: Batching should be implemented at the renderer level, not inside
+  // the reconciler.
+  function batchedUpdates<A, R>(fn: (a: A) => R, a: A): R {
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    isBatchingUpdates = true;
+    try {
+      return fn(a);
+    } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
+      if (!isBatchingUpdates && !isRendering) {
+        performWork(Sync, null);
+      }
+    }
+  }
+
+  // TODO: Batching should be implemented at the renderer level, not inside
+  // the reconciler.
+  function unbatchedUpdates<A>(fn: () => A): A {
+    if (isBatchingUpdates && !isUnbatchingUpdates) {
+      isUnbatchingUpdates = true;
+      try {
+        return fn();
+      } finally {
+        isUnbatchingUpdates = false;
+      }
+    }
+    return fn();
+  }
+
+  // TODO: Batching should be implemented at the renderer level, not within
+  // the reconciler.
+  function flushSync<A>(fn: () => A): A {
+    const previousIsBatchingUpdates = isBatchingUpdates;
+    isBatchingUpdates = true;
+    try {
+      return syncUpdates(fn);
+    } finally {
+      isBatchingUpdates = previousIsBatchingUpdates;
+      invariant(
+        !isRendering,
+        'flushSync was called from inside a lifecycle method. It cannot be ' +
+          'called when React is already rendering.',
+      );
+      performWork(Sync, null);
+    }
+  }
+
   return {
-    computeAsyncExpiration: computeAsyncExpiration,
-    computeExpirationForFiber: computeExpirationForFiber,
-    scheduleWork: scheduleWork,
-    batchedUpdates: batchedUpdates,
-    unbatchedUpdates: unbatchedUpdates,
-    flushSync: flushSync,
-    deferredUpdates: deferredUpdates,
+    computeAsyncExpiration,
+    computeExpirationForFiber,
+    scheduleWork,
+    batchedUpdates,
+    unbatchedUpdates,
+    flushSync,
+    deferredUpdates,
   };
 };
