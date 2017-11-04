@@ -34,8 +34,8 @@ const report = cli.executeOnFiles(jsFiles);
 console.log(formatter(report.results));
 
 if (report.errorCount > 0) {
-  console.log('Linc failed');
+  console.log('Lint failed for changed files.');
   process.exit(1);
 } else {
-  console.log('Linc passed');
+  console.log('Lint passed for changed files.');
 }
