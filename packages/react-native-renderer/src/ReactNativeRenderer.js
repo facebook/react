@@ -28,7 +28,7 @@ import {showDialog} from './ReactNativeFiberErrorDialog';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
-import ReactNativeComponentTree from './ReactNativeComponentTree';
+import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 import ReactNativePropRegistry from './ReactNativePropRegistry';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';

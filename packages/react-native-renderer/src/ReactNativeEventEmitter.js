@@ -13,7 +13,7 @@ import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import warning from 'fbjs/lib/warning';
 
-import ReactNativeComponentTree from './ReactNativeComponentTree';
+import {getInstanceFromNode} from './ReactNativeComponentTree';
 import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 /**
@@ -97,7 +97,7 @@ var ReactNativeEventEmitter = {
     nativeEventParam: ?Object,
   ) {
     var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
-    var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
+    var inst = getInstanceFromNode(rootNodeID);
     batchedUpdates(function() {
       ReactNativeEventEmitter.handleTopLevel(
         topLevelType,
