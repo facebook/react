@@ -13,7 +13,7 @@ import getActiveElement from 'fbjs/lib/getActiveElement';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 
 import ReactBrowserEventEmitter from './ReactBrowserEventEmitter';
-import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
@@ -154,9 +154,7 @@ var SelectEventPlugin = {
       return null;
     }
 
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.

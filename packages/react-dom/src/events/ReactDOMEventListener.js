@@ -11,7 +11,7 @@ import {HostRoot} from 'shared/ReactTypeOfWork';
 import EventListener from 'fbjs/lib/EventListener';
 
 import getEventTarget from './getEventTarget';
-import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
 var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
 var callbackBookkeepingPool = [];
@@ -80,7 +80,7 @@ function handleTopLevelImpl(bookKeeping) {
       break;
     }
     bookKeeping.ancestors.push(ancestor);
-    ancestor = ReactDOMComponentTree.getClosestInstanceFromNode(root);
+    ancestor = getClosestInstanceFromNode(root);
   } while (ancestor);
 
   for (var i = 0; i < bookKeeping.ancestors.length; i++) {
@@ -158,9 +158,7 @@ var ReactDOMEventListener = {
     }
 
     var nativeEventTarget = getEventTarget(nativeEvent);
-    var targetInst = ReactDOMComponentTree.getClosestInstanceFromNode(
-      nativeEventTarget,
-    );
+    var targetInst = getClosestInstanceFromNode(nativeEventTarget);
     if (
       targetInst !== null &&
       typeof targetInst.tag === 'number' &&

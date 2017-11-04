@@ -62,7 +62,7 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginRegistry = require('events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree').default;
+    ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
     ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter')
       .default;
     ReactTestUtils = require('react-dom/test-utils');

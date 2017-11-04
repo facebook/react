@@ -14,7 +14,7 @@ import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import ReactControlledValuePropTypes
   from '../shared/ReactControlledValuePropTypes';
 
@@ -317,9 +317,7 @@ function updateNamedCousins(rootNode, props) {
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
-      var otherProps = ReactDOMComponentTree.getFiberCurrentPropsFromNode(
-        otherNode,
-      );
+      var otherProps = getFiberCurrentPropsFromNode(otherNode);
       invariant(
         otherProps,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +

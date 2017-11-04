@@ -34,7 +34,7 @@ import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
 import validateDOMNesting from './validateDOMNesting';

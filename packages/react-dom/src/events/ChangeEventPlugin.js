@@ -15,7 +15,7 @@ import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
-import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
 
 var eventTypes = {
@@ -93,7 +93,7 @@ function runEventInBatch(event) {
 }
 
 function getInstIfValueChanged(targetInst) {
-  const targetNode = ReactDOMComponentTree.getNodeFromInstance(targetInst);
+  const targetNode = getNodeFromInstance(targetInst);
   if (inputValueTracking.updateValueIfChanged(targetNode)) {
     return targetInst;
   }
@@ -262,9 +262,7 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     var getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {

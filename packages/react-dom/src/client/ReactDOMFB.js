@@ -16,7 +16,7 @@ import ReactErrorUtils from 'shared/ReactErrorUtils';
 
 import ReactDOM from './ReactDOM';
 import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import TapEventPlugin from '../events/TapEventPlugin';
 
 Object.assign(

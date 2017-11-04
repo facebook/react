@@ -8,7 +8,7 @@
 import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginUtils from 'events/EventPluginUtils';
 
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
 import ChangeEventPlugin from '../events/ChangeEventPlugin';
 import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
