@@ -11,7 +11,7 @@ import {batchedUpdates} from 'events/ReactGenericBatching';
 // Module provided by RN:
 import BatchedBridge from 'BatchedBridge';
 
-import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import {getFiberCurrentPropsFromTag} from './ReactNativeRTComponentTree';
 
 var ReactNativeRTEventEmitter = {
   /**
@@ -27,7 +27,7 @@ var ReactNativeRTEventEmitter = {
     nativeEventParam: Object,
   ) {
     var nativeEvent = nativeEventParam;
-    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(tag);
+    var props = getFiberCurrentPropsFromTag(tag);
     if (props == null) {
       return;
     }

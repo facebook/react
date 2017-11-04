@@ -21,7 +21,7 @@ import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
-import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import {getFiberFromTag} from './ReactNativeRTComponentTree';
 import ReactNativeRTFiberRenderer from './ReactNativeRTFiberRenderer';
 import ReactNativeRTFiberInspector from './ReactNativeRTFiberInspector';
 
@@ -84,7 +84,7 @@ const ReactNativeRTFiber: ReactNativeRTType = {
 };
 
 injectInternals({
-  findFiberByHostInstance: ReactNativeRTComponentTree.getFiberFromTag,
+  findFiberByHostInstance: getFiberFromTag,
   findHostInstanceByFiber: ReactNativeRTFiberRenderer.findHostInstance,
   getInspectorDataForViewTag: ReactNativeRTFiberInspector.getInspectorDataForViewTag,
   // This is an enum because we may add more (e.g. profiler build)
