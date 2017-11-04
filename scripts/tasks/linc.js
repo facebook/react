@@ -7,52 +7,35 @@
 
 'use strict';
 
-const path = require('path');
 const execFileSync = require('child_process').execFileSync;
-const spawn = require('child_process').spawn;
-const extension = process.platform === 'win32' ? '.cmd' : '';
-const eslint = path.join('node_modules', '.bin', 'eslint' + extension);
+const CLIEngine = require('eslint').CLIEngine;
 
-function exec(
-  command,
-  args,
-  options = {
+const cli = new CLIEngine();
+const formatter = cli.getFormatter();
+
+const mergeBase = execFileSync('git', ['merge-base', 'HEAD', 'master'], {
+  stdio: 'pipe',
+  encoding: 'utf-8',
+}).trim();
+const changedFiles = execFileSync(
+  'git',
+  ['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase],
+  {
     stdio: 'pipe',
     encoding: 'utf-8',
   }
-) {
-  return execFileSync(command, args, options);
-}
-
-function spawnCommand(
-  command,
-  args,
-  options = {
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  }
-) {
-  return new Promise((resolve, reject) => {
-    const child = spawn(command, args, options);
-    child.on('close', code => code === 0 ? resolve() : reject());
-  });
-}
-
-const mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
-const changedFiles = exec('git', [
-  'diff',
-  '--name-only',
-  '--diff-filter=ACMRTUB',
-  mergeBase,
-])
+)
   .trim()
   .toString()
   .split('\n');
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
-const jsFilesPromises = jsFiles.map(file => spawnCommand(eslint, [file], {stdio: 'inherit'}));
-Promise.all(jsFilesPromises)
-  .then(() => console.log('Linc passed'))
-  .catch(e => {
-    console.log('Linc failed');
-    process.exit(1);
-  });
+
+const report = cli.executeOnFiles(jsFiles);
+console.log(formatter(report.results));
+
+if (report.errorCount > 0) {
+  console.log('Linc failed');
+  process.exit(1);
+} else {
+  console.log('Linc passed');
+}
