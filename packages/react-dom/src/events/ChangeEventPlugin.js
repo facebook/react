@@ -6,7 +6,7 @@
  */
 
 import {enqueueEvents, processEventQueue} from 'events/EventPluginHub';
-import EventPropagators from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import ReactControlledComponent from 'events/ReactControlledComponent';
 import ReactGenericBatching from 'events/ReactGenericBatching';
 import SyntheticEvent from 'events/SyntheticEvent';
@@ -47,7 +47,7 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   event.type = 'change';
   // Flag this event loop as needing state restore.
   ReactControlledComponent.enqueueStateRestore(target);
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 /**

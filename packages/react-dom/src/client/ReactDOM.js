@@ -23,7 +23,7 @@ import ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactControlledComponent from 'events/ReactControlledComponent';
 import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginRegistry from 'events/EventPluginRegistry';
-import EventPropagators from 'events/EventPropagators';
+import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';

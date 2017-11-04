@@ -8,7 +8,7 @@
  */
 
 import {isStartish, isEndish} from 'events/EventPluginUtils';
-import EventPropagators from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 
 import SyntheticUIEvent from './SyntheticUIEvent';
@@ -141,7 +141,7 @@ var TapEventPlugin = {
       startCoords.x = 0;
       startCoords.y = 0;
     }
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatches(event);
     return event;
   },
 };

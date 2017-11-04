@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPropagators from 'events/EventPropagators';
+import {accumulateEnterLeaveDispatches} from 'events/EventPropagators';
 
 import SyntheticMouseEvent from './SyntheticMouseEvent';
 import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
@@ -108,7 +108,7 @@ var EnterLeaveEventPlugin = {
     enter.target = toNode;
     enter.relatedTarget = fromNode;
 
-    EventPropagators.accumulateEnterLeaveDispatches(leave, enter, from, to);
+    accumulateEnterLeaveDispatches(leave, enter, from, to);
 
     return [leave, enter];
   },

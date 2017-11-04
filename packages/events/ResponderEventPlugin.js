@@ -16,7 +16,11 @@ import {
   executeDispatchesInOrderStopAtTrue,
   getInstanceFromNode,
 } from './EventPluginUtils';
-import EventPropagators from './EventPropagators';
+import {
+  accumulateDirectDispatches,
+  accumulateTwoPhaseDispatches,
+  accumulateTwoPhaseDispatchesSkipTarget,
+} from './EventPropagators';
 import ResponderSyntheticEvent from './ResponderSyntheticEvent';
 import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
 import accumulate from './accumulate';
@@ -340,9 +344,9 @@ function setResponderAndExtractTransfer(
   );
   shouldSetEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
   if (skipOverBubbleShouldSetFrom) {
-    EventPropagators.accumulateTwoPhaseDispatchesSkipTarget(shouldSetEvent);
+    accumulateTwoPhaseDispatchesSkipTarget(shouldSetEvent);
   } else {
-    EventPropagators.accumulateTwoPhaseDispatches(shouldSetEvent);
+    accumulateTwoPhaseDispatches(shouldSetEvent);
   }
   var wantsResponderInst = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
   if (!shouldSetEvent.isPersistent()) {
@@ -361,7 +365,7 @@ function setResponderAndExtractTransfer(
   );
   grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
-  EventPropagators.accumulateDirectDispatches(grantEvent);
+  accumulateDirectDispatches(grantEvent);
   var blockHostResponder = executeDirectDispatch(grantEvent) === true;
   if (responderInst) {
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
@@ -372,7 +376,7 @@ function setResponderAndExtractTransfer(
     );
     terminationRequestEvent.touchHistory =
       ResponderTouchHistoryStore.touchHistory;
-    EventPropagators.accumulateDirectDispatches(terminationRequestEvent);
+    accumulateDirectDispatches(terminationRequestEvent);
     var shouldSwitch =
       !hasDispatches(terminationRequestEvent) ||
       executeDirectDispatch(terminationRequestEvent);
@@ -388,7 +392,7 @@ function setResponderAndExtractTransfer(
         nativeEventTarget,
       );
       terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(terminateEvent);
+      accumulateDirectDispatches(terminateEvent);
       extracted = accumulate(extracted, [grantEvent, terminateEvent]);
       changeResponder(wantsResponderInst, blockHostResponder);
     } else {
@@ -399,7 +403,7 @@ function setResponderAndExtractTransfer(
         nativeEventTarget,
       );
       rejectEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(rejectEvent);
+      accumulateDirectDispatches(rejectEvent);
       extracted = accumulate(extracted, rejectEvent);
     }
   } else {
@@ -525,7 +529,7 @@ var ResponderEventPlugin = {
         nativeEventTarget,
       );
       gesture.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(gesture);
+      accumulateDirectDispatches(gesture);
       extracted = accumulate(extracted, gesture);
     }
 
@@ -547,7 +551,7 @@ var ResponderEventPlugin = {
         nativeEventTarget,
       );
       finalEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(finalEvent);
+      accumulateDirectDispatches(finalEvent);
       extracted = accumulate(extracted, finalEvent);
       changeResponder(null);
     }

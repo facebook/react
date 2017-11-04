@@ -15,7 +15,7 @@ import type {
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {EventTypes, PluginModule} from 'events/PluginModuleType';
 
-import EventPropagators from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import SyntheticEvent from 'events/SyntheticEvent';
 import warning from 'fbjs/lib/warning';
 
@@ -274,7 +274,7 @@ var SimpleEventPlugin: PluginModule<MouseEvent> = {
       nativeEvent,
       nativeEventTarget,
     );
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatches(event);
     return event;
   },
 };
