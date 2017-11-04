@@ -48,7 +48,7 @@ describe('getEventKey', () => {
         let key = null;
         class Comp extends React.Component {
           render() {
-            return onKeyDown={e => (key = e.key)} />;
+            return <input onKeyDown={e => (key = e.key)} />;
           }
         }
 
