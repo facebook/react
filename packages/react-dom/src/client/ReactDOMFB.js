@@ -15,7 +15,7 @@ import * as ReactFiberErrorLogger
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 
 import ReactDOM from './ReactDOM';
-import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
 import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import TapEventPlugin from '../events/TapEventPlugin';
 

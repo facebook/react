@@ -12,7 +12,7 @@ import isTextInputElement from 'shared/isTextInputElement';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 
-import ReactBrowserEventEmitter from './ReactBrowserEventEmitter';
+import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
@@ -45,11 +45,6 @@ var activeElement = null;
 var activeElementInst = null;
 var lastSelection = null;
 var mouseDown = false;
-
-// Track whether all listeners exists for this plugin. If none exist, we do
-// not extract events. See #3639.
-var isListeningToAllDependencies =
-  ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -150,6 +145,8 @@ var SelectEventPlugin = {
       : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
+    // Track whether all listeners exists for this plugin. If none exist, we do
+    // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }

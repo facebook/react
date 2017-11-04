@@ -6,7 +6,6 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
-import * as ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
 
 import ReactDOMEventListener from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
@@ -88,151 +87,133 @@ function getListeningForDocument(mountAt) {
   return alreadyListeningTo[mountAt[topListenersIDKey]];
 }
 
-var ReactBrowserEventEmitter = Object.assign({}, ReactEventEmitterMixin, {
-  /**
-   * Sets whether or not any created callbacks should be enabled.
-   *
-   * @param {boolean} enabled True if callbacks should be enabled.
-   */
-  setEnabled: function(enabled) {
-    if (ReactDOMEventListener) {
-      ReactDOMEventListener.setEnabled(enabled);
-    }
-  },
+export * from 'events/ReactEventEmitterMixin';
 
-  /**
-   * @return {boolean} True if callbacks are enabled.
-   */
-  isEnabled: function() {
-    return !!(ReactDOMEventListener && ReactDOMEventListener.isEnabled());
-  },
+/**
+ * Sets whether or not any created callbacks should be enabled.
+ *
+ * @param {boolean} enabled True if callbacks should be enabled.
+ */
+export function setEnabled(enabled) {
+  if (ReactDOMEventListener) {
+    ReactDOMEventListener.setEnabled(enabled);
+  }
+}
 
-  /**
-   * We listen for bubbled touch events on the document object.
-   *
-   * Firefox v8.01 (and possibly others) exhibited strange behavior when
-   * mounting `onmousemove` events at some node that was not the document
-   * element. The symptoms were that if your mouse is not moving over something
-   * contained within that mount point (for example on the background) the
-   * top-level listeners for `onmousemove` won't be called. However, if you
-   * register the `mousemove` on the document object, then it will of course
-   * catch all `mousemove`s. This along with iOS quirks, justifies restricting
-   * top-level listeners to the document object only, at least for these
-   * movement types of events and possibly all events.
-   *
-   * @see http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
-   *
-   * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
-   * they bubble to document.
-   *
-   * @param {string} registrationName Name of listener (e.g. `onClick`).
-   * @param {object} contentDocumentHandle Document which owns the container
-   */
-  listenTo: function(registrationName, contentDocumentHandle) {
-    var mountAt = contentDocumentHandle;
-    var isListening = getListeningForDocument(mountAt);
-    var dependencies = registrationNameDependencies[registrationName];
+/**
+ * @return {boolean} True if callbacks are enabled.
+ */
+export function isEnabled() {
+  return !!(ReactDOMEventListener && ReactDOMEventListener.isEnabled());
+}
 
-    for (var i = 0; i < dependencies.length; i++) {
-      var dependency = dependencies[i];
-      if (
-        !(isListening.hasOwnProperty(dependency) && isListening[dependency])
-      ) {
-        if (dependency === 'topWheel') {
-          if (isEventSupported('wheel')) {
-            ReactDOMEventListener.trapBubbledEvent(
-              'topWheel',
-              'wheel',
-              mountAt,
-            );
-          } else if (isEventSupported('mousewheel')) {
-            ReactDOMEventListener.trapBubbledEvent(
-              'topWheel',
-              'mousewheel',
-              mountAt,
-            );
-          } else {
-            // Firefox needs to capture a different mouse scroll event.
-            // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-            ReactDOMEventListener.trapBubbledEvent(
-              'topWheel',
-              'DOMMouseScroll',
-              mountAt,
-            );
-          }
-        } else if (dependency === 'topScroll') {
-          ReactDOMEventListener.trapCapturedEvent(
-            'topScroll',
-            'scroll',
+/**
+ * We listen for bubbled touch events on the document object.
+ *
+ * Firefox v8.01 (and possibly others) exhibited strange behavior when
+ * mounting `onmousemove` events at some node that was not the document
+ * element. The symptoms were that if your mouse is not moving over something
+ * contained within that mount point (for example on the background) the
+ * top-level listeners for `onmousemove` won't be called. However, if you
+ * register the `mousemove` on the document object, then it will of course
+ * catch all `mousemove`s. This along with iOS quirks, justifies restricting
+ * top-level listeners to the document object only, at least for these
+ * movement types of events and possibly all events.
+ *
+ * @see http://www.quirksmode.org/blog/archives/2010/09/click_event_del.html
+ *
+ * Also, `keyup`/`keypress`/`keydown` do not bubble to the window on IE, but
+ * they bubble to document.
+ *
+ * @param {string} registrationName Name of listener (e.g. `onClick`).
+ * @param {object} contentDocumentHandle Document which owns the container
+ */
+export function listenTo(registrationName, contentDocumentHandle) {
+  var mountAt = contentDocumentHandle;
+  var isListening = getListeningForDocument(mountAt);
+  var dependencies = registrationNameDependencies[registrationName];
+
+  for (var i = 0; i < dependencies.length; i++) {
+    var dependency = dependencies[i];
+    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
+      if (dependency === 'topWheel') {
+        if (isEventSupported('wheel')) {
+          ReactDOMEventListener.trapBubbledEvent('topWheel', 'wheel', mountAt);
+        } else if (isEventSupported('mousewheel')) {
+          ReactDOMEventListener.trapBubbledEvent(
+            'topWheel',
+            'mousewheel',
             mountAt,
           );
-        } else if (dependency === 'topFocus' || dependency === 'topBlur') {
-          ReactDOMEventListener.trapCapturedEvent('topFocus', 'focus', mountAt);
-          ReactDOMEventListener.trapCapturedEvent('topBlur', 'blur', mountAt);
-
-          // to make sure blur and focus event listeners are only attached once
-          isListening.topBlur = true;
-          isListening.topFocus = true;
-        } else if (dependency === 'topCancel') {
-          if (isEventSupported('cancel', true)) {
-            ReactDOMEventListener.trapCapturedEvent(
-              'topCancel',
-              'cancel',
-              mountAt,
-            );
-          }
-          isListening.topCancel = true;
-        } else if (dependency === 'topClose') {
-          if (isEventSupported('close', true)) {
-            ReactDOMEventListener.trapCapturedEvent(
-              'topClose',
-              'close',
-              mountAt,
-            );
-          }
-          isListening.topClose = true;
-        } else if (topLevelTypes.hasOwnProperty(dependency)) {
+        } else {
+          // Firefox needs to capture a different mouse scroll event.
+          // @see http://www.quirksmode.org/dom/events/tests/scroll.html
           ReactDOMEventListener.trapBubbledEvent(
-            dependency,
-            topLevelTypes[dependency],
+            'topWheel',
+            'DOMMouseScroll',
             mountAt,
           );
         }
+      } else if (dependency === 'topScroll') {
+        ReactDOMEventListener.trapCapturedEvent('topScroll', 'scroll', mountAt);
+      } else if (dependency === 'topFocus' || dependency === 'topBlur') {
+        ReactDOMEventListener.trapCapturedEvent('topFocus', 'focus', mountAt);
+        ReactDOMEventListener.trapCapturedEvent('topBlur', 'blur', mountAt);
 
-        isListening[dependency] = true;
+        // to make sure blur and focus event listeners are only attached once
+        isListening.topBlur = true;
+        isListening.topFocus = true;
+      } else if (dependency === 'topCancel') {
+        if (isEventSupported('cancel', true)) {
+          ReactDOMEventListener.trapCapturedEvent(
+            'topCancel',
+            'cancel',
+            mountAt,
+          );
+        }
+        isListening.topCancel = true;
+      } else if (dependency === 'topClose') {
+        if (isEventSupported('close', true)) {
+          ReactDOMEventListener.trapCapturedEvent('topClose', 'close', mountAt);
+        }
+        isListening.topClose = true;
+      } else if (topLevelTypes.hasOwnProperty(dependency)) {
+        ReactDOMEventListener.trapBubbledEvent(
+          dependency,
+          topLevelTypes[dependency],
+          mountAt,
+        );
       }
+
+      isListening[dependency] = true;
     }
-  },
+  }
+}
 
-  isListeningToAllDependencies: function(registrationName, mountAt) {
-    var isListening = getListeningForDocument(mountAt);
-    var dependencies = registrationNameDependencies[registrationName];
-    for (var i = 0; i < dependencies.length; i++) {
-      var dependency = dependencies[i];
-      if (
-        !(isListening.hasOwnProperty(dependency) && isListening[dependency])
-      ) {
-        return false;
-      }
+export function isListeningToAllDependencies(registrationName, mountAt) {
+  var isListening = getListeningForDocument(mountAt);
+  var dependencies = registrationNameDependencies[registrationName];
+  for (var i = 0; i < dependencies.length; i++) {
+    var dependency = dependencies[i];
+    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
+      return false;
     }
-    return true;
-  },
+  }
+  return true;
+}
 
-  trapBubbledEvent: function(topLevelType, handlerBaseName, handle) {
-    return ReactDOMEventListener.trapBubbledEvent(
-      topLevelType,
-      handlerBaseName,
-      handle,
-    );
-  },
+export function trapBubbledEvent(topLevelType, handlerBaseName, handle) {
+  return ReactDOMEventListener.trapBubbledEvent(
+    topLevelType,
+    handlerBaseName,
+    handle,
+  );
+}
 
-  trapCapturedEvent: function(topLevelType, handlerBaseName, handle) {
-    return ReactDOMEventListener.trapCapturedEvent(
-      topLevelType,
-      handlerBaseName,
-      handle,
-    );
-  },
-});
-
-export default ReactBrowserEventEmitter;
+export function trapCapturedEvent(topLevelType, handlerBaseName, handle) {
+  return ReactDOMEventListener.trapCapturedEvent(
+    topLevelType,
+    handlerBaseName,
+    handle,
+  );
+}
