@@ -20,11 +20,11 @@ const shouldWrite = mode === 'write' || mode === 'write-changed';
 const onlyChanged = mode === 'check-changed' || mode === 'write-changed';
 
 const defaultOptions = {
-  'bracket-spacing': 'false',
-  'single-quote': 'true',
-  'jsx-bracket-same-line': 'true',
-  'trailing-comma': 'all',
-  'print-width': 80,
+  bracketSpacing: false,
+  singleQuote: true,
+  jsxBracketSameLine: true,
+  trailingComma: 'all',
+  printWidth: 80,
 };
 const config = {
   default: {
@@ -51,7 +51,7 @@ const config = {
       'scripts/bench/benchmarks/**',
     ],
     options: {
-      'trailing-comma': 'es5',
+      trailingComma: 'es5',
     },
   },
 };
@@ -96,13 +96,7 @@ Object.keys(config).forEach(key => {
   }
 
   const args = Object.keys(defaultOptions).reduce((acc, _key) => {
-    const camelize = /[\-\:]([a-z])/g;
-    const capitalize = token => token[1].toUpperCase();
-    const prettierKey = _key.replace(camelize, capitalize);
-    acc[prettierKey] = (options && options[_key]) || defaultOptions[_key];
-    if (acc[prettierKey] === 'true' || acc[prettierKey] === 'false') {
-      acc[prettierKey] = acc[prettierKey] === 'true';
-    }
+    acc[_key] = (options && options[_key]) || defaultOptions[_key];
     return acc;
   }, {});
   files.forEach(file => {
