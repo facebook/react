@@ -14,7 +14,7 @@ import type {ReactNativeCSType} from './ReactNativeCSTypes';
 import {CSStatefulComponent} from 'CSStatefulComponent';
 
 import ReactFiberReconciler from 'react-reconciler';
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import {injectInternals} from 'react-reconciler/devtools';
 import ReactVersion from 'shared/ReactVersion';
 
 const emptyObject = {};

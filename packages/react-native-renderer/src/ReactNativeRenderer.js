@@ -16,7 +16,7 @@ import './ReactNativeInjection';
 import * as ReactFiberErrorLogger
   from 'react-reconciler/src/ReactFiberErrorLogger';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
+import {injectInternals} from 'react-reconciler/devtools';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
 import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
