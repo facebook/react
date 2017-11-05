@@ -6,7 +6,7 @@
  */
 
 import ReactDOM from 'react-dom';
-import EventPluginUtils from 'events/EventPluginUtils';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';
 import ResponderTouchHistoryStore from 'events/ResponderTouchHistoryStore';
 

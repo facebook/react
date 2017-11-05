@@ -7,14 +7,17 @@
  * @flow
  */
 
-import EventPluginHub from 'events/EventPluginHub';
-import EventPluginRegistry from 'events/EventPluginRegistry';
-import ReactEventEmitterMixin from 'events/ReactEventEmitterMixin';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {getListener} from 'events/EventPluginHub';
+import {registrationNameModules} from 'events/EventPluginRegistry';
+import {batchedUpdates} from 'events/ReactGenericBatching';
+import {handleTopLevel} from 'events/ReactEventEmitterMixin';
 import warning from 'fbjs/lib/warning';
 
-import ReactNativeComponentTree from './ReactNativeComponentTree';
+import {getInstanceFromNode} from './ReactNativeComponentTree';
 import ReactNativeTagHandles from './ReactNativeTagHandles';
+
+export * from 'events/ReactEventEmitterMixin';
+export {getListener, registrationNameModules as registrationNames};
 
 /**
  * Version of `ReactBrowserEventEmitter` that works on the receiving side of a
@@ -74,123 +77,101 @@ var removeTouchesAtIndices = function(
   return rippedOut;
 };
 
-var ReactNativeEventEmitter = {
-  ...ReactEventEmitterMixin,
+/**
+ * Internal version of `receiveEvent` in terms of normalized (non-tag)
+ * `rootNodeID`.
+ *
+ * @see receiveEvent.
+ *
+ * @param {rootNodeID} rootNodeID React root node ID that event occurred on.
+ * @param {TopLevelType} topLevelType Top level type of event.
+ * @param {?object} nativeEventParam Object passed from native.
+ */
+export function _receiveRootNodeIDEvent(
+  rootNodeID: number,
+  topLevelType: string,
+  nativeEventParam: ?Object,
+) {
+  var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
+  var inst = getInstanceFromNode(rootNodeID);
+  batchedUpdates(function() {
+    handleTopLevel(topLevelType, inst, nativeEvent, nativeEvent.target);
+  });
+  // React Native doesn't use ReactControlledComponent but if it did, here's
+  // where it would do it.
+}
 
-  registrationNames: EventPluginRegistry.registrationNameModules,
+/**
+ * Publicly exposed method on module for native objc to invoke when a top
+ * level event is extracted.
+ * @param {rootNodeID} rootNodeID React root node ID that event occurred on.
+ * @param {TopLevelType} topLevelType Top level type of event.
+ * @param {object} nativeEventParam Object passed from native.
+ */
+export function receiveEvent(
+  rootNodeID: number,
+  topLevelType: string,
+  nativeEventParam: Object,
+) {
+  _receiveRootNodeIDEvent(rootNodeID, topLevelType, nativeEventParam);
+}
 
-  getListener: EventPluginHub.getListener,
+/**
+ * Simple multi-wrapper around `receiveEvent` that is intended to receive an
+ * efficient representation of `Touch` objects, and other information that
+ * can be used to construct W3C compliant `Event` and `Touch` lists.
+ *
+ * This may create dispatch behavior that differs than web touch handling. We
+ * loop through each of the changed touches and receive it as a single event.
+ * So two `touchStart`/`touchMove`s that occur simultaneously are received as
+ * two separate touch event dispatches - when they arguably should be one.
+ *
+ * This implementation reuses the `Touch` objects themselves as the `Event`s
+ * since we dispatch an event for each touch (though that might not be spec
+ * compliant). The main purpose of reusing them is to save allocations.
+ *
+ * TODO: Dispatch multiple changed touches in one event. The bubble path
+ * could be the first common ancestor of all the `changedTouches`.
+ *
+ * One difference between this behavior and W3C spec: cancelled touches will
+ * not appear in `.touches`, or in any future `.touches`, though they may
+ * still be "actively touching the surface".
+ *
+ * Web desktop polyfills only need to construct a fake touch event with
+ * identifier 0, also abandoning traditional click handlers.
+ */
+export function receiveTouches(
+  eventTopLevelType: string,
+  touches: Array<Object>,
+  changedIndices: Array<number>,
+) {
+  var changedTouches = eventTopLevelType === 'topTouchEnd' ||
+    eventTopLevelType === 'topTouchCancel'
+    ? removeTouchesAtIndices(touches, changedIndices)
+    : touchSubsequence(touches, changedIndices);
 
-  /**
-   * Internal version of `receiveEvent` in terms of normalized (non-tag)
-   * `rootNodeID`.
-   *
-   * @see receiveEvent.
-   *
-   * @param {rootNodeID} rootNodeID React root node ID that event occurred on.
-   * @param {TopLevelType} topLevelType Top level type of event.
-   * @param {?object} nativeEventParam Object passed from native.
-   */
-  _receiveRootNodeIDEvent: function(
-    rootNodeID: number,
-    topLevelType: string,
-    nativeEventParam: ?Object,
-  ) {
-    var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
-    var inst = ReactNativeComponentTree.getInstanceFromNode(rootNodeID);
-    ReactGenericBatching.batchedUpdates(function() {
-      ReactNativeEventEmitter.handleTopLevel(
-        topLevelType,
-        inst,
-        nativeEvent,
-        nativeEvent.target,
-      );
-    });
-    // React Native doesn't use ReactControlledComponent but if it did, here's
-    // where it would do it.
-  },
-
-  /**
-   * Publicly exposed method on module for native objc to invoke when a top
-   * level event is extracted.
-   * @param {rootNodeID} rootNodeID React root node ID that event occurred on.
-   * @param {TopLevelType} topLevelType Top level type of event.
-   * @param {object} nativeEventParam Object passed from native.
-   */
-  receiveEvent: function(
-    rootNodeID: number,
-    topLevelType: string,
-    nativeEventParam: Object,
-  ) {
-    ReactNativeEventEmitter._receiveRootNodeIDEvent(
-      rootNodeID,
-      topLevelType,
-      nativeEventParam,
-    );
-  },
-
-  /**
-   * Simple multi-wrapper around `receiveEvent` that is intended to receive an
-   * efficient representation of `Touch` objects, and other information that
-   * can be used to construct W3C compliant `Event` and `Touch` lists.
-   *
-   * This may create dispatch behavior that differs than web touch handling. We
-   * loop through each of the changed touches and receive it as a single event.
-   * So two `touchStart`/`touchMove`s that occur simultaneously are received as
-   * two separate touch event dispatches - when they arguably should be one.
-   *
-   * This implementation reuses the `Touch` objects themselves as the `Event`s
-   * since we dispatch an event for each touch (though that might not be spec
-   * compliant). The main purpose of reusing them is to save allocations.
-   *
-   * TODO: Dispatch multiple changed touches in one event. The bubble path
-   * could be the first common ancestor of all the `changedTouches`.
-   *
-   * One difference between this behavior and W3C spec: cancelled touches will
-   * not appear in `.touches`, or in any future `.touches`, though they may
-   * still be "actively touching the surface".
-   *
-   * Web desktop polyfills only need to construct a fake touch event with
-   * identifier 0, also abandoning traditional click handlers.
-   */
-  receiveTouches: function(
-    eventTopLevelType: string,
-    touches: Array<Object>,
-    changedIndices: Array<number>,
-  ) {
-    var changedTouches = eventTopLevelType === 'topTouchEnd' ||
-      eventTopLevelType === 'topTouchCancel'
-      ? removeTouchesAtIndices(touches, changedIndices)
-      : touchSubsequence(touches, changedIndices);
-
-    for (var jj = 0; jj < changedTouches.length; jj++) {
-      var touch = changedTouches[jj];
-      // Touch objects can fulfill the role of `DOM` `Event` objects if we set
-      // the `changedTouches`/`touches`. This saves allocations.
-      touch.changedTouches = changedTouches;
-      touch.touches = touches;
-      var nativeEvent = touch;
-      var rootNodeID = null;
-      var target = nativeEvent.target;
-      if (target !== null && target !== undefined) {
-        if (target < ReactNativeTagHandles.tagsStartAt) {
-          if (__DEV__) {
-            warning(
-              false,
-              'A view is reporting that a touch occurred on tag zero.',
-            );
-          }
-        } else {
-          rootNodeID = target;
+  for (var jj = 0; jj < changedTouches.length; jj++) {
+    var touch = changedTouches[jj];
+    // Touch objects can fulfill the role of `DOM` `Event` objects if we set
+    // the `changedTouches`/`touches`. This saves allocations.
+    touch.changedTouches = changedTouches;
+    touch.touches = touches;
+    var nativeEvent = touch;
+    var rootNodeID = null;
+    var target = nativeEvent.target;
+    if (target !== null && target !== undefined) {
+      if (target < ReactNativeTagHandles.tagsStartAt) {
+        if (__DEV__) {
+          warning(
+            false,
+            'A view is reporting that a touch occurred on tag zero.',
+          );
         }
+      } else {
+        rootNodeID = target;
       }
-      ReactNativeEventEmitter._receiveRootNodeIDEvent(
-        rootNodeID,
-        eventTopLevelType,
-        nativeEvent,
-      );
     }
-  },
-};
-
-export default ReactNativeEventEmitter;
+    // $FlowFixMe Shouldn't we *not* call it if rootNodeID is null?
+    _receiveRootNodeIDEvent(rootNodeID, eventTopLevelType, nativeEvent);
+  }
+}

@@ -40,6 +40,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Improve the warning about booleans passed to event handlers. ([@NicBonetto](https://github.com/NicBonetto) in [#11308](https://github.com/facebook/react/pull/11308))
 * Improve the warning when a multiple `select` gets null `value`. ([@Hendeca](https://github.com/Hendeca) in [#11141](https://github.com/facebook/react/pull/11141))
 * Move link in the warning message to avoid redirect. ([@marciovicente](https://github.com/marciovicente) in [#11400](https://github.com/facebook/react/pull/11400))
+* Add a way to suppress the React DevTools installation prompt. ([@gaearon](http://github.com/gaearon) in [#11448](https://github.com/facebook/react/pull/11448))
 * Remove unused code. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
 
 ### React DOM Server
@@ -52,7 +53,8 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React Test Renderer and Test Utils
 
 * Fix multiple `setState()` calls in `componentWillMount()` in shallow renderer. ([@Hypnosphi](https://github.com/Hypnosphi) in [#11167](https://github.com/facebook/react/pull/11167))
-* Fix shallow renderer to ignore `shouldComponentUpdate()` after `forceUpdate()`. ([@d4rky-pl](https://github.com/d4rky-pl) in [#11239](https://github.com/facebook/react/pull/11239))
+* Fix shallow renderer to ignore `shouldComponentUpdate()` after `forceUpdate()`. ([@d4rky-pl](https://github.com/d4rky-pl) in [#11239](https://github.com/facebook/react/pull/11239) and [#11439](https://github.com/facebook/react/pull/11439))
+* Handle `forceUpdate()` and `React.PureComponent` correctly. ([@koba04](https://github.com/koba04) in [#11440](https://github.com/facebook/react/pull/11440))
 * Add back support for running in production mode. ([@gaearon](https://github.com/gaearon) in [#11112](https://github.com/facebook/react/pull/11112))
 * Add a missing `package.json` dependency. ([@gaearon](https://github.com/gaearon) in [#11340](https://github.com/facebook/react/pull/11340))
 

@@ -98,7 +98,7 @@
   },
   "scripts": {
     "build": "npm run version-check && node scripts/rollup/build.js",
-    "linc": "git diff --name-only --diff-filter=ACMRTUB `git merge-base HEAD master` | grep '\\.js$' | xargs eslint --",
+    "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest",

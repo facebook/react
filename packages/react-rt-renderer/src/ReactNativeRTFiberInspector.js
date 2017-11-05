@@ -16,9 +16,8 @@ import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 
-import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import {getFiberFromTag} from './ReactNativeRTComponentTree';
 
-const {getFiberFromTag} = ReactNativeRTComponentTree;
 let getInspectorDataForViewTag;
 
 if (__DEV__) {

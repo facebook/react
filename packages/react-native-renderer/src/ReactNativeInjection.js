@@ -16,15 +16,15 @@
 // Module provided by RN:
 import 'InitializeCore';
 
-import EventPluginHub from 'events/EventPluginHub';
-import EventPluginUtils from 'events/EventPluginUtils';
+import * as EventPluginHub from 'events/EventPluginHub';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 import ResponderEventPlugin from 'events/ResponderEventPlugin';
 // Module provided by RN:
 import RCTEventEmitter from 'RCTEventEmitter';
 
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
-import ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactNativeEventEmitter from './ReactNativeEventEmitter';
+import * as ReactNativeComponentTree from './ReactNativeComponentTree';
+import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';
 import ReactNativeGlobalResponderHandler
   from './ReactNativeGlobalResponderHandler';

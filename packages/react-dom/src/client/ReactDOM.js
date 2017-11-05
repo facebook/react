@@ -18,11 +18,11 @@ import ReactFiberReconciler from 'react-reconciler';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import {injectInternals} from 'react-reconciler/devtools';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-import ReactGenericBatching from 'events/ReactGenericBatching';
-import ReactControlledComponent from 'events/ReactControlledComponent';
-import EventPluginHub from 'events/EventPluginHub';
-import EventPluginRegistry from 'events/EventPluginRegistry';
-import EventPropagators from 'events/EventPropagators';
+import * as ReactGenericBatching from 'events/ReactGenericBatching';
+import * as ReactControlledComponent from 'events/ReactControlledComponent';
+import * as EventPluginHub from 'events/EventPluginHub';
+import * as EventPluginRegistry from 'events/EventPluginRegistry';
+import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import ReactFeatureFlags from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
@@ -33,12 +33,12 @@ import invariant from 'fbjs/lib/invariant';
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import warning from 'fbjs/lib/warning';
 
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
 import validateDOMNesting from './validateDOMNesting';
-import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,
@@ -47,9 +47,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
-import DOMProperty from '../shared/DOMProperty';
-
-var {ROOT_ATTRIBUTE_NAME} = DOMProperty;
+import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 var {
   createElement,
   createTextNode,

@@ -20,16 +20,14 @@ import deepFreezeAndThrowOnMutationInDev
 import * as ReactNativeViewConfigRegistry
   from './ReactNativeViewConfigRegistry';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
-import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
-import ReactNativeTagHandles from './ReactNativeTagHandles';
-
-const {
+import {
   precacheFiberNode,
   uncacheFiberNode,
   updateFiberProps,
-} = ReactNativeComponentTree;
+} from './ReactNativeComponentTree';
+import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
+import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
+import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 export type Container = number;
 export type Instance = {
