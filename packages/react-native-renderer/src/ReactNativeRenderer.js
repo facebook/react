@@ -17,7 +17,7 @@ import * as ReactFiberErrorLogger
   from 'react-reconciler/src/ReactFiberErrorLogger';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
 import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
 import ReactVersion from 'shared/ReactVersion';
@@ -28,7 +28,7 @@ import {showDialog} from './ReactNativeFiberErrorDialog';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
-import ReactNativeComponentTree from './ReactNativeComponentTree';
+import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 import ReactNativePropRegistry from './ReactNativePropRegistry';
 import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';

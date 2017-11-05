@@ -12,7 +12,7 @@ var randomKey = Math.random().toString(36).slice(2);
 var internalInstanceKey = '__reactInternalInstance$' + randomKey;
 var internalEventHandlersKey = '__reactEventHandlers$' + randomKey;
 
-function precacheFiberNode(hostInst, node) {
+export function precacheFiberNode(hostInst, node) {
   node[internalInstanceKey] = hostInst;
 }
 
@@ -20,7 +20,7 @@ function precacheFiberNode(hostInst, node) {
  * Given a DOM node, return the closest ReactDOMComponent or
  * ReactDOMTextComponent instance ancestor.
  */
-function getClosestInstanceFromNode(node) {
+export function getClosestInstanceFromNode(node) {
   if (node[internalInstanceKey]) {
     return node[internalInstanceKey];
   }
@@ -55,7 +55,7 @@ function getClosestInstanceFromNode(node) {
  * Given a DOM node, return the ReactDOMComponent or ReactDOMTextComponent
  * instance, or null if the node was not rendered by this React.
  */
-function getInstanceFromNode(node) {
+export function getInstanceFromNode(node) {
   var inst = node[internalInstanceKey];
   if (inst) {
     if (inst.tag === HostComponent || inst.tag === HostText) {
@@ -71,7 +71,7 @@ function getInstanceFromNode(node) {
  * Given a ReactDOMComponent or ReactDOMTextComponent, return the corresponding
  * DOM node.
  */
-function getNodeFromInstance(inst) {
+export function getNodeFromInstance(inst) {
   if (inst.tag === HostComponent || inst.tag === HostText) {
     // In Fiber this, is just the state node right now. We assume it will be
     // a host component or host text.
@@ -83,21 +83,10 @@ function getNodeFromInstance(inst) {
   invariant(false, 'getNodeFromInstance: Invalid argument.');
 }
 
-function getFiberCurrentPropsFromNode(node) {
+export function getFiberCurrentPropsFromNode(node) {
   return node[internalEventHandlersKey] || null;
 }
 
-function updateFiberProps(node, props) {
+export function updateFiberProps(node, props) {
   node[internalEventHandlersKey] = props;
 }
-
-var ReactDOMComponentTree = {
-  getClosestInstanceFromNode: getClosestInstanceFromNode,
-  getInstanceFromNode: getInstanceFromNode,
-  getNodeFromInstance: getNodeFromInstance,
-  precacheFiberNode: precacheFiberNode,
-  getFiberCurrentPropsFromNode,
-  updateFiberProps,
-};
-
-export default ReactDOMComponentTree;

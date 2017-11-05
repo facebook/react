@@ -68,7 +68,7 @@ var DOMPropertyInjection = {
 
     for (var propName in Properties) {
       invariant(
-        !DOMProperty.properties.hasOwnProperty(propName),
+        !properties.hasOwnProperty(propName),
         "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
           "'%s' which has already been injected. You may be accidentally " +
           'injecting the same DOM property config twice, or you may be ' +
@@ -129,135 +129,114 @@ var DOMPropertyInjection = {
       // without case-sensitivity. This allows the whitelist to pick up
       // `allowfullscreen`, which should be written using the property configuration
       // for `allowFullscreen`
-      DOMProperty.properties[propName] = propertyInfo;
+      properties[propName] = propertyInfo;
     }
   },
 };
 
 /* eslint-disable max-len */
-var ATTRIBUTE_NAME_START_CHAR =
+export const ATTRIBUTE_NAME_START_CHAR =
   ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
 /* eslint-enable max-len */
+export const ATTRIBUTE_NAME_CHAR =
+  ATTRIBUTE_NAME_START_CHAR + '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040';
+
+export const ID_ATTRIBUTE_NAME = 'data-reactid';
+export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 
 /**
- * DOMProperty exports lookup objects that can be used like functions:
+ * Map from property "standard name" to an object with info about how to set
+ * the property in the DOM. Each object contains:
  *
- *   > DOMProperty.isValid['id']
- *   true
- *   > DOMProperty.isValid['foobar']
- *   undefined
- *
- * Although this may be confusing, it performs better in general.
- *
- * @see http://jsperf.com/key-exists
- * @see http://jsperf.com/key-missing
+ * attributeName:
+ *   Used when rendering markup or with `*Attribute()`.
+ * attributeNamespace
+ * propertyName:
+ *   Used on DOM node instances. (This includes properties that mutate due to
+ *   external factors.)
+ * mutationMethod:
+ *   If non-null, used instead of the property or `setAttribute()` after
+ *   initial render.
+ * mustUseProperty:
+ *   Whether the property must be accessed and mutated as an object property.
+ * hasBooleanValue:
+ *   Whether the property should be removed when set to a falsey value.
+ * hasNumericValue:
+ *   Whether the property must be numeric or parse as a numeric and should be
+ *   removed when set to a falsey value.
+ * hasPositiveNumericValue:
+ *   Whether the property must be positive numeric or parse as a positive
+ *   numeric and should be removed when set to a falsey value.
+ * hasOverloadedBooleanValue:
+ *   Whether the property can be used as a flag as well as with a value.
+ *   Removed when strictly equal to false; present without a value when
+ *   strictly equal to true; present with a value otherwise.
  */
-var DOMProperty = {
-  ID_ATTRIBUTE_NAME: 'data-reactid',
-  ROOT_ATTRIBUTE_NAME: 'data-reactroot',
+export const properties = {};
 
-  ATTRIBUTE_NAME_START_CHAR: ATTRIBUTE_NAME_START_CHAR,
-  ATTRIBUTE_NAME_CHAR: ATTRIBUTE_NAME_START_CHAR +
-    '\\-.0-9\\u00B7\\u0300-\\u036F\\u203F-\\u2040',
-
-  /**
-   * Map from property "standard name" to an object with info about how to set
-   * the property in the DOM. Each object contains:
-   *
-   * attributeName:
-   *   Used when rendering markup or with `*Attribute()`.
-   * attributeNamespace
-   * propertyName:
-   *   Used on DOM node instances. (This includes properties that mutate due to
-   *   external factors.)
-   * mutationMethod:
-   *   If non-null, used instead of the property or `setAttribute()` after
-   *   initial render.
-   * mustUseProperty:
-   *   Whether the property must be accessed and mutated as an object property.
-   * hasBooleanValue:
-   *   Whether the property should be removed when set to a falsey value.
-   * hasNumericValue:
-   *   Whether the property must be numeric or parse as a numeric and should be
-   *   removed when set to a falsey value.
-   * hasPositiveNumericValue:
-   *   Whether the property must be positive numeric or parse as a positive
-   *   numeric and should be removed when set to a falsey value.
-   * hasOverloadedBooleanValue:
-   *   Whether the property can be used as a flag as well as with a value.
-   *   Removed when strictly equal to false; present without a value when
-   *   strictly equal to true; present with a value otherwise.
-   */
-  properties: {},
-
-  /**
-   * Checks whether a property name is a writeable attribute.
-   * @method
-   */
-  shouldSetAttribute: function(name, value) {
-    if (DOMProperty.isReservedProp(name)) {
-      return false;
-    }
-    if (
-      (name[0] === 'o' || name[0] === 'O') &&
-      (name[1] === 'n' || name[1] === 'N') &&
-      name.length > 2
-    ) {
-      return false;
-    }
-    if (value === null) {
+/**
+ * Checks whether a property name is a writeable attribute.
+ * @method
+ */
+export function shouldSetAttribute(name, value) {
+  if (isReservedProp(name)) {
+    return false;
+  }
+  if (
+    (name[0] === 'o' || name[0] === 'O') &&
+    (name[1] === 'n' || name[1] === 'N') &&
+    name.length > 2
+  ) {
+    return false;
+  }
+  if (value === null) {
+    return true;
+  }
+  switch (typeof value) {
+    case 'boolean':
+      return shouldAttributeAcceptBooleanValue(name);
+    case 'undefined':
+    case 'number':
+    case 'string':
+    case 'object':
       return true;
-    }
-    switch (typeof value) {
-      case 'boolean':
-        return DOMProperty.shouldAttributeAcceptBooleanValue(name);
-      case 'undefined':
-      case 'number':
-      case 'string':
-      case 'object':
-        return true;
-      default:
-        // function, symbol
-        return false;
-    }
-  },
+    default:
+      // function, symbol
+      return false;
+  }
+}
 
-  getPropertyInfo(name) {
-    return DOMProperty.properties.hasOwnProperty(name)
-      ? DOMProperty.properties[name]
-      : null;
-  },
+export function getPropertyInfo(name) {
+  return properties.hasOwnProperty(name) ? properties[name] : null;
+}
 
-  shouldAttributeAcceptBooleanValue(name) {
-    if (DOMProperty.isReservedProp(name)) {
-      return true;
-    }
-    let propertyInfo = DOMProperty.getPropertyInfo(name);
-    if (propertyInfo) {
-      return (
-        propertyInfo.hasBooleanValue ||
-        propertyInfo.hasStringBooleanValue ||
-        propertyInfo.hasOverloadedBooleanValue
-      );
-    }
-    var prefix = name.toLowerCase().slice(0, 5);
-    return prefix === 'data-' || prefix === 'aria-';
-  },
+export function shouldAttributeAcceptBooleanValue(name) {
+  if (isReservedProp(name)) {
+    return true;
+  }
+  let propertyInfo = getPropertyInfo(name);
+  if (propertyInfo) {
+    return (
+      propertyInfo.hasBooleanValue ||
+      propertyInfo.hasStringBooleanValue ||
+      propertyInfo.hasOverloadedBooleanValue
+    );
+  }
+  var prefix = name.toLowerCase().slice(0, 5);
+  return prefix === 'data-' || prefix === 'aria-';
+}
 
-  /**
-   * Checks to see if a property name is within the list of properties
-   * reserved for internal React operations. These properties should
-   * not be set on an HTML element.
-   *
-   * @private
-   * @param {string} name
-   * @return {boolean} If the name is within reserved props
-   */
-  isReservedProp(name) {
-    return RESERVED_PROPS.hasOwnProperty(name);
-  },
+/**
+ * Checks to see if a property name is within the list of properties
+ * reserved for internal React operations. These properties should
+ * not be set on an HTML element.
+ *
+ * @private
+ * @param {string} name
+ * @return {boolean} If the name is within reserved props
+ */
+export function isReservedProp(name) {
+  return RESERVED_PROPS.hasOwnProperty(name);
+}
 
-  injection: DOMPropertyInjection,
-};
-
-export default DOMProperty;
+export const injection = DOMPropertyInjection;

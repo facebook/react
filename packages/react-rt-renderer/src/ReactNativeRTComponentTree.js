@@ -12,33 +12,23 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 var instanceCache: {[key: number]: Fiber} = {};
 var instanceProps: {[key: number]: Object} = {};
 
-function precacheFiberNode(fiber: Fiber, tag: number): void {
+export function precacheFiberNode(fiber: Fiber, tag: number): void {
   instanceCache[tag] = fiber;
 }
 
-function getFiberFromTag(tag: number): null | Fiber {
+export function getFiberFromTag(tag: number): null | Fiber {
   return instanceCache[tag] || null;
 }
 
-function uncacheFiberNode(tag: number): void {
+export function uncacheFiberNode(tag: number): void {
   delete instanceCache[tag];
   delete instanceProps[tag];
 }
 
-function getFiberCurrentPropsFromTag(tag: number): null | Object {
+export function getFiberCurrentPropsFromTag(tag: number): null | Object {
   return instanceProps[tag] || null;
 }
 
-function updateFiberProps(tag: number, props: Object): void {
+export function updateFiberProps(tag: number, props: Object): void {
   instanceProps[tag] = props;
 }
-
-var ReactNativeRTComponentTree = {
-  precacheFiberNode,
-  uncacheFiberNode,
-  getFiberFromTag,
-  getFiberCurrentPropsFromTag,
-  updateFiberProps,
-};
-
-export default ReactNativeRTComponentTree;

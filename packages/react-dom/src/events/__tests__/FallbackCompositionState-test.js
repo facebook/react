@@ -16,7 +16,7 @@ describe('FallbackCompositionState', () => {
 
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    FallbackCompositionState = require('../FallbackCompositionState').default;
+    FallbackCompositionState = require('../FallbackCompositionState');
   });
 
   function getInput() {

@@ -24,52 +24,51 @@ var compositionState = {
   _fallbackText: null,
 };
 
-var FallbackCompositionState = {
-  initialize(nativeEventTarget) {
-    compositionState._root = nativeEventTarget;
-    compositionState._startText = FallbackCompositionState.getText();
-    return true;
-  },
-  reset() {
-    compositionState._root = null;
-    compositionState._startText = null;
-    compositionState._fallbackText = null;
-  },
-  getData() {
-    if (compositionState._fallbackText) {
-      return compositionState._fallbackText;
-    }
+export function initialize(nativeEventTarget) {
+  compositionState._root = nativeEventTarget;
+  compositionState._startText = getText();
+  return true;
+}
 
-    var start;
-    var startValue = compositionState._startText;
-    var startLength = startValue.length;
-    var end;
-    var endValue = FallbackCompositionState.getText();
-    var endLength = endValue.length;
+export function reset() {
+  compositionState._root = null;
+  compositionState._startText = null;
+  compositionState._fallbackText = null;
+}
 
-    for (start = 0; start < startLength; start++) {
-      if (startValue[start] !== endValue[start]) {
-        break;
-      }
-    }
-
-    var minEnd = startLength - start;
-    for (end = 1; end <= minEnd; end++) {
-      if (startValue[startLength - end] !== endValue[endLength - end]) {
-        break;
-      }
-    }
-
-    var sliceTail = end > 1 ? 1 - end : undefined;
-    compositionState._fallbackText = endValue.slice(start, sliceTail);
+export function getData() {
+  if (compositionState._fallbackText) {
     return compositionState._fallbackText;
-  },
-  getText() {
-    if ('value' in compositionState._root) {
-      return compositionState._root.value;
-    }
-    return compositionState._root[getTextContentAccessor()];
-  },
-};
+  }
 
-export default FallbackCompositionState;
+  var start;
+  var startValue = compositionState._startText;
+  var startLength = startValue.length;
+  var end;
+  var endValue = getText();
+  var endLength = endValue.length;
+
+  for (start = 0; start < startLength; start++) {
+    if (startValue[start] !== endValue[start]) {
+      break;
+    }
+  }
+
+  var minEnd = startLength - start;
+  for (end = 1; end <= minEnd; end++) {
+    if (startValue[startLength - end] !== endValue[endLength - end]) {
+      break;
+    }
+  }
+
+  var sliceTail = end > 1 ? 1 - end : undefined;
+  compositionState._fallbackText = endValue.slice(start, sliceTail);
+  return compositionState._fallbackText;
+}
+
+export function getText() {
+  if ('value' in compositionState._root) {
+    return compositionState._root.value;
+  }
+  return compositionState._root[getTextContentAccessor()];
+}
