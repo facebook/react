@@ -7,6 +7,8 @@
  * @flow
  */
 
+import invariant from 'fbjs/lib/invariant';
+
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as CSFeatureFlagsType from './ReactNativeCSFeatureFlags';
 
@@ -20,6 +22,10 @@ export const enableUserTimingAPI = __DEV__;
 export const enableMutatingReconciler = false;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = true;
+
+export function addUserTimingListener() {
+  invariant(false, 'Not implemented.');
+}
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
