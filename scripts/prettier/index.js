@@ -11,7 +11,6 @@
 
 const chalk = require('chalk');
 const glob = require('glob');
-const path = require('path');
 const execFileSync = require('child_process').execFileSync;
 const prettier = require('prettier');
 const fs = require('fs');
@@ -19,9 +18,6 @@ const fs = require('fs');
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
 const onlyChanged = mode === 'check-changed' || mode === 'write-changed';
-
-const extension = process.platform === 'win32' ? '.cmd' : '';
-const prettierCmd = path.join('node_modules', '.bin', 'prettier' + extension);
 
 const defaultOptions = {
   'bracket-spacing': 'false',
@@ -99,11 +95,11 @@ Object.keys(config).forEach(key => {
     return;
   }
 
-  const args = Object.keys(defaultOptions).reduce((acc, key) => {
+  const args = Object.keys(defaultOptions).reduce((acc, _key) => {
     const camelize = /[\-\:]([a-z])/g;
     const capitalize = token => token[1].toUpperCase();
     const prettierKey = key.replace(camelize, capitalize);
-    acc[prettierKey] = (options && options[key]) || defaultOptions[key];
+    acc[prettierKey] = (options && options[_key]) || defaultOptions[_key];
     if (acc[prettierKey] === 'true' || acc[prettierKey] === 'false') {
       acc[prettierKey] = acc[prettierKey] === 'true';
     }
