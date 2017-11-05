@@ -7,10 +7,6 @@
  * @flow
  */
 
-var DevToolsHook = require('./src/ReactFiberDevToolsHook');
+const {injectInternals} = require('./src/ReactFiberDevToolsHook');
 
-// TODO: decide on the top-level export form.
-// This is hacky but makes it work with both Rollup and Jest.
-module.exports = (DevToolsHook.default
-  ? DevToolsHook.default
-  : DevToolsHook).injectInternals;
+exports.injectInternals = injectInternals;
