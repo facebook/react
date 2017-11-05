@@ -39,7 +39,7 @@ import * as ReactDOMFiberComponent from './ReactDOMFiberComponent';
 import * as ReactInputSelection from './ReactInputSelection';
 import validateDOMNesting from './validateDOMNesting';
 import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import * as ReactDOMEventListener from '../events/ReactDOMEventListener';
 import {getChildNamespace} from '../shared/DOMNamespaces';
 import {
   ELEMENT_NODE,

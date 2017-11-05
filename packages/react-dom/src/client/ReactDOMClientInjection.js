@@ -14,11 +14,11 @@ import ChangeEventPlugin from '../events/ChangeEventPlugin';
 import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
 import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
 import {handleTopLevel} from '../events/ReactBrowserEventEmitter';
-import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import {setHandleTopLevel} from '../events/ReactDOMEventListener';
 import SelectEventPlugin from '../events/SelectEventPlugin';
 import SimpleEventPlugin from '../events/SimpleEventPlugin';
 
-ReactDOMEventListener.setHandleTopLevel(handleTopLevel);
+setHandleTopLevel(handleTopLevel);
 
 /**
  * Inject modules for resolving DOM hierarchy and plugin ordering.
