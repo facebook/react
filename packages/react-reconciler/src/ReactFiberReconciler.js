@@ -28,6 +28,7 @@ import {
   processChildContext,
 } from './ReactFiberContext';
 import {createFiberRoot} from './ReactFiberRoot';
+import * as ReactFiberDevToolsHook from './ReactFiberDevToolsHook';
 import ReactFiberScheduler from './ReactFiberScheduler';
 import {insertUpdateIntoFiber} from './ReactFiberUpdateQueue';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
@@ -211,6 +212,23 @@ type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
   ): void,
 };
 
+// 0 is PROD, 1 is DEV.
+// Might add PROFILE later.
+type BundleType = 0 | 1;
+
+type DevToolsConfig<I, TI> = {|
+  bundleType: BundleType,
+  version: string,
+  rendererPackageName: string,
+  // Note: this actually *does* depend on Fiber internal fields.
+  // Used by "inspect clicked DOM element" in React DevTools.
+  findFiberByHostInstance?: (instance: I | TI) => Fiber,
+  // Used by RN in-app inspector.
+  // This API is unfortunately RN-specific.
+  // TODO: Change it to accept Fiber instead and type it properly.
+  getInspectorDataForViewTag?: (tag: number) => Object,
+|};
+
 export type Reconciler<C, I, TI> = {
   createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot,
   updateContainer(
@@ -223,6 +241,7 @@ export type Reconciler<C, I, TI> = {
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
   deferredUpdates<A>(fn: () => A): A,
+  injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean,
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(
@@ -327,6 +346,14 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     scheduleWork(current, expirationTime);
   }
 
+  function findHostInstance(fiber: Fiber): PI | null {
+    const hostFiber = findCurrentHostFiber(fiber);
+    if (hostFiber === null) {
+      return null;
+    }
+    return hostFiber.stateNode;
+  }
+
   return {
     createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot {
       return createFiberRoot(containerInfo, hydrate);
@@ -386,13 +413,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       }
     },
 
-    findHostInstance(fiber: Fiber): PI | null {
-      const hostFiber = findCurrentHostFiber(fiber);
-      if (hostFiber === null) {
-        return null;
-      }
-      return hostFiber.stateNode;
-    },
+    findHostInstance,
 
     findHostInstanceWithNoPortals(fiber: Fiber): PI | null {
       const hostFiber = findCurrentHostFiberWithNoPortals(fiber);
@@ -400,6 +421,23 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         return null;
       }
       return hostFiber.stateNode;
+    },
+
+    injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean {
+      const {findFiberByHostInstance} = devToolsConfig;
+      return ReactFiberDevToolsHook.injectInternals({
+        ...devToolsConfig,
+        findHostInstanceByFiber(fiber: Fiber): I | TI | null {
+          return findHostInstance(fiber);
+        },
+        findFiberByHostInstance(instance: I | TI): Fiber | null {
+          if (!findFiberByHostInstance) {
+            // Might not be implemented by the renderer.
+            return null;
+          }
+          return findFiberByHostInstance(instance);
+        },
+      });
     },
   };
 }
