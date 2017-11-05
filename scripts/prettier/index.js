@@ -98,7 +98,7 @@ Object.keys(config).forEach(key => {
   const args = Object.keys(defaultOptions).reduce((acc, _key) => {
     const camelize = /[\-\:]([a-z])/g;
     const capitalize = token => token[1].toUpperCase();
-    const prettierKey = key.replace(camelize, capitalize);
+    const prettierKey = _key.replace(camelize, capitalize);
     acc[prettierKey] = (options && options[_key]) || defaultOptions[_key];
     if (acc[prettierKey] === 'true' || acc[prettierKey] === 'false') {
       acc[prettierKey] = acc[prettierKey] === 'true';
