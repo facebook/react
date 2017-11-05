@@ -95,10 +95,7 @@ Object.keys(config).forEach(key => {
     return;
   }
 
-  const args = Object.keys(defaultOptions).reduce((acc, _key) => {
-    acc[_key] = (options && options[_key]) || defaultOptions[_key];
-    return acc;
-  }, {});
+  const args = Object.assign({}, defaultOptions, options);
   files.forEach(file => {
     const input = fs.readFileSync(file, 'utf8');
     if (shouldWrite) {
