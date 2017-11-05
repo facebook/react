@@ -20,7 +20,11 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
-import DOMMarkupOperations from './DOMMarkupOperations';
+import {
+  createMarkupForCustomAttribute,
+  createMarkupForProperty,
+  createMarkupForRoot,
+} from './DOMMarkupOperations';
 import {
   Namespaces,
   getIntrinsicNamespace,
@@ -319,13 +323,10 @@ function createOpenTagMarkup(
     var markup = null;
     if (isCustomComponent(tagLowercase, props)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
-        markup = DOMMarkupOperations.createMarkupForCustomAttribute(
-          propKey,
-          propValue,
-        );
+        markup = createMarkupForCustomAttribute(propKey, propValue);
       }
     } else {
-      markup = DOMMarkupOperations.createMarkupForProperty(propKey, propValue);
+      markup = createMarkupForProperty(propKey, propValue);
     }
     if (markup) {
       ret += ' ' + markup;
@@ -339,7 +340,7 @@ function createOpenTagMarkup(
   }
 
   if (isRootElement) {
-    ret += ' ' + DOMMarkupOperations.createMarkupForRoot();
+    ret += ' ' + createMarkupForRoot();
   }
   return ret;
 }
