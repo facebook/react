@@ -8,15 +8,13 @@
 import warning from 'fbjs/lib/warning';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 
-import DOMProperty from './DOMProperty';
+import {ATTRIBUTE_NAME_CHAR} from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import validAriaProperties from './validAriaProperties';
 
 var warnedProperties = {};
-var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-var rARIACamel = new RegExp(
-  '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
-);
+var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
+var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
 

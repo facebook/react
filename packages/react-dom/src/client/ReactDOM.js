@@ -48,9 +48,7 @@ import {
   DOCUMENT_NODE,
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
-import DOMProperty from '../shared/DOMProperty';
-
-var {ROOT_ATTRIBUTE_NAME} = DOMProperty;
+import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
 var {
   createElement,
   createTextNode,

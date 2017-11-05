@@ -5,7 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import DOMProperty from '../shared/DOMProperty';
+import {
+  ATTRIBUTE_NAME_CHAR,
+  ATTRIBUTE_NAME_START_CHAR,
+  ID_ATTRIBUTE_NAME,
+  ROOT_ATTRIBUTE_NAME,
+  getPropertyInfo,
+  shouldAttributeAcceptBooleanValue,
+  shouldSetAttribute,
+} from '../shared/DOMProperty';
 import quoteAttributeValueForBrowser
   from '../shared/quoteAttributeValueForBrowser';
 import warning from 'fbjs/lib/warning';
@@ -13,11 +21,7 @@ import warning from 'fbjs/lib/warning';
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  '^[' +
-    DOMProperty.ATTRIBUTE_NAME_START_CHAR +
-    '][' +
-    DOMProperty.ATTRIBUTE_NAME_CHAR +
-    ']*$',
+  '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
@@ -62,13 +66,11 @@ function shouldIgnoreValue(propertyInfo, value) {
  * @return {string} Markup string.
  */
 export function createMarkupForID(id) {
-  return (
-    DOMProperty.ID_ATTRIBUTE_NAME + '=' + quoteAttributeValueForBrowser(id)
-  );
+  return ID_ATTRIBUTE_NAME + '=' + quoteAttributeValueForBrowser(id);
 }
 
 export function createMarkupForRoot() {
-  return DOMProperty.ROOT_ATTRIBUTE_NAME + '=""';
+  return ROOT_ATTRIBUTE_NAME + '=""';
 }
 
 /**
@@ -79,7 +81,7 @@ export function createMarkupForRoot() {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name, value) {
-  var propertyInfo = DOMProperty.getPropertyInfo(name);
+  var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
     if (shouldIgnoreValue(propertyInfo, value)) {
       return '';
@@ -92,11 +94,11 @@ export function createMarkupForProperty(name, value) {
       return attributeName + '=""';
     } else if (
       typeof value !== 'boolean' ||
-      DOMProperty.shouldAttributeAcceptBooleanValue(name)
+      shouldAttributeAcceptBooleanValue(name)
     ) {
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     }
-  } else if (DOMProperty.shouldSetAttribute(name, value)) {
+  } else if (shouldSetAttribute(name, value)) {
     if (value == null) {
       return '';
     }

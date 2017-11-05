@@ -13,7 +13,12 @@ import {
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import warning from 'fbjs/lib/warning';
 
-import DOMProperty from './DOMProperty';
+import {
+  ATTRIBUTE_NAME_CHAR,
+  isReservedProp,
+  shouldAttributeAcceptBooleanValue,
+  shouldSetAttribute,
+} from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
 
@@ -26,10 +31,8 @@ if (__DEV__) {
   var warnedProperties = {};
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var EVENT_NAME_REGEX = /^on[A-Z]/;
-  var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-  var rARIACamel = new RegExp(
-    '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
-  );
+  var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
+  var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
   var validateProperty = function(tagName, name, value) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
@@ -141,7 +144,7 @@ if (__DEV__) {
       return true;
     }
 
-    const isReserved = DOMProperty.isReservedProp(name);
+    const isReserved = isReservedProp(name);
 
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
@@ -177,7 +180,7 @@ if (__DEV__) {
 
     if (
       typeof value === 'boolean' &&
-      !DOMProperty.shouldAttributeAcceptBooleanValue(name)
+      !shouldAttributeAcceptBooleanValue(name)
     ) {
       if (value) {
         warning(
@@ -221,7 +224,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (!DOMProperty.shouldSetAttribute(name, value)) {
+    if (!shouldSetAttribute(name, value)) {
       warnedProperties[name] = true;
       return false;
     }
