@@ -92,7 +92,7 @@ Object.keys(config).forEach(key => {
     ? `{${patterns.join(',')}}`
     : `${patterns.join(',')}`;
   const files = glob
-    .sync(globPattern, { ignore })
+    .sync(globPattern, {ignore})
     .filter(f => !onlyChanged || changedFiles.has(f));
 
   if (!files.length) {
@@ -105,7 +105,7 @@ Object.keys(config).forEach(key => {
     const prettierKey = key.replace(camelize, capitalize);
     acc[prettierKey] = (options && options[key]) || defaultOptions[key];
     if (acc[prettierKey] === 'true' || acc[prettierKey] === 'false') {
-      acc[prettierKey] = !!acc[prettierKey];
+      acc[prettierKey] = acc[prettierKey] === 'true';
     }
     return acc;
   }, {});
