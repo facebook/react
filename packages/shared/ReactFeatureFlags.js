@@ -24,6 +24,7 @@ export const enableNoopReconciler = false;
 // Experimental persistent mode (CS):
 export const enablePersistentReconciler = false;
 
+// Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');
 }
