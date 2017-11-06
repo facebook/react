@@ -3,7 +3,7 @@
 // We want to globally mock this but jest doesn't let us do that by default
 // for a file that already exists. So we have to explicitly mock it.
 jest.mock('shared/ReactFeatureFlags', () => {
-  const flags = require.requireActual('shared/ReactFeatureFlags');
+  const flags = require.requireActual('shared/ReactFeatureFlags').default;
   return Object.assign({}, flags, {
     disableNewFiberFeatures: true,
   });

@@ -54,8 +54,9 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
-        'Warning: Received `true` for non-boolean attribute `unknown`. ' +
-          'If this is expected, cast the value to a string.\n' +
+        'Received `true` for a non-boolean attribute `unknown`.\n\n' +
+          'If you want to write it to the DOM, pass a string instead: ' +
+          'unknown="true" or unknown={value.toString()}.\n' +
           '    in div (at **)',
       );
       expectDev(console.error.calls.count()).toBe(1);
@@ -87,7 +88,7 @@ describe('ReactDOM unknown attribute', () => {
       expectDev(
         normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
       ).toMatch(
-        'Warning: Received NaN for numeric attribute `unknown`. ' +
+        'Warning: Received NaN for the `unknown` attribute. ' +
           'If this is expected, cast the value to a string.\n' +
           '    in div (at **)',
       );

@@ -13,7 +13,7 @@ var reactProdInvariant;
 describe('reactProdInvariant', () => {
   beforeEach(() => {
     jest.resetModules();
-    reactProdInvariant = require('shared/reactProdInvariant');
+    reactProdInvariant = require('shared/reactProdInvariant').default;
   });
 
   it('should throw with the correct number of `%s`s in the URL', () => {

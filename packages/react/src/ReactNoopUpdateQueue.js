@@ -5,15 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import warning from 'fbjs/lib/warning';
 
-if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-}
+var didWarnStateUpdateForUnmountedComponent = {};
 
 function warnNoop(publicInstance, callerName) {
   if (__DEV__) {
     var constructor = publicInstance.constructor;
+    const componentName =
+      (constructor && (constructor.displayName || constructor.name)) ||
+      'ReactClass';
+    const warningKey = `${componentName}.${callerName}`;
+    if (didWarnStateUpdateForUnmountedComponent[warningKey]) {
+      return;
+    }
     warning(
       false,
       '%s(...): Can only update a mounted or mounting component. ' +
@@ -21,9 +26,9 @@ function warnNoop(publicInstance, callerName) {
         'This is a no-op.\n\nPlease check the code for the %s component.',
       callerName,
       callerName,
-      (constructor && (constructor.displayName || constructor.name)) ||
-        'ReactClass',
+      componentName,
     );
+    didWarnStateUpdateForUnmountedComponent[warningKey] = true;
   }
 }
 
@@ -105,4 +110,4 @@ var ReactNoopUpdateQueue = {
   },
 };
 
-module.exports = ReactNoopUpdateQueue;
+export default ReactNoopUpdateQueue;

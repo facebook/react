@@ -5,18 +5,16 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 var instanceCache = {};
 var instanceProps = {};
 
-function precacheFiberNode(hostInst, tag) {
+export function precacheFiberNode(hostInst, tag) {
   instanceCache[tag] = hostInst;
 }
 
-function uncacheFiberNode(tag) {
+export function uncacheFiberNode(tag) {
   delete instanceCache[tag];
   delete instanceProps[tag];
 }
@@ -31,22 +29,16 @@ function getTagFromInstance(inst) {
   return tag;
 }
 
-function getFiberCurrentPropsFromNode(stateNode) {
+export {
+  getInstanceFromTag as getClosestInstanceFromNode,
+  getInstanceFromTag as getInstanceFromNode,
+  getTagFromInstance as getNodeFromInstance,
+};
+
+export function getFiberCurrentPropsFromNode(stateNode) {
   return instanceProps[stateNode._nativeTag] || null;
 }
 
-function updateFiberProps(tag, props) {
+export function updateFiberProps(tag, props) {
   instanceProps[tag] = props;
 }
-
-var ReactNativeComponentTree = {
-  getClosestInstanceFromNode: getInstanceFromTag,
-  getInstanceFromNode: getInstanceFromTag,
-  getNodeFromInstance: getTagFromInstance,
-  precacheFiberNode,
-  uncacheFiberNode,
-  getFiberCurrentPropsFromNode,
-  updateFiberProps,
-};
-
-module.exports = ReactNativeComponentTree;

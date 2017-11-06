@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var omittedCloseTags = require('./omittedCloseTags');
+import omittedCloseTags from './omittedCloseTags';
 
 // For HTML, certain tags cannot have children. This has the same purpose as
 // `omittedCloseTags` except that `menuitem` should still have its closing tag.
@@ -17,4 +15,4 @@ var voidElementTags = {
   ...omittedCloseTags,
 };
 
-module.exports = voidElementTags;
+export default voidElementTags;

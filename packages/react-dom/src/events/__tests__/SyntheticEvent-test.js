@@ -19,13 +19,13 @@ describe('SyntheticEvent', () => {
 
   beforeEach(() => {
     // TODO: can we express this test with only public API?
-    SyntheticEvent = require('events/SyntheticEvent');
+    SyntheticEvent = require('events/SyntheticEvent').default;
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
 
     createEvent = function(nativeEvent) {
-      var target = require('../getEventTarget')(nativeEvent);
+      var target = require('../getEventTarget').default(nativeEvent);
       return SyntheticEvent.getPooled({}, '', nativeEvent, target);
     };
   });

@@ -7,23 +7,22 @@
  * @flow
  */
 
-'use strict';
-
-const ReactFiberReconciler = require('react-reconciler');
-const emptyObject = require('fbjs/lib/emptyObject');
-const invariant = require('fbjs/lib/invariant');
+import ReactFiberReconciler from 'react-reconciler';
+import emptyObject from 'fbjs/lib/emptyObject';
+import invariant from 'fbjs/lib/invariant';
 // Module provided by RN:
-const RTManager = require('RTManager');
+import RTManager from 'RTManager';
 
-const ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
-const ReactNativeRTTagHandles = require('./ReactNativeRTTagHandles');
+import {
+  precacheFiberNode,
+  updateFiberProps,
+} from './ReactNativeRTComponentTree';
+import ReactNativeRTTagHandles from './ReactNativeRTTagHandles';
 
 export type Container = number;
 export type Instance = number;
 export type Props = Object;
 export type TextInstance = number;
-
-const {precacheFiberNode, updateFiberProps} = ReactNativeRTComponentTree;
 
 function processProps(instance: number, props: Props): Object {
   const propsPayload = {};
@@ -242,4 +241,4 @@ const NativeRTRenderer = ReactFiberReconciler({
   },
 });
 
-module.exports = NativeRTRenderer;
+export default NativeRTRenderer;

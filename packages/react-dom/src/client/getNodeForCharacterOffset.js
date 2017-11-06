@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Given any node return the first leaf node without children.
@@ -46,9 +44,9 @@ function getSiblingNode(node) {
  * @return {?object}
  */
 function getNodeForCharacterOffset(root, offset) {
-  var node = getLeafNode(root);
-  var nodeStart = 0;
-  var nodeEnd = 0;
+  let node = getLeafNode(root);
+  let nodeStart = 0;
+  let nodeEnd = 0;
 
   while (node) {
     if (node.nodeType === TEXT_NODE) {
@@ -68,4 +66,4 @@ function getNodeForCharacterOffset(root, offset) {
   }
 }
 
-module.exports = getNodeForCharacterOffset;
+export default getNodeForCharacterOffset;

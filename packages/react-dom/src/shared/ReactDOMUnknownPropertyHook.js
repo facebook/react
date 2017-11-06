@@ -5,17 +5,22 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import {
+  registrationNameModules,
+  plugins,
+  possibleRegistrationNames,
+} from 'events/EventPluginRegistry';
+import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import warning from 'fbjs/lib/warning';
 
-var EventPluginRegistry = require('events/EventPluginRegistry');
-
-var DOMProperty = require('./DOMProperty');
-var isCustomComponent = require('./isCustomComponent');
-
-if (__DEV__) {
-  var {ReactDebugCurrentFrame} = require('shared/ReactGlobalSharedState');
-  var warning = require('fbjs/lib/warning');
-}
+import {
+  ATTRIBUTE_NAME_CHAR,
+  isReservedProp,
+  shouldAttributeAcceptBooleanValue,
+  shouldSetAttribute,
+} from './DOMProperty';
+import isCustomComponent from './isCustomComponent';
+import possibleStandardNames from './possibleStandardNames';
 
 function getStackAddendum() {
   var stack = ReactDebugCurrentFrame.getStackAddendum();
@@ -26,35 +31,29 @@ if (__DEV__) {
   var warnedProperties = {};
   var hasOwnProperty = Object.prototype.hasOwnProperty;
   var EVENT_NAME_REGEX = /^on[A-Z]/;
-  var rARIA = new RegExp('^(aria)-[' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$');
-  var rARIACamel = new RegExp(
-    '^(aria)[A-Z][' + DOMProperty.ATTRIBUTE_NAME_CHAR + ']*$',
-  );
-  var possibleStandardNames = require('./possibleStandardNames');
+  var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
+  var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
   var validateProperty = function(tagName, name, value) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
 
-    if (EventPluginRegistry.registrationNameModules.hasOwnProperty(name)) {
+    if (registrationNameModules.hasOwnProperty(name)) {
       return true;
     }
 
-    if (
-      EventPluginRegistry.plugins.length === 0 &&
-      EVENT_NAME_REGEX.test(name)
-    ) {
+    if (plugins.length === 0 && EVENT_NAME_REGEX.test(name)) {
       // If no event plugins have been injected, we might be in a server environment.
       // Don't check events in this case.
       return true;
     }
 
     var lowerCasedName = name.toLowerCase();
-    var registrationName = EventPluginRegistry.possibleRegistrationNames.hasOwnProperty(
+    var registrationName = possibleRegistrationNames.hasOwnProperty(
       lowerCasedName,
     )
-      ? EventPluginRegistry.possibleRegistrationNames[lowerCasedName]
+      ? possibleRegistrationNames[lowerCasedName]
       : null;
 
     if (registrationName != null) {
@@ -124,7 +123,7 @@ if (__DEV__) {
     ) {
       warning(
         false,
-        'Received a `%s` for string attribute `is`. If this is expected, cast ' +
+        'Received a `%s` for a string attribute `is`. If this is expected, cast ' +
           'the value to a string.%s',
         typeof value,
         getStackAddendum(),
@@ -136,7 +135,7 @@ if (__DEV__) {
     if (typeof value === 'number' && isNaN(value)) {
       warning(
         false,
-        'Received NaN for numeric attribute `%s`. If this is expected, cast ' +
+        'Received NaN for the `%s` attribute. If this is expected, cast ' +
           'the value to a string.%s',
         name,
         getStackAddendum(),
@@ -145,7 +144,7 @@ if (__DEV__) {
       return true;
     }
 
-    const isReserved = DOMProperty.isReservedProp(name);
+    const isReserved = isReservedProp(name);
 
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
@@ -179,15 +178,41 @@ if (__DEV__) {
       return true;
     }
 
-    if (typeof value === 'boolean') {
-      warning(
-        DOMProperty.shouldAttributeAcceptBooleanValue(name),
-        'Received `%s` for non-boolean attribute `%s`. If this is expected, cast ' +
-          'the value to a string.%s',
-        value,
-        name,
-        getStackAddendum(),
-      );
+    if (
+      typeof value === 'boolean' &&
+      !shouldAttributeAcceptBooleanValue(name)
+    ) {
+      if (value) {
+        warning(
+          false,
+          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            '%s="%s" or %s={value.toString()}.%s',
+          value,
+          name,
+          name,
+          value,
+          name,
+          getStackAddendum(),
+        );
+      } else {
+        warning(
+          false,
+          'Received `%s` for a non-boolean attribute `%s`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            '%s="%s" or %s={value.toString()}.\n\n' +
+            'If you used to conditionally omit it with %s={condition && value}, ' +
+            'pass %s={condition ? value : undefined} instead.%s',
+          value,
+          name,
+          name,
+          value,
+          name,
+          name,
+          name,
+          getStackAddendum(),
+        );
+      }
       warnedProperties[name] = true;
       return true;
     }
@@ -199,7 +224,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (!DOMProperty.shouldSetAttribute(name, value)) {
+    if (!shouldSetAttribute(name, value)) {
       warnedProperties[name] = true;
       return false;
     }
@@ -241,15 +266,9 @@ var warnUnknownProperties = function(type, props) {
   }
 };
 
-function validateProperties(type, props) {
+export function validateProperties(type, props) {
   if (isCustomComponent(type, props)) {
     return;
   }
   warnUnknownProperties(type, props);
 }
-
-var ReactDOMUnknownPropertyHook = {
-  validateProperties,
-};
-
-module.exports = ReactDOMUnknownPropertyHook;

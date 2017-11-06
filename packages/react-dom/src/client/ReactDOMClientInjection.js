@@ -5,24 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import * as EventPluginHub from 'events/EventPluginHub';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 
-var EventPluginHub = require('events/EventPluginHub');
-var EventPluginUtils = require('events/EventPluginUtils');
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
+import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
+import ChangeEventPlugin from '../events/ChangeEventPlugin';
+import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
+import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
+import {handleTopLevel} from '../events/ReactBrowserEventEmitter';
+import {setHandleTopLevel} from '../events/ReactDOMEventListener';
+import SelectEventPlugin from '../events/SelectEventPlugin';
+import SimpleEventPlugin from '../events/SimpleEventPlugin';
 
-var ReactDOMComponentTree = require('./ReactDOMComponentTree');
-var BeforeInputEventPlugin = require('../events/BeforeInputEventPlugin');
-var ChangeEventPlugin = require('../events/ChangeEventPlugin');
-var DOMEventPluginOrder = require('../events/DOMEventPluginOrder');
-var EnterLeaveEventPlugin = require('../events/EnterLeaveEventPlugin');
-var ReactBrowserEventEmitter = require('../events/ReactBrowserEventEmitter');
-var ReactDOMEventListener = require('../events/ReactDOMEventListener');
-var SelectEventPlugin = require('../events/SelectEventPlugin');
-var SimpleEventPlugin = require('../events/SimpleEventPlugin');
-
-ReactDOMEventListener.setHandleTopLevel(
-  ReactBrowserEventEmitter.handleTopLevel,
-);
+setHandleTopLevel(handleTopLevel);
 
 /**
  * Inject modules for resolving DOM hierarchy and plugin ordering.

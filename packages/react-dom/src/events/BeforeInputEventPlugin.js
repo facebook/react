@@ -5,16 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 import type {TopLevelTypes} from './BrowserEventConstants';
 
-var EventPropagators = require('events/EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var FallbackCompositionState = require('./FallbackCompositionState');
-var SyntheticCompositionEvent = require('./SyntheticCompositionEvent');
-var SyntheticInputEvent = require('./SyntheticInputEvent');
+import * as FallbackCompositionState from './FallbackCompositionState';
+import SyntheticCompositionEvent from './SyntheticCompositionEvent';
+import SyntheticInputEvent from './SyntheticInputEvent';
 
 var END_KEYCODES = [9, 13, 27, 32]; // Tab, Return, Esc, Space
 var START_KEYCODE = 229;
@@ -265,7 +263,7 @@ function extractCompositionEvent(
     }
   }
 
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -424,7 +422,7 @@ function extractBeforeInputEvent(
   );
 
   event.data = chars;
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -472,4 +470,4 @@ var BeforeInputEventPlugin = {
   },
 };
 
-module.exports = BeforeInputEventPlugin;
+export default BeforeInputEventPlugin;

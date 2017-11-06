@@ -13,6 +13,12 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 
 * Fix an accidental extra global variable in the UMD builds. ([@gaearon](https://github.com/gaearon) in [#10935](https://github.com/facebook/react/pull/10935))
 
+### React
+
+* Add support for portals in `React.Children` utilities. ([@MatteoVH](https://github.com/MatteoVH) in [#11378](https://github.com/facebook/react/pull/11378))
+* Warn when a class has a `render` method but doesn't extend a known base class. ([@sw-yx](https://github.com/sw-yx) in [#11168](https://github.com/facebook/react/pull/11168))
+* Improve the warning when accidentally returning an object from constructor. ([@deanbrophy](https://github.com/deanbrophy) in [#11395](https://github.com/facebook/react/pull/11395))
+
 ### React DOM
 
 * Allow `on` as a custom attribute for AMP. ([@nuc](https://github.com/nuc) in [#11153](https://github.com/facebook/react/pull/11153))
@@ -29,8 +35,13 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
 * Warn about nested updates no more than once. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11113](https://github.com/facebook/react/pull/11113))
-* Include helpful component stack into the warning about `contentEditable` and `children`. ([@Ethan-Arrowood](https://github.com/Ethan-Arrowood) in [#11208](https://github.com/facebook/react/pull/11208))
-* Removing unused code. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
+* Deduplicate other warnings about updates. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11216](https://github.com/facebook/react/pull/11216))
+* Include component stack into the warning about `contentEditable` and `children`. ([@Ethan-Arrowood](https://github.com/Ethan-Arrowood) in [#11208](https://github.com/facebook/react/pull/11208))
+* Improve the warning about booleans passed to event handlers. ([@NicBonetto](https://github.com/NicBonetto) in [#11308](https://github.com/facebook/react/pull/11308))
+* Improve the warning when a multiple `select` gets null `value`. ([@Hendeca](https://github.com/Hendeca) in [#11141](https://github.com/facebook/react/pull/11141))
+* Move link in the warning message to avoid redirect. ([@marciovicente](https://github.com/marciovicente) in [#11400](https://github.com/facebook/react/pull/11400))
+* Add a way to suppress the React DevTools installation prompt. ([@gaearon](http://github.com/gaearon) in [#11448](https://github.com/facebook/react/pull/11448))
+* Remove unused code. ([@gaearon](https://github.com/gaearon) in [#10802](https://github.com/facebook/react/pull/10802), [#10803](https://github.com/facebook/react/pull/10803))
 
 ### React DOM Server
 
@@ -42,13 +53,23 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React Test Renderer and Test Utils
 
 * Fix multiple `setState()` calls in `componentWillMount()` in shallow renderer. ([@Hypnosphi](https://github.com/Hypnosphi) in [#11167](https://github.com/facebook/react/pull/11167))
-* Fix shallow renderer to ignore `shouldComponentUpdate()` after `forceUpdate()`. ([@d4rky-pl](https://github.com/d4rky-pl) in [#11239](https://github.com/facebook/react/pull/11239))
+* Fix shallow renderer to ignore `shouldComponentUpdate()` after `forceUpdate()`. ([@d4rky-pl](https://github.com/d4rky-pl) in [#11239](https://github.com/facebook/react/pull/11239) and [#11439](https://github.com/facebook/react/pull/11439))
+* Handle `forceUpdate()` and `React.PureComponent` correctly. ([@koba04](https://github.com/koba04) in [#11440](https://github.com/facebook/react/pull/11440))
 * Add back support for running in production mode. ([@gaearon](https://github.com/gaearon) in [#11112](https://github.com/facebook/react/pull/11112))
 * Add a missing `package.json` dependency. ([@gaearon](https://github.com/gaearon) in [#11340](https://github.com/facebook/react/pull/11340))
 
 ### React ART
 
 * Add a missing `package.json` dependency. ([@gaearon](https://github.com/gaearon) in [#11341](https://github.com/facebook/react/pull/11341))
+* Expose `react-art/Circle`, `react-art/Rectangle`, and `react-art/Wedge`. ([@gaearon](https://github.com/gaearon) in [#11343](https://github.com/facebook/react/pull/11343))
+
+### React Reconciler (Experimental)
+
+* First release of the [new experimental package](https://github.com/facebook/react/blob/master/packages/react-reconciler/README.md) for creating custom renderers. ([@iamdustan](https://github.com/iamdustan) in [#10758](https://github.com/facebook/react/pull/10758))
+
+### React Call Return (Experimental)
+
+* First release of the [new experimental package](https://github.com/facebook/react/tree/master/packages/react-call-return) for parent-child communication. ([@gaearon](https://github.com/gaearon) in [#11364](https://github.com/facebook/react/pull/11364))
 
 </details>
 

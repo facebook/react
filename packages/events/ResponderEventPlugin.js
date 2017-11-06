@@ -5,23 +5,25 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import {getLowestCommonAncestor, isAncestor} from 'shared/ReactTreeTraversal';
 
-var ReactTreeTraversal = require('shared/ReactTreeTraversal');
-
-var EventPluginUtils = require('./EventPluginUtils');
-var EventPropagators = require('./EventPropagators');
-var ResponderSyntheticEvent = require('./ResponderSyntheticEvent');
-var ResponderTouchHistoryStore = require('./ResponderTouchHistoryStore');
-var accumulate = require('./accumulate');
-
-var isStartish = EventPluginUtils.isStartish;
-var isMoveish = EventPluginUtils.isMoveish;
-var isEndish = EventPluginUtils.isEndish;
-var executeDirectDispatch = EventPluginUtils.executeDirectDispatch;
-var hasDispatches = EventPluginUtils.hasDispatches;
-var executeDispatchesInOrderStopAtTrue =
-  EventPluginUtils.executeDispatchesInOrderStopAtTrue;
+import {
+  isStartish,
+  isMoveish,
+  isEndish,
+  executeDirectDispatch,
+  hasDispatches,
+  executeDispatchesInOrderStopAtTrue,
+  getInstanceFromNode,
+} from './EventPluginUtils';
+import {
+  accumulateDirectDispatches,
+  accumulateTwoPhaseDispatches,
+  accumulateTwoPhaseDispatchesSkipTarget,
+} from './EventPropagators';
+import ResponderSyntheticEvent from './ResponderSyntheticEvent';
+import ResponderTouchHistoryStore from './ResponderTouchHistoryStore';
+import accumulate from './accumulate';
 
 /**
  * Instance of element that should respond to touch/move types of interactions,
@@ -327,7 +329,7 @@ function setResponderAndExtractTransfer(
   // TODO: stop one short of the current responder.
   var bubbleShouldSetFrom = !responderInst
     ? targetInst
-    : ReactTreeTraversal.getLowestCommonAncestor(responderInst, targetInst);
+    : getLowestCommonAncestor(responderInst, targetInst);
 
   // When capturing/bubbling the "shouldSet" event, we want to skip the target
   // (deepest ID) if it happens to be the current responder. The reasoning:
@@ -342,9 +344,9 @@ function setResponderAndExtractTransfer(
   );
   shouldSetEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
   if (skipOverBubbleShouldSetFrom) {
-    EventPropagators.accumulateTwoPhaseDispatchesSkipTarget(shouldSetEvent);
+    accumulateTwoPhaseDispatchesSkipTarget(shouldSetEvent);
   } else {
-    EventPropagators.accumulateTwoPhaseDispatches(shouldSetEvent);
+    accumulateTwoPhaseDispatches(shouldSetEvent);
   }
   var wantsResponderInst = executeDispatchesInOrderStopAtTrue(shouldSetEvent);
   if (!shouldSetEvent.isPersistent()) {
@@ -363,7 +365,7 @@ function setResponderAndExtractTransfer(
   );
   grantEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
 
-  EventPropagators.accumulateDirectDispatches(grantEvent);
+  accumulateDirectDispatches(grantEvent);
   var blockHostResponder = executeDirectDispatch(grantEvent) === true;
   if (responderInst) {
     var terminationRequestEvent = ResponderSyntheticEvent.getPooled(
@@ -374,7 +376,7 @@ function setResponderAndExtractTransfer(
     );
     terminationRequestEvent.touchHistory =
       ResponderTouchHistoryStore.touchHistory;
-    EventPropagators.accumulateDirectDispatches(terminationRequestEvent);
+    accumulateDirectDispatches(terminationRequestEvent);
     var shouldSwitch =
       !hasDispatches(terminationRequestEvent) ||
       executeDirectDispatch(terminationRequestEvent);
@@ -390,7 +392,7 @@ function setResponderAndExtractTransfer(
         nativeEventTarget,
       );
       terminateEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(terminateEvent);
+      accumulateDirectDispatches(terminateEvent);
       extracted = accumulate(extracted, [grantEvent, terminateEvent]);
       changeResponder(wantsResponderInst, blockHostResponder);
     } else {
@@ -401,7 +403,7 @@ function setResponderAndExtractTransfer(
         nativeEventTarget,
       );
       rejectEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(rejectEvent);
+      accumulateDirectDispatches(rejectEvent);
       extracted = accumulate(extracted, rejectEvent);
     }
   } else {
@@ -449,8 +451,8 @@ function noResponderTouches(nativeEvent) {
     var target = activeTouch.target;
     if (target !== null && target !== undefined && target !== 0) {
       // Is the original touch location inside of the current responder?
-      var targetInst = EventPluginUtils.getInstanceFromNode(target);
-      if (ReactTreeTraversal.isAncestor(responderInst, targetInst)) {
+      var targetInst = getInstanceFromNode(target);
+      if (isAncestor(responderInst, targetInst)) {
         return false;
       }
     }
@@ -527,7 +529,7 @@ var ResponderEventPlugin = {
         nativeEventTarget,
       );
       gesture.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(gesture);
+      accumulateDirectDispatches(gesture);
       extracted = accumulate(extracted, gesture);
     }
 
@@ -549,7 +551,7 @@ var ResponderEventPlugin = {
         nativeEventTarget,
       );
       finalEvent.touchHistory = ResponderTouchHistoryStore.touchHistory;
-      EventPropagators.accumulateDirectDispatches(finalEvent);
+      accumulateDirectDispatches(finalEvent);
       extracted = accumulate(extracted, finalEvent);
       changeResponder(null);
     }
@@ -592,4 +594,4 @@ var ResponderEventPlugin = {
   },
 };
 
-module.exports = ResponderEventPlugin;
+export default ResponderEventPlugin;

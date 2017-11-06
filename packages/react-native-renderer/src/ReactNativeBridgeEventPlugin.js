@@ -6,13 +6,15 @@
  *
  * @flow
  */
-'use strict';
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
 
-const EventPropagators = require('events/EventPropagators');
-const SyntheticEvent = require('events/SyntheticEvent');
-const invariant = require('fbjs/lib/invariant');
+import {
+  accumulateTwoPhaseDispatches,
+  accumulateDirectDispatches,
+} from 'events/EventPropagators';
+import SyntheticEvent from 'events/SyntheticEvent';
+import invariant from 'fbjs/lib/invariant';
 
 const customBubblingEventTypes = {};
 const customDirectEventTypes = {};
@@ -43,9 +45,9 @@ const ReactNativeBridgeEventPlugin = {
       nativeEventTarget,
     );
     if (bubbleDispatchConfig) {
-      EventPropagators.accumulateTwoPhaseDispatches(event);
+      accumulateTwoPhaseDispatches(event);
     } else if (directDispatchConfig) {
-      EventPropagators.accumulateDirectDispatches(event);
+      accumulateDirectDispatches(event);
     } else {
       return null;
     }
@@ -93,4 +95,4 @@ const ReactNativeBridgeEventPlugin = {
   },
 };
 
-module.exports = ReactNativeBridgeEventPlugin;
+export default ReactNativeBridgeEventPlugin;
