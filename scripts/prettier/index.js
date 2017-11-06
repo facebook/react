@@ -79,6 +79,7 @@ var changedFiles = new Set(
 );
 
 let didWarn = false;
+let didError = false;
 Object.keys(config).forEach(key => {
   const patterns = config[key].patterns;
   const options = config[key].options;
@@ -125,12 +126,13 @@ Object.keys(config).forEach(key => {
         }
       }
     } catch (error) {
+      didError = true;
       console.log('\n\n' + error.message);
       console.log(file);
     }
   });
 });
 
-if (didWarn) {
+if (didWarn || didError) {
   process.exit(1);
 }
