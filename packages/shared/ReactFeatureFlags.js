@@ -7,35 +7,16 @@
  * @flow
  */
 
-export type FeatureFlags = {|
-  enableAsyncSubtreeAPI: boolean,
-  enableAsyncSchedulingByDefaultInReactDOM: boolean,
-  enableMutatingReconciler: boolean,
-  enableNoopReconciler: boolean,
-  enablePersistentReconciler: boolean,
-  enableReactFragment: boolean,
-  enableCreateRoot: boolean,
-|};
+export const enableAsyncSubtreeAPI = true;
+export const enableAsyncSchedulingByDefaultInReactDOM = false;
+// Exports React.Fragment
+export const enableReactFragment = false;
+// Exports ReactDOM.createRoot
+export const enableCreateRoot = false;
 
-var ReactFeatureFlags: FeatureFlags = {
-  enableAsyncSubtreeAPI: true,
-  enableAsyncSchedulingByDefaultInReactDOM: false,
-  // Mutating mode (React DOM, React ART, React Native):
-  enableMutatingReconciler: true,
-  // Experimental noop mode (currently unused):
-  enableNoopReconciler: false,
-  // Experimental persistent mode (CS):
-  enablePersistentReconciler: false,
-  // Exports React.Fragment
-  enableReactFragment: false,
-  // Exports ReactDOM.createRoot
-  enableCreateRoot: false,
-};
-
-if (__DEV__) {
-  if (Object.freeze) {
-    Object.freeze(ReactFeatureFlags);
-  }
-}
-
-export default ReactFeatureFlags;
+// Mutating mode (React DOM, React ART, React Native):
+export const enableMutatingReconciler = true;
+// Experimental noop mode (currently unused):
+export const enableNoopReconciler = false;
+// Experimental persistent mode (CS):
+export const enablePersistentReconciler = false;

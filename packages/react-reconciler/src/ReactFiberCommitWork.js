@@ -10,7 +10,11 @@
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {
+  enableMutatingReconciler,
+  enableNoopReconciler,
+  enablePersistentReconciler,
+} from 'shared/ReactFeatureFlags';
 import {
   ClassComponent,
   HostRoot,
@@ -218,12 +222,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        if (ReactFeatureFlags.enableMutatingReconciler && mutation) {
+        if (enableMutatingReconciler && mutation) {
           unmountHostComponents(current);
-        } else if (
-          ReactFeatureFlags.enablePersistentReconciler &&
-          persistence
-        ) {
+        } else if (enablePersistentReconciler && persistence) {
           emptyPortalContainer(current);
         }
         return;
@@ -324,10 +325,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         // Noop
       };
     }
-    if (
-      ReactFeatureFlags.enablePersistentReconciler ||
-      ReactFeatureFlags.enableNoopReconciler
-    ) {
+    if (enablePersistentReconciler || enableNoopReconciler) {
       return {
         commitResetTextContent(finishedWork: Fiber) {},
         commitPlacement(finishedWork: Fiber) {},
@@ -660,7 +658,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     resetTextContent(current.stateNode);
   }
 
-  if (ReactFeatureFlags.enableMutatingReconciler) {
+  if (enableMutatingReconciler) {
     return {
       commitResetTextContent,
       commitPlacement,

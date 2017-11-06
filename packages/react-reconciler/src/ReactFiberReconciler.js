@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
@@ -322,7 +322,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // treat updates to the root as async. This is a bit weird but lets us
     // avoid a separate `renderAsync` API.
     if (
-      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      enableAsyncSubtreeAPI &&
       element != null &&
       element.type != null &&
       element.type.prototype != null &&

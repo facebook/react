@@ -7,17 +7,21 @@
  * @flow
  */
 
-import type {FeatureFlags} from 'shared/ReactFeatureFlags';
+import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
+import typeof * as CSFeatureFlagsType from './ReactNativeCSFeatureFlags';
 
-var ReactNativeCSFeatureFlags: FeatureFlags = {
-  enableAsyncSubtreeAPI: true,
-  enableAsyncSchedulingByDefaultInReactDOM: false,
-  enableReactFragment: false,
-  enableCreateRoot: false,
-  // React Native CS uses persistent reconciler.
-  enableMutatingReconciler: false,
-  enableNoopReconciler: false,
-  enablePersistentReconciler: true,
-};
+export const enableAsyncSubtreeAPI = true;
+export const enableAsyncSchedulingByDefaultInReactDOM = false;
+export const enableReactFragment = false;
+export const enableCreateRoot = false;
 
-export default ReactNativeCSFeatureFlags;
+// React Native CS uses persistent reconciler.
+export const enableMutatingReconciler = false;
+export const enableNoopReconciler = false;
+export const enablePersistentReconciler = true;
+
+// Flow magic to verify the exports of this file match the original version.
+// eslint-disable-next-line no-unused-vars
+type Check<_X, Y: _X, X: Y=_X> = null;
+// eslint-disable-next-line no-unused-expressions
+(null: Check<CSFeatureFlagsType, FeatureFlagsType>);
