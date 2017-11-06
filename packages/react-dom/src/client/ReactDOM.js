@@ -16,8 +16,6 @@ import './ReactDOMClientInjection';
 import ReactFiberReconciler from 'react-reconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactControlledComponent from 'events/ReactControlledComponent';
@@ -956,10 +954,8 @@ if (ReactFeatureFlags.enableCreateRoot) {
   };
 }
 
-const foundDevTools = injectInternals({
+const foundDevTools = DOMRenderer.injectIntoDevTools({
   findFiberByHostInstance: ReactDOMComponentTree.getClosestInstanceFromNode,
-  findHostInstanceByFiber: DOMRenderer.findHostInstance,
-  // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-dom',

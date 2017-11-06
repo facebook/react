@@ -16,7 +16,6 @@ import './ReactNativeInjection';
 import * as ReactFiberErrorLogger
   from 'react-reconciler/src/ReactFiberErrorLogger';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
 import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
@@ -130,11 +129,9 @@ if (__DEV__) {
   );
 }
 
-injectInternals({
+ReactNativeFiberRenderer.injectIntoDevTools({
   findFiberByHostInstance: ReactNativeComponentTree.getClosestInstanceFromNode,
-  findHostInstanceByFiber: ReactNativeFiberRenderer.findHostInstance,
   getInspectorDataForViewTag: getInspectorDataForViewTag,
-  // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-native-renderer',
