@@ -10,16 +10,20 @@
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as FeatureFlagsShimType from './ReactFeatureFlags-www';
 
-// Re-export all flags from the www version.
+// Re-export dynamic flags from the www version.
 export const {
-  enableAsyncSubtreeAPI,
   enableAsyncSchedulingByDefaultInReactDOM,
-  enableReactFragment,
-  enableCreateRoot,
-  enableMutatingReconciler,
-  enableNoopReconciler,
-  enablePersistentReconciler,
 } = require('ReactFeatureFlags');
+
+// The rest of the flags are static for better dead code elimination.
+export const enableAsyncSubtreeAPI = true;
+export const enableReactFragment = false;
+export const enableCreateRoot = false;
+
+// The www bundles only use the mutating reconciler.
+export const enableMutatingReconciler = true;
+export const enableNoopReconciler = false;
+export const enablePersistentReconciler = false;
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
