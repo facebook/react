@@ -66,6 +66,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React Reconciler (Experimental)
 
 * First release of the [new experimental package](https://github.com/facebook/react/blob/master/packages/react-reconciler/README.md) for creating custom renderers. ([@iamdustan](https://github.com/iamdustan) in [#10758](https://github.com/facebook/react/pull/10758))
+* Add support for React DevTools. ([@gaearon](https://github.com/gaearon) in [#11463](https://github.com/facebook/react/pull/11463))
 
 ### React Call Return (Experimental)
 
