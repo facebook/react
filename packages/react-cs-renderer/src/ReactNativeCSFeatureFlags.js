@@ -23,6 +23,7 @@ export const enableMutatingReconciler = false;
 export const enableNoopReconciler = false;
 export const enablePersistentReconciler = true;
 
+// Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');
 }
