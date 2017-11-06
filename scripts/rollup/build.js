@@ -582,6 +582,8 @@ function createBundle(bundle, bundleType) {
       bundle.modulesToStub,
       bundle.featureFlags
     ),
+    // We can't use getters in www.
+    legacy: bundleType === FB_DEV || bundleType === FB_PROD,
   })
     .then(result =>
       result.write(
