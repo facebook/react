@@ -102,11 +102,20 @@ function getShims(bundleType, entry, featureFlags) {
       // so we resort to using a shim that re-exports the www module, and then
       // treating shim's target destinations as external (see getDependencies).
       forkedFBModules.forEach(srcPath => {
-        const wwwName = path.parse(srcPath).name;
+        const fileName = path.parse(srcPath).name;
         const shimPath = path.resolve(
-          __dirname + `/shims/rollup/${wwwName}-www.js`
+          __dirname + `/shims/rollup/${fileName}-www.js`
         );
         shims[srcPath] = shimPath;
+        // <hack>
+        // Unfortunately the above doesn't work for relative imports,
+        // and Rollup isn't smart enough to understand they refer to the same file.
+        // We should come up with a real fix for this, but for now this will do.
+        // FIXME: this is gross.
+        shims['./' + fileName] = shimPath;
+        shims['../' + fileName] = shimPath;
+        // We don't have deeper relative requires between source files.
+        // </hack>
       });
       break;
   }
