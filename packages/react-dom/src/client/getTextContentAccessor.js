@@ -7,7 +7,7 @@
 
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var contentKey = null;
+let contentKey = null;
 
 /**
  * Gets the key used to access text content on a DOM node.
