@@ -79,6 +79,7 @@ var changedFiles = new Set(
 );
 
 let didWarn = false;
+let didError = false;
 Object.keys(config).forEach(key => {
   const patterns = config[key].patterns;
   const options = config[key].options;
@@ -97,35 +98,41 @@ Object.keys(config).forEach(key => {
 
   const args = Object.assign({}, defaultOptions, options);
   files.forEach(file => {
-    const input = fs.readFileSync(file, 'utf8');
-    if (shouldWrite) {
-      const output = prettier.format(input, args);
-      if (output !== input) {
-        fs.writeFileSync(file, output, 'utf8');
-      }
-    } else {
-      if (!prettier.check(input, args)) {
-        if (!didWarn) {
-          console.log(
-            '\n' +
-              chalk.red(
-                `  This project uses prettier to format all JavaScript code.\n`
-              ) +
-              chalk.dim(`    Please run `) +
-              chalk.reset('yarn prettier-all') +
-              chalk.dim(
-                ` and add changes to files listed below to your commit:`
-              ) +
-              `\n\n`
-          );
-          didWarn = true;
+    try {
+      const input = fs.readFileSync(file, 'utf8');
+      if (shouldWrite) {
+        const output = prettier.format(input, args);
+        if (output !== input) {
+          fs.writeFileSync(file, output, 'utf8');
         }
-        console.log(file);
+      } else {
+        if (!prettier.check(input, args)) {
+          if (!didWarn) {
+            console.log(
+              '\n' +
+                chalk.red(
+                  `  This project uses prettier to format all JavaScript code.\n`
+                ) +
+                chalk.dim(`    Please run `) +
+                chalk.reset('yarn prettier-all') +
+                chalk.dim(
+                  ` and add changes to files listed below to your commit:`
+                ) +
+                `\n\n`
+            );
+            didWarn = true;
+          }
+          console.log(file);
+        }
       }
+    } catch (error) {
+      didError = true;
+      console.log('\n\n' + error.message);
+      console.log(file);
     }
   });
 });
 
-if (didWarn) {
+if (didWarn || didError) {
   process.exit(1);
 }
