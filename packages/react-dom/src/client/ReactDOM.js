@@ -49,7 +49,7 @@ import {
   DOCUMENT_FRAGMENT_NODE,
 } from '../shared/HTMLNodeType';
 import {ROOT_ATTRIBUTE_NAME} from '../shared/DOMProperty';
-var {
+const {
   createElement,
   createTextNode,
   setInitialProperties,
@@ -63,8 +63,8 @@ var {
   warnForInsertedHydratedElement,
   warnForInsertedHydratedText,
 } = ReactDOMFiberComponent;
-var {updatedAncestorInfo} = validateDOMNesting;
-var {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
+const {updatedAncestorInfo} = validateDOMNesting;
+const {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
 if (__DEV__) {
   var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
@@ -163,7 +163,7 @@ function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
   return false;
 }
 
-var DOMRenderer = ReactFiberReconciler({
+const DOMRenderer = ReactFiberReconciler({
   getRootHostContext(rootContainerInstance: Container): HostContext {
     let type;
     let namespace;
@@ -343,7 +343,7 @@ var DOMRenderer = ReactFiberReconciler({
       const hostContextDev = ((hostContext: any): HostContextDev);
       validateDOMNesting(null, text, hostContextDev.ancestorInfo);
     }
-    var textNode: TextInstance = createTextNode(text, rootContainerInstance);
+    const textNode: TextInstance = createTextNode(text, rootContainerInstance);
     precacheFiberNode(internalInstanceHandle, textNode);
     return textNode;
   },
@@ -640,7 +640,7 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
   DOMRenderer.batchedUpdates,
 );
 
-var warnedAboutHydrateAPI = false;
+let warnedAboutHydrateAPI = false;
 
 function renderSubtreeIntoContainer(
   parentComponent: ?React$Component<any, any>,
@@ -785,16 +785,17 @@ ReactRoot.prototype.unmount = function(callback) {
   DOMRenderer.updateContainer(null, root, null, callback);
 };
 
-var ReactDOM: Object = {
+const ReactDOM: Object = {
   createPortal,
 
   findDOMNode(
     componentOrElement: Element | ?React$Component<any, any>,
   ): null | Element | Text {
     if (__DEV__) {
-      var owner = (ReactCurrentOwner.current: any);
+      let owner = (ReactCurrentOwner.current: any);
       if (owner !== null) {
-        var warnedAboutRefsInRender = owner.stateNode._warnedAboutRefsInRender;
+        const warnedAboutRefsInRender =
+          owner.stateNode._warnedAboutRefsInRender;
         warning(
           warnedAboutRefsInRender,
           '%s is accessing findDOMNode inside its render(). ' +
@@ -814,7 +815,7 @@ var ReactDOM: Object = {
       return (componentOrElement: any);
     }
 
-    var inst = ReactInstanceMap.get(componentOrElement);
+    const inst = ReactInstanceMap.get(componentOrElement);
     if (inst) {
       return DOMRenderer.findHostInstance(inst);
     }
