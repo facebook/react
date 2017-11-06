@@ -7,12 +7,15 @@
  * @flow
  */
 
+import invariant from 'fbjs/lib/invariant';
+
 export const enableAsyncSubtreeAPI = true;
 export const enableAsyncSchedulingByDefaultInReactDOM = false;
 // Exports React.Fragment
 export const enableReactFragment = false;
 // Exports ReactDOM.createRoot
 export const enableCreateRoot = false;
+export const enableUserTimingAPI = __DEV__;
 
 // Mutating mode (React DOM, React ART, React Native):
 export const enableMutatingReconciler = true;
@@ -20,3 +23,8 @@ export const enableMutatingReconciler = true;
 export const enableNoopReconciler = false;
 // Experimental persistent mode (CS):
 export const enablePersistentReconciler = false;
+
+// Only used in www builds.
+export function addUserTimingListener() {
+  invariant(false, 'Not implemented.');
+}

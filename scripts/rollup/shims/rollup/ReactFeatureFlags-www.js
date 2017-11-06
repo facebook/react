@@ -16,10 +16,37 @@ export const {
   enableAsyncSchedulingByDefaultInReactDOM,
   enableReactFragment,
   enableCreateRoot,
+  // Reconciler flags
   enableMutatingReconciler,
   enableNoopReconciler,
   enablePersistentReconciler,
 } = require('ReactFeatureFlags');
+
+export let enableUserTimingAPI = __DEV__;
+
+let refCount = 0;
+export function addUserTimingListener() {
+  if (__DEV__) {
+    // Noop.
+    return () => {};
+  }
+  refCount++;
+  updateFlagOutsideOfReactCallStack();
+  return () => {
+    refCount--;
+    updateFlagOutsideOfReactCallStack();
+  };
+}
+
+let timeout = null;
+function updateFlagOutsideOfReactCallStack() {
+  if (!timeout) {
+    timeout = setTimeout(() => {
+      timeout = null;
+      enableUserTimingAPI = refCount > 0;
+    });
+  }
+}
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
