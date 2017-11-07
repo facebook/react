@@ -3,6 +3,12 @@
   "description": "Experimental APIs for multi-pass rendering in React.",
   "version": "0.1.0",
   "repository": "facebook/react",
+  "files": [
+    "LICENSE",
+    "README.md",
+    "index.js",
+    "cjs/"
+  ],
   "dependencies": {
     "fbjs": "^0.8.16",
     "object-assign": "^4.1.1"
