@@ -669,7 +669,7 @@ describe('ReactDOMInput', () => {
     expect(cNode.checked).toBe(true);
   });
 
-  it('should have correct checked value when radio names changed', () => {
+  it('should check the correct radio when the selected name moves', () => {
     class App extends React.Component {
       state = {
         updated: false,

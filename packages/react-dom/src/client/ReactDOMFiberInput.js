@@ -153,11 +153,7 @@ export function updateChecked(
   if (!targetType || targetType === node.type) {
     var checked = props.checked;
     if (checked != null) {
-      DOMPropertyOperations.setValueForProperty(
-        node,
-        'checked',
-        checked || false,
-      );
+      DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
     }
   }
 }

@@ -5,6 +5,7 @@ import TestCase from '../../TestCase';
 import RangeKeyboardFixture from './RangeKeyboardFixture';
 import RadioClickFixture from './RadioClickFixture';
 import RadioGroupFixture from './RadioGroupFixture';
+import RadioNameChangeFixture from './RadioNameChangeFixture';
 import InputPlaceholderFixture from './InputPlaceholderFixture';
 
 class InputChangeEvents extends React.Component {
@@ -86,6 +87,24 @@ class InputChangeEvents extends React.Component {
           </TestCase.ExpectedResult>
 
           <InputPlaceholderFixture />
+        </TestCase>
+        <TestCase
+          title="Radio button groups with name changes"
+          description={`
+            A radio button group should have correct checked value when
+            the names changes
+          `}
+          resolvedBy="#11227"
+          affectedBrowsers="IE9+">
+          <TestCase.Steps>
+            <li>Click the toggle button</li>
+          </TestCase.Steps>
+
+          <TestCase.ExpectedResult>
+            The checked radio button should switch between the first and second radio button
+          </TestCase.ExpectedResult>
+
+          <RadioNameChangeFixture />
         </TestCase>
       </FixtureSet>
     );
