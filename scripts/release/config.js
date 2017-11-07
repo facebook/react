@@ -6,6 +6,7 @@ const dependencies = ['fbjs', 'object-assign', 'prop-types'];
 const projects = [
   'react',
   'react-art',
+  'react-call-return',
   'react-dom',
   'react-reconciler',
   'react-test-renderer',
