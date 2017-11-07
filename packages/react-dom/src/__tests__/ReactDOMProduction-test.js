@@ -115,6 +115,30 @@ describe('ReactDOMProduction', () => {
     expect(container.firstChild.childNodes[1].textContent).toBe('world');
   });
 
+  it('should support React public API methods', () => {
+    expect(React.isValidElement(42)).toBe(false);
+    expect(React.isValidElement(<div />)).toBe(true);
+    expect(React.cloneElement(<div />, {foo: 42})).toEqual(<div foo={42} />);
+
+    const mapped = React.Children.map(<div />, el =>
+      React.cloneElement(el, {foo: 42}),
+    );
+    expect(mapped.length).toBe(1);
+    expect(mapped[0].type).toBe('div');
+    expect(mapped[0].props.foo).toBe(42);
+
+    const arr = React.Children.toArray(<div />);
+    expect(arr.length).toBe(1);
+    expect(arr[0].type).toBe('div');
+
+    let called = 0;
+    React.Children.forEach(<div />, () => called++);
+    expect(called).toBe(1);
+
+    expect(React.Children.count(<div />)).toBe(1);
+    expect(() => React.Children.only(42)).toThrowError();
+  });
+
   it('should handle a simple flow (ssr)', () => {
     class Component extends React.Component {
       render() {
