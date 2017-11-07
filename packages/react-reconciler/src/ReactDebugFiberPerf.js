@@ -318,8 +318,9 @@ export function stopPhaseTimer(): void {
   }
 }
 
-export function startWorkLoopTimer(): void {
+export function startWorkLoopTimer(nextUnitOfWork: Fiber | null): void {
   if (enableUserTimingAPI) {
+    currentFiber = nextUnitOfWork;
     if (!supportsUserTiming) {
       return;
     }
@@ -332,14 +333,17 @@ export function startWorkLoopTimer(): void {
   }
 }
 
-export function stopWorkLoopTimer(): void {
+export function stopWorkLoopTimer(didInterrupt: boolean): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming) {
       return;
     }
-    const warning = commitCountInCurrentWorkLoop > 1
-      ? 'There were cascading updates'
-      : null;
+    let warning = null;
+    if (didInterrupt) {
+      warning = 'Interrupted an in-progress update';
+    } else if (commitCountInCurrentWorkLoop > 1) {
+      warning = 'There were cascading updates';
+    }
     commitCountInCurrentWorkLoop = 0;
     // Pause any measurements until the next loop.
     pauseTimers();
