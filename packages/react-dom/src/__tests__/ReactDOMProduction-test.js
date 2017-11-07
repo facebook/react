@@ -93,6 +93,28 @@ describe('ReactDOMProduction', () => {
     expect(container.childNodes.length).toBe(0);
   });
 
+  it('should support createFactory', () => {
+    var span = React.createFactory('span');
+    class Component extends React.Component {
+      render() {
+        return span({children: this.props.children});
+      }
+    }
+
+    var ComponentFactory = React.createFactory(Component);
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      ComponentFactory(null, span(null, 'Hello'), span(null, 'world')),
+      container,
+    );
+    expect(container.firstChild.tagName).toBe('SPAN');
+    expect(container.firstChild.childNodes[0].tagName).toBe('SPAN');
+    expect(container.firstChild.childNodes[0].textContent).toBe('Hello');
+    expect(container.firstChild.childNodes[1].tagName).toBe('SPAN');
+    expect(container.firstChild.childNodes[1].textContent).toBe('world');
+  });
+
   it('should handle a simple flow (ssr)', () => {
     class Component extends React.Component {
       render() {
