@@ -39,8 +39,8 @@ const push = async ({cwd, dry, version}) => {
         // To better handle the case of pre-release versions.
         if (remoteVersion !== packageVersion) {
           throw Error(
-            chalk`Publised version {yellow.bold ${packageVersion}} for ` +
-              `{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
+            chalk`Published version {yellow.bold ${packageVersion}} for ` +
+              chalk`{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
           );
         }
 
