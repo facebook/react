@@ -1128,7 +1128,8 @@ describe('ReactDOMServerIntegration', () => {
       });
 
       itRenders('a div with multiple whitespace children', async render => {
-        const e = await render(<div> </div>);
+        // prettier-ignore
+        const e = await render(<div>{' '}{' '}{' '}</div>);
         if (
           render === serverRender ||
           render === clientRenderOnServerString ||
