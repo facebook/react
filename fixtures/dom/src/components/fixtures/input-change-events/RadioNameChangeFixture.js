@@ -7,11 +7,11 @@ class RadioNameChangeFixture extends React.Component {
   };
   onClick = () => {
     this.setState(state => {
-      return { updated: !state.updated };
+      return {updated: !state.updated};
     });
   };
   render() {
-    const { updated } = this.state;
+    const {updated} = this.state;
     const radioName = updated ? 'firstName' : 'secondName';
     return (
       <div>
