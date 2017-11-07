@@ -24,7 +24,7 @@ function isInDocument(node) {
  */
 
 export function hasSelectionCapabilities(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
     ((nodeName === 'input' && elem.type === 'text') ||
@@ -34,7 +34,7 @@ export function hasSelectionCapabilities(elem) {
 }
 
 export function getSelectionInformation() {
-  var focusedElem = getActiveElement();
+  const focusedElem = getActiveElement();
   return {
     focusedElem: focusedElem,
     selectionRange: hasSelectionCapabilities(focusedElem)
@@ -49,9 +49,9 @@ export function getSelectionInformation() {
  * nodes and place them back in, resulting in focus being lost.
  */
 export function restoreSelection(priorSelectionInformation) {
-  var curFocusedElem = getActiveElement();
-  var priorFocusedElem = priorSelectionInformation.focusedElem;
-  var priorSelectionRange = priorSelectionInformation.selectionRange;
+  const curFocusedElem = getActiveElement();
+  const priorFocusedElem = priorSelectionInformation.focusedElem;
+  const priorSelectionRange = priorSelectionInformation.selectionRange;
   if (curFocusedElem !== priorFocusedElem && isInDocument(priorFocusedElem)) {
     if (hasSelectionCapabilities(priorFocusedElem)) {
       setSelection(priorFocusedElem, priorSelectionRange);
@@ -87,7 +87,7 @@ export function restoreSelection(priorSelectionInformation) {
  * -@return {start: selectionStart, end: selectionEnd}
  */
 export function getSelection(input) {
-  var selection;
+  let selection;
 
   if ('selectionStart' in input) {
     // Modern browser with input or textarea.
@@ -110,8 +110,7 @@ export function getSelection(input) {
  * -@offsets   Object of same form that is returned from get*
  */
 export function setSelection(input, offsets) {
-  var start = offsets.start;
-  var end = offsets.end;
+  let {start, end} = offsets;
   if (end === undefined) {
     end = start;
   }

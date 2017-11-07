@@ -17,11 +17,10 @@ import {
   showDialog,
 } from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 
-import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import {getFiberFromTag} from './ReactNativeRTComponentTree';
 import ReactNativeRTFiberRenderer from './ReactNativeRTFiberRenderer';
 import ReactNativeRTFiberInspector from './ReactNativeRTFiberInspector';
 
@@ -83,11 +82,9 @@ const ReactNativeRTFiber: ReactNativeRTType = {
   flushSync: ReactNativeRTFiberRenderer.flushSync,
 };
 
-injectInternals({
-  findFiberByHostInstance: ReactNativeRTComponentTree.getFiberFromTag,
-  findHostInstanceByFiber: ReactNativeRTFiberRenderer.findHostInstance,
+ReactNativeRTFiberRenderer.injectIntoDevTools({
+  findFiberByHostInstance: getFiberFromTag,
   getInspectorDataForViewTag: ReactNativeRTFiberInspector.getInspectorDataForViewTag,
-  // This is an enum because we may add more (e.g. profiler build)
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-rt-renderer',

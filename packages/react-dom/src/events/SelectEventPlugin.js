@@ -5,15 +5,15 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPropagators from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import getActiveElement from 'fbjs/lib/getActiveElement';
 import shallowEqual from 'fbjs/lib/shallowEqual';
 
-import ReactBrowserEventEmitter from './ReactBrowserEventEmitter';
-import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
@@ -45,11 +45,6 @@ var activeElement = null;
 var activeElementInst = null;
 var lastSelection = null;
 var mouseDown = false;
-
-// Track whether all listeners exists for this plugin. If none exist, we do
-// not extract events. See #3639.
-var isListeningToAllDependencies =
-  ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -114,7 +109,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    EventPropagators.accumulateTwoPhaseDispatches(syntheticEvent);
+    accumulateTwoPhaseDispatches(syntheticEvent);
 
     return syntheticEvent;
   }
@@ -150,13 +145,13 @@ var SelectEventPlugin = {
       : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
+    // Track whether all listeners exists for this plugin. If none exist, we do
+    // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.

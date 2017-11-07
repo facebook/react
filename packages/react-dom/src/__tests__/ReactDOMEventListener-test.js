@@ -9,184 +9,183 @@
 
 'use strict';
 
-var EVENT_TARGET_PARAM = 1;
-
 describe('ReactDOMEventListener', () => {
   var React;
   var ReactDOM;
-  var ReactDOMComponentTree;
-  var ReactDOMEventListener;
-  var ReactTestUtils;
-  var handleTopLevel;
 
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
     ReactDOM = require('react-dom');
-    // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../client/ReactDOMComponentTree').default;
-    ReactDOMEventListener = require('../events/ReactDOMEventListener').default;
-    ReactTestUtils = require('react-dom/test-utils');
-
-    handleTopLevel = jest.fn();
-    ReactDOMEventListener._handleTopLevel = handleTopLevel;
   });
 
   it('should dispatch events from outside React tree', () => {
+    var mock = jest.fn();
+
+    var container = document.createElement('div');
+    var node = ReactDOM.render(<div onMouseEnter={mock} />, container);
     var otherNode = document.createElement('h1');
-    var component = ReactDOM.render(<div />, document.createElement('div'));
-    expect(handleTopLevel.mock.calls.length).toBe(0);
-    ReactDOMEventListener.dispatchEvent('topMouseOut', {
-      type: 'mouseout',
-      fromElement: otherNode,
-      target: otherNode,
-      srcElement: otherNode,
-      toElement: ReactDOM.findDOMNode(component),
-      relatedTarget: ReactDOM.findDOMNode(component),
-      view: window,
-      path: [otherNode, otherNode],
-    });
-    expect(handleTopLevel.mock.calls.length).toBe(1);
+    document.body.appendChild(container);
+    document.body.appendChild(otherNode);
+
+    otherNode.dispatchEvent(
+      new MouseEvent('mouseout', {
+        bubbles: true,
+        cancelable: true,
+        relatedTarget: node,
+      }),
+    );
+    expect(mock).toBeCalled();
   });
 
   describe('Propagation', () => {
     it('should propagate events one level down', () => {
+      var mouseOut = jest.fn();
+      var onMouseOut = event => mouseOut(event.currentTarget);
+
       var childContainer = document.createElement('div');
-      var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
-      var parentControl = <div>Parent</div>;
-      childControl = ReactDOM.render(childControl, childContainer);
-      parentControl = ReactDOM.render(parentControl, parentContainer);
-      ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
-
-      var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
-      callback({
-        target: ReactDOM.findDOMNode(childControl),
-      });
-
-      var calls = handleTopLevel.mock.calls;
-      expect(calls.length).toBe(2);
-      expect(calls[0][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(childControl),
+      var childNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Child</div>,
+        childContainer,
       );
-      expect(calls[1][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(parentControl),
+      var parentNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>div</div>,
+        parentContainer,
       );
+      parentNode.appendChild(childContainer);
+      document.body.appendChild(parentContainer);
+
+      var nativeEvent = document.createEvent('Event');
+      nativeEvent.initEvent('mouseout', true, true);
+      childNode.dispatchEvent(nativeEvent);
+
+      expect(mouseOut).toBeCalled();
+      expect(mouseOut.mock.calls.length).toBe(2);
+      expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
+      expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
+
+      document.body.removeChild(parentContainer);
     });
 
     it('should propagate events two levels down', () => {
+      var mouseOut = jest.fn();
+      var onMouseOut = event => mouseOut(event.currentTarget);
+
       var childContainer = document.createElement('div');
-      var childControl = <div>Child</div>;
       var parentContainer = document.createElement('div');
-      var parentControl = <div>Parent</div>;
       var grandParentContainer = document.createElement('div');
-      var grandParentControl = <div>Parent</div>;
-      childControl = ReactDOM.render(childControl, childContainer);
-      parentControl = ReactDOM.render(parentControl, parentContainer);
-      grandParentControl = ReactDOM.render(
-        grandParentControl,
+      var childNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Child</div>,
+        childContainer,
+      );
+      var parentNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Parent</div>,
+        parentContainer,
+      );
+      var grandParentNode = ReactDOM.render(
+        <div onMouseOut={onMouseOut}>Parent</div>,
         grandParentContainer,
       );
-      ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
-      ReactDOM.findDOMNode(grandParentControl).appendChild(parentContainer);
+      parentNode.appendChild(childContainer);
+      grandParentNode.appendChild(parentContainer);
 
-      var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
-      callback({
-        target: ReactDOM.findDOMNode(childControl),
-      });
+      document.body.appendChild(grandParentContainer);
 
-      var calls = handleTopLevel.mock.calls;
-      expect(calls.length).toBe(3);
-      expect(calls[0][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(childControl),
-      );
-      expect(calls[1][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(parentControl),
-      );
-      expect(calls[2][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(grandParentControl),
-      );
+      var nativeEvent = document.createEvent('Event');
+      nativeEvent.initEvent('mouseout', true, true);
+      childNode.dispatchEvent(nativeEvent);
+
+      expect(mouseOut).toBeCalled();
+      expect(mouseOut.mock.calls.length).toBe(3);
+      expect(mouseOut.mock.calls[0][0]).toEqual(childNode);
+      expect(mouseOut.mock.calls[1][0]).toEqual(parentNode);
+      expect(mouseOut.mock.calls[2][0]).toEqual(grandParentNode);
+
+      document.body.removeChild(grandParentContainer);
     });
 
+    // Regression test for https://github.com/facebook/react/issues/1105
     it('should not get confused by disappearing elements', () => {
-      var childContainer = document.createElement('div');
-      var childControl = <div>Child</div>;
-      var parentContainer = document.createElement('div');
-      var parentControl = <div>Parent</div>;
-      childControl = ReactDOM.render(childControl, childContainer);
-      parentControl = ReactDOM.render(parentControl, parentContainer);
-      ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
-
-      // ReactBrowserEventEmitter.handleTopLevel might remove the
-      // target from the DOM. Here, we have handleTopLevel remove the
-      // node when the first event handlers are called; we'll still
-      // expect to receive a second call for the parent control.
-      var childNode = ReactDOM.findDOMNode(childControl);
-      handleTopLevel.mockImplementation(function(
-        topLevelType,
-        topLevelTarget,
-        topLevelTargetID,
-        nativeEvent,
-      ) {
-        if (topLevelTarget === childNode) {
-          ReactDOM.unmountComponentAtNode(childContainer);
+      var container = document.createElement('div');
+      document.body.appendChild(container);
+      class MyComponent extends React.Component {
+        state = {clicked: false};
+        handleClick = () => {
+          this.setState({clicked: true});
+        };
+        componentDidMount() {
+          expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
         }
-      });
-
-      var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
-      callback({
-        target: childNode,
-      });
-
-      var calls = handleTopLevel.mock.calls;
-      expect(calls.length).toBe(2);
-      expect(calls[0][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(childNode),
+        componentDidUpdate() {
+          expect(ReactDOM.findDOMNode(this)).toBe(container.firstChild);
+        }
+        render() {
+          if (this.state.clicked) {
+            return <span>clicked!</span>;
+          } else {
+            return <button onClick={this.handleClick}>not yet clicked</button>;
+          }
+        }
+      }
+      ReactDOM.render(<MyComponent />, container);
+      container.firstChild.dispatchEvent(
+        new MouseEvent('click', {
+          bubbles: true,
+        }),
       );
-      expect(calls[1][EVENT_TARGET_PARAM]).toBe(
-        ReactDOMComponentTree.getInstanceFromNode(parentControl),
-      );
+      expect(container.firstChild.textContent).toBe('clicked!');
+      document.body.removeChild(container);
     });
 
     it('should batch between handlers from different roots', () => {
+      var mock = jest.fn();
+
       var childContainer = document.createElement('div');
+      var handleChildMouseOut = () => {
+        ReactDOM.render(<div>1</div>, childContainer);
+        mock(childNode.textContent);
+      };
+
       var parentContainer = document.createElement('div');
-      var childControl = ReactDOM.render(<div>Child</div>, childContainer);
-      var parentControl = ReactDOM.render(<div>Parent</div>, parentContainer);
-      ReactDOM.findDOMNode(parentControl).appendChild(childContainer);
+      var handleParentMouseOut = () => {
+        ReactDOM.render(<div>2</div>, childContainer);
+        mock(childNode.textContent);
+      };
 
-      // Suppose an event handler in each root enqueues an update to the
-      // childControl element -- the two updates should get batched together.
-      var childNode = ReactDOM.findDOMNode(childControl);
-      handleTopLevel.mockImplementation(function(
-        topLevelType,
-        topLevelTarget,
-        topLevelTargetID,
-        nativeEvent,
-      ) {
-        ReactDOM.render(
-          <div>{topLevelTarget === childNode ? '1' : '2'}</div>,
-          childContainer,
-        );
-        // Since we're batching, neither update should yet have gone through.
-        expect(childNode.textContent).toBe('Child');
-      });
-
-      var callback = ReactDOMEventListener.dispatchEvent.bind(
-        ReactDOMEventListener,
-        'test',
+      var childNode = ReactDOM.render(
+        <div onMouseOut={handleChildMouseOut}>Child</div>,
+        childContainer,
       );
-      callback({
-        target: childNode,
-      });
+      var parentNode = ReactDOM.render(
+        <div onMouseOut={handleParentMouseOut}>Parent</div>,
+        parentContainer,
+      );
+      parentNode.appendChild(childContainer);
+      document.body.appendChild(parentContainer);
 
-      var calls = handleTopLevel.mock.calls;
-      expect(calls.length).toBe(2);
+      var nativeEvent = document.createEvent('Event');
+      nativeEvent.initEvent('mouseout', true, true);
+      childNode.dispatchEvent(nativeEvent);
+
+      // Child and parent should both call from event handlers.
+      expect(mock.mock.calls.length).toBe(2);
+      // The first call schedules a render of '1' into the 'Child'.
+      // However, we're batching so it isn't flushed yet.
+      expect(mock.mock.calls[0][0]).toBe('Child');
+      // The first call schedules a render of '2' into the 'Child'.
+      // We're still batching so it isn't flushed yet either.
+      expect(mock.mock.calls[1][0]).toBe('Child');
+      // By the time we leave the handler, the second update is flushed.
       expect(childNode.textContent).toBe('2');
+      document.body.removeChild(parentContainer);
     });
   });
 
   it('should not fire duplicate events for a React DOM tree', () => {
+    var mouseOut = jest.fn();
+    var onMouseOut = event => mouseOut(event.target);
+
     class Wrapper extends React.Component {
       getInner = () => {
         return this.refs.inner;
@@ -194,21 +193,22 @@ describe('ReactDOMEventListener', () => {
 
       render() {
         var inner = <div ref="inner">Inner</div>;
-        return <div><div id="outer">{inner}</div></div>;
+        return <div><div onMouseOut={onMouseOut} id="outer">{inner}</div></div>;
       }
     }
 
-    var instance = ReactTestUtils.renderIntoDocument(<Wrapper />);
+    var container = document.createElement('div');
+    var instance = ReactDOM.render(<Wrapper />, container);
 
-    var callback = ReactDOMEventListener.dispatchEvent.bind(null, 'test');
-    callback({
-      target: ReactDOM.findDOMNode(instance.getInner()),
-    });
+    document.body.appendChild(container);
 
-    var calls = handleTopLevel.mock.calls;
-    expect(calls.length).toBe(1);
-    expect(calls[0][EVENT_TARGET_PARAM]).toBe(
-      ReactDOMComponentTree.getInstanceFromNode(instance.getInner()),
-    );
+    var nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('mouseout', true, true);
+    instance.getInner().dispatchEvent(nativeEvent);
+
+    expect(mouseOut).toBeCalled();
+    expect(mouseOut.mock.calls.length).toBe(1);
+    expect(mouseOut.mock.calls[0][0]).toEqual(instance.getInner());
+    document.body.removeChild(container);
   });
 });

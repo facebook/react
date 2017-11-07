@@ -9,11 +9,18 @@
 
 'use strict';
 
-var EnterLeaveEventPlugin;
 var React;
 var ReactDOM;
-var ReactDOMComponentTree;
-var ReactTestUtils;
+
+const simulateMouseEvent = (node, type, relatedTarget) => {
+  node.dispatchEvent(
+    new MouseEvent(type, {
+      bubbles: true,
+      cancelable: true,
+      relatedTarget,
+    }),
+  );
+};
 
 describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
@@ -21,45 +28,58 @@ describe('EnterLeaveEventPlugin', () => {
 
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
-    // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../../client/ReactDOMComponentTree')
-      .default;
-    EnterLeaveEventPlugin = require('../EnterLeaveEventPlugin').default;
   });
 
-  it('should set relatedTarget properly in iframe', () => {
-    var iframe = document.createElement('iframe');
+  it('should set onMouseLeave relatedTarget properly in iframe', () => {
+    const iframe = document.createElement('iframe');
     document.body.appendChild(iframe);
-
-    var iframeDocument = iframe.contentDocument;
-
+    const iframeDocument = iframe.contentDocument;
     iframeDocument.write(
       '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
     );
     iframeDocument.close();
 
-    var component = ReactDOM.render(
-      <div />,
+    let leaveEvents = [];
+    const node = ReactDOM.render(
+      <div
+        onMouseLeave={e => {
+          e.persist();
+          leaveEvents.push(e);
+        }}
+      />,
       iframeDocument.body.getElementsByTagName('div')[0],
     );
-    var div = ReactDOM.findDOMNode(component);
 
-    var extracted = EnterLeaveEventPlugin.extractEvents(
-      'topMouseOver',
-      ReactDOMComponentTree.getInstanceFromNode(div),
-      {target: div},
-      div,
+    simulateMouseEvent(node, 'mouseout', iframe.contentWindow);
+    expect(leaveEvents.length).toBe(1);
+    expect(leaveEvents[0].target).toBe(node);
+    expect(leaveEvents[0].relatedTarget).toBe(iframe.contentWindow);
+  });
+
+  it('should set onMouseEnter relatedTarget properly in iframe', () => {
+    const iframe = document.createElement('iframe');
+    document.body.appendChild(iframe);
+    const iframeDocument = iframe.contentDocument;
+    iframeDocument.write(
+      '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
     );
-    expect(extracted.length).toBe(2);
+    iframeDocument.close();
 
-    var leave = extracted[0];
-    var enter = extracted[1];
+    let enterEvents = [];
+    const node = ReactDOM.render(
+      <div
+        onMouseEnter={e => {
+          e.persist();
+          enterEvents.push(e);
+        }}
+      />,
+      iframeDocument.body.getElementsByTagName('div')[0],
+    );
 
-    expect(leave.target).toBe(iframe.contentWindow);
-    expect(leave.relatedTarget).toBe(div);
-    expect(enter.target).toBe(div);
-    expect(enter.relatedTarget).toBe(iframe.contentWindow);
+    simulateMouseEvent(node, 'mouseover', null);
+    expect(enterEvents.length).toBe(1);
+    expect(enterEvents[0].target).toBe(node);
+    expect(enterEvents[0].relatedTarget).toBe(iframe.contentWindow);
   });
 
   // Regression test for https://github.com/facebook/react/issues/10906.
@@ -85,11 +105,10 @@ describe('EnterLeaveEventPlugin', () => {
     // The issue only reproduced on insertion during the first update.
     ReactDOM.render(<Parent showChild={true} />, div);
 
+    document.body.appendChild(div);
+
     // Enter from parent into the child.
-    ReactTestUtils.simulateNativeEventOnNode('topMouseOut', parent, {
-      target: parent,
-      relatedTarget: parent.firstChild,
-    });
+    simulateMouseEvent(parent, 'mouseout', parent.firstChild);
 
     // Entering a child should fire on the child, not on the parent.
     expect(childEnterCalls).toBe(1);

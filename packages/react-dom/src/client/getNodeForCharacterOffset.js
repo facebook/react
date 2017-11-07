@@ -44,9 +44,9 @@ function getSiblingNode(node) {
  * @return {?object}
  */
 function getNodeForCharacterOffset(root, offset) {
-  var node = getLeafNode(root);
-  var nodeStart = 0;
-  var nodeEnd = 0;
+  let node = getLeafNode(root);
+  let nodeStart = 0;
+  let nodeEnd = 0;
 
   while (node) {
     if (node.nodeType === TEXT_NODE) {

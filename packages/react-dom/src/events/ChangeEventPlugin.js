@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginHub from 'events/EventPluginHub';
-import EventPropagators from 'events/EventPropagators';
-import ReactControlledComponent from 'events/ReactControlledComponent';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {enqueueEvents, processEventQueue} from 'events/EventPluginHub';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import {enqueueStateRestore} from 'events/ReactControlledComponent';
+import {batchedUpdates} from 'events/ReactGenericBatching';
 import SyntheticEvent from 'events/SyntheticEvent';
 import isTextInputElement from 'shared/isTextInputElement';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
-import ReactDOMComponentTree from '../client/ReactDOMComponentTree';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
 
 var eventTypes = {
@@ -46,8 +46,8 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
   );
   event.type = 'change';
   // Flag this event loop as needing state restore.
-  ReactControlledComponent.enqueueStateRestore(target);
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  enqueueStateRestore(target);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 /**
@@ -84,16 +84,16 @@ function manualDispatchChangeEvent(nativeEvent) {
   // components don't work properly in conjunction with event bubbling because
   // the component is rerendered and the value reverted before all the event
   // handlers can run. See https://github.com/facebook/react/issues/708.
-  ReactGenericBatching.batchedUpdates(runEventInBatch, event);
+  batchedUpdates(runEventInBatch, event);
 }
 
 function runEventInBatch(event) {
-  EventPluginHub.enqueueEvents(event);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(event);
+  processEventQueue(false);
 }
 
 function getInstIfValueChanged(targetInst) {
-  const targetNode = ReactDOMComponentTree.getNodeFromInstance(targetInst);
+  const targetNode = getNodeFromInstance(targetInst);
   if (inputValueTracking.updateValueIfChanged(targetNode)) {
     return targetInst;
   }
@@ -262,9 +262,7 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     var getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {

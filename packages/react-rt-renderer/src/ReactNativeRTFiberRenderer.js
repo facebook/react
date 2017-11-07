@@ -13,15 +13,16 @@ import invariant from 'fbjs/lib/invariant';
 // Module provided by RN:
 import RTManager from 'RTManager';
 
-import ReactNativeRTComponentTree from './ReactNativeRTComponentTree';
+import {
+  precacheFiberNode,
+  updateFiberProps,
+} from './ReactNativeRTComponentTree';
 import ReactNativeRTTagHandles from './ReactNativeRTTagHandles';
 
 export type Container = number;
 export type Instance = number;
 export type Props = Object;
 export type TextInstance = number;
-
-const {precacheFiberNode, updateFiberProps} = ReactNativeRTComponentTree;
 
 function processProps(instance: number, props: Props): Object {
   const propsPayload = {};

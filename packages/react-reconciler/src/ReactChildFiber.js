@@ -14,7 +14,7 @@ import type {
   ExpirationTime,
 } from 'react-reconciler/src/ReactFiberExpirationTime';
 
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enableReactFragment} from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
 import {
   FunctionalComponent,
@@ -1426,7 +1426,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
-      ReactFeatureFlags.enableReactFragment &&
+      enableReactFragment &&
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&

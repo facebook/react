@@ -21,7 +21,7 @@ import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 import ReactFiberInstrumentation
   from 'react-reconciler/src/ReactFiberInstrumentation';
 import ReactFiberReconciler from 'react-reconciler';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
@@ -213,7 +213,7 @@ var NoopRenderer = ReactFiberReconciler({
   },
 });
 
-var PersistentNoopRenderer = ReactFeatureFlags.enablePersistentReconciler
+var PersistentNoopRenderer = enablePersistentReconciler
   ? ReactFiberReconciler({
       ...SharedHostConfig,
       persistence: {

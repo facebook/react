@@ -14,7 +14,6 @@ import type {ReactNativeCSType} from './ReactNativeCSTypes';
 import {CSStatefulComponent} from 'CSStatefulComponent';
 
 import ReactFiberReconciler from 'react-reconciler';
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ReactVersion from 'shared/ReactVersion';
 
 const emptyObject = {};
@@ -240,9 +239,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   },
 });
 
-injectInternals({
-  findHostInstanceByFiber: ReactNativeCSFiberRenderer.findHostInstance,
-  // This is an enum because we may add more (e.g. profiler build)
+ReactNativeCSFiberRenderer.injectIntoDevTools({
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-cs-renderer',

@@ -13,10 +13,11 @@ import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import * as ReactFiberErrorLogger
   from 'react-reconciler/src/ReactFiberErrorLogger';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
-import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import TapEventPlugin from '../events/TapEventPlugin';
 
 Object.assign(
@@ -31,6 +32,8 @@ Object.assign(
     ReactInstanceMap,
     // Used by www msite:
     TapEventPlugin,
+    // Perf experiment
+    addUserTimingListener,
   },
 );
 

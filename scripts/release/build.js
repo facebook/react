@@ -9,6 +9,7 @@ const run = async () => {
   const chalk = require('chalk');
   const logUpdate = require('log-update');
 
+  const addGitTag = require('./build-commands/add-git-tag');
   const buildArtifacts = require('./build-commands/build-artifacts');
   const checkCircleCiStatus = require('./build-commands/check-circle-ci-status');
   const checkEnvironmentVariables = require('./build-commands/check-environment-variables');
@@ -39,6 +40,7 @@ const run = async () => {
     await runAutomatedTests(params);
     await updatePackageVersions(params);
     await buildArtifacts(params);
+    await addGitTag(params);
     await printPostBuildSummary(params);
   } catch (error) {
     logUpdate.clear();

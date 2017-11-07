@@ -40,7 +40,7 @@ import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import ReactFiberClassComponent from './ReactFiberClassComponent';
 import {
@@ -60,7 +60,6 @@ import {
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 
-var {cancelWorkTimer} = ReactDebugFiberPerf;
 if (__DEV__) {
   var warnedAboutStatelessRefs = {};
 }
@@ -666,9 +665,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     current,
     workInProgress: Fiber,
   ): Fiber | null {
-    if (__DEV__) {
-      cancelWorkTimer(workInProgress);
-    }
+    cancelWorkTimer(workInProgress);
 
     // TODO: We should ideally be able to bail out early if the children have no
     // more work to do. However, since we don't have a separation of this
@@ -689,9 +686,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   }
 
   function bailoutOnLowPriority(current, workInProgress) {
-    if (__DEV__) {
-      cancelWorkTimer(workInProgress);
-    }
+    cancelWorkTimer(workInProgress);
 
     // TODO: Handle HostComponent tags here as well and call pushHostContext()?
     // See PR 8590 discussion for context
