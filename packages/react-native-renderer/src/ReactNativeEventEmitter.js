@@ -145,10 +145,11 @@ export function receiveTouches(
   touches: Array<Object>,
   changedIndices: Array<number>,
 ) {
-  var changedTouches = eventTopLevelType === 'topTouchEnd' ||
+  var changedTouches =
+    eventTopLevelType === 'topTouchEnd' ||
     eventTopLevelType === 'topTouchCancel'
-    ? removeTouchesAtIndices(touches, changedIndices)
-    : touchSubsequence(touches, changedIndices);
+      ? removeTouchesAtIndices(touches, changedIndices)
+      : touchSubsequence(touches, changedIndices);
 
   for (var jj = 0; jj < changedTouches.length; jj++) {
     var touch = changedTouches[jj];

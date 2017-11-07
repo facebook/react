@@ -18,8 +18,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberInstrumentation
-  from 'react-reconciler/src/ReactFiberInstrumentation';
+import ReactFiberInstrumentation from 'react-reconciler/src/ReactFiberInstrumentation';
 import ReactFiberReconciler from 'react-reconciler';
 import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';

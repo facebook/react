@@ -99,9 +99,10 @@ function SyntheticEvent(
     }
   }
 
-  var defaultPrevented = nativeEvent.defaultPrevented != null
-    ? nativeEvent.defaultPrevented
-    : nativeEvent.returnValue === false;
+  var defaultPrevented =
+    nativeEvent.defaultPrevented != null
+      ? nativeEvent.defaultPrevented
+      : nativeEvent.returnValue === false;
   if (defaultPrevented) {
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
   } else {
@@ -227,9 +228,9 @@ SyntheticEvent.augmentClass = function(Class, Interface) {
 };
 
 /** Proxying after everything set on SyntheticEvent
-  * to resolve Proxy issue on some WebKit browsers
-  * in which some Event properties are set to undefined (GH#10010)
-  */
+ * to resolve Proxy issue on some WebKit browsers
+ * in which some Event properties are set to undefined (GH#10010)
+ */
 if (__DEV__) {
   if (isProxySupported) {
     /*eslint-disable no-func-assign */
@@ -267,12 +268,12 @@ if (__DEV__) {
 addEventPoolingTo(SyntheticEvent);
 
 /**
-  * Helper to nullify syntheticEvent instance properties when destructing
-  *
-  * @param {String} propName
-  * @param {?object} getVal
-  * @return {object} defineProperty object
-  */
+ * Helper to nullify syntheticEvent instance properties when destructing
+ *
+ * @param {String} propName
+ * @param {?object} getVal
+ * @return {object} defineProperty object
+ */
 function getPooledWarningPropertyDefinition(propName, getVal) {
   var isFunction = typeof getVal === 'function';
   return {

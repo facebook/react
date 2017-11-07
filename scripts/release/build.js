@@ -49,7 +49,9 @@ const run = async () => {
     const stack = error.stack.replace(error.message, '');
 
     console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(stack)}`
+      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
+        stack
+      )}`
     );
 
     process.exit(1);

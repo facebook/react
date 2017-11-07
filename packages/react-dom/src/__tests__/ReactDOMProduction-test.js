@@ -205,7 +205,9 @@ describe('ReactDOMProduction', () => {
       ReactDOM.render(<Component />, container);
     }).toThrowError(
       `Minified React error #${errorCode}; visit ` +
-        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=Component` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${
+          errorCode
+        }&args[]=Component` +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );
@@ -219,7 +221,9 @@ describe('ReactDOMProduction', () => {
       ReactDOM.render(<input>children</input>, container),
     ).toThrowError(
       `Minified React error #${errorCode}; visit ` +
-        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=input&args[]=` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${
+          errorCode
+        }&args[]=input&args[]=` +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );
@@ -227,7 +231,9 @@ describe('ReactDOMProduction', () => {
       ReactDOMServer.renderToString(<input>children</input>, container),
     ).toThrowError(
       `Minified React error #${errorCode}; visit ` +
-        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${errorCode}&args[]=input&args[]=` +
+        `http://facebook.github.io/react/docs/error-decoder.html?invariant=${
+          errorCode
+        }&args[]=input&args[]=` +
         ' for the full message or use the non-minified dev environment' +
         ' for full errors and additional helpful warnings.',
     );

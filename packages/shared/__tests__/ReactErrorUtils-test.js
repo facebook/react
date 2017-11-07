@@ -74,7 +74,9 @@ describe('ReactErrorUtils', () => {
       expect(callback).toBeCalledWith('arg1', 'arg2');
     });
 
-    it(`should call the callback with the provided context (${environment})`, () => {
+    it(`should call the callback with the provided context (${
+      environment
+    })`, () => {
       var context = {didCall: false};
       ReactErrorUtils.invokeGuardedCallback(
         'foo',
@@ -102,7 +104,9 @@ describe('ReactErrorUtils', () => {
       expect(ReactErrorUtils.clearCaughtError()).toBe(error);
     });
 
-    it(`should return false from clearCaughtError if no error was thrown (${environment})`, () => {
+    it(`should return false from clearCaughtError if no error was thrown (${
+      environment
+    })`, () => {
       var callback = jest.fn();
       ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
       expect(ReactErrorUtils.hasCaughtError()).toBe(false);

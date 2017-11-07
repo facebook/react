@@ -104,7 +104,11 @@ describe('ReactComponent', () => {
     class Component extends React.Component {
       render() {
         var inner = <Wrapper object={innerObj} ref="inner" />;
-        var outer = <Wrapper object={outerObj} ref="outer">{inner}</Wrapper>;
+        var outer = (
+          <Wrapper object={outerObj} ref="outer">
+            {inner}
+          </Wrapper>
+        );
         return outer;
       }
 
@@ -120,7 +124,11 @@ describe('ReactComponent', () => {
   it('should not have refs on unmounted components', () => {
     class Parent extends React.Component {
       render() {
-        return <Child><div ref="test" /></Child>;
+        return (
+          <Child>
+            <div ref="test" />
+          </Child>
+        );
       }
 
       componentDidMount() {
@@ -357,7 +365,11 @@ describe('ReactComponent', () => {
     }
 
     function Bar() {
-      return <Indirection><X /></Indirection>;
+      return (
+        <Indirection>
+          <X />
+        </Indirection>
+      );
     }
 
     function Foo() {
@@ -513,7 +525,11 @@ describe('ReactComponent', () => {
 
     it('warns on function as a child to host component', () => {
       function Foo() {
-        return <div><span>{Foo}</span></div>;
+        return (
+          <div>
+            <span>{Foo}</span>
+          </div>
+        );
       }
       spyOn(console, 'error');
       var container = document.createElement('div');
@@ -553,8 +569,12 @@ describe('ReactComponent', () => {
         render() {
           return (
             <div>
-              {Foo}{Foo}
-              <span>{Foo}{Foo}</span>
+              {Foo}
+              {Foo}
+              <span>
+                {Foo}
+                {Foo}
+              </span>
             </div>
           );
         }

@@ -32,22 +32,24 @@ var TouchHistoryMath = {
     var total = 0;
     var count = 0;
 
-    var oneTouchData = touchHistory.numberActiveTouches === 1
-      ? touchHistory.touchBank[touchHistory.indexOfSingleActiveTouch]
-      : null;
+    var oneTouchData =
+      touchHistory.numberActiveTouches === 1
+        ? touchHistory.touchBank[touchHistory.indexOfSingleActiveTouch]
+        : null;
 
     if (oneTouchData !== null) {
       if (
         oneTouchData.touchActive &&
         oneTouchData.currentTimeStamp > touchesChangedAfter
       ) {
-        total += ofCurrent && isXAxis
-          ? oneTouchData.currentPageX
-          : ofCurrent && !isXAxis
+        total +=
+          ofCurrent && isXAxis
+            ? oneTouchData.currentPageX
+            : ofCurrent && !isXAxis
               ? oneTouchData.currentPageY
               : !ofCurrent && isXAxis
-                  ? oneTouchData.previousPageX
-                  : oneTouchData.previousPageY;
+                ? oneTouchData.previousPageX
+                : oneTouchData.previousPageY;
         count = 1;
       }
     } else {

@@ -65,7 +65,11 @@ describe('ReactShallowRenderer', () => {
 
   it('should only render 1 level deep', () => {
     function Parent() {
-      return <div><Child /></div>;
+      return (
+        <div>
+          <Child />
+        </div>
+      );
     }
     function Child() {
       throw Error('This component should not render');
@@ -638,11 +642,7 @@ describe('ReactShallowRenderer', () => {
       };
       render() {
         instance = this;
-        return (
-          <p>
-            {this.state.counter}
-          </p>
-        );
+        return <p>{this.state.counter}</p>;
       }
     }
 
@@ -670,11 +670,7 @@ describe('ReactShallowRenderer', () => {
       };
       render() {
         instance = this;
-        return (
-          <p>
-            {this.state.counter}
-          </p>
-        );
+        return <p>{this.state.counter}</p>;
       }
     }
 
@@ -708,11 +704,7 @@ describe('ReactShallowRenderer', () => {
       };
       render() {
         instance = this;
-        return (
-          <p>
-            {this.state.counter}
-          </p>
-        );
+        return <p>{this.state.counter}</p>;
       }
     }
 

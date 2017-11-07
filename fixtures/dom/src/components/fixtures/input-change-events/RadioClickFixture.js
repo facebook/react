@@ -34,10 +34,11 @@ class RadioClickFixture extends React.Component {
         <label>
           <input defaultChecked type="radio" onChange={this.handleChange} />
           Test case radio input
-        </label>
-        {' '}
+        </label>{' '}
         <p style={{color}}>
-          <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
+          <code>onChange</code>
+          {' calls: '}
+          <strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset count</button>
       </Fixture>

@@ -48,9 +48,11 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var toggleActivatedState = this._toggleActivatedState;
-        return !this.state.activated
-          ? <a ref="x" onClick={toggleActivatedState} />
-          : <b ref="x" onClick={toggleActivatedState} />;
+        return !this.state.activated ? (
+          <a ref="x" onClick={toggleActivatedState} />
+        ) : (
+          <b ref="x" onClick={toggleActivatedState} />
+        );
       }
     };
 
@@ -65,9 +67,11 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var className = this.props.anchorClassOn ? 'anchorClass' : '';
-        return this.props.renderAnchor
-          ? <a ref="anch" className={className} />
-          : <b />;
+        return this.props.renderAnchor ? (
+          <a ref="anch" className={className} />
+        ) : (
+          <b />
+        );
       }
     };
   });
@@ -110,7 +114,11 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       render() {
-        return <div><Child /></div>;
+        return (
+          <div>
+            <Child />
+          </div>
+        );
       }
     }
 
@@ -582,7 +590,11 @@ describe('ReactCompositeComponent', () => {
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
-        return <Child><Grandchild /></Child>;
+        return (
+          <Child>
+            <Grandchild />
+          </Child>
+        );
       }
     }
 
@@ -685,7 +697,11 @@ describe('ReactCompositeComponent', () => {
     }
 
     parentInstance = ReactTestUtils.renderIntoDocument(
-      <Parent><Middle><Child /></Middle></Parent>,
+      <Parent>
+        <Middle>
+          <Child />
+        </Middle>
+      </Parent>,
     );
 
     expect(parentInstance.state.flag).toBe(false);
@@ -1139,15 +1155,23 @@ describe('ReactCompositeComponent', () => {
         if (this.props.flipped) {
           return (
             <div>
-              <Static ref="static0" key="B">B (ignored)</Static>
-              <Static ref="static1" key="A">A (ignored)</Static>
+              <Static ref="static0" key="B">
+                B (ignored)
+              </Static>
+              <Static ref="static1" key="A">
+                A (ignored)
+              </Static>
             </div>
           );
         } else {
           return (
             <div>
-              <Static ref="static0" key="A">A</Static>
-              <Static ref="static1" key="B">B</Static>
+              <Static ref="static0" key="A">
+                A
+              </Static>
+              <Static ref="static1" key="B">
+                B
+              </Static>
             </div>
           );
         }
@@ -1221,7 +1245,12 @@ describe('ReactCompositeComponent', () => {
     }
 
     var div = document.createElement('div');
-    ReactDOM.render(<Parent><Component /></Parent>, div);
+    ReactDOM.render(
+      <Parent>
+        <Component />
+      </Parent>,
+      div,
+    );
   });
 
   it('should replace state', () => {
@@ -1314,7 +1343,12 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    ReactDOM.render(<Outer><Component /></Outer>, container);
+    ReactDOM.render(
+      <Outer>
+        <Component />
+      </Outer>,
+      container,
+    );
     ReactDOM.render(<Outer />, container);
   });
 

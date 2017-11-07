@@ -23,7 +23,8 @@ const paramDefinitions = [
     name: 'path',
     type: String,
     alias: 'p',
-    description: 'Location of React repository to release; defaults to [bold]{cwd}',
+    description:
+      'Location of React repository to release; defaults to [bold]{cwd}',
     defaultValue: '.',
   },
   {

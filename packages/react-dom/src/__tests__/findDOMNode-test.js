@@ -21,7 +21,11 @@ describe('findDOMNode', () => {
   it('findDOMNode should find dom element', () => {
     class MyNode extends React.Component {
       render() {
-        return <div><span>Noise</span></div>;
+        return (
+          <div>
+            <span>Noise</span>
+          </div>
+        );
       }
     }
 

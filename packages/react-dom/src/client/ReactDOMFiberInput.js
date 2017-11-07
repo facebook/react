@@ -8,15 +8,13 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber
-  from 'react-reconciler/src/ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-import ReactControlledValuePropTypes
-  from '../shared/ReactControlledValuePropTypes';
+import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
@@ -136,9 +134,8 @@ export function initWrapperState(element: Element, props: Object) {
   var defaultValue = props.defaultValue;
   var node = ((element: any): InputWithWrapperState);
   node._wrapperState = {
-    initialChecked: props.checked != null
-      ? props.checked
-      : props.defaultChecked,
+    initialChecked:
+      props.checked != null ? props.checked : props.defaultChecked,
     initialValue: props.value != null ? props.value : defaultValue,
     controlled: isControlled(props),
   };

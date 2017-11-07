@@ -891,11 +891,7 @@ describe('ReactIncrementalErrorHandling', () => {
     }
 
     function Foo(props) {
-      return (
-        <div>
-          {props.hide ? null : <Bar ref={barRef} />}
-        </div>
-      );
+      return <div>{props.hide ? null : <Bar ref={barRef} />}</div>;
     }
 
     ReactNoop.render(<Foo />);
@@ -1148,7 +1144,11 @@ describe('ReactIncrementalErrorHandling', () => {
       }
     }
 
-    ReactNoop.render(<ErrorBoundary><Foo /></ErrorBoundary>);
+    ReactNoop.render(
+      <ErrorBoundary>
+        <Foo />
+      </ErrorBoundary>,
+    );
     expect(ReactNoop.flush()).toEqual([
       'render: 0',
       'render: 1',

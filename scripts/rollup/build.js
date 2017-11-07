@@ -146,10 +146,15 @@ const RECONCILER_WRAPPER_INTRO = `var $$$reconciler;\nmodule.exports = function(
 const RECONCILER_WRAPPER_OUTRO = `return ($$$reconciler || ($$$reconciler = module.exports))(config);\n};\n`;
 
 function getReconcilerBanner(bundleType, filename) {
-  let banner = `${Header.getHeader(filename, reactVersion)}\n\n'use strict';\n\n\n`;
+  let banner = `${Header.getHeader(
+    filename,
+    reactVersion
+  )}\n\n'use strict';\n\n\n`;
   switch (bundleType) {
     case NODE_DEV:
-      banner += `if (process.env.NODE_ENV !== "production") {\n${RECONCILER_WRAPPER_INTRO}`;
+      banner += `if (process.env.NODE_ENV !== "production") {\n${
+        RECONCILER_WRAPPER_INTRO
+      }`;
       break;
     case NODE_PROD:
       banner += RECONCILER_WRAPPER_INTRO;
@@ -258,7 +263,8 @@ function getRollupOutputOptions(
     {
       banner: getBanner(bundleType, globalName, filename, moduleType),
       destDir: 'build/',
-      file: 'build/' +
+      file:
+        'build/' +
         Packaging.getOutputPathRelativeToBuildFolder(
           bundleType,
           filename,

@@ -140,9 +140,10 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var doc = nativeEventTarget.window === nativeEventTarget
-      ? nativeEventTarget.document
-      : nativeEventTarget.nodeType === DOCUMENT_NODE
+    var doc =
+      nativeEventTarget.window === nativeEventTarget
+        ? nativeEventTarget.document
+        : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
     // Track whether all listeners exists for this plugin. If none exist, we do
