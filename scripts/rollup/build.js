@@ -654,7 +654,7 @@ rimraf('build', () => {
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
   }
-  // rather than run concurently, opt to run them serially
+  // rather than run concurrently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occurred
   return runWaterfall(tasks)
