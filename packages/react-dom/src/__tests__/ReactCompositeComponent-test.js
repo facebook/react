@@ -533,6 +533,29 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when componentDidReceiveProps method is defined', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      componentDidReceiveProps = () => {};
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Component has a method called ' +
+        'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+        'If you meant to update the state in response to changing props, ' +
+        'use componentWillReceiveProps(). If you meant to fetch data or ' +
+        'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+    );
+  });
+
   it('should warn when defaultProps was defined as an instance property', () => {
     spyOn(console, 'error');
 
