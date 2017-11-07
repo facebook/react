@@ -333,14 +333,19 @@ export function startWorkLoopTimer(nextUnitOfWork: Fiber | null): void {
   }
 }
 
-export function stopWorkLoopTimer(didInterrupt: boolean): void {
+export function stopWorkLoopTimer(interruptedBy: Fiber | null): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming) {
       return;
     }
     let warning = null;
-    if (didInterrupt) {
-      warning = 'Interrupted an in-progress update';
+    if (interruptedBy !== null) {
+      if (interruptedBy.tag === HostRoot) {
+        warning = 'A top-level update interrupted the previous render';
+      } else {
+        const componentName = getComponentName(interruptedBy) || 'Unknown';
+        warning = `An update to ${componentName} interrupted the previous render`;
+      }
     } else if (commitCountInCurrentWorkLoop > 1) {
       warning = 'There were cascading updates';
     }

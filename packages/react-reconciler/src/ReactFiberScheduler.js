@@ -217,7 +217,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isUnmounting: boolean = false;
 
   // Used for performance tracking.
-  let didInterrupt: boolean = false;
+  let interruptedBy: Fiber | null = null;
 
   function resetContextStack() {
     // Reset the stack
@@ -868,8 +868,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     const uncaughtError = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
-    stopWorkLoopTimer(didInterrupt);
-    didInterrupt = false;
+    stopWorkLoopTimer(interruptedBy);
+    interruptedBy = null;
     isWorking = false;
     didFatal = false;
     firstUncaughtError = null;
@@ -1204,7 +1204,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
             // Restart the root from the top.
             if (nextUnitOfWork !== null) {
               // This is an interruption. (Used for performance tracking.)
-              didInterrupt = true;
+              interruptedBy = fiber;
             }
             nextRoot = null;
             nextUnitOfWork = null;

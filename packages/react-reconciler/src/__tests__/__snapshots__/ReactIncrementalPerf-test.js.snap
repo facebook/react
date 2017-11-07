@@ -275,7 +275,7 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 "⚛ (React Tree Reconciliation)
   ⚛ Foo [mount]
 
-⛔ (React Tree Reconciliation) Warning: Interrupted an in-progress update
+⛔ (React Tree Reconciliation) Warning: A top-level update interrupted the previous render
   ⚛ Foo [mount]
 
 ⚛ (Committing Changes)
