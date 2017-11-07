@@ -287,7 +287,9 @@ export default function(
         noComponentDidReceiveProps,
         '%s has a method called ' +
           'componentDidReceiveProps(). But there is no such lifecycle method. ' +
-          'Did you mean componentDidUpdate()?',
+          'If you meant to update the state in response to changing props, ' +
+          'use componentWillReceiveProps(). If you meant to fetch data or ' +
+          'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
         name,
       );
       const noComponentWillRecieveProps =
