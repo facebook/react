@@ -533,6 +533,27 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when componentDidReceiveProps method is defined', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      componentDidReceiveProps = () => {};
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Component has a method called ' +
+        'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+        'Did you mean componentDidUpdate()?',
+    );
+  });
+
   it('should warn when defaultProps was defined as an instance property', () => {
     spyOn(console, 'error');
 

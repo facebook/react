@@ -281,6 +281,15 @@ export default function(
           'Did you mean componentWillUnmount()?',
         name,
       );
+      const noComponentDidReceiveProps =
+        typeof instance.componentDidReceiveProps !== 'function';
+      warning(
+        noComponentDidReceiveProps,
+        '%s has a method called ' +
+          'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+          'Did you mean componentDidUpdate()?',
+        name,
+      );
       const noComponentWillRecieveProps =
         typeof instance.componentWillRecieveProps !== 'function';
       warning(
