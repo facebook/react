@@ -73,7 +73,7 @@
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
-    "prettier": "1.2.2",
+    "prettier": "1.8.1",
     "prop-types": "^15.6.0",
     "rimraf": "^2.6.1",
     "rollup": "^0.49.3",
