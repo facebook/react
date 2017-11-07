@@ -216,6 +216,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
+  // Used for performance tracking.
+  let interruptedBy: Fiber | null = null;
+
   function resetContextStack() {
     // Reset the stack
     reset();
@@ -752,8 +755,6 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     root: FiberRoot,
     expirationTime: ExpirationTime,
   ): Fiber | null {
-    startWorkLoopTimer();
-
     invariant(
       !isWorking,
       'renderRoot was called recursively. This error is likely caused ' +
@@ -772,7 +773,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       expirationTime !== nextRenderExpirationTime ||
       nextUnitOfWork === null
     ) {
-      // This is a restart. Reset the stack.
+      // Reset the stack and start working from the root.
       resetContextStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
@@ -782,6 +783,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         expirationTime,
       );
     }
+
+    startWorkLoopTimer(nextUnitOfWork);
 
     let didError = false;
     let error = null;
@@ -865,11 +868,11 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     const uncaughtError = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
+    stopWorkLoopTimer(interruptedBy);
+    interruptedBy = null;
     isWorking = false;
     didFatal = false;
     firstUncaughtError = null;
-
-    stopWorkLoopTimer();
 
     if (uncaughtError !== null) {
       onUncaughtError(uncaughtError);
@@ -1198,7 +1201,11 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
             root === nextRoot &&
             expirationTime <= nextRenderExpirationTime
           ) {
-            // This is an interruption. Restart the root from the top.
+            // Restart the root from the top.
+            if (nextUnitOfWork !== null) {
+              // This is an interruption. (Used for performance tracking.)
+              interruptedBy = fiber;
+            }
             nextRoot = null;
             nextUnitOfWork = null;
             nextRenderExpirationTime = NoWork;

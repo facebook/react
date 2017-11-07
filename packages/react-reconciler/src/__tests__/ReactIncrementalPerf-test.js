@@ -498,4 +498,18 @@ describe('ReactDebugFiberPerf', () => {
     });
     expect(getFlameChart()).toMatchSnapshot();
   });
+
+  it('warns if an in-progress update is interrupted', () => {
+    function Foo() {
+      return <span />;
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flushUnitsOfWork(2);
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Foo />);
+    });
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
 });
