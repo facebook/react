@@ -1432,8 +1432,14 @@ describe('ReactDOMComponent', () => {
         </div>,
       );
 
-      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(console.error.calls.count()).toBe(2);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+          '<div>.' +
+          '\n    in tr (at **)' +
+          '\n    in div (at **)',
+      );
+      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
         'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
           '<div>.' +
           '\n    in tr (at **)' +

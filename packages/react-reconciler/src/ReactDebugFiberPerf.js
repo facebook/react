@@ -344,7 +344,9 @@ export function stopWorkLoopTimer(interruptedBy: Fiber | null): void {
         warning = 'A top-level update interrupted the previous render';
       } else {
         const componentName = getComponentName(interruptedBy) || 'Unknown';
-        warning = `An update to ${componentName} interrupted the previous render`;
+        warning = `An update to ${
+          componentName
+        } interrupted the previous render`;
       }
     } else if (commitCountInCurrentWorkLoop > 1) {
       warning = 'There were cascading updates';
