@@ -132,7 +132,13 @@ describe('ReactJSXElement', () => {
     var a = 1;
     var b = 2;
     var c = 3;
-    var element = <Component>{a}{b}{c}</Component>;
+    var element = (
+      <Component>
+        {a}
+        {b}
+        {c}
+      </Component>
+    );
     expect(element.props.children).toEqual([1, 2, 3]);
     expectDev(console.error.calls.count()).toBe(0);
   });

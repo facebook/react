@@ -134,11 +134,19 @@ describe('ReactDebugFiberPerf', () => {
   }
 
   it('measures a simple reconciliation', () => {
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     addComment('Mount');
     ReactNoop.flush();
 
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     addComment('Update');
     ReactNoop.flush();
 
@@ -196,7 +204,11 @@ describe('ReactDebugFiberPerf', () => {
       }
     }
 
-    ReactNoop.render(<Parent><Cascading /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Cascading />
+      </Parent>,
+    );
     addComment('Should print a warning');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -233,10 +245,18 @@ describe('ReactDebugFiberPerf', () => {
       }
     }
 
-    ReactNoop.render(<Parent><NotCascading /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <NotCascading />
+      </Parent>,
+    );
     addComment('Should not print a warning');
     ReactNoop.flush();
-    ReactNoop.render(<Parent><NotCascading /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <NotCascading />
+      </Parent>,
+    );
     addComment('Should not print a warning');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -328,14 +348,22 @@ describe('ReactDebugFiberPerf', () => {
       throw new Error('Game over');
     }
 
-    ReactNoop.render(<Parent><Baddie /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Baddie />
+      </Parent>,
+    );
     try {
       addComment('Will fatal');
       ReactNoop.flush();
     } catch (err) {
       expect(err.message).toBe('Game over');
     }
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     addComment('Will reconcile from a clean state');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -464,7 +492,13 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function App() {
-      return <div><CoParent foo={true}><Indirection /></CoParent></div>;
+      return (
+        <div>
+          <CoParent foo={true}>
+            <Indirection />
+          </CoParent>
+        </div>
+      );
     }
 
     ReactNoop.render(<App />);

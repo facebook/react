@@ -11,11 +11,8 @@ import type {ReactNativeRTType} from './ReactNativeRTTypes';
 import type {ReactNodeList} from 'shared/ReactTypes';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger
-  from 'react-reconciler/src/ReactFiberErrorLogger';
-import {
-  showDialog,
-} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
+import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
+import {showDialog} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
@@ -84,7 +81,8 @@ const ReactNativeRTFiber: ReactNativeRTType = {
 
 ReactNativeRTFiberRenderer.injectIntoDevTools({
   findFiberByHostInstance: getFiberFromTag,
-  getInspectorDataForViewTag: ReactNativeRTFiberInspector.getInspectorDataForViewTag,
+  getInspectorDataForViewTag:
+    ReactNativeRTFiberInspector.getInspectorDataForViewTag,
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-rt-renderer',

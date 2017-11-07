@@ -41,14 +41,14 @@ class InputPlaceholderFixture extends React.Component {
           type="text"
           placeholder={placeholder}
           onChange={this.handleChange}
-        />
-        {' '}
+        />{' '}
         <button onClick={this.handleGeneratePlaceholder}>
           Change placeholder
         </button>
-
         <p style={{color}}>
-          <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
+          <code>onChange</code>
+          {' calls: '}
+          <strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset count</button>
       </Fixture>

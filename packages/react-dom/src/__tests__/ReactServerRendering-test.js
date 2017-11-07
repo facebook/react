@@ -81,7 +81,11 @@ describe('ReactDOMServer', () => {
     it('should render composite components', () => {
       class Parent extends React.Component {
         render() {
-          return <div><Child name="child" /></div>;
+          return (
+            <div>
+              <Child name="child" />
+            </div>
+          );
         }
       }
 
@@ -198,7 +202,9 @@ describe('ReactDOMServer', () => {
 
         render() {
           return (
-            <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
+            <span ref="span" onClick={this.click}>
+              Name: {this.props.name}
+            </span>
           );
         }
       }
@@ -410,7 +416,11 @@ describe('ReactDOMServer', () => {
 
       class TestComponent extends React.Component {
         render() {
-          return <span><NestedComponent /></span>;
+          return (
+            <span>
+              <NestedComponent />
+            </span>
+          );
         }
       }
 
@@ -422,7 +432,11 @@ describe('ReactDOMServer', () => {
     it('should not put checksum and React ID on text components', () => {
       class TestComponent extends React.Component {
         render() {
-          return <span>{'hello'} {'world'}</span>;
+          return (
+            <span>
+              {'hello'} {'world'}
+            </span>
+          );
         }
       }
 
@@ -595,7 +609,9 @@ describe('ReactDOMServer', () => {
       };
 
       var markup = ReactDOMServer.renderToString(
-        <ContextProvider><Component /></ContextProvider>,
+        <ContextProvider>
+          <Component />
+        </ContextProvider>,
       );
       expect(markup).toContain('hello, world');
     });
