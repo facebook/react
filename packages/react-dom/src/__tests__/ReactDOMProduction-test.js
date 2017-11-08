@@ -93,6 +93,52 @@ describe('ReactDOMProduction', () => {
     expect(container.childNodes.length).toBe(0);
   });
 
+  it('should support createFactory', () => {
+    var span = React.createFactory('span');
+    class Component extends React.Component {
+      render() {
+        return span({children: this.props.children});
+      }
+    }
+
+    var ComponentFactory = React.createFactory(Component);
+
+    var container = document.createElement('div');
+    ReactDOM.render(
+      ComponentFactory(null, span(null, 'Hello'), span(null, 'world')),
+      container,
+    );
+    expect(container.firstChild.tagName).toBe('SPAN');
+    expect(container.firstChild.childNodes[0].tagName).toBe('SPAN');
+    expect(container.firstChild.childNodes[0].textContent).toBe('Hello');
+    expect(container.firstChild.childNodes[1].tagName).toBe('SPAN');
+    expect(container.firstChild.childNodes[1].textContent).toBe('world');
+  });
+
+  it('should support React public API methods', () => {
+    expect(React.isValidElement(42)).toBe(false);
+    expect(React.isValidElement(<div />)).toBe(true);
+    expect(React.cloneElement(<div />, {foo: 42})).toEqual(<div foo={42} />);
+
+    const mapped = React.Children.map(<div />, el =>
+      React.cloneElement(el, {foo: 42}),
+    );
+    expect(mapped.length).toBe(1);
+    expect(mapped[0].type).toBe('div');
+    expect(mapped[0].props.foo).toBe(42);
+
+    const arr = React.Children.toArray(<div />);
+    expect(arr.length).toBe(1);
+    expect(arr[0].type).toBe('div');
+
+    let called = 0;
+    React.Children.forEach(<div />, () => called++);
+    expect(called).toBe(1);
+
+    expect(React.Children.count(<div />)).toBe(1);
+    expect(() => React.Children.only(42)).toThrowError();
+  });
+
   it('should handle a simple flow (ssr)', () => {
     class Component extends React.Component {
       render() {
