@@ -6,13 +6,12 @@
  *
  * @flow
  */
-'use strict';
 
 // Modules provided by RN:
-var deepDiffer = require('deepDiffer');
-var flattenStyle = require('flattenStyle');
+import deepDiffer from 'deepDiffer';
+import flattenStyle from 'flattenStyle';
 
-var ReactNativePropRegistry = require('./ReactNativePropRegistry');
+import ReactNativePropRegistry from './ReactNativePropRegistry';
 
 var emptyObject = {};
 
@@ -107,9 +106,10 @@ function restoreDeletedValuesInNestedArray(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        var nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         updatePayload[propKey] = nextValue;
       }
       removedKeys[propKey] = false;
@@ -124,9 +124,8 @@ function diffNestedArrayProperty(
   nextArray: Array<NestedNode>,
   validAttributes: AttributeConfiguration,
 ): ?Object {
-  var minLength = prevArray.length < nextArray.length
-    ? prevArray.length
-    : nextArray.length;
+  var minLength =
+    prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
   var i;
   for (i = 0; i < minLength; i++) {
     // Diff any items in the array in the forward direction. Repeated keys
@@ -351,9 +350,10 @@ function diffProperties(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        var nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         updatePayload[propKey] = nextValue;
       }
       continue;
@@ -381,9 +381,10 @@ function diffProperties(
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));
       if (shouldUpdate) {
-        nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         (updatePayload || (updatePayload = {}))[propKey] = nextValue;
       }
     } else {
@@ -485,30 +486,26 @@ function clearProperties(
   return diffProperties(updatePayload, prevProps, emptyObject, validAttributes);
 }
 
-var ReactNativeAttributePayload = {
-  create: function(
-    props: Object,
-    validAttributes: AttributeConfiguration,
-  ): ?Object {
-    return addProperties(
-      null, // updatePayload
-      props,
-      validAttributes,
-    );
-  },
+export function create(
+  props: Object,
+  validAttributes: AttributeConfiguration,
+): ?Object {
+  return addProperties(
+    null, // updatePayload
+    props,
+    validAttributes,
+  );
+}
 
-  diff: function(
-    prevProps: Object,
-    nextProps: Object,
-    validAttributes: AttributeConfiguration,
-  ): ?Object {
-    return diffProperties(
-      null, // updatePayload
-      prevProps,
-      nextProps,
-      validAttributes,
-    );
-  },
-};
-
-module.exports = ReactNativeAttributePayload;
+export function diff(
+  prevProps: Object,
+  nextProps: Object,
+  validAttributes: AttributeConfiguration,
+): ?Object {
+  return diffProperties(
+    null, // updatePayload
+    prevProps,
+    nextProps,
+    validAttributes,
+  );
+}

@@ -6,7 +6,6 @@
  *
  * @flow
  */
-'use strict';
 
 var objects = {};
 var uniqueID = 1;
@@ -38,4 +37,4 @@ class ReactNativePropRegistry {
   }
 }
 
-module.exports = ReactNativePropRegistry;
+export default ReactNativePropRegistry;

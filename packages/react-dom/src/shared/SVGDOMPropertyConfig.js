@@ -5,11 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import {injection} from './DOMProperty';
 
-var DOMProperty = require('./DOMProperty');
-
-var {HAS_STRING_BOOLEAN_VALUE} = DOMProperty.injection;
+var {HAS_STRING_BOOLEAN_VALUE} = injection;
 
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',
@@ -150,4 +148,4 @@ ATTRS.forEach(original => {
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
 });
 
-module.exports = SVGDOMPropertyConfig;
+export default SVGDOMPropertyConfig;

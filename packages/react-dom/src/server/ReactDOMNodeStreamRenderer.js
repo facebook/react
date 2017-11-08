@@ -5,11 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import {Readable} from 'stream';
 
-var Readable = require('stream').Readable;
-
-var ReactPartialRenderer = require('./ReactPartialRenderer');
+import ReactPartialRenderer from './ReactPartialRenderer';
 
 // This is a Readable Node.js stream which wraps the ReactDOMPartialRenderer.
 class ReactMarkupReadableStream extends Readable {
@@ -33,7 +31,7 @@ class ReactMarkupReadableStream extends Readable {
  * server.
  * See https://reactjs.org/docs/react-dom-stream.html#rendertonodestream
  */
-function renderToNodeStream(element) {
+export function renderToNodeStream(element) {
   return new ReactMarkupReadableStream(element, false);
 }
 
@@ -42,11 +40,6 @@ function renderToNodeStream(element) {
  * such as data-react-id that React uses internally.
  * See https://reactjs.org/docs/react-dom-stream.html#rendertostaticnodestream
  */
-function renderToStaticNodeStream(element) {
+export function renderToStaticNodeStream(element) {
   return new ReactMarkupReadableStream(element, true);
 }
-
-module.exports = {
-  renderToNodeStream: renderToNodeStream,
-  renderToStaticNodeStream: renderToStaticNodeStream,
-};

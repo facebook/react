@@ -9,4 +9,8 @@
 
 'use strict';
 
-module.exports = require('./src/ReactNoop');
+var ReactNoop = require('./src/ReactNoop');
+
+// TODO: decide on the top-level export form.
+// This is hacky but makes it work with both Rollup and Jest.
+module.exports = ReactNoop.default ? ReactNoop.default : ReactNoop;

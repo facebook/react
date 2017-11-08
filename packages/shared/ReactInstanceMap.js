@@ -5,8 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
 /**
  * `ReactInstanceMap` maintains a mapping from a public facing stateful
  * instance (key) and the internal representation (value). This allows public
@@ -17,27 +15,23 @@
  * If this becomes an actual Map, that will break.
  */
 
-var ReactInstanceMap = {
-  /**
-   * This API should be called `delete` but we'd have to make sure to always
-   * transform these to strings for IE support. When this transform is fully
-   * supported we can rename it.
-   */
-  remove: function(key) {
-    key._reactInternalFiber = undefined;
-  },
+/**
+ * This API should be called `delete` but we'd have to make sure to always
+ * transform these to strings for IE support. When this transform is fully
+ * supported we can rename it.
+ */
+export function remove(key) {
+  key._reactInternalFiber = undefined;
+}
 
-  get: function(key) {
-    return key._reactInternalFiber;
-  },
+export function get(key) {
+  return key._reactInternalFiber;
+}
 
-  has: function(key) {
-    return key._reactInternalFiber !== undefined;
-  },
+export function has(key) {
+  return key._reactInternalFiber !== undefined;
+}
 
-  set: function(key, value) {
-    key._reactInternalFiber = value;
-  },
-};
-
-module.exports = ReactInstanceMap;
+export function set(key, value) {
+  key._reactInternalFiber = value;
+}

@@ -7,7 +7,8 @@
 
 'use strict';
 
-var createReactNativeComponentClass = require('../createReactNativeComponentClass');
+var createReactNativeComponentClass = require('../createReactNativeComponentClass')
+  .default;
 
 var View = createReactNativeComponentClass({
   validAttributes: {},

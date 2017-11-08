@@ -243,6 +243,17 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 "
 `;
 
+exports[`ReactDebugFiberPerf supports portals 1`] = `
+"⚛ (React Tree Reconciliation)
+  ⚛ Parent [mount]
+    ⚛ Child [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
 exports[`ReactDebugFiberPerf supports returns 1`] = `
 "⚛ (React Tree Reconciliation)
   ⚛ App [mount]
@@ -260,14 +271,22 @@ exports[`ReactDebugFiberPerf supports returns 1`] = `
 "
 `;
 
-exports[`ReactDebugFiberPerf supports portals 1`] = `
+exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] = `
 "⚛ (React Tree Reconciliation)
-  ⚛ Parent [mount]
-    ⚛ Child [mount]
+  ⚛ Foo [mount]
+
+⛔ (React Tree Reconciliation) Warning: A top-level update interrupted the previous render
+  ⚛ Foo [mount]
 
 ⚛ (Committing Changes)
-  ⚛ (Committing Host Effects: 2 Total)
+  ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
+
+⚛ (React Tree Reconciliation)
+
+⚛ (Committing Changes)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 1 Total)
 "
 `;
 

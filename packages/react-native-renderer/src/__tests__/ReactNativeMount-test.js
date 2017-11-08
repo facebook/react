@@ -21,7 +21,8 @@ describe('ReactNative', () => {
     React = require('react');
     ReactNative = require('react-native-renderer');
     UIManager = require('UIManager');
-    createReactNativeComponentClass = require('../createReactNativeComponentClass');
+    createReactNativeComponentClass = require('../createReactNativeComponentClass')
+      .default;
   });
 
   it('should be able to create and render a native component', () => {
@@ -150,9 +151,7 @@ describe('ReactNative', () => {
       render() {
         var chars = this.props.chars.split('');
         return (
-          <View>
-            {chars.map(text => <View key={text} title={text} />)}
-          </View>
+          <View>{chars.map(text => <View key={text} title={text} />)}</View>
         );
       }
     }

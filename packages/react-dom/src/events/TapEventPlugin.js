@@ -7,15 +7,11 @@
  * @flow
  */
 
-'use strict';
+import {isStartish, isEndish} from 'events/EventPluginUtils';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import TouchEventUtils from 'fbjs/lib/TouchEventUtils';
 
-var EventPluginUtils = require('events/EventPluginUtils');
-var EventPropagators = require('events/EventPropagators');
-var TouchEventUtils = require('fbjs/lib/TouchEventUtils');
-var isStartish = EventPluginUtils.isStartish;
-var isEndish = EventPluginUtils.isEndish;
-
-var SyntheticUIEvent = require('./SyntheticUIEvent');
+import SyntheticUIEvent from './SyntheticUIEvent';
 
 /**
  * We are extending the Flow 'Touch' declaration to enable using bracket
@@ -27,7 +23,7 @@ var SyntheticUIEvent = require('./SyntheticUIEvent');
 type TouchPropertyKey = 'clientX' | 'clientY' | 'pageX' | 'pageY';
 
 declare class _Touch extends Touch {
-  [key: TouchPropertyKey]: number,
+  [key: TouchPropertyKey]: number;
 }
 
 type AxisCoordinateData = {
@@ -145,9 +141,9 @@ var TapEventPlugin = {
       startCoords.x = 0;
       startCoords.y = 0;
     }
-    EventPropagators.accumulateTwoPhaseDispatches(event);
+    accumulateTwoPhaseDispatches(event);
     return event;
   },
 };
 
-module.exports = TapEventPlugin;
+export default TapEventPlugin;

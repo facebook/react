@@ -5,13 +5,11 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-
-var setInnerHTML = require('./setInnerHTML');
-var escapeTextContentForBrowser = require('../shared/escapeTextContentForBrowser');
-var {TEXT_NODE} = require('../shared/HTMLNodeType');
+import setInnerHTML from './setInnerHTML';
+import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
+import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
  * Set the textContent property of a node, ensuring that whitespace is preserved
@@ -25,7 +23,7 @@ var {TEXT_NODE} = require('../shared/HTMLNodeType');
  */
 var setTextContent = function(node, text) {
   if (text) {
-    var firstChild = node.firstChild;
+    let firstChild = node.firstChild;
 
     if (
       firstChild &&
@@ -51,4 +49,4 @@ if (ExecutionEnvironment.canUseDOM) {
   }
 }
 
-module.exports = setTextContent;
+export default setTextContent;

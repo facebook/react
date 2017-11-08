@@ -9,7 +9,7 @@
 
 // Mock of the Native Hooks
 
-const ReactNativeTagHandles = require('../ReactNativeTagHandles');
+const ReactNativeTagHandles = require('../ReactNativeTagHandles').default;
 const invariant = require('fbjs/lib/invariant');
 
 // Map of viewTag -> {children: [childTag], parent: ?parentTag}

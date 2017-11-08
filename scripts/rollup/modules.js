@@ -27,6 +27,20 @@ const forkedFBModules = Object.freeze([
   'react/src/ReactCurrentOwner',
 ]);
 
+// For any external that is used in a DEV-only condition, explicitly
+// specify whether it has side effects during import or not. This lets
+// us know whether we can safely omit them when they are unused.
+const HAS_NO_SIDE_EFFECTS_ON_IMPORT = false;
+// const HAS_SIDE_EFFECTS_ON_IMPORT = true;
+const importSideEffects = Object.freeze({
+  'fbjs/lib/invariant': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fbjs/lib/warning': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'prop-types/checkPropTypes': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fbjs/lib/camelizeStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  'fbjs/lib/hyphenateStyleName': HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+  deepFreezeAndThrowOnMutationInDev: HAS_NO_SIDE_EFFECTS_ON_IMPORT,
+});
+
 // Given ['react'] in bundle externals, returns { 'react': 'React' }.
 function getPeerGlobals(externals, moduleType) {
   const peerGlobals = {};
@@ -61,6 +75,10 @@ function getDependencies(bundleType, entry) {
   return deps;
 }
 
+function getImportSideEffects() {
+  return importSideEffects;
+}
+
 // Hijacks some modules for optimization and integration reasons.
 function getShims(bundleType, entry, featureFlags) {
   const shims = {};
@@ -84,24 +102,31 @@ function getShims(bundleType, entry, featureFlags) {
       // so we resort to using a shim that re-exports the www module, and then
       // treating shim's target destinations as external (see getDependencies).
       forkedFBModules.forEach(srcPath => {
-        const resolvedSrcPath = require.resolve(srcPath);
-        const wwwName = path.parse(resolvedSrcPath).name;
+        const fileName = path.parse(srcPath).name;
         const shimPath = path.resolve(
-          __dirname + `/shims/rollup/${wwwName}-www.js`
+          __dirname + `/shims/rollup/${fileName}-www.js`
         );
-        shims[resolvedSrcPath] = shimPath;
+        shims[srcPath] = shimPath;
+        // <hack>
+        // Unfortunately the above doesn't work for relative imports,
+        // and Rollup isn't smart enough to understand they refer to the same file.
+        // We should come up with a real fix for this, but for now this will do.
+        // FIXME: this is gross.
+        shims['./' + fileName] = shimPath;
+        shims['../' + fileName] = shimPath;
+        // We don't have deeper relative requires between source files.
+        // </hack>
       });
       break;
   }
   if (featureFlags) {
-    shims[require.resolve('shared/ReactFeatureFlags')] = require.resolve(
-      featureFlags
-    );
+    shims['shared/ReactFeatureFlags'] = require.resolve(featureFlags);
   }
   return shims;
 }
 
 module.exports = {
+  getImportSideEffects,
   getPeerGlobals,
   getDependencies,
   getShims,

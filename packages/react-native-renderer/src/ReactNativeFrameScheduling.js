@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Deadline} from 'react-reconciler';
 
 const hasNativePerformanceNow =
@@ -59,7 +57,4 @@ function scheduleDeferredCallback(callback: Callback): number {
   return 0;
 }
 
-module.exports = {
-  now,
-  scheduleDeferredCallback,
-};
+export {now, scheduleDeferredCallback};

@@ -9,6 +9,6 @@
 
 // Mock of the CS Hooks
 
-exports.CSStatefulComponent = function(spec) {
+export const CSStatefulComponent = function(spec) {
   return spec;
 };

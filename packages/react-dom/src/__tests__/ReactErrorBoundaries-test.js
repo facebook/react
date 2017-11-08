@@ -594,9 +594,7 @@ describe('ReactErrorBoundaries', () => {
     ReactDOM.render(<span>After 1</span>, container1);
     ReactDOM.render(<span>After 2</span>, container2);
     ReactDOM.render(
-      <ErrorBoundary forceRetry={true}>
-        After 3
-      </ErrorBoundary>,
+      <ErrorBoundary forceRetry={true}>After 3</ErrorBoundary>,
       container3,
     );
     expect(container1.firstChild.textContent).toBe('After 1');
@@ -1621,18 +1619,14 @@ describe('ReactErrorBoundaries', () => {
     var fail = false;
     var container = document.createElement('div');
     ReactDOM.render(
-      <ErrorBoundary>
-        {getAMixOfNormalAndBrokenRenderElements()}
-      </ErrorBoundary>,
+      <ErrorBoundary>{getAMixOfNormalAndBrokenRenderElements()}</ErrorBoundary>,
       container,
     );
     expect(container.textContent).not.toContain('Caught an error');
 
     fail = true;
     ReactDOM.render(
-      <ErrorBoundary>
-        {getAMixOfNormalAndBrokenRenderElements()}
-      </ErrorBoundary>,
+      <ErrorBoundary>{getAMixOfNormalAndBrokenRenderElements()}</ErrorBoundary>,
       container,
     );
     expect(container.textContent).toBe('Caught an error: Hello.');
@@ -1784,9 +1778,7 @@ describe('ReactErrorBoundaries', () => {
       <ErrorBoundary>
         <BrokenComponentDidMountErrorBoundary
           renderError={error => (
-            <div>
-              We should never catch our own error: {error.message}.
-            </div>
+            <div>We should never catch our own error: {error.message}.</div>
           )}
         />
       </ErrorBoundary>,

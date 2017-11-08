@@ -7,17 +7,15 @@
  * @flow
  */
 
-'use strict';
-
 import type {CapturedError} from './ReactFiberScheduler';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
 const defaultShowDialog = (capturedError: CapturedError) => true;
 
 let showDialog = defaultShowDialog;
 
-function logCapturedError(capturedError: CapturedError): void {
+export function logCapturedError(capturedError: CapturedError): void {
   const logError = showDialog(capturedError);
 
   // Allow injected showDialog() to prevent default console.error logging.
@@ -49,7 +47,9 @@ function logCapturedError(capturedError: CapturedError): void {
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
         errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName}.\n` +
+          `This error was initially handled by the error boundary ${
+            errorBoundaryName
+          }.\n` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {
@@ -74,7 +74,7 @@ function logCapturedError(capturedError: CapturedError): void {
   }
 }
 
-exports.injection = {
+export const injection = {
   /**
    * Display custom dialog for lifecycle errors.
    * Return false to prevent default behavior of logging to console.error.
@@ -91,5 +91,3 @@ exports.injection = {
     showDialog = fn;
   },
 };
-
-exports.logCapturedError = logCapturedError;

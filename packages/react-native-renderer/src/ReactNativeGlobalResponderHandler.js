@@ -4,10 +4,9 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
-'use strict';
 
 // Module provided by RN:
-var UIManager = require('UIManager');
+import UIManager from 'UIManager';
 
 var ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
@@ -20,4 +19,4 @@ var ReactNativeGlobalResponderHandler = {
   },
 };
 
-module.exports = ReactNativeGlobalResponderHandler;
+export default ReactNativeGlobalResponderHandler;

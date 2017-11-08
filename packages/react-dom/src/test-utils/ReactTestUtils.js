@@ -5,17 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import React from 'react';
+import ReactDOM from 'react-dom';
+import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import {
+  ClassComponent,
+  FunctionalComponent,
+  HostComponent,
+  HostText,
+} from 'shared/ReactTypeOfWork';
+import SyntheticEvent from 'events/SyntheticEvent';
+import invariant from 'fbjs/lib/invariant';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactFiberTreeReflection = require('shared/ReactFiberTreeReflection');
-var ReactInstanceMap = require('shared/ReactInstanceMap');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var SyntheticEvent = require('events/SyntheticEvent');
-var invariant = require('fbjs/lib/invariant');
-
-var BrowserEventConstants = require('../events/BrowserEventConstants');
+import BrowserEventConstants from '../events/BrowserEventConstants';
 
 var {findDOMNode} = ReactDOM;
 var {
@@ -28,12 +31,6 @@ var {
 } = ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED;
 
 var topLevelTypes = BrowserEventConstants.topLevelTypes;
-var {
-  ClassComponent,
-  FunctionalComponent,
-  HostComponent,
-  HostText,
-} = ReactTypeOfWork;
 
 function Event(suffix) {}
 
@@ -45,9 +42,7 @@ function findAllInRenderedFiberTreeInternal(fiber, test) {
   if (!fiber) {
     return [];
   }
-  var currentParent = ReactFiberTreeReflection.findCurrentFiberUsingSlowPath(
-    fiber,
-  );
+  var currentParent = findCurrentFiberUsingSlowPath(fiber);
   if (!currentParent) {
     return [];
   }
@@ -466,9 +461,10 @@ function makeNativeSimulator(eventType) {
 
 Object.keys(topLevelTypes).forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
-  var convenienceName = eventType.indexOf('top') === 0
-    ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
-    : eventType;
+  var convenienceName =
+    eventType.indexOf('top') === 0
+      ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
+      : eventType;
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.
@@ -478,4 +474,4 @@ Object.keys(topLevelTypes).forEach(function(eventType) {
   );
 });
 
-module.exports = ReactTestUtils;
+export default ReactTestUtils;

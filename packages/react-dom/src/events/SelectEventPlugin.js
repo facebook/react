@@ -5,19 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import SyntheticEvent from 'events/SyntheticEvent';
+import isTextInputElement from 'shared/isTextInputElement';
+import getActiveElement from 'fbjs/lib/getActiveElement';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 
-var EventPropagators = require('events/EventPropagators');
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-var SyntheticEvent = require('events/SyntheticEvent');
-var isTextInputElement = require('shared/isTextInputElement');
-var getActiveElement = require('fbjs/lib/getActiveElement');
-var shallowEqual = require('fbjs/lib/shallowEqual');
-
-var ReactBrowserEventEmitter = require('./ReactBrowserEventEmitter');
-var ReactDOMComponentTree = require('../client/ReactDOMComponentTree');
-var ReactInputSelection = require('../client/ReactInputSelection');
-var {DOCUMENT_NODE} = require('../shared/HTMLNodeType');
+import {isListeningToAllDependencies} from './ReactBrowserEventEmitter';
+import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
+import * as ReactInputSelection from '../client/ReactInputSelection';
+import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
 var skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&
@@ -47,11 +45,6 @@ var activeElement = null;
 var activeElementInst = null;
 var lastSelection = null;
 var mouseDown = false;
-
-// Track whether all listeners exists for this plugin. If none exist, we do
-// not extract events. See #3639.
-var isListeningToAllDependencies =
-  ReactBrowserEventEmitter.isListeningToAllDependencies;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -116,7 +109,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
     syntheticEvent.type = 'select';
     syntheticEvent.target = activeElement;
 
-    EventPropagators.accumulateTwoPhaseDispatches(syntheticEvent);
+    accumulateTwoPhaseDispatches(syntheticEvent);
 
     return syntheticEvent;
   }
@@ -147,18 +140,19 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var doc = nativeEventTarget.window === nativeEventTarget
-      ? nativeEventTarget.document
-      : nativeEventTarget.nodeType === DOCUMENT_NODE
+    var doc =
+      nativeEventTarget.window === nativeEventTarget
+        ? nativeEventTarget.document
+        : nativeEventTarget.nodeType === DOCUMENT_NODE
           ? nativeEventTarget
           : nativeEventTarget.ownerDocument;
+    // Track whether all listeners exists for this plugin. If none exist, we do
+    // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
       return null;
     }
 
-    var targetNode = targetInst
-      ? ReactDOMComponentTree.getNodeFromInstance(targetInst)
-      : window;
+    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.
@@ -209,4 +203,4 @@ var SelectEventPlugin = {
   },
 };
 
-module.exports = SelectEventPlugin;
+export default SelectEventPlugin;

@@ -48,9 +48,11 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var toggleActivatedState = this._toggleActivatedState;
-        return !this.state.activated
-          ? <a ref="x" onClick={toggleActivatedState} />
-          : <b ref="x" onClick={toggleActivatedState} />;
+        return !this.state.activated ? (
+          <a ref="x" onClick={toggleActivatedState} />
+        ) : (
+          <b ref="x" onClick={toggleActivatedState} />
+        );
       }
     };
 
@@ -65,9 +67,11 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var className = this.props.anchorClassOn ? 'anchorClass' : '';
-        return this.props.renderAnchor
-          ? <a ref="anch" className={className} />
-          : <b />;
+        return this.props.renderAnchor ? (
+          <a ref="anch" className={className} />
+        ) : (
+          <b />
+        );
       }
     };
   });
@@ -110,7 +114,11 @@ describe('ReactCompositeComponent', () => {
 
     class Parent extends React.Component {
       render() {
-        return <div><Child /></div>;
+        return (
+          <div>
+            <Child />
+          </div>
+        );
       }
     }
 
@@ -533,6 +541,29 @@ describe('ReactCompositeComponent', () => {
     );
   });
 
+  it('should warn when componentDidReceiveProps method is defined', () => {
+    spyOn(console, 'error');
+
+    class Component extends React.Component {
+      componentDidReceiveProps = () => {};
+
+      render() {
+        return <div />;
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(<Component />);
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: Component has a method called ' +
+        'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+        'If you meant to update the state in response to changing props, ' +
+        'use componentWillReceiveProps(). If you meant to fetch data or ' +
+        'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+    );
+  });
+
   it('should warn when defaultProps was defined as an instance property', () => {
     spyOn(console, 'error');
 
@@ -559,7 +590,11 @@ describe('ReactCompositeComponent', () => {
   it('should pass context to children when not owner', () => {
     class Parent extends React.Component {
       render() {
-        return <Child><Grandchild /></Child>;
+        return (
+          <Child>
+            <Grandchild />
+          </Child>
+        );
       }
     }
 
@@ -662,7 +697,11 @@ describe('ReactCompositeComponent', () => {
     }
 
     parentInstance = ReactTestUtils.renderIntoDocument(
-      <Parent><Middle><Child /></Middle></Parent>,
+      <Parent>
+        <Middle>
+          <Child />
+        </Middle>
+      </Parent>,
     );
 
     expect(parentInstance.state.flag).toBe(false);
@@ -1116,15 +1155,23 @@ describe('ReactCompositeComponent', () => {
         if (this.props.flipped) {
           return (
             <div>
-              <Static ref="static0" key="B">B (ignored)</Static>
-              <Static ref="static1" key="A">A (ignored)</Static>
+              <Static ref="static0" key="B">
+                B (ignored)
+              </Static>
+              <Static ref="static1" key="A">
+                A (ignored)
+              </Static>
             </div>
           );
         } else {
           return (
             <div>
-              <Static ref="static0" key="A">A</Static>
-              <Static ref="static1" key="B">B</Static>
+              <Static ref="static0" key="A">
+                A
+              </Static>
+              <Static ref="static1" key="B">
+                B
+              </Static>
             </div>
           );
         }
@@ -1198,7 +1245,12 @@ describe('ReactCompositeComponent', () => {
     }
 
     var div = document.createElement('div');
-    ReactDOM.render(<Parent><Component /></Parent>, div);
+    ReactDOM.render(
+      <Parent>
+        <Component />
+      </Parent>,
+      div,
+    );
   });
 
   it('should replace state', () => {
@@ -1291,7 +1343,12 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    ReactDOM.render(<Outer><Component /></Outer>, container);
+    ReactDOM.render(
+      <Outer>
+        <Component />
+      </Outer>,
+      container,
+    );
     ReactDOM.render(<Outer />, container);
   });
 
@@ -1532,5 +1589,44 @@ describe('ReactCompositeComponent', () => {
 
     ReactTestUtils.renderIntoDocument(<Component />);
     expect(mockArgs.length).toEqual(0);
+  });
+
+  it('should return a meaningful warning when constructor is returned', () => {
+    spyOn(console, 'error');
+    class RenderTextInvalidConstructor extends React.Component {
+      constructor(props) {
+        super(props);
+        return {something: false};
+      }
+
+      render() {
+        return <div />;
+      }
+    }
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<RenderTextInvalidConstructor />);
+    }).toThrow();
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
+      'Warning: RenderTextInvalidConstructor(...): No `render` method found on the returned component instance: ' +
+        'did you accidentally return an object from the constructor?',
+    );
+  });
+
+  it('should return error if render is not defined', () => {
+    spyOn(console, 'error');
+    class RenderTestUndefinedRender extends React.Component {}
+
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<RenderTestUndefinedRender />);
+    }).toThrow();
+
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.mostRecent().args[0]).toBe(
+      'Warning: RenderTestUndefinedRender(...): No `render` method found on the returned ' +
+        'component instance: you may have forgotten to define `render`.',
+    );
   });
 });

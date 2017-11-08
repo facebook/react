@@ -46,7 +46,9 @@ describe('SimpleEventPlugin', function() {
 
   it('A non-interactive tags clicks bubble when disabled', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <div onClick={onClick}><div /></div>,
+      <div onClick={onClick}>
+        <div />
+      </div>,
     );
     var child = ReactDOM.findDOMNode(element).firstChild;
 
@@ -56,7 +58,9 @@ describe('SimpleEventPlugin', function() {
 
   it('does not register a click when clicking a child of a disabled element', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <button onClick={onClick} disabled={true}><span /></button>,
+      <button onClick={onClick} disabled={true}>
+        <span />
+      </button>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 
@@ -66,7 +70,9 @@ describe('SimpleEventPlugin', function() {
 
   it('triggers click events for children of disabled elements', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <button disabled={true}><span onClick={onClick} /></button>,
+      <button disabled={true}>
+        <span onClick={onClick} />
+      </button>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 
@@ -77,7 +83,9 @@ describe('SimpleEventPlugin', function() {
   it('triggers parent captured click events when target is a child of a disabled elements', function() {
     var element = ReactTestUtils.renderIntoDocument(
       <div onClickCapture={onClick}>
-        <button disabled={true}><span /></button>
+        <button disabled={true}>
+          <span />
+        </button>
       </div>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
@@ -88,7 +96,9 @@ describe('SimpleEventPlugin', function() {
 
   it('triggers captured click events for children of disabled elements', function() {
     var element = ReactTestUtils.renderIntoDocument(
-      <button disabled={true}><span onClickCapture={onClick} /></button>,
+      <button disabled={true}>
+        <span onClickCapture={onClick} />
+      </button>,
     );
     var child = ReactDOM.findDOMNode(element).querySelector('span');
 

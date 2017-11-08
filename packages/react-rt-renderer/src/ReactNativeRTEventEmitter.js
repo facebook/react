@@ -6,13 +6,12 @@
  *
  * @flow
  */
-'use strict';
 
-var ReactGenericBatching = require('events/ReactGenericBatching');
+import {batchedUpdates} from 'events/ReactGenericBatching';
 // Module provided by RN:
-var BatchedBridge = require('BatchedBridge');
+import BatchedBridge from 'BatchedBridge';
 
-var ReactNativeRTComponentTree = require('./ReactNativeRTComponentTree');
+import {getFiberCurrentPropsFromTag} from './ReactNativeRTComponentTree';
 
 var ReactNativeRTEventEmitter = {
   /**
@@ -28,7 +27,7 @@ var ReactNativeRTEventEmitter = {
     nativeEventParam: Object,
   ) {
     var nativeEvent = nativeEventParam;
-    var props = ReactNativeRTComponentTree.getFiberCurrentPropsFromTag(tag);
+    var props = getFiberCurrentPropsFromTag(tag);
     if (props == null) {
       return;
     }
@@ -36,7 +35,7 @@ var ReactNativeRTEventEmitter = {
     if (typeof eventHandler !== 'function') {
       return;
     }
-    ReactGenericBatching.batchedUpdates(function() {
+    batchedUpdates(function() {
       eventHandler(nativeEvent);
     });
   },

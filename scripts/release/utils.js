@@ -40,7 +40,9 @@ const logPromise = async (promise, text, completedLabel = '') => {
   const id = setInterval(() => {
     index = ++index % frames.length;
     logUpdate(
-      `${chalk.yellow(frames[index])} ${text} ${chalk.gray('- this may take a few seconds')}`
+      `${chalk.yellow(frames[index])} ${text} ${chalk.gray(
+        '- this may take a few seconds'
+      )}`
     );
   }, interval);
 

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
 import type {ReactCall} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
@@ -17,8 +15,12 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var {
+import {
+  enableMutatingReconciler,
+  enablePersistentReconciler,
+  enableNoopReconciler,
+} from 'shared/ReactFeatureFlags';
+import {
   IndeterminateComponent,
   FunctionalComponent,
   ClassComponent,
@@ -30,18 +32,18 @@ var {
   CallHandlerPhase,
   ReturnComponent,
   Fragment,
-} = require('shared/ReactTypeOfWork');
-var {Placement, Ref, Update} = require('shared/ReactTypeOfSideEffect');
-var invariant = require('fbjs/lib/invariant');
+} from 'shared/ReactTypeOfWork';
+import {Placement, Ref, Update} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-var {reconcileChildFibers} = require('./ReactChildFiber');
-var {
+import {reconcileChildFibers} from './ReactChildFiber';
+import {
   popContextProvider,
   popTopLevelContextObject,
-} = require('./ReactFiberContext');
-var {Never} = require('./ReactFiberExpirationTime');
+} from './ReactFiberContext';
+import {Never} from './ReactFiberExpirationTime';
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
@@ -182,7 +184,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   let updateHostComponent;
   let updateHostText;
   if (mutation) {
-    if (ReactFeatureFlags.enableMutatingReconciler) {
+    if (enableMutatingReconciler) {
       // Mutation mode
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
@@ -219,7 +221,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       invariant(false, 'Mutating reconciler is disabled.');
     }
   } else if (persistence) {
-    if (ReactFeatureFlags.enablePersistentReconciler) {
+    if (enablePersistentReconciler) {
       // Persistent host tree mode
       const {
         cloneInstance,
@@ -356,7 +358,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       invariant(false, 'Persistent reconciler is disabled.');
     }
   } else {
-    if (ReactFeatureFlags.enableNoopReconciler) {
+    if (enableNoopReconciler) {
       // No host operations
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
@@ -606,4 +608,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   return {
     completeWork,
   };
-};
+}

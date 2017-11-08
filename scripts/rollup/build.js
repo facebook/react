@@ -146,10 +146,15 @@ const RECONCILER_WRAPPER_INTRO = `var $$$reconciler;\nmodule.exports = function(
 const RECONCILER_WRAPPER_OUTRO = `return ($$$reconciler || ($$$reconciler = module.exports))(config);\n};\n`;
 
 function getReconcilerBanner(bundleType, filename) {
-  let banner = `${Header.getHeader(filename, reactVersion)}\n\n'use strict';\n\n\n`;
+  let banner = `${Header.getHeader(
+    filename,
+    reactVersion
+  )}\n\n'use strict';\n\n\n`;
   switch (bundleType) {
     case NODE_DEV:
-      banner += `if (process.env.NODE_ENV !== "production") {\n${RECONCILER_WRAPPER_INTRO}`;
+      banner += `if (process.env.NODE_ENV !== "production") {\n${
+        RECONCILER_WRAPPER_INTRO
+      }`;
       break;
     case NODE_PROD:
       banner += RECONCILER_WRAPPER_INTRO;
@@ -221,6 +226,27 @@ function handleRollupWarnings(warning) {
     console.error(warning.message);
     process.exit(1);
   }
+  if (warning.code === 'UNUSED_EXTERNAL_IMPORT') {
+    const match = warning.message.match(/external module '([^']+)'/);
+    if (!match || typeof match[1] !== 'string') {
+      throw new Error(
+        'Could not parse a Rollup warning. ' + 'Fix this method.'
+      );
+    }
+    const importSideEffects = Modules.getImportSideEffects();
+    const path = match[1];
+    if (typeof importSideEffects[path] !== 'boolean') {
+      throw new Error(
+        'An external module "' +
+          path +
+          '" is used in a DEV-only code path ' +
+          'but we do not know if it is safe to omit an unused require() to it in production. ' +
+          'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
+      );
+    }
+    // Don't warn. We will remove side effectless require() in a later pass.
+    return;
+  }
   console.warn(warning.message || warning);
 }
 
@@ -237,7 +263,8 @@ function getRollupOutputOptions(
     {
       banner: getBanner(bundleType, globalName, filename, moduleType),
       destDir: 'build/',
-      dest: 'build/' +
+      file:
+        'build/' +
         Packaging.getOutputPathRelativeToBuildFolder(
           bundleType,
           filename,
@@ -247,8 +274,8 @@ function getRollupOutputOptions(
       format,
       globals,
       interop: false,
-      moduleName: globalName,
-      sourceMap: false,
+      name: globalName,
+      sourcemap: false,
     }
   );
 }
@@ -345,29 +372,23 @@ function getUglifyConfig(configs) {
   };
 }
 
-// We use this for various shims, such as www forks of the code,
-// renderer-specific feature flag overrides, and UMD optimizations.
-function shimModules(shims) {
-  // For some reason, even if we use the alias plugin,
-  // Rollup still attempts to bundle unused original code
-  // if it exists. We have to explicitly stub it out.
-  const nullStub = {
-    transform(source, id) {
-      if (shims[id]) {
-        return 'module.exports = null;';
-      }
-      return source;
-    },
-  };
-  return [nullStub, alias(shims)];
-}
-
 // FB uses require('React') instead of require('react').
 // We can't set up a forwarding module due to case sensitivity issues.
 function rewriteFBReactImport() {
   return {
     transformBundle(source) {
       return source.replace(/require\(['"]react['"]\)/g, "require('React')");
+    },
+  };
+}
+
+// Strip 'use strict' directives in individual modules
+// because we always emit them in the file headers.
+// The whole bundle is strict.
+function stripUseStrict() {
+  return {
+    transform(source) {
+      return source.replace(/['"]use strict['"']/g, '');
     },
   };
 }
@@ -397,12 +418,17 @@ function getPlugins(
 ) {
   const shims = Modules.getShims(bundleType, entry, featureFlags);
   const plugins = [
+    // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && writeErrorCodes(),
-    ...shimModules(shims),
+    // Shim some modules for www custom behavior and optimizations.
+    alias(shims),
+    // Use Node resolution mechanism.
     resolvePlugin({
       skip: externals,
     }),
+    // Compile to ES5.
     babel(getBabelConfig(updateBabelOptions, bundleType)),
+    stripUseStrict(),
   ].filter(Boolean);
 
   const headerSanityCheck = getHeaderSanityCheck(bundleType, globalName);
@@ -533,9 +559,15 @@ function createBundle(bundle, bundleType) {
     externals = externals.concat(deps);
   }
 
+  const importSideEffects = Modules.getImportSideEffects();
+  const pureExternalModules = Object.keys(importSideEffects).filter(
+    module => !importSideEffects[module]
+  );
+
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
   return rollup({
-    entry: resolvedEntry,
+    input: resolvedEntry,
+    pureExternalModules,
     external(id) {
       const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
       const isProvidedByDependency = externals.some(containsThisModule);
@@ -556,6 +588,8 @@ function createBundle(bundle, bundleType) {
       bundle.modulesToStub,
       bundle.featureFlags
     ),
+    // We can't use getters in www.
+    legacy: bundleType === FB_DEV || bundleType === FB_PROD,
   })
     .then(result =>
       result.write(
@@ -626,7 +660,7 @@ rimraf('build', () => {
   } else if (syncWww) {
     tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
   }
-  // rather than run concurently, opt to run them serially
+  // rather than run concurrently, opt to run them serially
   // this helps improve console/warning/error output
   // and fixes a bunch of IO failures that sometimes occurred
   return runWaterfall(tasks)

@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
 /**
@@ -25,4 +23,4 @@ var ReactCurrentOwner = {
   current: (null: null | Fiber),
 };
 
-module.exports = ReactCurrentOwner;
+export default ReactCurrentOwner;

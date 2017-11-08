@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-'use strict';
-
-var getVendorPrefixedEventName = require('./getVendorPrefixedEventName');
+import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
  * Types of raw signals from the browser caught at the top level.
@@ -19,10 +17,10 @@ var getVendorPrefixedEventName = require('./getVendorPrefixedEventName');
 var topLevelTypes = {
   topAbort: 'abort',
   topAnimationEnd: getVendorPrefixedEventName('animationend') || 'animationend',
-  topAnimationIteration: getVendorPrefixedEventName('animationiteration') ||
-    'animationiteration',
-  topAnimationStart: getVendorPrefixedEventName('animationstart') ||
-    'animationstart',
+  topAnimationIteration:
+    getVendorPrefixedEventName('animationiteration') || 'animationiteration',
+  topAnimationStart:
+    getVendorPrefixedEventName('animationstart') || 'animationstart',
   topBlur: 'blur',
   topCancel: 'cancel',
   topCanPlay: 'canplay',
@@ -83,8 +81,8 @@ var topLevelTypes = {
   topTouchEnd: 'touchend',
   topTouchMove: 'touchmove',
   topTouchStart: 'touchstart',
-  topTransitionEnd: getVendorPrefixedEventName('transitionend') ||
-    'transitionend',
+  topTransitionEnd:
+    getVendorPrefixedEventName('transitionend') || 'transitionend',
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
   topWheel: 'wheel',
@@ -96,4 +94,4 @@ var BrowserEventConstants = {
   topLevelTypes,
 };
 
-module.exports = BrowserEventConstants;
+export default BrowserEventConstants;

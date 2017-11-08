@@ -7,58 +7,52 @@
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
-var ReactTypeOfWork = require('shared/ReactTypeOfWork');
-var {
+import {
+  enableMutatingReconciler,
+  enableNoopReconciler,
+  enablePersistentReconciler,
+} from 'shared/ReactFeatureFlags';
+import {
   ClassComponent,
   HostRoot,
   HostComponent,
   HostText,
   HostPortal,
   CallComponent,
-} = ReactTypeOfWork;
-var {
-  invokeGuardedCallback,
-  hasCaughtError,
-  clearCaughtError,
-} = require('shared/ReactErrorUtils');
-var {Placement, Update, ContentReset} = require('shared/ReactTypeOfSideEffect');
-var invariant = require('fbjs/lib/invariant');
+} from 'shared/ReactTypeOfWork';
+import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {Placement, Update, ContentReset} from 'shared/ReactTypeOfSideEffect';
+import invariant from 'fbjs/lib/invariant';
 
-var {commitCallbacks} = require('./ReactFiberUpdateQueue');
-var {onCommitUnmount} = require('./ReactFiberDevToolsHook');
+import {commitCallbacks} from './ReactFiberUpdateQueue';
+import {onCommitUnmount} from './ReactFiberDevToolsHook';
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
-if (__DEV__) {
-  var {startPhaseTimer, stopPhaseTimer} = require('./ReactDebugFiberPerf');
-}
+var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
   const {getPublicInstance, mutation, persistence} = config;
 
-  if (__DEV__) {
-    var callComponentWillUnmountWithTimerInDev = function(current, instance) {
-      startPhaseTimer(current, 'componentWillUnmount');
-      instance.props = current.memoizedProps;
-      instance.state = current.memoizedState;
-      instance.componentWillUnmount();
-      stopPhaseTimer();
-    };
-  }
+  var callComponentWillUnmountWithTimer = function(current, instance) {
+    startPhaseTimer(current, 'componentWillUnmount');
+    instance.props = current.memoizedProps;
+    instance.state = current.memoizedState;
+    instance.componentWillUnmount();
+    stopPhaseTimer();
+  };
 
   // Capture errors so they don't interrupt unmounting.
   function safelyCallComponentWillUnmount(current, instance) {
     if (__DEV__) {
       invokeGuardedCallback(
         null,
-        callComponentWillUnmountWithTimerInDev,
+        callComponentWillUnmountWithTimer,
         null,
         current,
         instance,
@@ -69,9 +63,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       }
     } else {
       try {
-        instance.props = current.memoizedProps;
-        instance.state = current.memoizedState;
-        instance.componentWillUnmount();
+        callComponentWillUnmountWithTimer(current, instance);
       } catch (unmountError) {
         captureError(current, unmountError);
       }
@@ -103,27 +95,19 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         const instance = finishedWork.stateNode;
         if (finishedWork.effectTag & Update) {
           if (current === null) {
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidMount');
-            }
+            startPhaseTimer(finishedWork, 'componentDidMount');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
             instance.componentDidMount();
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
+            stopPhaseTimer();
           } else {
             const prevProps = current.memoizedProps;
             const prevState = current.memoizedState;
-            if (__DEV__) {
-              startPhaseTimer(finishedWork, 'componentDidUpdate');
-            }
+            startPhaseTimer(finishedWork, 'componentDidUpdate');
             instance.props = finishedWork.memoizedProps;
             instance.state = finishedWork.memoizedState;
             instance.componentDidUpdate(prevProps, prevState);
-            if (__DEV__) {
-              stopPhaseTimer();
-            }
+            stopPhaseTimer();
           }
         }
         const updateQueue = finishedWork.updateQueue;
@@ -135,9 +119,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          const instance = finishedWork.child !== null
-            ? finishedWork.child.stateNode
-            : null;
+          const instance =
+            finishedWork.child !== null ? finishedWork.child.stateNode : null;
           commitCallbacks(updateQueue, instance);
         }
         return;
@@ -225,12 +208,9 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         // TODO: this is recursive.
         // We are also not using this parent because
         // the portal will get pushed immediately.
-        if (ReactFeatureFlags.enableMutatingReconciler && mutation) {
+        if (enableMutatingReconciler && mutation) {
           unmountHostComponents(current);
-        } else if (
-          ReactFeatureFlags.enablePersistentReconciler &&
-          persistence
-        ) {
+        } else if (enablePersistentReconciler && persistence) {
           emptyPortalContainer(current);
         }
         return;
@@ -331,10 +311,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         // Noop
       };
     }
-    if (
-      ReactFeatureFlags.enablePersistentReconciler ||
-      ReactFeatureFlags.enableNoopReconciler
-    ) {
+    if (enablePersistentReconciler || enableNoopReconciler) {
       return {
         commitResetTextContent(finishedWork: Fiber) {},
         commitPlacement(finishedWork: Fiber) {},
@@ -644,9 +621,8 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
         // For hydration we reuse the update path but we treat the oldProps
         // as the newProps. The updatePayload will contain the real change in
         // this case.
-        const oldText: string = current !== null
-          ? current.memoizedProps
-          : newText;
+        const oldText: string =
+          current !== null ? current.memoizedProps : newText;
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }
@@ -667,7 +643,7 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     resetTextContent(current.stateNode);
   }
 
-  if (ReactFeatureFlags.enableMutatingReconciler) {
+  if (enableMutatingReconciler) {
     return {
       commitResetTextContent,
       commitPlacement,
@@ -680,4 +656,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
   } else {
     invariant(false, 'Mutating reconciler is disabled.');
   }
-};
+}

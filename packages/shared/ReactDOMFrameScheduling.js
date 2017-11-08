@@ -7,8 +7,6 @@
  * @flow
  */
 
-'use strict';
-
 // This is a built-in polyfill for requestIdleCallback. It works by scheduling
 // a requestAnimationFrame, storing the time for the start of the frame, then
 // scheduling a postMessage which gets scheduled after paint. Within the
@@ -19,11 +17,10 @@
 
 import type {Deadline} from 'react-reconciler';
 
-var ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
+import warning from 'fbjs/lib/warning';
 
 if (__DEV__) {
-  var warning = require('fbjs/lib/warning');
-
   if (
     ExecutionEnvironment.canUseDOM &&
     typeof requestAnimationFrame !== 'function'
@@ -98,7 +95,11 @@ if (!ExecutionEnvironment.canUseDOM) {
   }
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey = '__reactIdleCallback$' + Math.random().toString(36).slice(2);
+  var messageKey =
+    '__reactIdleCallback$' +
+    Math.random()
+      .toString(36)
+      .slice(2);
   var idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
@@ -133,9 +134,8 @@ if (!ExecutionEnvironment.canUseDOM) {
       // running on 120hz display or 90hz VR display.
       // Take the max of the two in case one of them was an anomaly due to
       // missed frame deadlines.
-      activeFrameTime = nextFrameTime < previousFrameTime
-        ? previousFrameTime
-        : nextFrameTime;
+      activeFrameTime =
+        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
     } else {
       previousFrameTime = nextFrameTime;
     }
@@ -164,5 +164,4 @@ if (!ExecutionEnvironment.canUseDOM) {
   rIC = requestIdleCallback;
 }
 
-exports.now = now;
-exports.rIC = rIC;
+export {now, rIC};

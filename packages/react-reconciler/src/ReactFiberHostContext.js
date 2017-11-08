@@ -7,15 +7,13 @@
  * @flow
  */
 
-'use strict';
-
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {StackCursor} from './ReactFiberStack';
 
-const invariant = require('fbjs/lib/invariant');
+import invariant from 'fbjs/lib/invariant';
 
-const {createCursor, pop, push} = require('./ReactFiberStack');
+import {createCursor, pop, push} from './ReactFiberStack';
 
 declare class NoContextT {}
 const NO_CONTEXT: NoContextT = ({}: any);
@@ -30,7 +28,7 @@ export type HostContext<C, CX> = {
   resetHostContainer(): void,
 };
 
-module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
+export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
 ): HostContext<C, CX> {
   const {getChildHostContext, getRootHostContext} = config;
@@ -124,4 +122,4 @@ module.exports = function<T, P, I, TI, PI, C, CC, CX, PL>(
     pushHostContext,
     resetHostContainer,
   };
-};
+}

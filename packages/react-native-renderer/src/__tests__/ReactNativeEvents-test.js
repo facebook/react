@@ -69,10 +69,12 @@ beforeEach(() => {
   RCTEventEmitter = require('RCTEventEmitter');
   React = require('react');
   ReactNative = require('react-native-renderer');
-  ReactNativeBridgeEventPlugin = require('../ReactNativeBridgeEventPlugin');
-  ResponderEventPlugin = require('events/ResponderEventPlugin');
+  ReactNativeBridgeEventPlugin = require('../ReactNativeBridgeEventPlugin')
+    .default;
+  ResponderEventPlugin = require('events/ResponderEventPlugin').default;
   UIManager = require('UIManager');
-  createReactNativeComponentClass = require('../createReactNativeComponentClass');
+  createReactNativeComponentClass = require('../createReactNativeComponentClass')
+    .default;
 });
 
 it('fails if unknown/unsupported event types are dispatched', () => {
@@ -350,14 +352,14 @@ it('handles events without target', () => {
     ReactNative.render(
       <View id="parent">
         <View key={1}>
-          {renderFirstComponent
-            ? <View
-                id="one"
-                onResponderEnd={() => log.push('one responder end')}
-                onResponderStart={() => log.push('one responder start')}
-                onStartShouldSetResponder={() => true}
-              />
-            : null}
+          {renderFirstComponent ? (
+            <View
+              id="one"
+              onResponderEnd={() => log.push('one responder end')}
+              onResponderStart={() => log.push('one responder start')}
+              onStartShouldSetResponder={() => true}
+            />
+          ) : null}
         </View>
         <View key={2}>
           <View
