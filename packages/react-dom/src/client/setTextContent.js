@@ -8,7 +8,6 @@
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
 import setInnerHTML from './setInnerHTML';
-import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
 import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**
@@ -36,17 +35,5 @@ var setTextContent = function(node, text) {
   }
   node.textContent = text;
 };
-
-if (ExecutionEnvironment.canUseDOM) {
-  if (!('textContent' in document.documentElement)) {
-    setTextContent = function(node, text) {
-      if (node.nodeType === TEXT_NODE) {
-        node.nodeValue = text;
-        return;
-      }
-      setInnerHTML(node, escapeTextContentForBrowser(text));
-    };
-  }
-}
 
 export default setTextContent;

@@ -9,40 +9,69 @@
 
 'use strict';
 
+var ExecutionEnvironment;
+var React;
+var ReactDOMServer;
+
+var ROOT_ATTRIBUTE_NAME;
+
 describe('quoteAttributeValueForBrowser', () => {
-  // TODO: can we express this test with only public API?
-  var quoteAttributeValueForBrowser = require('../shared/quoteAttributeValueForBrowser')
-    .default;
 
-  it('should escape boolean to string', () => {
-    expect(quoteAttributeValueForBrowser(true)).toBe('"true"');
-    expect(quoteAttributeValueForBrowser(false)).toBe('"false"');
+  beforeEach(() => {
+    jest.resetModules();
+    React = require('react');
+
+    ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
+    ExecutionEnvironment.canUseDOM = false;
+    ReactDOMServer = require('react-dom/server');
+
+    // TODO: can we express this test with only public API?
+    var DOMProperty = require('../shared/DOMProperty');
+    ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
-  it('should escape object to string', () => {
-    var escaped = quoteAttributeValueForBrowser({
-      toString: function() {
-        return 'ponys';
-      },
-    });
-
-    expect(escaped).toBe('"ponys"');
-  });
-
-  it('should escape number to string', () => {
-    expect(quoteAttributeValueForBrowser(42)).toBe('"42"');
-  });
-
-  it('should escape string', () => {
-    var escaped = quoteAttributeValueForBrowser(
-      '<script type=\'\' src=""></script>',
+  it('ampersand is escaped inside attributes', () => {
+    var response = ReactDOMServer.renderToString(<img data-attr="&" />);
+    expect(response).toMatch(
+      new RegExp(
+        '<img data-attr="&amp;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
+      ),
     );
-    expect(escaped).not.toContain('<');
-    expect(escaped).not.toContain('>');
-    expect(escaped).not.toContain("'");
-    expect(escaped.substr(1, -1)).not.toContain('"');
+  });
 
-    escaped = quoteAttributeValueForBrowser('&');
-    expect(escaped).toBe('"&amp;"');
+  it('double quote is escaped inside attributes', () => {
+    var response = ReactDOMServer.renderToString(<img data-attr='"' />);
+    expect(response).toMatch(
+      new RegExp(
+        '<img data-attr="&quot;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
+      ),
+    );
+  });
+
+  it('single quote is escaped inside attributes', () => {
+    var response = ReactDOMServer.renderToString(<img data-attr="'" />);
+    expect(response).toMatch(
+      new RegExp(
+        '<img data-attr="&#x27;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
+      ),
+    );
+  });
+
+  it('greater than entity is escaped inside attributes', () => {
+    var response = ReactDOMServer.renderToString(<img data-attr=">" />);
+    expect(response).toMatch(
+      new RegExp(
+        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
+      ),
+    );
+  });
+
+  it('lower than entity is escaped inside attributes', () => {
+    var response = ReactDOMServer.renderToString(<img data-attr="<" />);
+    expect(response).toMatch(
+      new RegExp(
+        '<img data-attr="&lt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
+      ),
+    );
   });
 });
