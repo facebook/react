@@ -18,7 +18,7 @@ function gte(left, right) {
   left = left.split('.');
   right = right.split('.');
 
-  return left.every((v, i) => {
+  return left.every(function(v, i) {
     if (v >= right[i]) {
       return true;
     } else {
