@@ -30,6 +30,10 @@ const push = async ({cwd, dry, version}) => {
       const packageVersion = packageJSON.version;
 
       if (!dry) {
+        // Wait a couple of seconds before querying NPM for status;
+        // Anecdotally, querying too soon can result in a false negative.
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
         const status = JSON.parse(
           await execRead(`npm info ${project} dist-tags --json`)
         );
