@@ -50,7 +50,7 @@ Object.keys(pkgVersions).forEach(function(name) {
       '%s version does not match package.json. Expected %s, saw %s.',
       name,
       reactVersion,
-      version,
+      version
     );
   }
 });
@@ -61,7 +61,7 @@ if (!gte(localYarnVersion, MIN_YARN_VERSION)) {
     'Your local %s version lower than mininal yarn version. Expected >= %s, saw %s.',
     'yarn',
     MIN_YARN_VERSION,
-    localYarnVersion,
+    localYarnVersion
   );
 }
 
