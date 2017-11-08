@@ -5,7 +5,7 @@ set -e
 # Make sure we don't introduce accidental @providesModule annotations.
 EXPECTED='packages/react-cs-renderer/src/ReactNativeCSTypes.js
 packages/react-native-renderer/src/ReactNativeTypes.js
-scripts/rollup/header.js'
+scripts/rollup/wrappers.js'
 ACTUAL=$(git grep -l @providesModule -- './*.js' ':!scripts/rollup/shims/*.js')
 
 if [ "$EXPECTED" != "$ACTUAL" ]; then

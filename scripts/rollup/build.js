@@ -25,7 +25,7 @@ const syncReactNative = require('./sync').syncReactNative;
 const syncReactNativeRT = require('./sync').syncReactNativeRT;
 const syncReactNativeCS = require('./sync').syncReactNativeCS;
 const Packaging = require('./packaging');
-const Header = require('./header');
+const Wrappers = require('./wrappers');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -36,9 +36,6 @@ const FB_PROD = Bundles.bundleTypes.FB_PROD;
 const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
-const RECONCILER = Bundles.moduleTypes.RECONCILER;
-
-const reactVersion = require('../../package.json').version;
 const requestedBundleTypes = (argv.type || '')
   .split(',')
   .map(type => type.toUpperCase());
@@ -62,109 +59,6 @@ const closureOptions = {
   useTypesForOptimization: false,
   processCommonJsModules: false,
 };
-
-function getBanner(bundleType, globalName, filename, moduleType) {
-  if (moduleType === RECONCILER) {
-    // Standalone reconciler is only used by third-party renderers.
-    // It is handled separately.
-    return getReconcilerBanner(bundleType, filename);
-  }
-
-  switch (bundleType) {
-    // UMDs are not wrapped in conditions.
-    case UMD_DEV:
-    case UMD_PROD:
-      return Header.getHeader(filename, reactVersion);
-    // CommonJS DEV bundle is guarded to help weak dead code elimination.
-    case NODE_DEV:
-      let banner = Header.getHeader(filename, reactVersion);
-      // Wrap the contents of the if-DEV check with an IIFE.
-      // Block-level function definitions can cause problems for strict mode.
-      banner += `'use strict';\n\n\nif (process.env.NODE_ENV !== "production") {\n(function() {\n`;
-      return banner;
-    case NODE_PROD:
-      return Header.getHeader(filename, reactVersion);
-    // All FB and RN bundles need Haste headers.
-    // DEV bundle is guarded to help weak dead code elimination.
-    case FB_DEV:
-    case FB_PROD:
-    case RN_DEV:
-    case RN_PROD:
-      const isDev = bundleType === FB_DEV || bundleType === RN_DEV;
-      const hasteFinalName = globalName + (isDev ? '-dev' : '-prod');
-      // Wrap the contents of the if-DEV check with an IIFE.
-      // Block-level function definitions can cause problems for strict mode.
-      return (
-        Header.getProvidesHeader(hasteFinalName) +
-        (isDev ? `\n\n'use strict';\n\n\nif (__DEV__) {\n(function() {\n` : '')
-      );
-    default:
-      throw new Error('Unknown type.');
-  }
-}
-
-function getFooter(bundleType, filename, moduleType) {
-  if (moduleType === RECONCILER) {
-    // Standalone reconciler is only used by third-party renderers.
-    // It is handled separately.
-    return getReconcilerFooter(bundleType);
-  }
-
-  // Only need a footer if getBanner() has an opening brace.
-  switch (bundleType) {
-    // Non-UMD DEV bundles need conditions to help weak dead code elimination.
-    case NODE_DEV:
-    case FB_DEV:
-    case RN_DEV:
-      return '\n})();\n}\n';
-    default:
-      return '';
-  }
-}
-
-// TODO: this is extremely gross.
-// But it only affects the "experimental" standalone reconciler build.
-// The goal is to avoid having any shared state between renderers sharing it on npm.
-// Ideally we should just remove shared state in all Fiber modules and then lint against it.
-// But for now, we store the exported function in a variable, and then put the rest of the code
-// into a closure that makes all module-level state private to each call.
-const RECONCILER_WRAPPER_INTRO = `var $$$reconciler;\nmodule.exports = function(config) {\n`;
-const RECONCILER_WRAPPER_OUTRO = `return ($$$reconciler || ($$$reconciler = module.exports))(config);\n};\n`;
-
-function getReconcilerBanner(bundleType, filename) {
-  let banner = `${Header.getHeader(
-    filename,
-    reactVersion
-  )}\n\n'use strict';\n\n\n`;
-  switch (bundleType) {
-    case NODE_DEV:
-      banner += `if (process.env.NODE_ENV !== "production") {\n${
-        RECONCILER_WRAPPER_INTRO
-      }`;
-      break;
-    case NODE_PROD:
-      banner += RECONCILER_WRAPPER_INTRO;
-      break;
-    default:
-      throw new Error(
-        'Standalone reconciler does not support ' + bundleType + ' builds.'
-      );
-  }
-  return banner;
-}
-
-function getReconcilerFooter(bundleType) {
-  switch (bundleType) {
-    case NODE_DEV:
-      return `\n${RECONCILER_WRAPPER_OUTRO}\n}`;
-    case NODE_PROD:
-      return `\n${RECONCILER_WRAPPER_OUTRO}`;
-    default:
-      throw new Error(
-        'Standalone reconciler does not support ' + bundleType + ' builds.'
-      );
-  }
-}
 
 function getBabelConfig(updateBabelOptions, bundleType, filename) {
   let options = {
@@ -393,9 +287,13 @@ function getPlugins(
     // License and haste headers, top-level `if` blocks.
     {
       transformBundle(source) {
-        const banner = getBanner(bundleType, globalName, filename, moduleType);
-        const footer = getFooter(bundleType, filename, moduleType);
-        return banner + '\n' + source + '\n' + footer;
+        return Wrappers.wrapBundle(
+          source,
+          bundleType,
+          globalName,
+          filename,
+          moduleType
+        );
       },
     },
     // Record bundle size.
