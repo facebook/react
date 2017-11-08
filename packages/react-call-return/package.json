@@ -1,7 +1,7 @@
 {
   "name": "react-call-return",
   "description": "Experimental APIs for multi-pass rendering in React.",
-  "version": "0.1.0",
+  "version": "0.2.0-rc",
   "repository": "facebook/react",
   "files": [
     "LICENSE",

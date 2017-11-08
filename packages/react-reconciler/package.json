@@ -1,7 +1,7 @@
 {
   "name": "react-reconciler",
   "description": "React package for creating custom renderers.",
-  "version": "0.3.0-beta.1",
+  "version": "0.4.0-rc",
   "keywords": [
     "react"
   ],
