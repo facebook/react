@@ -13,7 +13,9 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -144,8 +146,8 @@ if (__DEV__) {
   };
 }
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(

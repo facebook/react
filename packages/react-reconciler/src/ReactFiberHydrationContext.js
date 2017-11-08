@@ -29,8 +29,8 @@ export type HydrationContext<C, CX> = {
   popHydrationState(fiber: Fiber): boolean,
 };
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): HydrationContext<C, CX> {
   const {shouldSetTextContent, hydration} = config;
 
@@ -82,7 +82,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   // The deepest Fiber on the stack involved in a hydration context.
   // This may have been an insertion or a hydration.
   let hydrationParentFiber: null | Fiber = null;
-  let nextHydratableInstance: null | I | TI = null;
+  let nextHydratableInstance: null | HI = null;
   let isHydrating: boolean = false;
 
   function enterHydrationState(fiber: Fiber) {
