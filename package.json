@@ -83,13 +83,13 @@
     "rollup-plugin-commonjs": "^8.2.6",
     "rollup-plugin-inject": "^2.0.0",
     "rollup-plugin-node-resolve": "^2.0.0",
+    "rollup-plugin-prettier": "^0.3.0",
     "rollup-plugin-replace": "^1.1.1",
-    "rollup-plugin-uglify": "^1.0.1",
+    "rollup-plugin-strip-banner": "^0.2.0",
     "run-sequence": "^1.1.4",
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
-    "uglify-js": "^2.5.0",
     "yargs": "^6.3.0"
   },
   "devEngines": {
