@@ -188,16 +188,26 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function canHydrate(fiber, nextInstance) {
+  function tryHydrate(fiber, nextInstance) {
     switch (fiber.tag) {
       case HostComponent: {
         const type = fiber.type;
         const props = fiber.pendingProps;
-        return canHydrateInstance(nextInstance, type, props);
+        const instance = canHydrateInstance(nextInstance, type, props);
+        if (instance !== null) {
+          fiber.stateNode = (instance: I);
+          return true;
+        }
+        return false;
       }
       case HostText: {
         const text = fiber.pendingProps;
-        return canHydrateTextInstance(nextInstance, text);
+        const textInstance = canHydrateTextInstance(nextInstance, text);
+        if (textInstance !== null) {
+          fiber.stateNode = (textInstance: TI);
+          return true;
+        }
+        return false;
       }
       default:
         return false;
@@ -216,12 +226,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       hydrationParentFiber = fiber;
       return;
     }
-    if (!canHydrate(fiber, nextInstance)) {
+    if (!tryHydrate(fiber, nextInstance)) {
       // If we can't hydrate this instance let's try the next one.
       // We use this as a heuristic. It's based on intuition and not data so it
       // might be flawed or unnecessary.
       nextInstance = getNextHydratableSibling(nextInstance);
-      if (!nextInstance || !canHydrate(fiber, nextInstance)) {
+      if (!nextInstance || !tryHydrate(fiber, nextInstance)) {
         // Nothing to hydrate. Make it an insertion.
         insertNonHydratedInstance((hydrationParentFiber: any), fiber);
         isHydrating = false;
@@ -237,7 +247,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         nextHydratableInstance,
       );
     }
-    fiber.stateNode = nextInstance;
     hydrationParentFiber = fiber;
     nextHydratableInstance = getFirstHydratableChild(nextInstance);
   }

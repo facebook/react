@@ -152,8 +152,8 @@ type PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL> = {
 
 type HydrationHostConfig<T, P, I, TI, HI, C, CX, PL> = {
   // Optional hydration
-  canHydrateInstance(instance: HI, type: T, props: P): boolean,
-  canHydrateTextInstance(instance: HI, text: string): boolean,
+  canHydrateInstance(instance: HI, type: T, props: P): null | I,
+  canHydrateTextInstance(instance: HI, text: string): null | TI,
   getNextHydratableSibling(instance: I | TI | HI): null | HI,
   getFirstHydratableChild(parentInstance: I | C): null | HI,
   hydrateInstance(
