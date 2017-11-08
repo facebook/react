@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
-
-import setInnerHTML from './setInnerHTML';
 import {TEXT_NODE} from '../shared/HTMLNodeType';
 
 /**

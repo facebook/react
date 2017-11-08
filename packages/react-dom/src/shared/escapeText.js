@@ -98,7 +98,7 @@ function escapeHtml(string) {
  * @param {*} text Text value to escape.
  * @return {string} An escaped string.
  */
-function escapeTextContent(text) {
+function escapeText(text) {
   if (typeof text === 'boolean' || typeof text === 'number') {
     // this shortcircuit helps perf for types that we know will never have
     // special characters, especially given that this function is used often
@@ -108,4 +108,4 @@ function escapeTextContent(text) {
   return escapeHtml(text);
 }
 
-export default escapeTextContent;
+export default escapeText;
