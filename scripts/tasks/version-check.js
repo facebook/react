@@ -6,9 +6,32 @@
  */
 
 'use strict';
+const execSync = require('child_process').execSync;
+
+function getLocalYarnVersion() {
+  return execSync('yarn --version', {
+    encoding: 'utf-8',
+  }).trim();
+}
+
+function gte(left, right) {
+  left = left.split('.');
+  right = right.split('.');
+
+  return left.every((v, i) => {
+    if (v >= right[i]) {
+      return true;
+    } else {
+      return false;
+    }
+  });
+}
 
 const reactVersion = require('../../package.json').version;
-const versions = {
+const MIN_YARN_VERSION = '1.2.1';
+const localYarnVersion = getLocalYarnVersion();
+
+const pkgVersions = {
   'packages/react/package.json': require('../../packages/react/package.json')
     .version,
   'packages/react-dom/package.json': require('../../packages/react-dom/package.json')
@@ -19,18 +42,28 @@ const versions = {
 };
 
 let allVersionsMatch = true;
-Object.keys(versions).forEach(function(name) {
-  const version = versions[name];
+Object.keys(pkgVersions).forEach(function(name) {
+  const version = pkgVersions[name];
   if (version !== reactVersion) {
     allVersionsMatch = false;
     console.log(
       '%s version does not match package.json. Expected %s, saw %s.',
       name,
       reactVersion,
-      version
+      version,
     );
   }
 });
+
+if (!gte(localYarnVersion, MIN_YARN_VERSION)) {
+  allVersionsMatch = false;
+  console.log(
+    'Your local %s version lower than mininal yarn version. Expected >= %s, saw %s.',
+    'yarn',
+    MIN_YARN_VERSION,
+    localYarnVersion,
+  );
+}
 
 if (!allVersionsMatch) {
   process.exit(1);
