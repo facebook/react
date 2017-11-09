@@ -59,7 +59,7 @@ const push = async ({cwd, dry, packages, version}) => {
         }
       }
     } catch (error) {
-      errors.push(error.message);
+      errors.push(error.stack);
     }
   };
 
@@ -70,7 +70,7 @@ const push = async ({cwd, dry, packages, version}) => {
       chalk`
       Failure publishing to NPM
 
-      {white ${errors.join('\n')}}`
+      {white ${errors.join('\n\n')}}`
     );
   }
 };
