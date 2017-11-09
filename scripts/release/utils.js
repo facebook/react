@@ -45,15 +45,17 @@ const getUnexecutedCommands = () => {
   }
 };
 
-const logPromise = async (promise, text, completedLabel = '') => {
+const logPromise = async (promise, text, isLongRunningTask = false) => {
   const {frames, interval} = dots;
 
   let index = 0;
 
+  const inProgressMessage = `- this may take a few ${isLongRunningTask ? 'minutes' : 'seconds'}`;
+
   const id = setInterval(() => {
     index = ++index % frames.length;
     logUpdate(
-      `${chalk.yellow(frames[index])} ${text} ${chalk.gray('- this may take a few seconds')}`
+      `${chalk.yellow(frames[index])} ${text} ${chalk.gray(inProgressMessage)}`
     );
   }, interval);
 
@@ -62,7 +64,7 @@ const logPromise = async (promise, text, completedLabel = '') => {
 
     clearInterval(id);
 
-    logUpdate(`${chalk.green('✓')} ${text} ${chalk.gray(completedLabel)}`);
+    logUpdate(`${chalk.green('✓')} ${text}`);
     logUpdate.done();
 
     return returnValue;
