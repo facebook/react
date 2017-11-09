@@ -342,7 +342,7 @@ describe('ReactComponent', () => {
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined. ' +
         "You likely forgot to export your component from the file it's " +
-        'defined in.',
+        'defined in, or you might have mixed up default and named imports.',
     );
 
     var Y = null;
@@ -380,7 +380,8 @@ describe('ReactComponent', () => {
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined. ' +
         "You likely forgot to export your component from the file it's " +
-        'defined in.\n\nCheck the render method of `Bar`.',
+        'defined in, or you might have mixed up default and named imports.' +
+        '\n\nCheck the render method of `Bar`.',
     );
 
     // One warning for each element creation
