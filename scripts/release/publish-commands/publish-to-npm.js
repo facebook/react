@@ -54,7 +54,8 @@ const push = async ({cwd, dry, version}) => {
         // Update the @next tag to also point to it (so @next doens't lag behind).
         if (!isPrerelease) {
           await execUnlessDry(
-            `npm dist-tag add ${project}@${packageVersion} next`
+            `npm dist-tag add ${project}@${packageVersion} next`,
+            {cwd: path, dry}
           );
         }
       }
