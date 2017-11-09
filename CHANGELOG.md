@@ -4,6 +4,9 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
+</details>
+
+## 16.1.0 (November 9, 2017)
 
 ### Discontinuing Bower Releases
 
@@ -46,6 +49,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 
 ### React DOM Server
 
+* Add a new `suppressHydrationWarning` attribute for intentional client/server text mismatches. ([@sebmarkbage](http://github.com/sebmarkbage) in [#11126](https://github.com/facebook/react/pull/11126))
 * Fix markup generation when components return strings. ([@gaearon](http://github.com/gaearon) in [#11109](https://github.com/facebook/react/pull/11109))
 * Fix obscure error message when passing an invalid style value. ([@iamdustan](https://github.com/iamdustan) in [#11173](https://github.com/facebook/react/pull/11173))
 * Include the `autoFocus` attribute into SSR markup. ([@gaearon](http://github.com/gaearon) in [#11192](https://github.com/facebook/react/pull/11192))
@@ -72,8 +76,6 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React Call Return (Experimental)
 
 * First release of the [new experimental package](https://github.com/facebook/react/tree/master/packages/react-call-return) for parent-child communication. ([@gaearon](https://github.com/gaearon) in [#11364](https://github.com/facebook/react/pull/11364))
-
-</details>
 
 ## 16.0.0 (September 26, 2017)
 
