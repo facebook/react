@@ -198,7 +198,7 @@ class Updater {
     this._publicInstance = null;
   }
 
-  _updateCallback(callback, publicInstance) {
+  _enqueueCallback(callback, publicInstance) {
     if (typeof callback === 'function') {
       this._callback = callback;
       this._publicInstance = publicInstance;
@@ -207,7 +207,10 @@ class Updater {
 
   _invokeCallback() {
     if (typeof this._callback === 'function' && this._publicInstance) {
-      this._callback.call(this._publicInstance);
+      const {_callback, _publicInstance} = this;
+      this._callback = null;
+      this._publicInstance = null;
+      _callback.call(_publicInstance);
     }
   }
 
@@ -216,19 +219,19 @@ class Updater {
   }
 
   enqueueForceUpdate(publicInstance, callback, callerName) {
-    this._updateCallback(callback, publicInstance);
+    this._enqueueCallback(callback, publicInstance);
     this._renderer._forcedUpdate = true;
     this._renderer.render(this._renderer._element, this._renderer._context);
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
-    this._updateCallback(callback, publicInstance);
+    this._enqueueCallback(callback, publicInstance);
     this._renderer._newState = completeState;
     this._renderer.render(this._renderer._element, this._renderer._context);
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
-    this._updateCallback(callback, publicInstance);
+    this._enqueueCallback(callback, publicInstance);
     const currentState = this._renderer._newState || publicInstance.state;
 
     if (typeof partialState === 'function') {
