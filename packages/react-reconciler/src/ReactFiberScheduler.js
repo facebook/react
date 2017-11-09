@@ -13,7 +13,9 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -33,6 +35,7 @@ import {
   HostPortal,
   ClassComponent,
 } from 'shared/ReactTypeOfWork';
+import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -47,6 +50,8 @@ import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
   recordEffect,
   recordScheduleUpdate,
+  startRequestCallbackTimer,
+  stopRequestCallbackTimer,
   startWorkTimer,
   stopWorkTimer,
   stopFailedWorkTimer,
@@ -1337,6 +1342,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       performWork(Sync, null);
     } else if (!isCallbackScheduled) {
       isCallbackScheduled = true;
+      startRequestCallbackTimer();
       scheduleDeferredCallback(performAsyncWork);
     }
   }
@@ -1425,8 +1431,14 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
-    // the deadlne.
+    // the deadline.
     findHighestPriorityRoot();
+
+    if (enableUserTimingAPI && deadline !== null) {
+      const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
+      stopRequestCallbackTimer(didExpire);
+    }
+
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
@@ -1449,6 +1461,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // If there's work left over, schedule a new callback.
     if (nextFlushedRoot !== null && !isCallbackScheduled) {
       isCallbackScheduled = true;
+      startRequestCallbackTimer();
       scheduleDeferredCallback(performAsyncWork);
     }
 

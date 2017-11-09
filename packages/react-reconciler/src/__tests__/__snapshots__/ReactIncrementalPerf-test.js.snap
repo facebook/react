@@ -1,7 +1,9 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
-"// Mount
+"⚛ (Waiting for async callback...)
+  // Mount
+
 ⚛ (React Tree Reconciliation)
   ⚛ AllLifecycles [mount]
     ⚛ AllLifecycles.componentWillMount
@@ -12,7 +14,9 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
   ⚛ (Calling Lifecycle Methods: 1 Total)
     ⚛ AllLifecycles.componentDidMount
 
-// Update
+⚛ (Waiting for async callback...)
+  // Update
+
 ⚛ (React Tree Reconciliation)
   ⚛ AllLifecycles [update]
     ⚛ AllLifecycles.componentWillReceiveProps
@@ -25,7 +29,9 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
   ⚛ (Calling Lifecycle Methods: 2 Total)
     ⚛ AllLifecycles.componentDidUpdate
 
-// Unmount
+⚛ (Waiting for async callback...)
+  // Unmount
+
 ⚛ (React Tree Reconciliation)
 
 ⚛ (Committing Changes)
@@ -36,7 +42,9 @@ exports[`ReactDebugFiberPerf captures all lifecycles 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduce overhead 1`] = `
-"// The commit phase should mention A and B just once
+"⚛ (Waiting for async callback...)
+  // The commit phase should mention A and B just once
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [update]
     ⚛ A [update]
@@ -50,8 +58,10 @@ exports[`ReactDebugFiberPerf deduplicates lifecycle names during commit to reduc
     ⚛ A.componentDidUpdate
     ⚛ B.componentDidUpdate
 
-// Because of deduplication, we don't know B was cascading,
-// but we should still see the warning for the commit phase.
+⚛ (Waiting for async callback...)
+  // Because of deduplication, we don't know B was cascading,
+  // but we should still see the warning for the commit phase.
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [update]
     ⚛ A [update]
@@ -94,7 +104,9 @@ exports[`ReactDebugFiberPerf does not schedule an extra callback if setState is 
 `;
 
 exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascading 1`] = `
-"// Should not print a warning
+"⚛ (Waiting for async callback...)
+  // Should not print a warning
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ NotCascading [mount]
@@ -104,7 +116,9 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
-// Should not print a warning
+⚛ (Waiting for async callback...)
+  // Should not print a warning
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [update]
     ⚛ NotCascading [update]
@@ -117,7 +131,9 @@ exports[`ReactDebugFiberPerf does not treat setState from cWM or cWRP as cascadi
 `;
 
 exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
-"// Mount
+"⚛ (Waiting for async callback...)
+  // Mount
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ Child [mount]
@@ -126,7 +142,9 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
-// Update
+⚛ (Waiting for async callback...)
+  // Update
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [update]
     ⚛ Child [update]
@@ -135,7 +153,9 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
   ⚛ (Committing Host Effects: 2 Total)
   ⚛ (Calling Lifecycle Methods: 2 Total)
 
-// Unmount
+⚛ (Waiting for async callback...)
+  // Unmount
+
 ⚛ (React Tree Reconciliation)
 
 ⚛ (Committing Changes)
@@ -145,18 +165,24 @@ exports[`ReactDebugFiberPerf measures a simple reconciliation 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf measures deferred work in chunks 1`] = `
-"// Start mounting Parent and A
+"⚛ (Waiting for async callback...)
+  // Start mounting Parent and A
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ A [mount]
       ⚛ Child [mount]
 
-// Mount B just a little (but not enough to memoize)
+⚛ (Waiting for async callback...)
+  // Mount B just a little (but not enough to memoize)
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ B [mount]
 
-// Complete B and Parent
+⚛ (Waiting for async callback...)
+  // Complete B and Parent
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ B [mount]
@@ -177,7 +203,9 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 0 Total)
 
-// Flush the child
+⚛ (Waiting for async callback...)
+  // Flush the child
+
 ⚛ (React Tree Reconciliation)
   ⚛ Child [mount]
 
@@ -188,7 +216,9 @@ exports[`ReactDebugFiberPerf measures deprioritized work 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
-"// Stop on Baddie and restart from Boundary
+"⚛ (Waiting for async callback...)
+  // Stop on Baddie and restart from Boundary
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⛔ Boundary [mount] Warning: An error was thrown inside this error boundary
@@ -211,7 +241,9 @@ exports[`ReactDebugFiberPerf recovers from caught errors 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
-"// Will fatal
+"⚛ (Waiting for async callback...)
+  // Will fatal
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ Baddie [mount]
@@ -220,7 +252,9 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
   ⚛ (Committing Host Effects: 1 Total)
   ⚛ (Calling Lifecycle Methods: 1 Total)
 
-// Will reconcile from a clean state
+⚛ (Waiting for async callback...)
+  // Will reconcile from a clean state
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ Child [mount]
@@ -232,7 +266,9 @@ exports[`ReactDebugFiberPerf recovers from fatal errors 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
-"// Should include just A and B, no Parents
+"⚛ (Waiting for async callback...)
+  // Should include just A and B, no Parents
+
 ⚛ (React Tree Reconciliation)
   ⚛ A [update]
   ⚛ B [update]
@@ -244,7 +280,9 @@ exports[`ReactDebugFiberPerf skips parents during setState 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf supports portals 1`] = `
-"⚛ (React Tree Reconciliation)
+"⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ Child [mount]
 
@@ -255,7 +293,9 @@ exports[`ReactDebugFiberPerf supports portals 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf supports returns 1`] = `
-"⚛ (React Tree Reconciliation)
+"⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation)
   ⚛ App [mount]
     ⚛ CoParent [mount]
       ⚛ HandleReturns [mount]
@@ -272,15 +312,17 @@ exports[`ReactDebugFiberPerf supports returns 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] = `
-"⚛ (React Tree Reconciliation)
+"⚛ (Waiting for async callback...)
+
+⚛ (React Tree Reconciliation)
   ⚛ Foo [mount]
 
-⛔ (React Tree Reconciliation) Warning: A top-level update interrupted the previous render
-  ⚛ Foo [mount]
-
-⚛ (Committing Changes)
-  ⚛ (Committing Host Effects: 1 Total)
-  ⚛ (Calling Lifecycle Methods: 0 Total)
+⚛ (Waiting for async callback...)
+  ⛔ (React Tree Reconciliation) Warning: A top-level update interrupted the previous render
+    ⚛ Foo [mount]
+  ⚛ (Committing Changes)
+    ⚛ (Committing Host Effects: 1 Total)
+    ⚛ (Calling Lifecycle Methods: 0 Total)
 
 ⚛ (React Tree Reconciliation)
 
@@ -290,8 +332,22 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 "
 `;
 
+exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
+"⛔ (Waiting for async callback...) Warning: Async work expired
+
+⚛ (React Tree Reconciliation)
+  ⚛ Foo [mount]
+
+⚛ (Committing Changes)
+  ⚛ (Committing Host Effects: 1 Total)
+  ⚛ (Calling Lifecycle Methods: 0 Total)
+"
+`;
+
 exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
-"// Should print a warning
+"⚛ (Waiting for async callback...)
+  // Should print a warning
+
 ⚛ (React Tree Reconciliation)
   ⚛ Parent [mount]
     ⚛ Cascading [mount]
@@ -311,7 +367,9 @@ exports[`ReactDebugFiberPerf warns on cascading renders from setState 1`] = `
 `;
 
 exports[`ReactDebugFiberPerf warns on cascading renders from top-level render 1`] = `
-"// Rendering the first root
+"⚛ (Waiting for async callback...)
+  // Rendering the first root
+
 ⚛ (React Tree Reconciliation)
   ⚛ Cascading [mount]
 

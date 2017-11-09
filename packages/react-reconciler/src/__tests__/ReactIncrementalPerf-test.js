@@ -546,4 +546,15 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
+
+  it('warns if async work expires (starvation)', () => {
+    function Foo() {
+      return <span />;
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.expire(5000);
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
 });

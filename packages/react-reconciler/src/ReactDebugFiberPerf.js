@@ -58,6 +58,7 @@ let hasScheduledUpdateInCurrentCommit: boolean = false;
 let hasScheduledUpdateInCurrentPhase: boolean = false;
 let commitCountInCurrentWorkLoop: number = 0;
 let effectCountInCurrentCommit: number = 0;
+let isWaitingForCallback: boolean = false;
 // During commits, we only show a measurement once per method name
 // to avoid stretch the commit phase with measurement overhead.
 const labelsInCurrentCommit: Set<string> = new Set();
@@ -231,6 +232,29 @@ export function recordScheduleUpdate(): void {
   }
 }
 
+export function startRequestCallbackTimer(): void {
+  if (enableUserTimingAPI) {
+    if (supportsUserTiming && !isWaitingForCallback) {
+      isWaitingForCallback = true;
+      beginMark('(Waiting for async callback...)');
+    }
+  }
+}
+
+export function stopRequestCallbackTimer(didExpire: boolean): void {
+  if (enableUserTimingAPI) {
+    if (supportsUserTiming) {
+      isWaitingForCallback = false;
+      const warning = didExpire ? 'Async work expired' : null;
+      endMark(
+        '(Waiting for async callback...)',
+        '(Waiting for async callback...)',
+        warning,
+      );
+    }
+  }
+}
+
 export function startWorkTimer(fiber: Fiber): void {
   if (enableUserTimingAPI) {
     if (!supportsUserTiming || shouldIgnoreFiber(fiber)) {
@@ -344,9 +368,7 @@ export function stopWorkLoopTimer(interruptedBy: Fiber | null): void {
         warning = 'A top-level update interrupted the previous render';
       } else {
         const componentName = getComponentName(interruptedBy) || 'Unknown';
-        warning = `An update to ${
-          componentName
-        } interrupted the previous render`;
+        warning = `An update to ${componentName} interrupted the previous render`;
       }
     } else if (commitCountInCurrentWorkLoop > 1) {
       warning = 'There were cascading updates';
