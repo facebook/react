@@ -845,6 +845,34 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>baz:bar</div>);
   });
 
+  it('this.state should be updated on setState callback inside componentWillMount', function() {
+    let stateSuccessfullyUpdated = false;
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
+      }
+
+      componentWillMount() {
+        this.setState(
+          {hasUpdatedState: true},
+          () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
+        );
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+    expect(stateSuccessfullyUpdated).toBe(true);
+  });
+
   it('throws usefully when rendering badly-typed elements', () => {
     spyOn(console, 'error');
     const shallowRenderer = createRenderer();
