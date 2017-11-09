@@ -285,7 +285,7 @@ export function createElementWithValidation(type, props, children) {
     ) {
       info +=
         ' You likely forgot to export your component from the file ' +
-        "it's defined in.";
+        "it's defined in, or you might have mixed up default and named imports.";
     }
 
     var sourceInfo = getSourceInfoErrorAddendum(props);
