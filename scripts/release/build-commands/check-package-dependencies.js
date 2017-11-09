@@ -52,6 +52,6 @@ const check = async ({cwd, packages}) => {
   }
 };
 
-module.exports = async ({cwd}) => {
-  return logPromise(check({cwd}), 'Checking runtime dependencies');
+module.exports = async params => {
+  return logPromise(check(params), 'Checking runtime dependencies');
 };
