@@ -7,9 +7,8 @@ const {readJson} = require('fs-extra');
 const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
-const {projects} = require('../config');
 
-const push = async ({cwd, dry, version}) => {
+const push = async ({cwd, dry, packages, version}) => {
   const errors = [];
   const isPrerelease = semver.prerelease(version);
   const tag = isPrerelease ? 'next' : 'latest';
@@ -62,7 +61,7 @@ const push = async ({cwd, dry, version}) => {
     }
   };
 
-  await Promise.all(projects.map(publishProject));
+  await Promise.all(packages.map(publishProject));
 
   if (errors.length > 0) {
     throw Error(

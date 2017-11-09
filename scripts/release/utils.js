@@ -3,7 +3,9 @@
 const chalk = require('chalk');
 const {dots} = require('cli-spinners');
 const {exec} = require('child-process-promise');
+const {readdirSync, readFileSync} = require('fs');
 const logUpdate = require('log-update');
+const {join} = require('path');
 
 const execRead = async (command, options) => {
   const {stdout} = await exec(command, options);
@@ -19,6 +21,17 @@ const execUnlessDry = async (command, {cwd, dry}) => {
   } else {
     await exec(command, {cwd});
   }
+};
+
+const getPublicPackages = () => {
+  const packagesRoot = join(__dirname, '..', '..', 'packages');
+
+  return readdirSync(packagesRoot).filter(dir => {
+    const packagePath = join(packagesRoot, dir, 'package.json');
+    const packageJSON = JSON.parse(readFileSync(packagePath));
+
+    return packageJSON.private !== true;
+  });
 };
 
 const getUnexecutedCommands = () => {
@@ -40,9 +53,7 @@ const logPromise = async (promise, text, completedLabel = '') => {
   const id = setInterval(() => {
     index = ++index % frames.length;
     logUpdate(
-      `${chalk.yellow(frames[index])} ${text} ${chalk.gray(
-        '- this may take a few seconds'
-      )}`
+      `${chalk.yellow(frames[index])} ${text} ${chalk.gray('- this may take a few seconds')}`
     );
   }, interval);
 
@@ -65,6 +76,7 @@ const logPromise = async (promise, text, completedLabel = '') => {
 module.exports = {
   execRead,
   execUnlessDry,
+  getPublicPackages,
   getUnexecutedCommands,
   logPromise,
 };

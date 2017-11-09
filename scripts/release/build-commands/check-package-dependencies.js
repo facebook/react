@@ -5,15 +5,15 @@
 const chalk = require('chalk');
 const {readJson} = require('fs-extra');
 const {join} = require('path');
-const {dependencies, projects} = require('../config');
+const {dependencies} = require('../config');
 const {logPromise} = require('../utils');
 
-const check = async ({cwd}) => {
+const check = async ({cwd, packages}) => {
   const rootPackage = await readJson(join(cwd, 'package.json'));
 
   const projectPackages = [];
-  for (let i = 0; i < projects.length; i++) {
-    const project = projects[i];
+  for (let i = 0; i < packages.length; i++) {
+    const project = packages[i];
     projectPackages.push(
       await readJson(join(cwd, join('packages', project), 'package.json'))
     );
