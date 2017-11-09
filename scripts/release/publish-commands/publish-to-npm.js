@@ -44,9 +44,7 @@ const push = async ({cwd, dry, version}) => {
         if (remoteVersion !== packageVersion) {
           throw Error(
             chalk`Published version {yellow.bold ${packageVersion}} for ` +
-              chalk`{bold ${project}} but NPM shows {yellow.bold ${
-                remoteVersion
-              }}`
+              chalk`{bold ${project}} but NPM shows {yellow.bold ${remoteVersion}}`
           );
         }
 
@@ -54,7 +52,8 @@ const push = async ({cwd, dry, version}) => {
         // Update the @next tag to also point to it (so @next doens't lag behind).
         if (!isPrerelease) {
           await execUnlessDry(
-            `npm dist-tag add ${project}@${packageVersion} next`
+            `npm dist-tag add ${project}@${packageVersion} next`,
+            {cwd: path, dry}
           );
         }
       }
