@@ -50,7 +50,9 @@ const logPromise = async (promise, text, isLongRunningTask = false) => {
 
   let index = 0;
 
-  const inProgressMessage = `- this may take a few ${isLongRunningTask ? 'minutes' : 'seconds'}`;
+  const inProgressMessage = `- this may take a few ${
+    isLongRunningTask ? 'minutes' : 'seconds'
+  }`;
 
   const id = setInterval(() => {
     index = ++index % frames.length;
