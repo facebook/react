@@ -165,7 +165,11 @@ describe('ReactDOMComponentTree', () => {
 
   it('finds instance from node to stop rendering over other react rendered components', () => {
     spyOn(console, 'error');
-    const component = <div><span>Hello</span></div>;
+    const component = (
+      <div>
+        <span>Hello</span>
+      </div>
+    );
     const anotherComponent = <div />;
     const container = document.createElement('div');
     const instance = ReactDOM.render(component, container);
