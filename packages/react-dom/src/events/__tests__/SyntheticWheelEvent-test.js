@@ -9,27 +9,32 @@
 
 'use strict';
 
+var React;
+var ReactDOM;
+
 describe('SyntheticWheelEvent', () => {
-  var React;
-  var ReactDOM;
-  var createMouseEvent;
+  var container;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   it('should normalize properties from the Event interface', () => {
-    const container = document.createElement('div');
     const events = [];
     var onWheel = event => {
       event.persist();
       events.push(event);
     };
-    const component = ReactDOM.render(<div onWheel={onWheel} />, container);
-    document.body.appendChild(container);
-
-    const node = ReactDOM.findDOMNode(component);
+    ReactDOM.render(<div onWheel={onWheel} />, container);
 
     const event = new MouseEvent('wheel', {
       bubbles: true,
@@ -40,31 +45,25 @@ describe('SyntheticWheelEvent', () => {
     });
     Object.defineProperty(event, 'srcElement', {
       get() {
-        return node;
+        return container.firstChild;
       },
     });
-    node.dispatchEvent(event);
+    container.firstChild.dispatchEvent(event);
 
     expect(events.length).toBe(1);
-    expect(events[0].target).toBe(node);
+    expect(events[0].target).toBe(container.firstChild);
     expect(events[0].type).toBe('wheel');
-
-    document.body.removeChild(container);
   });
 
   it('should normalize properties from the MouseEvent interface', () => {
-    const container = document.createElement('div');
     const events = [];
     var onWheel = event => {
       event.persist();
       events.push(event);
     };
-    const component = ReactDOM.render(<div onWheel={onWheel} />, container);
-    document.body.appendChild(container);
+    ReactDOM.render(<div onWheel={onWheel} />, container);
 
-    const node = ReactDOM.findDOMNode(component);
-
-    node.dispatchEvent(
+    container.firstChild.dispatchEvent(
       new MouseEvent('wheel', {
         bubbles: true,
         button: 1,
@@ -73,21 +72,15 @@ describe('SyntheticWheelEvent', () => {
 
     expect(events.length).toBe(1);
     expect(events[0].button).toBe(1);
-
-    document.body.removeChild(container);
   });
 
   it('should normalize properties from the WheelEvent interface', () => {
     var events = [];
-    const container = document.createElement('div');
     var onWheel = event => {
       event.persist();
       events.push(event);
     };
-    const component = ReactDOM.render(<div onWheel={onWheel} />, container);
-    document.body.appendChild(container);
-
-    const node = ReactDOM.findDOMNode(component);
+    ReactDOM.render(<div onWheel={onWheel} />, container);
 
     var event = new MouseEvent('wheel', {
       bubbles: true,
@@ -97,10 +90,7 @@ describe('SyntheticWheelEvent', () => {
       deltaX: 10,
       deltaY: -50,
     });
-    node.dispatchEvent(event);
-
-    expect(events[0].deltaX).toBe(10);
-    expect(events[0].deltaY).toBe(-50);
+    container.firstChild.dispatchEvent(event);
 
     event = new MouseEvent('wheel', {
       bubbles: true,
@@ -110,71 +100,62 @@ describe('SyntheticWheelEvent', () => {
       wheelDeltaX: -10,
       wheelDeltaY: 50,
     });
-    node.dispatchEvent(event);
+    container.firstChild.dispatchEvent(event);
 
+    expect(events.length).toBe(2);
+    expect(events[0].deltaX).toBe(10);
+    expect(events[0].deltaY).toBe(-50);
     expect(events[1].deltaX).toBe(10);
     expect(events[1].deltaY).toBe(-50);
-
-    document.body.removeChild(container);
   });
 
   it('should be able to `preventDefault` and `stopPropagation`', () => {
     var events = [];
-    const container = document.createElement('div');
     var onWheel = event => {
+      expect(event.isDefaultPrevented()).toBe(false);
+      event.preventDefault();
+      expect(event.isDefaultPrevented()).toBe(true);
       event.persist();
       events.push(event);
     };
-    const component = ReactDOM.render(<div onWheel={onWheel} />, container);
-    document.body.appendChild(container);
+    ReactDOM.render(<div onWheel={onWheel} />, container);
 
-    const node = ReactDOM.findDOMNode(component);
-
-    node.dispatchEvent(
+    container.firstChild.dispatchEvent(
       new MouseEvent('wheel', {
         bubbles: true,
         deltaX: 10,
         deltaY: -50,
       }),
     );
-    expect(events[0].isDefaultPrevented()).toBe(false);
-    events[0].preventDefault();
-    expect(events[0].isDefaultPrevented()).toBe(true);
 
-    node.dispatchEvent(
+    container.firstChild.dispatchEvent(
       new MouseEvent('wheel', {
         bubbles: true,
         deltaX: 10,
         deltaY: -50,
       }),
     );
-    expect(events[1].isPropagationStopped()).toBe(false);
-    events[1].stopPropagation();
-    expect(events[1].isPropagationStopped()).toBe(true);
 
-    document.body.removeChild(container);
+    expect(events.length).toBe(2);
   });
 
   it('should be able to `persist`', () => {
     var events = [];
-    const container = document.createElement('div');
     var onWheel = event => {
+      expect(event.isPersistent()).toBe(false);
+      event.persist();
+      expect(event.isPersistent()).toBe(true);
       events.push(event);
     };
-    const component = ReactDOM.render(<div onWheel={onWheel} />, container);
-    document.body.appendChild(container);
+    ReactDOM.render(<div onWheel={onWheel} />, container);
 
-    const node = ReactDOM.findDOMNode(component);
-
-    node.dispatchEvent(
+    container.firstChild.dispatchEvent(
       new MouseEvent('wheel', {
         bubbles: true,
       }),
     );
-    expect(events[0].isPersistent()).toBe(false);
-    events[0].persist();
-    expect(events[0].isPersistent()).toBe(true);
 
-    document.body.removeChild(container);
+    expect(events.length).toBe(1);
+    expect(events[0].type).toBe('wheel');
   });
 });
