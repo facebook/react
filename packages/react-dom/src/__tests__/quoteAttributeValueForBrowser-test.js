@@ -16,7 +16,6 @@ var ReactDOMServer;
 var ROOT_ATTRIBUTE_NAME;
 
 describe('quoteAttributeValueForBrowser', () => {
-
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
@@ -40,7 +39,7 @@ describe('quoteAttributeValueForBrowser', () => {
   });
 
   it('double quote is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr='"' />);
+    var response = ReactDOMServer.renderToString(<img data-attr="&quot;" />);
     expect(response).toMatch(
       new RegExp(
         '<img data-attr="&quot;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
@@ -60,18 +59,14 @@ describe('quoteAttributeValueForBrowser', () => {
   it('greater than entity is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr=">" />);
     expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
-      ),
+      new RegExp('<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>'),
     );
   });
 
   it('lower than entity is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr="<" />);
     expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="&lt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
-      ),
+      new RegExp('<img data-attr="&lt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>'),
     );
   });
 });
