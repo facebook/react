@@ -15,26 +15,12 @@ describe('ReactDOMComponent', () => {
   var ReactDOM;
   var ReactDOMServer;
 
-  var getInputValueTracker;
-  var getTextAreaValueTracker;
-
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
   beforeEach(() => {
     jest.resetModules();
-
-    getInputValueTracker = Object.getOwnPropertyDescriptor(
-      HTMLInputElement.prototype,
-      'value',
-    ).get;
-
-    getTextAreaValueTracker = Object.getOwnPropertyDescriptor(
-      HTMLTextAreaElement.prototype,
-      'value',
-    ).get;
-
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
@@ -1154,23 +1140,6 @@ describe('ReactDOMComponent', () => {
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
           'when using JSX.',
       );
-    });
-
-    it('should track input values', () => {
-      var container = document.createElement('div');
-      var inst = ReactDOM.render(
-        <input type="text" defaultValue="foo" />,
-        container,
-      );
-
-      expect(getInputValueTracker.call(inst)).toEqual('foo');
-    });
-
-    it('should track textarea values', () => {
-      var container = document.createElement('div');
-      var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
-
-      expect(getTextAreaValueTracker.call(inst)).toEqual('foo');
     });
 
     it('should throw for children on void elements', () => {
