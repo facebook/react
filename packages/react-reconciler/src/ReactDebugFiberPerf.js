@@ -245,7 +245,7 @@ export function stopRequestCallbackTimer(didExpire: boolean): void {
   if (enableUserTimingAPI) {
     if (supportsUserTiming) {
       isWaitingForCallback = false;
-      const warning = didExpire ? 'Async work expired' : null;
+      const warning = didExpire ? 'React was blocked by main thread' : null;
       endMark(
         '(Waiting for async callback...)',
         '(Waiting for async callback...)',

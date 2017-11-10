@@ -333,7 +333,7 @@ exports[`ReactDebugFiberPerf warns if an in-progress update is interrupted 1`] =
 `;
 
 exports[`ReactDebugFiberPerf warns if async work expires (starvation) 1`] = `
-"⛔ (Waiting for async callback...) Warning: Async work expired
+"⛔ (Waiting for async callback...) Warning: React was blocked by main thread
 
 ⚛ (React Tree Reconciliation)
   ⚛ Foo [mount]
