@@ -21,14 +21,27 @@ describe('SyntheticWheelEvent', () => {
 
   it('should normalize properties from the Event interface', () => {
     const container = document.createElement('div');
+    const events = [];
+    var onWheel = event => {
+      event.persist();
+      events.push(event);
+    };
+    const component = ReactDOM.render(<div onWheel={onWheel} />, container);
+    document.body.appendChild(container);
+
+    const node = ReactDOM.findDOMNode(component);
+
     const event = new MouseEvent('wheel', {
       bubbles: true,
       srcElement: container,
     });
-    container.dispatchEvent(event);
+    node.dispatchEvent(event);
 
-    expect(event.target).toBe(container);
-    expect(event.type).toBe('wheel');
+    expect(events.length).toBe(1);
+    expect(events[0].target).toBe(node);
+    expect(events[0].type).toBe('wheel');
+
+    document.body.removeChild(container);
   });
 
   it('should normalize properties from the MouseEvent interface', () => {
