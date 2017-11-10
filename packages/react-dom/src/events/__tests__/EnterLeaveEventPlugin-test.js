@@ -21,6 +21,7 @@ describe('EnterLeaveEventPlugin', () => {
     React = require('react');
     ReactDOM = require('react-dom');
 
+    // The container has to be attached for events to fire.
     container = document.createElement('div');
     document.body.appendChild(container);
   });
