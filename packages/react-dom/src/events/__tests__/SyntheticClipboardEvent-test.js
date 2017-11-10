@@ -22,15 +22,6 @@ describe('SyntheticClipboardEvent', () => {
 
     container = document.createElement('div');
     document.body.appendChild(container);
-
-    simulateEvent = (element, type, data) => {
-      var event = document.createEvent('Event');
-      event.initEvent(type, true, true);
-      if (data) {
-        event.clipboardData = data;
-      }
-      element.dispatchEvent(event);
-    };
   });
 
   afterEach(() => {
@@ -44,7 +35,7 @@ describe('SyntheticClipboardEvent', () => {
         it("returns event's clipboardData", () => {
           var expectedCount = 0;
 
-          // Mock clipboardData since native implementation doesn't have a constructor
+          // Mock clipboardData since jsdom implementation doesn't have a constructor
           var clipboardData = {
             dropEffect: null,
             effectAllowed: null,
@@ -65,9 +56,22 @@ describe('SyntheticClipboardEvent', () => {
             container,
           );
 
-          simulateEvent(div, 'copy', clipboardData);
-          simulateEvent(div, 'cut', clipboardData);
-          simulateEvent(div, 'paste', clipboardData);
+          var event;
+          event = document.createEvent('Event');
+          event.initEvent('copy', true, true);
+          event.clipboardData = clipboardData;
+          div.dispatchEvent(event);
+
+          event = document.createEvent('Event');
+          event.initEvent('cut', true, true);
+          event.clipboardData = clipboardData;
+          div.dispatchEvent(event);
+
+          event = document.createEvent('Event');
+          event.initEvent('paste', true, true);
+          event.clipboardData = clipboardData;
+          div.dispatchEvent(event);
+
           expect(expectedCount).toBe(3);
         });
       });
@@ -84,6 +88,7 @@ describe('SyntheticClipboardEvent', () => {
         expect(event.type).toBe(type);
         expectedCount++;
       };
+
       div = ReactDOM.render(
         <div
           onCopy={eventHandler('copy')}
@@ -93,9 +98,19 @@ describe('SyntheticClipboardEvent', () => {
         container,
       );
 
-      simulateEvent(div, 'copy');
-      simulateEvent(div, 'cut');
-      simulateEvent(div, 'paste');
+      var event;
+      event = document.createEvent('Event');
+      event.initEvent('copy', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('cut', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('paste', true, true);
+      div.dispatchEvent(event);
+
       expect(expectedCount).toBe(3);
     });
 
@@ -111,6 +126,7 @@ describe('SyntheticClipboardEvent', () => {
         expect(event.isPropagationStopped()).toBe(true);
         expectedCount++;
       };
+
       var div = ReactDOM.render(
         <div
           onCopy={eventHandler}
@@ -120,9 +136,19 @@ describe('SyntheticClipboardEvent', () => {
         container,
       );
 
-      simulateEvent(div, 'copy');
-      simulateEvent(div, 'cut');
-      simulateEvent(div, 'paste');
+      var event;
+      event = document.createEvent('Event');
+      event.initEvent('copy', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('cut', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('paste', true, true);
+      div.dispatchEvent(event);
+
       expect(expectedCount).toBe(3);
     });
 
@@ -135,6 +161,7 @@ describe('SyntheticClipboardEvent', () => {
         expect(event.isPersistent()).toBe(true);
         expectedCount++;
       };
+
       var div = ReactDOM.render(
         <div
           onCopy={eventHandler}
@@ -144,9 +171,19 @@ describe('SyntheticClipboardEvent', () => {
         container,
       );
 
-      simulateEvent(div, 'copy');
-      simulateEvent(div, 'cut');
-      simulateEvent(div, 'paste');
+      var event;
+      event = document.createEvent('Event');
+      event.initEvent('copy', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('cut', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('paste', true, true);
+      div.dispatchEvent(event);
+
       expect(expectedCount).toBe(3);
     });
   });
