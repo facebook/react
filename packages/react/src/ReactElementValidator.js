@@ -221,7 +221,14 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   var propTypes = componentClass.propTypes;
-
+  if (componentClass.PropTypes !== undefined) {
+    warning(
+      false,
+      'Static propTypes method should be accessed by `%s.propTypes` instead of `%s.PropTypes`',
+      name,
+      name,
+    );
+  }
   if (propTypes) {
     currentlyValidatingElement = element;
     checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
