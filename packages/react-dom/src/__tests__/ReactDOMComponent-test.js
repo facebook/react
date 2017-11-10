@@ -14,7 +14,6 @@ describe('ReactDOMComponent', () => {
   var ReactTestUtils;
   var ReactDOM;
   var ReactDOMServer;
-  var inputValueTracking;
 
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -26,8 +25,6 @@ describe('ReactDOMComponent', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-    // TODO: can we express this test with only public API?
-    inputValueTracking = require('../client/inputValueTracking');
   });
 
   describe('updateDOM', () => {
@@ -1172,27 +1169,6 @@ describe('ReactDOMComponent', () => {
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
           'when using JSX.',
       );
-    });
-
-    it('should track input values', () => {
-      var container = document.createElement('div');
-      var inst = ReactDOM.render(
-        <input type="text" defaultValue="foo" />,
-        container,
-      );
-
-      var tracker = inputValueTracking._getTrackerFromNode(inst);
-
-      expect(tracker.getValue()).toEqual('foo');
-    });
-
-    it('should track textarea values', () => {
-      var container = document.createElement('div');
-      var inst = ReactDOM.render(<textarea defaultValue="foo" />, container);
-
-      var tracker = inputValueTracking._getTrackerFromNode(inst);
-
-      expect(tracker.getValue()).toEqual('foo');
     });
 
     it('should throw for children on void elements', () => {
