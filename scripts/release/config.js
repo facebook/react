@@ -2,16 +2,6 @@
 
 const dependencies = ['fbjs', 'object-assign', 'prop-types'];
 
-// TODO: enumerate all non-private package folders in packages/*?
-const projects = [
-  'react',
-  'react-art',
-  'react-call-return',
-  'react-dom',
-  'react-reconciler',
-  'react-test-renderer',
-];
-
 const paramDefinitions = [
   {
     name: 'dry',
@@ -38,5 +28,4 @@ const paramDefinitions = [
 module.exports = {
   dependencies,
   paramDefinitions,
-  projects,
 };

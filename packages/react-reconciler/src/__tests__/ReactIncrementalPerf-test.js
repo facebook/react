@@ -20,6 +20,7 @@ describe('ReactDebugFiberPerf', () => {
   let activeMeasure;
   let knownMarks;
   let knownMeasures;
+  let comments;
 
   function resetFlamechart() {
     root = {
@@ -35,12 +36,11 @@ describe('ReactDebugFiberPerf', () => {
     activeMeasure = root;
     knownMarks = new Set();
     knownMeasures = new Set();
+    comments = [];
   }
 
   function addComment(comment) {
-    activeMeasure.children.push(
-      `${'  '.repeat(activeMeasure.indent + 1)}// ${comment}`,
-    );
+    comments.push(comment);
   }
 
   function getFlameChart() {
@@ -67,9 +67,11 @@ describe('ReactDebugFiberPerf', () => {
           // Will be assigned on measure() call:
           label: null,
           parent: activeMeasure,
+          comments,
           toString() {
             return (
               [
+                ...this.comments.map(c => '  '.repeat(this.indent) + '// ' + c),
                 '  '.repeat(this.indent) + this.label,
                 ...this.children.map(c => c.toString()),
               ].join('\n') +
@@ -78,6 +80,7 @@ describe('ReactDebugFiberPerf', () => {
             );
           },
         };
+        comments = [];
         // Step one level deeper
         activeMeasure.children.push(measure);
         activeMeasure = measure;
@@ -543,6 +546,17 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Foo />);
     });
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('warns if async work expires (starvation)', () => {
+    function Foo() {
+      return <span />;
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.expire(5000);
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });

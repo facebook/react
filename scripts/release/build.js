@@ -8,6 +8,7 @@ const {exec} = require('child_process');
 const run = async () => {
   const chalk = require('chalk');
   const logUpdate = require('log-update');
+  const {getPublicPackages} = require('./utils');
 
   const addGitTag = require('./build-commands/add-git-tag');
   const buildArtifacts = require('./build-commands/build-artifacts');
@@ -27,6 +28,7 @@ const run = async () => {
 
   try {
     const params = parseBuildParameters();
+    params.packages = getPublicPackages();
 
     await checkEnvironmentVariables(params);
     await validateVersion(params);
