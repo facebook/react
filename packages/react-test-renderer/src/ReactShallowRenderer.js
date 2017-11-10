@@ -103,6 +103,7 @@ class ReactShallowRenderer {
     }
 
     this._rendering = false;
+    this._updater._invokeCallback();
 
     return this.getRenderOutput();
   }
@@ -139,7 +140,6 @@ class ReactShallowRenderer {
     }
 
     this._rendered = this._instance.render();
-    this._updater._invokeCallback();
     // Intentionally do not call componentDidMount()
     // because DOM refs are not available.
   }
@@ -184,7 +184,6 @@ class ReactShallowRenderer {
 
     if (shouldUpdate) {
       this._rendered = this._instance.render();
-      this._updater._invokeCallback();
     }
     // Intentionally do not call componentDidUpdate()
     // because DOM refs are not available.
