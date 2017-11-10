@@ -42,7 +42,7 @@ describe('SyntheticClipboardEvent', () => {
     describe('clipboardData', () => {
       describe('when event has clipboardData', () => {
         it("returns event's clipboardData", () => {
-          var expectedCount = 3;
+          var expectedCount = 0;
 
           // Mock clipboardData since native implementation doesn't have a constructor
           var clipboardData = {
@@ -52,12 +52,10 @@ describe('SyntheticClipboardEvent', () => {
             items: null,
             types: null,
           };
-
           var eventHandler = event => {
             expect(event.clipboardData).toBe(clipboardData);
-            expectedCount -= 1;
+            expectedCount++;
           };
-
           var div = ReactDOM.render(
             <div
               onCopy={eventHandler}
@@ -70,8 +68,7 @@ describe('SyntheticClipboardEvent', () => {
           simulateEvent(div, 'copy', clipboardData);
           simulateEvent(div, 'cut', clipboardData);
           simulateEvent(div, 'paste', clipboardData);
-
-          expect(expectedCount).toBe(0);
+          expect(expectedCount).toBe(3);
         });
       });
     });
@@ -79,15 +76,14 @@ describe('SyntheticClipboardEvent', () => {
 
   describe('EventInterface', () => {
     it('normalizes properties from the Event interface', () => {
-      var expectedCount = 3;
+      var expectedCount = 0;
       var div;
 
       var eventHandler = type => event => {
         expect(event.target).toBe(div);
         expect(event.type).toBe(type);
-        expectedCount -= 1;
+        expectedCount++;
       };
-
       div = ReactDOM.render(
         <div
           onCopy={eventHandler('copy')}
@@ -100,12 +96,11 @@ describe('SyntheticClipboardEvent', () => {
       simulateEvent(div, 'copy');
       simulateEvent(div, 'cut');
       simulateEvent(div, 'paste');
-
-      expect(expectedCount).toBe(0);
+      expect(expectedCount).toBe(3);
     });
 
     it('is able to `preventDefault` and `stopPropagation`', () => {
-      var expectedCount = 3;
+      var expectedCount = 0;
 
       var eventHandler = event => {
         expect(event.isDefaultPrevented()).toBe(false);
@@ -114,9 +109,8 @@ describe('SyntheticClipboardEvent', () => {
         expect(event.isPropagationStopped()).toBe(false);
         event.stopPropagation();
         expect(event.isPropagationStopped()).toBe(true);
-        expectedCount -= 1;
+        expectedCount++;
       };
-
       var div = ReactDOM.render(
         <div
           onCopy={eventHandler}
@@ -129,20 +123,18 @@ describe('SyntheticClipboardEvent', () => {
       simulateEvent(div, 'copy');
       simulateEvent(div, 'cut');
       simulateEvent(div, 'paste');
-
-      expect(expectedCount).toBe(0);
+      expect(expectedCount).toBe(3);
     });
 
     it('is able to `persist`', () => {
-      var expectedCount = 3;
+      var expectedCount = 0;
 
       var eventHandler = event => {
         expect(event.isPersistent()).toBe(false);
         event.persist();
         expect(event.isPersistent()).toBe(true);
-        expectedCount -= 1;
+        expectedCount++;
       };
-
       var div = ReactDOM.render(
         <div
           onCopy={eventHandler}
@@ -155,8 +147,7 @@ describe('SyntheticClipboardEvent', () => {
       simulateEvent(div, 'copy');
       simulateEvent(div, 'cut');
       simulateEvent(div, 'paste');
-
-      expect(expectedCount).toBe(0);
+      expect(expectedCount).toBe(3);
     });
   });
 });
