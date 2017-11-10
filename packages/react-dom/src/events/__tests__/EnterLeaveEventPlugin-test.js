@@ -12,16 +12,6 @@
 var React;
 var ReactDOM;
 
-const simulateMouseEvent = (node, type, relatedTarget) => {
-  node.dispatchEvent(
-    new MouseEvent(type, {
-      bubbles: true,
-      cancelable: true,
-      relatedTarget,
-    }),
-  );
-};
-
 describe('EnterLeaveEventPlugin', () => {
   beforeEach(() => {
     jest.resetModules();
@@ -50,7 +40,14 @@ describe('EnterLeaveEventPlugin', () => {
       iframeDocument.body.getElementsByTagName('div')[0],
     );
 
-    simulateMouseEvent(node, 'mouseout', iframe.contentWindow);
+    node.dispatchEvent(
+      new MouseEvent('mouseout', {
+        bubbles: true,
+        cancelable: true,
+        relatedTarget: iframe.contentWindow,
+      }),
+    );
+
     expect(leaveEvents.length).toBe(1);
     expect(leaveEvents[0].target).toBe(node);
     expect(leaveEvents[0].relatedTarget).toBe(iframe.contentWindow);
@@ -76,7 +73,14 @@ describe('EnterLeaveEventPlugin', () => {
       iframeDocument.body.getElementsByTagName('div')[0],
     );
 
-    simulateMouseEvent(node, 'mouseover', null);
+    node.dispatchEvent(
+      new MouseEvent('mouseover', {
+        bubbles: true,
+        cancelable: true,
+        relatedTarget: null,
+      }),
+    );
+
     expect(enterEvents.length).toBe(1);
     expect(enterEvents[0].target).toBe(node);
     expect(enterEvents[0].relatedTarget).toBe(iframe.contentWindow);
@@ -109,7 +113,13 @@ describe('EnterLeaveEventPlugin', () => {
     document.body.appendChild(div);
 
     // Enter from parent into the child.
-    simulateMouseEvent(parent, 'mouseout', parent.firstChild);
+    parent.dispatchEvent(
+      new MouseEvent('mouseout', {
+        bubbles: true,
+        cancelable: true,
+        relatedTarget: parent.firstChild,
+      }),
+    );
 
     // Entering a child should fire on the child, not on the parent.
     expect(childEnterCalls).toBe(1);
