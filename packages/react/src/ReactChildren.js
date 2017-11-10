@@ -122,22 +122,7 @@ function traverseAllChildrenImpl(
 ) {
   var type = typeof children;
 
-  if (type === 'undefined' || type === 'boolean') {
-    // All of the above are perceived as null.
-    children = null;
-  }
-
-  if (
-    children === null ||
-    type === 'string' ||
-    type === 'number' ||
-    // The following is inlined from ReactElement. This means we can optimize
-    // some checks. React Fiber also inlines this logic for similar purposes.
-    (type === 'object' && children.$$typeof === REACT_ELEMENT_TYPE) ||
-    (type === 'object' && children.$$typeof === REACT_CALL_TYPE) ||
-    (type === 'object' && children.$$typeof === REACT_RETURN_TYPE) ||
-    (type === 'object' && children.$$typeof === REACT_PORTAL_TYPE)
-  ) {
+  const invokeCallback = () => {
     callback(
       traverseContext,
       children,
@@ -145,7 +130,32 @@ function traverseAllChildrenImpl(
       // so that it's consistent if the number of children grows.
       nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
     );
+  };
+
+  if (type === 'undefined' || type === 'boolean') {
+    // All of the above are perceived as null.
+    children = null;
+  }
+
+  if (children === null) {
+    invokeCallback();
     return 1;
+  }
+
+  switch (type) {
+    case 'string':
+    case 'number':
+      invokeCallback();
+      return 1;
+    case 'object':
+      switch (children.$$typeof) {
+        case REACT_ELEMENT_TYPE:
+        case REACT_CALL_TYPE:
+        case REACT_RETURN_TYPE:
+        case REACT_PORTAL_TYPE:
+          invokeCallback();
+          return 1;
+      }
   }
 
   var child;
