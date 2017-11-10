@@ -101,7 +101,11 @@ if (!ExecutionEnvironment.canUseDOM) {
       .toString(36)
       .slice(2);
   var idleTick = function(event) {
-    if (event.source !== window || event.data !== messageKey) {
+    if (
+      event.source !== window ||
+      event.data !== messageKey ||
+      frameDeadlineObject.timeRemaining() <= 0
+    ) {
       return;
     }
     isIdleScheduled = false;
