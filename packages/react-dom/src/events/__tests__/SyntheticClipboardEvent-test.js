@@ -13,7 +13,6 @@ var React;
 var ReactDOM;
 
 describe('SyntheticClipboardEvent', () => {
-  var simulateEvent;
   var container;
 
   beforeEach(() => {
@@ -180,8 +179,6 @@ describe('SyntheticClipboardEvent', () => {
     });
 
     it('is able to `persist`', () => {
-      var expectedCount = 0;
-
       const persistentEvents = [];
       var eventHandler = event => {
         expect(event.isPersistent()).toBe(false);
