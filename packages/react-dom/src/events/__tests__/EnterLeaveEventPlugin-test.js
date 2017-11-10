@@ -13,16 +13,26 @@ var React;
 var ReactDOM;
 
 describe('EnterLeaveEventPlugin', () => {
+  var container;
+
   beforeEach(() => {
     jest.resetModules();
 
     React = require('react');
     ReactDOM = require('react-dom');
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   it('should set onMouseLeave relatedTarget properly in iframe', () => {
     const iframe = document.createElement('iframe');
-    document.body.appendChild(iframe);
+    container.appendChild(iframe);
     const iframeDocument = iframe.contentDocument;
     iframeDocument.write(
       '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
@@ -55,7 +65,7 @@ describe('EnterLeaveEventPlugin', () => {
 
   it('should set onMouseEnter relatedTarget properly in iframe', () => {
     const iframe = document.createElement('iframe');
-    document.body.appendChild(iframe);
+    container.appendChild(iframe);
     const iframeDocument = iframe.contentDocument;
     iframeDocument.write(
       '<!DOCTYPE html><html><head></head><body><div></div></body></html>',
@@ -91,6 +101,7 @@ describe('EnterLeaveEventPlugin', () => {
     let parentEnterCalls = 0;
     let childEnterCalls = 0;
     let parent = null;
+
     class Parent extends React.Component {
       render() {
         return (
@@ -105,12 +116,9 @@ describe('EnterLeaveEventPlugin', () => {
       }
     }
 
-    const div = document.createElement('div');
-    ReactDOM.render(<Parent />, div);
+    ReactDOM.render(<Parent />, container);
     // The issue only reproduced on insertion during the first update.
-    ReactDOM.render(<Parent showChild={true} />, div);
-
-    document.body.appendChild(div);
+    ReactDOM.render(<Parent showChild={true} />, container);
 
     // Enter from parent into the child.
     parent.dispatchEvent(
