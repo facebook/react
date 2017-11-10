@@ -83,7 +83,7 @@ function getSourceInfoErrorAddendum(elementProps) {
     elementProps.__source !== undefined
   ) {
     var source = elementProps.__source;
-    var fileName = source.fileName.replace(/^.*[\\\/]/, '');
+    var fileName = source.fileName;
     var lineNumber = source.lineNumber;
     return '\n\nCheck your code at ' + fileName + ':' + lineNumber + '.';
   }
