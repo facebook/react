@@ -33,7 +33,15 @@ describe('SyntheticWheelEvent', () => {
 
     const event = new MouseEvent('wheel', {
       bubbles: true,
-      srcElement: container,
+    });
+    // Emulate IE8
+    Object.defineProperty(event, 'target', {
+      get() {},
+    });
+    Object.defineProperty(event, 'srcElement', {
+      get() {
+        return node;
+      },
     });
     node.dispatchEvent(event);
 
