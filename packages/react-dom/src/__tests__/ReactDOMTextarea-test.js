@@ -329,7 +329,10 @@ describe('ReactDOMTextarea', () => {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(
-        <textarea>{'hello'}{'there'}</textarea>,
+        <textarea>
+          {'hello'}
+          {'there'}
+        </textarea>,
       );
     }).toThrow();
 
@@ -337,7 +340,11 @@ describe('ReactDOMTextarea', () => {
 
     var node;
     expect(function() {
-      node = renderTextarea(<textarea><strong /></textarea>);
+      node = renderTextarea(
+        <textarea>
+          <strong />
+        </textarea>,
+      );
     }).not.toThrow();
 
     expect(node.value).toBe('[object Object]');

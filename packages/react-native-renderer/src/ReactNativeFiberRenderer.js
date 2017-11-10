@@ -14,22 +14,18 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 // Modules provided by RN:
 import UIManager from 'UIManager';
-import deepFreezeAndThrowOnMutationInDev
-  from 'deepFreezeAndThrowOnMutationInDev';
+import deepFreezeAndThrowOnMutationInDev from 'deepFreezeAndThrowOnMutationInDev';
 
-import * as ReactNativeViewConfigRegistry
-  from './ReactNativeViewConfigRegistry';
+import * as ReactNativeViewConfigRegistry from './ReactNativeViewConfigRegistry';
 import * as ReactNativeAttributePayload from './ReactNativeAttributePayload';
-import ReactNativeComponentTree from './ReactNativeComponentTree';
-import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
-import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
-import ReactNativeTagHandles from './ReactNativeTagHandles';
-
-const {
+import {
   precacheFiberNode,
   uncacheFiberNode,
   updateFiberProps,
-} = ReactNativeComponentTree;
+} from './ReactNativeComponentTree';
+import ReactNativeFiberHostComponent from './ReactNativeFiberHostComponent';
+import * as ReactNativeFrameScheduling from './ReactNativeFrameScheduling';
+import ReactNativeTagHandles from './ReactNativeTagHandles';
 
 export type Container = number;
 export type Instance = {
@@ -134,9 +130,9 @@ const NativeRenderer = ReactFiberReconciler({
     // Either way we need to pass a copy of the Array to prevent it from being frozen.
     const nativeTags = parentInstance._children.map(
       child =>
-        (typeof child === 'number'
+        typeof child === 'number'
           ? child // Leaf node (eg text)
-          : child._nativeTag),
+          : child._nativeTag,
     );
 
     UIManager.setChildren(

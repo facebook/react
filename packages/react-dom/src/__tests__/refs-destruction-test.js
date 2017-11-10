@@ -27,11 +27,9 @@ describe('refs-destruction', () => {
       render() {
         return (
           <div>
-            {this.props.destroy
-              ? null
-              : <div ref="theInnerDiv">
-                  Lets try to destroy this.
-                </div>}
+            {this.props.destroy ? null : (
+              <div ref="theInnerDiv">Lets try to destroy this.</div>
+            )}
           </div>
         );
       }

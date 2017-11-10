@@ -101,9 +101,10 @@ function getCurrentComponentErrorInfo(parentType) {
   var info = getDeclarationErrorAddendum();
 
   if (!info) {
-    var parentName = typeof parentType === 'string'
-      ? parentType
-      : parentType.displayName || parentType.name;
+    var parentName =
+      typeof parentType === 'string'
+        ? parentType
+        : parentType.displayName || parentType.name;
     if (parentName) {
       info = `\n\nCheck the top-level render call using <${parentName}>.`;
     }
@@ -144,7 +145,9 @@ function validateExplicitKey(element, parentType) {
     element._owner !== ReactCurrentOwner.current
   ) {
     // Give the component that originally created this child.
-    childOwner = ` It was passed a child from ${getComponentName(element._owner)}.`;
+    childOwner = ` It was passed a child from ${getComponentName(
+      element._owner,
+    )}.`;
   }
 
   currentlyValidatingElement = element;
@@ -282,7 +285,7 @@ export function createElementWithValidation(type, props, children) {
     ) {
       info +=
         ' You likely forgot to export your component from the file ' +
-        "it's defined in.";
+        "it's defined in, or you might have mixed up default and named imports.";
     }
 
     var sourceInfo = getSourceInfoErrorAddendum(props);

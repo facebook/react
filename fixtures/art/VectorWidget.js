@@ -137,12 +137,12 @@ var RING_TWO_PATH =
 var RING_THREE_PATH =
   'M84,121 C130.391921,121 168,106.673113 168,89 C168,71.3268871 130.391921,57 84,57 C37.6080787,57 0,71.3268871 0,89 C0,106.673113 37.6080787,121 84,121 Z M84,121';
 var RING_TWO_ROTATE = new Transform()
-  .translate(84.000000, 89.000000)
-  .rotate(-240.000000)
-  .translate(-84.000000, -89.000000);
+  .translate(84.0, 89.0)
+  .rotate(-240.0)
+  .translate(-84.0, -89.0);
 var RING_THREE_ROTATE = new Transform()
-  .translate(84.000000, 89.000000)
-  .rotate(-300.000000)
-  .translate(-84.000000, -89.000000);
+  .translate(84.0, 89.0)
+  .rotate(-300.0)
+  .translate(-84.0, -89.0);
 
 module.exports = VectorWidget;

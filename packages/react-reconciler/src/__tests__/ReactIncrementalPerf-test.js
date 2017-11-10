@@ -20,6 +20,7 @@ describe('ReactDebugFiberPerf', () => {
   let activeMeasure;
   let knownMarks;
   let knownMeasures;
+  let comments;
 
   function resetFlamechart() {
     root = {
@@ -35,12 +36,11 @@ describe('ReactDebugFiberPerf', () => {
     activeMeasure = root;
     knownMarks = new Set();
     knownMeasures = new Set();
+    comments = [];
   }
 
   function addComment(comment) {
-    activeMeasure.children.push(
-      `${'  '.repeat(activeMeasure.indent + 1)}// ${comment}`,
-    );
+    comments.push(comment);
   }
 
   function getFlameChart() {
@@ -67,9 +67,11 @@ describe('ReactDebugFiberPerf', () => {
           // Will be assigned on measure() call:
           label: null,
           parent: activeMeasure,
+          comments,
           toString() {
             return (
               [
+                ...this.comments.map(c => '  '.repeat(this.indent) + '// ' + c),
                 '  '.repeat(this.indent) + this.label,
                 ...this.children.map(c => c.toString()),
               ].join('\n') +
@@ -78,6 +80,7 @@ describe('ReactDebugFiberPerf', () => {
             );
           },
         };
+        comments = [];
         // Step one level deeper
         activeMeasure.children.push(measure);
         activeMeasure = measure;
@@ -134,11 +137,19 @@ describe('ReactDebugFiberPerf', () => {
   }
 
   it('measures a simple reconciliation', () => {
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     addComment('Mount');
     ReactNoop.flush();
 
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     addComment('Update');
     ReactNoop.flush();
 
@@ -196,7 +207,11 @@ describe('ReactDebugFiberPerf', () => {
       }
     }
 
-    ReactNoop.render(<Parent><Cascading /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Cascading />
+      </Parent>,
+    );
     addComment('Should print a warning');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -233,10 +248,18 @@ describe('ReactDebugFiberPerf', () => {
       }
     }
 
-    ReactNoop.render(<Parent><NotCascading /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <NotCascading />
+      </Parent>,
+    );
     addComment('Should not print a warning');
     ReactNoop.flush();
-    ReactNoop.render(<Parent><NotCascading /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <NotCascading />
+      </Parent>,
+    );
     addComment('Should not print a warning');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -328,14 +351,22 @@ describe('ReactDebugFiberPerf', () => {
       throw new Error('Game over');
     }
 
-    ReactNoop.render(<Parent><Baddie /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Baddie />
+      </Parent>,
+    );
     try {
       addComment('Will fatal');
       ReactNoop.flush();
     } catch (err) {
       expect(err.message).toBe('Game over');
     }
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     addComment('Will reconcile from a clean state');
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -464,7 +495,13 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     function App() {
-      return <div><CoParent foo={true}><Indirection /></CoParent></div>;
+      return (
+        <div>
+          <CoParent foo={true}>
+            <Indirection />
+          </CoParent>
+        </div>
+      );
     }
 
     ReactNoop.render(<App />);
@@ -496,6 +533,31 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.flushSync(() => {
       ReactNoop.render(<Component />);
     });
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('warns if an in-progress update is interrupted', () => {
+    function Foo() {
+      return <span />;
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.flushUnitsOfWork(2);
+    ReactNoop.flushSync(() => {
+      ReactNoop.render(<Foo />);
+    });
+    ReactNoop.flush();
+    expect(getFlameChart()).toMatchSnapshot();
+  });
+
+  it('warns if async work expires (starvation)', () => {
+    function Foo() {
+      return <span />;
+    }
+
+    ReactNoop.render(<Foo />);
+    ReactNoop.expire(5000);
+    ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
   });
 });

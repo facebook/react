@@ -13,9 +13,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {
-  getStackAddendumByWorkInProgressFiber,
-} from 'shared/ReactFiberComponentTreeHook';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -35,6 +33,7 @@ import {
   HostPortal,
   ClassComponent,
 } from 'shared/ReactTypeOfWork';
+import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -46,7 +45,23 @@ import ReactFiberHostContext from './ReactFiberHostContext';
 import ReactFiberHydrationContext from './ReactFiberHydrationContext';
 import ReactFiberInstrumentation from './ReactFiberInstrumentation';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {
+  recordEffect,
+  recordScheduleUpdate,
+  startRequestCallbackTimer,
+  stopRequestCallbackTimer,
+  startWorkTimer,
+  stopWorkTimer,
+  stopFailedWorkTimer,
+  startWorkLoopTimer,
+  stopWorkLoopTimer,
+  startCommitTimer,
+  stopCommitTimer,
+  startCommitHostEffectsTimer,
+  stopCommitHostEffectsTimer,
+  startCommitLifeCyclesTimer,
+  stopCommitLifeCyclesTimer,
+} from './ReactDebugFiberPerf';
 import {popContextProvider} from './ReactFiberContext';
 import {reset} from './ReactFiberStack';
 import {logCapturedError} from './ReactFiberErrorLogger';
@@ -64,21 +79,6 @@ import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
 
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
-var {
-  recordEffect,
-  recordScheduleUpdate,
-  startWorkTimer,
-  stopWorkTimer,
-  stopFailedWorkTimer,
-  startWorkLoopTimer,
-  stopWorkLoopTimer,
-  startCommitTimer,
-  stopCommitTimer,
-  startCommitHostEffectsTimer,
-  stopCommitHostEffectsTimer,
-  startCommitLifeCyclesTimer,
-  stopCommitLifeCyclesTimer,
-} = ReactDebugFiberPerf;
 
 export type CapturedError = {
   componentName: ?string,
@@ -217,6 +217,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
 
+  // Used for performance tracking.
+  let interruptedBy: Fiber | null = null;
+
   function resetContextStack() {
     // Reset the stack
     reset();
@@ -229,8 +232,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     while (nextEffect !== null) {
       if (__DEV__) {
         ReactDebugCurrentFiber.setCurrentFiber(nextEffect);
-        recordEffect();
       }
+      recordEffect();
 
       const effectTag = nextEffect.effectTag;
       if (effectTag & ContentReset) {
@@ -298,24 +301,18 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       const effectTag = nextEffect.effectTag;
 
       if (effectTag & (Update | Callback)) {
-        if (__DEV__) {
-          recordEffect();
-        }
+        recordEffect();
         const current = nextEffect.alternate;
         commitLifeCycles(current, nextEffect);
       }
 
       if (effectTag & Ref) {
-        if (__DEV__) {
-          recordEffect();
-        }
+        recordEffect();
         commitAttachRef(nextEffect);
       }
 
       if (effectTag & Err) {
-        if (__DEV__) {
-          recordEffect();
-        }
+        recordEffect();
         commitErrorHandling(nextEffect);
       }
 
@@ -338,9 +335,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // captured elsewhere, to prevent the unmount from being interrupted.
     isWorking = true;
     isCommitting = true;
-    if (__DEV__) {
-      startCommitTimer();
-    }
+    startCommitTimer();
 
     const root: FiberRoot = finishedWork.stateNode;
     invariant(
@@ -377,9 +372,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // The first pass performs all the host insertions, updates, deletions and
     // ref unmounts.
     nextEffect = firstEffect;
-    if (__DEV__) {
-      startCommitHostEffectsTimer();
-    }
+    startCommitHostEffectsTimer();
     while (nextEffect !== null) {
       let didError = false;
       let error;
@@ -410,9 +403,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         }
       }
     }
-    if (__DEV__) {
-      stopCommitHostEffectsTimer();
-    }
+    stopCommitHostEffectsTimer();
 
     resetAfterCommit();
 
@@ -427,9 +418,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // and deletions in the entire tree have already been invoked.
     // This pass also triggers any renderer-specific initial effects.
     nextEffect = firstEffect;
-    if (__DEV__) {
-      startCommitLifeCyclesTimer();
-    }
+    startCommitLifeCyclesTimer();
     while (nextEffect !== null) {
       let didError = false;
       let error;
@@ -462,10 +451,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
 
     isCommitting = false;
     isWorking = false;
-    if (__DEV__) {
-      stopCommitLifeCyclesTimer();
-      stopCommitTimer();
-    }
+    stopCommitLifeCyclesTimer();
+    stopCommitTimer();
     if (typeof onCommitRoot === 'function') {
       onCommitRoot(finishedWork.stateNode);
     }
@@ -551,9 +538,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       resetExpirationTime(workInProgress, nextRenderExpirationTime);
 
       if (next !== null) {
-        if (__DEV__) {
-          stopWorkTimer(workInProgress);
-        }
+        stopWorkTimer(workInProgress);
         if (__DEV__ && ReactFiberInstrumentation.debugTool) {
           ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
         }
@@ -595,9 +580,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         }
       }
 
-      if (__DEV__) {
-        stopWorkTimer(workInProgress);
-      }
+      stopWorkTimer(workInProgress);
       if (__DEV__ && ReactFiberInstrumentation.debugTool) {
         ReactFiberInstrumentation.debugTool.onCompleteWork(workInProgress);
       }
@@ -631,8 +614,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
+    startWorkTimer(workInProgress);
     if (__DEV__) {
-      startWorkTimer(workInProgress);
       ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
     let next = beginWork(current, workInProgress, nextRenderExpirationTime);
@@ -661,8 +644,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     const current = workInProgress.alternate;
 
     // See if beginning this work spawns more work.
+    startWorkTimer(workInProgress);
     if (__DEV__) {
-      startWorkTimer(workInProgress);
       ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
     let next = beginFailedWork(
@@ -773,10 +756,6 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     root: FiberRoot,
     expirationTime: ExpirationTime,
   ): Fiber | null {
-    if (__DEV__) {
-      startWorkLoopTimer();
-    }
-
     invariant(
       !isWorking,
       'renderRoot was called recursively. This error is likely caused ' +
@@ -795,7 +774,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       expirationTime !== nextRenderExpirationTime ||
       nextUnitOfWork === null
     ) {
-      // This is a restart. Reset the stack.
+      // Reset the stack and start working from the root.
       resetContextStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
@@ -805,6 +784,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         expirationTime,
       );
     }
+
+    startWorkLoopTimer(nextUnitOfWork);
 
     let didError = false;
     let error = null;
@@ -888,13 +869,11 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     const uncaughtError = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
+    stopWorkLoopTimer(interruptedBy);
+    interruptedBy = null;
     isWorking = false;
     didFatal = false;
     firstUncaughtError = null;
-
-    if (__DEV__) {
-      stopWorkLoopTimer();
-    }
 
     if (uncaughtError !== null) {
       onUncaughtError(uncaughtError);
@@ -1131,11 +1110,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
           break;
       }
       if (node === to || node.alternate === to) {
-        if (__DEV__) {
-          stopFailedWorkTimer(node);
-        }
+        stopFailedWorkTimer(node);
         break;
-      } else if (__DEV__) {
+      } else {
         stopWorkTimer(node);
       }
       node = node.return;
@@ -1190,9 +1167,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     expirationTime: ExpirationTime,
     isErrorRecovery: boolean,
   ) {
-    if (__DEV__) {
-      recordScheduleUpdate();
-    }
+    recordScheduleUpdate();
 
     if (__DEV__) {
       if (!isErrorRecovery && fiber.tag === ClassComponent) {
@@ -1227,7 +1202,11 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
             root === nextRoot &&
             expirationTime <= nextRenderExpirationTime
           ) {
-            // This is an interruption. Restart the root from the top.
+            // Restart the root from the top.
+            if (nextUnitOfWork !== null) {
+              // This is an interruption. (Used for performance tracking.)
+              interruptedBy = fiber;
+            }
             nextRoot = null;
             nextUnitOfWork = null;
             nextRenderExpirationTime = NoWork;
@@ -1361,6 +1340,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       performWork(Sync, null);
     } else if (!isCallbackScheduled) {
       isCallbackScheduled = true;
+      startRequestCallbackTimer();
       scheduleDeferredCallback(performAsyncWork);
     }
   }
@@ -1449,8 +1429,14 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
-    // the deadlne.
+    // the deadline.
     findHighestPriorityRoot();
+
+    if (enableUserTimingAPI && deadline !== null) {
+      const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
+      stopRequestCallbackTimer(didExpire);
+    }
+
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
@@ -1473,6 +1459,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // If there's work left over, schedule a new callback.
     if (nextFlushedRoot !== null && !isCallbackScheduled) {
       isCallbackScheduled = true;
+      startRequestCallbackTimer();
       scheduleDeferredCallback(performAsyncWork);
     }
 

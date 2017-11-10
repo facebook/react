@@ -4,6 +4,9 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
+</details>
+
+## 16.1.0 (November 9, 2017)
 
 ### Discontinuing Bower Releases
 
@@ -33,6 +36,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 * Fix a crash rendering into shadow root. ([@gaearon](https://github.com/gaearon) in [#11037](https://github.com/facebook/react/pull/11037))
 * Fix false positive warning about hydrating mixed case SVG tags. ([@gaearon](http://github.com/gaearon) in [#11174](https://github.com/facebook/react/pull/11174))
 * Suppress the new unknown tag warning for `<dialog>` element. ([@gaearon](http://github.com/gaearon) in [#11035](https://github.com/facebook/react/pull/11035))
+* Warn when defining a non-existent `componentDidReceiveProps` method. ([@iamtommcc](https://github.com/iamtommcc) in [#11479](https://github.com/facebook/react/pull/11479))
 * Warn about function child no more than once. ([@andreysaleba](https://github.com/andreysaleba) in [#11120](https://github.com/facebook/react/pull/11120))
 * Warn about nested updates no more than once. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11113](https://github.com/facebook/react/pull/11113))
 * Deduplicate other warnings about updates. ([@anushreesubramani](https://github.com/anushreesubramani) in [#11216](https://github.com/facebook/react/pull/11216))
@@ -45,6 +49,7 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 
 ### React DOM Server
 
+* Add a new `suppressHydrationWarning` attribute for intentional client/server text mismatches. ([@sebmarkbage](http://github.com/sebmarkbage) in [#11126](https://github.com/facebook/react/pull/11126))
 * Fix markup generation when components return strings. ([@gaearon](http://github.com/gaearon) in [#11109](https://github.com/facebook/react/pull/11109))
 * Fix obscure error message when passing an invalid style value. ([@iamdustan](https://github.com/iamdustan) in [#11173](https://github.com/facebook/react/pull/11173))
 * Include the `autoFocus` attribute into SSR markup. ([@gaearon](http://github.com/gaearon) in [#11192](https://github.com/facebook/react/pull/11192))
@@ -66,12 +71,11 @@ Starting with 16.1.0, we will no longer be publishing new releases on Bower. You
 ### React Reconciler (Experimental)
 
 * First release of the [new experimental package](https://github.com/facebook/react/blob/master/packages/react-reconciler/README.md) for creating custom renderers. ([@iamdustan](https://github.com/iamdustan) in [#10758](https://github.com/facebook/react/pull/10758))
+* Add support for React DevTools. ([@gaearon](https://github.com/gaearon) in [#11463](https://github.com/facebook/react/pull/11463))
 
 ### React Call Return (Experimental)
 
 * First release of the [new experimental package](https://github.com/facebook/react/tree/master/packages/react-call-return) for parent-child communication. ([@gaearon](https://github.com/gaearon) in [#11364](https://github.com/facebook/react/pull/11364))
-
-</details>
 
 ## 16.0.0 (September 26, 2017)
 

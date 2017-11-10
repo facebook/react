@@ -353,7 +353,13 @@ describe('root level refs', () => {
     var divInst = null;
     var ref2 = jest.fn(value => (divInst = value));
     result = ReactDOM.render(
-      [<Comp ref={ref} key="a" />, 5, <div ref={ref2} key="b">Hello</div>],
+      [
+        <Comp ref={ref} key="a" />,
+        5,
+        <div ref={ref2} key="b">
+          Hello
+        </div>,
+      ],
       container,
     );
 

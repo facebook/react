@@ -43,11 +43,11 @@ class RadioGroupFixture extends React.Component {
         <label>
           <input name="foo" type="radio" onChange={this.handleChange} />
           Radio 2
-        </label>
-
-        {' '}
+        </label>{' '}
         <p style={{color}}>
-          <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
+          <code>onChange</code>
+          {' calls: '}
+          <strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset count</button>
       </Fixture>

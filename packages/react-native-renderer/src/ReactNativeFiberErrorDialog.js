@@ -30,7 +30,9 @@ export function showDialog(capturedError: CapturedError): boolean {
     errorToHandle = error;
 
     try {
-      errorToHandle.message = `${summary}\n\nThis error is located at:${componentStack}`;
+      errorToHandle.message = `${summary}\n\nThis error is located at:${
+        componentStack
+      }`;
     } catch (e) {}
   } else if (typeof error === 'string') {
     errorToHandle = new Error(
