@@ -44,7 +44,7 @@ class ReactShallowRenderer {
       'ReactShallowRenderer render(): Invalid component element.%s',
       typeof element === 'function'
         ? ' Instead of passing a component class, make sure to instantiate ' +
-            'it by passing it to React.createElement.'
+          'it by passing it to React.createElement.'
         : '',
     );
     // Show a special message for host elements since it's a common case.
