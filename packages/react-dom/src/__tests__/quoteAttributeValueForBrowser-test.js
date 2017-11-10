@@ -39,7 +39,7 @@ describe('quoteAttributeValueForBrowser', () => {
   });
 
   it('double quote is escaped inside attributes', () => {
-    var response = ReactDOMServer.renderToString(<img data-attr="&quot;" />);
+    var response = ReactDOMServer.renderToString(<img data-attr={'"'} />);
     expect(response).toMatch(
       new RegExp(
         '<img data-attr="&quot;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
