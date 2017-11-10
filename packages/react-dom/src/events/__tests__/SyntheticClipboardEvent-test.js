@@ -182,11 +182,12 @@ describe('SyntheticClipboardEvent', () => {
     it('is able to `persist`', () => {
       var expectedCount = 0;
 
+      const persistentEvents = [];
       var eventHandler = event => {
         expect(event.isPersistent()).toBe(false);
         event.persist();
         expect(event.isPersistent()).toBe(true);
-        expectedCount++;
+        persistentEvents.push(event);
       };
 
       var div = ReactDOM.render(
@@ -211,7 +212,10 @@ describe('SyntheticClipboardEvent', () => {
       event.initEvent('paste', true, true);
       div.dispatchEvent(event);
 
-      expect(expectedCount).toBe(3);
+      expect(persistentEvents.length).toBe(3);
+      expect(persistentEvents[0].type).toBe('copy');
+      expect(persistentEvents[1].type).toBe('cut');
+      expect(persistentEvents[2].type).toBe('paste');
     });
   });
 });
