@@ -14,23 +14,28 @@ var ReactDOM;
 
 describe('SyntheticClipboardEvent', () => {
   var simulateEvent;
+  var container;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
 
-    document.body.innerHTML = '';
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
     simulateEvent = (element, type, data) => {
       var event = document.createEvent('Event');
       event.initEvent(type, true, true);
-
       if (data) {
         event.clipboardData = data;
       }
-
       element.dispatchEvent(event);
     };
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   describe('ClipboardEvent interface', () => {
@@ -53,7 +58,6 @@ describe('SyntheticClipboardEvent', () => {
             expectedCount -= 1;
           };
 
-          var container = document.createElement('div');
           var div = ReactDOM.render(
             <div
               onCopy={eventHandler}
@@ -62,7 +66,6 @@ describe('SyntheticClipboardEvent', () => {
             />,
             container,
           );
-          document.body.appendChild(div);
 
           simulateEvent(div, 'copy', clipboardData);
           simulateEvent(div, 'cut', clipboardData);
@@ -85,7 +88,6 @@ describe('SyntheticClipboardEvent', () => {
         expectedCount -= 1;
       };
 
-      var container = document.createElement('div');
       div = ReactDOM.render(
         <div
           onCopy={eventHandler('copy')}
@@ -94,7 +96,6 @@ describe('SyntheticClipboardEvent', () => {
         />,
         container,
       );
-      document.body.appendChild(div);
 
       simulateEvent(div, 'copy');
       simulateEvent(div, 'cut');
@@ -116,7 +117,6 @@ describe('SyntheticClipboardEvent', () => {
         expectedCount -= 1;
       };
 
-      var container = document.createElement('div');
       var div = ReactDOM.render(
         <div
           onCopy={eventHandler}
@@ -125,7 +125,6 @@ describe('SyntheticClipboardEvent', () => {
         />,
         container,
       );
-      document.body.appendChild(div);
 
       simulateEvent(div, 'copy');
       simulateEvent(div, 'cut');
@@ -144,7 +143,6 @@ describe('SyntheticClipboardEvent', () => {
         expectedCount -= 1;
       };
 
-      var container = document.createElement('div');
       var div = ReactDOM.render(
         <div
           onCopy={eventHandler}
@@ -153,7 +151,6 @@ describe('SyntheticClipboardEvent', () => {
         />,
         container,
       );
-      document.body.appendChild(div);
 
       simulateEvent(div, 'copy');
       simulateEvent(div, 'cut');
