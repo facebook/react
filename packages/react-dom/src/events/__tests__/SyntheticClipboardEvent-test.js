@@ -101,14 +101,41 @@ describe('SyntheticClipboardEvent', () => {
       var event;
       event = document.createEvent('Event');
       event.initEvent('copy', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        },
+      });
       div.dispatchEvent(event);
 
       event = document.createEvent('Event');
       event.initEvent('cut', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        },
+      });
       div.dispatchEvent(event);
 
       event = document.createEvent('Event');
       event.initEvent('paste', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        },
+      });
       div.dispatchEvent(event);
 
       expect(expectedCount).toBe(3);
