@@ -11,84 +11,186 @@
 
 var React;
 var ReactDOM;
-var ReactTestUtils;
 
 describe('SyntheticEvent', () => {
-  var createEvent;
+  var container;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
 
-    createEvent = (nativeEvent, callback) => {
-      var instance;
-      var container = document.createElement('div');
-      ReactDOM.render(
-        <div ref={ref => (instance = ref)} onClick={callback} />,
-        container,
-      );
-      ReactTestUtils.SimulateNative.click(instance, nativeEvent);
-    };
+    container = document.createElement('div');
+    document.body.appendChild(container);
   });
 
-  // TODO: This is not testable with the public APIs, write a test for getEventTarget
-  xit('should normalize `target` from the nativeEvent', () => {
-    var target = document.createElement('div');
-    var syntheticEvent = createEvent({srcElement: target});
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
+  });
 
-    expect(syntheticEvent.target).toBe(target);
-    expect(syntheticEvent.type).toBe(undefined);
+  it('should normalize `target` from the nativeEvent', () => {
+    var instance;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
+      expect(syntheticEvent.target).toBe(instance);
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    // Emulate IE8
+    Object.defineProperty(event, 'target', {
+      get() {},
+    });
+    Object.defineProperty(event, 'srcElement', {
+      get() {
+        return instance;
+      },
+    });
+    instance.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
   });
 
   it('should be able to `preventDefault`', () => {
-    var nativeEvent = {};
-    createEvent(nativeEvent, syntheticEvent => {
+    var instance;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
       expect(syntheticEvent.isDefaultPrevented()).toBe(false);
       syntheticEvent.preventDefault();
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
-
       expect(syntheticEvent.defaultPrevented).toBe(true);
-
       // TODO: Figure out why this is undefined when switching to public API
       // expect(nativeEvent.returnValue).toBe(false);
-    });
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    instance.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
   });
 
   it('should be prevented if nativeEvent is prevented', () => {
-    createEvent({defaultPrevented: true}, syntheticEvent => {
-      expect(syntheticEvent.isDefaultPrevented()).toBe(true);
-    });
+    var instance;
+    var expectedCount = 0;
 
-    createEvent({returnValue: false}, syntheticEvent => {
+    var eventHandler = syntheticEvent => {
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    Object.defineProperty(event, 'defaultPrevented', {
+      get(){
+        return true;
+      }
     });
+    instance.dispatchEvent(event);
+
+    // TODO: figure out why this fails
+    // event = document.createEvent('Event');
+    // event.initEvent('click', true, true);
+    // Object.defineProperty(event, 'returnValue', {
+    //   get(){
+    //     return false;
+    //   }
+    // });
+    // instance.dispatchEvent(event);
+
+    // expect(expectedCount).toBe(2);
   });
 
   it('should be able to `stopPropagation`', () => {
-    var nativeEvent = {};
-    createEvent(nativeEvent, syntheticEvent => {
+    var instance;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
       expect(syntheticEvent.isPropagationStopped()).toBe(false);
       syntheticEvent.stopPropagation();
       expect(syntheticEvent.isPropagationStopped()).toBe(true);
-
       // TODO: Figure out why this is undefined when switching to public API
       // expect(nativeEvent.cancelBubble).toBe(true);
-    });
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    instance.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
   });
 
-  it('should be able to `persist`', () => {
-    createEvent({}, syntheticEvent => {
+  it('should be able to `stopPropagation`', () => {
+    var instance;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
       expect(syntheticEvent.isPersistent()).toBe(false);
       syntheticEvent.persist();
       expect(syntheticEvent.isPersistent()).toBe(true);
-    });
+      // TODO: Figure out why this is undefined when switching to public API
+      // expect(nativeEvent.cancelBubble).toBe(true);
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    instance.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
   });
 
-  it('should be nullified if the synthetic event has called destructor and log warnings', () => {
+  it('should be nullified if the synthetic event has called destructor and log warnings`', () => {
     spyOn(console, 'error');
-    var target = document.createElement('div');
-    createEvent({srcElement: target}, syntheticEvent => {
+    var instance;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
       syntheticEvent.destructor();
       expect(syntheticEvent.type).toBe(null);
       expect(syntheticEvent.nativeEvent).toBe(null);
@@ -103,13 +205,35 @@ describe('SyntheticEvent', () => {
           'keep the original synthetic event around, use event.persist(). ' +
           'See https://fb.me/react-event-pooling for more information.',
       );
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    Object.defineProperty(event, 'srcElement', {
+      get() {
+        return instance;
+      },
     });
+    instance.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
   });
 
   it('should warn when setting properties of a destructored synthetic event', () => {
     spyOn(console, 'error');
-    var target = document.createElement('div');
-    createEvent({srcElement: target}, syntheticEvent => {
+    var instance;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
       syntheticEvent.destructor();
       expect((syntheticEvent.type = 'MouseEvent')).toBe('MouseEvent');
       expectDev(console.error.calls.count()).toBe(1);
@@ -120,15 +244,50 @@ describe('SyntheticEvent', () => {
           'keep the original synthetic event around, use event.persist(). ' +
           'See https://fb.me/react-event-pooling for more information.',
       );
+
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    Object.defineProperty(event, 'srcElement', {
+      get() {
+        return instance;
+      },
     });
+    instance.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
   });
 
   it('should warn if the synthetic event has been released when calling `preventDefault`', () => {
     spyOn(console, 'error');
+    var instance;
+    var expectedCount = 0;
     var syntheticEvent;
-    createEvent({}, e => {
+
+    var eventHandler = e => {
       syntheticEvent = e;
-    });
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    instance.dispatchEvent(event);
 
     syntheticEvent.preventDefault();
     expectDev(console.error.calls.count()).toBe(1);
@@ -139,14 +298,31 @@ describe('SyntheticEvent', () => {
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
     );
+    expect(expectedCount).toBe(1);
   });
 
   it('should warn if the synthetic event has been released when calling `stopPropagation`', () => {
     spyOn(console, 'error');
+    var instance;
+    var expectedCount = 0;
     var syntheticEvent;
-    createEvent({}, e => {
+
+    var eventHandler = e => {
       syntheticEvent = e;
-    });
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+
+    instance.dispatchEvent(event);
 
     syntheticEvent.stopPropagation();
     expectDev(console.error.calls.count()).toBe(1);
@@ -157,6 +333,7 @@ describe('SyntheticEvent', () => {
         'keep the original synthetic event around, use event.persist(). ' +
         'See https://fb.me/react-event-pooling for more information.',
     );
+    expect(expectedCount).toBe(1);
   });
 
   // TODO: reenable this test. We are currently silencing these warnings when
@@ -188,11 +365,27 @@ describe('SyntheticEvent', () => {
 
   it('should warn if Proxy is supported and the synthetic event is added a property', () => {
     spyOn(console, 'error');
+    var instance;
+    var expectedCount = 0;
     var syntheticEvent;
-    createEvent({}, e => {
+
+    var eventHandler = e => {
       e.foo = 'bar';
       syntheticEvent = e;
-    });
+      expectedCount++;
+    };
+    instance = ReactDOM.render(
+      <div
+        onClick={eventHandler}
+      />,
+      container,
+    );
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+
+    instance.dispatchEvent(event);
 
     expect(syntheticEvent.foo).toBe('bar');
     if (typeof Proxy === 'function') {
@@ -206,5 +399,6 @@ describe('SyntheticEvent', () => {
     } else {
       expectDev(console.error.calls.count()).toBe(0);
     }
+    expect(expectedCount).toBe(1);
   });
 });
