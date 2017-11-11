@@ -140,29 +140,6 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  it('should be able to `stopPropagation`', () => {
-    var instance;
-    var expectedCount = 0;
-
-    var eventHandler = syntheticEvent => {
-      expect(syntheticEvent.isPersistent()).toBe(false);
-      syntheticEvent.persist();
-      expect(syntheticEvent.isPersistent()).toBe(true);
-      // TODO: Figure out why this is undefined when switching to public API
-      // expect(nativeEvent.cancelBubble).toBe(true);
-
-      expectedCount++;
-    };
-    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
-
-    var event;
-    event = document.createEvent('Event');
-    event.initEvent('click', true, true);
-    instance.dispatchEvent(event);
-
-    expect(expectedCount).toBe(1);
-  });
-
   it('should be nullified if the synthetic event has called destructor and log warnings`', () => {
     spyOn(console, 'error');
     var instance;
