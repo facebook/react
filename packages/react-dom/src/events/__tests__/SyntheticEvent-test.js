@@ -23,11 +23,14 @@ describe('SyntheticEvent', () => {
 
     createEvent = (nativeEvent, callback) => {
       var instance;
-      
+
       var container = document.createElement('div');
-      ReactDOM.render(<div ref={ref => instance = ref} onClick={callback} />, container);
-      ReactTestUtils.SimulateNative.click(instance, nativeEvent)
-    }
+      ReactDOM.render(
+        <div ref={ref => (instance = ref)} onClick={callback} />,
+        container,
+      );
+      ReactTestUtils.SimulateNative.click(instance, nativeEvent);
+    };
   });
 
   // TODO: This is not testable with the public APIs, write a test for getEventTarget
@@ -45,9 +48,9 @@ describe('SyntheticEvent', () => {
       expect(syntheticEvent.isDefaultPrevented()).toBe(false);
       syntheticEvent.preventDefault();
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
-  
+
       expect(syntheticEvent.defaultPrevented).toBe(true);
-      
+
       // TODO: Figure out why this is undefined when switching to public API
       // expect(nativeEvent.returnValue).toBe(false);
     });
@@ -55,11 +58,9 @@ describe('SyntheticEvent', () => {
 
   it('should be prevented if nativeEvent is prevented', () => {
     createEvent({defaultPrevented: true}, syntheticEvent => {
-      expect(syntheticEvent.isDefaultPrevented()).toBe(
-        true,
-      );
+      expect(syntheticEvent.isDefaultPrevented()).toBe(true);
     });
-    
+
     createEvent({returnValue: false}, syntheticEvent => {
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
     });
@@ -68,7 +69,6 @@ describe('SyntheticEvent', () => {
   it('should be able to `stopPropagation`', () => {
     var nativeEvent = {};
     createEvent(nativeEvent, syntheticEvent => {
-
       expect(syntheticEvent.isPropagationStopped()).toBe(false);
       syntheticEvent.stopPropagation();
       expect(syntheticEvent.isPropagationStopped()).toBe(true);
@@ -80,7 +80,6 @@ describe('SyntheticEvent', () => {
 
   it('should be able to `persist`', () => {
     createEvent({}, syntheticEvent => {
-
       expect(syntheticEvent.isPersistent()).toBe(false);
       syntheticEvent.persist();
       expect(syntheticEvent.isPersistent()).toBe(true);
@@ -193,7 +192,7 @@ describe('SyntheticEvent', () => {
     var syntheticEvent;
     createEvent({}, e => {
       e.foo = 'bar';
-      syntheticEvent  = e;
+      syntheticEvent = e;
     });
 
     expect(syntheticEvent.foo).toBe('bar');
