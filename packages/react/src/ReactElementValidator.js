@@ -214,6 +214,7 @@ function validateChildKeys(node, parentType) {
  *
  * @param {ReactElement} element
  */
+var propTypesMisspellWarningShown;
 function validatePropTypes(element) {
   var componentClass = element.type;
   if (typeof componentClass !== 'function') {
@@ -221,12 +222,14 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   var propTypes = componentClass.propTypes;
-  if (componentClass.PropTypes !== undefined) {
+  if (
+    componentClass.PropTypes !== undefined &&
+    !propTypesMisspellWarningShown
+  ) {
+    propTypesMisspellWarningShown = true;
     warning(
       false,
-      'Static propTypes method should be accessed by `%s.propTypes` instead of `%s.PropTypes`',
-      name,
-      name,
+      'Static propTypes method should be accessed by `.propTypes = { }` instead of `.PropTypes = { }`',
     );
   }
   if (propTypes) {
