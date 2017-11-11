@@ -601,7 +601,9 @@ function createBundle(bundle, bundleType) {
     })
     .catch(error => {
       if (error.code) {
-        console.error(`\x1b[31m-- ${error.code} (${error.plugin}) --`);
+        console.error(
+          `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
+        );
         console.error(error.message);
         console.error(error.frame);
       } else {
