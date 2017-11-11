@@ -16,11 +16,7 @@ export default function(
     '\n    in ' +
     (name || 'Unknown') +
     (source
-      ? ' (at ' +
-        source.fileName.replace(/^.*[\\\/]/, '') +
-        ':' +
-        source.lineNumber +
-        ')'
+      ? ' (at ' + source.fileName + ':' + source.lineNumber + ')'
       : ownerName ? ' (created by ' + ownerName + ')' : '')
   );
 }

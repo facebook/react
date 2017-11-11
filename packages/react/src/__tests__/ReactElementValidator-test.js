@@ -505,13 +505,10 @@ describe('ReactElementValidator', () => {
   });
 
   it('does not blow up on key warning with undefined type', () => {
-    const path = require('path');
     spyOn(console, 'error');
     var Foo = undefined;
     void <Foo>{[<div />]}</Foo>;
     expectDev(console.error.calls.count()).toBe(1);
-    const relativePathToFile = path.relative(process.cwd(), __filename);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(relativePathToFile);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
       'Warning: React.createElement: type is invalid -- expected a string ' +
         '(for built-in components) or a class/function (for composite ' +

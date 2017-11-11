@@ -13,6 +13,7 @@
  */
 
 import lowPriorityWarning from 'shared/lowPriorityWarning';
+import parseStackInfo from 'shared/parseStackInfo';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
 import checkPropTypes from 'prop-types/checkPropTypes';
@@ -296,14 +297,14 @@ export function createElementWithValidation(type, props, children) {
     }
 
     info += getStackAddendum() || '';
-
+    const parsedInfo = parseStackInfo(info);
     warning(
       false,
       'React.createElement: type is invalid -- expected a string (for ' +
         'built-in components) or a class/function (for composite ' +
         'components) but got: %s.%s',
       type == null ? type : typeof type,
-      info,
+      parsedInfo,
     );
   }
 
