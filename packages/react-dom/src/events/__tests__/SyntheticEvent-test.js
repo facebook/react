@@ -80,7 +80,7 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  it('should be prevented if nativeEvent is prevented', () => {
+  test.only('should be prevented if nativeEvent is prevented', () => {
     var instance;
     var expectedCount = 0;
 
@@ -101,18 +101,20 @@ describe('SyntheticEvent', () => {
     });
     instance.dispatchEvent(event);
 
-    // TODO: figure out why this fails
-    // event = document.createEvent('Event');
-    // event.initEvent('click', true, true);
-    // Object.defineProperty(event, 'returnValue', {
-    //   get(){
-    //     return false;
-    //   }
-    // });
-    // instance.dispatchEvent(event);
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    // Emulate IE8
+    Object.defineProperty(event, 'defaultPrevented', {
+      get() {}
+    });
+    Object.defineProperty(event, 'returnValue', {
+      get(){
+        return false;
+      }
+    });
+    instance.dispatchEvent(event);
 
-    // TODO: change to 2 when problem above is resolved
-    expect(expectedCount).toBe(1);
+    expect(expectedCount).toBe(2);
   });
 
   it('should be able to `stopPropagation`', () => {
