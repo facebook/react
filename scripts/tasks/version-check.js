@@ -6,12 +6,43 @@
  */
 
 'use strict';
-const execSync = require('child_process').execSync;
+const execFileSync = require('child_process').execFileSync;
+const yarnCmds = ['yarnpkg', 'yarn'];
 
-function getLocalYarnVersion() {
-  return execSync('yarn --version', {
+function getVersion(cmd) {
+  return execFileSync(cmd, ['--version'], {
     encoding: 'utf-8',
   }).trim();
+}
+
+function getLocalYarnVersion() {
+  let yarnVersion;
+  let caughtError = null;
+
+  const isInstalledYarn = yarnCmds.some(function(cmd) {
+    try {
+      yarnVersion = getVersion(cmd);
+      return true;
+    } catch (err) {
+      caughtError = err;
+      return false;
+    }
+  });
+
+  if (isInstalledYarn) {
+    return yarnVersion;
+  } else {
+    if (caughtError.code === 'ENOENT') {
+      console.log(
+        'It seems like you not have yarn globally, ' +
+          'see https://yarnpkg.com/lang/en/docs/install/ to install yarn'
+      );
+    } else {
+      throw caughtError;
+    }
+
+    process.exit(1);
+  }
 }
 
 function gte(left, right) {
