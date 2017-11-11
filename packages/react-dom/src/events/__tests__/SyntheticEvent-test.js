@@ -23,7 +23,6 @@ describe('SyntheticEvent', () => {
 
     createEvent = (nativeEvent, callback) => {
       var instance;
-
       var container = document.createElement('div');
       ReactDOM.render(
         <div ref={ref => (instance = ref)} onClick={callback} />,
