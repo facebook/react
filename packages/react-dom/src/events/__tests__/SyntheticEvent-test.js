@@ -67,8 +67,6 @@ describe('SyntheticEvent', () => {
       syntheticEvent.preventDefault();
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
       expect(syntheticEvent.defaultPrevented).toBe(true);
-      // TODO: Figure out why this is undefined when switching to public API
-      // expect(nativeEvent.returnValue).toBe(false);
 
       expectedCount++;
     };
@@ -125,8 +123,6 @@ describe('SyntheticEvent', () => {
       expect(syntheticEvent.isPropagationStopped()).toBe(false);
       syntheticEvent.stopPropagation();
       expect(syntheticEvent.isPropagationStopped()).toBe(true);
-      // TODO: Figure out why this is undefined when switching to public API
-      // expect(nativeEvent.cancelBubble).toBe(true);
 
       expectedCount++;
     };
