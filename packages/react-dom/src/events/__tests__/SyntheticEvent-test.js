@@ -80,7 +80,7 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  test.only('should be prevented if nativeEvent is prevented', () => {
+  it('should be prevented if nativeEvent is prevented', () => {
     var instance;
     var expectedCount = 0;
 
@@ -105,12 +105,12 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     // Emulate IE8
     Object.defineProperty(event, 'defaultPrevented', {
-      get() {}
+      get() {},
     });
     Object.defineProperty(event, 'returnValue', {
-      get(){
+      get() {
         return false;
-      }
+      },
     });
     instance.dispatchEvent(event);
 
