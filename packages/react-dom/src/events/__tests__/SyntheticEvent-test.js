@@ -11,6 +11,7 @@
 
 var React;
 var ReactDOM;
+var ReactTestUtils;
 
 describe('SyntheticEvent', () => {
   var container;
@@ -18,6 +19,7 @@ describe('SyntheticEvent', () => {
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -37,12 +39,7 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -75,12 +72,7 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -99,20 +91,15 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
     event.initEvent('click', true, true);
     Object.defineProperty(event, 'defaultPrevented', {
-      get(){
+      get() {
         return true;
-      }
+      },
     });
     instance.dispatchEvent(event);
 
@@ -126,7 +113,8 @@ describe('SyntheticEvent', () => {
     // });
     // instance.dispatchEvent(event);
 
-    // expect(expectedCount).toBe(2);
+    // TODO: change to 2 when problem above is resolved
+    expect(expectedCount).toBe(1);
   });
 
   it('should be able to `stopPropagation`', () => {
@@ -142,12 +130,7 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -170,12 +153,7 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -208,12 +186,7 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -247,12 +220,7 @@ describe('SyntheticEvent', () => {
 
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -277,12 +245,7 @@ describe('SyntheticEvent', () => {
       syntheticEvent = e;
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -311,12 +274,7 @@ describe('SyntheticEvent', () => {
       syntheticEvent = e;
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
@@ -374,12 +332,7 @@ describe('SyntheticEvent', () => {
       syntheticEvent = e;
       expectedCount++;
     };
-    instance = ReactDOM.render(
-      <div
-        onClick={eventHandler}
-      />,
-      container,
-    );
+    instance = ReactDOM.render(<div onClick={eventHandler} />, container);
 
     var event;
     event = document.createEvent('Event');
