@@ -142,8 +142,7 @@ function getRollupOutputOptions(
     {},
     {
       destDir: 'build/',
-      file:
-        'build/' +
+      file: 'build/' +
         Packaging.getOutputPathRelativeToBuildFolder(
           bundleType,
           filename,
