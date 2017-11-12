@@ -26,7 +26,7 @@ var HTMLDOMPropertyConfig = {
     // autoFocus is polyfilled/normalized by AutoFocusUtils
     // autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
-    capture: HAS_BOOLEAN_VALUE,
+    capture: HAS_OVERLOADED_BOOLEAN_VALUE,
     checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
     contentEditable: HAS_STRING_BOOLEAN_VALUE,
