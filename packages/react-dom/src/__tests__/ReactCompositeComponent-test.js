@@ -48,11 +48,9 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var toggleActivatedState = this._toggleActivatedState;
-        return !this.state.activated ? (
-          <a ref="x" onClick={toggleActivatedState} />
-        ) : (
-          <b ref="x" onClick={toggleActivatedState} />
-        );
+        return !this.state.activated
+          ? <a ref="x" onClick={toggleActivatedState} />
+          : <b ref="x" onClick={toggleActivatedState} />;
       }
     };
 
@@ -67,11 +65,9 @@ describe('ReactCompositeComponent', () => {
 
       render() {
         var className = this.props.anchorClassOn ? 'anchorClass' : '';
-        return this.props.renderAnchor ? (
-          <a ref="anch" className={className} />
-        ) : (
-          <b />
-        );
+        return this.props.renderAnchor
+          ? <a ref="anch" className={className} />
+          : <b />;
       }
     };
   });

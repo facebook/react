@@ -41,7 +41,8 @@ class InputPlaceholderFixture extends React.Component {
           type="text"
           placeholder={placeholder}
           onChange={this.handleChange}
-        />{' '}
+        />
+        {' '}
         <button onClick={this.handleGeneratePlaceholder}>
           Change placeholder
         </button>

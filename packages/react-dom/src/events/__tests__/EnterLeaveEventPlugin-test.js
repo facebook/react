@@ -109,9 +109,8 @@ describe('EnterLeaveEventPlugin', () => {
           <div
             onMouseEnter={() => parentEnterCalls++}
             ref={node => (parent = node)}>
-            {this.props.showChild && (
-              <div onMouseEnter={() => childEnterCalls++} />
-            )}
+            {this.props.showChild &&
+              <div onMouseEnter={() => childEnterCalls++} />}
           </div>
         );
       }

@@ -1832,8 +1832,8 @@ describe('ReactDOMComponent', () => {
       var previousLine = (matches || [])[1];
 
       expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches =
-        console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {};
+      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {
+      };
       var currentLine = (matches || [])[1];
 
       //verify line number has a proper relative difference,

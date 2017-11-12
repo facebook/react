@@ -99,10 +99,9 @@ function SyntheticEvent(
     }
   }
 
-  var defaultPrevented =
-    nativeEvent.defaultPrevented != null
-      ? nativeEvent.defaultPrevented
-      : nativeEvent.returnValue === false;
+  var defaultPrevented = nativeEvent.defaultPrevented != null
+    ? nativeEvent.defaultPrevented
+    : nativeEvent.returnValue === false;
   if (defaultPrevented) {
     this.isDefaultPrevented = emptyFunction.thatReturnsTrue;
   } else {

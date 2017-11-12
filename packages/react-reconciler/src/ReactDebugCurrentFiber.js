@@ -8,7 +8,9 @@
  */
 
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
+import {
+  getStackAddendumByWorkInProgressFiber,
+} from 'shared/ReactFiberComponentTreeHook';
 import getComponentName from 'shared/getComponentName';
 
 import type {Fiber} from './ReactFiber';

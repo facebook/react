@@ -390,8 +390,7 @@ describe('ReactCompositeComponent-state', () => {
         this.setState({step: 2}, () => {
           // Tests that earlier setState callbacks are not dropped
           ops.push(
-            `callback -- step: ${this.state.step}, extra: ${!!this.state
-              .extra}`,
+            `callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
           );
         });
         // Treat like replaceState
@@ -438,8 +437,7 @@ describe('ReactCompositeComponent-state', () => {
         this.setState({step: 2}, () => {
           // Tests that earlier setState callbacks are not dropped
           ops.push(
-            `callback -- step: ${this.state.step}, extra: ${!!this.state
-              .extra}`,
+            `callback -- step: ${this.state.step}, extra: ${!!this.state.extra}`,
           );
         });
         // Treat like replaceState

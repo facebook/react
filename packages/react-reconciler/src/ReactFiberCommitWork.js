@@ -119,8 +119,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case HostRoot: {
         const updateQueue = finishedWork.updateQueue;
         if (updateQueue !== null) {
-          const instance =
-            finishedWork.child !== null ? finishedWork.child.stateNode : null;
+          const instance = finishedWork.child !== null
+            ? finishedWork.child.stateNode
+            : null;
           commitCallbacks(updateQueue, instance);
         }
         return;
@@ -621,8 +622,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // For hydration we reuse the update path but we treat the oldProps
         // as the newProps. The updatePayload will contain the real change in
         // this case.
-        const oldText: string =
-          current !== null ? current.memoizedProps : newText;
+        const oldText: string = current !== null
+          ? current.memoizedProps
+          : newText;
         commitTextUpdate(textInstance, oldText, newText);
         return;
       }

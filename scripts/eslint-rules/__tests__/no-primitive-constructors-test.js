@@ -20,8 +20,7 @@ ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
       code: 'Boolean(obj)',
       errors: [
         {
-          message:
-            'Do not use the Boolean constructor. To cast a value to a boolean, use double negation: !!value',
+          message: 'Do not use the Boolean constructor. To cast a value to a boolean, use double negation: !!value',
         },
       ],
     },
@@ -29,8 +28,7 @@ ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
       code: 'String(obj)',
       errors: [
         {
-          message:
-            'Do not use the String constructor. ' +
+          message: 'Do not use the String constructor. ' +
             'To cast a value to a string, concat it with the empty string ' +
             "(unless it's a symbol, which has different semantics): '' + value",
         },
@@ -40,8 +38,7 @@ ruleTester.run('eslint-rules/no-primitive-constructors', rule, {
       code: 'Number(string)',
       errors: [
         {
-          message:
-            'Do not use the Number constructor. To cast a value to a number, use the plus operator: +value',
+          message: 'Do not use the Number constructor. To cast a value to a number, use the plus operator: +value',
         },
       ],
     },
