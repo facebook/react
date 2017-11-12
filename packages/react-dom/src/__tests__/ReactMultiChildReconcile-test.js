@@ -113,15 +113,15 @@ class FriendsStatusDisplay extends React.Component {
     for (var key in this.props.usernameToStatus) {
       var status = this.props.usernameToStatus[key];
       children.push(
-        !status ? null : (
-          <StatusDisplay
-            key={key}
-            ref={key}
-            contentKey={key}
-            onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
-            status={status}
-          />
-        ),
+        !status
+          ? null
+          : <StatusDisplay
+              key={key}
+              ref={key}
+              contentKey={key}
+              onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
+              status={status}
+            />,
       );
     }
     var childrenToRender = this.props.prepareChildren(children);

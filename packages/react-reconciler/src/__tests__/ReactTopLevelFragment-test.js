@@ -40,11 +40,9 @@ describe('ReactTopLevelFragment', function() {
     }
 
     function Fragment({condition}) {
-      return condition ? (
-        <Stateful key="a" />
-      ) : (
-        [<Stateful key="a" />, <div key="b">World</div>]
-      );
+      return condition
+        ? <Stateful key="a" />
+        : [<Stateful key="a" />, <div key="b">World</div>];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();
@@ -72,11 +70,9 @@ describe('ReactTopLevelFragment', function() {
     }
 
     function Fragment({condition}) {
-      return condition ? (
-        <Stateful key="a" />
-      ) : (
-        [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />]
-      );
+      return condition
+        ? <Stateful key="a" />
+        : [[<Stateful key="a" />, <div key="b">World</div>], <div key="c" />];
     }
     ReactNoop.render(<Fragment />);
     ReactNoop.flush();

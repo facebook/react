@@ -540,10 +540,9 @@ function expectOne(
     return all[0];
   }
 
-  const prefix =
-    all.length === 0
-      ? 'No instances found '
-      : `Expected 1 but found ${all.length} instances `;
+  const prefix = all.length === 0
+    ? 'No instances found '
+    : `Expected 1 but found ${all.length} instances `;
 
   throw new Error(prefix + message);
 }

@@ -95,11 +95,7 @@ if (!ExecutionEnvironment.canUseDOM) {
   }
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey =
-    '__reactIdleCallback$' +
-    Math.random()
-      .toString(36)
-      .slice(2);
+  var messageKey = '__reactIdleCallback$' + Math.random().toString(36).slice(2);
   var idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
@@ -134,8 +130,9 @@ if (!ExecutionEnvironment.canUseDOM) {
       // running on 120hz display or 90hz VR display.
       // Take the max of the two in case one of them was an anomaly due to
       // missed frame deadlines.
-      activeFrameTime =
-        nextFrameTime < previousFrameTime ? previousFrameTime : nextFrameTime;
+      activeFrameTime = nextFrameTime < previousFrameTime
+        ? previousFrameTime
+        : nextFrameTime;
     } else {
       previousFrameTime = nextFrameTime;
     }

@@ -67,8 +67,8 @@ describe('ReactIncrementalSideEffects', () => {
           {props.text === 'World'
             ? [<Bar key="a" text={props.text} />, <div key="b" />]
             : props.text === 'Hi'
-              ? [<div key="b" />, <Bar key="a" text={props.text} />]
-              : null}
+                ? [<div key="b" />, <Bar key="a" text={props.text} />]
+                : null}
           <span prop="test" />
         </div>
       );
@@ -161,13 +161,11 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.useClass ? (
-            <ClassComponent />
-          ) : props.useFunction ? (
-            <FunctionalComponent />
-          ) : props.useText ? (
-            'Text'
-          ) : null}
+          {props.useClass
+            ? <ClassComponent />
+            : props.useFunction
+                ? <FunctionalComponent />
+                : props.useText ? 'Text' : null}
           Trail
         </div>
       );
@@ -213,11 +211,9 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.useClass ? (
-            <ClassComponent key="a" />
-          ) : props.useFunction ? (
-            <FunctionalComponent key="a" />
-          ) : null}
+          {props.useClass
+            ? <ClassComponent key="a" />
+            : props.useFunction ? <FunctionalComponent key="a" /> : null}
           Trail
         </div>
       );
@@ -315,14 +311,12 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div hidden={true}>
-          {props.step === 0 ? (
-            <div>
-              <Bar>Hi</Bar>
-              <Bar>{props.text}</Bar>
-            </div>
-          ) : (
-            middleContent
-          )}
+          {props.step === 0
+            ? <div>
+                <Bar>Hi</Bar>
+                <Bar>{props.text}</Bar>
+              </div>
+            : middleContent}
         </div>
       );
     }
@@ -1003,13 +997,13 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     function Foo(props) {
-      return props.show ? (
-        <div>
-          <ClassComponent ref={n => ops.push(n)} />
-          <FunctionalComponent ref={n => ops.push(n)} />
-          <div ref={n => ops.push(n)} />
-        </div>
-      ) : null;
+      return props.show
+        ? <div>
+            <ClassComponent ref={n => ops.push(n)} />
+            <FunctionalComponent ref={n => ops.push(n)} />
+            <div ref={n => ops.push(n)} />
+          </div>
+        : null;
     }
 
     ReactNoop.render(<Foo show={true} />);
