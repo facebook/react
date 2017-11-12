@@ -35,7 +35,7 @@ class MouseMove extends React.Component {
         <p>
           Was the event pooled?{' '}
           <b>
-            {events.length ? (events.length <= 1 ? 'Yes' : 'No') : 'Unsure'} (
+            {events.length ? events.length <= 1 ? 'Yes' : 'No' : 'Unsure'} (
             {events.length} events)
           </b>
         </p>

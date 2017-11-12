@@ -30,7 +30,8 @@ class SwitchDateTestCase extends React.Component {
               type="checkbox"
               checked={this.state.fullDate}
               onChange={this.updateFullDate}
-            />{' '}
+            />
+            {' '}
             Switch type
           </label>
         </p>

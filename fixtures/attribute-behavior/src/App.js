@@ -185,9 +185,7 @@ function getCanonicalizedValue(value) {
       if (typeof value.length === 'number') {
         return (
           '[' +
-          Array.from(value)
-            .map(v => getCanonicalizedValue(v))
-            .join(', ') +
+          Array.from(value).map(v => getCanonicalizedValue(v)).join(', ') +
           ']'
         );
       }
@@ -461,9 +459,7 @@ function prepareState(initGlobals) {
       hasSameBehaviorForAll,
       rowPatternHash,
       // "Good enough" id that we can store in localStorage
-      rowIdHash: `${attribute.name} ${attribute.tagName} ${
-        attribute.overrideStringValue
-      }`,
+      rowIdHash: `${attribute.name} ${attribute.tagName} ${attribute.overrideStringValue}`,
     };
     const rowGroup = rowPatternHashes.get(rowPatternHash) || new Set();
     rowGroup.add(row);
@@ -681,11 +677,9 @@ function CellContent(props) {
       <RowHeader
         checked={completedHashes.has(rowPatternHash)}
         onChange={() => toggleAttribute(rowPatternHash)}>
-        {row.hasSameBehaviorForAll ? (
-          attribute.name
-        ) : (
-          <b css={{color: 'purple'}}>{attribute.name}</b>
-        )}
+        {row.hasSameBehaviorForAll
+          ? attribute.name
+          : <b css={{color: 'purple'}}>{attribute.name}</b>}
       </RowHeader>
     );
   }
@@ -760,10 +754,8 @@ class App extends React.Component {
   async componentDidMount() {
     const sources = {
       ReactStable: 'https://unpkg.com/react@latest/umd/react.development.js',
-      ReactDOMStable:
-        'https://unpkg.com/react-dom@latest/umd/react-dom.development.js',
-      ReactDOMServerStable:
-        'https://unpkg.com/react-dom@latest/umd/react-dom-server.browser.development.js',
+      ReactDOMStable: 'https://unpkg.com/react-dom@latest/umd/react-dom.development.js',
+      ReactDOMServerStable: 'https://unpkg.com/react-dom@latest/umd/react-dom-server.browser.development.js',
       ReactNext: '/react.development.js',
       ReactDOMNext: '/react-dom.development.js',
       ReactDOMServerNext: '/react-dom-server.browser.development.js',
@@ -868,12 +860,12 @@ class App extends React.Component {
       case ALPHABETICAL:
         return filteredAttributes.sort(
           (attr1, attr2) =>
-            attr1.name.toLowerCase() < attr2.name.toLowerCase() ? -1 : 1
+            (attr1.name.toLowerCase() < attr2.name.toLowerCase() ? -1 : 1)
         );
       case REV_ALPHABETICAL:
         return filteredAttributes.sort(
           (attr1, attr2) =>
-            attr1.name.toLowerCase() < attr2.name.toLowerCase() ? 1 : -1
+            (attr1.name.toLowerCase() < attr2.name.toLowerCase() ? 1 : -1)
         );
       case GROUPED_BY_ROW_PATTERN: {
         return filteredAttributes.sort((attr1, attr2) => {
@@ -903,8 +895,7 @@ class App extends React.Component {
 
     let log = '';
     for (let attribute of attributes) {
-      log += `## \`${attribute.name}\` (on \`<${attribute.tagName ||
-        'div'}>\` inside \`<${attribute.containerTagName || 'div'}>\`)\n`;
+      log += `## \`${attribute.name}\` (on \`<${attribute.tagName || 'div'}>\` inside \`<${attribute.containerTagName || 'div'}>\`)\n`;
       log += '| Test Case | Flags | Result |\n';
       log += '| --- | --- | --- |\n';
 
@@ -959,9 +950,8 @@ class App extends React.Component {
       return (
         <div>
           <h1>Loading...</h1>
-          {!useFastMode && (
-            <h3>The progress is reported in the window title.</h3>
-          )}
+          {!useFastMode &&
+            <h3>The progress is reported in the window title.</h3>}
         </div>
       );
     }

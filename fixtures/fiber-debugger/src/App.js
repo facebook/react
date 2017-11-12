@@ -160,15 +160,14 @@ class App extends Component {
 
     return (
       <div style={{height: '100%'}}>
-        {fibers && (
+        {fibers &&
           <Draggable>
             <Fibers
               fibers={fibers}
               show={this.state.show}
               graphSettings={this.state.graphSettings}
             />
-          </Draggable>
-        )}
+          </Draggable>}
         <div
           style={{
             width: '100%',
@@ -188,8 +187,7 @@ class App extends Component {
               max={history.length - 1}
               value={currentStep}
               onChange={e =>
-                this.setState({currentStep: Number(e.target.value)})
-              }
+                this.setState({currentStep: Number(e.target.value)})}
             />
             <p>
               Step {currentStep}
