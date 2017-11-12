@@ -17,6 +17,8 @@ function getTrackedValue(elem) {
   return elem.value;
 }
 
+
+
 var setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
   'checked',
@@ -27,31 +29,55 @@ var setUntrackedValue = Object.getOwnPropertyDescriptor(
   'value',
 ).set;
 
+function getEvent(type, opts) {
+  var event = document.createEvent('Event');
+  event.initEvent(type, true, true);
+  return event;
+}
+
+function dispatchEventOnNode(node, type) {
+  //console.log(`Dispatch ${type}`, node.checked);
+  var res = node.dispatchEvent(
+    new Event( type, {bubbles: true, cancelable: true} ));
+}
+
 describe('ChangeEventPlugin', () => {
-  it('should fire change for checkbox input', () => {
+  it('should fire click for checkbox input', () => {
     var called = 0;
 
     function cb(e) {
       called = 1;
-      expect(e.type).toBe('change');
+      expect(e.type).toBe('click');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(
-      <input type="checkbox" onChange={cb} />,
+    var container = document.createElement('div');
+
+    var stub = ReactDOM.render(
+      <input type="checkbox" onClick={cb}/>,
+      container
     );
 
-    setUntrackedChecked.call(input, true);
-    ReactTestUtils.SimulateNative.click(input);
+    document.body.appendChild(container);
 
-    expect(called).toBe(1);
+    var node = ReactDOM.findDOMNode(stub);
+
+    setUntrackedChecked.call(node, false); // track and set to false
+    dispatchEventOnNode(node, 'click'); // make it true
+
+    expect(called).toBe(1); // onClick has been called
+    expect(node.checked).toBe(true); // tracked property is now true
+
+    document.body.removeChild(container);
   });
 
   it('should catch setting the value programmatically', () => {
-    var input = ReactTestUtils.renderIntoDocument(
-      <input type="text" defaultValue="foo" />,
+    var container = document.createElement('div');
+    var ref = ReactDOM.render(
+      <input type="text" defaultValue="foo" />, container
     );
+    var input = ReactDOM.findDOMNode(ref);
+    setUntrackedValue.call(input, 'bar');
 
-    input.value = 'bar';
     expect(getTrackedValue(input)).toBe('bar');
   });
 
@@ -63,17 +89,20 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    var input = ReactTestUtils.renderIntoDocument(
-      <input type="text" onChange={cb} defaultValue="foo" />,
+    var container = document.createElement('div');
+    var ref = ReactDOM.render(
+      <input type="text" onChange={cb} defaultValue="foo" />, container
     );
+    var input = ReactDOM.findDOMNode(ref);
 
     input.value = 'bar';
-    ReactTestUtils.SimulateNative.change(input);
+    dispatchEventOnNode(input, 'change');
     expect(called).toBe(0);
 
     setUntrackedValue.call(input, 'foo');
-    ReactTestUtils.SimulateNative.change(input);
+    expect(input.value).toBe('foo');
 
+    dispatchEventOnNode(input, 'change');
     expect(called).toBe(1);
   });
 
@@ -90,11 +119,11 @@ describe('ChangeEventPlugin', () => {
     );
 
     input.checked = true;
-    ReactTestUtils.SimulateNative.click(input);
+    input.dispatchEvent(getEvent('click'));
     expect(called).toBe(0);
 
     setUntrackedChecked.call(input, false);
-    ReactTestUtils.SimulateNative.click(input);
+    input.dispatchEvent(getEvent('click'));
 
     expect(called).toBe(1);
   });
@@ -117,8 +146,8 @@ describe('ChangeEventPlugin', () => {
       <input type="radio" onChange={cb} />,
     );
     setUntrackedChecked.call(input, true);
-    ReactTestUtils.SimulateNative.click(input);
-    ReactTestUtils.SimulateNative.click(input);
+    input.dispatchEvent(getEvent('click'));
+    input.dispatchEvent(getEvent('click'));
     expect(called).toBe(1);
   });
 
@@ -140,22 +169,22 @@ describe('ChangeEventPlugin', () => {
       input = ReactTestUtils.renderIntoDocument(element);
 
       setUntrackedValue.call(input, '40');
-      ReactTestUtils.SimulateNative.change(input);
-      ReactTestUtils.SimulateNative.change(input);
+      input.dispatchEvent(getEvent('change'));
+      input.dispatchEvent(getEvent('change'));
       expect(called).toBe(1);
 
       called = 0;
       input = ReactTestUtils.renderIntoDocument(element);
       setUntrackedValue.call(input, '40');
-      ReactTestUtils.SimulateNative.input(input);
-      ReactTestUtils.SimulateNative.input(input);
+      input.dispatchEvent(getEvent('input'));
+      input.dispatchEvent(getEvent('input'));
       expect(called).toBe(1);
 
       called = 0;
       input = ReactTestUtils.renderIntoDocument(element);
       setUntrackedValue.call(input, '40');
-      ReactTestUtils.SimulateNative.input(input);
-      ReactTestUtils.SimulateNative.change(input);
+      input.dispatchEvent(getEvent('input'));
+      input.dispatchEvent(getEvent('change'));
       expect(called).toBe(1);
     });
   });
@@ -173,11 +202,11 @@ describe('ChangeEventPlugin', () => {
     );
     setUntrackedValue.call(input, 'bar');
 
-    ReactTestUtils.SimulateNative.input(input);
+    input.dispatchEvent(getEvent('input'));
 
     setUntrackedValue.call(input, 'foo');
 
-    ReactTestUtils.SimulateNative.change(input);
+    input.dispatchEvent(getEvent('change'));
 
     expect(called).toBe(2);
   });
@@ -194,13 +223,13 @@ describe('ChangeEventPlugin', () => {
       <input type="range" onChange={cb} />,
     );
     setUntrackedValue.call(input, '40');
-    ReactTestUtils.SimulateNative.input(input);
-    ReactTestUtils.SimulateNative.change(input);
+    input.dispatchEvent(getEvent('input'));
+    input.dispatchEvent(getEvent('change'));
 
     setUntrackedValue.call(input, 'foo');
 
-    ReactTestUtils.SimulateNative.input(input);
-    ReactTestUtils.SimulateNative.change(input);
+    input.dispatchEvent(getEvent('input'));
+    input.dispatchEvent(getEvent('change'));
     expect(called).toBe(2);
   });
 });
