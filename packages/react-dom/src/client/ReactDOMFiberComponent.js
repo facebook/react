@@ -62,6 +62,7 @@ if (__DEV__) {
     time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
+    noindex: true
   };
 
   var validatePropertiesInDevelopment = function(type, props) {
