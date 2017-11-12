@@ -21,7 +21,7 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @param {string} text
  * @internal
  */
-var setTextContent = function(node, text) {
+let setTextContent = function(node, text) {
   if (text) {
     let firstChild = node.firstChild;
 
