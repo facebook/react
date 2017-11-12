@@ -52,7 +52,7 @@ export function postMountWrapper(element: Element, props: Object) {
 }
 
 export function getHostProps(element: Element, props: Object) {
-  const hostProps = {...{children: undefined}, ...props};
+  const hostProps = {children: undefined, ...props};
   const content = flattenChildren(props.children);
 
   if (content) {

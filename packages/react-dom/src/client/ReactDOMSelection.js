@@ -20,12 +20,7 @@ export function getOffsets(outerNode) {
     return null;
   }
 
-  const {
-    anchorNode,
-    anchorOffset,
-    focusNode,
-    focusOffset,
-  } = selection;
+  const {anchorNode, anchorOffset, focusNode, focusOffset} = selection;
 
   // In Firefox, anchorNode and focusNode can be "anonymous divs", e.g. the
   // up/down buttons on an <input type="number">. Anonymous divs do not seem to

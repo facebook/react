@@ -52,11 +52,12 @@ export function getHostProps(element: Element, props: Object) {
   // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
   // solution. The value can be a boolean or object so that's why it's forced
   // to be a string.
-  var hostProps = Object.assign({}, props, {
+  const hostProps = {
+    ...props,
     value: undefined,
     defaultValue: undefined,
     children: '' + node._wrapperState.initialValue,
-  });
+  };
 
   return hostProps;
 }
