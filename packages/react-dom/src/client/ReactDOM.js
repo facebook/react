@@ -459,22 +459,27 @@ const DOMRenderer = ReactFiberReconciler({
       instance: Instance | TextInstance,
       type: string,
       props: Props,
-    ): boolean {
-      return (
-        instance.nodeType === ELEMENT_NODE &&
-        type.toLowerCase() === instance.nodeName.toLowerCase()
-      );
+    ): null | Instance {
+      if (
+        instance.nodeType !== ELEMENT_NODE ||
+        type.toLowerCase() !== instance.nodeName.toLowerCase()
+      ) {
+        return null;
+      }
+      // This has now been refined to an element node.
+      return ((instance: any): Instance);
     },
 
     canHydrateTextInstance(
       instance: Instance | TextInstance,
       text: string,
-    ): boolean {
-      if (text === '') {
+    ): null | TextInstance {
+      if (text === '' || instance.nodeType !== TEXT_NODE) {
         // Empty strings are not parsed by HTML so there won't be a correct match here.
-        return false;
+        return null;
       }
-      return instance.nodeType === TEXT_NODE;
+      // This has now been refined to a text node.
+      return ((instance: any): TextInstance);
     },
 
     getNextHydratableSibling(

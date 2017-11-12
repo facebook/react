@@ -33,8 +33,8 @@ import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
 var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   captureError: (failedFiber: Fiber, error: mixed) => Fiber | null,
 ) {
   const {getPublicInstance, mutation, persistence} = config;

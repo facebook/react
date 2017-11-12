@@ -114,14 +114,14 @@ export function insertUpdateIntoFiber<State>(
     // It depends on which fiber is the next current. Initialize with an empty
     // base state, then set to the memoizedState when rendering. Not super
     // happy with this approach.
-    queue1 = fiber.updateQueue = createUpdateQueue(null);
+    queue1 = fiber.updateQueue = createUpdateQueue((null: any));
   }
 
   let queue2;
   if (alternateFiber !== null) {
     queue2 = alternateFiber.updateQueue;
     if (queue2 === null) {
-      queue2 = alternateFiber.updateQueue = createUpdateQueue(null);
+      queue2 = alternateFiber.updateQueue = createUpdateQueue((null: any));
     }
   } else {
     queue2 = null;
