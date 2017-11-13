@@ -33,6 +33,5 @@ export default {
   renderToStaticMarkup,
   renderToNodeStream,
   renderToStaticNodeStream,
+  version: ReactVersion,
 };
-
-export const version = ReactVersion;
