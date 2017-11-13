@@ -25,8 +25,8 @@
       "gzip": 3316
     },
     "react-dom.development.js (UMD_DEV)": {
-      "size": 567829,
-      "gzip": 132387
+      "size": 570566,
+      "gzip": 133054
     },
     "react-dom.production.min.js (UMD_PROD)": {
       "size": 94627,
