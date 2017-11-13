@@ -4,6 +4,24 @@
     Changes that have landed in master but are not yet released.
     Click to see more.
   </summary>
+
+### React
+
+* Improve the warning about undefined component type. ([@selbekk](https://github.com/selbekk) in [#11505](https://github.com/facebook/react/pull/11505))
+
+### React DOM
+
+* Support string values for the `capture` attribute. ([@maxschmeling](https://github.com/maxschmeling) in [#11424](https://github.com/facebook/react/pull/11424))
+
+### React DOM Server
+
+* Don't freeze the `ReactDOMServer` public API. ([@travi](https://github.com/travi) in [#11531](https://github.com/facebook/react/pull/11531))
+* Don't emit `autoFocus={false}` attribute on the server. ([@gaearon](https://github.com/gaearon) in [#11543](https://github.com/facebook/react/pull/11543))
+
+### React Reconciler
+
+* Change the hydration API for better Flow typing. ([@sebmarkbage](https://github.com/sebmarkbage) in [#11493](https://github.com/facebook/react/pull/11493))
+
 </details>
 
 ## 16.1.0 (November 9, 2017)
