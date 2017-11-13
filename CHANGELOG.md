@@ -5,6 +5,10 @@
     Click to see more.
   </summary>
 
+</details>
+
+## 16.1.1 (November 13, 2017)
+
 ### React
 
 * Improve the warning about undefined component type. ([@selbekk](https://github.com/selbekk) in [#11505](https://github.com/facebook/react/pull/11505))
@@ -21,8 +25,6 @@
 ### React Reconciler
 
 * Change the hydration API for better Flow typing. ([@sebmarkbage](https://github.com/sebmarkbage) in [#11493](https://github.com/facebook/react/pull/11493))
-
-</details>
 
 ## 16.1.0 (November 9, 2017)
 
