@@ -845,7 +845,7 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>baz:bar</div>);
   });
 
-  it('this.state should be updated on setState callback inside componentWillMount', function() {
+  it('this.state should be updated on setState callback inside componentWillMount', () => {
     let stateSuccessfullyUpdated = false;
 
     class Component extends React.Component {
@@ -871,6 +871,36 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<Component />);
     expect(stateSuccessfullyUpdated).toBe(true);
+  });
+
+  it('should call the setState callback even if shouldComponentUpdate = false', () => {
+    const mockFn = jest.fn().mockReturnValue(false);
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
+      }
+
+      shouldComponentUpdate() {
+        return mockFn();
+      }
+
+      render() {
+        return <div>{this.state.hasUpdatedState}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+
+    const mountedInstance = shallowRenderer.getMountedInstance();
+    mountedInstance.setState({hasUpdatedState: true}, () => {
+      expect(mockFn).toBeCalled();
+      expect(mountedInstance.state.hasUpdatedState).toBe(true);
+    });
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
