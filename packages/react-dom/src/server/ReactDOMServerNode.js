@@ -22,4 +22,3 @@ export default {
   renderToStaticNodeStream,
   version: ReactVersion,
 };
-
