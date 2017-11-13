@@ -9,7 +9,7 @@
 
 const lintOnFiles = require('../eslint');
 const report = lintOnFiles(['.']);
-if (report.errorCount > 0) {
+if (report.errorCount > 0 || report.warningCount > 0) {
   console.log('Lint failed.');
   process.exit(1);
 } else {
