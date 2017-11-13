@@ -144,17 +144,11 @@ export function initWrapperState(element: Element, props: Object) {
   };
 }
 
-export function updateChecked(
-  element: Element,
-  props: Object,
-  targetType: ?string,
-) {
+export function updateChecked(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
-  if (!targetType || targetType === node.type) {
-    var checked = props.checked;
-    if (checked != null) {
-      DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
-    }
+  var checked = props.checked;
+  if (checked != null) {
+    DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
   }
 }
 
