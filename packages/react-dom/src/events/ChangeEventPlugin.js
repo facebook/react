@@ -60,6 +60,10 @@ var activeElementInst = null;
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem) {
+  if (elem.window === elem) {
+    return false;
+  }
+
   var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
