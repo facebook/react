@@ -27,7 +27,7 @@ const changedFiles = execFileSync(
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 
 const report = lintOnFiles(jsFiles);
-if (report.errorCount > 0) {
+if (report.errorCount > 0 || report.warningCount > 0) {
   console.log('Lint failed for changed files.');
   process.exit(1);
 } else {
