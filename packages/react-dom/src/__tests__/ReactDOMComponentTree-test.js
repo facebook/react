@@ -13,39 +13,19 @@ describe('ReactDOMComponentTree', () => {
   let React;
   let ReactDOM;
   let ReactDOMServer;
-
-  function renderMarkupIntoDocument(elt) {
-    const container = document.createElement('div');
-    // Force server-rendering path:
-    container.innerHTML = ReactDOMServer.renderToString(elt);
-    return ReactDOM.hydrate(elt, container);
-  }
-
-  function simulateInput(elem, value) {
-    const inputEvent = new Event('input', {
-      bubbles: true,
-    });
-    setUntrackedInputValue.call(elem, value);
-    elem.dispatchEvent(inputEvent);
-  }
-
-  function simulateClick(elem) {
-    const event = new MouseEvent('click', {
-      bubbles: true,
-    });
-    elem.dispatchEvent(event);
-  }
-
-  const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
-    HTMLInputElement.prototype,
-    'value',
-  ).set;
+  let container;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
-    document.innerHTML = '';
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   it('finds nodes for instances', () => {
@@ -68,7 +48,12 @@ describe('ReactDOMComponentTree', () => {
     }
 
     function renderAndGetRef(toRef) {
-      const inst = renderMarkupIntoDocument(<Component toRef={toRef} />);
+      // We need to unmount any React components from previous assertions in
+      // this test
+      ReactDOM.unmountComponentAtNode(container);
+      const elt = <Component toRef={toRef} />;
+      container.innerHTML = ReactDOMServer.renderToString(elt);
+      const inst = ReactDOM.hydrate(elt, container);
       return inst.refs.target.nodeName;
     }
 
@@ -99,10 +84,15 @@ describe('ReactDOMComponentTree', () => {
       }
     }
 
+    function simulateClick(elem) {
+      const event = new MouseEvent('click', {
+        bubbles: true,
+      });
+      elem.dispatchEvent(event);
+    }
+
     const component = <ClosestInstance />;
-    const container = document.createElement('div');
     ReactDOM.render(<section>{component}</section>, container);
-    document.body.appendChild(container);
     expect(currentTargetID).toBe(null);
     simulateClick(document.getElementById(nonReactElemID));
     expect(currentTargetID).toBe(closestInstanceID);
@@ -130,10 +120,21 @@ describe('ReactDOMComponentTree', () => {
       }
     }
 
+    const setUntrackedInputValue = Object.getOwnPropertyDescriptor(
+      HTMLInputElement.prototype,
+      'value',
+    ).set;
+
+    function simulateInput(elem, value) {
+      const inputEvent = new Event('input', {
+        bubbles: true,
+      });
+      setUntrackedInputValue.call(elem, value);
+      elem.dispatchEvent(inputEvent);
+    }
+
     const component = <Controlled />;
-    const container = document.createElement('div');
     const instance = ReactDOM.render(component, container);
-    document.body.appendChild(container);
     spyOn(console, 'error');
     expectDev(console.error.calls.count()).toBe(0);
     simulateInput(instance.a, finishValue);
@@ -151,7 +152,6 @@ describe('ReactDOMComponentTree', () => {
   it('finds instance of node that is attempted to be unmounted', () => {
     spyOn(console, 'error');
     const component = <div />;
-    const container = document.createElement('div');
     const node = ReactDOM.render(<div>{component}</div>, container);
     ReactDOM.unmountComponentAtNode(node);
     expectDev(console.error.calls.count()).toBe(1);
@@ -171,7 +171,6 @@ describe('ReactDOMComponentTree', () => {
       </div>
     );
     const anotherComponent = <div />;
-    const container = document.createElement('div');
     const instance = ReactDOM.render(component, container);
     ReactDOM.render(anotherComponent, instance);
     expectDev(console.error.calls.count()).toBe(1);
