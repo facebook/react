@@ -1591,7 +1591,7 @@ describe('ReactCompositeComponent', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
-  it('should call the setState callback even if shouldComponentUpdate = false', () => {
+  it('should call the setState callback even if shouldComponentUpdate = false', done => {
     const mockFn = jest.fn().mockReturnValue(false);
     const div = document.createElement('div');
 
@@ -1626,6 +1626,7 @@ describe('ReactCompositeComponent', () => {
     instance.setState({hasUpdatedState: true}, () => {
       expect(mockFn).toBeCalled();
       expect(instance.state.hasUpdatedState).toBe(true);
+      done();
     });
   });
 
