@@ -103,7 +103,7 @@ class ReactShallowRenderer {
     }
 
     this._rendering = false;
-    this._updater._invokeCallback();
+    this._updater._invokeCallbackIfNecessary();
 
     return this.getRenderOutput();
   }
@@ -204,7 +204,7 @@ class Updater {
     }
   }
 
-  _invokeCallback() {
+  _invokeCallbackIfNecessary() {
     if (typeof this._callback === 'function' && this._publicInstance) {
       const {_callback, _publicInstance} = this;
       this._callback = null;

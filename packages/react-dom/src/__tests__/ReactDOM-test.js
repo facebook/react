@@ -341,10 +341,9 @@ describe('ReactDOM', () => {
 
   it('should call the setState callback even if shouldComponentUpdate = false', () => {
     const mockFn = jest.fn().mockReturnValue(false);
-    let setState, getState;
-
     const div = document.createElement('div');
-    document.body.appendChild(div);
+
+    let instance;
 
     class Component extends React.Component {
       constructor(props, context) {
@@ -355,8 +354,7 @@ describe('ReactDOM', () => {
       }
 
       componentWillMount() {
-        setState = (newState, callback) => this.setState(newState, callback);
-        getState = () => this.state;
+        instance = this;
       }
 
       shouldComponentUpdate() {
@@ -370,13 +368,12 @@ describe('ReactDOM', () => {
 
     ReactDOM.render(<Component />, div);
 
-    expect(setState).toBeDefined();
-    expect(getState).toBeDefined();
+    expect(instance).toBeDefined();
     expect(mockFn).not.toBeCalled();
 
-    setState({hasUpdatedState: true}, () => {
+    instance.setState({hasUpdatedState: true}, () => {
       expect(mockFn).toBeCalled();
-      expect(getState().hasUpdatedState).toBe(true);
+      expect(instance.state.hasUpdatedState).toBe(true);
     });
   });
 });
