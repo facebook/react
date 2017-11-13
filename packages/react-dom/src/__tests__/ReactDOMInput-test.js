@@ -1276,8 +1276,8 @@ describe('ReactDOMInput', () => {
       'set attribute min',
       'set attribute max',
       'set attribute step',
-      'set attribute value',
       'set property value',
+      'set attribute value',
       'set attribute checked',
       'set attribute checked',
     ]);
@@ -1341,8 +1341,8 @@ describe('ReactDOMInput', () => {
     );
     expect(log).toEqual([
       'node.setAttribute("type", "date")',
-      'node.setAttribute("value", "1980-01-01")',
       'node.value = "1980-01-01"',
+      'node.setAttribute("value", "1980-01-01")',
       'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
