@@ -3,7 +3,7 @@
 const chalk = require('chalk');
 const {dots} = require('cli-spinners');
 const {exec} = require('child-process-promise');
-const {readdirSync, readFileSync} = require('fs');
+const {readdirSync, readFileSync, statSync} = require('fs');
 const logUpdate = require('log-update');
 const {join} = require('path');
 
@@ -28,9 +28,14 @@ const getPublicPackages = () => {
 
   return readdirSync(packagesRoot).filter(dir => {
     const packagePath = join(packagesRoot, dir, 'package.json');
-    const packageJSON = JSON.parse(readFileSync(packagePath));
 
-    return packageJSON.private !== true;
+    if (dir.charAt(0) !== '.' && statSync(packagePath).isFile()) {
+      const packageJSON = JSON.parse(readFileSync(packagePath));
+
+      return packageJSON.private !== true;
+    }
+
+    return false;
   });
 };
 
