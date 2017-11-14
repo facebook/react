@@ -1011,9 +1011,7 @@ describe('ReactErrorBoundaries', () => {
       'ErrorBoundary render error',
       'ErrorBoundary componentDidUpdate',
     ]);
-    expect(errorMessageRef.value.toString()).toEqual(
-      '[object HTMLDivElement]',
-    );
+    expect(errorMessageRef.value.toString()).toEqual('[object HTMLDivElement]');
 
     log.length = 0;
     ReactDOM.unmountComponentAtNode(container);
