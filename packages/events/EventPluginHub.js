@@ -41,7 +41,7 @@ var eventQueue: ?(Array<ReactSyntheticEvent> | ReactSyntheticEvent) = null;
  */
 var executeDispatchesAndRelease = function(
   event: ReactSyntheticEvent,
-  simulated,
+  simulated: boolean,
 ) {
   if (event) {
     executeDispatchesInOrder(event, simulated);
@@ -51,10 +51,10 @@ var executeDispatchesAndRelease = function(
     }
   }
 };
-var executeDispatchesAndReleaseSimulated = function(e: ReactSyntheticEvent) {
+var executeDispatchesAndReleaseSimulated = function(e) {
   return executeDispatchesAndRelease(e, true);
 };
-var executeDispatchesAndReleaseTopLevel = function(e: ReactSyntheticEvent) {
+var executeDispatchesAndReleaseTopLevel = function(e) {
   return executeDispatchesAndRelease(e, false);
 };
 
@@ -215,7 +215,11 @@ export function processEventQueue(simulated: boolean) {
   var processingEventQueue = eventQueue;
   eventQueue = null;
 
-  if (simulated && processingEventQueue) {
+  if (!processingEventQueue) {
+    return;
+  }
+
+  if (simulated) {
     forEachAccumulated(
       processingEventQueue,
       executeDispatchesAndReleaseSimulated,
