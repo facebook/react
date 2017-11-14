@@ -46,6 +46,6 @@ export type ReactPortal = {
   implementation: any,
 };
 
-export type RefObject = {
-  contents: any,
-};
+export type RefObject = {|
+  value: any,
+|};

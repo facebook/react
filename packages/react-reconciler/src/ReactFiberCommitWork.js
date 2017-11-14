@@ -88,7 +88,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         }
       } else {
-        ref.contents = null;
+        ref.value = null;
       }
     }
   }
@@ -177,7 +177,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (typeof ref === 'function') {
         ref(instanceToUse);
       } else {
-        ref.contents = instanceToUse;
+        ref.value = instanceToUse;
       }
     }
   }
@@ -188,7 +188,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (typeof currentRef === 'function') {
         currentRef(null);
       } else {
-        currentRef.contents = null;
+        currentRef.value = null;
       }
     }
   }

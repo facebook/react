@@ -7,9 +7,10 @@
 
 import type {RefObject} from 'shared/ReactTypes';
 
+// an immutable object with a single mutable value
 export function createRef(): RefObject {
   const refObject = {
-    contents: null,
+    value: null,
   };
   if (__DEV__) {
     Object.seal(refObject);
