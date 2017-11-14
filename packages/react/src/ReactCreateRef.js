@@ -8,11 +8,11 @@
 import type {RefObject} from 'shared/ReactTypes';
 
 export function createRef(): RefObject {
-	const refObject = {
-		contents: null,
-	};
-	if (__DEV__) {
-		Object.seal(refObject);
-	}
-	return refObject;
+  const refObject = {
+    contents: null,
+  };
+  if (__DEV__) {
+    Object.seal(refObject);
+  }
+  return refObject;
 }

@@ -47,6 +47,5 @@ export type ReactPortal = {
 };
 
 export type RefObject = {
-	contents: any,
+  contents: any,
 };
-

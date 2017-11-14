@@ -208,9 +208,7 @@ describe('ReactComponent', () => {
         this.outerRef = React.createRef();
       }
       render() {
-        var inner = (
-          <Wrapper object={innerObj} ref={this.innerRef} />
-        );
+        var inner = <Wrapper object={innerObj} ref={this.innerRef} />;
         var outer = (
           <Wrapper object={outerObj} ref={this.outerRef}>
             {inner}

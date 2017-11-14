@@ -73,7 +73,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function safelyDetachRef(current: Fiber) {
     const ref = current.ref;
     if (ref !== null) {
-      if (typeof ref === "function") {
+      if (typeof ref === 'function') {
         if (__DEV__) {
           invokeGuardedCallback(null, ref, null, null);
           if (hasCaughtError()) {
