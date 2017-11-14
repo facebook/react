@@ -19,7 +19,7 @@ function getLocalYarnVersion() {
   let yarnVersion;
   let caughtError = null;
 
-  const isInstalledYarn = yarnCmds.some(function(cmd) {
+  const isYarnInstalled = yarnCmds.some(function(cmd) {
     try {
       yarnVersion = getVersion(cmd);
       return true;
@@ -29,13 +29,13 @@ function getLocalYarnVersion() {
     }
   });
 
-  if (isInstalledYarn) {
+  if (isYarnInstalled) {
     return yarnVersion;
   } else {
     if (caughtError.code === 'ENOENT') {
       console.log(
-        'It seems like you not have yarn globally, ' +
-          'see https://yarnpkg.com/lang/en/docs/install/ to install yarn'
+        'Could not find a Yarn installation. Please make sure Yarn is installed and ' +
+          'that the `yarn` command works in your command line shell.'
       );
     } else {
       throw caughtError;
