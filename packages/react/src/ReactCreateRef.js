@@ -6,7 +6,7 @@
  */
 
 export type RefObject = {
-	contents: Node | null
+	contents: any,
 };
 
 export function createRef(): RefObject {
