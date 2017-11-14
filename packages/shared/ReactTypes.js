@@ -45,3 +45,8 @@ export type ReactPortal = {
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
 };
+
+export type RefObject = {
+	contents: any,
+};
+

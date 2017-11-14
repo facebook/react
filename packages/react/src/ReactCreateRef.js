@@ -5,9 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-export type RefObject = {
-	contents: any,
-};
+import type {RefObject} from 'shared/ReactTypes';
 
 export function createRef(): RefObject {
 	const refObject = {
