@@ -25,6 +25,8 @@ import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 if (__DEV__) {
   var currentlyValidatingElement = null;
 
+  var propTypesMisspellWarningShown = false;
+
   var getDisplayName = function(element): string {
     if (element == null) {
       return '#empty';
@@ -214,7 +216,6 @@ function validateChildKeys(node, parentType) {
  *
  * @param {ReactElement} element
  */
-var propTypesMisspellWarningShown;
 function validatePropTypes(element) {
   var componentClass = element.type;
   if (typeof componentClass !== 'function') {
