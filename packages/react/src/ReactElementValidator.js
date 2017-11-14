@@ -222,20 +222,20 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   var propTypes = componentClass.propTypes;
-  if (
+  if (propTypes) {
+    currentlyValidatingElement = element;
+    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
+    currentlyValidatingElement = null;
+  } else if (
     componentClass.PropTypes !== undefined &&
     !propTypesMisspellWarningShown
   ) {
     propTypesMisspellWarningShown = true;
     warning(
       false,
-      'Static propTypes method should be accessed by `.propTypes = { }` instead of `.PropTypes = { }`',
+      'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
+      name || 'Unknown',
     );
-  }
-  if (propTypes) {
-    currentlyValidatingElement = element;
-    checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
-    currentlyValidatingElement = null;
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
