@@ -25,7 +25,11 @@ describe('ReactDOMOption', () => {
   });
 
   it('should flatten children to a string', () => {
-    var stub = <option>{1} {'foo'}</option>;
+    var stub = (
+      <option>
+        {1} {'foo'}
+      </option>
+    );
     stub = ReactTestUtils.renderIntoDocument(stub);
     var node = ReactDOM.findDOMNode(stub);
 
@@ -34,7 +38,11 @@ describe('ReactDOMOption', () => {
 
   it('should ignore and warn invalid children types', () => {
     spyOn(console, 'error');
-    var el = <option>{1} <div /> {2}</option>;
+    var el = (
+      <option>
+        {1} <div /> {2}
+      </option>
+    );
     var node = ReactTestUtils.renderIntoDocument(el);
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(el);
@@ -50,7 +58,14 @@ describe('ReactDOMOption', () => {
   });
 
   it('should ignore null/undefined/false children without warning', () => {
-    var stub = <option>{1} {false}{true}{null}{undefined} {2}</option>;
+    var stub = (
+      <option>
+        {1} {false}
+        {true}
+        {null}
+        {undefined} {2}
+      </option>
+    );
     spyOn(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 

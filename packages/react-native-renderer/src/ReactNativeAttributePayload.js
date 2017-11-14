@@ -106,9 +106,10 @@ function restoreDeletedValuesInNestedArray(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        var nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         updatePayload[propKey] = nextValue;
       }
       removedKeys[propKey] = false;
@@ -123,9 +124,8 @@ function diffNestedArrayProperty(
   nextArray: Array<NestedNode>,
   validAttributes: AttributeConfiguration,
 ): ?Object {
-  var minLength = prevArray.length < nextArray.length
-    ? prevArray.length
-    : nextArray.length;
+  var minLength =
+    prevArray.length < nextArray.length ? prevArray.length : nextArray.length;
   var i;
   for (i = 0; i < minLength; i++) {
     // Diff any items in the array in the forward direction. Repeated keys
@@ -350,9 +350,10 @@ function diffProperties(
         typeof attributeConfig.process === 'function'
       ) {
         // case: CustomAttributeConfiguration
-        var nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        var nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         updatePayload[propKey] = nextValue;
       }
       continue;
@@ -380,9 +381,10 @@ function diffProperties(
           ? attributeConfig.diff(prevProp, nextProp)
           : defaultDiffer(prevProp, nextProp));
       if (shouldUpdate) {
-        nextValue = typeof attributeConfig.process === 'function'
-          ? attributeConfig.process(nextProp)
-          : nextProp;
+        nextValue =
+          typeof attributeConfig.process === 'function'
+            ? attributeConfig.process(nextProp)
+            : nextProp;
         (updatePayload || (updatePayload = {}))[propKey] = nextValue;
       }
     } else {

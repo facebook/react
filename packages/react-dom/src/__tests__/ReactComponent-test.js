@@ -104,7 +104,11 @@ describe('ReactComponent', () => {
     class Component extends React.Component {
       render() {
         var inner = <Wrapper object={innerObj} ref="inner" />;
-        var outer = <Wrapper object={outerObj} ref="outer">{inner}</Wrapper>;
+        var outer = (
+          <Wrapper object={outerObj} ref="outer">
+            {inner}
+          </Wrapper>
+        );
         return outer;
       }
 
@@ -120,7 +124,11 @@ describe('ReactComponent', () => {
   it('should not have refs on unmounted components', () => {
     class Parent extends React.Component {
       render() {
-        return <Child><div ref="test" /></Child>;
+        return (
+          <Child>
+            <div ref="test" />
+          </Child>
+        );
       }
 
       componentDidMount() {
@@ -334,7 +342,7 @@ describe('ReactComponent', () => {
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined. ' +
         "You likely forgot to export your component from the file it's " +
-        'defined in.',
+        'defined in, or you might have mixed up default and named imports.',
     );
 
     var Y = null;
@@ -357,7 +365,11 @@ describe('ReactComponent', () => {
     }
 
     function Bar() {
-      return <Indirection><X /></Indirection>;
+      return (
+        <Indirection>
+          <X />
+        </Indirection>
+      );
     }
 
     function Foo() {
@@ -368,7 +380,8 @@ describe('ReactComponent', () => {
       'Element type is invalid: expected a string (for built-in components) ' +
         'or a class/function (for composite components) but got: undefined. ' +
         "You likely forgot to export your component from the file it's " +
-        'defined in.\n\nCheck the render method of `Bar`.',
+        'defined in, or you might have mixed up default and named imports.' +
+        '\n\nCheck the render method of `Bar`.',
     );
 
     // One warning for each element creation
@@ -513,7 +526,11 @@ describe('ReactComponent', () => {
 
     it('warns on function as a child to host component', () => {
       function Foo() {
-        return <div><span>{Foo}</span></div>;
+        return (
+          <div>
+            <span>{Foo}</span>
+          </div>
+        );
       }
       spyOn(console, 'error');
       var container = document.createElement('div');
@@ -553,8 +570,12 @@ describe('ReactComponent', () => {
         render() {
           return (
             <div>
-              {Foo}{Foo}
-              <span>{Foo}{Foo}</span>
+              {Foo}
+              {Foo}
+              <span>
+                {Foo}
+                {Foo}
+              </span>
             </div>
           );
         }

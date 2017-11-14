@@ -18,7 +18,9 @@ module.exports = async ({cwd, version}) => {
 
   if (packageJson.version !== version) {
     throw Error(
-      chalk`Expected version {bold.white ${version}} but found {bold.white ${packageJson.version}}`
+      chalk`Expected version {bold.white ${version}} but found {bold.white ${
+        packageJson.version
+      }}`
     );
   }
 };

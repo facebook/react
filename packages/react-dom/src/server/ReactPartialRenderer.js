@@ -30,23 +30,16 @@ import {
   getIntrinsicNamespace,
   getChildNamespace,
 } from '../shared/DOMNamespaces';
-import ReactControlledValuePropTypes
-  from '../shared/ReactControlledValuePropTypes';
+import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
 import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
-import {
-  validateProperties as validateARIAProperties,
-} from '../shared/ReactDOMInvalidARIAHook';
-import {
-  validateProperties as validateInputProperties,
-} from '../shared/ReactDOMNullInputValuePropHook';
-import {
-  validateProperties as validateUnknownProperties,
-} from '../shared/ReactDOMUnknownPropertyHook';
+import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
+import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
+import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
 
 var REACT_FRAGMENT_TYPE =
   (typeof Symbol === 'function' &&
@@ -435,9 +428,10 @@ function resolve(
           var dontMutate = true;
           for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
             var partial = oldQueue[i];
-            var partialState = typeof partial === 'function'
-              ? partial.call(inst, nextState, element.props, publicContext)
-              : partial;
+            var partialState =
+              typeof partial === 'function'
+                ? partial.call(inst, nextState, element.props, publicContext)
+                : partial;
             if (partialState) {
               if (dontMutate) {
                 dontMutate = false;
@@ -828,9 +822,8 @@ class ReactDOMServerRenderer {
           didWarnDefaultSelectValue = true;
         }
       }
-      this.currentSelectValue = props.value != null
-        ? props.value
-        : props.defaultValue;
+      this.currentSelectValue =
+        props.value != null ? props.value : props.defaultValue;
       props = Object.assign({}, props, {
         value: undefined,
       });

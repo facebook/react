@@ -297,7 +297,10 @@ Noop.render(
     <div>Hello</div>
     <Children>
       Hello world
-      <span>{'Number '}{42}</span>
+      <span>
+        {'Number '}
+        {42}
+      </span>
       <Test active={true} ref={t => (instance = t)} />
     </Children>
   </main>
@@ -324,7 +327,7 @@ const expected1 = [
 assert.deepEqual(
   actual1,
   expected1,
-  'Error. Noop.getChildren() returned unexpected value.\nExpected:\  ' +
+  'Error. Noop.getChildren() returned unexpected value.\nExpected:  ' +
     JSON.stringify(expected1, null, 2) +
     '\n\nActual:\n  ' +
     JSON.stringify(actual1, null, 2)
@@ -357,7 +360,7 @@ const expected2 = [
 assert.deepEqual(
   actual2,
   expected2,
-  'Error. Noop.getChildren() returned unexpected value.\nExpected:\  ' +
+  'Error. Noop.getChildren() returned unexpected value.\nExpected:  ' +
     JSON.stringify(expected2, null, 2) +
     '\n\nActual:\n  ' +
     JSON.stringify(actual2, null, 2)

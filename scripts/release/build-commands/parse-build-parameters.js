@@ -35,11 +35,13 @@ module.exports = () => {
           },
           {
             desc: '2. Dry run build a release candidate (no git commits).',
-            example: '$ ./build.js [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
+            example:
+              '$ ./build.js [bold]{--dry} [bold]{-v} [underline]{16.0.0-rc.0}',
           },
           {
             desc: '3. Release from another checkout.',
-            example: '$ ./build.js [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
+            example:
+              '$ ./build.js [bold]{--version}=[underline]{16.0.0} [bold]{--path}=/path/to/react/repo',
           },
         ],
       },

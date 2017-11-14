@@ -128,7 +128,13 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       render() {
         instance = this;
-        return <span prop={Object.keys(this.state).sort().join('')} />;
+        return (
+          <span
+            prop={Object.keys(this.state)
+              .sort()
+              .join('')}
+          />
+        );
       }
     }
 
@@ -177,7 +183,13 @@ describe('ReactIncrementalUpdates', () => {
       state = {};
       render() {
         instance = this;
-        return <span prop={Object.keys(this.state).sort().join('')} />;
+        return (
+          <span
+            prop={Object.keys(this.state)
+              .sort()
+              .join('')}
+          />
+        );
       }
     }
 

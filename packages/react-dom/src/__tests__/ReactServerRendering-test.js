@@ -81,7 +81,11 @@ describe('ReactDOMServer', () => {
     it('should render composite components', () => {
       class Parent extends React.Component {
         render() {
-          return <div><Child name="child" /></div>;
+          return (
+            <div>
+              <Child name="child" />
+            </div>
+          );
         }
       }
 
@@ -198,7 +202,9 @@ describe('ReactDOMServer', () => {
 
         render() {
           return (
-            <span ref="span" onClick={this.click}>Name: {this.props.name}</span>
+            <span ref="span" onClick={this.click}>
+              Name: {this.props.name}
+            </span>
           );
         }
       }
@@ -376,6 +382,21 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
     });
 
+    it('should not focus on either server or client with autofocus={false}', () => {
+      var element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(
+        <input autoFocus={false} />,
+      );
+      expect(element.firstChild.autofocus).toBe(false);
+
+      element.firstChild.focus = jest.fn();
+      ReactDOM.hydrate(<input autoFocus={false} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+
+      ReactDOM.render(<input autoFocus={false} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+    });
+
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
@@ -410,7 +431,11 @@ describe('ReactDOMServer', () => {
 
       class TestComponent extends React.Component {
         render() {
-          return <span><NestedComponent /></span>;
+          return (
+            <span>
+              <NestedComponent />
+            </span>
+          );
         }
       }
 
@@ -422,7 +447,11 @@ describe('ReactDOMServer', () => {
     it('should not put checksum and React ID on text components', () => {
       class TestComponent extends React.Component {
         render() {
-          return <span>{'hello'} {'world'}</span>;
+          return (
+            <span>
+              {'hello'} {'world'}
+            </span>
+          );
         }
       }
 
@@ -595,7 +624,9 @@ describe('ReactDOMServer', () => {
       };
 
       var markup = ReactDOMServer.renderToString(
-        <ContextProvider><Component /></ContextProvider>,
+        <ContextProvider>
+          <Component />
+        </ContextProvider>,
       );
       expect(markup).toContain('hello, world');
     });

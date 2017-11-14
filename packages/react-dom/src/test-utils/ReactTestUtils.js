@@ -461,9 +461,10 @@ function makeNativeSimulator(eventType) {
 
 Object.keys(topLevelTypes).forEach(function(eventType) {
   // Event type is stored as 'topClick' - we transform that to 'click'
-  var convenienceName = eventType.indexOf('top') === 0
-    ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
-    : eventType;
+  var convenienceName =
+    eventType.indexOf('top') === 0
+      ? eventType.charAt(3).toLowerCase() + eventType.substr(4)
+      : eventType;
   /**
    * @param {!Element|ReactDOMComponent} domComponentOrNode
    * @param {?Event} nativeEventData Fake native event to use in SyntheticEvent.

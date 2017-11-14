@@ -281,6 +281,17 @@ export default function(
           'Did you mean componentWillUnmount()?',
         name,
       );
+      const noComponentDidReceiveProps =
+        typeof instance.componentDidReceiveProps !== 'function';
+      warning(
+        noComponentDidReceiveProps,
+        '%s has a method called ' +
+          'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+          'If you meant to update the state in response to changing props, ' +
+          'use componentWillReceiveProps(). If you meant to fetch data or ' +
+          'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+        name,
+      );
       const noComponentWillRecieveProps =
         typeof instance.componentWillRecieveProps !== 'function';
       warning(
@@ -634,8 +645,10 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate)
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.

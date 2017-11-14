@@ -9,13 +9,24 @@
 
 'use strict';
 
+var React;
+var ReactDOM;
+
 describe('getEventKey', () => {
-  var React;
-  var ReactDOM;
+  var container;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
+
+    // The container has to be attached for events to fire.
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   describe('when key is implemented in a browser', () => {
@@ -28,9 +39,7 @@ describe('getEventKey', () => {
           }
         }
 
-        var container = document.createElement('div');
         ReactDOM.render(<Comp />, container);
-        document.body.appendChild(container);
 
         var nativeEvent = new KeyboardEvent('keydown', {
           key: 'Del',
@@ -39,7 +48,6 @@ describe('getEventKey', () => {
         });
         container.firstChild.dispatchEvent(nativeEvent);
         expect(key).toBe('Delete');
-        document.body.removeChild(container);
       });
     });
 
@@ -52,9 +60,7 @@ describe('getEventKey', () => {
           }
         }
 
-        var container = document.createElement('div');
         ReactDOM.render(<Comp />, container);
-        document.body.appendChild(container);
 
         var nativeEvent = new KeyboardEvent('keydown', {
           key: 'f',
@@ -63,7 +69,6 @@ describe('getEventKey', () => {
         });
         container.firstChild.dispatchEvent(nativeEvent);
         expect(key).toBe('f');
-        document.body.removeChild(container);
       });
     });
   });
@@ -79,9 +84,7 @@ describe('getEventKey', () => {
             }
           }
 
-          var container = document.createElement('div');
           ReactDOM.render(<Comp />, container);
-          document.body.appendChild(container);
 
           var nativeEvent = new KeyboardEvent('keypress', {
             charCode: 13,
@@ -90,7 +93,6 @@ describe('getEventKey', () => {
           });
           container.firstChild.dispatchEvent(nativeEvent);
           expect(key).toBe('Enter');
-          document.body.removeChild(container);
         });
       });
 
@@ -103,9 +105,7 @@ describe('getEventKey', () => {
             }
           }
 
-          var container = document.createElement('div');
           ReactDOM.render(<Comp />, container);
-          document.body.appendChild(container);
 
           var nativeEvent = new KeyboardEvent('keypress', {
             charCode: 65,
@@ -114,7 +114,6 @@ describe('getEventKey', () => {
           });
           container.firstChild.dispatchEvent(nativeEvent);
           expect(key).toBe('A');
-          document.body.removeChild(container);
         });
       });
     });
@@ -129,9 +128,7 @@ describe('getEventKey', () => {
             }
           }
 
-          var container = document.createElement('div');
           ReactDOM.render(<Comp />, container);
-          document.body.appendChild(container);
 
           var nativeEvent = new KeyboardEvent('keydown', {
             keyCode: 45,
@@ -140,7 +137,6 @@ describe('getEventKey', () => {
           });
           container.firstChild.dispatchEvent(nativeEvent);
           expect(key).toBe('Insert');
-          document.body.removeChild(container);
         });
       });
 
@@ -153,9 +149,7 @@ describe('getEventKey', () => {
             }
           }
 
-          var container = document.createElement('div');
           ReactDOM.render(<Comp />, container);
-          document.body.appendChild(container);
 
           var nativeEvent = new KeyboardEvent('keydown', {
             keyCode: 1337,
@@ -164,7 +158,6 @@ describe('getEventKey', () => {
           });
           container.firstChild.dispatchEvent(nativeEvent);
           expect(key).toBe('Unidentified');
-          document.body.removeChild(container);
         });
       });
     });

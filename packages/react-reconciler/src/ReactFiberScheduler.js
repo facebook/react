@@ -13,9 +13,7 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {
-  getStackAddendumByWorkInProgressFiber,
-} from 'shared/ReactFiberComponentTreeHook';
+import {getStackAddendumByWorkInProgressFiber} from 'shared/ReactFiberComponentTreeHook';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {
@@ -35,6 +33,7 @@ import {
   HostPortal,
   ClassComponent,
 } from 'shared/ReactTypeOfWork';
+import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -49,6 +48,8 @@ import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
   recordEffect,
   recordScheduleUpdate,
+  startRequestCallbackTimer,
+  stopRequestCallbackTimer,
   startWorkTimer,
   stopWorkTimer,
   stopFailedWorkTimer,
@@ -143,8 +144,8 @@ if (__DEV__) {
   };
 }
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
@@ -215,6 +216,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
 
   let isCommitting: boolean = false;
   let isUnmounting: boolean = false;
+
+  // Used for performance tracking.
+  let interruptedBy: Fiber | null = null;
 
   function resetContextStack() {
     // Reset the stack
@@ -752,8 +756,6 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     root: FiberRoot,
     expirationTime: ExpirationTime,
   ): Fiber | null {
-    startWorkLoopTimer();
-
     invariant(
       !isWorking,
       'renderRoot was called recursively. This error is likely caused ' +
@@ -772,7 +774,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       expirationTime !== nextRenderExpirationTime ||
       nextUnitOfWork === null
     ) {
-      // This is a restart. Reset the stack.
+      // Reset the stack and start working from the root.
       resetContextStack();
       nextRoot = root;
       nextRenderExpirationTime = expirationTime;
@@ -782,6 +784,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
         expirationTime,
       );
     }
+
+    startWorkLoopTimer(nextUnitOfWork);
 
     let didError = false;
     let error = null;
@@ -865,11 +869,11 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     const uncaughtError = firstUncaughtError;
 
     // We're done performing work. Time to clean up.
+    stopWorkLoopTimer(interruptedBy);
+    interruptedBy = null;
     isWorking = false;
     didFatal = false;
     firstUncaughtError = null;
-
-    stopWorkLoopTimer();
 
     if (uncaughtError !== null) {
       onUncaughtError(uncaughtError);
@@ -1198,7 +1202,11 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
             root === nextRoot &&
             expirationTime <= nextRenderExpirationTime
           ) {
-            // This is an interruption. Restart the root from the top.
+            // Restart the root from the top.
+            if (nextUnitOfWork !== null) {
+              // This is an interruption. (Used for performance tracking.)
+              interruptedBy = fiber;
+            }
             nextRoot = null;
             nextUnitOfWork = null;
             nextRenderExpirationTime = NoWork;
@@ -1332,6 +1340,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       performWork(Sync, null);
     } else if (!isCallbackScheduled) {
       isCallbackScheduled = true;
+      startRequestCallbackTimer();
       scheduleDeferredCallback(performAsyncWork);
     }
   }
@@ -1420,8 +1429,14 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
-    // the deadlne.
+    // the deadline.
     findHighestPriorityRoot();
+
+    if (enableUserTimingAPI && deadline !== null) {
+      const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
+      stopRequestCallbackTimer(didExpire);
+    }
+
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
@@ -1444,6 +1459,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // If there's work left over, schedule a new callback.
     if (nextFlushedRoot !== null && !isCallbackScheduled) {
       isCallbackScheduled = true;
+      startRequestCallbackTimer();
       scheduleDeferredCallback(performAsyncWork);
     }
 

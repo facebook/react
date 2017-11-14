@@ -1,11 +1,10 @@
-import React from 'react';
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import RangeKeyboardFixture from './RangeKeyboardFixture';
 import RadioClickFixture from './RadioClickFixture';
 import RadioGroupFixture from './RadioGroupFixture';
 import InputPlaceholderFixture from './InputPlaceholderFixture';
+const React = window.React;
 
 class InputChangeEvents extends React.Component {
   render() {
@@ -24,8 +23,8 @@ class InputChangeEvents extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The <code>onKeyDown</code> call count should be equal to
-            the <code>onChange</code> call count.
+            The <code>onKeyDown</code> call count should be equal to the{' '}
+            <code>onChange</code> call count.
           </TestCase.ExpectedResult>
 
           <RangeKeyboardFixture />

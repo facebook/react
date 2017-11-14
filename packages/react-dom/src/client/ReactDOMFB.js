@@ -10,8 +10,7 @@
 import * as ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger
-  from 'react-reconciler/src/ReactFiberErrorLogger';
+import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 

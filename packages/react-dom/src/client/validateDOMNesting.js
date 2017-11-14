@@ -8,8 +8,7 @@
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import warning from 'fbjs/lib/warning';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber
-  from 'react-reconciler/src/ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 var validateDOMNesting = emptyFunction;

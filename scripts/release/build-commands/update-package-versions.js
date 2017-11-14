@@ -8,10 +8,9 @@ const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
 const semver = require('semver');
-const {projects} = require('../config');
 const {execUnlessDry, logPromise} = require('../utils');
 
-const update = async ({cwd, dry, version}) => {
+const update = async ({cwd, dry, packages, version}) => {
   try {
     // Update root package.json
     const packagePath = join(cwd, 'package.json');
@@ -60,7 +59,7 @@ const update = async ({cwd, dry, version}) => {
 
       await writeJson(path, json, {spaces: 2});
     };
-    await Promise.all(projects.map(updateProjectPackage));
+    await Promise.all(packages.map(updateProjectPackage));
 
     // Version sanity check
     await exec('yarn version-check', {cwd});

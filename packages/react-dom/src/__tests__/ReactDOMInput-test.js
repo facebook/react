@@ -629,7 +629,6 @@ describe('ReactDOMInput', () => {
             A
             <input ref="b" type="radio" name="fruit" onChange={emptyFunction} />
             B
-
             <form>
               <input
                 ref="c"

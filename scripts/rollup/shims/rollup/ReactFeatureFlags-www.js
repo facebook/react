@@ -18,7 +18,7 @@ export const {
 // The rest of the flags are static for better dead code elimination.
 export const enableAsyncSubtreeAPI = true;
 export const enableReactFragment = false;
-export const enableCreateRoot = false;
+export const enableCreateRoot = true;
 
 // The www bundles only use the mutating reconciler.
 export const enableMutatingReconciler = true;
@@ -62,6 +62,6 @@ function updateFlagOutsideOfReactCallStack() {
 
 // Flow magic to verify the exports of this file match the original version.
 // eslint-disable-next-line no-unused-vars
-type Check<_X, Y: _X, X: Y=_X> = null;
+type Check<_X, Y: _X, X: Y = _X> = null;
 // eslint-disable-next-line no-unused-expressions
 (null: Check<FeatureFlagsShimType, FeatureFlagsType>);

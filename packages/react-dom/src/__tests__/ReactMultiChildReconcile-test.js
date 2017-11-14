@@ -52,11 +52,7 @@ class StatusDisplay extends React.Component {
   }
 
   render() {
-    return (
-      <div>
-        {this.props.contentKey}
-      </div>
-    );
+    return <div>{this.props.contentKey}</div>;
   }
 }
 
@@ -65,10 +61,10 @@ class StatusDisplay extends React.Component {
  */
 class FriendsStatusDisplay extends React.Component {
   /**
-  * Gets the order directly from each rendered child's `index` field.
-  * Refs are not maintained in the rendered order, and neither is
-  * `this._renderedChildren` (surprisingly).
-  */
+   * Gets the order directly from each rendered child's `index` field.
+   * Refs are not maintained in the rendered order, and neither is
+   * `this._renderedChildren` (surprisingly).
+   */
   getOriginalKeys() {
     var originalKeys = [];
     for (var key in this.props.usernameToStatus) {
@@ -117,23 +113,19 @@ class FriendsStatusDisplay extends React.Component {
     for (var key in this.props.usernameToStatus) {
       var status = this.props.usernameToStatus[key];
       children.push(
-        !status
-          ? null
-          : <StatusDisplay
-              key={key}
-              ref={key}
-              contentKey={key}
-              onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
-              status={status}
-            />,
+        !status ? null : (
+          <StatusDisplay
+            key={key}
+            ref={key}
+            contentKey={key}
+            onFlush={this.verifyPreviousRefsResolved.bind(this, key)}
+            status={status}
+          />
+        ),
       );
     }
     var childrenToRender = this.props.prepareChildren(children);
-    return (
-      <div>
-        {childrenToRender}
-      </div>
-    );
+    return <div>{childrenToRender}</div>;
   }
 }
 

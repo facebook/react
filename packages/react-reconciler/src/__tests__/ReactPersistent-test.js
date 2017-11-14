@@ -152,7 +152,12 @@ describe('ReactPersistent', () => {
     }
 
     function Child(props) {
-      return <div><BailoutTest />{props.children}</div>;
+      return (
+        <div>
+          <BailoutTest />
+          {props.children}
+        </div>
+      );
     }
     const portalContainer = {rootID: 'persistent-portal-test', children: []};
     const emptyPortalChildSet = portalContainer.children;

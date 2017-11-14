@@ -233,11 +233,7 @@ describe('ReactChildren', () => {
       return kid;
     });
 
-    var instance = (
-      <div>
-        {[[zero, one, two], [three, four], five]}
-      </div>
-    );
+    var instance = <div>{[[zero, one, two], [three, four], five]}</div>;
 
     function assertCalls() {
       expect(callback.calls.count()).toBe(6);
@@ -327,11 +323,7 @@ describe('ReactChildren', () => {
       return kid;
     });
 
-    var instance = (
-      <div>
-        {threeDivIterable}
-      </div>
-    );
+    var instance = <div>{threeDivIterable}</div>;
 
     function assertCalls() {
       expect(callback.calls.count()).toBe(3);
@@ -385,11 +377,7 @@ describe('ReactChildren', () => {
       return kid;
     });
 
-    var instance = (
-      <div>
-        {threeDivIterable}
-      </div>
-    );
+    var instance = <div>{threeDivIterable}</div>;
 
     function assertCalls() {
       expect(callback.calls.count()).toBe(3);
@@ -815,11 +803,7 @@ describe('ReactChildren', () => {
     var four = <div key="keyFour" />;
     var five = <div key="keyFive" />;
 
-    var instance = (
-      <div>
-        {[[[zero, one, two], [three, four], five], null]}
-      </div>
-    );
+    var instance = <div>{[[[zero, one, two], [three, four], five], null]}</div>;
     var numberOfChildren = React.Children.count(instance.props.children);
     expect(numberOfChildren).toBe(7);
   });

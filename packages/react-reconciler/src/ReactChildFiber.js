@@ -10,9 +10,7 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactCall, ReactPortal, ReactReturn} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {
-  ExpirationTime,
-} from 'react-reconciler/src/ReactFiberExpirationTime';
+import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
 import {enableReactFragment} from 'shared/ReactFeatureFlags';
 import {NoEffect, Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
@@ -1092,7 +1090,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++, (step = newChildren.next())
+      newIdx++, step = newChildren.next()
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1147,7 +1145,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-      for (; !step.done; newIdx++, (step = newChildren.next())) {
+      for (; !step.done; newIdx++, step = newChildren.next()) {
         const newFiber = createChild(returnFiber, step.value, expirationTime);
         if (newFiber === null) {
           continue;
@@ -1168,7 +1166,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, (step = newChildren.next())) {
+    for (; !step.done; newIdx++, step = newChildren.next()) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,

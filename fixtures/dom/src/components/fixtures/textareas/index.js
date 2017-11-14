@@ -27,9 +27,7 @@ export default class TextAreaFixtures extends React.Component {
             </form>
             <div className="container">
               <h4>Controlled Output:</h4>
-              <div className="output">
-                {this.state.value}
-              </div>
+              <div className="output">{this.state.value}</div>
             </div>
           </div>
         </TestCase>
