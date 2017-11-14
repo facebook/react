@@ -13,12 +13,30 @@ import {
   trapBubbledEvent,
   trapCapturedEvent,
 } from './ReactDOMEventListener';
+import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isEventSupported from './isEventSupported';
 import BrowserEventConstants from './BrowserEventConstants';
 
 export * from 'events/ReactEventEmitterMixin';
 
 var {topLevelTypes} = BrowserEventConstants;
+
+const forceDelegation = {
+  topMouseOver: 1,
+  topMouseOut: 2,
+  topMouseEnter: 3,
+  topMouseLeave: 4,
+};
+
+function documentForRoot(rootContainerElement, registrationName) {
+  var isDocumentOrFragment =
+    rootContainerElement.nodeType === DOCUMENT_NODE ||
+    rootContainerElement.nodeType === DOCUMENT_FRAGMENT_NODE;
+
+  return isDocumentOrFragment
+    ? rootContainerElement
+    : rootContainerElement.ownerDocument;
+}
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -115,15 +133,22 @@ function getListeningForDocument(mountAt) {
  * @param {string} registrationName Name of listener (e.g. `onClick`).
  * @param {object} contentDocumentHandle Document which owns the container
  */
-export function listenTo(registrationName, contentDocumentHandle) {
+export function listenTo(registrationName, contentDocumentHandle, root) {
   var mountAt = contentDocumentHandle;
   var isListening = getListeningForDocument(mountAt);
   var dependencies = registrationNameDependencies[registrationName];
 
   for (var i = 0; i < dependencies.length; i++) {
     var dependency = dependencies[i];
+
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === 'topWheel') {
+      if (forceDelegation.hasOwnProperty(dependency)) {
+        trapBubbledEvent(
+          dependency,
+          topLevelTypes[dependency],
+          documentForRoot(root),
+        );
+      } else if (dependency === 'topWheel') {
         if (isEventSupported('wheel')) {
           trapBubbledEvent('topWheel', 'wheel', mountAt);
         } else if (isEventSupported('mousewheel')) {
