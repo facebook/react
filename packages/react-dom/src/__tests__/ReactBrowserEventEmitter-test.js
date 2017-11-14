@@ -373,26 +373,27 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   it('should listen to events only once', () => {
+    let button = document.createElement('button');
     spyOn(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, button);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, button);
     expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
   });
 
   it('should work with event plugins without dependencies', () => {
+    let button = document.createElement('button');
     spyOn(EventTarget.prototype, 'addEventListener');
-
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, button);
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
     );
   });
 
   it('should work with event plugins with dependencies', () => {
+    let button = document.createElement('button');
     spyOn(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, button);
 
     var setEventListeners = [];
     var listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
