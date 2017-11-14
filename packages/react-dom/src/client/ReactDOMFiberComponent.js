@@ -351,7 +351,7 @@ function updateDOMProperties(
 }
 
 export function createElement(
-  type: *,
+  type: string,
   props: Object,
   rootContainerElement: Element | Document,
   parentNamespace: string,

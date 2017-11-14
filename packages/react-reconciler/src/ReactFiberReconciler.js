@@ -45,7 +45,7 @@ export type Deadline = {
 type OpaqueHandle = Fiber;
 type OpaqueRoot = FiberRoot;
 
-export type HostConfig<T, P, I, TI, PI, C, CC, CX, PL> = {
+export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
   getRootHostContext(rootContainerInstance: C): CX,
   getChildHostContext(parentHostContext: CX, type: T, instance: C): CX,
   getPublicInstance(instance: I | TI): PI,
@@ -95,7 +95,7 @@ export type HostConfig<T, P, I, TI, PI, C, CC, CX, PL> = {
 
   useSyncScheduling?: boolean,
 
-  +hydration?: HydrationHostConfig<T, P, I, TI, C, CX, PL>,
+  +hydration?: HydrationHostConfig<T, P, I, TI, HI, C, CX, PL>,
 
   +mutation?: MutableUpdatesHostConfig<T, P, I, TI, C, PL>,
   +persistence?: PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL>,
@@ -150,12 +150,12 @@ type PersistentUpdatesHostConfig<T, P, I, TI, C, CC, PL> = {
   replaceContainerChildren(container: C, newChildren: CC): void,
 };
 
-type HydrationHostConfig<T, P, I, TI, C, CX, PL> = {
+type HydrationHostConfig<T, P, I, TI, HI, C, CX, PL> = {
   // Optional hydration
-  canHydrateInstance(instance: I | TI, type: T, props: P): boolean,
-  canHydrateTextInstance(instance: I | TI, text: string): boolean,
-  getNextHydratableSibling(instance: I | TI): null | I | TI,
-  getFirstHydratableChild(parentInstance: I | C): null | I | TI,
+  canHydrateInstance(instance: HI, type: T, props: P): null | I,
+  canHydrateTextInstance(instance: HI, text: string): null | TI,
+  getNextHydratableSibling(instance: I | TI | HI): null | HI,
+  getFirstHydratableChild(parentInstance: I | C): null | HI,
   hydrateInstance(
     instance: I,
     type: T,
@@ -269,8 +269,8 @@ function getContextForSubtree(
     : parentContext;
 }
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
   var {getPublicInstance} = config;
 
@@ -324,9 +324,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (
       enableAsyncSubtreeAPI &&
       element != null &&
-      element.type != null &&
-      element.type.prototype != null &&
-      (element.type.prototype: any).unstable_isAsyncReactComponent === true
+      (element: any).type != null &&
+      (element: any).type.prototype != null &&
+      (element: any).type.prototype.unstable_isAsyncReactComponent === true
     ) {
       expirationTime = computeAsyncExpiration();
     } else {

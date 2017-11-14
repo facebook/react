@@ -144,8 +144,8 @@ if (__DEV__) {
   };
 }
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(

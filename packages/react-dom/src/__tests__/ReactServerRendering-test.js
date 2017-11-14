@@ -382,6 +382,21 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
     });
 
+    it('should not focus on either server or client with autofocus={false}', () => {
+      var element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(
+        <input autoFocus={false} />,
+      );
+      expect(element.firstChild.autofocus).toBe(false);
+
+      element.firstChild.focus = jest.fn();
+      ReactDOM.hydrate(<input autoFocus={false} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+
+      ReactDOM.render(<input autoFocus={false} />, element);
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+    });
+
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),

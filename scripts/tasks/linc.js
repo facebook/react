@@ -7,12 +7,8 @@
 
 'use strict';
 
+const lintOnFiles = require('../eslint');
 const execFileSync = require('child_process').execFileSync;
-const CLIEngine = require('eslint').CLIEngine;
-
-const cli = new CLIEngine();
-const formatter = cli.getFormatter();
-
 const mergeBase = execFileSync('git', ['merge-base', 'HEAD', 'master'], {
   stdio: 'pipe',
   encoding: 'utf-8',
@@ -30,10 +26,8 @@ const changedFiles = execFileSync(
   .split('\n');
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 
-const report = cli.executeOnFiles(jsFiles);
-console.log(formatter(report.results));
-
-if (report.errorCount > 0) {
+const report = lintOnFiles(jsFiles);
+if (report.errorCount > 0 || report.warningCount > 0) {
   console.log('Lint failed for changed files.');
   process.exit(1);
 } else {

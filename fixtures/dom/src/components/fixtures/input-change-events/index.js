@@ -1,11 +1,10 @@
-import React from 'react';
-
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import RangeKeyboardFixture from './RangeKeyboardFixture';
 import RadioClickFixture from './RadioClickFixture';
 import RadioGroupFixture from './RadioGroupFixture';
 import InputPlaceholderFixture from './InputPlaceholderFixture';
+const React = window.React;
 
 class InputChangeEvents extends React.Component {
   render() {
