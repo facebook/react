@@ -122,7 +122,12 @@ function traverseAllChildrenImpl(
 ) {
   var type = typeof children;
 
-  const invokeCallback = () => {
+  if (type === 'undefined' || type === 'boolean') {
+    // All of the above are perceived as null.
+    children = null;
+  }
+
+  if (children === null) {
     callback(
       traverseContext,
       children,
@@ -130,22 +135,19 @@ function traverseAllChildrenImpl(
       // so that it's consistent if the number of children grows.
       nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
     );
-  };
-
-  if (type === 'undefined' || type === 'boolean') {
-    // All of the above are perceived as null.
-    children = null;
-  }
-
-  if (children === null) {
-    invokeCallback();
     return 1;
   }
 
   switch (type) {
     case 'string':
     case 'number':
-      invokeCallback();
+      callback(
+        traverseContext,
+        children,
+        // If it's the only child, treat the name as if it was wrapped in an array
+        // so that it's consistent if the number of children grows.
+        nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
+      );
       return 1;
     case 'object':
       switch (children.$$typeof) {
@@ -153,7 +155,15 @@ function traverseAllChildrenImpl(
         case REACT_CALL_TYPE:
         case REACT_RETURN_TYPE:
         case REACT_PORTAL_TYPE:
-          invokeCallback();
+          callback(
+            traverseContext,
+            children,
+            // If it's the only child, treat the name as if it was wrapped in an array
+            // so that it's consistent if the number of children grows.
+            nameSoFar === ''
+              ? SEPARATOR + getComponentKey(children, 0)
+              : nameSoFar,
+          );
           return 1;
       }
   }
