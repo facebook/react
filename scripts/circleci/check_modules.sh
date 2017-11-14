@@ -6,6 +6,7 @@ set -e
 EXPECTED='packages/react-cs-renderer/src/ReactNativeCSTypes.js
 packages/react-native-renderer/src/ReactNativeTypes.js
 packages/react-rt-renderer/src/ReactNativeRTTypes.js
+packages/shared/ReactTypes.js
 scripts/rollup/wrappers.js'
 ACTUAL=$(git grep -l @providesModule -- './*.js' ':!scripts/rollup/shims/*.js')
 
