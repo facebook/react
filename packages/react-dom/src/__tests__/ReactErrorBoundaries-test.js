@@ -2001,4 +2001,16 @@ describe('ReactErrorBoundaries', () => {
     // Error should be the first thrown
     expect(caughtError.message).toBe('child sad');
   });
+
+  it('propagates uncaught error inside unbatched initial mount', () => {
+    function Foo() {
+      throw new Error('foo error');
+    }
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.unstable_batchedUpdates(() => {
+        ReactDOM.render(<Foo />, container);
+      });
+    }).toThrow('foo error');
+  });
 });

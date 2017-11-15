@@ -1330,7 +1330,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (isUnbatchingUpdates) {
         // ...unless we're inside unbatchedUpdates, in which case we should
         // flush it now.
-        performWorkOnRoot(root, Sync);
+        nextFlushedRoot = root;
+        nextFlushedExpirationTime = Sync;
+        performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime);
       }
       return;
     }
