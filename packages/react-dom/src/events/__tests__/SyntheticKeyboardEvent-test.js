@@ -14,18 +14,19 @@ var ReactDOM;
 var SyntheticKeyboardEvent;
 var getEventCharCode;
 
+var React;
+var ReactDOM;
+
 describe('SyntheticKeyboardEvent', () => {
   var container;
 
   var createEvent;
-
   beforeEach(() => {    
     React = require('react');
     ReactDOM = require('react-dom');
     // The container has to be attached for events to fire.
     container = document.createElement('div');
     document.body.appendChild(container);
-
     // Mock getEventCharCode for proper unit testing
     // jest.mock('../getEventCharCode');
     getEventCharCode = require('../getEventCharCode').default;
@@ -41,6 +42,11 @@ describe('SyntheticKeyboardEvent', () => {
     document.body.removeChild(container);
     container = null;
   });
+
+  // afterEach(() => {
+  //   document.body.removeChild(container);
+  //   container = null;
+  // })
 
   describe('KeyboardEvent interface', () => {
     describe('charCode', () => {
@@ -65,7 +71,6 @@ describe('SyntheticKeyboardEvent', () => {
           });
           container.firstChild.dispatchEvent(nativeEvent);
           expect(charCode).toBe(65);
-          
         });
       });
       // AARBOLEDA PASSED
@@ -108,6 +113,7 @@ describe('SyntheticKeyboardEvent', () => {
           });
           container.firstChild.dispatchEvent(nativeEvent);
           expect(keyCode).toBe(40);
+
         });
       });
 
@@ -208,4 +214,3 @@ describe('SyntheticKeyboardEvent', () => {
   //     expect(syntheticEvent.isPersistent()).toBe(true);
   //   });
   // });
-});
