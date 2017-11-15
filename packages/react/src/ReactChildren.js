@@ -376,7 +376,14 @@ function mapSingleChildIntoContext(bookKeeping, child, childKey) {
   }
 }
 
-function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
+function mapIntoWithKeyPrefixInternal(
+  children,
+  array,
+  prefix,
+  func,
+  context,
+  shouldWarn,
+) {
   var escapedPrefix = '';
   if (prefix != null) {
     escapedPrefix = escapeUserProvidedKey(prefix) + '/';
@@ -387,7 +394,7 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     func,
     context,
   );
-  if (traverseContext.context && traverseContext.context.shouldWarn) {
+  if (shouldWarn) {
     traverseAllChildren(
       children,
       mapSingleChildIntoContext,
@@ -418,7 +425,7 @@ function mapChildren(children, func, context) {
     return children;
   }
   var result = [];
-  mapIntoWithKeyPrefixInternal(children, result, null, func, context);
+  mapIntoWithKeyPrefixInternal(children, result, null, func, context, __DEV__);
   return result;
 }
 
@@ -448,7 +455,8 @@ function toArray(children) {
     result,
     null,
     emptyFunction.thatReturnsArgument,
-    {shouldWarn: __DEV__},
+    null,
+    __DEV__,
   );
   return result;
 }
