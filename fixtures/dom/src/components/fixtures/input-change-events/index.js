@@ -61,11 +61,8 @@ class InputChangeEvents extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The
-            {' '}
-            <code>onChange</code>
-            {' '}
-            call count increment on each value change (at least 3+)
+            The <code>onChange</code> call count increment on each value change
+            (at least 3+)
           </TestCase.ExpectedResult>
 
           <RadioGroupFixture />
