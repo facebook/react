@@ -25,6 +25,49 @@ const REACT_PORTAL_TYPE =
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
+if (__DEV__) {
+  var ownerHasKeyUseWarning = {};
+
+  /**
+   * Warn if the element doesn't have an explicit key assigned to it.
+   * This element is in an array. The array could grow and shrink or be
+   * reordered. All children that haven't already been validated are required to
+   * have a "key" property assigned to it.
+   *
+   * @param {ReactElement} element Element that requires a key.
+   */
+  var validateExplicitKey = function(element) {
+    if (!element._store || element._store.validated || element.key != null) {
+      return;
+    }
+
+    const errorInfo =
+      'Each child in an array or iterator should have a unique "key" prop.' +
+      ' See https://fb.me/react-warning-keys for more information.' +
+      (ReactDebugCurrentFrame.getStackAddendum() || '');
+    if (ownerHasKeyUseWarning[errorInfo]) {
+      return;
+    }
+    ownerHasKeyUseWarning[errorInfo] = true;
+
+    warning(
+      false,
+      'Each child in an array or iterator should have a unique "key" prop.' +
+        ' See https://fb.me/react-warning-keys for more information.%s',
+      ReactDebugCurrentFrame.getStackAddendum(),
+    );
+  };
+
+  var validateCurrentLevelKeys = function(bookKeeping, children) {
+    for (var i = 0; i < children.length; i++) {
+      var child = children[i];
+      if (isValidElement(child)) {
+        validateExplicitKey(child);
+      }
+    }
+  };
+}
+
 /**
  * Escape and wrap key so it is safe to use as a reactid
  *
@@ -98,6 +141,7 @@ function releaseTraverseContext(traverseContext) {
  * @param {?*} children Children tree container.
  * @param {!string} nameSoFar Name of the key path so far.
  * @param {!function} callback Callback to invoke with each child found.
+ * @param {!function} iterableCallback Callback to invoke with each iterable child found.
  * @param {?*} traverseContext Used to pass information throughout the traversal
  * process.
  * @return {!number} The number of children in this subtree.
@@ -106,6 +150,7 @@ function traverseAllChildrenImpl(
   children,
   nameSoFar,
   callback,
+  iterableCallback,
   traverseContext,
 ) {
   var type = typeof children;
@@ -140,6 +185,9 @@ function traverseAllChildrenImpl(
   var nextNamePrefix = nameSoFar === '' ? SEPARATOR : nameSoFar + SUBSEPARATOR;
 
   if (Array.isArray(children)) {
+    if (iterableCallback) {
+      iterableCallback(traverseContext, children);
+    }
     for (var i = 0; i < children.length; i++) {
       child = children[i];
       nextName = nextNamePrefix + getComponentKey(child, i);
@@ -147,6 +195,7 @@ function traverseAllChildrenImpl(
         child,
         nextName,
         callback,
+        iterableCallback,
         traverseContext,
       );
     }
@@ -172,15 +221,21 @@ function traverseAllChildrenImpl(
       var iterator = iteratorFn.call(children);
       var step;
       var ii = 0;
+      var collect = [];
       while (!(step = iterator.next()).done) {
         child = step.value;
+        collect.push(child);
         nextName = nextNamePrefix + getComponentKey(child, ii++);
         subtreeCount += traverseAllChildrenImpl(
           child,
           nextName,
           callback,
+          iterableCallback,
           traverseContext,
         );
+      }
+      if (iterableCallback) {
+        iterableCallback(traverseContext, collect);
       }
     } else if (type === 'object') {
       var addendum = '';
@@ -221,12 +276,23 @@ function traverseAllChildrenImpl(
  * @param {?*} traverseContext Context for traversal.
  * @return {!number} The number of children in this subtree.
  */
-function traverseAllChildren(children, callback, traverseContext) {
+function traverseAllChildren(
+  children,
+  callback,
+  traverseContext,
+  iterableCallback,
+) {
   if (children == null) {
     return 0;
   }
 
-  return traverseAllChildrenImpl(children, '', callback, traverseContext);
+  return traverseAllChildrenImpl(
+    children,
+    '',
+    callback,
+    iterableCallback,
+    traverseContext,
+  );
 }
 
 /**
@@ -321,7 +387,16 @@ function mapIntoWithKeyPrefixInternal(children, array, prefix, func, context) {
     func,
     context,
   );
-  traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
+  if (traverseContext.context && traverseContext.context.shouldWarn) {
+    traverseAllChildren(
+      children,
+      mapSingleChildIntoContext,
+      traverseContext,
+      validateCurrentLevelKeys,
+    );
+  } else {
+    traverseAllChildren(children, mapSingleChildIntoContext, traverseContext);
+  }
   releaseTraverseContext(traverseContext);
 }
 
@@ -373,6 +448,7 @@ function toArray(children) {
     result,
     null,
     emptyFunction.thatReturnsArgument,
+    {shouldWarn: __DEV__},
   );
   return result;
 }
