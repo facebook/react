@@ -165,6 +165,14 @@ var SharedHostConfig = {
       );
     }
     scheduledCallback = callback;
+    return 0;
+  },
+
+  cancelDeferredCallback() {
+    if (scheduledCallback === null) {
+      throw new Error('No callback is scheduled.');
+    }
+    scheduledCallback = null;
   },
 
   prepareForCommit(): void {},
