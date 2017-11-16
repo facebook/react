@@ -110,6 +110,18 @@ export function isEnabled() {
   return _enabled;
 }
 
+let typeCache = {};
+
+function getDispatcher(topLevelType) {
+  if (topLevelType in typeCache) {
+    return typeCache[topLevelType];
+  }
+
+  typeCache[topLevelType] = dispatchEvent.bind(null, topLevelType);
+
+  return typeCache[topLevelType];
+}
+
 /**
  * Traps top-level events by using event bubbling.
  *
@@ -124,11 +136,8 @@ export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
-  return EventListener.listen(
-    element,
-    handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
-  );
+
+  EventListener.listen(element, handlerBaseName, getDispatcher(topLevelType));
 }
 
 /**
@@ -145,11 +154,8 @@ export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
-  return EventListener.capture(
-    element,
-    handlerBaseName,
-    dispatchEvent.bind(null, topLevelType),
-  );
+
+  EventListener.capture(element, handlerBaseName, getDispatcher(topLevelType));
 }
 
 export function dispatchEvent(topLevelType, nativeEvent) {

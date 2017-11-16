@@ -16,7 +16,8 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "prestart": "cp ../../build/dist/{react,react-dom}.development.js public/",
+    "prestart": "cp ../../build/dist/{react,react-dom}.{development,production.min}.js public/",
+    "prebuild": "cp ../../build/dist/{react,react-dom}.{development,production.min}.js public/",
     "build": "react-scripts build && cp build/index.html build/200.html",
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
