@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+import isEventSupported from './isEventSupported';
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
 
 /**
@@ -87,6 +88,14 @@ var topLevelTypes = {
   topWaiting: 'waiting',
   topWheel: 'wheel',
 };
+
+if (isEventSupported('wheel')) {
+  topLevelTypes.topWheel = 'wheel';
+} else if (isEventSupported('mousewheel')) {
+  topLevelTypes.topWheel = 'mousewheel';
+} else {
+  topLevelTypes.topWheel = 'DOMMouseScroll';
+}
 
 export type TopLevelTypes = $Enum<typeof topLevelTypes>;
 

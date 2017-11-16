@@ -420,14 +420,14 @@ export function setInitialProperties(
       props = ReactDOMFiberSelect.getHostProps(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      listenTo('onChange', domElement);
+      listenTo('onChange', domElement, rootContainerElement);
       break;
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
       props = ReactDOMFiberTextarea.getHostProps(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      listenTo('onChange', domElement);
+      listenTo('onChange', domElement, rootContainerElement);
       break;
     default:
       props = rawProps;
@@ -728,7 +728,7 @@ export function diffHydratedProperties(
       ReactDOMFiberInput.initWrapperState(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      listenTo('onChange', rootContainerElement);
+      listenTo('onChange', domElement, rootContainerElement);
       break;
     case 'option':
       ReactDOMFiberOption.validateProps(domElement, rawProps);
@@ -737,13 +737,13 @@ export function diffHydratedProperties(
       ReactDOMFiberSelect.initWrapperState(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      listenTo('onChange', rootContainerElement);
+      listenTo('onChange', domElement, rootContainerElement);
       break;
     case 'textarea':
       ReactDOMFiberTextarea.initWrapperState(domElement, rawProps);
       // For controlled components we always need to ensure we're listening
       // to onChange. Even if there is no listener.
-      listenTo('onChange', rootContainerElement);
+      listenTo('onChange', domElement, rootContainerElement);
       break;
   }
 
@@ -810,7 +810,7 @@ export function diffHydratedProperties(
         if (__DEV__ && typeof nextProp !== 'function') {
           warnForInvalidEventListener(propKey, nextProp);
         }
-        listenTo(propKey, domElement);
+        listenTo(propKey, domElement, rootContainerElement);
       }
     } else if (__DEV__) {
       // Validate that the properties correspond to their expected values.

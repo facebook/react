@@ -14,7 +14,6 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
-import isEventSupported from './isEventSupported';
 import BrowserEventConstants from './BrowserEventConstants';
 
 export * from 'events/ReactEventEmitterMixin';
@@ -133,52 +132,23 @@ function getListeningForDocument(mountAt) {
  * @param {string} registrationName Name of listener (e.g. `onClick`).
  * @param {object} contentDocumentHandle Document which owns the container
  */
-export function listenTo(registrationName, contentDocumentHandle, root) {
-  var mountAt = contentDocumentHandle;
-  var isListening = getListeningForDocument(mountAt);
+export function listenTo(registrationName, domElement, rootContainerElement) {
+  var isListening = getListeningForDocument(domElement);
   var dependencies = registrationNameDependencies[registrationName];
 
   for (var i = 0; i < dependencies.length; i++) {
     var dependency = dependencies[i];
+    var eventName = topLevelTypes[dependency];
 
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       if (forceDelegation.hasOwnProperty(dependency)) {
         trapBubbledEvent(
           dependency,
-          topLevelTypes[dependency],
-          documentForRoot(root),
+          eventName,
+          documentForRoot(rootContainerElement),
         );
-      } else if (dependency === 'topWheel') {
-        if (isEventSupported('wheel')) {
-          trapBubbledEvent('topWheel', 'wheel', mountAt);
-        } else if (isEventSupported('mousewheel')) {
-          trapBubbledEvent('topWheel', 'mousewheel', mountAt);
-        } else {
-          // Firefox needs to capture a different mouse scroll event.
-          // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-          trapBubbledEvent('topWheel', 'DOMMouseScroll', mountAt);
-        }
-      } else if (dependency === 'topScroll') {
-        trapCapturedEvent('topScroll', 'scroll', mountAt);
-      } else if (dependency === 'topFocus' || dependency === 'topBlur') {
-        trapCapturedEvent('topFocus', 'focus', mountAt);
-        trapCapturedEvent('topBlur', 'blur', mountAt);
-
-        // to make sure blur and focus event listeners are only attached once
-        isListening.topBlur = true;
-        isListening.topFocus = true;
-      } else if (dependency === 'topCancel') {
-        if (isEventSupported('cancel', true)) {
-          trapCapturedEvent('topCancel', 'cancel', mountAt);
-        }
-        isListening.topCancel = true;
-      } else if (dependency === 'topClose') {
-        if (isEventSupported('close', true)) {
-          trapCapturedEvent('topClose', 'close', mountAt);
-        }
-        isListening.topClose = true;
       } else if (topLevelTypes.hasOwnProperty(dependency)) {
-        trapBubbledEvent(dependency, topLevelTypes[dependency], mountAt);
+        trapBubbledEvent(dependency, eventName, domElement);
       }
 
       isListening[dependency] = true;
@@ -186,8 +156,8 @@ export function listenTo(registrationName, contentDocumentHandle, root) {
   }
 }
 
-export function isListeningToAllDependencies(registrationName, mountAt) {
-  var isListening = getListeningForDocument(mountAt);
+export function isListeningToAllDependencies(registrationName, domElement) {
+  var isListening = getListeningForDocument(domElement);
   var dependencies = registrationNameDependencies[registrationName];
   for (var i = 0; i < dependencies.length; i++) {
     var dependency = dependencies[i];
