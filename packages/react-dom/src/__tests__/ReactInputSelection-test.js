@@ -24,10 +24,10 @@ describe('ReactInputSelection', () => {
   var makeGetSelection = (win = window) => () => ({
     anchorNode: win.document.activeElement,
     focusNode: win.document.activeElement,
-    anchorOffset: win.document.activeElement &&
-      win.document.activeElement.selectionStart,
-    focusOffset: win.document.activeElement &&
-      win.document.activeElement.selectionEnd,
+    anchorOffset:
+      win.document.activeElement && win.document.activeElement.selectionStart,
+    focusOffset:
+      win.document.activeElement && win.document.activeElement.selectionEnd,
   });
 
   describe('hasSelectionCapabilities', () => {
