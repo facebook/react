@@ -30,8 +30,7 @@ describe('SelectEventPlugin', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../../client/ReactDOMComponentTree')
-      .default;
+    ReactDOMComponentTree = require('../../client/ReactDOMComponentTree');
     SelectEventPlugin = require('../SelectEventPlugin').default;
   });
 

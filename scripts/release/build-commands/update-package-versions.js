@@ -8,10 +8,9 @@ const {readFileSync, writeFileSync} = require('fs');
 const {readJson, writeJson} = require('fs-extra');
 const {join} = require('path');
 const semver = require('semver');
-const {projects} = require('../config');
 const {execUnlessDry, logPromise} = require('../utils');
 
-const update = async ({cwd, dry, version}) => {
+const update = async ({cwd, dry, packages, version}) => {
   try {
     // Update root package.json
     const packagePath = join(cwd, 'package.json');
@@ -32,11 +31,18 @@ const update = async ({cwd, dry, version}) => {
       const path = join(cwd, 'packages', project, 'package.json');
       const json = await readJson(path);
 
-      // Unstable packages (eg version < 1.0) are treated differently.
-      // In order to simplify DX for the release engineer,
-      // These packages are auto-incremented by a minor version number.
+      // Unstable packages (eg version < 1.0) are treated specially:
+      // Rather than use the release version (eg 16.1.0)-
+      // We just auto-increment the minor version (eg 0.1.0 -> 0.2.0).
+      // If we're doing a prerelease, we also append the suffix (eg 0.2.0-beta).
       if (semver.lt(json.version, '1.0.0')) {
-        json.version = `0.${semver.minor(json.version) + 1}.0`;
+        const prerelease = semver.prerelease(version);
+        let suffix = '';
+        if (prerelease) {
+          suffix = `-${prerelease.join('.')}`;
+        }
+
+        json.version = `0.${semver.minor(json.version) + 1}.0${suffix}`;
       } else {
         json.version = version;
       }
@@ -53,7 +59,7 @@ const update = async ({cwd, dry, version}) => {
 
       await writeJson(path, json, {spaces: 2});
     };
-    await Promise.all(projects.map(updateProjectPackage));
+    await Promise.all(packages.map(updateProjectPackage));
 
     // Version sanity check
     await exec('yarn version-check', {cwd});

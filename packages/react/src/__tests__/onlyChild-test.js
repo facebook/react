@@ -40,42 +40,26 @@ describe('onlyChild', () => {
 
   it('should fail when passed nully values', () => {
     expect(function() {
-      var instance = (
-        <WrapComponent>
-          {null}
-        </WrapComponent>
-      );
+      var instance = <WrapComponent>{null}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).toThrow();
 
     expect(function() {
-      var instance = (
-        <WrapComponent>
-          {undefined}
-        </WrapComponent>
-      );
+      var instance = <WrapComponent>{undefined}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).toThrow();
   });
 
   it('should fail when key/value objects', () => {
     expect(function() {
-      var instance = (
-        <WrapComponent>
-          {[<span key="abc" />]}
-        </WrapComponent>
-      );
+      var instance = <WrapComponent>{[<span key="abc" />]}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).toThrow();
   });
 
   it('should not fail when passed interpolated single child', () => {
     expect(function() {
-      var instance = (
-        <WrapComponent>
-          {<span />}
-        </WrapComponent>
-      );
+      var instance = <WrapComponent>{<span />}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).not.toThrow();
   });

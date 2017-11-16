@@ -11,7 +11,7 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {isMounted} from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -20,7 +20,7 @@ import shallowEqual from 'fbjs/lib/shallowEqual';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
 import {
   cacheContext,
@@ -34,7 +34,6 @@ import {
 } from './ReactFiberUpdateQueue';
 import {hasContextChanged} from './ReactFiberContext';
 
-var {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
@@ -161,17 +160,13 @@ export default function(
     const instance = workInProgress.stateNode;
     const type = workInProgress.type;
     if (typeof instance.shouldComponentUpdate === 'function') {
-      if (__DEV__) {
-        startPhaseTimer(workInProgress, 'shouldComponentUpdate');
-      }
+      startPhaseTimer(workInProgress, 'shouldComponentUpdate');
       const shouldUpdate = instance.shouldComponentUpdate(
         newProps,
         newState,
         newContext,
       );
-      if (__DEV__) {
-        stopPhaseTimer();
-      }
+      stopPhaseTimer();
 
       if (__DEV__) {
         warning(
@@ -286,6 +281,17 @@ export default function(
           'Did you mean componentWillUnmount()?',
         name,
       );
+      const noComponentDidReceiveProps =
+        typeof instance.componentDidReceiveProps !== 'function';
+      warning(
+        noComponentDidReceiveProps,
+        '%s has a method called ' +
+          'componentDidReceiveProps(). But there is no such lifecycle method. ' +
+          'If you meant to update the state in response to changing props, ' +
+          'use componentWillReceiveProps(). If you meant to fetch data or ' +
+          'run side-effects or mutations after React has updated the UI, use componentDidUpdate().',
+        name,
+      );
       const noComponentWillRecieveProps =
         typeof instance.componentWillRecieveProps !== 'function';
       warning(
@@ -365,14 +371,11 @@ export default function(
   }
 
   function callComponentWillMount(workInProgress, instance) {
-    if (__DEV__) {
-      startPhaseTimer(workInProgress, 'componentWillMount');
-    }
+    startPhaseTimer(workInProgress, 'componentWillMount');
     const oldState = instance.state;
     instance.componentWillMount();
-    if (__DEV__) {
-      stopPhaseTimer();
-    }
+
+    stopPhaseTimer();
 
     if (oldState !== instance.state) {
       if (__DEV__) {
@@ -394,14 +397,10 @@ export default function(
     newProps,
     newContext,
   ) {
-    if (__DEV__) {
-      startPhaseTimer(workInProgress, 'componentWillReceiveProps');
-    }
+    startPhaseTimer(workInProgress, 'componentWillReceiveProps');
     const oldState = instance.state;
     instance.componentWillReceiveProps(newProps, newContext);
-    if (__DEV__) {
-      stopPhaseTimer();
-    }
+    stopPhaseTimer();
 
     if (instance.state !== oldState) {
       if (__DEV__) {
@@ -450,7 +449,7 @@ export default function(
     instance.context = getMaskedContext(workInProgress, unmaskedContext);
 
     if (
-      ReactFeatureFlags.enableAsyncSubtreeAPI &&
+      enableAsyncSubtreeAPI &&
       workInProgress.type != null &&
       workInProgress.type.prototype != null &&
       workInProgress.type.prototype.unstable_isAsyncReactComponent === true
@@ -646,8 +645,10 @@ export default function(
       oldProps === newProps &&
       oldState === newState &&
       !hasContextChanged() &&
-      !(workInProgress.updateQueue !== null &&
-        workInProgress.updateQueue.hasForceUpdate)
+      !(
+        workInProgress.updateQueue !== null &&
+        workInProgress.updateQueue.hasForceUpdate
+      )
     ) {
       // If an update was already in progress, we should schedule an Update
       // effect even though we're bailing out, so that cWU/cDU are called.
@@ -673,13 +674,9 @@ export default function(
 
     if (shouldUpdate) {
       if (typeof instance.componentWillUpdate === 'function') {
-        if (__DEV__) {
-          startPhaseTimer(workInProgress, 'componentWillUpdate');
-        }
+        startPhaseTimer(workInProgress, 'componentWillUpdate');
         instance.componentWillUpdate(newProps, newState, newContext);
-        if (__DEV__) {
-          stopPhaseTimer();
-        }
+        stopPhaseTimer();
       }
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;

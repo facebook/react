@@ -47,7 +47,9 @@ export function logCapturedError(capturedError: CapturedError): void {
           `using the error boundary you provided, ${errorBoundaryName}.`;
       } else {
         errorBoundaryMessage =
-          `This error was initially handled by the error boundary ${errorBoundaryName}.\n` +
+          `This error was initially handled by the error boundary ${
+            errorBoundaryName
+          }.\n` +
           `Recreating the tree from scratch failed so React will unmount the tree.`;
       }
     } else {

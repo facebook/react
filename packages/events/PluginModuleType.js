@@ -26,6 +26,6 @@ export type PluginModule<NativeEvent> = {
     targetInst: Fiber,
     nativeTarget: NativeEvent,
     nativeEventTarget: EventTarget,
-  ) => null | ReactSyntheticEvent,
+  ) => ?ReactSyntheticEvent,
   tapMoveThreshold?: number,
 };

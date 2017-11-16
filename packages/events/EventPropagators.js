@@ -12,13 +12,11 @@ import {
 } from 'shared/ReactTreeTraversal';
 import warning from 'fbjs/lib/warning';
 
-import EventPluginHub from './EventPluginHub';
+import {getListener} from './EventPluginHub';
 import accumulateInto from './accumulateInto';
 import forEachAccumulated from './forEachAccumulated';
 
 type PropagationPhases = 'bubbled' | 'captured';
-
-var getListener = EventPluginHub.getListener;
 
 /**
  * Some event types have a notion of different registration names for different
@@ -29,6 +27,16 @@ function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
+
+/**
+ * A small set of propagation patterns, each of which will accept a small amount
+ * of information, and generate a set of "dispatch ready event objects" - which
+ * are sets of events that have already been annotated with a set of dispatched
+ * listener functions/ids. The API is designed this way to discourage these
+ * propagation strategies from actually executing the dispatches, since we
+ * always want to collect the entire set of dispatches before executing even a
+ * single one.
+ */
 
 /**
  * Tags a `SyntheticEvent` with dispatched listeners. Creating this function
@@ -104,38 +112,18 @@ function accumulateDirectDispatchesSingle(event) {
   }
 }
 
-function accumulateTwoPhaseDispatches(events) {
+export function accumulateTwoPhaseDispatches(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingle);
 }
 
-function accumulateTwoPhaseDispatchesSkipTarget(events) {
+export function accumulateTwoPhaseDispatchesSkipTarget(events) {
   forEachAccumulated(events, accumulateTwoPhaseDispatchesSingleSkipTarget);
 }
 
-function accumulateEnterLeaveDispatches(leave, enter, from, to) {
+export function accumulateEnterLeaveDispatches(leave, enter, from, to) {
   traverseEnterLeave(from, to, accumulateDispatches, leave, enter);
 }
 
-function accumulateDirectDispatches(events) {
+export function accumulateDirectDispatches(events) {
   forEachAccumulated(events, accumulateDirectDispatchesSingle);
 }
-
-/**
- * A small set of propagation patterns, each of which will accept a small amount
- * of information, and generate a set of "dispatch ready event objects" - which
- * are sets of events that have already been annotated with a set of dispatched
- * listener functions/ids. The API is designed this way to discourage these
- * propagation strategies from actually executing the dispatches, since we
- * always want to collect the entire set of dispatches before executing even a
- * single one.
- *
- * @constructor EventPropagators
- */
-var EventPropagators = {
-  accumulateTwoPhaseDispatches: accumulateTwoPhaseDispatches,
-  accumulateTwoPhaseDispatchesSkipTarget: accumulateTwoPhaseDispatchesSkipTarget,
-  accumulateDirectDispatches: accumulateDirectDispatches,
-  accumulateEnterLeaveDispatches: accumulateEnterLeaveDispatches,
-};
-
-export default EventPropagators;

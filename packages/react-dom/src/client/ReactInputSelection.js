@@ -19,8 +19,8 @@ function isInDocument(node) {
 }
 
 function getActiveElementDeep() {
-  var win = window;
-  var element = getActiveElement();
+  let win = window;
+  let element = getActiveElement();
   while (element instanceof win.HTMLIFrameElement) {
     try {
       win = element.contentDocument.defaultView;
@@ -35,7 +35,7 @@ function getActiveElementDeep() {
 function getElementsWithSelections(acc, win) {
   acc = acc || [];
   win = win || window;
-  var doc;
+  let doc;
   try {
     doc = win.document;
     if (!doc) {
@@ -44,16 +44,16 @@ function getElementsWithSelections(acc, win) {
   } catch (e) {
     return acc;
   }
-  var element = getActiveElement(doc);
+  let element = getActiveElement(doc);
   // Use getSelection if no activeElement with selection capabilities
   if (!hasSelectionCapabilities(element)) {
     if (win.getSelection) {
-      var selection = win.getSelection();
+      const selection = win.getSelection();
       if (selection) {
-        var startNode = selection.anchorNode;
-        var endNode = selection.focusNode;
-        var startOffset = selection.anchorOffset;
-        var endOffset = selection.focusOffset;
+        const startNode = selection.anchorNode;
+        const endNode = selection.focusNode;
+        const startOffset = selection.anchorOffset;
+        const endOffset = selection.focusOffset;
         if (startNode && startNode.childNodes.length) {
           if (
             startNode.childNodes[startOffset] === endNode.childNodes[endOffset]
@@ -65,7 +65,7 @@ function getElementsWithSelections(acc, win) {
         }
       }
     } else if (doc.selection) {
-      var range = doc.selection.createRange();
+      const range = doc.selection.createRange();
       element = range.parentElement();
     }
   }
@@ -77,7 +77,7 @@ function getElementsWithSelections(acc, win) {
     });
   }
 
-  for (var i = 0; i < win.frames.length; i++) {
+  for (let i = 0; i < win.frames.length; i++) {
     acc = getElementsWithSelections(acc, win.frames[i]);
   }
 
@@ -115,7 +115,7 @@ function focusNodePreservingScroll(element) {
  */
 
 export function hasSelectionCapabilities(elem) {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
     ((nodeName === 'input' && elem.type === 'text') ||
@@ -137,10 +137,10 @@ export function getSelectionInformation() {
  * nodes and place them back in, resulting in focus being lost.
  */
 export function restoreSelection(priorSelectionInformation) {
-  var priorActiveElement = priorSelectionInformation.activeElement;
-  var elementSelections = priorSelectionInformation.elementSelections;
-  var curActiveElement = getActiveElementDeep();
-  var isActiveElementOnlySelection =
+  const priorActiveElement = priorSelectionInformation.activeElement;
+  const elementSelections = priorSelectionInformation.elementSelections;
+  let curActiveElement = getActiveElementDeep();
+  const isActiveElementOnlySelection =
     elementSelections.length === 1 &&
     elementSelections[0] === priorActiveElement;
   if (
@@ -151,7 +151,7 @@ export function restoreSelection(priorSelectionInformation) {
     return;
   }
   elementSelections.forEach(function(selection) {
-    var element = selection.element;
+    const element = selection.element;
     if (
       isInDocument(element) &&
       getActiveElement(element.ownerDocument) !== element
@@ -179,7 +179,7 @@ export function restoreSelection(priorSelectionInformation) {
  * -@return {start: selectionStart, end: selectionEnd}
  */
 export function getSelection(input) {
-  var selection;
+  let selection;
 
   if ('selectionStart' in input) {
     // Modern browser with input or textarea.
@@ -202,8 +202,7 @@ export function getSelection(input) {
  * -@offsets   Object of same form that is returned from get*
  */
 export function setSelection(input, offsets) {
-  var start = offsets.start;
-  var end = offsets.end;
+  let {start, end} = offsets;
   if (end === undefined) {
     end = start;
   }

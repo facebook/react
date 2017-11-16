@@ -180,18 +180,37 @@ describe('ReactMultiChildText', () => {
   });
 
   it('should render between nested components and inline children', () => {
-    ReactTestUtils.renderIntoDocument(<div><h1><span /><span /></h1></div>);
+    ReactTestUtils.renderIntoDocument(
+      <div>
+        <h1>
+          <span />
+          <span />
+        </h1>
+      </div>,
+    );
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><h1>A</h1></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>A</h1>
+        </div>,
+      );
     }).not.toThrow();
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><h1>{['A']}</h1></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>{['A']}</h1>
+        </div>,
+      );
     }).not.toThrow();
 
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><h1>{['A', 'B']}</h1></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <h1>{['A', 'B']}</h1>
+        </div>,
+      );
     }).not.toThrow();
   });
 });

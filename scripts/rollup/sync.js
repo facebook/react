@@ -35,9 +35,8 @@ function syncReactDom(buildPath, wwwPath) {
 }
 
 function syncReactNativeHelper(buildPath, fbSourcePath, relativeDestPath) {
-  fbSourcePath = typeof fbSourcePath === 'string'
-    ? fbSourcePath
-    : DEFAULT_FB_SOURCE_PATH;
+  fbSourcePath =
+    typeof fbSourcePath === 'string' ? fbSourcePath : DEFAULT_FB_SOURCE_PATH;
 
   if (fbSourcePath.charAt(fbSourcePath.length - 1) !== '/') {
     fbSourcePath += '/';

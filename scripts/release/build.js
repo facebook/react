@@ -8,7 +8,9 @@ const {exec} = require('child_process');
 const run = async () => {
   const chalk = require('chalk');
   const logUpdate = require('log-update');
+  const {getPublicPackages} = require('./utils');
 
+  const addGitTag = require('./build-commands/add-git-tag');
   const buildArtifacts = require('./build-commands/build-artifacts');
   const checkCircleCiStatus = require('./build-commands/check-circle-ci-status');
   const checkEnvironmentVariables = require('./build-commands/check-environment-variables');
@@ -26,6 +28,7 @@ const run = async () => {
 
   try {
     const params = parseBuildParameters();
+    params.packages = getPublicPackages();
 
     await checkEnvironmentVariables(params);
     await validateVersion(params);
@@ -39,6 +42,7 @@ const run = async () => {
     await runAutomatedTests(params);
     await updatePackageVersions(params);
     await buildArtifacts(params);
+    await addGitTag(params);
     await printPostBuildSummary(params);
   } catch (error) {
     logUpdate.clear();
@@ -47,7 +51,9 @@ const run = async () => {
     const stack = error.stack.replace(error.message, '');
 
     console.log(
-      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(stack)}`
+      `${chalk.bgRed.white(' ERROR ')} ${chalk.red(message)}\n\n${chalk.gray(
+        stack
+      )}`
     );
 
     process.exit(1);
