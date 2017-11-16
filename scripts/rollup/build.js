@@ -25,6 +25,7 @@ const syncReactNativeCS = require('./sync').syncReactNativeCS;
 const Packaging = require('./packaging');
 const Header = require('./header');
 const closure = require('rollup-plugin-closure-compiler-js');
+const codeFrame = require('babel-code-frame');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -605,7 +606,15 @@ function createBundle(bundle, bundleType) {
           `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
         );
         console.error(error.message);
-        console.error(error.frame);
+
+        const {file, line, column} = error.loc;
+        const rawLines = fs.readFileSync(file, 'utf-8');
+        // column + 1 is required due to rollup counting column start position from 0
+        // whereas babel-code-frame counts from 1
+        const frame = codeFrame(rawLines, line, column + 1, {
+          highlightCode: true,
+        });
+        console.error(frame);
       } else {
         console.error(error);
       }
