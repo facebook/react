@@ -1202,7 +1202,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           if (
             !isWorking &&
             root === nextRoot &&
-            expirationTime <= nextRenderExpirationTime
+            expirationTime < nextRenderExpirationTime
           ) {
             // Restart the root from the top.
             if (nextUnitOfWork !== null) {
