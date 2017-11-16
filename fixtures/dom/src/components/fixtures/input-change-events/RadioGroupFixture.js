@@ -26,7 +26,7 @@ class RadioGroupFixture extends React.Component {
 
   render() {
     const {changeCount} = this.state;
-    const color = changeCount === 2 ? 'green' : 'red';
+    const color = changeCount >= 3 ? 'green' : 'red';
 
     return (
       <Fixture>
