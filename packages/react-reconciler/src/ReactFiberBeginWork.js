@@ -142,13 +142,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateFragment(current, workInProgress) {
-    var nextChildren = workInProgress.pendingProps;
+    const nextChildren = workInProgress.pendingProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-      if (nextChildren === null) {
-        nextChildren = workInProgress.memoizedProps;
-      }
     } else if (
       nextChildren === null ||
       workInProgress.memoizedProps === nextChildren
@@ -169,18 +166,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateFunctionalComponent(current, workInProgress) {
-    var fn = workInProgress.type;
-    var nextProps = workInProgress.pendingProps;
+    const fn = workInProgress.type;
+    const nextProps = workInProgress.pendingProps;
 
-    const memoizedProps = workInProgress.memoizedProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-      if (nextProps === null) {
-        nextProps = memoizedProps;
-      }
     } else {
-      if (nextProps === null || memoizedProps === nextProps) {
+      if (workInProgress.memoizedProps === nextProps) {
         return bailoutOnAlreadyFinishedWork(current, workInProgress);
       }
       // TODO: consider bringing fn.shouldComponentUpdate() back.
@@ -380,21 +373,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const type = workInProgress.type;
     const memoizedProps = workInProgress.memoizedProps;
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = memoizedProps;
-      invariant(
-        nextProps !== null,
-        'We should always have pending or current props. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
+    const nextProps = workInProgress.pendingProps;
     const prevProps = current !== null ? current.memoizedProps : null;
 
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (nextProps === null || memoizedProps === nextProps) {
+    } else if (memoizedProps === nextProps) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 
@@ -436,10 +421,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (current === null) {
       tryToClaimNextHydratableInstance(workInProgress);
     }
-    let nextProps = workInProgress.pendingProps;
-    if (nextProps === null) {
-      nextProps = workInProgress.memoizedProps;
-    }
+    const nextProps = workInProgress.pendingProps;
     memoizeProps(workInProgress, nextProps);
     // Nothing to do here. This is terminal. We'll do the completion step
     // immediately after.
@@ -541,19 +523,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateCallComponent(current, workInProgress, renderExpirationTime) {
-    var nextCall = (workInProgress.pendingProps: null | ReactCall);
+    var nextCall = (workInProgress.pendingProps: ReactCall);
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-      if (nextCall === null) {
-        nextCall = current && current.memoizedProps;
-        invariant(
-          nextCall !== null,
-          'We should always have pending or current props. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    } else if (nextCall === null || workInProgress.memoizedProps === nextCall) {
+    } else if (workInProgress.memoizedProps === nextCall) {
       nextCall = workInProgress.memoizedProps;
       // TODO: When bailing out, we might need to return the stateNode instead
       // of the child. To check it for work.
@@ -592,22 +566,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     renderExpirationTime,
   ) {
     pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
-    let nextChildren = workInProgress.pendingProps;
+    const nextChildren = workInProgress.pendingProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-      if (nextChildren === null) {
-        nextChildren = current && current.memoizedProps;
-        invariant(
-          nextChildren != null,
-          'We should always have pending or current props. This error is ' +
-            'likely caused by a bug in React. Please file an issue.',
-        );
-      }
-    } else if (
-      nextChildren === null ||
-      workInProgress.memoizedProps === nextChildren
-    ) {
+    } else if (workInProgress.memoizedProps === nextChildren) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
 

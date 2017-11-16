@@ -41,7 +41,6 @@ import {
   popContextProvider,
   popTopLevelContextObject,
 } from './ReactFiberContext';
-import {Never} from './ReactFiberExpirationTime';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
@@ -392,18 +391,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ): Fiber | null {
-    // Get the latest props.
-    let newProps = workInProgress.pendingProps;
-    if (newProps === null) {
-      newProps = workInProgress.memoizedProps;
-    } else if (
-      workInProgress.expirationTime !== Never ||
-      renderExpirationTime === Never
-    ) {
-      // Reset the pending props, unless this was a down-prioritization.
-      workInProgress.pendingProps = null;
-    }
-
+    const newProps = workInProgress.pendingProps;
     switch (workInProgress.tag) {
       case FunctionalComponent:
         return null;
