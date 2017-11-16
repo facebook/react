@@ -44,27 +44,30 @@ function getElementsWithSelections(acc, win) {
   } catch (e) {
     return acc;
   }
-  var element = null;
-  if (win.getSelection) {
-    var selection = win.getSelection();
-    if (selection) {
-      var startNode = selection.anchorNode;
-      var endNode = selection.focusNode;
-      var startOffset = selection.anchorOffset;
-      var endOffset = selection.focusOffset;
-      if (startNode && startNode.childNodes.length) {
-        if (
-          startNode.childNodes[startOffset] === endNode.childNodes[endOffset]
-        ) {
-          element = startNode.childNodes[startOffset];
+  var element = getActiveElement(doc);
+  // Use getSelection if no activeElement with selection capabilities
+  if (!hasSelectionCapabilities(element)) {
+    if (win.getSelection) {
+      var selection = win.getSelection();
+      if (selection) {
+        var startNode = selection.anchorNode;
+        var endNode = selection.focusNode;
+        var startOffset = selection.anchorOffset;
+        var endOffset = selection.focusOffset;
+        if (startNode && startNode.childNodes.length) {
+          if (
+            startNode.childNodes[startOffset] === endNode.childNodes[endOffset]
+          ) {
+            element = startNode.childNodes[startOffset];
+          }
+        } else {
+          element = startNode;
         }
-      } else {
-        element = startNode;
       }
+    } else if (doc.selection) {
+      var range = doc.selection.createRange();
+      element = range.parentElement();
     }
-  } else if (doc.selection) {
-    var range = doc.selection.createRange();
-    element = range.parentElement();
   }
 
   if (hasSelectionCapabilities(element)) {
