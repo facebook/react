@@ -19,6 +19,8 @@ export const {
 export const enableAsyncSubtreeAPI = true;
 export const enableReactFragment = false;
 export const enableCreateRoot = true;
+export const invokePrecommitLifecycleHooksTwice = false;
+export const invokeSetStateCallbackTwice = false;
 
 // The www bundles only use the mutating reconciler.
 export const enableMutatingReconciler = true;

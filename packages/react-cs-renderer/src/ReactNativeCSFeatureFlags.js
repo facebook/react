@@ -17,6 +17,8 @@ export const enableAsyncSchedulingByDefaultInReactDOM = false;
 export const enableReactFragment = false;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
+export const invokePrecommitLifecycleHooksTwice = false;
+export const invokeSetStateCallbackTwice = false;
 
 // React Native CS uses persistent reconciler.
 export const enableMutatingReconciler = false;
