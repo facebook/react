@@ -45,8 +45,8 @@ function getElementsWithSelections(acc, win) {
     return acc;
   }
   let element = getActiveElement(doc);
-  // Use getSelection if no activeElement with selection capabilities
-  if (!hasSelectionCapabilities(element)) {
+  // Use getSelection if activeElement is the document body
+  if (element === doc.body) {
     if (win.getSelection) {
       const selection = win.getSelection();
       if (selection) {
