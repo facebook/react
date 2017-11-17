@@ -61,6 +61,7 @@ describe('ReactAsyncClassComponent', () => {
         'componentWillMount',
         'componentWillMount',
         'render',
+        'render',
         'componentDidMount',
       ]);
 
@@ -75,6 +76,7 @@ describe('ReactAsyncClassComponent', () => {
         'shouldComponentUpdate',
         'componentWillUpdate',
         'componentWillUpdate',
+        'render',
         'render',
         'componentDidUpdate',
       ]);
