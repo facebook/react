@@ -8,6 +8,7 @@
  */
 
 'use strict';
+
 var React;
 var ReactDOM;
 
@@ -43,10 +44,6 @@ describe('SyntheticKeyboardEvent', () => {
     container = null;
   });
 
-  // afterEach(() => {
-  //   document.body.removeChild(container);
-  //   container = null;
-  // })
 
   describe('KeyboardEvent interface', () => {
     describe('charCode', () => {
@@ -57,6 +54,7 @@ describe('SyntheticKeyboardEvent', () => {
             render() {
               return <input onKeyPress={e => {
                 e.persist();
+                console.log(charCode, 'IS CHARCODE INSIDE FUNCTION')                
                 charCode = getEventCharCode(e);
               }} />;
             }
@@ -70,6 +68,7 @@ describe('SyntheticKeyboardEvent', () => {
             cancelable: true,
           });
           container.firstChild.dispatchEvent(nativeEvent);
+          console.log(charCode, 'IS CHARCODE')          
           expect(charCode).toBe(65);
         });
       });
@@ -80,7 +79,9 @@ describe('SyntheticKeyboardEvent', () => {
           class Comp extends React.Component {
             render() {
               return <input onKeyDown={e => {
+                e.persist();
                 charCode = getEventCharCode(e);
+                console.log(charCode, 'IS CHARCODE INSIDE FUNCTION')
               }} />;
             }
           }
@@ -151,6 +152,7 @@ describe('SyntheticKeyboardEvent', () => {
               return <input onKeyPress={e => {
                 console.log('FIRE BITCH')
                 console.log(e.which, 'iIS THE WHICH')
+                which = e.which;
                 // console.log(getEventCharCode(e), 'SHOULD BE 9001')
                 // charCode = getEventCharCode(e);
               }} />;
@@ -158,13 +160,12 @@ describe('SyntheticKeyboardEvent', () => {
           }
           ReactDOM.render(<Comp />, container);
           var nativeEvent = new KeyboardEvent('keypress', {
-            charCode: 50,
+            key: 'a',
             bubbles: true,
             cancelable: true,
           });
-          console.log(which, 'IS WHICH !!!')
           container.firstChild.dispatchEvent(nativeEvent);
-          expect(which).toBe(9001);
+          expect(which).toBe(97);
         });
       });
 
@@ -213,4 +214,4 @@ describe('SyntheticKeyboardEvent', () => {
   //     syntheticEvent.persist();
   //     expect(syntheticEvent.isPersistent()).toBe(true);
   //   });
-  // });
+  });

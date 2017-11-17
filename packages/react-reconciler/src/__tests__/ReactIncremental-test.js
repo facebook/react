@@ -168,6 +168,7 @@ describe('ReactIncremental', () => {
     ops = [];
 
     // This will abort the previous work and restart
+    ReactNoop.flushSync(() => ReactNoop.render(null));
     ReactNoop.render(<Foo text="baz" />);
 
     // Flush part of the new work
@@ -221,6 +222,7 @@ describe('ReactIncremental', () => {
     expect(ops).toEqual(['setState1']);
 
     // This will abort the previous work and restart
+    ReactNoop.flushSync(() => ReactNoop.render(<Foo />));
     inst.setState(
       () => {
         ops.push('setState2');
@@ -1877,6 +1879,8 @@ describe('ReactIncremental', () => {
     );
     ReactNoop.flush();
     expect(ops).toEqual([
+      'ShowLocale {"locale":"sv"}',
+      'ShowBoth {"locale":"sv"}',
       'Intl {}',
       'ShowLocale {"locale":"en"}',
       'Router {}',
@@ -2647,5 +2651,68 @@ describe('ReactIncremental', () => {
       'count:0, name:brian',
       'count:1, name:not brian',
     ]);
+  });
+
+  it('does not interrupt for update at same priority', () => {
+    function Parent(props) {
+      ReactNoop.yield('Parent: ' + props.step);
+      return <Child step={props.step} />;
+    }
+
+    function Child(props) {
+      ReactNoop.yield('Child: ' + props.step);
+      return null;
+    }
+
+    ReactNoop.render(<Parent step={1} />);
+    ReactNoop.flushThrough(['Parent: 1']);
+
+    // Interrupt at same priority
+    ReactNoop.render(<Parent step={2} />);
+
+    expect(ReactNoop.flush()).toEqual(['Child: 1', 'Parent: 2', 'Child: 2']);
+  });
+
+  it('does not interrupt for update at lower priority', () => {
+    function Parent(props) {
+      ReactNoop.yield('Parent: ' + props.step);
+      return <Child step={props.step} />;
+    }
+
+    function Child(props) {
+      ReactNoop.yield('Child: ' + props.step);
+      return null;
+    }
+
+    ReactNoop.render(<Parent step={1} />);
+    ReactNoop.flushThrough(['Parent: 1']);
+
+    // Interrupt at lower priority
+    ReactNoop.expire(2000);
+    ReactNoop.render(<Parent step={2} />);
+
+    expect(ReactNoop.flush()).toEqual(['Child: 1', 'Parent: 2', 'Child: 2']);
+  });
+
+  it('does interrupt for update at higher priority', () => {
+    function Parent(props) {
+      ReactNoop.yield('Parent: ' + props.step);
+      return <Child step={props.step} />;
+    }
+
+    function Child(props) {
+      ReactNoop.yield('Child: ' + props.step);
+      return null;
+    }
+
+    ReactNoop.render(<Parent step={1} />);
+    ReactNoop.flushThrough(['Parent: 1']);
+
+    // Interrupt at higher priority
+    expect(
+      ReactNoop.flushSync(() => ReactNoop.render(<Parent step={2} />)),
+    ).toEqual(['Parent: 2', 'Child: 2']);
+
+    expect(ReactNoop.flush()).toEqual([]);
   });
 });

@@ -57,10 +57,12 @@ class InputChangeEvents extends React.Component {
           <TestCase.Steps>
             <li>Click on the "Radio 2"</li>
             <li>Click back to "Radio 1"</li>
+            <li>Click back to "Radio 2"</li>
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The <code>onChange</code> call count should equal 2
+            The <code>onChange</code> call count increment on each value change
+            (at least 3+)
           </TestCase.ExpectedResult>
 
           <RadioGroupFixture />

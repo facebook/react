@@ -15,6 +15,7 @@ import warning from 'fbjs/lib/warning';
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import * as inputValueTracking from './inputValueTracking';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
@@ -320,6 +321,11 @@ function updateNamedCousins(rootNode, props) {
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
           'same `name` is not supported.',
       );
+
+      // We need update the tracked value on the named cousin since the value
+      // was changed but the input saw no event or value set
+      inputValueTracking.updateValueIfChanged(otherNode);
+
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
