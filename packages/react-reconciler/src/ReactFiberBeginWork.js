@@ -15,6 +15,7 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -31,15 +32,18 @@ import {
 import {
   PerformedWork,
   Placement,
+  Update,
   ContentReset,
   Err,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
 import getComponentName from 'shared/getComponentName';
 import warning from 'fbjs/lib/warning';
+import shallowEqual from 'fbjs/lib/shallowEqual';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
@@ -51,6 +55,7 @@ import {
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactFiberUpdateQueue';
 import {
+  isContextConsumer,
   getMaskedContext,
   getUnmaskedContext,
   hasContextChanged,
@@ -59,9 +64,34 @@ import {
   invalidateContextProvider,
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
+import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import emptyObject from 'fbjs/lib/emptyObject';
+
+const fakeInternalInstance = {};
 
 if (__DEV__) {
   var warnedAboutStatelessRefs = {};
+
+  // This is so gross but it's at least non-critical and can be removed if
+  // it causes problems. This is meant to give a nicer error message for
+  // ReactDOM15.unstable_renderSubtreeIntoContainer(reactDOM16Component,
+  // ...)) which otherwise throws a "_processChildContext is not a function"
+  // exception.
+  Object.defineProperty(fakeInternalInstance, '_processChildContext', {
+    enumerable: false,
+    value: function() {
+      invariant(
+        false,
+        '_processChildContext is not available in React 16+. This likely ' +
+          'means you have multiple copies of React and are attempting to nest ' +
+          'a React 15 tree inside a React 16 tree using ' +
+          "unstable_renderSubtreeIntoContainer, which isn't supported. Try " +
+          'to make sure you have only one copy of React (and ideally, switch ' +
+          'to ReactDOM.createPortal).',
+      );
+    },
+  });
+  Object.freeze(fakeInternalInstance);
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
@@ -86,17 +116,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   } = hydrationContext;
 
   const {
-    adoptClassInstance,
-    constructClassInstance,
-    mountClassInstance,
-    // resumeMountClassInstance,
-    updateClassInstance,
-  } = ReactFiberClassComponent(
-    scheduleWork,
-    computeExpirationForFiber,
-    memoizeProps,
-    memoizeState,
-  );
+    classUpdater,
+    checkClassInstance,
+    callComponentWillMount,
+    callComponentWillReceiveProps,
+    callShouldComponentUpdate,
+    callComponentWillUpdate,
+  } = ReactFiberClassComponent(scheduleWork, computeExpirationForFiber);
 
   function reconcileChildren(
     current,
@@ -204,64 +230,333 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.child;
   }
 
-  function updateClassComponent(
+  // ----------------- The Life-Cycle of a Composite Component -----------------
+  // The render phase of a composite component is when we compute the next set
+  // of children. If there are no changes to props, state, or context, then we
+  // bail out and reuse the existing children. We may also bail out if
+  // shouldComponentUpdate returns false. Otherwise, we'll call the render
+  // method and reconcile the result against the existing set.
+  //
+  // The render phase is asynchronous, and may be interrupted or restarted.
+  // Methods in this phase should contain no side-effects. For example,
+  // componentWillMount may fire twice before the component actually mounts.
+  //
+  // Overview of the composite component render phase algorithm:
+  //   - Do we have new props or context since the last render?
+  //     -> componentWillReceiveProps(nextProps, nextContext).
+  //   - Process the update queue to compute the next state.
+  //   - Do we have new props, context, or state since the last render?
+  //     - If they are unchanged -> bailout. Stop working and don't re-render.
+  //     - If something did change, we may be able to bailout anyway:
+  //       - Is this a forced update (caused by this.forceUpdate())?
+  //         -> Can't bailout. Skip subsequent checks and continue rendering.
+  //       - Is shouldComponentUpdate defined?
+  //         -> shouldComponentUpdate(nextProps, nextState, nextContext)
+  //           - If it returns false -> bailout.
+  //       - Is this a PureComponent?
+  //         -> Shallow compare props and state.
+  //           - If they are the same -> bailout.
+  //   - Proceed with rendering. Are we mounting a new component, or updating
+  //     an existing one?
+  //     - Mount -> componentWillMount()
+  //     - Update -> componentWillUpdate(nextProps, nextState, nextContext)
+  //   - Call render method to compute next children.
+  //   - Reconcile next children against the previous set.
+  //
+  // componentDidMount, componentDidUpdate, and componentWillUnount are called
+  // during the commit phase, along with other side-effects like refs,
+  // callbacks, and host mutations (e.g. updating the DOM).
+  // ---------------------------------------------------------------------------
+  function beginClassComponent(
     current: Fiber | null,
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
     // Push context providers early to prevent context stack mismatches.
-    // During mounting we don't know the child context yet as the instance doesn't exist.
-    // We will invalidate the child context in finishClassComponent() right after rendering.
+    // During mounting we don't know the child context yet as the instance
+    // doesn't exist. We will invalidate the child context right
+    // after rendering.
     const hasContext = pushContextProvider(workInProgress);
+    const nextProps = workInProgress.pendingProps;
 
-    let shouldUpdate;
     if (current === null) {
-      if (!workInProgress.stateNode) {
-        // In the initial pass we might need to construct the instance.
-        constructClassInstance(workInProgress, workInProgress.pendingProps);
-        mountClassInstance(workInProgress, renderExpirationTime);
-        shouldUpdate = true;
+      if (workInProgress.stateNode === null) {
+        const ctor = workInProgress.type;
+        const unmaskedContext = getUnmaskedContext(workInProgress);
+        const needsContext = isContextConsumer(workInProgress);
+        const context = needsContext
+          ? getMaskedContext(workInProgress, unmaskedContext)
+          : emptyObject;
+        const instance = (workInProgress.stateNode = new ctor(
+          nextProps,
+          context,
+        ));
+        return mountClassComponent(
+          workInProgress,
+          instance,
+          nextProps,
+          hasContext,
+          needsContext,
+          unmaskedContext,
+          context,
+          renderExpirationTime,
+        );
       } else {
-        invariant(false, 'Resuming work not yet implemented.');
         // In a resume, we'll already have an instance we can reuse.
-        // shouldUpdate = resumeMountClassInstance(workInProgress, renderExpirationTime);
+        invariant(false, 'Resuming work not yet implemented.');
       }
     } else {
-      shouldUpdate = updateClassInstance(
+      return updateClassComponent(
         current,
         workInProgress,
+        hasContext,
         renderExpirationTime,
       );
     }
-    return finishClassComponent(
-      current,
+  }
+
+  function mountClassComponent(
+    workInProgress: Fiber,
+    instance: any,
+    nextProps: mixed,
+    hasContext: boolean,
+    needsContext: boolean,
+    unmaskedContext: any,
+    context: any,
+    renderExpirationTime: ExpirationTime,
+  ) {
+    instance.updater = classUpdater;
+    workInProgress.stateNode = instance;
+    // The instance needs access to the fiber so that it can schedule updates
+    ReactInstanceMap.set(instance, workInProgress);
+    if (__DEV__) {
+      instance._reactInternalInstance = fakeInternalInstance;
+    }
+
+    if (__DEV__) {
+      checkClassInstance(workInProgress);
+    }
+
+    let nextState = instance.state || null;
+
+    instance.props = nextProps;
+    instance.state = workInProgress.memoizedState = nextState;
+    instance.refs = emptyObject;
+    const nextContext = (instance.context = getMaskedContext(
       workInProgress,
-      shouldUpdate,
+      unmaskedContext,
+    ));
+
+    if (
+      enableAsyncSubtreeAPI &&
+      workInProgress.type != null &&
+      workInProgress.type.prototype != null &&
+      workInProgress.type.prototype.unstable_isAsyncReactComponent === true
+    ) {
+      workInProgress.internalContextTag |= AsyncUpdates;
+    }
+
+    if (typeof instance.componentWillMount === 'function') {
+      callComponentWillMount(workInProgress, instance);
+      // If we had additional state updates during this life-cycle, let's
+      // process them now.
+      const updateQueue = workInProgress.updateQueue;
+      if (updateQueue !== null) {
+        instance.state = nextState = processUpdateQueue(
+          null,
+          workInProgress,
+          updateQueue,
+          instance,
+          nextProps,
+          renderExpirationTime,
+        );
+      }
+    }
+    if (typeof instance.componentDidMount === 'function') {
+      workInProgress.effectTag |= Update;
+    }
+
+    return reconcileClassComponent(
+      null,
+      workInProgress,
       hasContext,
+      nextProps,
+      nextState,
+      nextContext,
       renderExpirationTime,
     );
   }
 
-  function finishClassComponent(
-    current: Fiber | null,
+  function updateClassComponent(
+    current: Fiber,
     workInProgress: Fiber,
-    shouldUpdate: boolean,
     hasContext: boolean,
     renderExpirationTime: ExpirationTime,
   ) {
-    // Refs should update even if shouldComponentUpdate returns false
-    markRef(current, workInProgress);
+    const ctor = workInProgress.type;
+    const instance = workInProgress.stateNode;
+    instance.props = workInProgress.memoizedProps;
+    instance.state = workInProgress.memoizedState;
 
-    if (!shouldUpdate) {
-      // Context providers should defer to sCU for rendering
-      if (hasContext) {
-        invalidateContextProvider(workInProgress, false);
-      }
+    const oldProps = workInProgress.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    const oldContext = instance.context;
+    const newUnmaskedContext = getUnmaskedContext(workInProgress);
+    const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
 
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    // Note: During these life-cycles, instance.props/instance.state are what
+    // ever the previously attempted to render - not the "current". However,
+    // during componentDidUpdate we pass the "current" props.
+
+    if (
+      typeof instance.componentWillReceiveProps === 'function' &&
+      (oldProps !== newProps || oldContext !== newContext)
+    ) {
+      callComponentWillReceiveProps(
+        workInProgress,
+        instance,
+        newProps,
+        newContext,
+      );
     }
 
+    // Compute the next state using the memoized state and the update queue.
+    const oldState = workInProgress.memoizedState;
+    // TODO: Previous state can be null.
+    let newState;
+    if (workInProgress.updateQueue !== null) {
+      newState = processUpdateQueue(
+        current,
+        workInProgress,
+        workInProgress.updateQueue,
+        instance,
+        newProps,
+        renderExpirationTime,
+      );
+    } else {
+      newState = oldState;
+    }
+
+    let shouldUpdate;
+    if (
+      workInProgress.updateQueue !== null &&
+      workInProgress.updateQueue.hasForceUpdate
+    ) {
+      shouldUpdate = true;
+    } else if (
+      !hasContextChanged() &&
+      oldProps === newProps &&
+      oldState === newState
+    ) {
+      shouldUpdate = false;
+    } else if (typeof instance.shouldComponentUpdate === 'function') {
+      shouldUpdate = callShouldComponentUpdate(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+        newContext,
+      );
+    } else if (ctor.prototype && ctor.prototype.isPureReactComponent) {
+      shouldUpdate =
+        !shallowEqual(oldProps, newProps) || !shallowEqual(oldState, newState);
+    } else {
+      shouldUpdate = true;
+    }
+
+    if (!shouldUpdate) {
+      // Bailout
+
+      // If an update was already in progress, we should schedule an Update
+      // effect even though we're bailing out, so that cWU/cDU are called.
+      // TODO: Resuming not yet implemented
+      // if (typeof instance.componentDidUpdate === 'function') {
+      //   if (
+      //     oldProps !== current.memoizedProps ||
+      //     oldState !== current.memoizedState
+      //   ) {
+      //     workInProgress.effectTag |= Update;
+      //   }
+      // }
+
+      return bailoutClassComponent(
+        current,
+        workInProgress,
+        hasContext,
+        newProps,
+        newState,
+        newContext,
+        renderExpirationTime,
+      );
+    }
+
+    // Re-render
+    if (typeof instance.componentWillUpdate === 'function') {
+      callComponentWillUpdate(
+        workInProgress,
+        instance,
+        newProps,
+        newState,
+        newContext,
+      );
+    }
+    if (typeof instance.componentDidUpdate === 'function') {
+      workInProgress.effectTag |= Update;
+    }
+    return reconcileClassComponent(
+      current,
+      workInProgress,
+      hasContext,
+      newProps,
+      newState,
+      newContext,
+      renderExpirationTime,
+    );
+  }
+
+  function bailoutClassComponent(
+    current: Fiber,
+    workInProgress: Fiber,
+    hasContext: boolean,
+    nextProps: mixed,
+    nextState: mixed,
+    nextContext: mixed,
+    renderExpirationTime: ExpirationTime,
+  ): Fiber | null {
+    // Update the existing instance's state, props, and context pointers even
+    // if shouldComponentUpdate returns false.
     const instance = workInProgress.stateNode;
+    instance.props = nextProps;
+    instance.state = nextState;
+    instance.context = nextContext;
+
+    memoizeProps(workInProgress, nextProps);
+    memoizeState(workInProgress, nextState);
+
+    // Refs should update even if shouldComponentUpdate returns false
+    markRef(current, workInProgress);
+    // Context providers should defer to sCU for rendering
+    if (hasContext) {
+      invalidateContextProvider(workInProgress, false);
+    }
+    return bailoutOnAlreadyFinishedWork(current, workInProgress);
+  }
+
+  function reconcileClassComponent(
+    current: Fiber | null,
+    workInProgress: Fiber,
+    hasContext: boolean,
+    nextProps: mixed,
+    nextState: mixed,
+    nextContext: mixed,
+    renderExpirationTime: ExpirationTime,
+  ): Fiber | null {
+    markRef(current, workInProgress);
+
+    const instance = workInProgress.stateNode;
+    instance.props = nextProps;
+    instance.state = nextState;
+    instance.context = nextContext;
 
     // Rerender
     ReactCurrentOwner.current = workInProgress;
@@ -287,10 +582,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       nextChildren,
       renderExpirationTime,
     );
-    // Memoize props and state using the values we just used to render.
-    // TODO: Restructure so we never read values from the instance.
-    memoizeState(workInProgress, instance.state);
-    memoizeProps(workInProgress, instance.props);
+
+    memoizeProps(workInProgress, nextProps);
+    memoizeState(workInProgress, nextState);
 
     // The context might have changed so we need to recalculate it.
     if (hasContext) {
@@ -496,14 +790,17 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Push context providers early to prevent context stack mismatches.
       // During mounting we don't know the child context yet as the instance doesn't exist.
       // We will invalidate the child context in finishClassComponent() right after rendering.
+      const instance = value;
+      const needsContext = isContextConsumer(workInProgress);
       const hasContext = pushContextProvider(workInProgress);
-      adoptClassInstance(workInProgress, value);
-      mountClassInstance(workInProgress, renderExpirationTime);
-      return finishClassComponent(
-        current,
+      return mountClassComponent(
         workInProgress,
-        true,
+        instance,
+        props,
         hasContext,
+        needsContext,
+        unmaskedContext,
+        context,
         renderExpirationTime,
       );
     } else {
@@ -730,7 +1027,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           renderExpirationTime,
         );
       case ClassComponent:
-        return updateClassComponent(
+        return beginClassComponent(
           current,
           workInProgress,
           renderExpirationTime,
