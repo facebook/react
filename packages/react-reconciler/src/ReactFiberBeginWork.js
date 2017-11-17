@@ -98,17 +98,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     memoizeState,
   );
 
-  // TODO: Remove this and use reconcileChildrenAtExpirationTime directly.
-  function reconcileChildren(current, workInProgress, nextChildren) {
-    reconcileChildrenAtExpirationTime(
-      current,
-      workInProgress,
-      nextChildren,
-      workInProgress.expirationTime,
-    );
-  }
-
-  function reconcileChildrenAtExpirationTime(
+  function reconcileChildren(
     current,
     workInProgress,
     nextChildren,
@@ -141,7 +131,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateFragment(current, workInProgress) {
+  function updateFragment(current, workInProgress, renderExpirationTime) {
     const nextChildren = workInProgress.pendingProps;
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -152,7 +142,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
     memoizeProps(workInProgress, nextChildren);
     return workInProgress.child;
   }
@@ -165,7 +160,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
-  function updateFunctionalComponent(current, workInProgress) {
+  function updateFunctionalComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
     const fn = workInProgress.type;
     const nextProps = workInProgress.pendingProps;
 
@@ -195,7 +194,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
@@ -234,6 +238,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       workInProgress,
       shouldUpdate,
       hasContext,
+      renderExpirationTime,
     );
   }
 
@@ -242,6 +247,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     shouldUpdate: boolean,
     hasContext: boolean,
+    renderExpirationTime: ExpirationTime,
   ) {
     // Refs should update even if shouldComponentUpdate returns false
     markRef(current, workInProgress);
@@ -275,7 +281,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
     memoizeState(workInProgress, instance.state);
@@ -354,7 +365,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // Otherwise reset hydration state in case we aborted and resumed another
         // root.
         resetHydrationState();
-        reconcileChildren(current, workInProgress, element);
+        reconcileChildren(
+          current,
+          workInProgress,
+          element,
+          renderExpirationTime,
+        );
       }
       memoizeState(workInProgress, state);
       return workInProgress.child;
@@ -412,7 +428,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       return null;
     }
 
-    reconcileChildren(current, workInProgress, nextChildren);
+    reconcileChildren(
+      current,
+      workInProgress,
+      nextChildren,
+      renderExpirationTime,
+    );
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
@@ -478,7 +499,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       const hasContext = pushContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, renderExpirationTime);
-      return finishClassComponent(current, workInProgress, true, hasContext);
+      return finishClassComponent(
+        current,
+        workInProgress,
+        true,
+        hasContext,
+        renderExpirationTime,
+      );
     } else {
       // Proceed under the assumption that this is a functional component
       workInProgress.tag = FunctionalComponent;
@@ -516,7 +543,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         }
       }
-      reconcileChildren(current, workInProgress, value);
+      reconcileChildren(current, workInProgress, value, renderExpirationTime);
       memoizeProps(workInProgress, props);
       return workInProgress.child;
     }
@@ -536,7 +563,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const nextChildren = nextCall.children;
 
-    // The following is a fork of reconcileChildrenAtExpirationTime but using
+    // The following is a fork of reconcileChildren but using
     // stateNode to store the child.
     if (current === null) {
       workInProgress.stateNode = mountChildFibers(
@@ -588,7 +615,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       memoizeProps(workInProgress, nextChildren);
     } else {
-      reconcileChildren(current, workInProgress, nextChildren);
+      reconcileChildren(
+        current,
+        workInProgress,
+        nextChildren,
+        renderExpirationTime,
+      );
       memoizeProps(workInProgress, nextChildren);
     }
     return workInProgress.child;
@@ -692,7 +724,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           renderExpirationTime,
         );
       case FunctionalComponent:
-        return updateFunctionalComponent(current, workInProgress);
+        return updateFunctionalComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       case ClassComponent:
         return updateClassComponent(
           current,
@@ -730,7 +766,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           renderExpirationTime,
         );
       case Fragment:
-        return updateFragment(current, workInProgress);
+        return updateFragment(current, workInProgress, renderExpirationTime);
       default:
         invariant(
           false,
@@ -789,7 +825,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // Unmount the current children as if the component rendered null
     const nextChildren = null;
-    reconcileChildrenAtExpirationTime(
+    reconcileChildren(
       current,
       workInProgress,
       nextChildren,
