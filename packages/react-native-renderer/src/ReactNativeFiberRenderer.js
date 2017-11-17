@@ -177,6 +177,7 @@ const NativeRenderer = ReactFiberReconciler({
   },
 
   scheduleDeferredCallback: ReactNativeFrameScheduling.scheduleDeferredCallback,
+  cancelDeferredCallback: ReactNativeFrameScheduling.cancelDeferredCallback,
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {
     return false;

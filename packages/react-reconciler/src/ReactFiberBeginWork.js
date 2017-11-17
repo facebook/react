@@ -44,9 +44,8 @@ import {cancelWorkTimer} from './ReactDebugFiberPerf';
 
 import ReactFiberClassComponent from './ReactFiberClassComponent';
 import {
-  mountChildFibersInPlace,
+  mountChildFibers,
   reconcileChildFibers,
-  reconcileChildFibersInPlace,
   cloneChildFibers,
 } from './ReactChildFiber';
 import {processUpdateQueue} from './ReactFiberUpdateQueue';
@@ -119,13 +118,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // won't update its child set by applying minimal side-effects. Instead,
       // we will add them all to the child before it gets rendered. That means
       // we can optimize this reconciliation pass by not tracking side-effects.
-      workInProgress.child = mountChildFibersInPlace(
+      workInProgress.child = mountChildFibers(
         workInProgress,
-        workInProgress.child,
+        null,
         nextChildren,
         renderExpirationTime,
       );
-    } else if (current.child === workInProgress.child) {
+    } else {
       // If the current child is the same as the work in progress, it means that
       // we haven't yet started any work on these children. Therefore, we use
       // the clone algorithm to create a copy of all the current children.
@@ -134,17 +133,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // let's throw it out.
       workInProgress.child = reconcileChildFibers(
         workInProgress,
-        workInProgress.child,
-        nextChildren,
-        renderExpirationTime,
-      );
-    } else {
-      // If, on the other hand, it is already using a clone, that means we've
-      // already begun some work on this tree and we can continue where we left
-      // off by reconciling against the existing children.
-      workInProgress.child = reconcileChildFibersInPlace(
-        workInProgress,
-        workInProgress.child,
+        current.child,
         nextChildren,
         renderExpirationTime,
       );
@@ -355,9 +344,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // Ensure that children mount into this root without tracking
         // side-effects. This ensures that we don't store Placement effects on
         // nodes that will be hydrated.
-        workInProgress.child = mountChildFibersInPlace(
+        workInProgress.child = mountChildFibers(
           workInProgress,
-          workInProgress.child,
+          null,
           element,
           renderExpirationTime,
         );
@@ -569,21 +558,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // The following is a fork of reconcileChildrenAtExpirationTime but using
     // stateNode to store the child.
     if (current === null) {
-      workInProgress.stateNode = mountChildFibersInPlace(
-        workInProgress,
-        workInProgress.stateNode,
-        nextChildren,
-        renderExpirationTime,
-      );
-    } else if (current.child === workInProgress.child) {
-      workInProgress.stateNode = reconcileChildFibers(
+      workInProgress.stateNode = mountChildFibers(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
         renderExpirationTime,
       );
     } else {
-      workInProgress.stateNode = reconcileChildFibersInPlace(
+      workInProgress.stateNode = reconcileChildFibers(
         workInProgress,
         workInProgress.stateNode,
         nextChildren,
@@ -628,9 +610,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // flow doesn't do during mount. This doesn't happen at the root because
       // the root always starts with a "current" with a null child.
       // TODO: Consider unifying this with how the root works.
-      workInProgress.child = reconcileChildFibersInPlace(
+      workInProgress.child = reconcileChildFibers(
         workInProgress,
-        workInProgress.child,
+        null,
         nextChildren,
         renderExpirationTime,
       );
