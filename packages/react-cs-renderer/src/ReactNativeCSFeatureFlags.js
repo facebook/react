@@ -12,13 +12,12 @@ import invariant from 'fbjs/lib/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as CSFeatureFlagsType from './ReactNativeCSFeatureFlags';
 
+export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableAsyncSchedulingByDefaultInReactDOM = false;
 export const enableReactFragment = false;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
-export const invokePrecommitLifecycleHooksTwice = false;
-export const invokeSetStateCallbackTwice = false;
 
 // React Native CS uses persistent reconciler.
 export const enableMutatingReconciler = false;

@@ -12,8 +12,8 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
 import {
+  debugRenderPhaseSideEffects,
   enableAsyncSubtreeAPI,
-  invokePrecommitLifecycleHooksTwice,
 } from 'shared/ReactFeatureFlags';
 import {isMounted} from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
@@ -172,7 +172,7 @@ export default function(
       stopPhaseTimer();
 
       // Simulate an async bailout/interruption by invoking lifecycle twice.
-      if (invokePrecommitLifecycleHooksTwice) {
+      if (debugRenderPhaseSideEffects) {
         instance.shouldComponentUpdate(newProps, newState, newContext);
       }
 
@@ -385,7 +385,7 @@ export default function(
     stopPhaseTimer();
 
     // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (invokePrecommitLifecycleHooksTwice) {
+    if (debugRenderPhaseSideEffects) {
       instance.componentWillMount();
     }
 
@@ -415,7 +415,7 @@ export default function(
     stopPhaseTimer();
 
     // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (invokePrecommitLifecycleHooksTwice) {
+    if (debugRenderPhaseSideEffects) {
       instance.componentWillReceiveProps(newProps, newContext);
     }
 
@@ -696,7 +696,7 @@ export default function(
         stopPhaseTimer();
 
         // Simulate an async bailout/interruption by invoking lifecycle twice.
-        if (invokePrecommitLifecycleHooksTwice) {
+        if (debugRenderPhaseSideEffects) {
           instance.componentWillUpdate(newProps, newState, newContext);
         }
       }

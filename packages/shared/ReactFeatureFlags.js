@@ -24,10 +24,8 @@ export const enableNoopReconciler = false;
 // Experimental persistent mode (CS):
 export const enablePersistentReconciler = false;
 
-// Helps identify side effects in begin-phase lifecycle hooks:
-export const invokePrecommitLifecycleHooksTwice = false;
-// Helps identify side effects in setState callback:
-export const invokeSetStateCallbackTwice = false;
+// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
+export const debugRenderPhaseSideEffects = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {

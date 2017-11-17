@@ -14,11 +14,11 @@ var ReactFeatureFlags;
 var ReactTestRenderer;
 
 describe('ReactAsyncClassComponent', () => {
-  describe('invokePrecommitLifecycleHooksTwice', () => {
+  describe('debugRenderPhaseSideEffects', () => {
     beforeEach(() => {
       jest.resetModules();
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.invokePrecommitLifecycleHooksTwice = true;
+      ReactFeatureFlags.debugRenderPhaseSideEffects = true;
       React = require('react');
       ReactTestRenderer = require('react-test-renderer');
     });
@@ -91,16 +91,6 @@ describe('ReactAsyncClassComponent', () => {
         'shouldComponentUpdate',
         'shouldComponentUpdate',
       ]);
-    });
-  });
-
-  describe('invokeSetStateCallbackTwice', () => {
-    beforeEach(() => {
-      jest.resetModules();
-      ReactFeatureFlags = require('shared/ReactFeatureFlags');
-      ReactFeatureFlags.invokeSetStateCallbackTwice = true;
-      React = require('react');
-      ReactTestRenderer = require('react-test-renderer');
     });
 
     it('should invoke setState callbacks twice', () => {

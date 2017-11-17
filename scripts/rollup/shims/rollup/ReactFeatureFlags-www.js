@@ -16,11 +16,10 @@ export const {
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
+export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableReactFragment = false;
 export const enableCreateRoot = true;
-export const invokePrecommitLifecycleHooksTwice = false;
-export const invokeSetStateCallbackTwice = false;
 
 // The www bundles only use the mutating reconciler.
 export const enableMutatingReconciler = true;
