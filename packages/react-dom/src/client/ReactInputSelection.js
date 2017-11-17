@@ -164,10 +164,7 @@ export function restoreSelection(priorSelectionInformation) {
     }
   });
 
-  if (
-    curActiveElement !== priorActiveElement &&
-    isInDocument(priorActiveElement)
-  ) {
+  if (curActiveElement !== priorActiveElement) {
     focusNodePreservingScroll(priorActiveElement);
   }
 }

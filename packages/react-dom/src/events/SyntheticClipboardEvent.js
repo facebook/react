@@ -13,11 +13,9 @@ import SyntheticEvent from 'events/SyntheticEvent';
  */
 var ClipboardEventInterface = {
   clipboardData: function(event) {
-    if ('clipboardData' in event) {
-      return event.clipboardData;
-    }
-    var doc = (event.target && event.target.ownerDocument) || document;
-    return doc.defaultView.clipboardData;
+    return 'clipboardData' in event
+      ? event.clipboardData
+      : window.clipboardData;
   },
 };
 

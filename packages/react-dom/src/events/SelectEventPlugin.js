@@ -82,6 +82,20 @@ function getSelection(node) {
 }
 
 /**
+ * Get document associated with the event target.
+ *
+ * @param {object} nativeEventTarget
+ * @return {Document}
+ */
+function getEventTargetDocument(eventTarget) {
+  return eventTarget.window === eventTarget
+    ? eventTarget.document
+    : eventTarget.nodeType === DOCUMENT_NODE
+      ? eventTarget
+      : eventTarget.ownerDocument;
+}
+
+/**
  * Poll selection to see whether it's changed.
  *
  * @param {object} nativeEvent
@@ -93,10 +107,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   // selection (this matches native `select` event behavior). In HTML5, select
   // fires only on input and textarea thus if there's no focused element we
   // won't dispatch.
-  var doc =
-    nativeEventTarget.ownerDocument ||
-    nativeEventTarget.document ||
-    nativeEventTarget;
+  var doc = getEventTargetDocument(nativeEventTarget);
 
   if (
     mouseDown ||
@@ -152,12 +163,7 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var doc =
-      nativeEventTarget.window === nativeEventTarget
-        ? nativeEventTarget.document
-        : nativeEventTarget.nodeType === DOCUMENT_NODE
-          ? nativeEventTarget
-          : nativeEventTarget.ownerDocument;
+    var doc = getEventTargetDocument(nativeEventTarget);
     // Track whether all listeners exists for this plugin. If none exist, we do
     // not extract events. See #3639.
     if (!doc || !isListeningToAllDependencies('onSelect', doc)) {
