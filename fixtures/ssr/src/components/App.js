@@ -11,6 +11,7 @@ export default class App extends Component {
       <Chrome title="SSR Fixture" assets={this.props.assets}>
         <Header />
         <Fixtures />
+        <Header />
       </Chrome>
     );
   }
