@@ -44,13 +44,23 @@ describe('ReactMultiChild', () => {
       expect(mockUpdate.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      ReactDOM.render(<div><MockComponent /></div>, container);
+      ReactDOM.render(
+        <div>
+          <MockComponent />
+        </div>,
+        container,
+      );
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUpdate.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      ReactDOM.render(<div><MockComponent /></div>, container);
+      ReactDOM.render(
+        <div>
+          <MockComponent />
+        </div>,
+        container,
+      );
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUpdate.mock.calls.length).toBe(1);
@@ -74,12 +84,22 @@ describe('ReactMultiChild', () => {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      ReactDOM.render(<div><MockComponent /></div>, container);
+      ReactDOM.render(
+        <div>
+          <MockComponent />
+        </div>,
+        container,
+      );
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      ReactDOM.render(<div><span /></div>, container);
+      ReactDOM.render(
+        <div>
+          <span />
+        </div>,
+        container,
+      );
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(1);
@@ -114,7 +134,9 @@ describe('ReactMultiChild', () => {
       expect(mockUnmount.mock.calls.length).toBe(0);
 
       ReactDOM.render(
-        <WrapperComponent><MockComponent /></WrapperComponent>,
+        <WrapperComponent>
+          <MockComponent />
+        </WrapperComponent>,
         container,
       );
 
@@ -139,12 +161,22 @@ describe('ReactMultiChild', () => {
       expect(mockMount.mock.calls.length).toBe(0);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      ReactDOM.render(<div><MockComponent key="A" /></div>, container);
+      ReactDOM.render(
+        <div>
+          <MockComponent key="A" />
+        </div>,
+        container,
+      );
 
       expect(mockMount.mock.calls.length).toBe(1);
       expect(mockUnmount.mock.calls.length).toBe(0);
 
-      ReactDOM.render(<div><MockComponent key="B" /></div>, container);
+      ReactDOM.render(
+        <div>
+          <MockComponent key="B" />
+        </div>,
+        container,
+      );
 
       expect(mockMount.mock.calls.length).toBe(2);
       expect(mockUnmount.mock.calls.length).toBe(1);
@@ -165,9 +197,7 @@ describe('ReactMultiChild', () => {
         render() {
           return (
             <div>
-              <WrapperComponent>
-                {this.props.children}
-              </WrapperComponent>
+              <WrapperComponent>{this.props.children}</WrapperComponent>
             </div>
           );
         }
@@ -211,9 +241,7 @@ describe('ReactMultiChild', () => {
         render() {
           return (
             <div>
-              <WrapperComponent>
-                {this.props.children}
-              </WrapperComponent>
+              <WrapperComponent>{this.props.children}</WrapperComponent>
             </div>
           );
         }

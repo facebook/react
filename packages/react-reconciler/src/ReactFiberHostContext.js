@@ -28,8 +28,8 @@ export type HostContext<C, CX> = {
   resetHostContainer(): void,
 };
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): HostContext<C, CX> {
   const {getChildHostContext, getRootHostContext} = config;
 

@@ -7,11 +7,15 @@ global.requestAnimationFrame = function(callback) {
 };
 
 global.requestIdleCallback = function(callback) {
-  setTimeout(() => {
+  return setTimeout(() => {
     callback({
       timeRemaining() {
         return Infinity;
       },
     });
   });
+};
+
+global.cancelIdleCallback = function(callbackID) {
+  clearTimeout(callbackID);
 };

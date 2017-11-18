@@ -14,7 +14,6 @@ import type {ReactNativeCSType} from './ReactNativeCSTypes';
 import {CSStatefulComponent} from 'CSStatefulComponent';
 
 import ReactFiberReconciler from 'react-reconciler';
-import {injectInternals} from 'react-reconciler/src/ReactFiberDevToolsHook';
 import ReactVersion from 'shared/ReactVersion';
 
 const emptyObject = {};
@@ -169,6 +168,13 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
     if (scheduleUpdate !== null) {
       scheduleUpdate(identityUpdater);
     }
+    return 0;
+  },
+
+  cancelDeferredCallback() {
+    // Noop. This is always called right before scheduling a new update, so
+    // should be fine. This renderer won't use requestIdleCallback, anyway.
+    // Will switch to use shouldYield() API instead.
   },
 
   shouldSetTextContent(type: string, props: Props): boolean {
@@ -240,9 +246,7 @@ const ReactNativeCSFiberRenderer = ReactFiberReconciler({
   },
 });
 
-injectInternals({
-  findHostInstanceByFiber: ReactNativeCSFiberRenderer.findHostInstance,
-  // This is an enum because we may add more (e.g. profiler build)
+ReactNativeCSFiberRenderer.injectIntoDevTools({
   bundleType: __DEV__ ? 1 : 0,
   version: ReactVersion,
   rendererPackageName: 'react-cs-renderer',

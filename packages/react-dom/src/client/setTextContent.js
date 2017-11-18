@@ -23,7 +23,7 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  */
 var setTextContent = function(node, text) {
   if (text) {
-    var firstChild = node.firstChild;
+    let firstChild = node.firstChild;
 
     if (
       firstChild &&

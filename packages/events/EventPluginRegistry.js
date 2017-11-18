@@ -48,7 +48,7 @@ function recomputePluginOrdering(): void {
         'the plugin ordering, `%s`.',
       pluginName,
     );
-    if (EventPluginRegistry.plugins[pluginIndex]) {
+    if (plugins[pluginIndex]) {
       continue;
     }
     invariant(
@@ -57,7 +57,7 @@ function recomputePluginOrdering(): void {
         'method, but `%s` does not.',
       pluginName,
     );
-    EventPluginRegistry.plugins[pluginIndex] = pluginModule;
+    plugins[pluginIndex] = pluginModule;
     var publishedEvents = pluginModule.eventTypes;
     for (var eventName in publishedEvents) {
       invariant(
@@ -88,12 +88,12 @@ function publishEventForPlugin(
   eventName: string,
 ): boolean {
   invariant(
-    !EventPluginRegistry.eventNameDispatchConfigs.hasOwnProperty(eventName),
+    !eventNameDispatchConfigs.hasOwnProperty(eventName),
     'EventPluginHub: More than one plugin attempted to publish the same ' +
       'event name, `%s`.',
     eventName,
   );
-  EventPluginRegistry.eventNameDispatchConfigs[eventName] = dispatchConfig;
+  eventNameDispatchConfigs[eventName] = dispatchConfig;
 
   var phasedRegistrationNames = dispatchConfig.phasedRegistrationNames;
   if (phasedRegistrationNames) {
@@ -132,23 +132,21 @@ function publishRegistrationName(
   eventName: string,
 ): void {
   invariant(
-    !EventPluginRegistry.registrationNameModules[registrationName],
+    !registrationNameModules[registrationName],
     'EventPluginHub: More than one plugin attempted to publish the same ' +
       'registration name, `%s`.',
     registrationName,
   );
-  EventPluginRegistry.registrationNameModules[registrationName] = pluginModule;
-  EventPluginRegistry.registrationNameDependencies[registrationName] =
+  registrationNameModules[registrationName] = pluginModule;
+  registrationNameDependencies[registrationName] =
     pluginModule.eventTypes[eventName].dependencies;
 
   if (__DEV__) {
     var lowerCasedName = registrationName.toLowerCase();
-    EventPluginRegistry.possibleRegistrationNames[
-      lowerCasedName
-    ] = registrationName;
+    possibleRegistrationNames[lowerCasedName] = registrationName;
 
     if (registrationName === 'onDoubleClick') {
-      EventPluginRegistry.possibleRegistrationNames.ondblclick = registrationName;
+      possibleRegistrationNames.ondblclick = registrationName;
     }
   }
 }
@@ -158,95 +156,92 @@ function publishRegistrationName(
  *
  * @see {EventPluginHub}
  */
-var EventPluginRegistry = {
-  /**
-   * Ordered list of injected plugins.
-   */
-  plugins: [],
 
-  /**
-   * Mapping from event name to dispatch config
-   */
-  eventNameDispatchConfigs: {},
+/**
+ * Ordered list of injected plugins.
+ */
+export const plugins = [];
 
-  /**
-   * Mapping from registration name to plugin module
-   */
-  registrationNameModules: {},
+/**
+ * Mapping from event name to dispatch config
+ */
+export const eventNameDispatchConfigs = {};
 
-  /**
-   * Mapping from registration name to event name
-   */
-  registrationNameDependencies: {},
+/**
+ * Mapping from registration name to plugin module
+ */
+export const registrationNameModules = {};
 
-  /**
-   * Mapping from lowercase registration names to the properly cased version,
-   * used to warn in the case of missing event handlers. Available
-   * only in __DEV__.
-   * @type {Object}
-   */
-  possibleRegistrationNames: __DEV__ ? {} : (null: any),
-  // Trust the developer to only use possibleRegistrationNames in __DEV__
+/**
+ * Mapping from registration name to event name
+ */
+export const registrationNameDependencies = {};
 
-  /**
-   * Injects an ordering of plugins (by plugin name). This allows the ordering
-   * to be decoupled from injection of the actual plugins so that ordering is
-   * always deterministic regardless of packaging, on-the-fly injection, etc.
-   *
-   * @param {array} InjectedEventPluginOrder
-   * @internal
-   * @see {EventPluginHub.injection.injectEventPluginOrder}
-   */
-  injectEventPluginOrder: function(
-    injectedEventPluginOrder: EventPluginOrder,
-  ): void {
-    invariant(
-      !eventPluginOrder,
-      'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
-        'once. You are likely trying to load more than one copy of React.',
-    );
-    // Clone the ordering so it cannot be dynamically mutated.
-    eventPluginOrder = Array.prototype.slice.call(injectedEventPluginOrder);
+/**
+ * Mapping from lowercase registration names to the properly cased version,
+ * used to warn in the case of missing event handlers. Available
+ * only in __DEV__.
+ * @type {Object}
+ */
+export const possibleRegistrationNames = __DEV__ ? {} : (null: any);
+// Trust the developer to only use possibleRegistrationNames in __DEV__
+
+/**
+ * Injects an ordering of plugins (by plugin name). This allows the ordering
+ * to be decoupled from injection of the actual plugins so that ordering is
+ * always deterministic regardless of packaging, on-the-fly injection, etc.
+ *
+ * @param {array} InjectedEventPluginOrder
+ * @internal
+ * @see {EventPluginHub.injection.injectEventPluginOrder}
+ */
+export function injectEventPluginOrder(
+  injectedEventPluginOrder: EventPluginOrder,
+): void {
+  invariant(
+    !eventPluginOrder,
+    'EventPluginRegistry: Cannot inject event plugin ordering more than ' +
+      'once. You are likely trying to load more than one copy of React.',
+  );
+  // Clone the ordering so it cannot be dynamically mutated.
+  eventPluginOrder = Array.prototype.slice.call(injectedEventPluginOrder);
+  recomputePluginOrdering();
+}
+
+/**
+ * Injects plugins to be used by `EventPluginHub`. The plugin names must be
+ * in the ordering injected by `injectEventPluginOrder`.
+ *
+ * Plugins can be injected as part of page initialization or on-the-fly.
+ *
+ * @param {object} injectedNamesToPlugins Map from names to plugin modules.
+ * @internal
+ * @see {EventPluginHub.injection.injectEventPluginsByName}
+ */
+export function injectEventPluginsByName(
+  injectedNamesToPlugins: NamesToPlugins,
+): void {
+  var isOrderingDirty = false;
+  for (var pluginName in injectedNamesToPlugins) {
+    if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
+      continue;
+    }
+    var pluginModule = injectedNamesToPlugins[pluginName];
+    if (
+      !namesToPlugins.hasOwnProperty(pluginName) ||
+      namesToPlugins[pluginName] !== pluginModule
+    ) {
+      invariant(
+        !namesToPlugins[pluginName],
+        'EventPluginRegistry: Cannot inject two different event plugins ' +
+          'using the same name, `%s`.',
+        pluginName,
+      );
+      namesToPlugins[pluginName] = pluginModule;
+      isOrderingDirty = true;
+    }
+  }
+  if (isOrderingDirty) {
     recomputePluginOrdering();
-  },
-
-  /**
-   * Injects plugins to be used by `EventPluginHub`. The plugin names must be
-   * in the ordering injected by `injectEventPluginOrder`.
-   *
-   * Plugins can be injected as part of page initialization or on-the-fly.
-   *
-   * @param {object} injectedNamesToPlugins Map from names to plugin modules.
-   * @internal
-   * @see {EventPluginHub.injection.injectEventPluginsByName}
-   */
-  injectEventPluginsByName: function(
-    injectedNamesToPlugins: NamesToPlugins,
-  ): void {
-    var isOrderingDirty = false;
-    for (var pluginName in injectedNamesToPlugins) {
-      if (!injectedNamesToPlugins.hasOwnProperty(pluginName)) {
-        continue;
-      }
-      var pluginModule = injectedNamesToPlugins[pluginName];
-      if (
-        !namesToPlugins.hasOwnProperty(pluginName) ||
-        namesToPlugins[pluginName] !== pluginModule
-      ) {
-        invariant(
-          !namesToPlugins[pluginName],
-          'EventPluginRegistry: Cannot inject two different event plugins ' +
-            'using the same name, `%s`.',
-          pluginName,
-        );
-        namesToPlugins[pluginName] = pluginModule;
-        isOrderingDirty = true;
-      }
-    }
-    if (isOrderingDirty) {
-      recomputePluginOrdering();
-    }
-  },
-};
-
-export default EventPluginRegistry;
+  }
+}

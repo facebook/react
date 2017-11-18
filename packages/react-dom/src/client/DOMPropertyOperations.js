@@ -5,17 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import DOMProperty from '../shared/DOMProperty';
+import {
+  ATTRIBUTE_NAME_CHAR,
+  ATTRIBUTE_NAME_START_CHAR,
+  ID_ATTRIBUTE_NAME,
+  ROOT_ATTRIBUTE_NAME,
+  getPropertyInfo,
+  shouldSetAttribute,
+} from '../shared/DOMProperty';
 import warning from 'fbjs/lib/warning';
 
 // isAttributeNameSafe() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  '^[' +
-    DOMProperty.ATTRIBUTE_NAME_START_CHAR +
-    '][' +
-    DOMProperty.ATTRIBUTE_NAME_CHAR +
-    ']*$',
+  '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
 var illegalAttributeNameCache = {};
 var validatedAttributeNameCache = {};
@@ -54,11 +57,11 @@ function shouldIgnoreValue(propertyInfo, value) {
  */
 
 export function setAttributeForID(node, id) {
-  node.setAttribute(DOMProperty.ID_ATTRIBUTE_NAME, id);
+  node.setAttribute(ID_ATTRIBUTE_NAME, id);
 }
 
 export function setAttributeForRoot(node) {
-  node.setAttribute(DOMProperty.ROOT_ATTRIBUTE_NAME, '');
+  node.setAttribute(ROOT_ATTRIBUTE_NAME, '');
 }
 
 /**
@@ -68,7 +71,7 @@ export function setAttributeForRoot(node) {
  */
 export function getValueForProperty(node, name, expected) {
   if (__DEV__) {
-    var propertyInfo = DOMProperty.getPropertyInfo(name);
+    var propertyInfo = getPropertyInfo(name);
     if (propertyInfo) {
       var mutationMethod = propertyInfo.mutationMethod;
       if (mutationMethod || propertyInfo.mustUseProperty) {
@@ -151,9 +154,9 @@ export function getValueForAttribute(node, name, expected) {
  * @param {*} value
  */
 export function setValueForProperty(node, name, value) {
-  var propertyInfo = DOMProperty.getPropertyInfo(name);
+  var propertyInfo = getPropertyInfo(name);
 
-  if (propertyInfo && DOMProperty.shouldSetAttribute(name, value)) {
+  if (propertyInfo && shouldSetAttribute(name, value)) {
     var mutationMethod = propertyInfo.mutationMethod;
     if (mutationMethod) {
       mutationMethod(node, value);
@@ -184,7 +187,7 @@ export function setValueForProperty(node, name, value) {
     setValueForAttribute(
       node,
       name,
-      DOMProperty.shouldSetAttribute(name, value) ? value : null,
+      shouldSetAttribute(name, value) ? value : null,
     );
     return;
   }
@@ -228,7 +231,7 @@ export function deleteValueForAttribute(node, name) {
  * @param {string} name
  */
 export function deleteValueForProperty(node, name) {
-  var propertyInfo = DOMProperty.getPropertyInfo(name);
+  var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
     var mutationMethod = propertyInfo.mutationMethod;
     if (mutationMethod) {

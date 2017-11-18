@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
@@ -114,14 +115,14 @@ export function insertUpdateIntoFiber<State>(
     // It depends on which fiber is the next current. Initialize with an empty
     // base state, then set to the memoizedState when rendering. Not super
     // happy with this approach.
-    queue1 = fiber.updateQueue = createUpdateQueue(null);
+    queue1 = fiber.updateQueue = createUpdateQueue((null: any));
   }
 
   let queue2;
   if (alternateFiber !== null) {
     queue2 = alternateFiber.updateQueue;
     if (queue2 === null) {
-      queue2 = alternateFiber.updateQueue = createUpdateQueue(null);
+      queue2 = alternateFiber.updateQueue = createUpdateQueue((null: any));
     }
   } else {
     queue2 = null;
@@ -181,6 +182,12 @@ function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
   if (typeof partialState === 'function') {
     const updateFn = partialState;
+
+    // Invoke setState callback an extra time to help detect side-effects.
+    if (debugRenderPhaseSideEffects) {
+      updateFn.call(instance, prevState, props);
+    }
+
     return updateFn.call(instance, prevState, props);
   } else {
     return partialState;

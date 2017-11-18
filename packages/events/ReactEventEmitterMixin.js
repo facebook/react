@@ -5,32 +5,32 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginHub from './EventPluginHub';
+import {
+  enqueueEvents,
+  processEventQueue,
+  extractEvents,
+} from './EventPluginHub';
 
 function runEventQueueInBatch(events) {
-  EventPluginHub.enqueueEvents(events);
-  EventPluginHub.processEventQueue(false);
+  enqueueEvents(events);
+  processEventQueue(false);
 }
 
-var ReactEventEmitterMixin = {
-  /**
-   * Streams a fired top-level event to `EventPluginHub` where plugins have the
-   * opportunity to create `ReactEvent`s to be dispatched.
-   */
-  handleTopLevel: function(
+/**
+ * Streams a fired top-level event to `EventPluginHub` where plugins have the
+ * opportunity to create `ReactEvent`s to be dispatched.
+ */
+export function handleTopLevel(
+  topLevelType,
+  targetInst,
+  nativeEvent,
+  nativeEventTarget,
+) {
+  var events = extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
     nativeEventTarget,
-  ) {
-    var events = EventPluginHub.extractEvents(
-      topLevelType,
-      targetInst,
-      nativeEvent,
-      nativeEventTarget,
-    );
-    runEventQueueInBatch(events);
-  },
-};
-
-export default ReactEventEmitterMixin;
+  );
+  runEventQueueInBatch(events);
+}

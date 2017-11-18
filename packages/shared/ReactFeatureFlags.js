@@ -7,35 +7,27 @@
  * @flow
  */
 
-export type FeatureFlags = {|
-  enableAsyncSubtreeAPI: boolean,
-  enableAsyncSchedulingByDefaultInReactDOM: boolean,
-  enableMutatingReconciler: boolean,
-  enableNoopReconciler: boolean,
-  enablePersistentReconciler: boolean,
-  enableReactFragment: boolean,
-  enableCreateRoot: boolean,
-|};
+import invariant from 'fbjs/lib/invariant';
 
-var ReactFeatureFlags: FeatureFlags = {
-  enableAsyncSubtreeAPI: true,
-  enableAsyncSchedulingByDefaultInReactDOM: false,
-  // Mutating mode (React DOM, React ART, React Native):
-  enableMutatingReconciler: true,
-  // Experimental noop mode (currently unused):
-  enableNoopReconciler: false,
-  // Experimental persistent mode (CS):
-  enablePersistentReconciler: false,
-  // Exports React.Fragment
-  enableReactFragment: false,
-  // Exports ReactDOM.createRoot
-  enableCreateRoot: false,
-};
+export const enableAsyncSubtreeAPI = true;
+export const enableAsyncSchedulingByDefaultInReactDOM = false;
+// Exports React.Fragment
+export const enableReactFragment = false;
+// Exports ReactDOM.createRoot
+export const enableCreateRoot = false;
+export const enableUserTimingAPI = __DEV__;
 
-if (__DEV__) {
-  if (Object.freeze) {
-    Object.freeze(ReactFeatureFlags);
-  }
+// Mutating mode (React DOM, React ART, React Native):
+export const enableMutatingReconciler = true;
+// Experimental noop mode (currently unused):
+export const enableNoopReconciler = false;
+// Experimental persistent mode (CS):
+export const enablePersistentReconciler = false;
+
+// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
+export const debugRenderPhaseSideEffects = false;
+
+// Only used in www builds.
+export function addUserTimingListener() {
+  invariant(false, 'Not implemented.');
 }
-
-export default ReactFeatureFlags;

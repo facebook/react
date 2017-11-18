@@ -20,9 +20,8 @@ import invariant from 'fbjs/lib/invariant';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-import ReactNativeComponentTree from './ReactNativeComponentTree';
+import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 
-const {getClosestInstanceFromNode} = ReactNativeComponentTree;
 let getInspectorDataForViewTag;
 
 if (__DEV__) {

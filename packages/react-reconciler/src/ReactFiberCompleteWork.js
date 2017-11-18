@@ -15,7 +15,11 @@ import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {
+  enableMutatingReconciler,
+  enablePersistentReconciler,
+  enableNoopReconciler,
+} from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -39,8 +43,8 @@ import {
 } from './ReactFiberContext';
 import {Never} from './ReactFiberExpirationTime';
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
   hostContext: HostContext<C, CX>,
   hydrationContext: HydrationContext<C, CX>,
 ) {
@@ -180,7 +184,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   let updateHostComponent;
   let updateHostText;
   if (mutation) {
-    if (ReactFeatureFlags.enableMutatingReconciler) {
+    if (enableMutatingReconciler) {
       // Mutation mode
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
@@ -217,7 +221,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       invariant(false, 'Mutating reconciler is disabled.');
     }
   } else if (persistence) {
-    if (ReactFeatureFlags.enablePersistentReconciler) {
+    if (enablePersistentReconciler) {
       // Persistent host tree mode
       const {
         cloneInstance,
@@ -354,7 +358,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       invariant(false, 'Persistent reconciler is disabled.');
     }
   } else {
-    if (ReactFeatureFlags.enableNoopReconciler) {
+    if (enableNoopReconciler) {
       // No host operations
       updateHostContainer = function(workInProgress: Fiber) {
         // Noop
