@@ -371,9 +371,14 @@ describe('ReactTestRenderer', () => {
         return <div />;
       }
     }
-    const inst = ReactTestRenderer.create(<div><Foo /></div>, {
-      createNodeMock: () => 'foo',
-    });
+    const inst = ReactTestRenderer.create(
+      <div>
+        <Foo />
+      </div>,
+      {
+        createNodeMock: () => 'foo',
+      },
+    );
     expect(() => inst.unmount()).not.toThrow();
     expect(count).toEqual(1);
   });
@@ -420,7 +425,10 @@ describe('ReactTestRenderer', () => {
         log.push('Boundary render');
         if (!this.state.error) {
           return (
-            <div><button onClick={this.onClick}>ClickMe</button><Angry /></div>
+            <div>
+              <button onClick={this.onClick}>ClickMe</button>
+              <Angry />
+            </div>
           );
         } else {
           return <div>Happy Birthday!</div>;
@@ -457,11 +465,7 @@ describe('ReactTestRenderer', () => {
   it('can update text nodes', () => {
     class Component extends React.Component {
       render() {
-        return (
-          <div>
-            {this.props.children}
-          </div>
-        );
+        return <div>{this.props.children}</div>;
       }
     }
 
@@ -489,7 +493,11 @@ describe('ReactTestRenderer', () => {
       children: ['42'],
       props: {},
     });
-    renderer.update(<Component><div /></Component>);
+    renderer.update(
+      <Component>
+        <div />
+      </Component>,
+    );
     expect(renderer.toJSON()).toEqual({
       type: 'div',
       children: [
@@ -696,11 +704,7 @@ describe('ReactTestRenderer', () => {
     class Bar extends React.Component {
       render() {
         const {special, children} = this.props;
-        return (
-          <Foo className={special ? 'special' : 'normal'}>
-            {children}
-          </Foo>
-        );
+        return <Foo className={special ? 'special' : 'normal'}>{children}</Foo>;
       }
     }
 

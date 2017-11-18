@@ -133,7 +133,12 @@ describe('ReactDOMFiber', () => {
 
     class Fragment extends React.Component {
       render() {
-        return [<Wrapper key="a"><div /></Wrapper>, <span key="b" />];
+        return [
+          <Wrapper key="a">
+            <div />
+          </Wrapper>,
+          <span key="b" />,
+        ];
       }
     }
 
@@ -204,9 +209,7 @@ describe('ReactDOMFiber', () => {
     var portalContainer = document.createElement('div');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<div>portal</div>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<div>portal</div>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<div>portal</div>');
@@ -382,54 +385,42 @@ describe('ReactDOMFiber', () => {
     var portalContainer = document.createElement('div');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<div>portal:1</div>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<div>portal:1</div>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<div>portal:1</div>');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<div>portal:2</div>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<div>portal:2</div>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<div>portal:2</div>');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<p>portal:3</p>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<p>portal:3</p>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<p>portal:3</p>');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(['Hi', 'Bye'], portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(['Hi', 'Bye'], portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('HiBye');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(['Bye', 'Hi'], portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(['Bye', 'Hi'], portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('ByeHi');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(null, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(null, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('');

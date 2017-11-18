@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import DOMProperty from './DOMProperty';
+import * as DOMProperty from './DOMProperty';
 import HTMLDOMPropertyConfig from './HTMLDOMPropertyConfig';
 import SVGDOMPropertyConfig from './SVGDOMPropertyConfig';
 

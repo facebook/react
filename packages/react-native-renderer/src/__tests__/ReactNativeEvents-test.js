@@ -352,14 +352,14 @@ it('handles events without target', () => {
     ReactNative.render(
       <View id="parent">
         <View key={1}>
-          {renderFirstComponent
-            ? <View
-                id="one"
-                onResponderEnd={() => log.push('one responder end')}
-                onResponderStart={() => log.push('one responder start')}
-                onStartShouldSetResponder={() => true}
-              />
-            : null}
+          {renderFirstComponent ? (
+            <View
+              id="one"
+              onResponderEnd={() => log.push('one responder end')}
+              onResponderStart={() => log.push('one responder start')}
+              onStartShouldSetResponder={() => true}
+            />
+          ) : null}
         </View>
         <View key={2}>
           <View

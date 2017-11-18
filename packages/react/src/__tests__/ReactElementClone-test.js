@@ -90,9 +90,7 @@ describe('ReactElementClone', () => {
     class Parent extends React.Component {
       render() {
         return (
-          <div>
-            {React.cloneElement(this.props.child, {className: 'xyz'})}
-          </div>
+          <div>{React.cloneElement(this.props.child, {className: 'xyz'})}</div>
         );
       }
     }
@@ -189,7 +187,11 @@ describe('ReactElementClone', () => {
 
     class Grandparent extends React.Component {
       render() {
-        return <Parent ref="parent"><span key="abc" /></Parent>;
+        return (
+          <Parent ref="parent">
+            <span key="abc" />
+          </Parent>
+        );
       }
     }
 
@@ -207,7 +209,11 @@ describe('ReactElementClone', () => {
 
     class Grandparent extends React.Component {
       render() {
-        return <Parent ref="parent"><span ref="child" /></Parent>;
+        return (
+          <Parent ref="parent">
+            <span ref="child" />
+          </Parent>
+        );
       }
     }
 

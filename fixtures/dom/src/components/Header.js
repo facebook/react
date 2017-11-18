@@ -34,7 +34,7 @@ class Header extends React.Component {
         <div className="header__inner">
           <span className="header__logo">
             <img
-              src="https://reactjs.org/img/logo.svg"
+              src={process.env.PUBLIC_URL + '/react-logo.svg'}
               alt=""
               width="32"
               height="32"
@@ -71,7 +71,9 @@ class Header extends React.Component {
                 value={this.state.version}
                 onChange={this.handleVersionChange}>
                 {this.state.versions.map(version => (
-                  <option key={version} value={version}>{version}</option>
+                  <option key={version} value={version}>
+                    {version}
+                  </option>
                 ))}
               </select>
             </label>

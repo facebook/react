@@ -28,5 +28,5 @@ const run = async ({cwd, dry, version}) => {
 };
 
 module.exports = async params => {
-  return logPromise(run(params), 'Building artifacts');
+  return logPromise(run(params), 'Building artifacts', true);
 };

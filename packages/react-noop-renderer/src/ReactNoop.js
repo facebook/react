@@ -18,10 +18,9 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberInstrumentation
-  from 'react-reconciler/src/ReactFiberInstrumentation';
+import ReactFiberInstrumentation from 'react-reconciler/src/ReactFiberInstrumentation';
 import ReactFiberReconciler from 'react-reconciler';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
@@ -166,6 +165,14 @@ var SharedHostConfig = {
       );
     }
     scheduledCallback = callback;
+    return 0;
+  },
+
+  cancelDeferredCallback() {
+    if (scheduledCallback === null) {
+      throw new Error('No callback is scheduled.');
+    }
+    scheduledCallback = null;
   },
 
   prepareForCommit(): void {},
@@ -213,7 +220,7 @@ var NoopRenderer = ReactFiberReconciler({
   },
 });
 
-var PersistentNoopRenderer = ReactFeatureFlags.enablePersistentReconciler
+var PersistentNoopRenderer = enablePersistentReconciler
   ? ReactFiberReconciler({
       ...SharedHostConfig,
       persistence: {
@@ -448,7 +455,11 @@ var ReactNoop = {
 
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
-  flushSync: NoopRenderer.flushSync,
+  flushSync(fn: () => mixed) {
+    yieldedValues = [];
+    NoopRenderer.flushSync(fn);
+    return yieldedValues;
+  },
 
   // Logs the current state of the tree.
   dumpTree(rootID: string = DEFAULT_ROOT_ID) {

@@ -61,7 +61,7 @@ var Wedge = createReactClass({
       // 360, 720, etc.
       return this.circleRadians;
     } else {
-      return degrees * this.radiansPerDegree % this.circleRadians;
+      return (degrees * this.radiansPerDegree) % this.circleRadians;
     }
   },
 
@@ -77,7 +77,10 @@ var Wedge = createReactClass({
   _createCirclePath: function _createCirclePath(or, ir) {
     var path = Path();
 
-    path.move(0, or).arc(or * 2, 0, or).arc(-or * 2, 0, or);
+    path
+      .move(0, or)
+      .arc(or * 2, 0, or)
+      .arc(-or * 2, 0, or);
 
     if (ir) {
       path

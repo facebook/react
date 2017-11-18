@@ -126,7 +126,11 @@ describe('ReactStatelessComponent', () => {
   it('should throw when stateless component returns undefined', () => {
     function NotAComponent() {}
     expect(function() {
-      ReactTestUtils.renderIntoDocument(<div><NotAComponent /></div>);
+      ReactTestUtils.renderIntoDocument(
+        <div>
+          <NotAComponent />
+        </div>,
+      );
     }).toThrowError(
       'NotAComponent(...): Nothing was returned from render. ' +
         'This usually means a return statement is missing. Or, to render nothing, return null.',
