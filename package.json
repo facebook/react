@@ -76,7 +76,7 @@
     "prettier": "1.8.1",
     "prop-types": "^15.6.0",
     "rimraf": "^2.6.1",
-    "rollup": "^0.49.3",
+    "rollup": "^0.51.7",
     "rollup-plugin-alias": "^1.2.1",
     "rollup-plugin-babel": "^2.7.1",
     "rollup-plugin-closure-compiler-js": "^1.0.4",
