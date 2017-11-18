@@ -1,7 +1,6 @@
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 
-
 import ReactDOM from 'react-dom';
 import React from 'react';
 

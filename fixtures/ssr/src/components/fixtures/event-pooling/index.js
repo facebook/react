@@ -2,7 +2,6 @@ import FixtureSet from '../../FixtureSet';
 import MouseMove from './mouse-move';
 import Persistence from './persistence';
 
-
 import React from 'react';
 class EventPooling extends React.Component {
   render() {

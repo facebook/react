@@ -2,7 +2,6 @@ import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 import PasswordTestCase from './PasswordTestCase';
 
-
 import React from 'react';
 
 function NumberInputs() {

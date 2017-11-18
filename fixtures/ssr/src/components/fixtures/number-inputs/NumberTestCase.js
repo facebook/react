@@ -1,6 +1,5 @@
 import Fixture from '../../Fixture';
 
-
 import React from 'react';
 
 class NumberTestCase extends React.Component {

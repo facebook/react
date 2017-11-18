@@ -17,20 +17,21 @@ import React from 'react';
 
 const FixtureSection = fixtures => {
   return Object.keys(fixtures).map(fixtureName => {
-    const Fixture = fixtures[fixtureName]
-    return(
-    <div key={fixtureName}>
-      <h1 style={{backgroundColor: 'royalblue'}}>{fixtureName}</h1>
-      <Fixture />
-      <hr />
-    </div>
-  )})
-}
+    const Fixture = fixtures[fixtureName];
+    return (
+      <div key={fixtureName}>
+        <h1 style={{backgroundColor: 'royalblue'}}>{fixtureName}</h1>
+        <Fixture />
+        <hr />
+      </div>
+    );
+  });
+};
 
 class FixturesPage extends React.Component {
   render() {
     return (
-      <div style={{display: "flex", flexDirection: "column"}}>
+      <div style={{display: 'flex', flexDirection: 'column'}}>
         {FixtureSection({
           BasicFormElementsFixtures,
           TextInputFixtures,
@@ -45,10 +46,10 @@ class FixturesPage extends React.Component {
           ErrorHandling,
           EventPooling,
           CustomElementFixtures,
-          AutofocusFixtures
+          AutofocusFixtures,
         })}
       </div>
-    )
+    );
   }
 }
 

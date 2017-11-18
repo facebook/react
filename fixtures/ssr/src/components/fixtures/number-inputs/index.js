@@ -4,7 +4,6 @@ import NumberTestCase from './NumberTestCase';
 import NumberInputDecimal from './NumberInputDecimal';
 import NumberInputExtraZeroes from './NumberInputExtraZeroes';
 
-
 import React from 'react';
 
 function NumberInputs() {

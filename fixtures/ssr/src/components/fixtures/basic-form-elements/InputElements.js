@@ -14,19 +14,20 @@ export default class InputElements extends Component {
         title="<input> Elements"
         description="Expected behavior across controlled and uncontrolled inputs">
         <Fixture>
-        <div className="control-box">
-          <fieldset>
-            <legend>Controlled</legend>
-            Write here: <input value={this.state.text} onChange={this.handleChange} />
-            <hr />
-            this.state.text: <pre>{this.state.text}</pre>
-          </fieldset>
+          <div className="control-box">
+            <fieldset>
+              <legend>Controlled</legend>
+              Write here:{' '}
+              <input value={this.state.text} onChange={this.handleChange} />
+              <hr />
+              this.state.text: <pre>{this.state.text}</pre>
+            </fieldset>
 
-          <fieldset>
-            <legend>Uncontrolled</legend>
-            <input placeholder="Uncontrolled input" />
-          </fieldset>
-        </div>
+            <fieldset>
+              <legend>Uncontrolled</legend>
+              <input placeholder="Uncontrolled input" />
+            </fieldset>
+          </div>
         </Fixture>
       </FixtureSet>
     );

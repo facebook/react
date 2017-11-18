@@ -1,6 +1,5 @@
 import Fixture from '../../Fixture';
 
-
 import React from 'react';
 
 class NumberInputExtraZeroes extends React.Component {

@@ -1,7 +1,6 @@
 import FixtureSet from '../../FixtureSet';
 import TestCase from '../../TestCase';
 
-
 import React from 'react';
 
 function onButtonClick() {

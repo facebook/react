@@ -45,7 +45,7 @@ class TestCase extends React.Component {
     let {complete} = this.state;
 
     // const {version} = parse(window.location.search);
-    const version = React.version
+    const version = React.version;
     const isTestFixed =
       !version || !resolvedIn || semver.gte(version, resolvedIn);
 

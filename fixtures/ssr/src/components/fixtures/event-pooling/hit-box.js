@@ -1,4 +1,3 @@
-
 import React from 'react';
 
 class HitBox extends React.Component {
