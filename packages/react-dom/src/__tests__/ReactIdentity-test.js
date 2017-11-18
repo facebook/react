@@ -50,11 +50,15 @@ describe('ReactIdentity', () => {
     var node1;
     var node2;
     ReactDOM.render(
-      <Wrapper key="wrap1"><span ref={c => (node1 = c)} /></Wrapper>,
+      <Wrapper key="wrap1">
+        <span ref={c => (node1 = c)} />
+      </Wrapper>,
       container,
     );
     ReactDOM.render(
-      <Wrapper key="wrap2"><span ref={c => (node2 = c)} /></Wrapper>,
+      <Wrapper key="wrap2">
+        <span ref={c => (node2 = c)} />
+      </Wrapper>,
       container,
     );
 
@@ -64,7 +68,11 @@ describe('ReactIdentity', () => {
   function renderAComponentWithKeyIntoContainer(key, container) {
     class Wrapper extends React.Component {
       render() {
-        return <div><span ref="span" key={key} /></div>;
+        return (
+          <div>
+            <span ref="span" key={key} />
+          </div>
+        );
       }
     }
 
@@ -123,7 +131,12 @@ describe('ReactIdentity', () => {
 
     class TestContainer extends React.Component {
       render() {
-        return <TestComponent>{instance0}{instance1}</TestComponent>;
+        return (
+          <TestComponent>
+            {instance0}
+            {instance1}
+          </TestComponent>
+        );
       }
     }
 
@@ -153,7 +166,10 @@ describe('ReactIdentity', () => {
       render() {
         return (
           <div>
-            <TestComponent>{instance0}{instance1}</TestComponent>
+            <TestComponent>
+              {instance0}
+              {instance1}
+            </TestComponent>
           </div>
         );
       }
@@ -167,7 +183,12 @@ describe('ReactIdentity', () => {
   it('should let text nodes retain their uniqueness', () => {
     class TestComponent extends React.Component {
       render() {
-        return <div>{this.props.children}<span /></div>;
+        return (
+          <div>
+            {this.props.children}
+            <span />
+          </div>
+        );
       }
     }
 

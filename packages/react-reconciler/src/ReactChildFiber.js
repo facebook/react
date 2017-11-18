@@ -10,12 +10,10 @@
 import type {ReactElement} from 'shared/ReactElementType';
 import type {ReactCall, ReactPortal, ReactReturn} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {
-  ExpirationTime,
-} from 'react-reconciler/src/ReactFiberExpirationTime';
+import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
+import {enableReactFragment} from 'shared/ReactFeatureFlags';
+import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
 import {
   FunctionalComponent,
   ClassComponent,
@@ -224,20 +222,11 @@ function warnOnFunctionType() {
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+function ChildReconciler(shouldTrackSideEffects) {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
       return;
-    }
-    if (!shouldClone) {
-      // When we're reconciling in place we have a work in progress copy. We
-      // actually want the current copy. If there is no current copy, then we
-      // don't need to track deletion side-effects.
-      if (childToDelete.alternate === null) {
-        return;
-      }
-      childToDelete = childToDelete.alternate;
     }
     // Deletions are added in reversed order so we add it to the front.
     // At this point, the return fiber's effect list is empty except for
@@ -302,22 +291,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
-    if (shouldClone) {
-      const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
-      clone.index = 0;
-      clone.sibling = null;
-      return clone;
-    } else {
-      // We override the expiration time even if it is earlier, because if
-      // we're reconciling at a later time that means that this was
-      // down-prioritized.
-      fiber.expirationTime = expirationTime;
-      fiber.effectTag = NoEffect;
-      fiber.index = 0;
-      fiber.sibling = null;
-      fiber.pendingProps = pendingProps;
-      return fiber;
-    }
+    const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
+    clone.index = 0;
+    clone.sibling = null;
+    return clone;
   }
 
   function placeChild(
@@ -1092,7 +1069,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     for (
       ;
       oldFiber !== null && !step.done;
-      newIdx++, (step = newChildren.next())
+      newIdx++, step = newChildren.next()
     ) {
       if (oldFiber.index > newIdx) {
         nextOldFiber = oldFiber;
@@ -1147,7 +1124,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     if (oldFiber === null) {
       // If we don't have any more existing children we can choose a fast path
       // since the rest will all be insertions.
-      for (; !step.done; newIdx++, (step = newChildren.next())) {
+      for (; !step.done; newIdx++, step = newChildren.next()) {
         const newFiber = createChild(returnFiber, step.value, expirationTime);
         if (newFiber === null) {
           continue;
@@ -1168,7 +1145,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     const existingChildren = mapRemainingChildren(returnFiber, oldFiber);
 
     // Keep scanning and use the map to restore deleted items as moves.
-    for (; !step.done; newIdx++, (step = newChildren.next())) {
+    for (; !step.done; newIdx++, step = newChildren.next()) {
       const newFiber = updateFromMap(
         existingChildren,
         returnFiber,
@@ -1426,7 +1403,7 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
-      ReactFeatureFlags.enableReactFragment &&
+      enableReactFragment &&
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&
@@ -1555,11 +1532,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers = ChildReconciler(true, true);
-
-export const reconcileChildFibersInPlace = ChildReconciler(false, true);
-
-export const mountChildFibersInPlace = ChildReconciler(false, false);
+export const reconcileChildFibers = ChildReconciler(true);
+export const mountChildFibers = ChildReconciler(false);
 
 export function cloneChildFibers(
   current: Fiber | null,

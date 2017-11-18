@@ -28,6 +28,7 @@ module.exports = async ({cwd}) => {
   );
   await logPromise(
     runYarnTask(cwd, 'jest', 'Jest failed'),
-    'Running Jest tests'
+    'Running Jest tests',
+    true
   );
 };

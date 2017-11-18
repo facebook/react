@@ -11,7 +11,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import ReactFiberReconciler from 'react-reconciler';
-import ReactGenericBatching from 'events/ReactGenericBatching';
+import {batchedUpdates} from 'events/ReactGenericBatching';
 import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
 import emptyObject from 'fbjs/lib/emptyObject';
 import {
@@ -195,8 +195,12 @@ var TestRenderer = ReactFiberReconciler({
     };
   },
 
-  scheduleDeferredCallback(fn: Function): void {
-    setTimeout(fn, 0, {timeRemaining: Infinity});
+  scheduleDeferredCallback(fn: Function): number {
+    return setTimeout(fn, 0, {timeRemaining: Infinity});
+  },
+
+  cancelDeferredCallback(timeoutID: number): void {
+    clearTimeout(timeoutID);
   },
 
   useSyncScheduling: true,
@@ -540,9 +544,10 @@ function expectOne(
     return all[0];
   }
 
-  const prefix = all.length === 0
-    ? 'No instances found '
-    : `Expected 1 but found ${all.length} instances `;
+  const prefix =
+    all.length === 0
+      ? 'No instances found '
+      : `Expected 1 but found ${all.length} instances `;
 
   throw new Error(prefix + message);
 }
@@ -633,7 +638,7 @@ var ReactTestRendererFiber = {
   },
 
   /* eslint-disable camelcase */
-  unstable_batchedUpdates: ReactGenericBatching.batchedUpdates,
+  unstable_batchedUpdates: batchedUpdates,
   /* eslint-enable camelcase */
 };
 

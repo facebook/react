@@ -195,7 +195,11 @@ describe('ReactMount', () => {
 
     class Component extends React.Component {
       render() {
-        return <div><div /></div>;
+        return (
+          <div>
+            <div />
+          </div>
+        );
       }
     }
 
@@ -221,7 +225,11 @@ describe('ReactMount', () => {
 
     class Component extends React.Component {
       render() {
-        return <div><div /></div>;
+        return (
+          <div>
+            <div />
+          </div>
+        );
       }
     }
 

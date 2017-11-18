@@ -5,9 +5,9 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import DOMProperty from './DOMProperty';
+import {injection} from './DOMProperty';
 
-var {HAS_STRING_BOOLEAN_VALUE} = DOMProperty.injection;
+var {HAS_STRING_BOOLEAN_VALUE} = injection;
 
 var NS = {
   xlink: 'http://www.w3.org/1999/xlink',

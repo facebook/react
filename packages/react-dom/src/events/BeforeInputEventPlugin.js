@@ -7,10 +7,10 @@
 
 import type {TopLevelTypes} from './BrowserEventConstants';
 
-import EventPropagators from 'events/EventPropagators';
+import {accumulateTwoPhaseDispatches} from 'events/EventPropagators';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 
-import FallbackCompositionState from './FallbackCompositionState';
+import * as FallbackCompositionState from './FallbackCompositionState';
 import SyntheticCompositionEvent from './SyntheticCompositionEvent';
 import SyntheticInputEvent from './SyntheticInputEvent';
 
@@ -263,7 +263,7 @@ function extractCompositionEvent(
     }
   }
 
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 
@@ -422,7 +422,7 @@ function extractBeforeInputEvent(
   );
 
   event.data = chars;
-  EventPropagators.accumulateTwoPhaseDispatches(event);
+  accumulateTwoPhaseDispatches(event);
   return event;
 }
 

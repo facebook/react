@@ -60,7 +60,11 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        return <div>({this.state.x}, {this.state.y})</div>;
+        return (
+          <div>
+            ({this.state.x}, {this.state.y})
+          </div>
+        );
       }
     }
 
@@ -92,7 +96,11 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        return <div>({this.props.x}, {this.state.y})</div>;
+        return (
+          <div>
+            ({this.props.x}, {this.state.y})
+          </div>
+        );
       }
     }
 
@@ -125,7 +133,11 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        return <div><Child ref="child" x={this.state.x} /></div>;
+        return (
+          <div>
+            <Child ref="child" x={this.state.x} />
+          </div>
+        );
       }
     }
 
@@ -174,7 +186,11 @@ describe('ReactUpdates', () => {
       }
 
       render() {
-        return <div><Child ref="child" x={this.state.x} /></div>;
+        return (
+          <div>
+            <Child ref="child" x={this.state.x} />
+          </div>
+        );
       }
     }
 
@@ -347,7 +363,11 @@ describe('ReactUpdates', () => {
 
     class Top extends React.Component {
       render() {
-        return <Middle><Bottom /></Middle>;
+        return (
+          <Middle>
+            <Bottom />
+          </Middle>
+        );
       }
     }
 
@@ -518,7 +538,12 @@ describe('ReactUpdates', () => {
         var portal = null;
         // If we're using Fiber, we use Portals instead to achieve this.
         portal = ReactDOM.createPortal(<B ref={n => (b = n)} />, bContainer);
-        return <div>A{this.state.x}{portal}</div>;
+        return (
+          <div>
+            A{this.state.x}
+            {portal}
+          </div>
+        );
       }
     }
 
@@ -547,7 +572,11 @@ describe('ReactUpdates', () => {
 
       render() {
         updates.push('Outer-render-' + this.state.x);
-        return <div><Inner x={this.state.x} ref="inner" /></div>;
+        return (
+          <div>
+            <Inner x={this.state.x} ref="inner" />
+          </div>
+        );
       }
 
       componentDidUpdate() {
@@ -1152,9 +1181,21 @@ describe('ReactUpdates', () => {
 
       const container = document.createElement('div');
       // Mount
-      ReactDOM.render(<div><Foo /><Bar /></div>, container);
+      ReactDOM.render(
+        <div>
+          <Foo />
+          <Bar />
+        </div>,
+        container,
+      );
       // Root update
-      ReactDOM.render(<div><Foo /><Bar /></div>, container);
+      ReactDOM.render(
+        <div>
+          <Foo />
+          <Bar />
+        </div>,
+        container,
+      );
       expect(ops).toEqual([
         // Mount
         'a: false',
@@ -1239,7 +1280,9 @@ describe('ReactUpdates', () => {
       ops.push('Foo');
       return (
         <div>
-          <div hidden={true}><Bar /></div>
+          <div hidden={true}>
+            <Bar />
+          </div>
           <Baz />
         </div>
       );
@@ -1289,7 +1332,12 @@ describe('ReactUpdates', () => {
         this.setState({step: 2});
       }
       render() {
-        return <div>Hello {this.props.name}{this.state.step}</div>;
+        return (
+          <div>
+            Hello {this.props.name}
+            {this.state.step}
+          </div>
+        );
       }
     }
 

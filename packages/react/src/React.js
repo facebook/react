@@ -7,7 +7,7 @@
 
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enableReactFragment} from 'shared/ReactFeatureFlags';
 
 import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
@@ -58,7 +58,7 @@ var React = {
   },
 };
 
-if (ReactFeatureFlags.enableReactFragment) {
+if (enableReactFragment) {
   React.Fragment = REACT_FRAGMENT_TYPE;
 }
 

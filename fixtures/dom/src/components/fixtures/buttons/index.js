@@ -20,7 +20,9 @@ export default class ButtonTestCases extends React.Component {
           <TestCase.ExpectedResult>
             Nothing should happen
           </TestCase.ExpectedResult>
-          <button disabled onClick={onButtonClick}>Click Me</button>
+          <button disabled onClick={onButtonClick}>
+            Click Me
+          </button>
         </TestCase>
         <TestCase
           title="onClick with disabled buttons containing other elements"

@@ -5,22 +5,20 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import EventPluginHub from 'events/EventPluginHub';
-import EventPluginUtils from 'events/EventPluginUtils';
+import * as EventPluginHub from 'events/EventPluginHub';
+import * as EventPluginUtils from 'events/EventPluginUtils';
 
-import ReactDOMComponentTree from './ReactDOMComponentTree';
+import * as ReactDOMComponentTree from './ReactDOMComponentTree';
 import BeforeInputEventPlugin from '../events/BeforeInputEventPlugin';
 import ChangeEventPlugin from '../events/ChangeEventPlugin';
 import DOMEventPluginOrder from '../events/DOMEventPluginOrder';
 import EnterLeaveEventPlugin from '../events/EnterLeaveEventPlugin';
-import ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
-import ReactDOMEventListener from '../events/ReactDOMEventListener';
+import {handleTopLevel} from '../events/ReactBrowserEventEmitter';
+import {setHandleTopLevel} from '../events/ReactDOMEventListener';
 import SelectEventPlugin from '../events/SelectEventPlugin';
 import SimpleEventPlugin from '../events/SimpleEventPlugin';
 
-ReactDOMEventListener.setHandleTopLevel(
-  ReactBrowserEventEmitter.handleTopLevel,
-);
+setHandleTopLevel(handleTopLevel);
 
 /**
  * Inject modules for resolving DOM hierarchy and plugin ordering.

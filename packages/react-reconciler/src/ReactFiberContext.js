@@ -20,9 +20,7 @@ import checkPropTypes from 'prop-types/checkPropTypes';
 
 import {createCursor, pop, push} from './ReactFiberStack';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
-import ReactDebugFiberPerf from './ReactDebugFiberPerf';
-
-const {startPhaseTimer, stopPhaseTimer} = ReactDebugFiberPerf;
+import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
 if (__DEV__) {
   var warnedAboutMissingGetChildContext = {};
@@ -177,12 +175,12 @@ export function processChildContext(
   let childContext;
   if (__DEV__) {
     ReactDebugCurrentFiber.setCurrentPhase('getChildContext');
-    startPhaseTimer(fiber, 'getChildContext');
-    childContext = instance.getChildContext();
-    stopPhaseTimer();
+  }
+  startPhaseTimer(fiber, 'getChildContext');
+  childContext = instance.getChildContext();
+  stopPhaseTimer();
+  if (__DEV__) {
     ReactDebugCurrentFiber.setCurrentPhase(null);
-  } else {
-    childContext = instance.getChildContext();
   }
   for (let contextKey in childContext) {
     invariant(
