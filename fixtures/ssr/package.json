@@ -8,10 +8,12 @@
     "react-scripts": "0.9.5"
   },
   "dependencies": {
+    "classnames": "^2.2.5",
     "express": "^4.14.0",
     "ignore-styles": "^5.0.1",
     "import-export": "^1.0.1",
     "node-fetch": "^1.6.3",
+    "prop-types": "^15.6.0",
     "react": "file:../../build/packages/react",
     "react-dom": "file:../../build/packages/react-dom"
   },
