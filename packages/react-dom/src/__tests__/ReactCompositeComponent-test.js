@@ -1591,6 +1591,34 @@ describe('ReactCompositeComponent', () => {
     expect(mockArgs.length).toEqual(0);
   });
 
+  it('this.state should be updated on setState callback inside componentWillMount', () => {
+    const div = document.createElement('div');
+    let stateSuccessfullyUpdated = false;
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
+      }
+
+      componentWillMount() {
+        this.setState(
+          {hasUpdatedState: true},
+          () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
+        );
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    ReactDOM.render(<Component />, div);
+    expect(stateSuccessfullyUpdated).toBe(true);
+  });
+
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
     const mockFn = jest.fn().mockReturnValue(false);
     const div = document.createElement('div');
