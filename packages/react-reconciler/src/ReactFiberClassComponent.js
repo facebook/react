@@ -11,7 +11,10 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
-import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffects,
+  enableAsyncSubtreeAPI,
+} from 'shared/ReactFeatureFlags';
 import {isMounted} from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -167,6 +170,11 @@ export default function(
         newContext,
       );
       stopPhaseTimer();
+
+      // Simulate an async bailout/interruption by invoking lifecycle twice.
+      if (debugRenderPhaseSideEffects) {
+        instance.shouldComponentUpdate(newProps, newState, newContext);
+      }
 
       if (__DEV__) {
         warning(
@@ -374,8 +382,12 @@ export default function(
     startPhaseTimer(workInProgress, 'componentWillMount');
     const oldState = instance.state;
     instance.componentWillMount();
-
     stopPhaseTimer();
+
+    // Simulate an async bailout/interruption by invoking lifecycle twice.
+    if (debugRenderPhaseSideEffects) {
+      instance.componentWillMount();
+    }
 
     if (oldState !== instance.state) {
       if (__DEV__) {
@@ -401,6 +413,11 @@ export default function(
     const oldState = instance.state;
     instance.componentWillReceiveProps(newProps, newContext);
     stopPhaseTimer();
+
+    // Simulate an async bailout/interruption by invoking lifecycle twice.
+    if (debugRenderPhaseSideEffects) {
+      instance.componentWillReceiveProps(newProps, newContext);
+    }
 
     if (instance.state !== oldState) {
       if (__DEV__) {
@@ -677,6 +694,11 @@ export default function(
         startPhaseTimer(workInProgress, 'componentWillUpdate');
         instance.componentWillUpdate(newProps, newState, newContext);
         stopPhaseTimer();
+
+        // Simulate an async bailout/interruption by invoking lifecycle twice.
+        if (debugRenderPhaseSideEffects) {
+          instance.componentWillUpdate(newProps, newState, newContext);
+        }
       }
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;

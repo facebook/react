@@ -668,6 +668,45 @@ describe('ReactDOMInput', () => {
     expect(cNode.checked).toBe(true);
   });
 
+  it('should check the correct radio when the selected name moves', () => {
+    class App extends React.Component {
+      state = {
+        updated: false,
+      };
+      onClick = () => {
+        this.setState({updated: true});
+      };
+      render() {
+        const {updated} = this.state;
+        const radioName = updated ? 'secondName' : 'firstName';
+        return (
+          <div>
+            <button type="button" onClick={this.onClick} />
+            <input
+              type="radio"
+              name={radioName}
+              onChange={emptyFunction}
+              checked={updated === true}
+            />
+            <input
+              type="radio"
+              name={radioName}
+              onChange={emptyFunction}
+              checked={updated === false}
+            />
+          </div>
+        );
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<App />);
+    var buttonNode = ReactDOM.findDOMNode(stub).childNodes[0];
+    var firstRadioNode = ReactDOM.findDOMNode(stub).childNodes[1];
+    expect(firstRadioNode.checked).toBe(false);
+    ReactTestUtils.Simulate.click(buttonNode);
+    expect(firstRadioNode.checked).toBe(true);
+  });
+
   it('should control radio buttons if the tree updates during render', () => {
     var sharedParent = document.createElement('div');
     var container1 = document.createElement('div');

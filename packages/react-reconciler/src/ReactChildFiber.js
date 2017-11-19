@@ -13,7 +13,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
 import {enableReactFragment} from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
+import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
 import {
   FunctionalComponent,
   ClassComponent,
@@ -222,20 +222,11 @@ function warnOnFunctionType() {
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+function ChildReconciler(shouldTrackSideEffects) {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
       return;
-    }
-    if (!shouldClone) {
-      // When we're reconciling in place we have a work in progress copy. We
-      // actually want the current copy. If there is no current copy, then we
-      // don't need to track deletion side-effects.
-      if (childToDelete.alternate === null) {
-        return;
-      }
-      childToDelete = childToDelete.alternate;
     }
     // Deletions are added in reversed order so we add it to the front.
     // At this point, the return fiber's effect list is empty except for
@@ -300,22 +291,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
-    if (shouldClone) {
-      const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
-      clone.index = 0;
-      clone.sibling = null;
-      return clone;
-    } else {
-      // We override the expiration time even if it is earlier, because if
-      // we're reconciling at a later time that means that this was
-      // down-prioritized.
-      fiber.expirationTime = expirationTime;
-      fiber.effectTag = NoEffect;
-      fiber.index = 0;
-      fiber.sibling = null;
-      fiber.pendingProps = pendingProps;
-      return fiber;
-    }
+    const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
+    clone.index = 0;
+    clone.sibling = null;
+    return clone;
   }
 
   function placeChild(
@@ -1553,11 +1532,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers = ChildReconciler(true, true);
-
-export const reconcileChildFibersInPlace = ChildReconciler(false, true);
-
-export const mountChildFibersInPlace = ChildReconciler(false, false);
+export const reconcileChildFibers = ChildReconciler(true);
+export const mountChildFibers = ChildReconciler(false);
 
 export function cloneChildFibers(
   current: Fiber | null,

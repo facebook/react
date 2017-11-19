@@ -16,6 +16,7 @@ export const {
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
+export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableReactFragment = false;
 export const enableCreateRoot = true;
