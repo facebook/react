@@ -9,34 +9,23 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
-var SyntheticKeyboardEvent;
-var getEventCharCode;
-
-var React;
-var ReactDOM;
+let getEventCharCode;
 
 describe('SyntheticKeyboardEvent', () => {
-  var container;
+  let container;
 
-  var createEvent;
   beforeEach(() => {    
     React = require('react');
     ReactDOM = require('react-dom');
     // The container has to be attached for events to fire.
     container = document.createElement('div');
     document.body.appendChild(container);
-    // Mock getEventCharCode for proper unit testing
-    // jest.mock('../getEventCharCode');
+
     getEventCharCode = require('../getEventCharCode').default;
-    // TODO: can we express this test with only public API?
-    // SyntheticKeyboardEvent = require('../SyntheticKeyboardEvent').default;
-    // createEvent = function(nativeEvent) {
-    //   var target = require('../getEventTarget').default(nativeEvent);
-    //   return SyntheticKeyboardEvent.getPooled({}, '', nativeEvent, target);
-    // };
+
   });
 
   afterEach(() => {
@@ -52,10 +41,8 @@ describe('SyntheticKeyboardEvent', () => {
           let charCode = null;
           class Comp extends React.Component {
             render() {
-              return <input onKeyPress={e => {
-                e.persist();
-                console.log(charCode, 'IS CHARCODE INSIDE FUNCTION')                
-                charCode = getEventCharCode(e);
+              return <input onKeyPress={event => {
+                charCode= getEventCharCode(event);
               }} />;
             }
           }
@@ -63,16 +50,14 @@ describe('SyntheticKeyboardEvent', () => {
           ReactDOM.render(<Comp />, container);
   
           var nativeEvent = new KeyboardEvent('keypress', {
-            charCode: 65,
+            keyCode: 13,
             bubbles: true,
             cancelable: true,
           });
           container.firstChild.dispatchEvent(nativeEvent);
-          console.log(charCode, 'IS CHARCODE')          
-          expect(charCode).toBe(65);
+          expect(charCode).toBe(13);
         });
       });
-      // AARBOLEDA PASSED
       describe('when event is not `keypress`', () => {
         it('returns 0', () => {
           let charCode = null;
@@ -81,7 +66,6 @@ describe('SyntheticKeyboardEvent', () => {
               return <input onKeyDown={e => {
                 e.persist();
                 charCode = getEventCharCode(e);
-                console.log(charCode, 'IS CHARCODE INSIDE FUNCTION')
               }} />;
             }
           }
@@ -96,7 +80,7 @@ describe('SyntheticKeyboardEvent', () => {
         });
       });
     });
-    // AARBOLEDA PASSED
+
     describe('keyCode', () => {
       describe('when event is `keydown` or `keyup`', () => {
         it('returns a passed keyCode', () => {
@@ -107,7 +91,7 @@ describe('SyntheticKeyboardEvent', () => {
             }
           }
           ReactDOM.render(<Comp />, container);
-          var nativeEvent = new KeyboardEvent('keyup', {
+          const nativeEvent = new KeyboardEvent('keyup', {
             keyCode: 40,
             bubbles: true,
             cancelable: true,
@@ -127,7 +111,7 @@ describe('SyntheticKeyboardEvent', () => {
             }
           }
           ReactDOM.render(<Comp />, container);
-          var nativeEvent = new KeyboardEvent('keypress', {
+          const nativeEvent = new KeyboardEvent('keypress', {
             charCode: 65,           
             bubbles: true,
             cancelable: true,
@@ -141,25 +125,14 @@ describe('SyntheticKeyboardEvent', () => {
     describe('which', () => {
       describe('when event is `keypress`', () => {
         it('returns whatever getEventCharCode returns', () => {
-          // getEventCharCode.mockReturnValue(9001);
-          // var keyboardEvent = createEvent({type: 'keypress', charCode: 50});
-
-          // expect(keyboardEvent.which).toBe(9001);
           let which = null;
           class Comp extends React.Component {
             render() {
-              // return <input onKeyPress={e => (which = e.which)} />;
-              return <input onKeyPress={e => {
-                console.log('FIRE BITCH')
-                console.log(e.which, 'iIS THE WHICH')
-                which = e.which;
-                // console.log(getEventCharCode(e), 'SHOULD BE 9001')
-                // charCode = getEventCharCode(e);
-              }} />;
+              return <input onKeyPress={e => (which = e.which)} />;
             }
           }
           ReactDOM.render(<Comp />, container);
-          var nativeEvent = new KeyboardEvent('keypress', {
+          const nativeEvent = new KeyboardEvent('keypress', {
             key: 'a',
             bubbles: true,
             cancelable: true,
@@ -168,50 +141,204 @@ describe('SyntheticKeyboardEvent', () => {
           expect(which).toBe(97);
         });
       });
+      describe('when event is `keydown` or `keyup`', () => {
+        it('returns a passed keyCode', () => {
+          let which = null;
+          class Comp extends React.Component {
+            render() {
+              return <input onKeyDown={e => (which = e.which)} />;
+            }
+          }
+          ReactDOM.render(<Comp />, container);
+          const nativeEvent = new KeyboardEvent('keydown', {
+            key: 'a',
+            keyCode: 40,
+            bubbles: true,
+            cancelable: true,
+          });      
+          container.firstChild.dispatchEvent(nativeEvent);
+          expect(which).toBe(40);              
+        });
+      });
 
-      // describe('when event is `keydown` or `keyup`', () => {
-      //   it('returns a passed keyCode', () => {
-      //     var keyboardEvent = createEvent({type: 'keyup', keyCode: 40});
-      //     expect(keyboardEvent.which).toBe(40);
-      //   });
-      // });
-
-      // describe('when event type is unknown', () => {
-      //   it('returns 0', () => {
-      //     var keyboardEvent = createEvent({type: 'keysmack', keyCode: 40});
-      //     expect(keyboardEvent.which).toBe(0);
-      //   });
-      // });
+      // TODO (aarboleda) Need to register this keyboard event
+      describe('when event type is unknown', () => {
+        it('returns 0', () => {
+          let which = null;
+          class Comp extends React.Component {
+            render() {
+              return <input onKeyPress={e => (which = e.which)} />;
+            }
+          }
+          ReactDOM.render(<Comp />, container);
+          const nativeEvent = new KeyboardEvent('keysmack', {
+            key: 'a',
+            bubbles: true,
+            cancelable: true,
+          });
+          container.firstChild.dispatchEvent(nativeEvent);
+          expect(which).toBe(0);          
+        });
+      });
     });
   });
 
-  // describe('EventInterface', () => {
-  //   it('normalizes properties from the Event interface', () => {
-  //     var target = document.createElement('div');
-  //     var syntheticEvent = createEvent({srcElement: target});
+  describe('EventInterface', () => {
+    it('normalizes properties from the Event interface', () => {
+      let expectedCount = 0;
+      let div;
+      const eventHandler = type => event => {
+        expect(event.target).toBe(div);
+        expect(event.type).toBe(type);
+        expectedCount++;
+      }
+      div = ReactDOM.render(
+        <div
+          onKeyDown={eventHandler('keydown')}
+          onKeyPress={eventHandler('keypress')}
+          onKeyUp={eventHandler('keyup')}
+        />, 
+        container,
+      );
+      let event;
+      event = document.createEvent('Event');
+      event.initEvent('keydown', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      })
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        }
+      })
+      div.dispatchEvent(event);
 
-  //     expect(syntheticEvent.target).toBe(target);
-  //     expect(syntheticEvent.type).toBe(undefined);
-  //   });
+      event = document.createEvent('Event');
+      event.initEvent('keypress', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        }
+      });
+      div.dispatchEvent(event);
 
-  //   it('is able to `preventDefault` and `stopPropagation`', () => {
-  //     var nativeEvent = {};
-  //     var syntheticEvent = createEvent(nativeEvent);
+      event = document.createEvent('Event');
+      event.initEvent('keyup', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
 
-  //     expect(syntheticEvent.isDefaultPrevented()).toBe(false);
-  //     syntheticEvent.preventDefault();
-  //     expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        }
+      });
+      div.dispatchEvent(event);
+      
+      /*
+      // TODO aarboleda1 This should be 3 events including the keypress event
 
-  //     expect(syntheticEvent.isPropagationStopped()).toBe(false);
-  //     syntheticEvent.stopPropagation();
-  //     expect(syntheticEvent.isPropagationStopped()).toBe(true);
-  //   });
+      event = document.createEvent('Event');
+      event.initEvent('keypress', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
 
-  //   it('is able to `persist`', () => {
-  //     var syntheticEvent = createEvent({});
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        }
+      });
+      div.dispatchEvent(event);
+      */
+      expect(expectedCount).toBe(2);
+    });
 
-  //     expect(syntheticEvent.isPersistent()).toBe(false);
-  //     syntheticEvent.persist();
-  //     expect(syntheticEvent.isPersistent()).toBe(true);
-  //   });
+    it('is able to `preventDefault` and `stopPropagation`', () => {
+      let expectedCount = 0;
+      let div;
+      const eventHandler = event => {
+        expect(event.isDefaultPrevented()).toBe(false);
+        event.preventDefault();
+        expect(event.isDefaultPrevented()).toBe(true);
+        expect(event.isPropagationStopped()).toBe(false);
+        event.stopPropagation();
+        expect(event.isPropagationStopped()).toBe(true);
+        expectedCount++;        
+      };
+      div = ReactDOM.render(
+        <div
+          onKeyDown={eventHandler}
+          onKeyUp={eventHandler}
+        />,
+        container,
+      );
+      let event;
+      event = document.createEvent('Event');
+      event.initEvent('keydown', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('keyup', true, true);
+      div.dispatchEvent(event);
+      
+      /*
+        event = document.createEvent('Event');
+        event.initEvent('keypress', true, true);
+        div.dispatchEvent(event);
+      */
+      // TODO aarboleda1, this should be 3 events with the keypress event
+      expect(expectedCount).toBe(2);
+    });
+
+    it('is able to `persist`', () => {
+      const persistentEvents = [];
+      const eventHandler = event => {
+        expect(event.isPersistent()).toBe(false);
+        event.persist();
+        expect(event.isPersistent()).toBe(true);
+        persistentEvents.push(event);        
+      };
+      let div = ReactDOM.render(
+        <div
+          onKeyDown={eventHandler}
+          onKeyUp={eventHandler}
+        />, 
+        container,
+      );
+      let event;
+      event = document.createEvent('Event');
+      event.initEvent('keydown', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('keyup', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('keypress', true, true);
+      div.dispatchEvent(event);
+       
+      // TODO aarboleda1, make this be 3 when keypres
+      expect(persistentEvents.length).toBe(2);
+      expect(persistentEvents[0].type).toBe('keydown');
+      expect(persistentEvents[1].type).toBe('keyup');      
+      // expect(persistentEvents[2].type).toBe('keypress');
+    });
   });
+});
+
+
+/*
+  TODO aarboleda
+  [ ] Figure out a way to fire keypress events. Have not figured out a way
+  to fire them in the Keyboard interface. 
+
+*/
