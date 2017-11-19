@@ -873,7 +873,7 @@ describe('ReactShallowRenderer', () => {
     expect(stateSuccessfullyUpdated).toBe(true);
   });
 
-  it('should call the setState callback even if shouldComponentUpdate = false', () => {
+  it('should call the setState callback even if shouldComponentUpdate = false', done => {
     const mockFn = jest.fn().mockReturnValue(false);
 
     class Component extends React.Component {
@@ -900,6 +900,7 @@ describe('ReactShallowRenderer', () => {
     mountedInstance.setState({hasUpdatedState: true}, () => {
       expect(mockFn).toBeCalled();
       expect(mountedInstance.state.hasUpdatedState).toBe(true);
+      done();
     });
   });
 
