@@ -113,12 +113,25 @@ function focusNodePreservingScroll(element) {
  * assume buttons have range selections allowed).
  * Input selection module for React.
  */
-
+const selectionCapableTypes = [
+  'date',
+  'datetime-local',
+  'email',
+  'month',
+  'number',
+  'password',
+  'search',
+  'tel',
+  'text',
+  'time',
+  'url',
+  'week',
+];
 export function hasSelectionCapabilities(elem) {
   const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
-    ((nodeName === 'input' && elem.type === 'text') ||
+    ((nodeName === 'input' && selectionCapableTypes.includes(elem.type)) ||
       nodeName === 'textarea' ||
       elem.contentEditable === 'true')
   );

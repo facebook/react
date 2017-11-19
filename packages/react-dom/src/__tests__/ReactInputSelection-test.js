@@ -36,37 +36,50 @@ describe('ReactInputSelection', () => {
       expect(ReactInputSelection.hasSelectionCapabilities(textarea)).toBe(true);
     });
 
-    it('returns true for text inputs', () => {
-      var inputText = document.createElement('input');
+    it('returns true for inputs that can support text selection ranges', () => {
+      [
+        'date',
+        'datetime-local',
+        'email',
+        'month',
+        'number',
+        'password',
+        'search',
+        'tel',
+        'text',
+        'time',
+        'url',
+        'week',
+      ].forEach(type => {
+        const input = document.createElement('input');
+        input.type = type;
+        expect(ReactInputSelection.hasSelectionCapabilities(input)).toBe(true);
+      });
+
       var inputReadOnly = document.createElement('input');
       inputReadOnly.readOnly = 'true';
-      var inputNumber = document.createElement('input');
-      inputNumber.type = 'number';
-      var inputEmail = document.createElement('input');
-      inputEmail.type = 'email';
-      var inputPassword = document.createElement('input');
-      inputPassword.type = 'password';
-      var inputHidden = document.createElement('input');
-      inputHidden.type = 'hidden';
-
-      expect(ReactInputSelection.hasSelectionCapabilities(inputText)).toBe(
-        true,
-      );
       expect(ReactInputSelection.hasSelectionCapabilities(inputReadOnly)).toBe(
         true,
       );
-      expect(ReactInputSelection.hasSelectionCapabilities(inputNumber)).toBe(
-        false,
-      );
-      expect(ReactInputSelection.hasSelectionCapabilities(inputEmail)).toBe(
-        false,
-      );
-      expect(ReactInputSelection.hasSelectionCapabilities(inputPassword)).toBe(
-        false,
-      );
-      expect(ReactInputSelection.hasSelectionCapabilities(inputHidden)).toBe(
-        false,
-      );
+    });
+
+    it('returns false for non-text-selectable inputs', () => {
+      [
+        'button',
+        'checkbox',
+        'color',
+        'file',
+        'hidden',
+        'image',
+        'radio',
+        'range',
+        'reset',
+        'submit',
+      ].forEach(type => {
+        const input = document.createElement('input');
+        input.type = type;
+        expect(ReactInputSelection.hasSelectionCapabilities(input)).toBe(false);
+      });
     });
 
     it('returns true for contentEditable elements', () => {
