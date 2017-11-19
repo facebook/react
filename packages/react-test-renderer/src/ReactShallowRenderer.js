@@ -103,7 +103,7 @@ class ReactShallowRenderer {
     }
 
     this._rendering = false;
-    this._updater._invokeCallbackIfNecessary();
+    this._updater._invokeCallbacks();
 
     return this.getRenderOutput();
   }
@@ -193,24 +193,23 @@ class ReactShallowRenderer {
 class Updater {
   constructor(renderer) {
     this._renderer = renderer;
-    this._callback = null;
-    this._publicInstance = null;
+    this._callbacks = [];
   }
 
   _enqueueCallback(callback, publicInstance) {
-    if (typeof callback === 'function') {
-      this._callback = callback;
-      this._publicInstance = publicInstance;
+    if (typeof callback === 'function' && publicInstance) {
+      this._callbacks.push({
+        callback,
+        publicInstance,
+      });
     }
   }
 
-  _invokeCallbackIfNecessary() {
-    if (typeof this._callback === 'function' && this._publicInstance) {
-      const {_callback, _publicInstance} = this;
-      this._callback = null;
-      this._publicInstance = null;
-      _callback.call(_publicInstance);
-    }
+  _invokeCallbacks() {
+    this._callbacks = this._callbacks.filter(({callback, publicInstance}) => {
+      callback.call(publicInstance);
+      return false;
+    });
   }
 
   isMounted(publicInstance) {
