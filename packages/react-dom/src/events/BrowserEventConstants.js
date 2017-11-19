@@ -6,6 +6,7 @@
  */
 
 import getVendorPrefixedEventName from './getVendorPrefixedEventName';
+import isEventSupported from './isEventSupported';
 
 /**
  * Types of raw signals from the browser caught at the top level.
@@ -85,7 +86,9 @@ var topLevelTypes = {
     getVendorPrefixedEventName('transitionend') || 'transitionend',
   topVolumeChange: 'volumechange',
   topWaiting: 'waiting',
-  topWheel: 'wheel',
+  topWheel: isEventSupported('wheel')
+    ? 'wheel'
+    : isEventSupported('mousewheel') ? 'mousewheel' : 'DOMMouseScroll',
 };
 
 export type TopLevelTypes = $Enum<typeof topLevelTypes>;
