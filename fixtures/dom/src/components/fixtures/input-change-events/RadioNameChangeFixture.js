@@ -36,7 +36,9 @@ class RadioNameChangeFixture extends React.Component {
         </label>
 
         <div>
-          <button type="button" onClick={this.onClick}>Toggle</button>
+          <button type="button" onClick={this.onClick}>
+            Toggle
+          </button>
         </div>
       </div>
     );

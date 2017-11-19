@@ -102,7 +102,8 @@ class InputChangeEvents extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The checked radio button should switch between the first and second radio button
+            The checked radio button should switch between the first and second
+            radio button
           </TestCase.ExpectedResult>
 
           <RadioNameChangeFixture />
