@@ -12,13 +12,11 @@
 describe('ReactDOMComponentTree', () => {
   let React;
   let ReactDOM;
-  let ReactDOMServer;
   let container;
 
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactDOMServer = require('react-dom/server');
     container = document.createElement('div');
     document.body.appendChild(container);
   });
@@ -28,39 +26,41 @@ describe('ReactDOMComponentTree', () => {
     container = null;
   });
 
-  it('finds nodes for instances', () => {
-    // This is a little hard to test directly. But refs rely on it -- so we
-    // check that we can find a ref at arbitrary points in the tree, even if
-    // other nodes don't have a ref.
+  it('finds nodes for instances on events', () => {
+    const mouseOverID = 'mouseOverID';
+    const clickID = 'clickID';
+    let currentTargetID = null;
+    // the current target of an event is set to result of getNodeFromInstance
+    // when an event is dispatched so we can test behavior by invoking
+    // events on elements in the tree and confirming the expected node is
+    // set as the current target
     class Component extends React.Component {
+      handler = e => {
+        currentTargetID = e.currentTarget.id;
+      };
       render() {
-        var toRef = this.props.toRef;
         return (
-          <div ref={toRef === 'div' ? 'target' : null}>
-            <h1 ref={toRef === 'h1' ? 'target' : null}>hello</h1>
-            <p ref={toRef === 'p' ? 'target' : null}>
-              <input ref={toRef === 'input' ? 'target' : null} />
-            </p>
-            goodbye.
+          <div id={mouseOverID} onMouseOver={this.handler}>
+            <div id={clickID} onClick={this.handler} />
           </div>
         );
       }
     }
 
-    function renderAndGetRef(toRef) {
-      // We need to unmount any React components from previous assertions in
-      // this test
-      ReactDOM.unmountComponentAtNode(container);
-      const elt = <Component toRef={toRef} />;
-      container.innerHTML = ReactDOMServer.renderToString(elt);
-      const inst = ReactDOM.hydrate(elt, container);
-      return inst.refs.target.nodeName;
+    function simulateMouseEvent(elem, type) {
+      const event = new MouseEvent(type, {
+        bubbles: true,
+      });
+      elem.dispatchEvent(event);
     }
 
-    expect(renderAndGetRef('div')).toBe('DIV');
-    expect(renderAndGetRef('h1')).toBe('H1');
-    expect(renderAndGetRef('p')).toBe('P');
-    expect(renderAndGetRef('input')).toBe('INPUT');
+    const component = <Component />;
+    ReactDOM.render(component, container);
+    expect(currentTargetID).toBe(null);
+    simulateMouseEvent(document.getElementById(mouseOverID), 'mouseover');
+    expect(currentTargetID).toBe(mouseOverID);
+    simulateMouseEvent(document.getElementById(clickID), 'click');
+    expect(currentTargetID).toBe(clickID);
   });
 
   it('finds closest instance for node when an event happens', () => {
@@ -96,6 +96,48 @@ describe('ReactDOMComponentTree', () => {
     expect(currentTargetID).toBe(null);
     simulateClick(document.getElementById(nonReactElemID));
     expect(currentTargetID).toBe(closestInstanceID);
+  });
+
+  it('updates event handlers from fiber props', () => {
+    let action = '';
+    let instance;
+    const handlerA = () => (action = 'A');
+    const handlerB = () => (action = 'B');
+
+    function simulateMouseOver(target) {
+      const event = new MouseEvent('mouseover', {
+        bubbles: true,
+      });
+      target.dispatchEvent(event);
+    }
+
+    class HandlerFlipper extends React.Component {
+      state = {flip: false};
+      flip() {
+        this.setState({flip: true});
+      }
+      render() {
+        return (
+          <div
+            id="update"
+            onMouseOver={this.state.flip ? handlerB : handlerA}
+          />
+        );
+      }
+    }
+
+    ReactDOM.render(
+      <HandlerFlipper key="1" ref={n => (instance = n)} />,
+      container,
+    );
+    const node = container.firstChild;
+    simulateMouseOver(node);
+    expect(action).toEqual('A');
+    action = '';
+    // Render with the other event handler.
+    instance.flip();
+    simulateMouseOver(node);
+    expect(action).toEqual('B');
   });
 
   it('finds a controlled instance from node and gets its current fiber props', () => {
