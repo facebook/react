@@ -136,13 +136,13 @@ describe('SyntheticEvent', () => {
   it('should be able to `persist`', () => {
     var node;
     var expectedCount = 0;
-    var persistedSyntheticEvent;
+    var syntheticEvent;
 
-    var eventHandler = syntheticEvent => {
-      expect(syntheticEvent.isPersistent()).toBe(false);
-      syntheticEvent.persist();
-      persistedSyntheticEvent = syntheticEvent;
-      expect(syntheticEvent.isPersistent()).toBe(true);
+    var eventHandler = e => {
+      expect(e.isPersistent()).toBe(false);
+      e.persist();
+      syntheticEvent = e;
+      expect(e.isPersistent()).toBe(true);
 
       expectedCount++;
     };
@@ -153,32 +153,20 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
-    expect(persistedSyntheticEvent.type).toBe('click');
-    expect(persistedSyntheticEvent.bubbles).toBe(true);
-    expect(persistedSyntheticEvent.cancelable).toBe(true);
+    expect(syntheticEvent.type).toBe('click');
+    expect(syntheticEvent.bubbles).toBe(true);
+    expect(syntheticEvent.cancelable).toBe(true);
     expect(expectedCount).toBe(1);
   });
 
-  it('should be nullified if the synthetic event has called destructor and log warnings', () => {
+  it('should be nullified and log warnings if the synthetic event has not been persisted', () => {
     spyOn(console, 'error');
     var node;
     var expectedCount = 0;
+    var syntheticEvent;
 
-    var eventHandler = syntheticEvent => {
-      syntheticEvent.destructor();
-      expect(syntheticEvent.type).toBe(null);
-      expect(syntheticEvent.nativeEvent).toBe(null);
-      expect(syntheticEvent.target).toBe(null);
-      // once for each property accessed
-      expectDev(console.error.calls.count()).toBe(3);
-      // assert the first warning for accessing `type`
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: This synthetic event is reused for performance reasons. If ' +
-          "you're seeing this, you're accessing the property `type` on a " +
-          'released/nullified synthetic event. This is set to null. If you must ' +
-          'keep the original synthetic event around, use event.persist(). ' +
-          'See https://fb.me/react-event-pooling for more information.',
-      );
+    var eventHandler = e => {
+      syntheticEvent = e;
 
       expectedCount++;
     };
@@ -189,25 +177,30 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
+    expect(syntheticEvent.type).toBe(null);
+    expect(syntheticEvent.nativeEvent).toBe(null);
+    expect(syntheticEvent.target).toBe(null);
+    // once for each property accessed
+    expectDev(console.error.calls.count()).toBe(3);
+    // assert the first warning for accessing `type`
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+        "you're seeing this, you're accessing the property `type` on a " +
+        'released/nullified synthetic event. This is set to null. If you must ' +
+        'keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
+    );
     expect(expectedCount).toBe(1);
   });
 
-  it('should warn when setting properties of a destructored synthetic event', () => {
+  it('should warn when setting properties of a synthetic event that has not been persisted', () => {
     spyOn(console, 'error');
     var node;
     var expectedCount = 0;
+    var syntheticEvent;
 
-    var eventHandler = syntheticEvent => {
-      syntheticEvent.destructor();
-      expect((syntheticEvent.type = 'MouseEvent')).toBe('MouseEvent');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: This synthetic event is reused for performance reasons. If ' +
-          "you're seeing this, you're setting the property `type` on a " +
-          'released/nullified synthetic event. This is effectively a no-op. If you must ' +
-          'keep the original synthetic event around, use event.persist(). ' +
-          'See https://fb.me/react-event-pooling for more information.',
-      );
+    var eventHandler = e => {
+      syntheticEvent = e;
 
       expectedCount++;
     };
@@ -218,10 +211,19 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
+    syntheticEvent.type = 'MouseEvent';
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toBe(
+      'Warning: This synthetic event is reused for performance reasons. If ' +
+        "you're seeing this, you're setting the property `type` on a " +
+        'released/nullified synthetic event. This is effectively a no-op. If you must ' +
+        'keep the original synthetic event around, use event.persist(). ' +
+        'See https://fb.me/react-event-pooling for more information.',
+    );
     expect(expectedCount).toBe(1);
   });
 
-  it('should warn if the synthetic event has been released when calling `preventDefault`', () => {
+  it('should warn when calling `preventDefault` if the synthetic event has not been persisted', () => {
     spyOn(console, 'error');
     var node;
     var expectedCount = 0;
@@ -250,7 +252,7 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  it('should warn if the synthetic event has been released when calling `stopPropagation`', () => {
+  it('should warn when calling `stopPropagation` if the synthetic event has not been persisted', () => {
     spyOn(console, 'error');
     var node;
     var expectedCount = 0;
