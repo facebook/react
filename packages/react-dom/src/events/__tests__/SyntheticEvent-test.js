@@ -93,11 +93,7 @@ describe('SyntheticEvent', () => {
     var event;
     event = document.createEvent('Event');
     event.initEvent('click', true, true);
-    Object.defineProperty(event, 'defaultPrevented', {
-      get() {
-        return true;
-      },
-    });
+    event.preventDefault();
     node.dispatchEvent(event);
 
     event = document.createEvent('Event');
