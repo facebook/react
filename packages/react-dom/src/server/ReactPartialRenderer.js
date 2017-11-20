@@ -33,7 +33,7 @@ import {
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
-import escapeText from '../shared/escapeText';
+import escapeTextForBrowser from '../shared/escapeTextForBrowser';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
@@ -209,7 +209,7 @@ function getNonChildrenInnerMarkup(props) {
   } else {
     var content = props.children;
     if (typeof content === 'string' || typeof content === 'number') {
-      return escapeText(content);
+      return escapeTextForBrowser(content);
     }
   }
   return null;
@@ -574,13 +574,13 @@ class ReactDOMServerRenderer {
         return '';
       }
       if (this.makeStaticMarkup) {
-        return escapeText(text);
+        return escapeTextForBrowser(text);
       }
       if (this.previousWasTextNode) {
-        return '<!-- -->' + escapeText(text);
+        return '<!-- -->' + escapeTextForBrowser(text);
       }
       this.previousWasTextNode = true;
-      return escapeText(text);
+      return escapeTextForBrowser(text);
     } else {
       var nextChild;
       ({child: nextChild, context} = resolve(child, context));
