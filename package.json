@@ -137,5 +137,8 @@
       "packages/**/*.js"
     ],
     "timers": "fake"
+  },
+  "dependencies": {
+    "minimatch": "3.0.2"
   }
 }
