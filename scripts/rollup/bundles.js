@@ -129,6 +129,7 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
     ],
+    featureFlags: 'react-native-renderer/src/ReactNativeFeatureFlags',
   },
 
   /******* React Native RT *******/
