@@ -127,7 +127,28 @@ function traverseAllChildrenImpl(
     children = null;
   }
 
+  let invokeCallback = false;
+
   if (children === null) {
+    invokeCallback = true;
+  } else {
+    switch (type) {
+      case 'string':
+      case 'number':
+        invokeCallback = true;
+        break;
+      case 'object':
+        switch (children.$$typeof) {
+          case REACT_ELEMENT_TYPE:
+          case REACT_CALL_TYPE:
+          case REACT_RETURN_TYPE:
+          case REACT_PORTAL_TYPE:
+            invokeCallback = true;
+        }
+    }
+  }
+
+  if (invokeCallback) {
     callback(
       traverseContext,
       children,
@@ -136,36 +157,6 @@ function traverseAllChildrenImpl(
       nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
     );
     return 1;
-  }
-
-  switch (type) {
-    case 'string':
-    case 'number':
-      callback(
-        traverseContext,
-        children,
-        // If it's the only child, treat the name as if it was wrapped in an array
-        // so that it's consistent if the number of children grows.
-        nameSoFar === '' ? SEPARATOR + getComponentKey(children, 0) : nameSoFar,
-      );
-      return 1;
-    case 'object':
-      switch (children.$$typeof) {
-        case REACT_ELEMENT_TYPE:
-        case REACT_CALL_TYPE:
-        case REACT_RETURN_TYPE:
-        case REACT_PORTAL_TYPE:
-          callback(
-            traverseContext,
-            children,
-            // If it's the only child, treat the name as if it was wrapped in an array
-            // so that it's consistent if the number of children grows.
-            nameSoFar === ''
-              ? SEPARATOR + getComponentKey(children, 0)
-              : nameSoFar,
-          );
-          return 1;
-      }
   }
 
   var child;
