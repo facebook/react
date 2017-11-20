@@ -137,6 +137,27 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
+  it('should be able to `persist`', () => {
+    var node;
+    var expectedCount = 0;
+
+    var eventHandler = syntheticEvent => {
+      expect(syntheticEvent.isPersistent()).toBe(false);
+      syntheticEvent.persist();
+      expect(syntheticEvent.isPersistent()).toBe(true);
+
+      expectedCount++;
+    };
+    node = ReactDOM.render(<div onClick={eventHandler} />, container);
+
+    var event;
+    event = document.createEvent('Event');
+    event.initEvent('click', true, true);
+    node.dispatchEvent(event);
+
+    expect(expectedCount).toBe(1);
+  });
+
   it('should be nullified if the synthetic event has called destructor and log warnings', () => {
     spyOn(console, 'error');
     var node;
