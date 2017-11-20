@@ -81,9 +81,12 @@ describe('escapeTextForBrowser', () => {
     var response = ReactDOMServer.renderToString(
       <span>{'<script type=\'\' src=""></script>'}</span>,
     );
-    expect(response).not.toContain('<script');
-    expect(response).not.toContain('script>');
-    expect(response).not.toContain("'");
-    expect(response.substr(1, -1)).not.toContain('"');
+    expect(response).toMatch(
+      new RegExp(
+        '<span ' +
+          ROOT_ATTRIBUTE_NAME +
+          '="">&lt;script type=&#x27;&#x27; src=&quot;&quot;&gt;&lt;/script&gt;</span>',
+      ),
+    );
   });
 });
