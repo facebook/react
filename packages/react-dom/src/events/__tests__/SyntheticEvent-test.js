@@ -71,8 +71,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -125,8 +124,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -148,8 +146,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -172,8 +169,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -206,8 +202,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -235,8 +230,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -264,8 +258,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
 
     node.dispatchEvent(event);
@@ -322,8 +315,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
-    event = document.createEvent('Event');
+    var event = document.createEvent('Event');
     event.initEvent('click', true, true);
 
     node.dispatchEvent(event);
