@@ -138,7 +138,7 @@ describe('SyntheticEvent', () => {
     expect(expectedCount).toBe(1);
   });
 
-  it('should be nullified if the synthetic event has called destructor and log warnings`', () => {
+  it('should be nullified if the synthetic event has called destructor and log warnings', () => {
     spyOn(console, 'error');
     var node;
     var expectedCount = 0;
