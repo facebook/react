@@ -61,7 +61,7 @@ const bundles = [
   {
     label: 'dom-test-utils',
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
