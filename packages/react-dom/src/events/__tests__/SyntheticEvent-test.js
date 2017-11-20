@@ -136,10 +136,12 @@ describe('SyntheticEvent', () => {
   it('should be able to `persist`', () => {
     var node;
     var expectedCount = 0;
+    var persistedSyntheticEvent;
 
     var eventHandler = syntheticEvent => {
       expect(syntheticEvent.isPersistent()).toBe(false);
       syntheticEvent.persist();
+      persistedSyntheticEvent = syntheticEvent;
       expect(syntheticEvent.isPersistent()).toBe(true);
 
       expectedCount++;
@@ -151,6 +153,9 @@ describe('SyntheticEvent', () => {
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
+    expect(persistedSyntheticEvent.type).toBe('click');
+    expect(persistedSyntheticEvent.bubbles).toBe(true);
+    expect(persistedSyntheticEvent.cancelable).toBe(true);
     expect(expectedCount).toBe(1);
   });
 
