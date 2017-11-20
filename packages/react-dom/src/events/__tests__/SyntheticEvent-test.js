@@ -166,11 +166,6 @@ describe('SyntheticEvent', () => {
     var event;
     event = document.createEvent('Event');
     event.initEvent('click', true, true);
-    Object.defineProperty(event, 'srcElement', {
-      get() {
-        return node;
-      },
-    });
     node.dispatchEvent(event);
 
     expect(expectedCount).toBe(1);
@@ -200,11 +195,6 @@ describe('SyntheticEvent', () => {
     var event;
     event = document.createEvent('Event');
     event.initEvent('click', true, true);
-    Object.defineProperty(event, 'srcElement', {
-      get() {
-        return node;
-      },
-    });
     node.dispatchEvent(event);
 
     expect(expectedCount).toBe(1);
