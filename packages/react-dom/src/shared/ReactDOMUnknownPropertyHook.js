@@ -152,7 +152,9 @@ if (__DEV__) {
       if (standardName !== name) {
         warning(
           false,
-          'Invalid DOM property `%s`. Did you mean `%s`?%s',
+          'Invalid DOM property `%s`. In React, all properties should be camelCased to ' +
+            'avoid issues with JavaScript reserved words, such as "class". ' +
+            'Did you mean `%s`?%s',
           name,
           standardName,
           getStackAddendum(),
