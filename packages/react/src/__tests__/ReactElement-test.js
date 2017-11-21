@@ -56,7 +56,7 @@ describe('ReactElement', () => {
   });
 
   it('should warn when `key` is being accessed on composite element', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -86,7 +86,7 @@ describe('ReactElement', () => {
   });
 
   it('should warn when `key` is being accessed on a host element', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var element = <div key="3" />;
     expectDev(console.error.calls.count()).toBe(0);
     void element.props.key;
@@ -100,7 +100,7 @@ describe('ReactElement', () => {
   });
 
   it('should warn when `ref` is being accessed', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var container = document.createElement('div');
     class Child extends React.Component {
       render() {
@@ -237,7 +237,7 @@ describe('ReactElement', () => {
   });
 
   it('merges an additional argument onto the children prop', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var a = 1;
     var element = React.createFactory(ComponentClass)(
       {
@@ -250,7 +250,7 @@ describe('ReactElement', () => {
   });
 
   it('does not override children if no rest args are provided', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var element = React.createFactory(ComponentClass)({
       children: 'text',
     });
@@ -259,7 +259,7 @@ describe('ReactElement', () => {
   });
 
   it('overrides children if null is provided as an argument', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var element = React.createFactory(ComponentClass)(
       {
         children: 'text',
@@ -271,7 +271,7 @@ describe('ReactElement', () => {
   });
 
   it('merges rest arguments onto the children prop in an array', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var a = 1;
     var b = 2;
     var c = 3;
@@ -283,7 +283,7 @@ describe('ReactElement', () => {
   // NOTE: We're explicitly not using JSX here. This is intended to test
   // classic JS without JSX.
   it('allows static methods to be called using the type property', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class StaticMethodComponentClass extends React.Component {
       render() {
@@ -410,7 +410,7 @@ describe('ReactElement', () => {
   });
 
   it('does not warn for NaN props', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Test extends React.Component {
       render() {
         return <div />;

@@ -38,7 +38,7 @@ describe('ReactDOMInput', () => {
     ReactDOM = require('react-dom');
     ReactDOMServer = require('react-dom/server');
     ReactTestUtils = require('react-dom/test-utils');
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
   });
 
   it('should properly control a value even if no event listener exists', () => {

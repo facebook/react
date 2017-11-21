@@ -177,7 +177,7 @@ describe('ReactDOMComponentTree', () => {
 
     const component = <Controlled />;
     const instance = ReactDOM.render(component, container);
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     expectDev(console.error.calls.count()).toBe(0);
     simulateInput(instance.a, finishValue);
     expectDev(console.error.calls.count()).toBe(1);
@@ -192,7 +192,7 @@ describe('ReactDOMComponentTree', () => {
   });
 
   it('finds instance of node that is attempted to be unmounted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     const component = <div />;
     const node = ReactDOM.render(<div>{component}</div>, container);
     ReactDOM.unmountComponentAtNode(node);
@@ -206,7 +206,7 @@ describe('ReactDOMComponentTree', () => {
   });
 
   it('finds instance from node to stop rendering over other react rendered components', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     const component = (
       <div>
         <span>Hello</span>

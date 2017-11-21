@@ -37,7 +37,7 @@ describe('ReactDOMOption', () => {
   });
 
   it('should ignore and warn invalid children types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var el = (
       <option>
         {1} <div /> {2}
@@ -66,7 +66,7 @@ describe('ReactDOMOption', () => {
         {undefined} {2}
       </option>
     );
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     stub = ReactTestUtils.renderIntoDocument(stub);
 
     var node = ReactDOM.findDOMNode(stub);

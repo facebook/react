@@ -532,7 +532,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value is null', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     ReactTestUtils.renderIntoDocument(
       <select value={null}>
@@ -554,7 +554,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value is null and multiple is true', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(
       <select value={null} multiple={true}>
         <option value="test" />
@@ -594,7 +594,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value and defaultValue props are specified', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(
       <select value="giraffe" defaultValue="giraffe" readOnly={true}>
         <option value="monkey">A monkey!</option>

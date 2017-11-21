@@ -770,7 +770,7 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('can fail context when shallowly rendering', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class SimpleComponent extends React.Component {
       static contextTypes = {
@@ -795,7 +795,7 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('should warn about propTypes (but only once)', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class SimpleComponent extends React.Component {
       render() {
@@ -846,7 +846,7 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     const shallowRenderer = createRenderer();
 
     var Undef = undefined;

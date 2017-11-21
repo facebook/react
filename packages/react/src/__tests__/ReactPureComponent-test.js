@@ -62,7 +62,7 @@ describe('ReactPureComponent', () => {
   });
 
   it('can override shouldComponentUpdate', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var renders = 0;
     class Component extends React.PureComponent {
       render() {
@@ -101,7 +101,7 @@ describe('ReactPureComponent', () => {
   });
 
   it('should warn when shouldComponentUpdate is defined on React.PureComponent', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class PureComponent extends React.PureComponent {
       shouldComponentUpdate() {

@@ -46,7 +46,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('changes values true, false to null, and also warns once', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       testUnknownAttributeAssignment(true, null);
       testUnknownAttributeAssignment(false, null);
@@ -82,7 +82,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('coerces NaN to strings and warns', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       testUnknownAttributeAssignment(NaN, 'NaN');
       expectDev(
@@ -107,7 +107,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes symbols and warns', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       testUnknownAttributeRemoval(Symbol('foo'));
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
@@ -120,7 +120,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes functions and warns', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       testUnknownAttributeRemoval(function someFunction() {});
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
@@ -134,7 +134,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('allows camelCase unknown attributes and warns', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = document.createElement('div');
       ReactDOM.render(<div helloWorld="something" />, el);

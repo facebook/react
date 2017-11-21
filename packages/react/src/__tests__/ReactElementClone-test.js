@@ -257,7 +257,7 @@ describe('ReactElementClone', () => {
   });
 
   it('warns for keys for arrays of elements in rest args', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     React.cloneElement(<div />, null, [<div />, <div />]);
 
@@ -268,7 +268,7 @@ describe('ReactElementClone', () => {
   });
 
   it('does not warns for arrays of elements with keys', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
 
@@ -276,7 +276,7 @@ describe('ReactElementClone', () => {
   });
 
   it('does not warn when the element is directly in rest args', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     React.cloneElement(<div />, null, <div />, <div />);
 
@@ -284,7 +284,7 @@ describe('ReactElementClone', () => {
   });
 
   it('does not warn when the array contains a non-element', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     React.cloneElement(<div />, null, [{}, {}]);
 
@@ -292,7 +292,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should check declared prop types after clone', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Component extends React.Component {
       static propTypes = {
         color: PropTypes.string.isRequired,

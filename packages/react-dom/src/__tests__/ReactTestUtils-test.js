@@ -365,7 +365,7 @@ describe('ReactTestUtils', () => {
     });
 
     it('should not warn when used with extra properties', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       const CLIENT_X = 100;
 

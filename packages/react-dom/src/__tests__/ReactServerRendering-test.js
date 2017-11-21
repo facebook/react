@@ -183,8 +183,8 @@ describe('ReactDOMServer', () => {
     });
 
     it('should have the correct mounting behavior (old hydrate API)', () => {
-      spyOn(console, 'warn');
-      spyOn(console, 'error');
+      spyOnDev(console, 'warn');
+      spyOnDev(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -280,7 +280,7 @@ describe('ReactDOMServer', () => {
     });
 
     it('should have the correct mounting behavior (new hydrate API)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -678,7 +678,7 @@ describe('ReactDOMServer', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<Foo />);
     jest.runOnlyPendingTimers();
     expectDev(console.error.calls.count()).toBe(1);
@@ -708,7 +708,7 @@ describe('ReactDOMServer', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<Baz />);
     jest.runOnlyPendingTimers();
     expectDev(console.error.calls.count()).toBe(1);
@@ -722,7 +722,7 @@ describe('ReactDOMServer', () => {
   });
 
   it('should warn when children are mutated during render', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
@@ -739,7 +739,7 @@ describe('ReactDOMServer', () => {
   });
 
   it('warns about lowercase html but not in svg tags', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     function CompositeG(props) {
       // Make sure namespace passes through composites
       return <g>{props.children}</g>;
@@ -771,7 +771,7 @@ describe('ReactDOMServer', () => {
   });
 
   it('should warn about contentEditable and children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<div contentEditable={true} children="" />);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(

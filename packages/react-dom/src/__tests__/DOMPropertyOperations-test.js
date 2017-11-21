@@ -151,7 +151,7 @@ describe('DOMPropertyOperations', () => {
 
     it('should not remove attributes for special properties', () => {
       var container = document.createElement('div');
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOM.render(
         <input type="text" value="foo" onChange={function() {}} />,
         container,

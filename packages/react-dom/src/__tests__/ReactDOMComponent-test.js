@@ -136,7 +136,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn for unknown prop', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div foo={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
@@ -149,7 +149,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should group multiple unknown prop warnings together', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
@@ -162,7 +162,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn for onDblClick prop', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div onDblClick={() => {}} />, container);
       expectDev(console.error.calls.count(0)).toBe(1);
@@ -172,7 +172,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn for unknown string event handlers', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div onUnknown="alert(&quot;hack&quot;)" />, container);
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
@@ -196,7 +196,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn for unknown function event handlers', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div onUnknown={function() {}} />, container);
       expect(container.firstChild.hasAttribute('onUnknown')).toBe(false);
@@ -220,7 +220,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn for badly cased React attributes', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div CHILDREN="5" />, container);
       expect(container.firstChild.getAttribute('CHILDREN')).toBe('5');
@@ -231,7 +231,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should not warn for "0" as a unitless style value', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       class Component extends React.Component {
         render() {
@@ -244,7 +244,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn nicely about NaN in style', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var style = {fontSize: NaN};
       var div = document.createElement('div');
@@ -445,7 +445,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should reject attribute key injection attack on markup', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       for (var i = 0; i < 3; i++) {
         var container = document.createElement('div');
         var element = React.createElement(
@@ -462,7 +462,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should reject attribute key injection attack on update', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       for (var i = 0; i < 3; i++) {
         var container = document.createElement('div');
         var beforeUpdate = React.createElement('x-foo-component', {}, null);
@@ -723,7 +723,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about non-string "is" attribute', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<button is={function() {}} />, container);
 
@@ -860,7 +860,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work error event on <source> element', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
         <video>
@@ -882,7 +882,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should not duplicate uppercased selfclosing tags', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       class Container extends React.Component {
         render() {
           return React.createElement('BR', null);
@@ -898,7 +898,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn on upper case HTML tags, not SVG nor custom tags', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(
         React.createElement('svg', null, React.createElement('PATH')),
       );
@@ -913,7 +913,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn on props reserved for future use', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div aria="hello" />);
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -923,7 +923,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn if the tag is unrecognized', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       let realToString;
       try {
@@ -1008,7 +1008,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should emit a warning once for a named custom component using shady DOM', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var defaultCreateElement = document.createElement.bind(document);
 
@@ -1038,7 +1038,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should emit a warning once for an unnamed custom component using shady DOM', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var defaultCreateElement = document.createElement.bind(document);
 
@@ -1065,7 +1065,7 @@ describe('ReactDOMComponent', () => {
 
     it('should treat menuitem as a void element but still create the closing tag', () => {
       // menuitem is not implemented in jsdom, so this triggers the unknown warning error
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
 
       var returnedValue = ReactDOMServer.renderToString(
@@ -1098,7 +1098,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should validate against use of innerHTML', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({innerHTML: '<span>Hi Jim!</span>'});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -1107,7 +1107,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should validate against use of innerHTML without case sensitivity', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({innerhtml: '<span>Hi Jim!</span>'});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -1140,7 +1140,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about contentEditable and children', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({contentEditable: true, children: ''});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
@@ -1152,7 +1152,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should respect suppressContentEditableWarning', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({
         contentEditable: true,
         children: '',
@@ -1279,7 +1279,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about contentEditable and children', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOM.render(
         <div contentEditable={true}>
           <div />
@@ -1400,7 +1400,7 @@ describe('ReactDOMComponent', () => {
 
   describe('nesting validation', () => {
     it('warns on invalid nesting', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(
         <div>
           <tr />
@@ -1424,7 +1424,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('warns on invalid nesting at root', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var p = document.createElement('p');
       ReactDOM.render(
         <span>
@@ -1444,7 +1444,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('warns nicely for table rows', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       class Row extends React.Component {
         render() {
@@ -1494,7 +1494,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives useful context in warnings', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       function Row() {
         return <tr />;
       }
@@ -1633,7 +1633,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about incorrect casing on properties (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOMServer.renderToString(
         React.createElement('input', {type: 'text', tabindex: '1'}),
       );
@@ -1642,7 +1642,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about incorrect casing on event handlers (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOMServer.renderToString(
         React.createElement('input', {type: 'text', onclick: '1'}),
       );
@@ -1655,7 +1655,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about incorrect casing on properties', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(
         React.createElement('input', {type: 'text', tabindex: '1'}),
       );
@@ -1664,7 +1664,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about incorrect casing on event handlers', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(
         React.createElement('input', {type: 'text', onclick: '1'}),
       );
@@ -1677,7 +1677,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about class', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(
         React.createElement('div', {class: 'muffins'}),
       );
@@ -1686,7 +1686,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about class (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOMServer.renderToString(
         React.createElement('div', {class: 'muffins'}),
       );
@@ -1695,7 +1695,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about props that are no longer supported', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div />);
       expectDev(console.error.calls.count()).toBe(0);
 
@@ -1707,7 +1707,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about props that are no longer supported without case sensitivity', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div />);
       expectDev(console.error.calls.count()).toBe(0);
 
@@ -1719,7 +1719,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about props that are no longer supported (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div />);
       expectDev(console.error.calls.count()).toBe(0);
 
@@ -1731,7 +1731,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should warn about props that are no longer supported without case sensitivity (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div />);
       expectDev(console.error.calls.count()).toBe(0);
 
@@ -1743,7 +1743,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div class="paladin" />);
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
@@ -1757,7 +1757,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div class="paladin" />);
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
       expectDev(console.error.calls.count()).toBe(2);
@@ -1771,7 +1771,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning for update render', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
 
       ReactTestUtils.renderIntoDocument(<div className="paladin" />, container);
@@ -1785,7 +1785,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning for exact elements', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       ReactTestUtils.renderIntoDocument(
         <div className="foo1">
@@ -1813,7 +1813,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning for exact elements (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       ReactDOMServer.renderToString(
         <div className="foo1">
@@ -1842,7 +1842,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning for exact elements in composition', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
 
       class Parent extends React.Component {
@@ -1900,7 +1900,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('gives source code refs for unknown prop warning for exact elements in composition (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
 
       class Parent extends React.Component {
@@ -1960,7 +1960,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should suggest property name if available', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       ReactTestUtils.renderIntoDocument(
         React.createElement('label', {for: 'test'}),
@@ -1981,7 +1981,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should suggest property name if available (ssr)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       ReactDOMServer.renderToString(
         React.createElement('label', {for: 'test'}),
@@ -2028,7 +2028,7 @@ describe('ReactDOMComponent', () => {
 
   describe('Attributes with aliases', function() {
     it('sets aliased attributes on HTML attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div class="test" />);
 
@@ -2040,7 +2040,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('sets incorrectly cased aliased attributes on HTML attributes with a warning', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div cLASS="test" />);
 
@@ -2052,7 +2052,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('sets aliased attributes on SVG elements with a warning', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(
         <svg>
@@ -2112,7 +2112,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('does not assign a boolean custom attributes as a string', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
 
@@ -2126,7 +2126,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('does not assign an implicit boolean custom attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       // eslint-disable-next-line react/jsx-boolean-value
       var el = ReactTestUtils.renderIntoDocument(<div whatever />);
@@ -2147,7 +2147,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('will not assign a function custom attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div whatever={() => {}} />);
 
@@ -2164,7 +2164,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('allows cased data attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
       expect(el.getAttribute('data-foobar')).toBe('true');
@@ -2183,7 +2183,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('allows cased custom attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
       expect(el.getAttribute('foobar')).toBe('true');
@@ -2202,7 +2202,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('warns on NaN attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div whatever={NaN} />);
 
@@ -2215,7 +2215,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('removes a property when it becomes invalid', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var container = document.createElement('div');
       ReactDOM.render(<div whatever={0} />, container);
@@ -2230,7 +2230,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('warns on bad casing of known HTML attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div SiZe="30" />);
 
@@ -2304,7 +2304,7 @@ describe('ReactDOMComponent', () => {
 
   describe('String boolean attributes', function() {
     it('does not assign string boolean attributes for custom attributes', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var el = ReactTestUtils.renderIntoDocument(<div whatever={true} />);
 
@@ -2339,7 +2339,7 @@ describe('ReactDOMComponent', () => {
 
   describe('Hyphenated SVG elements', function() {
     it('the font-face element is not a custom element', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var el = ReactTestUtils.renderIntoDocument(
         <svg>
           <font-face x-height={false} />
@@ -2357,7 +2357,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('the font-face element does not allow unknown boolean values', function() {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var el = ReactTestUtils.renderIntoDocument(
         <svg>
           <font-face whatever={false} />

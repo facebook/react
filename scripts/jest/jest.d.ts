@@ -11,6 +11,7 @@ declare function expect(val: any): Expect;
 declare var jest: Jest;
 declare function pit(name: string, fn: any): void;
 declare function spyOn(obj: any, key: string): any;
+declare function spyOnDev(obj: any, key: string): any;
 declare function xdescribe(name: string, fn: any): void;
 declare function xit(name: string, fn: any): void;
 

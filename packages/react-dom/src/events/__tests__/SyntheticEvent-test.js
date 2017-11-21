@@ -157,7 +157,7 @@ describe('SyntheticEvent', () => {
   });
 
   it('should be nullified and log warnings if the synthetic event has not been persisted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node;
     var expectedCount = 0;
     var syntheticEvent;
@@ -190,7 +190,7 @@ describe('SyntheticEvent', () => {
   });
 
   it('should warn when setting properties of a synthetic event that has not been persisted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node;
     var expectedCount = 0;
     var syntheticEvent;
@@ -219,7 +219,7 @@ describe('SyntheticEvent', () => {
   });
 
   it('should warn when calling `preventDefault` if the synthetic event has not been persisted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node;
     var expectedCount = 0;
     var syntheticEvent;
@@ -247,7 +247,7 @@ describe('SyntheticEvent', () => {
   });
 
   it('should warn when calling `stopPropagation` if the synthetic event has not been persisted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node;
     var expectedCount = 0;
     var syntheticEvent;
@@ -279,7 +279,7 @@ describe('SyntheticEvent', () => {
   // using TestUtils.Simulate to avoid spurious warnings that result from the
   // way we simulate events.
   xit('should properly log warnings when events simulated with rendered components', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var event;
     var element = document.createElement('div');
     function assignEvent(e) {
@@ -303,7 +303,7 @@ describe('SyntheticEvent', () => {
   });
 
   it('should warn if Proxy is supported and the synthetic event is added a property', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node;
     var expectedCount = 0;
     var syntheticEvent;

@@ -207,7 +207,7 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('0');
 
-    spyOn(console, 'error'); // deprecation warning for `children` content
+    spyOnDev(console, 'error'); // deprecation warning for `children` content
 
     ReactDOM.render(<textarea>1</textarea>, container);
 
@@ -247,7 +247,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should treat children like `defaultValue`', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var container = document.createElement('div');
     var stub = <textarea>giraffe</textarea>;
@@ -299,21 +299,21 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should allow numbers as children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node = renderTextarea(<textarea>{17}</textarea>);
     expectDev(console.error.calls.count()).toBe(1);
     expect(node.value).toBe('17');
   });
 
   it('should allow booleans as children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node = renderTextarea(<textarea>{false}</textarea>);
     expectDev(console.error.calls.count()).toBe(1);
     expect(node.value).toBe('false');
   });
 
   it('should allow objects as children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var obj = {
       toString: function() {
         return 'sharkswithlasers';
@@ -325,7 +325,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should throw with multiple or invalid children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(
@@ -359,7 +359,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should warn if value is null', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -373,7 +373,7 @@ describe('ReactDOMTextarea', () => {
   });
 
   it('should warn if value and defaultValue are specified', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />,
     );

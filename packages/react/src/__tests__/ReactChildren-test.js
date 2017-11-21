@@ -350,7 +350,7 @@ describe('ReactChildren', () => {
   });
 
   it('should be called for each child in an iterable without keys', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
@@ -936,7 +936,7 @@ describe('ReactChildren', () => {
 
   describe('with fragments enabled', () => {
     it('warns for keys for arrays of elements in a fragment', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div />, <div />];
@@ -955,7 +955,7 @@ describe('ReactChildren', () => {
     });
 
     it('does not warn when there are keys on  elements in a fragment', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div key="foo" />, <div key="bar" />];
@@ -968,7 +968,7 @@ describe('ReactChildren', () => {
     });
 
     it('warns for keys for arrays at the top level', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       ReactTestUtils.renderIntoDocument([<div />, <div />]);
 

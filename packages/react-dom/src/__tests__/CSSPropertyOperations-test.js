@@ -91,7 +91,7 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
     expectDev(console.error.calls.count()).toBe(1);
@@ -111,7 +111,7 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var styles = {
       '-ms-transform': 'translate3d(0, 0, 0)',
       '-webkit-transform': 'translate3d(0, 0, 0)',
@@ -150,7 +150,7 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
     // msTransform is correct already and shouldn't warn
@@ -187,7 +187,7 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
     expectDev(console.error.calls.count()).toBe(2);
@@ -214,7 +214,7 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
 
@@ -246,7 +246,7 @@ describe('CSSPropertyOperations', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var root = document.createElement('div');
     ReactDOM.render(<Comp />, root);
 

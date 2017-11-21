@@ -122,7 +122,7 @@ describe('ReactCompositeComponent', () => {
       }
     }
 
-    spyOn(console, 'warn');
+    spyOnDev(console, 'warn');
     var markup = ReactDOMServer.renderToString(<Parent />);
 
     // Old API based on heuristic
@@ -231,7 +231,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn about `forceUpdate` on unmounted components', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var container = document.createElement('div');
     document.body.appendChild(container);
@@ -266,7 +266,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn about `setState` on unmounted components', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var container = document.createElement('div');
     document.body.appendChild(container);
@@ -338,7 +338,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when rendering a class with a render method that does not extend React.Component', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var container = document.createElement('div');
     class ClassWithRenderNotExtended {
       render() {
@@ -358,7 +358,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn about `setState` in render', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var container = document.createElement('div');
 
@@ -410,7 +410,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn about `setState` in getChildContext', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var container = document.createElement('div');
 
@@ -496,7 +496,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when shouldComponentUpdate() returns undefined', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       state = {bogus: false};
@@ -521,7 +521,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when componentDidUnmount method is defined', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       componentDidUnmount = () => {};
@@ -542,7 +542,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when componentDidReceiveProps method is defined', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       componentDidReceiveProps = () => {};
@@ -565,7 +565,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when defaultProps was defined as an instance property', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       constructor(props) {
@@ -1056,7 +1056,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should disallow nested render calls', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Inner extends React.Component {
       render() {
@@ -1353,7 +1353,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should warn when mutated props are passed', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var container = document.createElement('div');
 
@@ -1592,7 +1592,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should return a meaningful warning when constructor is returned', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class RenderTextInvalidConstructor extends React.Component {
       constructor(props) {
         super(props);
@@ -1616,7 +1616,7 @@ describe('ReactCompositeComponent', () => {
   });
 
   it('should return error if render is not defined', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class RenderTestUndefinedRender extends React.Component {}
 
     expect(function() {

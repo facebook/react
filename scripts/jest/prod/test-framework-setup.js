@@ -13,6 +13,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
+  // Dev-only spyOn should be ignored in production runs.
+  global.spyOnDev = () => {};
+
   ['error', 'warn'].forEach(methodName => {
     var oldMethod = console[methodName];
     var newMethod = function() {

@@ -198,7 +198,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should not allow update state inside of getInitialState', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class StatefulComponent extends React.Component {
       constructor(props, context) {
@@ -228,7 +228,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should correctly determine if a component is mounted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Component extends React.Component {
       _isMounted() {
         // No longer a public API, but we can test that it works internally by
@@ -259,7 +259,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should correctly determine if a null component is mounted', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Component extends React.Component {
       _isMounted() {
         // No longer a public API, but we can test that it works internally by
@@ -309,7 +309,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('warns if findDOMNode is used inside render', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Component extends React.Component {
       state = {isMounted: false};
       componentDidMount() {
@@ -331,7 +331,7 @@ describe('ReactComponentLifeCycle', () => {
   });
 
   it('should carry through each of the phases of setup', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class LifeCycleComponent extends React.Component {
       constructor(props, context) {

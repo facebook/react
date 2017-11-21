@@ -919,7 +919,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn for non-functional event listeners', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Example extends React.Component {
       render() {
         return <div onClick="woops" />;
@@ -937,7 +937,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn with a special message for `false` event listeners', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Example extends React.Component {
       render() {
         return <div onClick={false} />;
@@ -1048,7 +1048,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not warn when rendering into an empty container', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.render(<div>foo</div>, container);
     expect(container.innerHTML).toBe('<div>foo</div>');
     ReactDOM.render(null, container);
@@ -1060,7 +1060,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn when replacing a container which was manually updated outside of React', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div key="1">foo</div>, container);
     ReactDOM.render(<div key="1">bar</div>, container);
@@ -1083,7 +1083,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn when doing an update to a container manually updated outside of React', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
@@ -1103,7 +1103,7 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn when doing an update to a container manually cleared outside of React', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);

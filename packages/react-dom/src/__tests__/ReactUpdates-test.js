@@ -842,7 +842,7 @@ describe('ReactUpdates', () => {
   });
 
   it('throws in setState if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -889,7 +889,7 @@ describe('ReactUpdates', () => {
   });
 
   it('throws in forceUpdate if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -1216,7 +1216,7 @@ describe('ReactUpdates', () => {
   );
 
   it('uses correct base state for setState inside render phase', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     let ops = [];
 

@@ -46,7 +46,7 @@ describe('ReactChildReconciler', () => {
   }
 
   it('warns for duplicated array keys', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       render() {
@@ -66,7 +66,7 @@ describe('ReactChildReconciler', () => {
   });
 
   it('warns for duplicated array keys with component stack info', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       render() {
@@ -105,7 +105,7 @@ describe('ReactChildReconciler', () => {
   });
 
   it('warns for duplicated iterable keys', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       render() {
@@ -125,7 +125,7 @@ describe('ReactChildReconciler', () => {
   });
 
   it('warns for duplicated iterable keys with component stack info', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       render() {

@@ -46,7 +46,7 @@ describe('ReactDOMRoot', () => {
       ),
     );
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     // Does not hydrate by default
     const container1 = document.createElement('div');
@@ -73,7 +73,7 @@ describe('ReactDOMRoot', () => {
   });
 
   it('does not clear existing children', async () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     container.innerHTML = '<div>a</div><div>b</div>';
     const root = ReactDOM.createRoot(container);
     root.render(

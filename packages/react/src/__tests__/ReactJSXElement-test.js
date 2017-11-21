@@ -94,7 +94,7 @@ describe('ReactJSXElement', () => {
   });
 
   it('merges JSX children onto the children prop', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var a = 1;
     var element = <Component children="text">{a}</Component>;
     expect(element.props.children).toBe(a);
@@ -102,14 +102,14 @@ describe('ReactJSXElement', () => {
   });
 
   it('does not override children if no JSX children are provided', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var element = <Component children="text" />;
     expect(element.props.children).toBe('text');
     expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('overrides children if null is provided as a JSX child', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var element = <Component children="text">{null}</Component>;
     expect(element.props.children).toBe(null);
     expectDev(console.error.calls.count()).toBe(0);
@@ -128,7 +128,7 @@ describe('ReactJSXElement', () => {
   });
 
   it('merges JSX children onto the children prop in an array', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var a = 1;
     var b = 2;
     var c = 3;
@@ -144,7 +144,7 @@ describe('ReactJSXElement', () => {
   });
 
   it('allows static methods to be called using the type property', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class StaticMethodComponent {
       static someStaticMethod() {

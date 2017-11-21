@@ -52,7 +52,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should warn on invalid prop types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     createReactClass({
       displayName: 'Component',
       propTypes: {
@@ -70,7 +70,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should warn on invalid context types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     createReactClass({
       displayName: 'Component',
       contextTypes: {
@@ -88,7 +88,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw on invalid child context types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     createReactClass({
       displayName: 'Component',
       childContextTypes: {
@@ -106,7 +106,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should warn when misspelling shouldComponentUpdate', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     createReactClass({
       componentShouldUpdate: function() {
@@ -141,7 +141,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should warn when misspelling componentWillReceiveProps', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     createReactClass({
       componentWillRecieveProps: function() {
         return false;
@@ -183,7 +183,7 @@ describe('create-react-class-integration', () => {
   // TODO: Consider actually moving these to statics or drop this unit test.
 
   xit('should warn when using deprecated non-static spec keys', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     createReactClass({
       mixins: [{}],
       propTypes: {
@@ -328,7 +328,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should throw when using legacy factories', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var Component = createReactClass({
       render() {
         return <div />;
@@ -363,7 +363,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('isMounted works', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var ops = [];
     var instance;

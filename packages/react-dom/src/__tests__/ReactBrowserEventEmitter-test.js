@@ -285,7 +285,7 @@ describe('ReactBrowserEventEmitter', () => {
     putListener(CHILD, ON_CLICK_KEY, recordIDAndReturnFalse.bind(null, CHILD));
     putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
     putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.Simulate.click(CHILD);
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0]).toBe(CHILD);

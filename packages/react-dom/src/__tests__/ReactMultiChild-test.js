@@ -183,7 +183,7 @@ describe('ReactMultiChild', () => {
     });
 
     it('should warn for duplicated array keys with component stack info', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var container = document.createElement('div');
 
@@ -227,7 +227,7 @@ describe('ReactMultiChild', () => {
     });
 
     it('should warn for duplicated iterable keys with component stack info', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       var container = document.createElement('div');
 
@@ -293,7 +293,7 @@ describe('ReactMultiChild', () => {
   });
 
   it('should warn for using maps as children with owner info', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Parent extends React.Component {
       render() {
         return <div>{new Map([['foo', 0], ['bar', 1]])}</div>;
@@ -312,7 +312,7 @@ describe('ReactMultiChild', () => {
   });
 
   it('should reorder bailed-out children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class LetterInner extends React.Component {
       render() {

@@ -22,7 +22,7 @@ describe('EventPluginHub', () => {
   });
 
   it('should prevent non-function listeners, at dispatch', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var node = ReactTestUtils.renderIntoDocument(
       <div onClick="not a function" />,
     );

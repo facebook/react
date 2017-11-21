@@ -103,7 +103,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('should warn for childContextTypes on a functional component', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     function StatelessComponentWithChildContext(props) {
       return <div>{props.name}</div>;
     }
@@ -148,7 +148,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('should warn when given a string ref', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Indirection(props) {
       return <div>{props.children}</div>;
@@ -181,7 +181,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('should warn when given a function ref', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Indirection(props) {
       return <div>{props.children}</div>;
@@ -219,7 +219,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('deduplicates ref warnings based on element or owner', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     // When owner uses JSX, we can use exact line location to dedupe warnings
     class AnonymousParentUsingJSX extends React.Component {
@@ -302,7 +302,7 @@ describe('ReactStatelessComponent', () => {
   // This guards against a regression caused by clearing the current debug fiber.
   // https://github.com/facebook/react/issues/10831
   it('should warn when giving a function ref with context', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Child() {
       return null;
@@ -350,7 +350,7 @@ describe('ReactStatelessComponent', () => {
       return <div>{[<span />]}</div>;
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -366,7 +366,7 @@ describe('ReactStatelessComponent', () => {
     Child.defaultProps = {test: 2};
     Child.propTypes = {test: PropTypes.string};
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(<Child />);
     expectDev(console.error.calls.count()).toBe(1);
     expect(

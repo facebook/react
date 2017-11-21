@@ -42,7 +42,7 @@ async function expectErrors(fn, count) {
   if (console.error.calls && console.error.calls.reset) {
     console.error.calls.reset();
   } else {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
   }
 
   const result = await fn();

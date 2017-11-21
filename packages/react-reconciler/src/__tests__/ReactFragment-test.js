@@ -674,7 +674,7 @@ describe('ReactFragment', () => {
   });
 
   it('should not preserve state when switching to a keyed fragment to an array', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var ops = [];
 
     class Stateful extends React.Component {
@@ -726,7 +726,7 @@ describe('ReactFragment', () => {
   });
 
   it('should preserve state when it does not change positions', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var ops = [];
 
     class Stateful extends React.Component {

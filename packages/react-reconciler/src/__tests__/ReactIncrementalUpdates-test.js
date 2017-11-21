@@ -320,7 +320,7 @@ describe('ReactIncrementalUpdates', () => {
   });
 
   it('enqueues setState inside an updater function as if the in-progress update is progressed (and warns)', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     let instance;
     let ops = [];
     class Foo extends React.Component {

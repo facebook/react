@@ -161,7 +161,7 @@ describe('ReactContextValidator', () => {
   });
 
   it('should check context types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       render() {
@@ -234,7 +234,7 @@ describe('ReactContextValidator', () => {
   });
 
   it('should check child context types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       getChildContext() {
@@ -282,7 +282,7 @@ describe('ReactContextValidator', () => {
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should warn (but not error) if getChildContext method is missing', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ComponentA extends React.Component {
       static childContextTypes = {
@@ -324,7 +324,7 @@ describe('ReactContextValidator', () => {
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should pass parent context if getChildContext method is missing', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ParentContextProvider extends React.Component {
       static childContextTypes = {

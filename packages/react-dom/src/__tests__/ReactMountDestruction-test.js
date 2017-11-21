@@ -50,7 +50,7 @@ describe('ReactMount', () => {
 
     // Test that unmounting at a root node gives a helpful warning
     var rootDiv = mainContainerDiv.firstChild;
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.unmountComponentAtNode(rootDiv);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
@@ -75,7 +75,7 @@ describe('ReactMount', () => {
 
     // Test that unmounting at a non-root node gives a different warning
     var nonRootDiv = mainContainerDiv.firstChild.firstChild;
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.unmountComponentAtNode(nonRootDiv);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(

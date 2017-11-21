@@ -719,7 +719,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches reconciler errors in a boundary during mounting', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -757,7 +757,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches reconciler errors in a boundary during update', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -803,7 +803,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('recovers from uncaught reconciler errors', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     const InvalidType = undefined;
     ReactNoop.render(<InvalidType />);
     expect(() => {
@@ -947,7 +947,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should log errors that occur during the begin phase', () => {
       initReactFiberErrorLoggerMock();
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
         componentWillMount() {
@@ -984,7 +984,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should log errors that occur during the commit phase', () => {
       initReactFiberErrorLoggerMock();
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
         componentDidMount() {
@@ -1021,7 +1021,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should ignore errors thrown in log method to prevent cycle', () => {
       initReactFiberErrorLoggerMock(true);
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
         render() {
@@ -1061,7 +1061,7 @@ describe('ReactIncrementalErrorHandling', () => {
 
     it('should relay info about error boundary and retry attempts if applicable', () => {
       initReactFiberErrorLoggerMock();
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       class ParentComponent extends React.Component {
         render() {
@@ -1118,7 +1118,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('resets instance variables before unmounting failed node', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};

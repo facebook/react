@@ -381,7 +381,7 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWRP as a replaceState, with a warning', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     let ops = [];
     class Test extends React.Component {
@@ -429,7 +429,7 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should treat assigning to this.state inside cWM as a replaceState, with a warning', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     let ops = [];
     class Test extends React.Component {

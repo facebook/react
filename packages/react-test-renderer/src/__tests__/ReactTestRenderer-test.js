@@ -263,7 +263,7 @@ describe('ReactTestRenderer', () => {
   });
 
   it('warns correctly for refs on SFCs', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     function Bar() {
       return <div>Hello, world</div>;
     }

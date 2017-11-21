@@ -56,7 +56,7 @@ describe('ReactES6Class', () => {
   });
 
   it('throws if no render function is defined', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Foo extends React.Component {}
     expect(() => ReactDOM.render(<Foo />, container)).toThrow();
 
@@ -302,7 +302,7 @@ describe('ReactES6Class', () => {
   });
 
   it('warns when classic properties are defined on the instance, but does not invoke them.', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var getDefaultPropsWasCalled = false;
     var getInitialStateWasCalled = false;
     class Foo extends React.Component {
@@ -342,7 +342,7 @@ describe('ReactES6Class', () => {
   });
 
   it('does not warn about getInitialState() on class components if state is also defined.', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Foo extends React.Component {
       state = this.getInitialState();
       getInitialState() {
@@ -357,7 +357,7 @@ describe('ReactES6Class', () => {
   });
 
   it('should warn when misspelling shouldComponentUpdate', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class NamedComponent extends React.Component {
       componentShouldUpdate() {
@@ -379,7 +379,7 @@ describe('ReactES6Class', () => {
   });
 
   it('should warn when misspelling componentWillReceiveProps', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class NamedComponent extends React.Component {
       componentWillRecieveProps() {
@@ -400,7 +400,7 @@ describe('ReactES6Class', () => {
   });
 
   it('should throw AND warn when trying to access classic APIs', () => {
-    spyOn(console, 'warn');
+    spyOnDev(console, 'warn');
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();

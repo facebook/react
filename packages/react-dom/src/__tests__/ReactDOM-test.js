@@ -109,7 +109,7 @@ describe('ReactDOM', () => {
   });
 
   it('throws in render() if the mount callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -153,7 +153,7 @@ describe('ReactDOM', () => {
   });
 
   it('throws in render() if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;

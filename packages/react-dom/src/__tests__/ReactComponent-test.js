@@ -46,7 +46,7 @@ describe('ReactComponent', () => {
   });
 
   it('should warn when children are mutated during render', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
@@ -63,7 +63,7 @@ describe('ReactComponent', () => {
   });
 
   it('should warn when children are mutated during update', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Wrapper extends React.Component {
       componentDidMount() {
@@ -335,7 +335,7 @@ describe('ReactComponent', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrowError(
@@ -356,7 +356,7 @@ describe('ReactComponent', () => {
   });
 
   it('includes owner name in the error about badly-typed elements', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     var X = undefined;
 
@@ -494,7 +494,7 @@ describe('ReactComponent', () => {
       function Foo() {
         return Foo;
       }
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<Foo />, container);
       expectDev(console.error.calls.count()).toBe(1);
@@ -512,7 +512,7 @@ describe('ReactComponent', () => {
           return Foo;
         }
       }
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<Foo />, container);
       expectDev(console.error.calls.count()).toBe(1);
@@ -532,7 +532,7 @@ describe('ReactComponent', () => {
           </div>
         );
       }
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<Foo />, container);
       expectDev(console.error.calls.count()).toBe(1);
@@ -553,7 +553,7 @@ describe('ReactComponent', () => {
       function Foo() {
         return <Bar>{() => 'Hello'}</Bar>;
       }
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<Foo />, container);
       expect(container.innerHTML).toBe('Hello');
@@ -561,7 +561,7 @@ describe('ReactComponent', () => {
     });
 
     it('deduplicates function type warnings based on component type', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       class Foo extends React.PureComponent {
         constructor() {
           super();

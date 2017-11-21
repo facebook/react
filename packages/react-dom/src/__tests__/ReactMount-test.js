@@ -55,7 +55,7 @@ describe('ReactMount', () => {
   });
 
   it('warns when given a factory', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Component extends React.Component {
       render() {
         return <div />;
@@ -129,7 +129,7 @@ describe('ReactMount', () => {
     var container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.hydrate(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -141,7 +141,7 @@ describe('ReactMount', () => {
     var container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.hydrate(<div />, container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -153,7 +153,7 @@ describe('ReactMount', () => {
     var container = document.createElement('container');
     container.innerHTML = '<div></div>';
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.render(<div />, container);
     expectDev(console.error.calls.count()).toBe(0);
   });
@@ -161,7 +161,7 @@ describe('ReactMount', () => {
   it('should warn when mounting into document.body', () => {
     var iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     ReactDOM.render(<div />, iFrame.contentDocument.body);
 
@@ -178,7 +178,7 @@ describe('ReactMount', () => {
     );
     div.innerHTML = markup;
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.hydrate(
       <div>This markup contains an nbsp entity: &nbsp; client text</div>,
       div,
@@ -206,7 +206,7 @@ describe('ReactMount', () => {
     ReactDOM.render(<Component />, container);
 
     // Test that blasting away children throws a warning
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var rootNode = container.firstChild;
     ReactDOM.render(<span />, rootNode);
     expectDev(console.error.calls.count()).toBe(1);
@@ -237,7 +237,7 @@ describe('ReactMount', () => {
     // Make sure ReactDOM and ReactDOMOther are different copies
     expect(ReactDOM).not.toEqual(ReactDOMOther);
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMOther.unmountComponentAtNode(container);
     expectDev(console.error.calls.count()).toBe(1);
     expectDev(console.error.calls.argsFor(0)[0]).toBe(

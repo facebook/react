@@ -44,7 +44,7 @@ describe('rendering React components at document', () => {
     }
 
     it('should be able to adopt server markup', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -73,7 +73,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should not be able to unmount component from document node', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -100,7 +100,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should not be able to switch root constructors', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -141,7 +141,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should be able to mount into document', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -195,8 +195,8 @@ describe('rendering React components at document', () => {
       );
       var testDocument = getTestDocument(markup);
 
-      spyOn(console, 'warn');
-      spyOn(console, 'error');
+      spyOnDev(console, 'warn');
+      spyOnDev(console, 'error');
       ReactDOM.render(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
       expectDev(console.warn.calls.count()).toBe(1);
@@ -235,7 +235,7 @@ describe('rendering React components at document', () => {
     });
 
     it('supports findDOMNode on full-page components', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       var tree = (
         <html>
           <head>
@@ -371,7 +371,7 @@ describe('rendering React components at document', () => {
     });
 
     it('renders over an existing text child without throwing', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       const container = document.createElement('div');
       container.textContent = 'potato';
       ReactDOM.hydrate(<div>parsnip</div>, container);
@@ -401,7 +401,7 @@ describe('rendering React components at document', () => {
       );
       var testDocument = getTestDocument(markup);
 
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
       expectDev(console.error.calls.count()).toBe(1);
@@ -411,7 +411,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should render w/ no markup to full document', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var testDocument = getTestDocument();
 
       class Component extends React.Component {

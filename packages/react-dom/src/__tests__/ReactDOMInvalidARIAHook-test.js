@@ -26,12 +26,12 @@ describe('ReactDOMInvalidARIAHook', () => {
 
   describe('aria-* props', () => {
     it('should allow valid aria-* props', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({'aria-label': 'Bumble bees'});
       expectDev(console.error.calls.count()).toBe(0);
     });
     it('should warn for one invalid aria-* prop', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({'aria-badprop': 'maybe'});
       expectDev(console.error.calls.count()).toBe(1);
       expectDev(console.error.calls.argsFor(0)[0]).toContain(
@@ -40,7 +40,7 @@ describe('ReactDOMInvalidARIAHook', () => {
       );
     });
     it('should warn for many invalid aria-* props', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       mountComponent({
         'aria-badprop': 'Very tall trees',
         'aria-malprop': 'Turbulent seas',
@@ -52,7 +52,7 @@ describe('ReactDOMInvalidARIAHook', () => {
       );
     });
     it('should warn for an improperly cased aria-* prop', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       // The valid attribute name is aria-haspopup.
       mountComponent({'aria-hasPopup': 'true'});
       expectDev(console.error.calls.count()).toBe(1);
@@ -63,7 +63,7 @@ describe('ReactDOMInvalidARIAHook', () => {
     });
 
     it('should warn for use of recognized camel case aria attributes', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       // The valid attribute name is aria-haspopup.
       mountComponent({ariaHasPopup: 'true'});
       expectDev(console.error.calls.count()).toBe(1);
@@ -74,7 +74,7 @@ describe('ReactDOMInvalidARIAHook', () => {
     });
 
     it('should warn for use of unrecognized camel case aria attributes', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       // The valid attribute name is aria-haspopup.
       mountComponent({ariaSomethingInvalid: 'true'});
       expectDev(console.error.calls.count()).toBe(1);

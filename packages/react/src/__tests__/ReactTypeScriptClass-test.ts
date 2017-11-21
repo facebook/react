@@ -315,7 +315,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('throws if no render function is defined', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     expect(() => ReactDOM.render(React.createElement(Empty), container)).toThrow();
 
@@ -431,7 +431,7 @@ describe('ReactTypeScriptClass', function() {
 
   it('warns when classic properties are defined on the instance, ' +
      'but does not invoke them.', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     getInitialStateWasCalled = false;
     getDefaultPropsWasCalled = false;
     test(React.createElement(ClassicProperties), 'SPAN', 'foo');
@@ -456,7 +456,7 @@ describe('ReactTypeScriptClass', function() {
 
   it('does not warn about getInitialState() on class components ' +
      'if state is also defined.', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Example extends React.Component {
       state = {};
@@ -473,7 +473,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should warn when misspelling shouldComponentUpdate', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     test(React.createElement(MisspelledComponent1), 'SPAN', 'foo');
 
@@ -487,7 +487,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should warn when misspelling componentWillReceiveProps', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     test(React.createElement(MisspelledComponent2), 'SPAN', 'foo');
 
@@ -500,7 +500,7 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should throw AND warn when trying to access classic APIs', function() {
-    spyOn(console, 'warn');
+    spyOnDev(console, 'warn');
     var instance = test(
       React.createElement(Inner, {name: 'foo'}),
       'DIV','foo'
