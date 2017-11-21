@@ -1,4 +1,5 @@
 declare var jasmine: any;
+declare var __DEV__: boolean;
 
 declare function afterEach(fn: any): any;
 declare function beforeEach(fn: any): any;

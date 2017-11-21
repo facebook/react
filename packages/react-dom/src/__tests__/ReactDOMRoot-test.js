@@ -57,7 +57,9 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
 
     // Accepts `hydrate` option
     const container2 = document.createElement('div');
@@ -68,8 +70,10 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toMatch('Extra attributes');
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toMatch('Extra attributes');
+    }
   });
 
   it('does not clear existing children', async () => {

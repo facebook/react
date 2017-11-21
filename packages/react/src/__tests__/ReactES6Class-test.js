@@ -60,11 +60,13 @@ describe('ReactES6Class', () => {
     class Foo extends React.Component {}
     expect(() => ReactDOM.render(<Foo />, container)).toThrow();
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Foo(...): No `render` method found on the returned component ' +
-        'instance: you may have forgotten to define `render`.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Foo(...): No `render` method found on the returned component ' +
+          'instance: you may have forgotten to define `render`.',
+      );
+    }
   });
 
   it('renders a simple stateless component with prop', () => {
@@ -326,19 +328,21 @@ describe('ReactES6Class', () => {
     test(<Foo />, 'SPAN', 'foo');
     expect(getInitialStateWasCalled).toBe(false);
     expect(getDefaultPropsWasCalled).toBe(false);
-    expect(console.error.calls.count()).toBe(4);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'getInitialState was defined on Foo, a plain JavaScript class.',
-    );
-    expect(console.error.calls.argsFor(1)[0]).toContain(
-      'getDefaultProps was defined on Foo, a plain JavaScript class.',
-    );
-    expect(console.error.calls.argsFor(2)[0]).toContain(
-      'propTypes was defined as an instance property on Foo.',
-    );
-    expect(console.error.calls.argsFor(3)[0]).toContain(
-      'contextTypes was defined as an instance property on Foo.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(4);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'getInitialState was defined on Foo, a plain JavaScript class.',
+      );
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'getDefaultProps was defined on Foo, a plain JavaScript class.',
+      );
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'propTypes was defined as an instance property on Foo.',
+      );
+      expect(console.error.calls.argsFor(3)[0]).toContain(
+        'contextTypes was defined as an instance property on Foo.',
+      );
+    }
   });
 
   it('does not warn about getInitialState() on class components if state is also defined.', () => {
@@ -353,7 +357,9 @@ describe('ReactES6Class', () => {
       }
     }
     test(<Foo />, 'SPAN', 'foo');
-    expect(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
   });
 
   it('should warn when misspelling shouldComponentUpdate', () => {
@@ -369,13 +375,15 @@ describe('ReactES6Class', () => {
     }
     test(<NamedComponent />, 'SPAN', 'foo');
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ' +
-        'NamedComponent has a method called componentShouldUpdate(). Did you ' +
-        'mean shouldComponentUpdate()? The name is phrased as a question ' +
-        'because the function is expected to return a value.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: ' +
+          'NamedComponent has a method called componentShouldUpdate(). Did you ' +
+          'mean shouldComponentUpdate()? The name is phrased as a question ' +
+          'because the function is expected to return a value.',
+      );
+    }
   });
 
   it('should warn when misspelling componentWillReceiveProps', () => {
@@ -391,12 +399,14 @@ describe('ReactES6Class', () => {
     }
     test(<NamedComponent />, 'SPAN', 'foo');
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: ' +
-        'NamedComponent has a method called componentWillRecieveProps(). Did ' +
-        'you mean componentWillReceiveProps()?',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: ' +
+          'NamedComponent has a method called componentWillRecieveProps(). Did ' +
+          'you mean componentWillReceiveProps()?',
+      );
+    }
   });
 
   it('should throw AND warn when trying to access classic APIs', () => {
@@ -404,13 +414,15 @@ describe('ReactES6Class', () => {
     var instance = test(<Inner name="foo" />, 'DIV', 'foo');
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
-    expect(console.warn.calls.count()).toBe(2);
-    expect(console.warn.calls.argsFor(0)[0]).toContain(
-      'replaceState(...) is deprecated in plain JavaScript React classes',
-    );
-    expect(console.warn.calls.argsFor(1)[0]).toContain(
-      'isMounted(...) is deprecated in plain JavaScript React classes',
-    );
+    if (__DEV__) {
+      expect(console.warn.calls.count()).toBe(2);
+      expect(console.warn.calls.argsFor(0)[0]).toContain(
+        'replaceState(...) is deprecated in plain JavaScript React classes',
+      );
+      expect(console.warn.calls.argsFor(1)[0]).toContain(
+        'isMounted(...) is deprecated in plain JavaScript React classes',
+      );
+    }
   });
 
   it('supports this.context passed via getChildContext', () => {

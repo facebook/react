@@ -1044,14 +1044,16 @@ describe('ReactIncrementalSideEffects', () => {
       null,
     ]);
 
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n\nCheck the render method ' +
-        'of `Foo`.\n' +
-        '    in FunctionalComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
-    );
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. ' +
+          'Attempts to access this ref will fail.\n\nCheck the render method ' +
+          'of `Foo`.\n' +
+          '    in FunctionalComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)',
+      );
+    }
   });
 
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the

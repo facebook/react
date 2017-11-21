@@ -291,7 +291,9 @@ describe('ReactBrowserEventEmitter', () => {
     expect(idCallOrder[0]).toBe(CHILD);
     expect(idCallOrder[1]).toBe(PARENT);
     expect(idCallOrder[2]).toBe(GRANDPARENT);
-    expectDev(console.error.calls.count()).toEqual(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toEqual(0);
+    }
   });
 
   /**

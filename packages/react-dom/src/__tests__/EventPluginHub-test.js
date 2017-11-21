@@ -31,10 +31,12 @@ describe('EventPluginHub', () => {
     }).toThrowError(
       'Expected `onClick` listener to be a function, instead got a value of `string` type.',
     );
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Expected `onClick` listener to be a function, instead got a value of `string` type.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.',
+      );
+    }
   });
 
   it('should not prevent null listeners, at dispatch', () => {

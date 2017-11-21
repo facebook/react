@@ -214,17 +214,21 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: setState(...): Can only update a mounted or ' +
-        'mounting component. This usually means you called setState() on an ' +
-        'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
-        'StatefulComponent component.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: setState(...): Can only update a mounted or ' +
+          'mounting component. This usually means you called setState() on an ' +
+          'unmounted component. This is a no-op.\n\nPlease check the code for the ' +
+          'StatefulComponent component.',
+      );
+    }
 
     // Check deduplication
     ReactTestUtils.renderIntoDocument(<StatefulComponent />);
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 
   it('should correctly determine if a component is mounted', () => {
@@ -252,10 +256,12 @@ describe('ReactComponentLifeCycle', () => {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance._isMounted()).toBeTruthy();
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Component is accessing isMounted inside its render()',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Component is accessing isMounted inside its render()',
+      );
+    }
   });
 
   it('should correctly determine if a null component is mounted', () => {
@@ -283,10 +289,12 @@ describe('ReactComponentLifeCycle', () => {
     var instance = ReactTestUtils.renderIntoDocument(element);
     expect(instance._isMounted()).toBeTruthy();
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Component is accessing isMounted inside its render()',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Component is accessing isMounted inside its render()',
+      );
+    }
   });
 
   it('isMounted should return false when unmounted', () => {
@@ -324,10 +332,12 @@ describe('ReactComponentLifeCycle', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<Component />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Component is accessing findDOMNode inside its render()',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Component is accessing findDOMNode inside its render()',
+      );
+    }
   });
 
   it('should carry through each of the phases of setup', () => {
@@ -440,10 +450,12 @@ describe('ReactComponentLifeCycle', () => {
     expect(getLifeCycleState(instance)).toBe('UNMOUNTED');
     expect(instance.state).toEqual(POST_WILL_UNMOUNT_STATE);
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'LifeCycleComponent is accessing isMounted inside its render() function',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'LifeCycleComponent is accessing isMounted inside its render() function',
+      );
+    }
   });
 
   it('should not throw when updating an auxiliary component', () => {

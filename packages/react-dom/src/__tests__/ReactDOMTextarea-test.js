@@ -253,7 +253,9 @@ describe('ReactDOMTextarea', () => {
     var stub = <textarea>giraffe</textarea>;
     var node = renderTextarea(stub, container);
 
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
     expect(node.value).toBe('giraffe');
 
     // Changing children should do nothing, it functions like `defaultValue`.
@@ -301,14 +303,18 @@ describe('ReactDOMTextarea', () => {
   it('should allow numbers as children', () => {
     spyOnDev(console, 'error');
     var node = renderTextarea(<textarea>{17}</textarea>);
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
     expect(node.value).toBe('17');
   });
 
   it('should allow booleans as children', () => {
     spyOnDev(console, 'error');
     var node = renderTextarea(<textarea>{false}</textarea>);
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
     expect(node.value).toBe('false');
   });
 
@@ -320,7 +326,9 @@ describe('ReactDOMTextarea', () => {
       },
     };
     var node = renderTextarea(<textarea>{obj}</textarea>);
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
     expect(node.value).toBe('sharkswithlasers');
   });
 
@@ -336,7 +344,9 @@ describe('ReactDOMTextarea', () => {
       );
     }).toThrow();
 
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
 
     var node;
     expect(function() {
@@ -349,7 +359,9 @@ describe('ReactDOMTextarea', () => {
 
     expect(node.value).toBe('[object Object]');
 
-    expectDev(console.error.calls.count()).toBe(2);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+    }
   });
 
   it('should unmount', () => {
@@ -362,14 +374,18 @@ describe('ReactDOMTextarea', () => {
     spyOnDev(console, 'error');
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      '`value` prop on `textarea` should not be null. ' +
-        'Consider using an empty string to clear the component or `undefined` ' +
-        'for uncontrolled components.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        '`value` prop on `textarea` should not be null. ' +
+          'Consider using an empty string to clear the component or `undefined` ' +
+          'for uncontrolled components.',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(<textarea value={null} />);
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 
   it('should warn if value and defaultValue are specified', () => {
@@ -377,17 +393,21 @@ describe('ReactDOMTextarea', () => {
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />,
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Textarea elements must be either controlled or uncontrolled ' +
-        '(specify either the value prop, or the defaultValue prop, but not ' +
-        'both). Decide between using a controlled or uncontrolled textarea ' +
-        'and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Textarea elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled textarea ' +
+          'and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(
       <textarea value="foo" defaultValue="bar" readOnly={true} />,
     );
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 });

@@ -129,27 +129,33 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('throws in render() if the update callback is not a function', () => {
@@ -174,29 +180,35 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('preserves focus', () => {

@@ -279,13 +279,15 @@ describe('ReactTestRenderer', () => {
     }
     ReactTestRenderer.create(<Baz />);
     ReactTestRenderer.create(<Foo />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Stateless function components cannot be given refs. Attempts ' +
-        'to access this ref will fail.\n\nCheck the render method of `Foo`.\n' +
-        '    in Bar (at **)\n' +
-        '    in Foo (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. Attempts ' +
+          'to access this ref will fail.\n\nCheck the render method of `Foo`.\n' +
+          '    in Bar (at **)\n' +
+          '    in Foo (at **)',
+      );
+    }
   });
 
   it('allows an optional createNodeMock function', () => {

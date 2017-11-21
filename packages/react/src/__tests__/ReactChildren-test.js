@@ -384,11 +384,13 @@ describe('ReactChildren', () => {
 
     React.Children.forEach(instance.props.children, callback, context);
     assertCalls();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.',
-    );
-    console.error.calls.reset();
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+      console.error.calls.reset();
+    }
 
     var mappedChildren = React.Children.map(
       instance.props.children,
@@ -396,7 +398,9 @@ describe('ReactChildren', () => {
       context,
     );
     assertCalls();
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
     expect(mappedChildren).toEqual([
       <div key=".0" />,
       <div key=".1" />,
@@ -945,13 +949,15 @@ describe('ReactChildren', () => {
 
       ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.' +
-          '\n    in ComponentReturningArray (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: ' +
+            'Each child in an array or iterator should have a unique "key" prop.' +
+            ' See https://fb.me/react-warning-keys for more information.' +
+            '\n    in ComponentReturningArray (at **)',
+        );
+      }
     });
 
     it('does not warn when there are keys on  elements in a fragment', () => {
@@ -964,7 +970,9 @@ describe('ReactChildren', () => {
 
       ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
     });
 
     it('warns for keys for arrays at the top level', () => {
@@ -972,12 +980,14 @@ describe('ReactChildren', () => {
 
       ReactTestUtils.renderIntoDocument([<div />, <div />]);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: ' +
+            'Each child in an array or iterator should have a unique "key" prop.' +
+            ' See https://fb.me/react-warning-keys for more information.',
+        );
+      }
     });
   });
 });

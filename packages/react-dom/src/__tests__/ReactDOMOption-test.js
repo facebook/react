@@ -46,15 +46,15 @@ describe('ReactDOMOption', () => {
     var node = ReactTestUtils.renderIntoDocument(el);
     expect(node.innerHTML).toBe('1  2');
     ReactTestUtils.renderIntoDocument(el);
-    // only warn once
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
-      '<div> cannot appear as a child of <option>.\n' +
-        '    in div (at **)\n' +
-        '    in option (at **)',
-    );
+    if (__DEV__) {
+      // only warn once
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        '<div> cannot appear as a child of <option>.\n' +
+          '    in div (at **)\n' +
+          '    in option (at **)',
+      );
+    }
   });
 
   it('should ignore null/undefined/false children without warning', () => {
@@ -71,7 +71,9 @@ describe('ReactDOMOption', () => {
 
     var node = ReactDOM.findDOMNode(stub);
 
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
     expect(node.innerHTML).toBe('1  2');
   });
 

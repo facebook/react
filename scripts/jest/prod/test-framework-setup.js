@@ -73,7 +73,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
 
   // In production, we strip error messages and turn them into codes.
   // This decodes them back so that the test assertions on them work.
-  function decodeErrorMessage(message) {
+  var decodeErrorMessage = function(message) {
     if (!message) {
       return message;
     }
@@ -91,7 +91,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     const format = errorMap[code];
     let argIndex = 0;
     return format.replace(/%s/g, () => args[argIndex++]);
-  }
+  };
   global.Error = new Proxy(global.Error, {
     construct(target, argumentsList, newTarget) {
       const error = Reflect.construct(target, argumentsList, newTarget);

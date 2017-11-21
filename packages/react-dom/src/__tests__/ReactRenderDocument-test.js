@@ -35,12 +35,14 @@ describe('rendering React components at document', () => {
 
   describe('with old implicit hydration API', () => {
     function expectDeprecationWarningWithFiber() {
-      expectDev(console.warn.calls.count()).toBe(1);
-      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
+      if (__DEV__) {
+        expect(console.warn.calls.count()).toBe(1);
+        expect(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+      }
     }
 
     it('should be able to adopt server markup', () => {
@@ -199,16 +201,18 @@ describe('rendering React components at document', () => {
       spyOnDev(console, 'error');
       ReactDOM.render(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDev(console.warn.calls.count()).toBe(1);
-      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Text content did not match.',
-      );
+      if (__DEV__) {
+        expect(console.warn.calls.count()).toBe(1);
+        expect(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Text content did not match.',
+        );
+      }
     });
 
     it('should throw on full document render w/ no markup', () => {
@@ -376,10 +380,12 @@ describe('rendering React components at document', () => {
       container.textContent = 'potato';
       ReactDOM.hydrate(<div>parsnip</div>, container);
       expect(container.textContent).toBe('parsnip');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Expected server HTML to contain a matching <div> in <div>.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Expected server HTML to contain a matching <div> in <div>.',
+        );
+      }
     });
 
     it('should give helpful errors on state desync', () => {
@@ -404,10 +410,12 @@ describe('rendering React components at document', () => {
       spyOnDev(console, 'error');
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Text content did not match.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Text content did not match.',
+        );
+      }
     });
 
     it('should render w/ no markup to full document', () => {
@@ -429,11 +437,13 @@ describe('rendering React components at document', () => {
 
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        // getTestDocument() has an extra <meta> that we didn't render.
-        'Did not expect server HTML to contain a <meta> in <head>.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          // getTestDocument() has an extra <meta> that we didn't render.
+          'Did not expect server HTML to contain a <meta> in <head>.',
+        );
+      }
     });
 
     it('supports findDOMNode on full-page components', () => {

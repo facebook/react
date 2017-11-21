@@ -47,6 +47,7 @@ async function expectErrors(fn, count) {
 
   const result = await fn();
   if (
+    console.error.calls &&
     console.error.calls.count() !== count &&
     console.error.calls.count() !== 0
   ) {
@@ -62,7 +63,9 @@ async function expectErrors(fn, count) {
       }
     }
   }
-  expectDev(console.error.calls.count()).toBe(count);
+  if (__DEV__) {
+    expect(console.error.calls.count()).toBe(count);
+  }
   return result;
 }
 
@@ -248,7 +251,7 @@ function itClientRenders(desc, testFn) {
 }
 
 function itThrows(desc, testFn, partialMessage) {
-  fit(`throws ${desc}`, () => {
+  it(`throws ${desc}`, () => {
     return testFn().then(
       () => expect(false).toBe('The promise resolved and should not have.'),
       err => {

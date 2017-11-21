@@ -210,20 +210,22 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-      ).toContain(
-        'Encountered two children with the same key, `1`. ' +
-          'Keys should be unique so that components maintain their identity ' +
-          'across updates. Non-unique keys may cause children to be ' +
-          'duplicated and/or omitted — the behavior is unsupported and ' +
-          'could change in a future version.',
-        '    in div (at **)\n' +
-          '    in WrapperComponent (at **)\n' +
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+        ).toContain(
+          'Encountered two children with the same key, `1`. ' +
+            'Keys should be unique so that components maintain their identity ' +
+            'across updates. Non-unique keys may cause children to be ' +
+            'duplicated and/or omitted — the behavior is unsupported and ' +
+            'could change in a future version.',
           '    in div (at **)\n' +
-          '    in Parent (at **)',
-      );
+            '    in WrapperComponent (at **)\n' +
+            '    in div (at **)\n' +
+            '    in Parent (at **)',
+        );
+      }
     });
 
     it('should warn for duplicated iterable keys with component stack info', () => {
@@ -275,20 +277,22 @@ describe('ReactMultiChild', () => {
         container,
       );
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-      ).toContain(
-        'Encountered two children with the same key, `1`. ' +
-          'Keys should be unique so that components maintain their identity ' +
-          'across updates. Non-unique keys may cause children to be ' +
-          'duplicated and/or omitted — the behavior is unsupported and ' +
-          'could change in a future version.',
-        '    in div (at **)\n' +
-          '    in WrapperComponent (at **)\n' +
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+        ).toContain(
+          'Encountered two children with the same key, `1`. ' +
+            'Keys should be unique so that components maintain their identity ' +
+            'across updates. Non-unique keys may cause children to be ' +
+            'duplicated and/or omitted — the behavior is unsupported and ' +
+            'could change in a future version.',
           '    in div (at **)\n' +
-          '    in Parent (at **)',
-      );
+            '    in WrapperComponent (at **)\n' +
+            '    in div (at **)\n' +
+            '    in Parent (at **)',
+        );
+      }
     });
   });
 
@@ -301,14 +305,16 @@ describe('ReactMultiChild', () => {
     }
     var container = document.createElement('div');
     ReactDOM.render(<Parent />, container);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Using Maps as children is unsupported and will likely yield ' +
-        'unexpected results. Convert it to a sequence/iterable of keyed ' +
-        'ReactElements instead.\n' +
-        '    in div (at **)\n' +
-        '    in Parent (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Using Maps as children is unsupported and will likely yield ' +
+          'unexpected results. Convert it to a sequence/iterable of keyed ' +
+          'ReactElements instead.\n' +
+          '    in div (at **)\n' +
+          '    in Parent (at **)',
+      );
+    }
   });
 
   it('should reorder bailed-out children', () => {

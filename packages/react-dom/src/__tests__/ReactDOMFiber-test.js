@@ -926,14 +926,14 @@ describe('ReactDOMFiber', () => {
       }
     }
     ReactDOM.render(<Example />, container);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
-      'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
-        '    in div (at **)\n' +
-        '    in Example (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
+          '    in div (at **)\n' +
+          '    in Example (at **)',
+      );
+    }
   });
 
   it('should warn with a special message for `false` event listeners', () => {
@@ -944,15 +944,15 @@ describe('ReactDOMFiber', () => {
       }
     }
     ReactDOM.render(<Example />, container);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
-      'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
-        'If you used to conditionally omit it with onClick={condition && value}, ' +
-        'pass onClick={condition ? value : undefined} instead.\n',
-      '    in div (at **)\n' + '    in Example (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
+          'If you used to conditionally omit it with onClick={condition && value}, ' +
+          'pass onClick={condition ? value : undefined} instead.\n',
+        '    in div (at **)\n' + '    in Example (at **)',
+      );
+    }
   });
 
   it('should not update event handlers until commit', () => {
@@ -1053,10 +1053,14 @@ describe('ReactDOMFiber', () => {
     expect(container.innerHTML).toBe('<div>foo</div>');
     ReactDOM.render(null, container);
     expect(container.innerHTML).toBe('');
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
     ReactDOM.render(<div>bar</div>, container);
     expect(container.innerHTML).toBe('<div>bar</div>');
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
   });
 
   it('should warn when replacing a container which was manually updated outside of React', () => {
@@ -1072,14 +1076,16 @@ describe('ReactDOMFiber', () => {
       container.innerHTML = '<div>MEOW.</div>';
       ReactDOM.render(<div key="2">baz</div>, container);
     }).toThrowError();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    }
   });
 
   it('should warn when doing an update to a container manually updated outside of React', () => {
@@ -1092,14 +1098,16 @@ describe('ReactDOMFiber', () => {
     container.innerHTML = '<div>MEOW.</div>';
     ReactDOM.render(<div>baz</div>, container);
     // silently fails to update
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    }
   });
 
   it('should warn when doing an update to a container manually cleared outside of React', () => {
@@ -1112,14 +1120,16 @@ describe('ReactDOMFiber', () => {
     container.innerHTML = '';
     ReactDOM.render(<div>baz</div>, container);
     // silently fails to update
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    }
   });
 
   it('should render a text component with a text DOM node on the same document as the container', () => {

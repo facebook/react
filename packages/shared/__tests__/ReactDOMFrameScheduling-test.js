@@ -17,10 +17,12 @@ describe('ReactDOMFrameScheduling', () => {
       jest.resetModules();
       spyOnDev(console, 'error');
       require('react-dom');
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'React depends on requestAnimationFrame.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'React depends on requestAnimationFrame.',
+        );
+      }
     } finally {
       global.requestAnimationFrame = previousRAF;
     }

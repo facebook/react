@@ -132,43 +132,51 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<App />);
-      expectDev(() => (style.position = 'absolute')).toThrow();
+      if (__DEV__) {
+        expect(() => (style.position = 'absolute')).toThrow();
+      }
     });
 
     it('should warn for unknown prop', () => {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div foo={() => {}} />, container);
-      expectDev(console.error.calls.count(0)).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
-          'from the element, or pass a string or number value to keep ' +
-          'it in the DOM. For details, see https://fb.me/react-attribute-behavior' +
-          '\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count(0)).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid value for prop `foo` on <div> tag. Either remove it ' +
+            'from the element, or pass a string or number value to keep ' +
+            'it in the DOM. For details, see https://fb.me/react-attribute-behavior' +
+            '\n    in div (at **)',
+        );
+      }
     });
 
     it('should group multiple unknown prop warnings together', () => {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div foo={() => {}} baz={() => {}} />, container);
-      expectDev(console.error.calls.count(0)).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
-          'them from the element, or pass a string or number value to keep ' +
-          'them in the DOM. For details, see https://fb.me/react-attribute-behavior' +
-          '\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count(0)).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid values for props `foo`, `baz` on <div> tag. Either remove ' +
+            'them from the element, or pass a string or number value to keep ' +
+            'them in the DOM. For details, see https://fb.me/react-attribute-behavior' +
+            '\n    in div (at **)',
+        );
+      }
     });
 
     it('should warn for onDblClick prop', () => {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<div onDblClick={() => {}} />, container);
-      expectDev(console.error.calls.count(0)).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count(0)).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid event handler property `onDblClick`. Did you mean `onDoubleClick`?\n    in div (at **)',
+        );
+      }
     });
 
     it('should warn for unknown string event handlers', () => {
@@ -183,16 +191,18 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div on-unknown="alert(&quot;hack&quot;)" />, container);
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
-      expectDev(console.error.calls.count(0)).toBe(3);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
-        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count(0)).toBe(3);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+          'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
+          'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        );
+      }
     });
 
     it('should warn for unknown function event handlers', () => {
@@ -207,16 +217,18 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<div on-unknown={function() {}} />, container);
       expect(container.firstChild.hasAttribute('on-unknown')).toBe(false);
       expect(container.firstChild['on-unknown']).toBe(undefined);
-      expectDev(console.error.calls.count(0)).toBe(3);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
-        'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count(0)).toBe(3);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Unknown event handler property `onUnknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+          'Warning: Unknown event handler property `onunknown`. It will be ignored.\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
+          'Warning: Unknown event handler property `on-unknown`. It will be ignored.\n    in div (at **)',
+        );
+      }
     });
 
     it('should warn for badly cased React attributes', () => {
@@ -224,15 +236,15 @@ describe('ReactDOMComponent', () => {
       var container = document.createElement('div');
       ReactDOM.render(<div CHILDREN="5" />, container);
       expect(container.firstChild.getAttribute('CHILDREN')).toBe('5');
-      expectDev(console.error.calls.count(0)).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count(0)).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid DOM property `CHILDREN`. Did you mean `children`?\n    in div (at **)',
+        );
+      }
     });
 
     it('should not warn for "0" as a unitless style value', () => {
-      spyOnDev(console, 'error');
-
       class Component extends React.Component {
         render() {
           return <div style={{margin: '0'}} />;
@@ -240,7 +252,6 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<Component />);
-      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should warn nicely about NaN in style', () => {
@@ -251,13 +262,13 @@ describe('ReactDOMComponent', () => {
       ReactDOM.render(<span style={style} />, div);
       ReactDOM.render(<span style={style} />, div);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-      ).toEqual(
-        'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
-          '\n    in span (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
+          'Warning: `NaN` is an invalid value for the `fontSize` css style property.' +
+            '\n    in span (at **)',
+        );
+      }
     });
 
     it('should update styles if initially null', () => {
@@ -455,10 +466,12 @@ describe('ReactDOMComponent', () => {
         );
         ReactDOM.render(element, container);
       }
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toEqual(
+          'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        );
+      }
     });
 
     it('should reject attribute key injection attack on update', () => {
@@ -475,10 +488,12 @@ describe('ReactDOMComponent', () => {
         );
         ReactDOM.render(afterUpdate, container);
       }
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toEqual(
-        'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toEqual(
+          'Warning: Invalid attribute name: `blah" onclick="beevil" noise="hi`',
+        );
+      }
     });
 
     it('should update arbitrary attributes for tags containing dashes', () => {
@@ -727,11 +742,13 @@ describe('ReactDOMComponent', () => {
       var container = document.createElement('div');
       ReactDOM.render(<button is={function() {}} />, container);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received a `function` for a string attribute `is`. If this is expected, cast ' +
-          'the value to a string.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Received a `function` for a string attribute `is`. If this is expected, cast ' +
+            'the value to a string.',
+        );
+      }
     });
 
     it('should not update when switching between null/undefined', () => {
@@ -860,14 +877,14 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work error event on <source> element', () => {
-      spyOnDev(console, 'error');
+      spyOn(console, 'log');
       var container = document.createElement('div');
       ReactDOM.render(
         <video>
           <source
             src="http://example.org/video"
             type="video/mp4"
-            onError={e => console.error('onError called')}
+            onError={e => console.log('onError called')}
           />
         </video>,
         container,
@@ -877,8 +894,10 @@ describe('ReactDOMComponent', () => {
       errorEvent.initEvent('error', false, false);
       container.getElementsByTagName('source')[0].dispatchEvent(errorEvent);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('onError called');
+      if (__DEV__) {
+        expect(console.log.calls.count()).toBe(1);
+        expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
+      }
     });
 
     it('should not duplicate uppercased selfclosing tags', () => {
@@ -891,10 +910,12 @@ describe('ReactDOMComponent', () => {
 
       var returnedValue = ReactDOMServer.renderToString(<Container />);
       expect(returnedValue).not.toContain('</BR>');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        '<BR /> is using uppercase HTML.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          '<BR /> is using uppercase HTML.',
+        );
+      }
     });
 
     it('should warn on upper case HTML tags, not SVG nor custom tags', () => {
@@ -902,24 +923,32 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(
         React.createElement('svg', null, React.createElement('PATH')),
       );
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
       ReactTestUtils.renderIntoDocument(React.createElement('CUSTOM-TAG'));
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
       ReactTestUtils.renderIntoDocument(React.createElement('IMG'));
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        '<IMG /> is using uppercase HTML.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          '<IMG /> is using uppercase HTML.',
+        );
+      }
     });
 
     it('should warn on props reserved for future use', () => {
       spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div aria="hello" />);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'The `aria` attribute is reserved for future use in React. ' +
-          'Pass individual `aria-` attributes instead.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'The `aria` attribute is reserved for future use in React. ' +
+            'Pass individual `aria-` attributes instead.',
+        );
+      }
     });
 
     it('should warn if the tag is unrecognized', () => {
@@ -957,19 +986,21 @@ describe('ReactDOMComponent', () => {
         Object.prototype.toString = realToString; // eslint-disable-line no-extend-native
       }
 
-      expectDev(console.error.calls.count()).toBe(4);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'The tag <bar> is unrecognized in this browser',
-      );
-      expectDev(console.error.calls.argsFor(1)[0]).toContain(
-        'The tag <foo> is unrecognized in this browser',
-      );
-      expectDev(console.error.calls.argsFor(2)[0]).toContain(
-        '<hasOwnProperty /> is using uppercase HTML',
-      );
-      expectDev(console.error.calls.argsFor(3)[0]).toContain(
-        'The tag <hasOwnProperty> is unrecognized in this browser',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(4);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'The tag <bar> is unrecognized in this browser',
+        );
+        expect(console.error.calls.argsFor(1)[0]).toContain(
+          'The tag <foo> is unrecognized in this browser',
+        );
+        expect(console.error.calls.argsFor(2)[0]).toContain(
+          '<hasOwnProperty /> is using uppercase HTML',
+        );
+        expect(console.error.calls.argsFor(3)[0]).toContain(
+          'The tag <hasOwnProperty> is unrecognized in this browser',
+        );
+      }
     });
 
     it('should throw on children for void elements', () => {
@@ -1025,13 +1056,17 @@ describe('ReactDOMComponent', () => {
         }
         var node = document.createElement('div');
         ReactDOM.render(<ShadyComponent />, node);
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-        );
+        if (__DEV__) {
+          expect(console.error.calls.count()).toBe(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'ShadyComponent is using shady DOM. Using shady DOM with React can ' +
+              'cause things to break subtly.',
+          );
+        }
         mountComponent({is: 'custom-shady-div2'});
-        expectDev(console.error.calls.count()).toBe(1);
+        if (__DEV__) {
+          expect(console.error.calls.count()).toBe(1);
+        }
       } finally {
         document.createElement = defaultCreateElement;
       }
@@ -1050,14 +1085,18 @@ describe('ReactDOMComponent', () => {
         };
 
         mountComponent({is: 'custom-shady-div'});
-        expectDev(console.error.calls.count()).toBe(1);
-        expectDev(console.error.calls.argsFor(0)[0]).toContain(
-          'A component is using shady DOM. Using shady DOM with React can ' +
-            'cause things to break subtly.',
-        );
+        if (__DEV__) {
+          expect(console.error.calls.count()).toBe(1);
+          expect(console.error.calls.argsFor(0)[0]).toContain(
+            'A component is using shady DOM. Using shady DOM with React can ' +
+              'cause things to break subtly.',
+          );
+        }
 
         mountComponent({is: 'custom-shady-div2'});
-        expectDev(console.error.calls.count()).toBe(1);
+        if (__DEV__) {
+          expect(console.error.calls.count()).toBe(1);
+        }
       } finally {
         document.createElement = defaultCreateElement;
       }
@@ -1100,19 +1139,23 @@ describe('ReactDOMComponent', () => {
     it('should validate against use of innerHTML', () => {
       spyOnDev(console, 'error');
       mountComponent({innerHTML: '<span>Hi Jim!</span>'});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Directly setting property `innerHTML` is not permitted. ',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Directly setting property `innerHTML` is not permitted. ',
+        );
+      }
     });
 
     it('should validate against use of innerHTML without case sensitivity', () => {
       spyOnDev(console, 'error');
       mountComponent({innerhtml: '<span>Hi Jim!</span>'});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Directly setting property `innerHTML` is not permitted. ',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Directly setting property `innerHTML` is not permitted. ',
+        );
+      }
     });
 
     it('should validate use of dangerouslySetInnerHTML', () => {
@@ -1142,23 +1185,23 @@ describe('ReactDOMComponent', () => {
     it('should warn about contentEditable and children', () => {
       spyOnDev(console, 'error');
       mountComponent({contentEditable: true, children: ''});
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: A component is `contentEditable` and contains `children` ' +
-          'managed by React. It is now your responsibility to guarantee that ' +
-          'none of those nodes are unexpectedly modified or duplicated. This ' +
-          'is probably not intentional.\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: A component is `contentEditable` and contains `children` ' +
+            'managed by React. It is now your responsibility to guarantee that ' +
+            'none of those nodes are unexpectedly modified or duplicated. This ' +
+            'is probably not intentional.\n    in div (at **)',
+        );
+      }
     });
 
     it('should respect suppressContentEditableWarning', () => {
-      spyOnDev(console, 'error');
       mountComponent({
         contentEditable: true,
         children: '',
         suppressContentEditableWarning: true,
       });
-      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should validate against invalid styles', () => {
@@ -1227,9 +1270,11 @@ describe('ReactDOMComponent', () => {
       container.getElementsByTagName('image')[0].dispatchEvent(errorEvent);
       container.getElementsByTagName('image')[0].dispatchEvent(loadEvent);
 
-      expectDev(console.log.calls.count()).toBe(2);
-      expectDev(console.log.calls.argsFor(0)[0]).toContain('onError called');
-      expectDev(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
+      if (__DEV__) {
+        expect(console.log.calls.count()).toBe(2);
+        expect(console.log.calls.argsFor(0)[0]).toContain('onError called');
+        expect(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
+      }
     });
   });
 
@@ -1286,8 +1331,10 @@ describe('ReactDOMComponent', () => {
         </div>,
         container,
       );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('contentEditable');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain('contentEditable');
+      }
     });
 
     it('should validate against invalid styles', () => {
@@ -1408,19 +1455,21 @@ describe('ReactDOMComponent', () => {
         </div>,
       );
 
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<div>.' +
-          '\n    in tr (at **)' +
-          '\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+            '<div>.' +
+            '\n    in tr (at **)' +
+            '\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+          'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+            '<div>.' +
+            '\n    in tr (at **)' +
+            '\n    in div (at **)',
+        );
+      }
     });
 
     it('warns on invalid nesting at root', () => {
@@ -1433,14 +1482,16 @@ describe('ReactDOMComponent', () => {
         p,
       );
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
-          'of <p>.' +
-          // There is no outer `p` here because root container is not part of the stack.
-          '\n    in p (at **)' +
-          '\n    in span (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: validateDOMNesting(...): <p> cannot appear as a descendant ' +
+            'of <p>.' +
+            // There is no outer `p` here because root container is not part of the stack.
+            '\n    in p (at **)' +
+            '\n    in span (at **)',
+        );
+      }
     });
 
     it('warns nicely for table rows', () => {
@@ -1463,34 +1514,36 @@ describe('ReactDOMComponent', () => {
       }
 
       ReactTestUtils.renderIntoDocument(<Foo />);
-      expectDev(console.error.calls.count()).toBe(3);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(3);
 
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
-          '<table>. Add a <tbody> to your code to match the DOM tree generated ' +
-          'by the browser.' +
-          '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-      );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: validateDOMNesting(...): <tr> cannot appear as a child of ' +
+            '<table>. Add a <tbody> to your code to match the DOM tree generated ' +
+            'by the browser.' +
+            '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Foo (at **)',
+        );
 
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
-          'child of <tr>.' +
-          '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-      );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+          'Warning: validateDOMNesting(...): Text nodes cannot appear as a ' +
+            'child of <tr>.' +
+            '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Foo (at **)',
+        );
 
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
-        'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
-          "appear as a child of <table>. Make sure you don't have any extra " +
-          'whitespace between tags on each line of your source code.' +
-          '\n    in table (at **)' +
-          '\n    in Foo (at **)',
-      );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toBe(
+          'Warning: validateDOMNesting(...): Whitespace text nodes cannot ' +
+            "appear as a child of <table>. Make sure you don't have any extra " +
+            'whitespace between tags on each line of your source code.' +
+            '\n    in table (at **)' +
+            '\n    in Foo (at **)',
+        );
+      }
     });
 
     it('gives useful context in warnings', () => {
@@ -1525,16 +1578,18 @@ describe('ReactDOMComponent', () => {
         return <Viz1 />;
       }
       ReactTestUtils.renderIntoDocument(<App1 />);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-      ).toContain(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Viz1 (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+        ).toContain(
+          '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in FancyRow (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Viz1 (at **)',
+        );
+      }
 
       function Viz2() {
         return (
@@ -1547,65 +1602,73 @@ describe('ReactDOMComponent', () => {
         return <Viz2 />;
       }
       ReactTestUtils.renderIntoDocument(<App2 />);
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(1)[0]),
-      ).toContain(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)' +
-          '\n    in Viz2 (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(1)[0]),
+        ).toContain(
+          '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in FancyRow (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Table (at **)' +
+            '\n    in FancyTable (at **)' +
+            '\n    in Viz2 (at **)',
+        );
+      }
 
       ReactTestUtils.renderIntoDocument(
         <FancyTable>
           <FancyRow />
         </FancyTable>,
       );
-      expectDev(console.error.calls.count()).toBe(3);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(2)[0]),
-      ).toContain(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(3);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(2)[0]),
+        ).toContain(
+          '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in FancyRow (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Table (at **)' +
+            '\n    in FancyTable (at **)',
+        );
+      }
 
       ReactTestUtils.renderIntoDocument(
         <table>
           <FancyRow />
         </table>,
       );
-      expectDev(console.error.calls.count()).toBe(4);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(3)[0]),
-      ).toContain(
-        '\n    in tr (at **)' +
-          '\n    in Row (at **)' +
-          '\n    in FancyRow (at **)' +
-          '\n    in table (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(4);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(3)[0]),
+        ).toContain(
+          '\n    in tr (at **)' +
+            '\n    in Row (at **)' +
+            '\n    in FancyRow (at **)' +
+            '\n    in table (at **)',
+        );
+      }
 
       ReactTestUtils.renderIntoDocument(
         <FancyTable>
           <tr />
         </FancyTable>,
       );
-      expectDev(console.error.calls.count()).toBe(5);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(4)[0]),
-      ).toContain(
-        '\n    in tr (at **)' +
-          '\n    in table (at **)' +
-          '\n    in Table (at **)' +
-          '\n    in FancyTable (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(5);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(4)[0]),
+        ).toContain(
+          '\n    in tr (at **)' +
+            '\n    in table (at **)' +
+            '\n    in Table (at **)' +
+            '\n    in FancyTable (at **)',
+        );
+      }
 
       class Link extends React.Component {
         render() {
@@ -1620,16 +1683,18 @@ describe('ReactDOMComponent', () => {
           </div>
         </Link>,
       );
-      expectDev(console.error.calls.count()).toBe(6);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(5)[0]),
-      ).toContain(
-        '\n    in a (at **)' +
-          '\n    in Link (at **)' +
-          '\n    in div (at **)' +
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(6);
+        expect(
+          normalizeCodeLocInfo(console.error.calls.argsFor(5)[0]),
+        ).toContain(
           '\n    in a (at **)' +
-          '\n    in Link (at **)',
-      );
+            '\n    in Link (at **)' +
+            '\n    in div (at **)' +
+            '\n    in a (at **)' +
+            '\n    in Link (at **)',
+        );
+      }
     });
 
     it('should warn about incorrect casing on properties (ssr)', () => {
@@ -1637,8 +1702,10 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(
         React.createElement('input', {type: 'text', tabindex: '1'}),
       );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
+      }
     });
 
     it('should warn about incorrect casing on event handlers (ssr)', () => {
@@ -1649,9 +1716,11 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(
         React.createElement('input', {type: 'text', onKeydown: '1'}),
       );
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('onClick');
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+        expect(console.error.calls.argsFor(0)[0]).toContain('onClick');
+        expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
+      }
     });
 
     it('should warn about incorrect casing on properties', () => {
@@ -1659,8 +1728,10 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(
         React.createElement('input', {type: 'text', tabindex: '1'}),
       );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain('tabIndex');
+      }
     });
 
     it('should warn about incorrect casing on event handlers', () => {
@@ -1671,9 +1742,11 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(
         React.createElement('input', {type: 'text', onKeydown: '1'}),
       );
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('onClick');
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+        expect(console.error.calls.argsFor(0)[0]).toContain('onClick');
+        expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
+      }
     });
 
     it('should warn about class', () => {
@@ -1681,8 +1754,10 @@ describe('ReactDOMComponent', () => {
       ReactTestUtils.renderIntoDocument(
         React.createElement('div', {class: 'muffins'}),
       );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain('className');
+      }
     });
 
     it('should warn about class (ssr)', () => {
@@ -1690,84 +1765,114 @@ describe('ReactDOMComponent', () => {
       ReactDOMServer.renderToString(
         React.createElement('div', {class: 'muffins'}),
       );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain('className');
+      }
     });
 
     it('should warn about props that are no longer supported', () => {
       spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div />);
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
 
       ReactTestUtils.renderIntoDocument(<div onFocusIn={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(1);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+      }
 
       ReactTestUtils.renderIntoDocument(<div onFocusOut={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+      }
     });
 
     it('should warn about props that are no longer supported without case sensitivity', () => {
       spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div />);
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
 
       ReactTestUtils.renderIntoDocument(<div onfocusin={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(1);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+      }
 
       ReactTestUtils.renderIntoDocument(<div onfocusout={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+      }
     });
 
     it('should warn about props that are no longer supported (ssr)', () => {
       spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div />);
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
 
       ReactDOMServer.renderToString(<div onFocusIn={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(1);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+      }
 
       ReactDOMServer.renderToString(<div onFocusOut={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+      }
     });
 
     it('should warn about props that are no longer supported without case sensitivity (ssr)', () => {
       spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div />);
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
 
       ReactDOMServer.renderToString(<div onfocusin={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(1);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+      }
 
       ReactDOMServer.renderToString(<div onfocusout={() => {}} />);
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+      }
     });
 
     it('gives source code refs for unknown prop warning', () => {
       spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(<div class="paladin" />);
       ReactTestUtils.renderIntoDocument(<input type="text" onclick="1" />);
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Invalid event handler property `onclick`. Did you mean ' +
-          '`onClick`?\n    in input (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+          'Warning: Invalid event handler property `onclick`. Did you mean ' +
+            '`onClick`?\n    in input (at **)',
+        );
+      }
     });
 
     it('gives source code refs for unknown prop warning (ssr)', () => {
       spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div class="paladin" />);
       ReactDOMServer.renderToString(<input type="text" onclick="1" />);
-      expectDev(console.error.calls.count()).toBe(2);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
-      );
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-        'Warning: Invalid event handler property `onclick`. Did you mean ' +
-          '`onClick`?\n    in input (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        );
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+          'Warning: Invalid event handler property `onclick`. Did you mean ' +
+            '`onClick`?\n    in input (at **)',
+        );
+      }
     });
 
     it('gives source code refs for unknown prop warning for update render', () => {
@@ -1775,13 +1880,17 @@ describe('ReactDOMComponent', () => {
       var container = document.createElement('div');
 
       ReactTestUtils.renderIntoDocument(<div className="paladin" />, container);
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
 
       ReactTestUtils.renderIntoDocument(<div class="paladin" />, container);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
+        );
+      }
     });
 
     it('gives source code refs for unknown prop warning for exact elements', () => {
@@ -1797,19 +1906,23 @@ describe('ReactDOMComponent', () => {
         </div>,
       );
 
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = matches[1];
+        expect(console.error.calls.argsFor(0)[0]).toContain('className');
+        var matches = console.error.calls
+          .argsFor(0)[0]
+          .match(/.*\(.*:(\d+)\).*/);
+        var previousLine = matches[1];
 
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = matches[1];
+        expect(console.error.calls.argsFor(1)[0]).toContain('onClick');
+        matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
+        var currentLine = matches[1];
 
-      //verify line number has a proper relative difference,
-      //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+        //verify line number has a proper relative difference,
+        //since hard coding the line number would make test too brittle
+        expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+      }
     });
 
     it('gives source code refs for unknown prop warning for exact elements (ssr)', () => {
@@ -1825,20 +1938,24 @@ describe('ReactDOMComponent', () => {
         </div>,
       );
 
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = (matches || [])[1];
+        expect(console.error.calls.argsFor(0)[0]).toContain('className');
+        var matches = console.error.calls
+          .argsFor(0)[0]
+          .match(/.*\(.*:(\d+)\).*/);
+        var previousLine = (matches || [])[1];
 
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches =
-        console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {};
-      var currentLine = (matches || [])[1];
+        expect(console.error.calls.argsFor(1)[0]).toContain('onClick');
+        matches =
+          console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/) || {};
+        var currentLine = (matches || [])[1];
 
-      //verify line number has a proper relative difference,
-      //since hard coding the line number would make test too brittle
-      expectDev(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+        //verify line number has a proper relative difference,
+        //since hard coding the line number would make test too brittle
+        expect(parseInt(previousLine, 10) + 2).toBe(parseInt(currentLine, 10));
+      }
     });
 
     it('gives source code refs for unknown prop warning for exact elements in composition', () => {
@@ -1884,19 +2001,23 @@ describe('ReactDOMComponent', () => {
 
       ReactTestUtils.renderIntoDocument(<Parent />, container);
 
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = (matches || [])[1];
+        expect(console.error.calls.argsFor(0)[0]).toContain('className');
+        var matches = console.error.calls
+          .argsFor(0)[0]
+          .match(/.*\(.*:(\d+)\).*/);
+        var previousLine = (matches || [])[1];
 
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = (matches || [])[1];
+        expect(console.error.calls.argsFor(1)[0]).toContain('onClick');
+        matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
+        var currentLine = (matches || [])[1];
 
-      //verify line number has a proper relative difference,
-      //since hard coding the line number would make test too brittle
-      expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+        //verify line number has a proper relative difference,
+        //since hard coding the line number would make test too brittle
+        expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+      }
     });
 
     it('gives source code refs for unknown prop warning for exact elements in composition (ssr)', () => {
@@ -1942,21 +2063,23 @@ describe('ReactDOMComponent', () => {
 
       ReactDOMServer.renderToString(<Parent />, container);
 
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain('className');
-      var matches = console.error.calls.argsFor(0)[0].match(/.*\(.*:(\d+)\).*/);
-      var previousLine = (matches || [])[1];
+        expect(console.error.calls.argsFor(0)[0]).toContain('className');
+        var matches = console.error.calls
+          .argsFor(0)[0]
+          .match(/.*\(.*:(\d+)\).*/);
+        var previousLine = (matches || [])[1];
 
-      expectDev(console.error.calls.argsFor(1)[0]).toContain('onClick');
-      matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
-      var currentLine = (matches || [])[1];
+        expect(console.error.calls.argsFor(1)[0]).toContain('onClick');
+        matches = console.error.calls.argsFor(1)[0].match(/.*\(.*:(\d+)\).*/);
+        var currentLine = (matches || [])[1];
 
-      //verify line number has a proper relative difference,
-      //since hard coding the line number would make test too brittle
-      expectDev(parseInt(previousLine, 10) + 12).toBe(
-        parseInt(currentLine, 10),
-      );
+        //verify line number has a proper relative difference,
+        //since hard coding the line number would make test too brittle
+        expect(parseInt(previousLine, 10) + 12).toBe(parseInt(currentLine, 10));
+      }
     });
 
     it('should suggest property name if available', () => {
@@ -1969,15 +2092,17 @@ describe('ReactDOMComponent', () => {
         React.createElement('input', {type: 'text', autofocus: true}),
       );
 
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
-      );
+        expect(console.error.calls.argsFor(0)[0]).toBe(
+          'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
+        );
 
-      expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
-      );
+        expect(console.error.calls.argsFor(1)[0]).toBe(
+          'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
+        );
+      }
     });
 
     it('should suggest property name if available (ssr)', () => {
@@ -1990,15 +2115,17 @@ describe('ReactDOMComponent', () => {
         React.createElement('input', {type: 'text', autofocus: true}),
       );
 
-      expectDev(console.error.calls.count()).toBe(2);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(2);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toBe(
-        'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
-      );
+        expect(console.error.calls.argsFor(0)[0]).toBe(
+          'Warning: Invalid DOM property `for`. Did you mean `htmlFor`?\n    in label',
+        );
 
-      expectDev(console.error.calls.argsFor(1)[0]).toBe(
-        'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
-      );
+        expect(console.error.calls.argsFor(1)[0]).toBe(
+          'Warning: Invalid DOM property `autofocus`. Did you mean `autoFocus`?\n    in input',
+        );
+      }
     });
   });
 
@@ -2034,9 +2161,11 @@ describe('ReactDOMComponent', () => {
 
       expect(el.className).toBe('test');
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `class`. Did you mean `className`?',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid DOM property `class`. Did you mean `className`?',
+        );
+      }
     });
 
     it('sets incorrectly cased aliased attributes on HTML attributes with a warning', function() {
@@ -2046,9 +2175,11 @@ describe('ReactDOMComponent', () => {
 
       expect(el.className).toBe('test');
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `cLASS`. Did you mean `className`?',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid DOM property `cLASS`. Did you mean `className`?',
+        );
+      }
     });
 
     it('sets aliased attributes on SVG elements with a warning', function() {
@@ -2063,9 +2194,11 @@ describe('ReactDOMComponent', () => {
 
       expect(text.hasAttribute('arabic-form')).toBe(true);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid DOM property `arabic-form`. Did you mean `arabicForm`?',
+        );
+      }
     });
 
     it('sets aliased attributes on custom elements', function() {
@@ -2118,11 +2251,13 @@ describe('ReactDOMComponent', () => {
 
       expect(el.hasAttribute('whatever')).toBe(false);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for a non-boolean attribute `whatever`.\n\n' +
-          'If you want to write it to the DOM, pass a string instead: ' +
-          'whatever="true" or whatever={value.toString()}.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Received `true` for a non-boolean attribute `whatever`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            'whatever="true" or whatever={value.toString()}.',
+        );
+      }
     });
 
     it('does not assign an implicit boolean custom attributes', function() {
@@ -2133,11 +2268,13 @@ describe('ReactDOMComponent', () => {
 
       expect(el.hasAttribute('whatever')).toBe(false);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for a non-boolean attribute `whatever`.\n\n' +
-          'If you want to write it to the DOM, pass a string instead: ' +
-          'whatever="true" or whatever={value.toString()}.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Received `true` for a non-boolean attribute `whatever`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            'whatever="true" or whatever={value.toString()}.',
+        );
+      }
     });
 
     it('assigns a numeric custom attributes as a string', function() {
@@ -2153,9 +2290,11 @@ describe('ReactDOMComponent', () => {
 
       expect(el.hasAttribute('whatever')).toBe(false);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid value for prop `whatever` on <div> tag',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid value for prop `whatever` on <div> tag',
+        );
+      }
     });
 
     it('will assign an object custom attributes', function() {
@@ -2169,17 +2308,17 @@ describe('ReactDOMComponent', () => {
       var el = ReactTestUtils.renderIntoDocument(<div data-fooBar="true" />);
       expect(el.getAttribute('data-foobar')).toBe('true');
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-      ).toMatch(
-        'React does not recognize the `data-fooBar` prop on a DOM element. ' +
-          'If you intentionally want it to appear in the DOM as a custom ' +
-          'attribute, spell it as lowercase `data-foobar` instead. ' +
-          'If you accidentally passed it from a parent component, remove ' +
-          'it from the DOM element.\n' +
-          '    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
+          'React does not recognize the `data-fooBar` prop on a DOM element. ' +
+            'If you intentionally want it to appear in the DOM as a custom ' +
+            'attribute, spell it as lowercase `data-foobar` instead. ' +
+            'If you accidentally passed it from a parent component, remove ' +
+            'it from the DOM element.\n' +
+            '    in div (at **)',
+        );
+      }
     });
 
     it('allows cased custom attributes', function() {
@@ -2188,17 +2327,17 @@ describe('ReactDOMComponent', () => {
       var el = ReactTestUtils.renderIntoDocument(<div fooBar="true" />);
       expect(el.getAttribute('foobar')).toBe('true');
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(
-        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-      ).toMatch(
-        'React does not recognize the `fooBar` prop on a DOM element. ' +
-          'If you intentionally want it to appear in the DOM as a custom ' +
-          'attribute, spell it as lowercase `foobar` instead. ' +
-          'If you accidentally passed it from a parent component, remove ' +
-          'it from the DOM element.\n' +
-          '    in div (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toMatch(
+          'React does not recognize the `fooBar` prop on a DOM element. ' +
+            'If you intentionally want it to appear in the DOM as a custom ' +
+            'attribute, spell it as lowercase `foobar` instead. ' +
+            'If you accidentally passed it from a parent component, remove ' +
+            'it from the DOM element.\n' +
+            '    in div (at **)',
+        );
+      }
     });
 
     it('warns on NaN attributes', function() {
@@ -2208,10 +2347,12 @@ describe('ReactDOMComponent', () => {
 
       expect(el.getAttribute('whatever')).toBe('NaN');
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Received NaN for the `whatever` attribute. If this is ' +
-          'expected, cast the value to a string.\n    in div',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Received NaN for the `whatever` attribute. If this is ' +
+            'expected, cast the value to a string.\n    in div',
+        );
+      }
     });
 
     it('removes a property when it becomes invalid', function() {
@@ -2224,9 +2365,11 @@ describe('ReactDOMComponent', () => {
 
       expect(el.hasAttribute('whatever')).toBe(false);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid value for prop `whatever` on <div> tag.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid value for prop `whatever` on <div> tag.',
+        );
+      }
     });
 
     it('warns on bad casing of known HTML attributes', function() {
@@ -2236,9 +2379,11 @@ describe('ReactDOMComponent', () => {
 
       expect(el.getAttribute('size')).toBe('30');
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `SiZe`. Did you mean `size`?',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid DOM property `SiZe`. Did you mean `size`?',
+        );
+      }
     });
   });
 
@@ -2310,11 +2455,13 @@ describe('ReactDOMComponent', () => {
 
       expect(el.hasAttribute('whatever')).toBe(false);
 
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `true` for a non-boolean attribute `whatever`.\n\n' +
-          'If you want to write it to the DOM, pass a string instead: ' +
-          'whatever="true" or whatever={value.toString()}.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Received `true` for a non-boolean attribute `whatever`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            'whatever="true" or whatever={value.toString()}.',
+        );
+      }
     });
 
     it('stringifies the boolean true for allowed attributes', function() {
@@ -2350,10 +2497,12 @@ describe('ReactDOMComponent', () => {
         false,
       );
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Invalid DOM property `x-height`. Did you mean `xHeight`',
+        );
+      }
     });
 
     it('the font-face element does not allow unknown boolean values', function() {
@@ -2368,14 +2517,16 @@ describe('ReactDOMComponent', () => {
         false,
       );
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Received `false` for a non-boolean attribute `whatever`.\n\n' +
-          'If you want to write it to the DOM, pass a string instead: ' +
-          'whatever="false" or whatever={value.toString()}.\n\n' +
-          'If you used to conditionally omit it with whatever={condition && value}, ' +
-          'pass whatever={condition ? value : undefined} instead.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Received `false` for a non-boolean attribute `whatever`.\n\n' +
+            'If you want to write it to the DOM, pass a string instead: ' +
+            'whatever="false" or whatever={value.toString()}.\n\n' +
+            'If you used to conditionally omit it with whatever={condition && value}, ' +
+            'pass whatever={condition ? value : undefined} instead.',
+        );
+      }
     });
   });
 });
