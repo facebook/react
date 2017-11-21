@@ -50,8 +50,10 @@ describe('ReactElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(element.props).toEqual({});
   });
 
@@ -144,14 +146,20 @@ describe('ReactElement', () => {
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(element.props).toEqual({});
   });
 
   it('returns an immutable element', () => {
     var element = React.createFactory(ComponentClass)();
-    expect(() => (element.type = 'div')).toThrow();
+    if (__DEV__) {
+      expect(() => (element.type = 'div')).toThrow();
+    } else {
+      expect(() => (element.type = 'div')).not.toThrow();
+    }
   });
 
   it('does not reuse the original config object', () => {
@@ -177,8 +185,10 @@ describe('ReactElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(element.props).toEqual({foo: '56'});
   });
 
@@ -191,8 +201,10 @@ describe('ReactElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('null');
     expect(element.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(element.props).toEqual({foo: '12'});
   });
 
@@ -206,8 +218,10 @@ describe('ReactElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(element.props).toEqual({foo: '56'});
   });
 
@@ -226,8 +240,10 @@ describe('ReactElement', () => {
     expect(element.type).toBe(ComponentClass);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(element.props).toEqual({foo: '56'});
   });
 
@@ -377,16 +393,25 @@ describe('ReactElement', () => {
       render() {
         var el = <div className="moo" />;
 
-        expect(function() {
+        if (__DEV__) {
+          expect(function() {
+            el.props.className = 'quack';
+          }).toThrow();
+          expect(el.props.className).toBe('moo');
+        } else {
           el.props.className = 'quack';
-        }).toThrow();
-        expect(el.props.className).toBe('moo');
+          expect(el.props.className).toBe('quack');
+        }
 
         return el;
       }
     }
     var outer = ReactTestUtils.renderIntoDocument(<Outer color="orange" />);
-    expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
+    if (__DEV__) {
+      expect(ReactDOM.findDOMNode(outer).className).toBe('moo');
+    } else {
+      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+    }
   });
 
   it('throws when adding a prop (in dev) after element creation', () => {
@@ -395,11 +420,15 @@ describe('ReactElement', () => {
       render() {
         var el = <div>{this.props.sound}</div>;
 
-        expect(function() {
+        if (__DEV__) {
+          expect(function() {
+            el.props.className = 'quack';
+          }).toThrow();
+          expect(el.props.className).toBe(undefined);
+        } else {
           el.props.className = 'quack';
-        }).toThrow();
-
-        expect(el.props.className).toBe(undefined);
+          expect(el.props.className).toBe('quack');
+        }
 
         return el;
       }
@@ -407,7 +436,11 @@ describe('ReactElement', () => {
     Outer.defaultProps = {sound: 'meow'};
     var outer = ReactDOM.render(<Outer />, container);
     expect(ReactDOM.findDOMNode(outer).textContent).toBe('meow');
-    expect(ReactDOM.findDOMNode(outer).className).toBe('');
+    if (__DEV__) {
+      expect(ReactDOM.findDOMNode(outer).className).toBe('');
+    } else {
+      expect(ReactDOM.findDOMNode(outer).className).toBe('quack');
+    }
   });
 
   it('does not warn for NaN props', () => {

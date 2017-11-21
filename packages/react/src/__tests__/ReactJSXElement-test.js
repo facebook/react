@@ -62,7 +62,11 @@ describe('ReactJSXElement', () => {
 
   it('returns an immutable element', () => {
     var element = <Component />;
-    expect(() => (element.type = 'div')).toThrow();
+    if (__DEV__) {
+      expect(() => (element.type = 'div')).toThrow();
+    } else {
+      expect(() => (element.type = 'div')).not.toThrow();
+    }
   });
 
   it('does not reuse the object that is spread into props', () => {

@@ -735,21 +735,33 @@ describe('ReactDOMServer', () => {
     expect(markup).toBe('<div></div>');
   });
 
-  it('should warn when children are mutated during render', () => {
+  it('should throw (in dev) when children are mutated during render', () => {
     spyOnDev(console, 'error');
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    expect(() => {
-      ReactDOMServer.renderToStaticMarkup(
-        <Wrapper>
-          <span key={0} />
-          <span key={1} />
-          <span key={2} />
-        </Wrapper>,
-      );
-    }).toThrowError(/Cannot assign to read only property.*/);
+    if (__DEV__) {
+      expect(() => {
+        ReactDOMServer.renderToStaticMarkup(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        );
+      }).toThrowError(/Cannot assign to read only property.*/);
+    } else {
+      expect(
+        ReactDOMServer.renderToStaticMarkup(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        ),
+      ).toContain('<p>');
+    }
   });
 
   it('warns about lowercase html but not in svg tags', () => {

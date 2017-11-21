@@ -45,13 +45,23 @@ describe('ReactComponent', () => {
     }).toThrow();
   });
 
-  it('should warn when children are mutated during render', () => {
+  it('should throw (in dev) when children are mutated during render', () => {
     spyOnDev(console, 'error');
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    expect(() => {
+    if (__DEV__) {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        );
+      }).toThrowError(/Cannot assign to read only property.*/);
+    } else {
       ReactTestUtils.renderIntoDocument(
         <Wrapper>
           <span key={0} />
@@ -59,10 +69,10 @@ describe('ReactComponent', () => {
           <span key={2} />
         </Wrapper>,
       );
-    }).toThrowError(/Cannot assign to read only property.*/);
+    }
   });
 
-  it('should warn when children are mutated during update', () => {
+  it('should throw (in dev) when children are mutated during update', () => {
     spyOnDev(console, 'error');
 
     class Wrapper extends React.Component {
@@ -76,7 +86,17 @@ describe('ReactComponent', () => {
       }
     }
 
-    expect(() => {
+    if (__DEV__) {
+      expect(() => {
+        ReactTestUtils.renderIntoDocument(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        );
+      }).toThrowError(/Cannot assign to read only property.*/);
+    } else {
       ReactTestUtils.renderIntoDocument(
         <Wrapper>
           <span key={0} />
@@ -84,7 +104,7 @@ describe('ReactComponent', () => {
           <span key={2} />
         </Wrapper>,
       );
-    }).toThrowError(/Cannot assign to read only property.*/);
+    }
   });
 
   it('should support refs on owned components', () => {

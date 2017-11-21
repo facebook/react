@@ -339,8 +339,10 @@ describe('ReactElementClone', () => {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
     expect(clone.ref).toBe('34');
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(clone.props).toEqual({foo: 'ef'});
   });
 
@@ -359,8 +361,10 @@ describe('ReactElementClone', () => {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
     expect(clone.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(clone.props).toEqual({foo: 'ef'});
   });
 });
