@@ -3,7 +3,7 @@
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
   // require that instead.
-  require('./setupSpecEquivalenceReporter.js');
+  require('../setupSpecEquivalenceReporter.js');
 } else {
   var env = jasmine.getEnv();
 
