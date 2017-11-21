@@ -103,6 +103,7 @@
     "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "jest --config scripts/jest/dev/config.js",
+    "test-prod": "jest --config scripts/jest/prod/config.js",
     "flow": "node ./scripts/tasks/flow.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
