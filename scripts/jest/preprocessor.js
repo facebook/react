@@ -18,12 +18,8 @@ var pathToBabel = path.join(
   '..',
   'package.json'
 );
-var pathToModuleMap = require.resolve('fbjs/module-map');
 var pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/replace-invariant-error-codes'
-);
-var pathToBabelPluginModules = require.resolve(
-  'fbjs-scripts/babel-6/rewrite-modules'
 );
 var pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
@@ -31,7 +27,6 @@ var pathToBabelPluginAsyncToGenerator = require.resolve(
 var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
-// TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
   plugins: [
     // For Node environment only. For builds, Rollup takes care of ESM.
@@ -81,9 +76,7 @@ module.exports = {
     __filename,
     pathToBabel,
     pathToBabelrc,
-    pathToModuleMap,
     pathToBabelPluginDevWithCode,
-    pathToBabelPluginModules,
     pathToErrorCodes,
   ]),
 };
