@@ -114,13 +114,13 @@
       "<rootDir>/scripts/bench/"
     ],
     "transform": {
-      ".*": "./scripts/jest/preprocessor.js"
+      ".*": "./scripts/jest/dev/preprocessor.js"
     },
     "setupFiles": [
-      "./scripts/jest/setup.js",
-      "./scripts/jest/environment.js"
+      "./scripts/jest/dev/setup.js",
+      "./scripts/jest/dev/environment.js"
     ],
-    "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
+    "setupTestFrameworkScriptFile": "./scripts/jest/dev/test-framework-setup.js",
     "testRegex": "/__tests__/.*(\\.js|\\.coffee|[^d]\\.ts)$",
     "moduleFileExtensions": [
       "js",

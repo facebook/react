@@ -17,13 +17,13 @@ var pathToBabel = path.join(
   'package.json'
 );
 var pathToBabelPluginDevWithCode = require.resolve(
-  '../error-codes/replace-invariant-error-codes'
+  '../../error-codes/replace-invariant-error-codes'
 );
 var pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
 );
-var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
-var pathToErrorCodes = require.resolve('../error-codes/codes.json');
+var pathToBabelrc = path.join(__dirname, '..', '..', '..', '.babelrc');
+var pathToErrorCodes = require.resolve('../../error-codes/codes.json');
 
 var babelOptions = {
   plugins: [
