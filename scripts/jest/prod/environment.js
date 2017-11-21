@@ -1,5 +1,5 @@
 /* eslint-disable */
-global.__DEV__ = true;
+global.__DEV__ = false;
 
 // For testing DOM Fiber.
 global.requestAnimationFrame = function(callback) {
