@@ -46,28 +46,8 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     });
   });
 
-  var wrapDevMatcher = function(obj, name) {
-    const original = obj[name];
-    obj[name] = function devMatcher() {
-      try {
-        original.apply(this, arguments);
-      } catch (e) {
-        global.__hadDevFailures = e.stack;
-      }
-    };
-  };
-
-  const expectDev = function expectDev(actual) {
-    const expectation = expect(actual);
-    if (global.__suppressDevFailures) {
-      Object.keys(expectation).forEach(name => {
-        wrapDevMatcher(expectation, name);
-        wrapDevMatcher(expectation.not, name);
-      });
-    }
-    return expectation;
-  };
-  global.expectDev = expectDev;
+  // In development environment, they're equivalent.
+  global.expectDev = expect;
 
   require('jasmine-check').install();
 }

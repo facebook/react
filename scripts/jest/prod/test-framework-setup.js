@@ -52,19 +52,17 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
       try {
         original.apply(this, arguments);
       } catch (e) {
-        global.__hadDevFailures = e.stack;
+        // Ignore DEV-only assertions in prod environment.
       }
     };
   };
 
   const expectDev = function expectDev(actual) {
     const expectation = expect(actual);
-    if (global.__suppressDevFailures) {
-      Object.keys(expectation).forEach(name => {
-        wrapDevMatcher(expectation, name);
-        wrapDevMatcher(expectation.not, name);
-      });
-    }
+    Object.keys(expectation).forEach(name => {
+      wrapDevMatcher(expectation, name);
+      wrapDevMatcher(expectation.not, name);
+    });
     return expectation;
   };
   global.expectDev = expectDev;
