@@ -14,6 +14,7 @@
 
 var React;
 var ReactTestUtils;
+var ReactDOM;
 
 describe('ReactChildReconciler', () => {
   function normalizeCodeLocInfo(str) {
@@ -25,6 +26,7 @@ describe('ReactChildReconciler', () => {
 
     React = require('react');
     ReactTestUtils = require('react-dom/test-utils');
+    ReactDOM = require('react-dom');
   });
 
   function createIterable(array) {
@@ -44,6 +46,72 @@ describe('ReactChildReconciler', () => {
       },
     };
   }
+
+  function makeRenderableFunction(value) {
+    const fn = () => {};
+    fn['@@iterator'] = function iterator() {
+      let timesCalled = 0;
+      return {
+        next() {
+          const done = timesCalled++ > 0;
+          return {done, value: done ? undefined : value};
+        },
+      };
+    };
+    return fn;
+  }
+
+  it('renders iterable functions', () => {
+    const f1 = makeRenderableFunction('f1');
+    const f2 = makeRenderableFunction('f2');
+
+    const comp = ReactTestUtils.renderIntoDocument(
+      <div>
+        <div>{f1}</div>
+        {f2}
+      </div>,
+    );
+    expect(comp.outerHTML).toContain('f1');
+    expect(comp.outerHTML).toContain('f2');
+  });
+
+  it('can update iterable functions', () => {
+    const f1 = makeRenderableFunction('f1');
+    const f2 = makeRenderableFunction('f2');
+
+    class Parent extends React.Component {
+      render() {
+        return (
+          <div>
+            <div>{f1}</div>
+            {f2}
+          </div>
+        );
+      }
+    }
+
+    const comp = ReactTestUtils.renderIntoDocument(<Parent />);
+    const initial = ReactDOM.findDOMNode(comp).outerHTML;
+    comp.forceUpdate();
+    const rerendered = ReactDOM.findDOMNode(comp).outerHTML;
+    expect(rerendered).toBe(initial);
+  });
+
+  it('can replace a keyed array with an iterable function', () => {
+    class Parent extends React.Component {
+      state = {children: <div key="a" />};
+      setChildren(children) {
+        this.setState({children});
+      }
+      render() {
+        return <div>{this.state.children}</div>;
+      }
+    }
+
+    const comp = ReactTestUtils.renderIntoDocument(<Parent />);
+    comp.setChildren([makeRenderableFunction('I am Batman')]);
+    expect(ReactDOM.findDOMNode(comp).textContent).toBe('I am Batman');
+  });
 
   it('warns for duplicated array keys', () => {
     spyOnDev(console, 'error');
