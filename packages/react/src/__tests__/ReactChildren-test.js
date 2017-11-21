@@ -396,7 +396,10 @@ describe('ReactChildren', () => {
       context,
     );
     assertCalls();
-    expectDev(console.error.calls.count()).toBe(0);
+    expectDev(console.error.calls.count()).toBe(1);
+    expectDev(console.error.calls.argsFor(0)[0]).toContain(
+      'Warning: Each child in an array or iterator should have a unique "key" prop.',
+    );
     expect(mappedChildren).toEqual([
       <div key=".0" />,
       <div key=".1" />,
@@ -862,9 +865,9 @@ describe('ReactChildren', () => {
     expect(React.Children.toArray(null)).toEqual([]);
 
     expect(React.Children.toArray(<div />).length).toBe(1);
-    expect(React.Children.toArray([<div />]).length).toBe(1);
-    expect(React.Children.toArray(<div />)[0].key).toBe(
-      React.Children.toArray([<div />])[0].key,
+    expect(React.Children.toArray([<div key="a" />]).length).toBe(1);
+    expect(React.Children.toArray(<div key="a" />)[0].key).toBe(
+      React.Children.toArray([<div key="a" />])[0].key,
     );
 
     var flattened = React.Children.toArray([
@@ -935,7 +938,7 @@ describe('ReactChildren', () => {
   });
 
   describe('with fragments enabled', () => {
-    it('warns for keys for arrays of elements in a fragment', () => {
+    it('warns for keys for arrays of elements in an array', () => {
       spyOn(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
@@ -954,7 +957,7 @@ describe('ReactChildren', () => {
       );
     });
 
-    it('does not warn when there are keys on  elements in a fragment', () => {
+    it('does not warn when there are keys on elements in an array', () => {
       spyOn(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
@@ -978,6 +981,179 @@ describe('ReactChildren', () => {
           'Each child in an array or iterator should have a unique "key" prop.' +
           ' See https://fb.me/react-warning-keys for more information.',
       );
+    });
+
+    it('warns for same-level unkeyed elements in an array after a React.Children helper', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return React.Children.toArray([<span>Hello</span>, <h1>World</h1>]);
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.',
+      );
+
+      console.error.calls.reset();
+      ReactTestUtils.renderIntoDocument(
+        React.Children.map([<span>Hello</span>, <h1>World</h1>], c => c),
+      );
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.',
+      );
+    });
+
+    it('warns for same-level duplicate keys in an array after a React.Children helper', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return React.Children.toArray([
+            [<span key="a">Hello</span>, <h1 key="a">World</h1>],
+          ]);
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: Encountered two children with the same key, `.0:$a`.' +
+          ' Keys should be unique so that components maintain their identity across updates.' +
+          ' Non-unique keys may cause children to be duplicated and/or omitted —' +
+          ' the behavior is unsupported and could change in a future version.',
+      );
+
+      console.error.calls.reset();
+      ReactTestUtils.renderIntoDocument(
+        React.Children.map(
+          [<span key="a">Hello</span>, <h1 key="a">World</h1>],
+          c => c,
+        ),
+      );
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: Encountered two children with the same key, `.$a`.' +
+          ' Keys should be unique so that components maintain their identity across updates.' +
+          ' Non-unique keys may cause children to be duplicated and/or omitted —' +
+          ' the behavior is unsupported and could change in a future version.',
+      );
+    });
+
+    it('warns for same-level unkeyed elements in an iterable after a React.Children helper', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return React.Children.toArray(
+            new Set([<span>Hello</span>, <h1>World</h1>]),
+          );
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.',
+      );
+
+      console.error.calls.reset();
+      ReactTestUtils.renderIntoDocument(
+        React.Children.map(
+          new Set([<span>Hello</span>, <h1>World</h1>]),
+          c => c,
+        ),
+      );
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: ' +
+          'Each child in an array or iterator should have a unique "key" prop.' +
+          ' See https://fb.me/react-warning-keys for more information.',
+      );
+    });
+
+    it('warns for same-level duplicate keys in an iterable after a React.Children helper', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return React.Children.toArray(
+            new Set([<span key="a">Hello</span>, <h1 key="a">World</h1>]),
+          );
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: Encountered two children with the same key, `.$a`.' +
+          ' Keys should be unique so that components maintain their identity across updates.' +
+          ' Non-unique keys may cause children to be duplicated and/or omitted —' +
+          ' the behavior is unsupported and could change in a future version.',
+      );
+
+      console.error.calls.reset();
+      ReactTestUtils.renderIntoDocument(
+        React.Children.map(
+          new Set([<span key="a">Hello</span>, <h1 key="a">World</h1>]),
+          c => c,
+        ),
+      );
+      expectDev(console.error.calls.count()).toBe(1);
+      expectDev(
+        normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
+      ).toContain(
+        'Warning: Encountered two children with the same key, `.$a`.' +
+          ' Keys should be unique so that components maintain their identity across updates.' +
+          ' Non-unique keys may cause children to be duplicated and/or omitted —' +
+          ' the behavior is unsupported and could change in a future version.',
+      );
+    });
+
+    it('should not warn for multi-level duplicate keys in an iterable after a React.Children helper', () => {
+      spyOn(console, 'error');
+      class ComponentReturningArray extends React.Component {
+        render() {
+          return React.Children.toArray([
+            <span key="a">Hello</span>,
+            [<h1 key="a">World</h1>],
+          ]);
+        }
+      }
+
+      ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
+      expectDev(console.error.calls.count()).toBe(0);
+
+      ReactTestUtils.renderIntoDocument(
+        React.Children.map(
+          [<span key="a">Hello</span>, [<h1 key="a">World</h1>]],
+          c => c,
+        ),
+      );
+      expectDev(console.error.calls.count()).toBe(0);
     });
   });
 });
