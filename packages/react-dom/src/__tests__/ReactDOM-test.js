@@ -338,4 +338,26 @@ describe('ReactDOM', () => {
     ];
     expect(actual).toEqual(expected);
   });
+
+  it('should not crash with devtools installed', () => {
+    try {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
+        supportsFiber: true,
+      };
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      ReactDOM.render(<Component />, document.createElement('container'));
+    } finally {
+      delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    }
+  });
 });
