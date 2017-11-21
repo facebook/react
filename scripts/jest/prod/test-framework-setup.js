@@ -6,6 +6,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   require('../setupSpecEquivalenceReporter.js');
 } else {
   var env = jasmine.getEnv();
+  var errorMap = require('../../error-codes/codes.json');
 
   // TODO: Stop using spyOn in all the test since that seem deprecated.
   // This is a legacy upgrade path strategy from:
@@ -66,6 +67,35 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     return expectation;
   };
   global.expectDev = expectDev;
+
+  // In production, we strip error messages and turn them into codes.
+  // This decodes them back so that the test assertions on them work.
+  function decodeErrorMessage(message) {
+    if (!message) {
+      return message;
+    }
+    const re = /error-decoder.html\?invariant=(\d+)([^\s]*)/;
+    const matches = message.match(re);
+    if (!matches || matches.length !== 3) {
+      return message;
+    }
+    const code = parseInt(matches[1], 10);
+    const args = matches[2]
+      .split('&')
+      .filter(s => s.startsWith('args[]='))
+      .map(s => s.substr('args[]='.length))
+      .map(decodeURIComponent);
+    const format = errorMap[code];
+    let argIndex = 0;
+    return format.replace(/%s/g, () => args[argIndex++]);
+  }
+  global.Error = new Proxy(global.Error, {
+    construct(target, argumentsList, newTarget) {
+      const error = Reflect.construct(target, argumentsList, newTarget);
+      error.message = decodeErrorMessage(error.message);
+      return error;
+    },
+  });
 
   require('jasmine-check').install();
 }
