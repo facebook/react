@@ -1,0 +1,141 @@
+version: 2
+
+defaults: &defaults
+  working_directory: ~/project/react
+  docker:
+    - image: starefossen/ruby-node:2-8
+
+restore_node_modules: &restore_node_modules
+  restore_cache:
+    name: Restore node_modules cache
+    keys:
+      - v1-node-{{ .Branch }}-{{ checksum "yarn.lock" }}
+      - v1-node-{{ .Branch }}-
+      - v1-node-
+
+jobs:
+  install:
+    <<: *defaults
+    steps:
+      - checkout
+      - *restore_node_modules
+      - run:
+          name: Install Dependencies
+          command: yarn install
+      - save_cache:
+          name: Save yarn cache
+          key: v1-yarn-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - .cache/yarn
+      - save_cache:
+          name: Save node_modules cache
+          key: v1-node-{{ .Branch }}-{{ checksum "yarn.lock" }}
+          paths:
+            - node_modules/
+      - run:
+          name: Remove node_modules to cleanup workspace
+          command: rm -r node_modules/
+      - persist_to_workspace:
+          root: ~/project
+          paths:
+            - react
+  # For balancing
+  eslint_prettier_flow_check-licence-and-modules_test-print-warnings_track-stats:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: eslint
+          command: node ./scripts/tasks/eslint
+      - run:
+          name: prettier
+          command: node ./scripts/prettier/index
+      - run:
+          name: flow
+          command: node ./scripts/tasks/flow
+      - run:
+          name: check_license
+          command: ./scripts/circleci/check_license.sh
+      - run:
+          name: check_modules
+          command: ./scripts/circleci/check_modules.sh
+      - run:
+          name: test_print_warnings
+          command: ./scripts/circleci/test_print_warnings.sh
+      - run:
+          name: track_stats
+          command: |
+            # skip fingerprints
+            mkdir -p ~/.ssh
+            echo -e "Host github.com\n\tStrictHostKeyChecking no\n" >> ~/.ssh/config
+            ./scripts/circleci/track_stats.sh
+
+  coverage:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: coverage
+          command: ./scripts/circleci/test_coverage.sh
+
+  jest:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: jest
+          command: node ./scripts/tasks/jest
+
+  build:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: build
+          command: ./scripts/circleci/build.sh
+      - persist_to_workspace:
+          root: ~/project/react
+          paths:
+            - build
+
+  deploy:
+    <<: *defaults
+    steps:
+      - attach_workspace:
+          at: ~/project
+      - *restore_node_modules
+      - run:
+          name: deploy
+          command: ./scripts/circleci/upload_build.sh
+
+workflows:
+  version: 2
+  install-test-build-and-deploy:
+    jobs:
+      - install
+      - coverage:
+          requires:
+            - install
+      - jest:
+          requires:
+            - install
+      - eslint_prettier_flow_check-licence-and-modules_test-print-warnings_track-stats:
+          requires:
+            - install
+      - build:
+          requires:
+            - install
+      - deploy:
+          requires:
+            - jest
+            - cooverage
+            - eslint_prettier_flow_check-licence-and-modules_test-print-warnings_track-stats
+            - build
