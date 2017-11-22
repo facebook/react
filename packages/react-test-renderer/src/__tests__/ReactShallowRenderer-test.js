@@ -903,6 +903,9 @@ describe('ReactShallowRenderer', () => {
 
     expect(callbackQueueLength).toBe(2);
     expect(mockFn.mock.calls.length).toBe(2);
+
+    // Ensure the callback queue is cleared after the callbacks are invoked
+    expect(shallowRenderer._updater._callbacks.length).toBe(0);
   });
 
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
