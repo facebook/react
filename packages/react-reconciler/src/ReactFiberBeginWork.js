@@ -145,7 +145,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     ) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    reconcileChildrenAtExpirationTime(current, workInProgress, nextChildren, workInProgress.expirationTime);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      workInProgress.expirationTime,
+    );
     memoizeProps(workInProgress, nextChildren);
     return workInProgress.child;
   }
@@ -192,7 +197,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
-    reconcileChildrenAtExpirationTime(current, workInProgress, nextChildren, workInProgress.expirationTime);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      workInProgress.expirationTime,
+    );
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
@@ -272,7 +282,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
     // React DevTools reads this flag.
     workInProgress.effectTag |= PerformedWork;
-    reconcileChildrenAtExpirationTime(current, workInProgress, nextChildren, workInProgress.expirationTime);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      workInProgress.expirationTime,
+    );
     // Memoize props and state using the values we just used to render.
     // TODO: Restructure so we never read values from the instance.
     memoizeState(workInProgress, instance.state);
@@ -351,7 +366,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // Otherwise reset hydration state in case we aborted and resumed another
         // root.
         resetHydrationState();
-        reconcileChildrenAtExpirationTime(current, workInProgress, element, workInProgress.expirationTime);
+        reconcileChildrenAtExpirationTime(
+          current,
+          workInProgress,
+          element,
+          workInProgress.expirationTime,
+        );
       }
       memoizeState(workInProgress, state);
       return workInProgress.child;
@@ -417,7 +437,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       return null;
     }
 
-    reconcileChildrenAtExpirationTime(current, workInProgress, nextChildren, workInProgress.expirationTime);
+    reconcileChildrenAtExpirationTime(
+      current,
+      workInProgress,
+      nextChildren,
+      workInProgress.expirationTime,
+    );
     memoizeProps(workInProgress, nextProps);
     return workInProgress.child;
   }
@@ -524,7 +549,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           }
         }
       }
-      reconcileChildrenAtExpirationTime(current, workInProgress, value, workInProgress.expirationTime);
+      reconcileChildrenAtExpirationTime(
+        current,
+        workInProgress,
+        value,
+        workInProgress.expirationTime,
+      );
       memoizeProps(workInProgress, props);
       return workInProgress.child;
     }
@@ -615,7 +645,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
       memoizeProps(workInProgress, nextChildren);
     } else {
-      reconcileChildrenAtExpirationTime(current, workInProgress, nextChildren, workInProgress.expirationTime);
+      reconcileChildrenAtExpirationTime(
+        current,
+        workInProgress,
+        nextChildren,
+        workInProgress.expirationTime,
+      );
       memoizeProps(workInProgress, nextChildren);
     }
     return workInProgress.child;
