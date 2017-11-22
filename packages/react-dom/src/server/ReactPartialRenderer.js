@@ -644,7 +644,7 @@ class ReactDOMServerRenderer {
         // allow <SVG> or <mATH>.
         warning(
           tag === element.type,
-          '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+          '<%s /> is using lowercase HTML. Always use uppercase HTML tags ' +
             'in React.',
           element.type,
         );
