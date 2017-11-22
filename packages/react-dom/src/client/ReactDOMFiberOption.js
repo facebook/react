@@ -11,7 +11,7 @@ import React from 'react';
 import warning from 'fbjs/lib/warning';
 
 function flattenChildren(children) {
-  var content = '';
+  let content = '';
 
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
@@ -52,9 +52,8 @@ export function postMountWrapper(element: Element, props: Object) {
 }
 
 export function getHostProps(element: Element, props: Object) {
-  var hostProps = Object.assign({children: undefined}, props);
-
-  var content = flattenChildren(props.children);
+  const hostProps = {children: undefined, ...props};
+  const content = flattenChildren(props.children);
 
   if (content) {
     hostProps.children = content;

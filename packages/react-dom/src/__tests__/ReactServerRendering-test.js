@@ -183,8 +183,8 @@ describe('ReactDOMServer', () => {
     });
 
     it('should have the correct mounting behavior (old hydrate API)', () => {
-      spyOn(console, 'warn');
-      spyOn(console, 'error');
+      spyOnDev(console, 'warn');
+      spyOnDev(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -241,13 +241,15 @@ describe('ReactDOMServer', () => {
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
-      expectDev(console.warn.calls.count()).toBe(1);
-      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
-      console.warn.calls.reset();
+      if (__DEV__) {
+        expect(console.warn.calls.count()).toBe(1);
+        expect(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+        console.warn.calls.reset();
+      }
       expect(element.innerHTML).toBe(lastMarkup);
 
       // Ensure the events system works after mount into server markup
@@ -263,11 +265,13 @@ describe('ReactDOMServer', () => {
       element.innerHTML = lastMarkup;
       instance = ReactDOM.render(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Text content did not match. Server: "x" Client: "y"',
-      );
-      console.error.calls.reset();
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Text content did not match. Server: "x" Client: "y"',
+        );
+        console.error.calls.reset();
+      }
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -275,12 +279,14 @@ describe('ReactDOMServer', () => {
       expect(numClicks).toEqual(1);
       ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance.refs.span));
       expect(numClicks).toEqual(2);
-      expectDev(console.warn.calls.count()).toBe(0);
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.warn.calls.count()).toBe(0);
+        expect(console.error.calls.count()).toBe(0);
+      }
     });
 
     it('should have the correct mounting behavior (new hydrate API)', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       // This test is testing client-side behavior.
       ExecutionEnvironment.canUseDOM = true;
 
@@ -352,7 +358,9 @@ describe('ReactDOMServer', () => {
       element.innerHTML = lastMarkup;
       instance = ReactDOM.hydrate(<TestComponent name="y" />, element);
       expect(mountCount).toEqual(4);
-      expectDev(console.error.calls.count()).toBe(1);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+      }
       expect(element.innerHTML.length > 0).toBe(true);
       expect(element.innerHTML).not.toEqual(lastMarkup);
 
@@ -416,7 +424,7 @@ describe('ReactDOMServer', () => {
       expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'The `style` prop expects a mapping from style properties to values, not ' +
           "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX." +
-          '\n    in iframe (at **)',
+          (__DEV__ ? '\n    in iframe (at **)' : ''),
       );
     });
   });
@@ -678,20 +686,24 @@ describe('ReactDOMServer', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<Foo />);
     jest.runOnlyPendingTimers();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.mostRecent().args[0]).toBe(
-      'Warning: setState(...): Can only update a mounting component.' +
-        ' This usually means you called setState() outside componentWillMount() on the server.' +
-        ' This is a no-op.\n\nPlease check the code for the Foo component.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.mostRecent().args[0]).toBe(
+        'Warning: setState(...): Can only update a mounting component.' +
+          ' This usually means you called setState() outside componentWillMount() on the server.' +
+          ' This is a no-op.\n\nPlease check the code for the Foo component.',
+      );
+    }
 
     var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
     jest.runOnlyPendingTimers();
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 
   it('warns with a no-op when an async forceUpdate is triggered', () => {
@@ -708,38 +720,52 @@ describe('ReactDOMServer', () => {
       }
     }
 
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<Baz />);
     jest.runOnlyPendingTimers();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.mostRecent().args[0]).toBe(
-      'Warning: forceUpdate(...): Can only update a mounting component. ' +
-        'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
-        'This is a no-op.\n\nPlease check the code for the Baz component.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.mostRecent().args[0]).toBe(
+        'Warning: forceUpdate(...): Can only update a mounting component. ' +
+          'This usually means you called forceUpdate() outside componentWillMount() on the server. ' +
+          'This is a no-op.\n\nPlease check the code for the Baz component.',
+      );
+    }
     var markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
   });
 
-  it('should warn when children are mutated during render', () => {
-    spyOn(console, 'error');
+  it('should throw (in dev) when children are mutated during render', () => {
+    spyOnDev(console, 'error');
     function Wrapper(props) {
       props.children[1] = <p key={1} />; // Mutation is illegal
       return <div>{props.children}</div>;
     }
-    expect(() => {
-      ReactDOMServer.renderToStaticMarkup(
-        <Wrapper>
-          <span key={0} />
-          <span key={1} />
-          <span key={2} />
-        </Wrapper>,
-      );
-    }).toThrowError(/Cannot assign to read only property.*/);
+    if (__DEV__) {
+      expect(() => {
+        ReactDOMServer.renderToStaticMarkup(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        );
+      }).toThrowError(/Cannot assign to read only property.*/);
+    } else {
+      expect(
+        ReactDOMServer.renderToStaticMarkup(
+          <Wrapper>
+            <span key={0} />
+            <span key={1} />
+            <span key={2} />
+          </Wrapper>,
+        ),
+      ).toContain('<p>');
+    }
   });
 
   it('warns about lowercase html but not in svg tags', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     function CompositeG(props) {
       // Make sure namespace passes through composites
       return <g>{props.children}</g>;
@@ -758,27 +784,31 @@ describe('ReactDOMServer', () => {
         </svg>
       </div>,
     );
-    expect(console.error.calls.count()).toBe(2);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
-        'HTML tags in React.',
-    );
-    // linearGradient doesn't warn
-    expect(console.error.calls.argsFor(1)[0]).toBe(
-      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
-        'HTML tags in React.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
+          'HTML tags in React.',
+      );
+      // linearGradient doesn't warn
+      expect(console.error.calls.argsFor(1)[0]).toBe(
+        'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
+          'HTML tags in React.',
+      );
+    }
   });
 
   it('should warn about contentEditable and children', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOMServer.renderToString(<div contentEditable={true} children="" />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: A component is `contentEditable` and contains `children` ' +
-        'managed by React. It is now your responsibility to guarantee that ' +
-        'none of those nodes are unexpectedly modified or duplicated. This ' +
-        'is probably not intentional.\n    in div (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: A component is `contentEditable` and contains `children` ' +
+          'managed by React. It is now your responsibility to guarantee that ' +
+          'none of those nodes are unexpectedly modified or duplicated. This ' +
+          'is probably not intentional.\n    in div (at **)',
+      );
+    }
   });
 });

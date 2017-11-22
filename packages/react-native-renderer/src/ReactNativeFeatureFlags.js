@@ -9,25 +9,29 @@
 
 import invariant from 'fbjs/lib/invariant';
 
+import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
+import typeof * as FeatureFlagsShimType from './ReactNativeFeatureFlags';
+
+// Re-export dynamic flags from the fbsource version.
+export const {debugRenderPhaseSideEffects} = require('ReactFeatureFlags');
+
+// The rest of the flags are static for better dead code elimination.
 export const enableAsyncSubtreeAPI = true;
 export const enableAsyncSchedulingByDefaultInReactDOM = false;
-// Exports React.Fragment
 export const enableReactFragment = false;
-// Exports ReactDOM.createRoot
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
-
-// Mutating mode (React DOM, React ART, React Native):
 export const enableMutatingReconciler = true;
-// Experimental noop mode (currently unused):
 export const enableNoopReconciler = false;
-// Experimental persistent mode (CS):
 export const enablePersistentReconciler = false;
-
-// Helps identify side effects in begin-phase lifecycle hooks and setState reducers:
-export const debugRenderPhaseSideEffects = false;
 
 // Only used in www builds.
 export function addUserTimingListener() {
   invariant(false, 'Not implemented.');
 }
+
+// Flow magic to verify the exports of this file match the original version.
+// eslint-disable-next-line no-unused-vars
+type Check<_X, Y: _X, X: Y = _X> = null;
+// eslint-disable-next-line no-unused-expressions
+(null: Check<FeatureFlagsShimType, FeatureFlagsType>);
