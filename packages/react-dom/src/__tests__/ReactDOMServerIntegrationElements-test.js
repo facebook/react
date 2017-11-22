@@ -871,5 +871,37 @@ describe('ReactDOMServerIntegration', () => {
             : ''),
       );
     });
+
+    itRenders(
+      'a select with value containing an option with multiple text children',
+      async render => {
+        const e = await render(
+          <select value="bar" readOnly={true}>
+            <option value="bar">A{'B'}</option>
+          </select>,
+          0,
+        );
+
+        const option = e.childNodes[0];
+
+        if (render === serverRender || render === streamRender) {
+          // We have three nodes because there is a comment between them.
+          expect(option.childNodes.length).toBe(3);
+          // Everything becomes LF when parsed from server HTML.
+          // Null character is ignored.
+          expectNode(option.childNodes[0], TEXT_NODE_TYPE, 'A');
+          expectNode(option.childNodes[2], TEXT_NODE_TYPE, 'B');
+        } else if (render === clientRenderOnServerString) {
+          // We have three nodes because there is a comment between them.
+          expect(option.childNodes.length).toBe(3);
+          expectNode(option.childNodes[0], TEXT_NODE_TYPE, 'A');
+          expectNode(option.childNodes[2], TEXT_NODE_TYPE, 'B');
+        } else {
+          expect(option.childNodes.length).toBe(2);
+          expectNode(option.childNodes[0], TEXT_NODE_TYPE, 'A');
+          expectNode(option.childNodes[1], TEXT_NODE_TYPE, 'B');
+        }
+      },
+    );
   });
 });
