@@ -361,31 +361,31 @@ describe('ReactTypeScriptClass', function() {
     expect(renderCount).toBe(1);
   });
 
-  it('should throw with non-object in the initial state property', function() {
+  it('should warn with non-object in the initial state property', function() {
+    spyOnDev(console, 'error');
+    test(React.createElement(ArrayState), 'SPAN', '');
     if (__DEV__) {
-      expect(() => test(React.createElement(ArrayState), 'SPAN', ''))
-      .toThrowError(
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
         'ArrayState.state: must be set to an object or null'
       );
-      expect(() => test(React.createElement(StringState), 'SPAN', ''))
-      .toThrowError(
+      (<any>console.error).calls.reset()
+    }
+    test(React.createElement(StringState), 'SPAN', '');
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
         'StringState.state: must be set to an object or null'
       );
-      expect(() => test(React.createElement(NumberState), 'SPAN', ''))
-      .toThrowError(
+      (<any>console.error).calls.reset()
+    }
+    test(React.createElement(NumberState), 'SPAN', '');
+    if (__DEV__) {
+      expect((<any>console.error).calls.count()).toBe(1);
+      expect((<any>console.error).calls.argsFor(0)[0]).toContain(
         'NumberState.state: must be set to an object or null'
       );
-    } else {
-      // This is a difference between development and production.
-      // I'm not sure if this is intentional, as generally we avoid this.
-      // TODO: investigate if this was intentional or an oversight.
-      // https://github.com/facebook/react/issues/11618
-      expect(() => test(React.createElement(ArrayState), 'SPAN', ''))
-      .not.toThrowError();
-      expect(() => test(React.createElement(StringState), 'SPAN', ''))
-      .not.toThrowError();
-      expect(() => test(React.createElement(NumberState), 'SPAN', ''))
-      .not.toThrowError();
+      (<any>console.error).calls.reset()
     }
   });
 

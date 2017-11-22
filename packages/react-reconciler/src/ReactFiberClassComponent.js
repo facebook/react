@@ -328,7 +328,7 @@ export default function(
 
     const state = instance.state;
     if (state && (typeof state !== 'object' || isArray(state))) {
-      invariant(
+      warning(
         false,
         '%s.state: must be set to an object or null',
         getComponentName(workInProgress),
