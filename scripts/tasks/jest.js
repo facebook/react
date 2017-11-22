@@ -6,15 +6,12 @@ const argv = require('minimist')(process.argv.slice(2));
 
 console.log('Running Jest');
 
-const args = [
-  path.join('node_modules', 'jest-cli', 'bin', 'jest'),
-  '--runInBand',
-];
+const args = ['test', '--runInBand'];
 if (argv.coverage) {
   args.push('--coverage');
 }
 
-const jest = spawn('node', args, {
+const jest = spawn('yarn', args, {
   stdio: 'inherit',
   env: Object.assign({}, process.env, {
     NODE_ENV: 'test',
