@@ -242,7 +242,7 @@ describe('SyntheticKeyboardEvent', () => {
       div.dispatchEvent(event);
       
       /*
-      // TODO aarboleda1 This should be 3 events including the keypress event
+      // TODO (aarboleda1), get keypress event to fire
 
       event = document.createEvent('Event');
       event.initEvent('keypress', true, true);
@@ -294,7 +294,7 @@ describe('SyntheticKeyboardEvent', () => {
         event.initEvent('keypress', true, true);
         div.dispatchEvent(event);
       */
-      // TODO aarboleda1, this should be 3 events with the keypress event
+      // TODO (aarboleda1), get keypress event to fire
       expect(expectedCount).toBe(2);
     });
 
@@ -326,7 +326,7 @@ describe('SyntheticKeyboardEvent', () => {
       event.initEvent('keypress', true, true);
       div.dispatchEvent(event);
        
-      // TODO aarboleda1, make this be 3 when keypres
+      // TODO (aarboleda1), get keypress event to fire
       expect(persistentEvents.length).toBe(2);
       expect(persistentEvents[0].type).toBe('keydown');
       expect(persistentEvents[1].type).toBe('keyup');      
