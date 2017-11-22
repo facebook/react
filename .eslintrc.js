@@ -59,7 +59,6 @@ module.exports = {
   },
 
   globals: {
-    expectDev: true,
     spyOnDev: true,
   },
 };
