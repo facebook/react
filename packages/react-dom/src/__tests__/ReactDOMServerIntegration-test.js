@@ -2671,22 +2671,26 @@ describe('ReactDOMServerIntegration', () => {
       },
     );
 
-    itThrowsWhenRendering(
-      'if getChildContext exists without childContextTypes',
-      render => {
-        class MyComponent extends React.Component {
-          render() {
-            return <div />;
+    // TODO: this being DEV-only is likely a bug.
+    // https://github.com/facebook/react/issues/11618
+    if (__DEV__) {
+      itThrowsWhenRendering(
+        'if getChildContext exists without childContextTypes',
+        render => {
+          class MyComponent extends React.Component {
+            render() {
+              return <div />;
+            }
+            getChildContext() {
+              return {foo: 'bar'};
+            }
           }
-          getChildContext() {
-            return {foo: 'bar'};
-          }
-        }
-        return render(<MyComponent />);
-      },
-      'MyComponent.getChildContext(): childContextTypes must be defined ' +
-        'in order to use getChildContext().',
-    );
+          return render(<MyComponent />);
+        },
+        'MyComponent.getChildContext(): childContextTypes must be defined ' +
+          'in order to use getChildContext().',
+      );
+    }
 
     itThrowsWhenRendering(
       'if getChildContext returns a value not in childContextTypes',
