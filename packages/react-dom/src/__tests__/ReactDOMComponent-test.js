@@ -1014,8 +1014,8 @@ describe('ReactDOMComponent', () => {
       expect(caughtErr).not.toBe(undefined);
       expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.',
-        '\n    in input (at **)',
+          'use `dangerouslySetInnerHTML`.' +
+          (__DEV__ ? '\n    in input (at **)' : ''),
       );
     });
 
@@ -1033,8 +1033,8 @@ describe('ReactDOMComponent', () => {
       expect(caughtErr).not.toBe(undefined);
       expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'input is a void element tag and must neither have `children` nor ' +
-          'use `dangerouslySetInnerHTML`.',
-        '\n    in input (at **)',
+          'use `dangerouslySetInnerHTML`.' +
+          (__DEV__ ? '\n    in input (at **)' : ''),
       );
     });
 
@@ -1233,8 +1233,7 @@ describe('ReactDOMComponent', () => {
       expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'input is a void element tag and must neither have `children` ' +
           'nor use `dangerouslySetInnerHTML`.' +
-          '\n    in input (at **)' +
-          '\n    in X (at **)',
+          (__DEV__ ? '\n    in input (at **)' + '\n    in X (at **)' : ''),
       );
     });
 
@@ -1368,8 +1367,7 @@ describe('ReactDOMComponent', () => {
         'The `style` prop expects a mapping from style properties to values, ' +
           "not a string. For example, style={{marginRight: spacing + 'em'}} " +
           'when using JSX.' +
-          '\n    in div (at **)' +
-          '\n    in Animal (at **)',
+          (__DEV__ ? '\n    in div (at **)' + '\n    in Animal (at **)' : ''),
       );
     });
 
