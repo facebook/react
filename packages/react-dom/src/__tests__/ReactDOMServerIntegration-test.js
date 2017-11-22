@@ -2671,26 +2671,27 @@ describe('ReactDOMServerIntegration', () => {
       },
     );
 
-    // TODO: this being DEV-only is likely a bug.
-    // https://github.com/facebook/react/issues/11618
-    if (__DEV__) {
-      itThrowsWhenRendering(
-        'if getChildContext exists without childContextTypes',
-        render => {
-          class MyComponent extends React.Component {
-            render() {
-              return <div />;
-            }
-            getChildContext() {
-              return {foo: 'bar'};
-            }
+    itRenders(
+      'if getChildContext exists but childContextTypes is missing with a warning',
+      async render => {
+        function HopefulChild(props, context) {
+          return context.foo || 'nope';
+        }
+        HopefulChild.contextTypes = {
+          foo: PropTypes.string,
+        };
+        class ForgetfulParent extends React.Component {
+          render() {
+            return <HopefulChild />;
           }
-          return render(<MyComponent />);
-        },
-        'MyComponent.getChildContext(): childContextTypes must be defined ' +
-          'in order to use getChildContext().',
-      );
-    }
+          getChildContext() {
+            return {foo: 'bar'};
+          }
+        }
+        const e = await render(<ForgetfulParent />, 1);
+        expect(e.textContent).toBe('nope');
+      },
+    );
 
     itThrowsWhenRendering(
       'if getChildContext returns a value not in childContextTypes',
