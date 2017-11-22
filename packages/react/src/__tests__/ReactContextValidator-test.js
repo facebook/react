@@ -161,7 +161,7 @@ describe('ReactContextValidator', () => {
   });
 
   it('should check context types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       render() {
@@ -174,13 +174,15 @@ describe('ReactContextValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<Component />);
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Failed context type: ' +
-        'The context `foo` is marked as required in `Component`, but its value ' +
-        'is `undefined`.\n' +
-        '    in Component (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Failed context type: ' +
+          'The context `foo` is marked as required in `Component`, but its value ' +
+          'is `undefined`.\n' +
+          '    in Component (at **)',
+      );
+    }
 
     class ComponentInFooStringContext extends React.Component {
       getChildContext() {
@@ -202,7 +204,9 @@ describe('ReactContextValidator', () => {
     );
 
     // Previous call should not error
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
 
     class ComponentInFooNumberContext extends React.Component {
       getChildContext() {
@@ -223,18 +227,20 @@ describe('ReactContextValidator', () => {
       <ComponentInFooNumberContext fooValue={123} />,
     );
 
-    expectDev(console.error.calls.count()).toBe(2);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-      'Warning: Failed context type: ' +
-        'Invalid context `foo` of type `number` supplied ' +
-        'to `Component`, expected `string`.\n' +
-        '    in Component (at **)\n' +
-        '    in ComponentInFooNumberContext (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: Failed context type: ' +
+          'Invalid context `foo` of type `number` supplied ' +
+          'to `Component`, expected `string`.\n' +
+          '    in Component (at **)\n' +
+          '    in ComponentInFooNumberContext (at **)',
+      );
+    }
   });
 
   it('should check child context types', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class Component extends React.Component {
       getChildContext() {
@@ -251,23 +257,27 @@ describe('ReactContextValidator', () => {
     };
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{bar: 123}} />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Failed child context type: ' +
-        'The child context `foo` is marked as required in `Component`, but its ' +
-        'value is `undefined`.\n' +
-        '    in Component (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Failed child context type: ' +
+          'The child context `foo` is marked as required in `Component`, but its ' +
+          'value is `undefined`.\n' +
+          '    in Component (at **)',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 123}} />);
 
-    expectDev(console.error.calls.count()).toBe(2);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-      'Warning: Failed child context type: ' +
-        'Invalid child context `foo` of type `number` ' +
-        'supplied to `Component`, expected `string`.\n' +
-        '    in Component (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: Failed child context type: ' +
+          'Invalid child context `foo` of type `number` ' +
+          'supplied to `Component`, expected `string`.\n' +
+          '    in Component (at **)',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(
       <Component testContext={{foo: 'foo', bar: 123}} />,
@@ -275,14 +285,16 @@ describe('ReactContextValidator', () => {
 
     ReactTestUtils.renderIntoDocument(<Component testContext={{foo: 'foo'}} />);
 
-    // Previous calls should not log errors
-    expectDev(console.error.calls.count()).toBe(2);
+    if (__DEV__) {
+      // Previous calls should not log errors
+      expect(console.error.calls.count()).toBe(2);
+    }
   });
 
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should warn (but not error) if getChildContext method is missing', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ComponentA extends React.Component {
       static childContextTypes = {
@@ -302,29 +314,35 @@ describe('ReactContextValidator', () => {
     }
 
     ReactTestUtils.renderIntoDocument(<ComponentA />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: ComponentA.childContextTypes is specified but there is no ' +
-        'getChildContext() method on the instance. You can either define ' +
-        'getChildContext() on ComponentA or remove childContextTypes from it.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: ComponentA.childContextTypes is specified but there is no ' +
+          'getChildContext() method on the instance. You can either define ' +
+          'getChildContext() on ComponentA or remove childContextTypes from it.',
+      );
+    }
 
     // Warnings should be deduped by component type
     ReactTestUtils.renderIntoDocument(<ComponentA />);
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
     ReactTestUtils.renderIntoDocument(<ComponentB />);
-    expectDev(console.error.calls.count()).toBe(2);
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-      'Warning: ComponentB.childContextTypes is specified but there is no ' +
-        'getChildContext() method on the instance. You can either define ' +
-        'getChildContext() on ComponentB or remove childContextTypes from it.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(2);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
+        'Warning: ComponentB.childContextTypes is specified but there is no ' +
+          'getChildContext() method on the instance. You can either define ' +
+          'getChildContext() on ComponentB or remove childContextTypes from it.',
+      );
+    }
   });
 
   // TODO (bvaughn) Remove this test and the associated behavior in the future.
   // It has only been added in Fiber to match the (unintentional) behavior in Stack.
   it('should pass parent context if getChildContext method is missing', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ParentContextProvider extends React.Component {
       static childContextTypes = {

@@ -142,6 +142,14 @@ export function initWrapperState(element: Element, props: Object) {
   };
 }
 
+export function updateChecked(element: Element, props: Object) {
+  var node = ((element: any): InputWithWrapperState);
+  var checked = props.checked;
+  if (checked != null) {
+    DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
+  }
+}
+
 export function updateWrapper(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
   if (__DEV__) {
@@ -181,14 +189,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
 
-  var checked = props.checked;
-  if (checked != null) {
-    DOMPropertyOperations.setValueForProperty(
-      node,
-      'checked',
-      checked || false,
-    );
-  }
+  updateChecked(element, props);
 
   var value = props.value;
   if (value != null) {

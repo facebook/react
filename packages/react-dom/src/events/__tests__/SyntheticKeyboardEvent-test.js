@@ -311,7 +311,7 @@ describe('SyntheticKeyboardEvent', () => {
           onKeyDown={eventHandler}
           onKeyUp={eventHandler}
         />, 
-        container,
+        container,    
       );
       let event;
       event = document.createEvent('Event');
@@ -334,11 +334,3 @@ describe('SyntheticKeyboardEvent', () => {
     });
   });
 });
-
-
-/*
-  TODO aarboleda
-  [ ] Figure out a way to fire keypress events. Have not figured out a way
-  to fire them in the Keyboard interface. 
-
-*/

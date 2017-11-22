@@ -42,11 +42,12 @@ async function expectErrors(fn, count) {
   if (console.error.calls && console.error.calls.reset) {
     console.error.calls.reset();
   } else {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
   }
 
   const result = await fn();
   if (
+    console.error.calls &&
     console.error.calls.count() !== count &&
     console.error.calls.count() !== 0
   ) {
@@ -62,7 +63,9 @@ async function expectErrors(fn, count) {
       }
     }
   }
-  expectDev(console.error.calls.count()).toBe(count);
+  if (__DEV__) {
+    expect(console.error.calls.count()).toBe(count);
+  }
   return result;
 }
 
@@ -1856,9 +1859,11 @@ describe('ReactDOMServerIntegration', () => {
           const ObjectComponent = () => ({x: 123});
           await render(<ObjectComponent />, 1);
         },
-        'Objects are not valid as a React child (found: object with keys ' +
-          '{x}). If you meant to render a collection of children, use ' +
-          'an array instead.',
+        'Objects are not valid as a React child (found: object with keys {x}).' +
+          (__DEV__
+            ? ' If you meant to render a collection of children, use ' +
+              'an array instead.'
+            : ''),
       );
 
       itThrowsWhenRendering(
@@ -1871,9 +1876,11 @@ describe('ReactDOMServerIntegration', () => {
           }
           await render(<ObjectComponent />, 1);
         },
-        'Objects are not valid as a React child (found: object with keys ' +
-          '{x}). If you meant to render a collection of children, use ' +
-          'an array instead.',
+        'Objects are not valid as a React child (found: object with keys {x}).' +
+          (__DEV__
+            ? ' If you meant to render a collection of children, use ' +
+              'an array instead.'
+            : ''),
       );
 
       itThrowsWhenRendering(
@@ -1881,9 +1888,11 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           await render({x: 123});
         },
-        'Objects are not valid as a React child (found: object with keys ' +
-          '{x}). If you meant to render a collection of children, use ' +
-          'an array instead.',
+        'Objects are not valid as a React child (found: object with keys {x}).' +
+          (__DEV__
+            ? ' If you meant to render a collection of children, use ' +
+              'an array instead.'
+            : ''),
       );
     });
   });
@@ -2662,22 +2671,26 @@ describe('ReactDOMServerIntegration', () => {
       },
     );
 
-    itThrowsWhenRendering(
-      'if getChildContext exists without childContextTypes',
-      render => {
-        class MyComponent extends React.Component {
-          render() {
-            return <div />;
+    // TODO: this being DEV-only is likely a bug.
+    // https://github.com/facebook/react/issues/11618
+    if (__DEV__) {
+      itThrowsWhenRendering(
+        'if getChildContext exists without childContextTypes',
+        render => {
+          class MyComponent extends React.Component {
+            render() {
+              return <div />;
+            }
+            getChildContext() {
+              return {foo: 'bar'};
+            }
           }
-          getChildContext() {
-            return {foo: 'bar'};
-          }
-        }
-        return render(<MyComponent />);
-      },
-      'MyComponent.getChildContext(): childContextTypes must be defined ' +
-        'in order to use getChildContext().',
-    );
+          return render(<MyComponent />);
+        },
+        'MyComponent.getChildContext(): childContextTypes must be defined ' +
+          'in order to use getChildContext().',
+      );
+    }
 
     itThrowsWhenRendering(
       'if getChildContext returns a value not in childContextTypes',
