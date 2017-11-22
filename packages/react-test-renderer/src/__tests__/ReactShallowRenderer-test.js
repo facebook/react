@@ -849,6 +849,97 @@ describe('ReactShallowRenderer', () => {
     expect(result).toEqual(<div>baz:bar</div>);
   });
 
+  it('this.state should be updated on setState callback inside componentWillMount', () => {
+    let stateSuccessfullyUpdated = false;
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
+      }
+
+      componentWillMount() {
+        this.setState(
+          {hasUpdatedState: true},
+          () => (stateSuccessfullyUpdated = this.state.hasUpdatedState),
+        );
+      }
+
+      render() {
+        return <div>{this.props.children}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+    expect(stateSuccessfullyUpdated).toBe(true);
+  });
+
+  it('should handle multiple callbacks', () => {
+    const mockFn = jest.fn();
+    const shallowRenderer = createRenderer();
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          foo: 'foo',
+        };
+      }
+
+      componentWillMount() {
+        this.setState({foo: 'bar'}, () => mockFn());
+        this.setState({foo: 'foobar'}, () => mockFn());
+      }
+
+      render() {
+        return <div>{this.state.foo}</div>;
+      }
+    }
+
+    shallowRenderer.render(<Component />);
+
+    expect(mockFn.mock.calls.length).toBe(2);
+
+    // Ensure the callback queue is cleared after the callbacks are invoked
+    const mountedInstance = shallowRenderer.getMountedInstance();
+    mountedInstance.setState({foo: 'bar'}, () => mockFn());
+    expect(mockFn.mock.calls.length).toBe(3);
+  });
+
+  it('should call the setState callback even if shouldComponentUpdate = false', done => {
+    const mockFn = jest.fn().mockReturnValue(false);
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          hasUpdatedState: false,
+        };
+      }
+
+      shouldComponentUpdate() {
+        return mockFn();
+      }
+
+      render() {
+        return <div>{this.state.hasUpdatedState}</div>;
+      }
+    }
+
+    const shallowRenderer = createRenderer();
+    shallowRenderer.render(<Component />);
+
+    const mountedInstance = shallowRenderer.getMountedInstance();
+    mountedInstance.setState({hasUpdatedState: true}, () => {
+      expect(mockFn).toBeCalled();
+      expect(mountedInstance.state.hasUpdatedState).toBe(true);
+      done();
+    });
+  });
+
   it('throws usefully when rendering badly-typed elements', () => {
     spyOnDev(console, 'error');
     const shallowRenderer = createRenderer();
