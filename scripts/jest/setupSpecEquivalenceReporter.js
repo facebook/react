@@ -16,6 +16,12 @@ global.expect = function() {
   return expect.apply(this, arguments);
 };
 
+global.spyOnDev = function(...args) {
+  if (__DEV__) {
+    return spyOn(...args);
+  }
+};
+
 beforeEach(() => (numExpectations = 0));
 
 jasmine.currentEnv_.addReporter({

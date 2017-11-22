@@ -674,7 +674,7 @@ describe('ReactFragment', () => {
   });
 
   it('should not preserve state when switching to a keyed fragment to an array', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var ops = [];
 
     class Stateful extends React.Component {
@@ -719,14 +719,16 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual([]);
     expect(ReactNoop.getChildren()).toEqual([div(div(), span())]);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Each child in an array or iterator should have a unique "key" prop.',
+      );
+    }
   });
 
   it('should preserve state when it does not change positions', function() {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var ops = [];
 
     class Stateful extends React.Component {
@@ -769,11 +771,13 @@ describe('ReactFragment', () => {
 
     expect(ops).toEqual(['Update Stateful', 'Update Stateful']);
     expect(ReactNoop.getChildren()).toEqual([span(), div()]);
-    expectDev(console.error.calls.count()).toBe(3);
-    for (let errorIndex = 0; errorIndex < 3; ++errorIndex) {
-      expectDev(console.error.calls.argsFor(errorIndex)[0]).toContain(
-        'Each child in an array or iterator should have a unique "key" prop.',
-      );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(3);
+      for (let errorIndex = 0; errorIndex < 3; ++errorIndex) {
+        expect(console.error.calls.argsFor(errorIndex)[0]).toContain(
+          'Each child in an array or iterator should have a unique "key" prop.',
+        );
+      }
     }
   });
 });
