@@ -206,9 +206,11 @@ class Updater {
   }
 
   _invokeCallbacks() {
-    this._callbacks = this._callbacks.filter(({callback, publicInstance}) => {
+    const callbacks = this._callbacks;
+    this._callbacks = [];
+
+    callbacks.forEach(({callback, publicInstance}) => {
       callback.call(publicInstance);
-      return false;
     });
   }
 
