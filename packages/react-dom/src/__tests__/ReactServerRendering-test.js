@@ -424,7 +424,7 @@ describe('ReactDOMServer', () => {
       expect(normalizeCodeLocInfo(caughtErr.message)).toContain(
         'The `style` prop expects a mapping from style properties to values, not ' +
           "a string. For example, style={{marginRight: spacing + 'em'}} when using JSX." +
-          '\n    in iframe (at **)',
+          (__DEV__ ? '\n    in iframe (at **)' : ''),
       );
     });
   });
