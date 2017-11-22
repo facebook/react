@@ -15,6 +15,7 @@ module.exports = {
     // Vendor specific
     MSApp: true,
     __REACT_DEVTOOLS_GLOBAL_HOOK__: true,
+    __REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__: true,
     // CommonJS / Node
     process: true,
   },

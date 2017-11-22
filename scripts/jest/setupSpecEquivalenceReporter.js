@@ -22,7 +22,13 @@ global.spyOnDev = function(...args) {
   }
 };
 
-beforeEach(() => (numExpectations = 0));
+beforeEach(() => {
+  numExpectations = 0;
+  // Suppresses additional console.error() when an error is caught by React.
+  // Unless error boundary catches it, React will rethrow it anyway.
+  // We need this in tests or they become too noisy (we often assert on errors).
+  global.__REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__ = true;
+});
 
 jasmine.currentEnv_.addReporter({
   specDone: spec => {

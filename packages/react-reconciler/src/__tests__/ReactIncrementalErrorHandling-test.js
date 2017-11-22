@@ -21,6 +21,10 @@ describe('ReactIncrementalErrorHandling', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
+  afterEach(() => {
+    jest.unmock('../ReactFiberErrorLogger');
+  });
+
   function div(...children) {
     children = children.map(c => (typeof c === 'string' ? {text: c} : c));
     return {type: 'div', children, prop: undefined};
@@ -952,44 +956,14 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   describe('ReactFiberErrorLogger', () => {
-    function initReactFiberErrorLoggerMock(mock) {
-      jest.resetModules();
-      if (mock) {
-        jest.mock('../ReactFiberErrorLogger');
-      } else {
-        jest.unmock('../ReactFiberErrorLogger');
-      }
-      React = require('react');
-      ReactNoop = require('react-noop-renderer');
-    }
-
-    beforeEach(() => {
-      // Assert that we're mocking this file by default.
-      // If this ever changes, we'll need to update this test suite anyway.
-      expect(
-        require('../ReactFiberErrorLogger').logCapturedError._isMockFunction,
-      ).toBe(true);
-    });
-
-    afterEach(() => {
-      // Restore the default (we verified it was being mocked in beforeEach).
-      jest.mock('../ReactFiberErrorLogger');
-    });
-
     function normalizeCodeLocInfo(str) {
       return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
     }
 
     it('should log errors that occur during the begin phase', () => {
-      initReactFiberErrorLoggerMock(false);
+      // Note: It is globally true by default.
+      global.__REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__ = false;
       // Intentionally spy in production too.
-      // TODO: It is confusing how these tests correctly "see" console.error()s
-      // from exceptions becase they called initReactFiberErrorLoggerMock(false)
-      // and thus unmocked the error logger. It is globally mocked in all other
-      // tests. We did this to silence warnings from intentionally caught errors
-      // in tests. But perhaps we should instead make a pass through all tests,
-      // intentionally assert console.error() is always called for uncaught
-      // exceptions, and then remove the global mock of ReactFiberErrorLogger.
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1030,14 +1004,9 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     it('should log errors that occur during the commit phase', () => {
-      initReactFiberErrorLoggerMock(false);
-      // TODO: It is confusing how these tests correctly "see" console.error()s
-      // from exceptions becase they called initReactFiberErrorLoggerMock(false)
-      // and thus unmocked the error logger. It is globally mocked in all other
-      // tests. We did this to silence warnings from intentionally caught errors
-      // in tests. But perhaps we should instead make a pass through all tests,
-      // intentionally assert console.error() is always called for uncaught
-      // exceptions, and then remove the global mock of ReactFiberErrorLogger.
+      // Note: It is globally true by default.
+      global.__REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__ = false;
+      // Intentionally spy in production too.
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1078,13 +1047,10 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     it('should ignore errors thrown in log method to prevent cycle', () => {
-      initReactFiberErrorLoggerMock(true);
-      // Intentionally spy in production too.
-      // Note: we're seeing console.error() even though ReactFiberErrorLogger is
-      // mocked because we're currently testing the console.error() call inside
-      // ReactFiberScheduler (for cycles). It doesn't get affected by mocking.
-      // TODO: mocking is confusing and we should simplify this and remove
-      // special cases.
+      jest.resetModules();
+      jest.mock('../ReactFiberErrorLogger');
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1124,14 +1090,9 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     it('should relay info about error boundary and retry attempts if applicable', () => {
-      initReactFiberErrorLoggerMock(false);
-      // TODO: It is confusing how these tests correctly "see" console.error()s
-      // from exceptions becase they called initReactFiberErrorLoggerMock(false)
-      // and thus unmocked the error logger. It is globally mocked in all other
-      // tests. We did this to silence warnings from intentionally caught errors
-      // in tests. But perhaps we should instead make a pass through all tests,
-      // intentionally assert console.error() is always called for uncaught
-      // exceptions, and then remove the global mock of ReactFiberErrorLogger.
+      // Note: It is globally true by default.
+      global.__REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__ = false;
+      // Intentionally spy in production too.
       spyOn(console, 'error');
 
       class ParentComponent extends React.Component {
