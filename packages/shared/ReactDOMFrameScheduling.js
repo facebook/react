@@ -48,25 +48,36 @@ if (hasNativePerformanceNow) {
 }
 
 // TODO: There's no way to cancel, because Fiber doesn't atm.
-let rIC: (callback: (deadline: Deadline) => void) => number;
+let rIC: (
+  callback: (deadline: Deadline, options?: {timeout: number}) => void,
+) => number;
+let cIC: (callbackID: number) => void;
 
 if (!ExecutionEnvironment.canUseDOM) {
-  rIC = function(frameCallback: (deadline: Deadline) => void): number {
-    setTimeout(() => {
+  rIC = function(
+    frameCallback: (deadline: Deadline, options?: {timeout: number}) => void,
+  ): number {
+    return setTimeout(() => {
       frameCallback({
         timeRemaining() {
           return Infinity;
         },
       });
     });
-    return 0;
   };
-} else if (typeof requestIdleCallback !== 'function') {
-  // Polyfill requestIdleCallback.
+  cIC = function(timeoutID: number) {
+    clearTimeout(timeoutID);
+  };
+} else if (
+  typeof requestIdleCallback !== 'function' ||
+  typeof cancelIdleCallback !== 'function'
+) {
+  // Polyfill requestIdleCallback and cancelIdleCallback
 
   var scheduledRICCallback = null;
-
   var isIdleScheduled = false;
+  var timeoutTime = -1;
+
   var isAnimationFrameScheduled = false;
 
   var frameDeadline = 0;
@@ -79,17 +90,21 @@ if (!ExecutionEnvironment.canUseDOM) {
   var frameDeadlineObject;
   if (hasNativePerformanceNow) {
     frameDeadlineObject = {
+      didTimeout: false,
       timeRemaining() {
         // We assume that if we have a performance timer that the rAF callback
         // gets a performance timer value. Not sure if this is always true.
-        return frameDeadline - performance.now();
+        const remaining = frameDeadline - performance.now();
+        return remaining > 0 ? remaining : 0;
       },
     };
   } else {
     frameDeadlineObject = {
+      didTimeout: false,
       timeRemaining() {
         // Fallback to Date.now()
-        return frameDeadline - Date.now();
+        const remaining = frameDeadline - Date.now();
+        return remaining > 0 ? remaining : 0;
       },
     };
   }
@@ -104,7 +119,33 @@ if (!ExecutionEnvironment.canUseDOM) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
+
     isIdleScheduled = false;
+
+    const currentTime = now();
+    if (frameDeadline - currentTime <= 0) {
+      // There's no time left in this idle period. Check if the callback has
+      // a timeout and whether it's been exceeded.
+      if (timeoutTime !== -1 && timeoutTime <= currentTime) {
+        // Exceeded the timeout. Invoke the callback even though there's no
+        // time left.
+        frameDeadlineObject.didTimeout = true;
+      } else {
+        // No timeout.
+        if (!isAnimationFrameScheduled) {
+          // Schedule another animation callback so we retry later.
+          isAnimationFrameScheduled = true;
+          requestAnimationFrame(animationTick);
+        }
+        // Exit without invoking the callback.
+        return;
+      }
+    } else {
+      // There's still time left in this idle period.
+      frameDeadlineObject.didTimeout = false;
+    }
+
+    timeoutTime = -1;
     var callback = scheduledRICCallback;
     scheduledRICCallback = null;
     if (callback !== null) {
@@ -146,10 +187,16 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
   };
 
-  rIC = function(callback: (deadline: Deadline) => void): number {
+  rIC = function(
+    callback: (deadline: Deadline) => void,
+    options?: {timeout: number},
+  ): number {
     // This assumes that we only schedule one callback at a time because that's
     // how Fiber uses it.
     scheduledRICCallback = callback;
+    if (options != null && typeof options.timeout === 'number') {
+      timeoutTime = now() + options.timeout;
+    }
     if (!isAnimationFrameScheduled) {
       // If rAF didn't already schedule one, we need to schedule a frame.
       // TODO: If this rAF doesn't materialize because the browser throttles, we
@@ -160,8 +207,15 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
     return 0;
   };
+
+  cIC = function() {
+    scheduledRICCallback = null;
+    isIdleScheduled = false;
+    timeoutTime = -1;
+  };
 } else {
-  rIC = requestIdleCallback;
+  rIC = window.requestIdleCallback;
+  cIC = window.cancelIdleCallback;
 }
 
-export {now, rIC};
+export {now, rIC, cIC};

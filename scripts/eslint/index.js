@@ -13,7 +13,7 @@ const formatter = cli.getFormatter();
 
 module.exports = function lintOnFiles(filePatterns) {
   const report = cli.executeOnFiles(filePatterns);
-  const formatedResults = formatter(report.results);
-  console.log(formatedResults);
+  const formattedResults = formatter(report.results);
+  console.log(formattedResults);
   return report;
 };
