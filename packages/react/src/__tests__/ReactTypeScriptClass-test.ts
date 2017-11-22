@@ -362,18 +362,31 @@ describe('ReactTypeScriptClass', function() {
   });
 
   it('should throw with non-object in the initial state property', function() {
-    expect(() => test(React.createElement(ArrayState), 'span', ''))
-    .toThrowError(
-      'ArrayState.state: must be set to an object or null'
-    );
-    expect(() => test(React.createElement(StringState), 'span', ''))
-    .toThrowError(
-      'StringState.state: must be set to an object or null'
-    );
-    expect(() => test(React.createElement(NumberState), 'span', ''))
-    .toThrowError(
-      'NumberState.state: must be set to an object or null'
-    );
+    if (__DEV__) {
+      expect(() => test(React.createElement(ArrayState), 'SPAN', ''))
+      .toThrowError(
+        'ArrayState.state: must be set to an object or null'
+      );
+      expect(() => test(React.createElement(StringState), 'SPAN', ''))
+      .toThrowError(
+        'StringState.state: must be set to an object or null'
+      );
+      expect(() => test(React.createElement(NumberState), 'SPAN', ''))
+      .toThrowError(
+        'NumberState.state: must be set to an object or null'
+      );
+    } else {
+      // This is a difference between development and production.
+      // I'm not sure if this is intentional, as generally we avoid this.
+      // TODO: investigate if this was intentional or an oversight.
+      // https://github.com/facebook/react/issues/11618
+      expect(() => test(React.createElement(ArrayState), 'SPAN', ''))
+      .not.toThrowError();
+      expect(() => test(React.createElement(StringState), 'SPAN', ''))
+      .not.toThrowError();
+      expect(() => test(React.createElement(NumberState), 'SPAN', ''))
+      .not.toThrowError();
+    }
   });
 
   it('should render with null in the initial state property', function() {

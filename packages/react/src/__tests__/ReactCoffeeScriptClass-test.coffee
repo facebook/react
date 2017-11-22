@@ -158,11 +158,20 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           span()
 
-      expect(->
-        test React.createElement(Foo), 'span', ''
-      ).toThrowError(
-        'Foo.state: must be set to an object or null'
-      )
+      if __DEV__
+        expect(->
+          test React.createElement(Foo), 'SPAN', ''
+        ).toThrowError(
+          'Foo.state: must be set to an object or null'
+        )
+      else
+        # This is a difference between development and production.
+        # I'm not sure if this is intentional, as generally we avoid this.
+        # TODO: investigate if this was intentional or an oversight.
+        # https://github.com/facebook/react/issues/11618
+        expect(->
+          test React.createElement(Foo), 'SPAN', ''
+        ).not.toThrowError()
     undefined
 
   it 'should render with null in the initial state property', ->
