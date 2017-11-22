@@ -119,7 +119,6 @@
       ".*": "./scripts/jest/preprocessor.js"
     },
     "setupFiles": [
-      "./scripts/jest/setup.js",
       "./scripts/jest/environment.js"
     ],
     "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",

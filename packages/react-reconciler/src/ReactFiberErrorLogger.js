@@ -11,7 +11,21 @@ import type {CapturedError} from './ReactFiberScheduler';
 
 import invariant from 'fbjs/lib/invariant';
 
-const defaultShowDialog = (capturedError: CapturedError) => true;
+declare var __REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__: void | boolean;
+
+const defaultShowDialog = (capturedError: CapturedError) => {
+  // This is a somewhat hacky way to disable error logging.
+  // Can be handy in tests.
+  // We can revisit this when we offer a more comprehensive
+  // solution for overriding warning behavior.
+  if (
+    typeof __REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__ !== 'undefined' &&
+    __REACT_UNSTABLE_SUPPRESS_ERROR_LOGGING__ === true
+  ) {
+    return false;
+  }
+  return true;
+};
 
 let showDialog = defaultShowDialog;
 
