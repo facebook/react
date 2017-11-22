@@ -719,8 +719,7 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('catches reconciler errors in a boundary during mounting', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -748,18 +747,24 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
-          'a class/function (for composite components) but got: undefined. ' +
-          "You likely forgot to export your component from the file it's " +
-          'defined in, or you might have mixed up default and named imports.' +
-          '\n\nCheck the render method of `BrokenRender`.',
+          'a class/function (for composite components) but got: undefined.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's " +
+              'defined in, or you might have mixed up default and named imports.' +
+              '\n\nCheck the render method of `BrokenRender`.'
+            : ''),
       ),
     ]);
-    expect(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: React.createElement: type is invalid -- expected a string',
+      );
+    }
   });
 
   it('catches reconciler errors in a boundary during update', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class ErrorBoundary extends React.Component {
       state = {error: null};
@@ -795,32 +800,46 @@ describe('ReactIncrementalErrorHandling', () => {
     expect(ReactNoop.getChildren()).toEqual([
       span(
         'Element type is invalid: expected a string (for built-in components) or ' +
-          'a class/function (for composite components) but got: undefined. ' +
-          "You likely forgot to export your component from the file it's " +
-          'defined in, or you might have mixed up default and named imports.' +
-          '\n\nCheck the render method of `BrokenRender`.',
+          'a class/function (for composite components) but got: undefined.' +
+          (__DEV__
+            ? " You likely forgot to export your component from the file it's " +
+              'defined in, or you might have mixed up default and named imports.' +
+              '\n\nCheck the render method of `BrokenRender`.'
+            : ''),
       ),
     ]);
-    expect(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: React.createElement: type is invalid -- expected a string',
+      );
+    }
   });
 
   it('recovers from uncaught reconciler errors', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     const InvalidType = undefined;
     ReactNoop.render(<InvalidType />);
     expect(() => {
       ReactNoop.flush();
     }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) or ' +
-        'a class/function (for composite components) but got: undefined. ' +
-        "You likely forgot to export your component from the file it's " +
-        'defined in, or you might have mixed up default and named imports.',
+        'a class/function (for composite components) but got: undefined.' +
+        (__DEV__
+          ? " You likely forgot to export your component from the file it's " +
+            'defined in, or you might have mixed up default and named imports.'
+          : ''),
     );
 
     ReactNoop.render(<span prop="hi" />);
     ReactNoop.flush();
     expect(ReactNoop.getChildren()).toEqual([span('hi')]);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: React.createElement: type is invalid -- expected a string',
+      );
+    }
   });
 
   it('unmounts components with uncaught errors', () => {
@@ -944,13 +963,33 @@ describe('ReactIncrementalErrorHandling', () => {
       ReactNoop = require('react-noop-renderer');
     }
 
+    beforeEach(() => {
+      // Assert that we're mocking this file by default.
+      // If this ever changes, we'll need to update this test suite anyway.
+      expect(
+        require('../ReactFiberErrorLogger').logCapturedError._isMockFunction,
+      ).toBe(true);
+    });
+
+    afterEach(() => {
+      // Restore the default (we verified it was being mocked in beforeEach).
+      jest.mock('../ReactFiberErrorLogger');
+    });
+
     function normalizeCodeLocInfo(str) {
       return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
     }
 
     it('should log errors that occur during the begin phase', () => {
-      initReactFiberErrorLoggerMock();
+      initReactFiberErrorLoggerMock(false);
       // Intentionally spy in production too.
+      // TODO: It is confusing how these tests correctly "see" console.error()s
+      // from exceptions becase they called initReactFiberErrorLoggerMock(false)
+      // and thus unmocked the error logger. It is globally mocked in all other
+      // tests. We did this to silence warnings from intentionally caught errors
+      // in tests. But perhaps we should instead make a pass through all tests,
+      // intentionally assert console.error() is always called for uncaught
+      // exceptions, and then remove the global mock of ReactFiberErrorLogger.
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -991,8 +1030,14 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     it('should log errors that occur during the commit phase', () => {
-      initReactFiberErrorLoggerMock();
-      // Intentionally spy in production too.
+      initReactFiberErrorLoggerMock(false);
+      // TODO: It is confusing how these tests correctly "see" console.error()s
+      // from exceptions becase they called initReactFiberErrorLoggerMock(false)
+      // and thus unmocked the error logger. It is globally mocked in all other
+      // tests. We did this to silence warnings from intentionally caught errors
+      // in tests. But perhaps we should instead make a pass through all tests,
+      // intentionally assert console.error() is always called for uncaught
+      // exceptions, and then remove the global mock of ReactFiberErrorLogger.
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1035,6 +1080,11 @@ describe('ReactIncrementalErrorHandling', () => {
     it('should ignore errors thrown in log method to prevent cycle', () => {
       initReactFiberErrorLoggerMock(true);
       // Intentionally spy in production too.
+      // Note: we're seeing console.error() even though ReactFiberErrorLogger is
+      // mocked because we're currently testing the console.error() call inside
+      // ReactFiberScheduler (for cycles). It doesn't get affected by mocking.
+      // TODO: mocking is confusing and we should simplify this and remove
+      // special cases.
       spyOn(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
@@ -1074,8 +1124,14 @@ describe('ReactIncrementalErrorHandling', () => {
     });
 
     it('should relay info about error boundary and retry attempts if applicable', () => {
-      initReactFiberErrorLoggerMock();
-      // Intentionally spy in production too.
+      initReactFiberErrorLoggerMock(false);
+      // TODO: It is confusing how these tests correctly "see" console.error()s
+      // from exceptions becase they called initReactFiberErrorLoggerMock(false)
+      // and thus unmocked the error logger. It is globally mocked in all other
+      // tests. We did this to silence warnings from intentionally caught errors
+      // in tests. But perhaps we should instead make a pass through all tests,
+      // intentionally assert console.error() is always called for uncaught
+      // exceptions, and then remove the global mock of ReactFiberErrorLogger.
       spyOn(console, 'error');
 
       class ParentComponent extends React.Component {
@@ -1135,9 +1191,6 @@ describe('ReactIncrementalErrorHandling', () => {
   });
 
   it('resets instance variables before unmounting failed node', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
-
     class ErrorBoundary extends React.Component {
       state = {error: null};
       componentDidCatch(error) {
