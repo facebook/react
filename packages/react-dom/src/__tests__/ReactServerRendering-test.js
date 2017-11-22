@@ -760,12 +760,12 @@ describe('ReactDOMServer', () => {
     );
     expect(console.error.calls.count()).toBe(2);
     expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: <inPUT /> is using uppercase HTML. Always use lowercase ' +
+      'Warning: <inPUT /> is using lowercase HTML. Always use uppercase ' +
         'HTML tags in React.',
     );
     // linearGradient doesn't warn
     expect(console.error.calls.argsFor(1)[0]).toBe(
-      'Warning: <iFrame /> is using uppercase HTML. Always use lowercase ' +
+      'Warning: <iFrame /> is using lowercase HTML. Always use uppercase ' +
         'HTML tags in React.',
     );
   });

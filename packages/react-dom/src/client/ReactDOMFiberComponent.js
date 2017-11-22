@@ -373,7 +373,7 @@ export function createElement(
       // allow <SVG> or <mATH>.
       warning(
         isCustomComponentTag || type === type.toLowerCase(),
-        '<%s /> is using uppercase HTML. Always use lowercase HTML tags ' +
+        '<%s /> is using lowercase HTML. Always use uppercase HTML tags ' +
           'in React.',
         type,
       );
