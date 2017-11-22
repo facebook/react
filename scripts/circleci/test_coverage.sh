@@ -2,7 +2,7 @@
 
 set -e
 
-yarn test --coverage
+yarn test --coverage --runInBand
 if [ -z $CI_PULL_REQUEST ]; then
   cat ./coverage/lcov.info | ./node_modules/.bin/coveralls
 fi
