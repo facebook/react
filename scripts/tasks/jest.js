@@ -1,6 +1,5 @@
 'use strict';
 
-const path = require('path');
 const spawn = require('child_process').spawn;
 const argv = require('minimist')(process.argv.slice(2));
 
