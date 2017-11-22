@@ -92,13 +92,16 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     let argIndex = 0;
     return format.replace(/%s/g, () => args[argIndex++]);
   };
-  global.Error = new Proxy(global.Error, {
+  const OriginalError = global.Error;
+  const ErrorProxy = new Proxy(OriginalError, {
     construct(target, argumentsList, newTarget) {
       const error = Reflect.construct(target, argumentsList, newTarget);
       error.message = decodeErrorMessage(error.message);
       return error;
     },
   });
+  ErrorProxy.OriginalError = OriginalError;
+  global.Error = ErrorProxy;
 
   require('jasmine-check').install();
 }
