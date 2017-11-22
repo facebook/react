@@ -8,11 +8,8 @@ module.exports = {
   transform: {
     '.*': require.resolve('./preprocessor.js'),
   },
-  setupFiles: [
-    require.resolve('./setup.js'),
-    require.resolve('./environment.js'),
-  ],
-  setupTestFrameworkScriptFile: require.resolve('./test-framework-setup.js'),
+  setupFiles: [require.resolve('./setupEnvironment.js')],
+  setupTestFrameworkScriptFile: require.resolve('./setupTests.js'),
   testRegex: '/__tests__/.*(\\.js|\\.coffee|[^d]\\.ts)$',
   moduleFileExtensions: ['js', 'json', 'node', 'coffee', 'ts'],
   rootDir: process.cwd(),
