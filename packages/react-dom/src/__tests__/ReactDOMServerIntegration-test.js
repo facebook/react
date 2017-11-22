@@ -1859,9 +1859,11 @@ describe('ReactDOMServerIntegration', () => {
           const ObjectComponent = () => ({x: 123});
           await render(<ObjectComponent />, 1);
         },
-        'Objects are not valid as a React child (found: object with keys ' +
-          '{x}). If you meant to render a collection of children, use ' +
-          'an array instead.',
+        'Objects are not valid as a React child (found: object with keys {x}).' +
+          (__DEV__
+            ? ' If you meant to render a collection of children, use ' +
+              'an array instead.'
+            : ''),
       );
 
       itThrowsWhenRendering(
@@ -1874,9 +1876,11 @@ describe('ReactDOMServerIntegration', () => {
           }
           await render(<ObjectComponent />, 1);
         },
-        'Objects are not valid as a React child (found: object with keys ' +
-          '{x}). If you meant to render a collection of children, use ' +
-          'an array instead.',
+        'Objects are not valid as a React child (found: object with keys {x}).' +
+          (__DEV__
+            ? ' If you meant to render a collection of children, use ' +
+              'an array instead.'
+            : ''),
       );
 
       itThrowsWhenRendering(
@@ -1884,9 +1888,11 @@ describe('ReactDOMServerIntegration', () => {
         async render => {
           await render({x: 123});
         },
-        'Objects are not valid as a React child (found: object with keys ' +
-          '{x}). If you meant to render a collection of children, use ' +
-          'an array instead.',
+        'Objects are not valid as a React child (found: object with keys {x}).' +
+          (__DEV__
+            ? ' If you meant to render a collection of children, use ' +
+              'an array instead.'
+            : ''),
       );
     });
   });
