@@ -45,6 +45,7 @@
     "core-js": "^2.2.1",
     "coveralls": "^2.11.6",
     "create-react-class": "^15.6.2",
+    "cross-env": "^5.1.1",
     "del": "^2.0.2",
     "derequire": "^2.0.3",
     "escape-string-regexp": "^1.0.5",
@@ -102,11 +103,41 @@
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "jest --config scripts/jest/dev/config.js",
-    "test-prod": "jest --config scripts/jest/prod/config.js",
+    "test": "cross-env NODE_ENV=development jest",
+    "test-prod": "cross-env NODE_ENV=production jest",
     "flow": "node ./scripts/tasks/flow.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js"
+  },
+  "jest": {
+    "modulePathIgnorePatterns": [
+      "<rootDir>/scripts/rollup/shims/",
+      "<rootDir>/scripts/bench/"
+    ],
+    "transform": {
+      ".*": "./scripts/jest/preprocessor.js"
+    },
+    "setupFiles": [
+      "./scripts/jest/setup.js",
+      "./scripts/jest/environment.js"
+    ],
+    "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
+    "testRegex": "/__tests__/.*(\\.js|\\.coffee|[^d]\\.ts)$",
+    "moduleFileExtensions": [
+      "js",
+      "json",
+      "node",
+      "coffee",
+      "ts"
+    ],
+    "roots": [
+      "<rootDir>/packages",
+      "<rootDir>/scripts"
+    ],
+    "collectCoverageFrom": [
+      "packages/**/*.js"
+    ],
+    "timers": "fake"
   }
 }

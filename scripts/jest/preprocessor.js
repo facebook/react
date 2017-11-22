@@ -1,13 +1,11 @@
 'use strict';
 
-process.env.NODE_ENV = 'production';
-
 var path = require('path');
 
 var babel = require('babel-core');
 var coffee = require('coffee-script');
 
-var tsPreprocessor = require('../ts-preprocessor');
+var tsPreprocessor = require('./ts-preprocessor');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
@@ -17,13 +15,13 @@ var pathToBabel = path.join(
   'package.json'
 );
 var pathToBabelPluginDevWithCode = require.resolve(
-  '../../error-codes/replace-invariant-error-codes'
+  '../error-codes/replace-invariant-error-codes'
 );
 var pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
 );
-var pathToBabelrc = path.join(__dirname, '..', '..', '..', '.babelrc');
-var pathToErrorCodes = require.resolve('../../error-codes/codes.json');
+var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
+var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
 var babelOptions = {
   plugins: [
