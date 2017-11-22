@@ -770,7 +770,7 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('can fail context when shallowly rendering', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class SimpleComponent extends React.Component {
       static contextTypes = {
@@ -784,18 +784,20 @@ describe('ReactShallowRenderer', () => {
 
     const shallowRenderer = createRenderer();
     shallowRenderer.render(<SimpleComponent />);
-    expectDev(console.error.calls.count()).toBe(1);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
-    ).toBe(
-      'Warning: Failed context type: The context `name` is marked as ' +
-        'required in `SimpleComponent`, but its value is `undefined`.\n' +
-        '    in SimpleComponent (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(
+        console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
+      ).toBe(
+        'Warning: Failed context type: The context `name` is marked as ' +
+          'required in `SimpleComponent`, but its value is `undefined`.\n' +
+          '    in SimpleComponent (at **)',
+      );
+    }
   });
 
   it('should warn about propTypes (but only once)', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     class SimpleComponent extends React.Component {
       render() {
@@ -810,14 +812,16 @@ describe('ReactShallowRenderer', () => {
     const shallowRenderer = createRenderer();
     shallowRenderer.render(React.createElement(SimpleComponent, {name: 123}));
 
-    expect(console.error.calls.count()).toBe(1);
-    expect(
-      console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
-    ).toBe(
-      'Warning: Failed prop type: Invalid prop `name` of type `number` ' +
-        'supplied to `SimpleComponent`, expected `string`.\n' +
-        '    in SimpleComponent',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(
+        console.error.calls.argsFor(0)[0].replace(/\(at .+?:\d+\)/g, '(at **)'),
+      ).toBe(
+        'Warning: Failed prop type: Invalid prop `name` of type `number` ' +
+          'supplied to `SimpleComponent`, expected `string`.\n' +
+          '    in SimpleComponent',
+      );
+    }
   });
 
   it('should enable rendering of cloned element', () => {
@@ -846,7 +850,7 @@ describe('ReactShallowRenderer', () => {
   });
 
   it('throws usefully when rendering badly-typed elements', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     const shallowRenderer = createRenderer();
 
     var Undef = undefined;
@@ -873,7 +877,9 @@ describe('ReactShallowRenderer', () => {
         'components, but the provided element type was `object`.',
     );
 
-    // One warning for each element creation
-    expectDev(console.error.calls.count()).toBe(4);
+    if (__DEV__) {
+      // One warning for each element creation
+      expect(console.error.calls.count()).toBe(4);
+    }
   });
 });

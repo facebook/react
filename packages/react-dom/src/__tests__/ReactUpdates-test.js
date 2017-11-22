@@ -842,7 +842,7 @@ describe('ReactUpdates', () => {
   });
 
   it('throws in setState if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -863,33 +863,39 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'setState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'setState(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.setState({}, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'setState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'setState(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.setState({}, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'setState(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'setState(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('throws in forceUpdate if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -910,29 +916,35 @@ describe('ReactUpdates', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.forceUpdate({foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     component = ReactTestUtils.renderIntoDocument(<A />);
     expect(() => component.forceUpdate(new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'forceUpdate(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'forceUpdate(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('does not update one component twice in a batch (#2410)', () => {
@@ -1216,7 +1228,7 @@ describe('ReactUpdates', () => {
   );
 
   it('uses correct base state for setState inside render phase', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     let ops = [];
 
@@ -1236,10 +1248,12 @@ describe('ReactUpdates', () => {
     const container = document.createElement('div');
     ReactDOM.render(<Foo />, container);
     expect(ops).toEqual(['base: 0, memoized: 0', 'base: 1, memoized: 1']);
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toContain(
-      'Cannot update during an existing state transition',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Cannot update during an existing state transition',
+      );
+    }
   });
 
   it('does not re-render if state update is null', () => {
