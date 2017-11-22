@@ -146,7 +146,14 @@ describe('ReactStatelessComponent', () => {
 
     expect(function() {
       ReactTestUtils.renderIntoDocument(<Child test="test" />);
-    }).toThrowError('Stateless function components cannot have refs.');
+    }).toThrowError(
+      __DEV__
+        ? 'Stateless function components cannot have refs.'
+        : // TODO: the different message in production seems like a bug.
+          // It happens because we don't save _owner in production for
+          // functional components. We should probably show a better message.
+          'Element ref was specified as a string (me) but no owner was set.',
+    );
   });
 
   it('should warn when given a string ref', () => {
