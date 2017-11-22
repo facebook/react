@@ -873,6 +873,38 @@ describe('ReactShallowRenderer', () => {
     expect(stateSuccessfullyUpdated).toBe(true);
   });
 
+  it('should handle multiple callbacks', () => {
+    const mockFn = jest.fn();
+    const shallowRenderer = createRenderer();
+
+    let callbackQueueLength = 0;
+
+    class Component extends React.Component {
+      constructor(props, context) {
+        super(props, context);
+        this.state = {
+          foo: 'foo',
+        };
+      }
+
+      componentWillMount() {
+        this.setState({foo: 'bar'}, () => mockFn());
+        this.setState({foo: 'foobar'}, () => mockFn());
+
+        callbackQueueLength = shallowRenderer._updater._callbacks.length;
+      }
+
+      render() {
+        return <div>{this.state.foo}</div>;
+      }
+    }
+
+    shallowRenderer.render(<Component />);
+
+    expect(callbackQueueLength).toBe(2);
+    expect(mockFn.mock.calls.length).toBe(2);
+  });
+
   it('should call the setState callback even if shouldComponentUpdate = false', done => {
     const mockFn = jest.fn().mockReturnValue(false);
 
