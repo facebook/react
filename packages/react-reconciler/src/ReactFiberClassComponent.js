@@ -335,7 +335,7 @@ export default function(
       );
     }
     if (typeof instance.getChildContext === 'function') {
-      invariant(
+      warning(
         typeof workInProgress.type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
