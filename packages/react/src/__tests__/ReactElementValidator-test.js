@@ -450,11 +450,10 @@ describe('ReactElementValidator', () => {
     );
 
     expectDev(console.error.calls.count()).toBe(1);
-    /*eslint-disable max-len */
     expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Component MisspelledPropTypesComponent declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
+      'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
+        'instead of `propTypes`. Did you misspell the property assignment?',
     );
-    /*eslint-enable max-len */
   });
 
   it('should warn when accessing .type on an element factory', () => {
