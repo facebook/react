@@ -73,18 +73,22 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function safelyDetachRef(current: Fiber) {
     const ref = current.ref;
     if (ref !== null) {
-      if (__DEV__) {
-        invokeGuardedCallback(null, ref, null, null);
-        if (hasCaughtError()) {
-          const refError = clearCaughtError();
-          captureError(current, refError);
+      if (typeof ref === 'function') {
+        if (__DEV__) {
+          invokeGuardedCallback(null, ref, null, null);
+          if (hasCaughtError()) {
+            const refError = clearCaughtError();
+            captureError(current, refError);
+          }
+        } else {
+          try {
+            ref(null);
+          } catch (refError) {
+            captureError(current, refError);
+          }
         }
       } else {
-        try {
-          ref(null);
-        } catch (refError) {
-          captureError(current, refError);
-        }
+        ref.value = null;
       }
     }
   }
@@ -162,12 +166,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const ref = finishedWork.ref;
     if (ref !== null) {
       const instance = finishedWork.stateNode;
+      let instanceToUse;
       switch (finishedWork.tag) {
         case HostComponent:
-          ref(getPublicInstance(instance));
+          instanceToUse = getPublicInstance(instance);
           break;
         default:
-          ref(instance);
+          instanceToUse = instance;
+      }
+      if (typeof ref === 'function') {
+        ref(instanceToUse);
+      } else {
+        ref.value = instanceToUse;
       }
     }
   }
@@ -175,7 +185,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   function commitDetachRef(current: Fiber) {
     const currentRef = current.ref;
     if (currentRef !== null) {
-      currentRef(null);
+      if (typeof currentRef === 'function') {
+        currentRef(null);
+      } else {
+        currentRef.value = null;
+      }
     }
   }
 

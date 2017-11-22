@@ -9,6 +9,7 @@ import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
 import {enableReactFragment} from 'shared/ReactFeatureFlags';
 
+import {createRef} from './ReactCreateRef';
 import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
@@ -31,7 +32,7 @@ const REACT_FRAGMENT_TYPE =
     Symbol.for('react.fragment')) ||
   0xeacb;
 
-var React = {
+const React = {
   Children: {
     map,
     forEach,
@@ -40,6 +41,7 @@ var React = {
     only,
   },
 
+  createRef,
   Component,
   PureComponent,
   unstable_AsyncComponent: AsyncComponent,
