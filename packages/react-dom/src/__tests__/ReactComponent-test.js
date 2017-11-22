@@ -360,9 +360,11 @@ describe('ReactComponent', () => {
     var X = undefined;
     expect(() => ReactTestUtils.renderIntoDocument(<X />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: undefined. ' +
-        "You likely forgot to export your component from the file it's " +
-        'defined in, or you might have mixed up default and named imports.',
+        'or a class/function (for composite components) but got: undefined.' +
+        (__DEV__
+          ? " You likely forgot to export your component from the file it's " +
+            'defined in, or you might have mixed up default and named imports.'
+          : ''),
     );
 
     var Y = null;
@@ -400,10 +402,12 @@ describe('ReactComponent', () => {
 
     expect(() => ReactTestUtils.renderIntoDocument(<Foo />)).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: undefined. ' +
-        "You likely forgot to export your component from the file it's " +
-        'defined in, or you might have mixed up default and named imports.' +
-        '\n\nCheck the render method of `Bar`.',
+        'or a class/function (for composite components) but got: undefined.' +
+        (__DEV__
+          ? " You likely forgot to export your component from the file it's " +
+            'defined in, or you might have mixed up default and named imports.' +
+            '\n\nCheck the render method of `Bar`.'
+          : ''),
     );
 
     if (__DEV__) {
@@ -428,10 +432,12 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{x, y, z}). If you meant to render a collection of children, use ' +
-        'an array instead.' +
-        '\n    in div (at **)',
+      'Objects are not valid as a React child (found: object with keys {x, y, z}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.' +
+            '\n    in div (at **)'
+          : ''),
     );
   });
 
@@ -455,11 +461,13 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b, c}). If you meant to render a collection of children, use ' +
-        'an array instead.\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
+      'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.\n' +
+            '    in div (at **)\n' +
+            '    in Foo (at **)'
+          : ''),
     );
   });
 
@@ -478,10 +486,12 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{x, y, z}). If you meant to render a collection of children, use ' +
-        'an array instead.' +
-        '\n    in div (at **)',
+      'Objects are not valid as a React child (found: object with keys {x, y, z}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.' +
+            '\n    in div (at **)'
+          : ''),
     );
   });
 
@@ -505,11 +515,13 @@ describe('ReactComponent', () => {
     }
     expect(ex).toBeDefined();
     expect(normalizeCodeLocInfo(ex.message)).toBe(
-      'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b, c}). If you meant to render a collection of children, use ' +
-        'an array instead.\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
+      'Objects are not valid as a React child (found: object with keys {a, b, c}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use ' +
+            'an array instead.\n' +
+            '    in div (at **)\n' +
+            '    in Foo (at **)'
+          : ''),
     );
   });
 

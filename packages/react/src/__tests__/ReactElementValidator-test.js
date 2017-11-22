@@ -314,16 +314,16 @@ describe('ReactElementValidator', () => {
       ReactTestUtils.renderIntoDocument(React.createElement(ParentComp));
     }).toThrowError(
       'Element type is invalid: expected a string (for built-in components) ' +
-        'or a class/function (for composite components) but got: null.\n\nCheck ' +
-        'the render method of `ParentComp`.',
+        'or a class/function (for composite components) but got: null.' +
+        (__DEV__ ? '\n\nCheck the render method of `ParentComp`.' : ''),
     );
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toBe(
         'Warning: React.createElement: type is invalid -- expected a string ' +
           '(for built-in components) or a class/function (for composite ' +
-          'components) but got: null.\n\nCheck the render method of `ParentComp`.' +
-          '\n    in ParentComp',
+          'components) but got: null.' +
+          '\n\nCheck the render method of `ParentComp`.\n    in ParentComp',
       );
     }
   });
