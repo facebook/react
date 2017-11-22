@@ -15,6 +15,14 @@ import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime
 import {enableReactFragment} from 'shared/ReactFeatureFlags';
 import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
 import {
+  getIteratorFn,
+  REACT_ELEMENT_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_CALL_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_PORTAL_TYPE,
+} from 'shared/ReactSymbols';
+import {
   FunctionalComponent,
   ClassComponent,
   HostText,
@@ -27,7 +35,6 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import {REACT_PORTAL_TYPE} from './ReactPortal';
 import {
   createWorkInProgress,
   createFiberFromElement,
@@ -86,40 +93,6 @@ if (__DEV__) {
 }
 
 const isArray = Array.isArray;
-
-const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
-
-// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE;
-var REACT_CALL_TYPE;
-var REACT_RETURN_TYPE;
-var REACT_FRAGMENT_TYPE;
-if (typeof Symbol === 'function' && Symbol.for) {
-  REACT_ELEMENT_TYPE = Symbol.for('react.element');
-  REACT_CALL_TYPE = Symbol.for('react.call');
-  REACT_RETURN_TYPE = Symbol.for('react.return');
-  REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
-} else {
-  REACT_ELEMENT_TYPE = 0xeac7;
-  REACT_CALL_TYPE = 0xeac8;
-  REACT_RETURN_TYPE = 0xeac9;
-  REACT_FRAGMENT_TYPE = 0xeacb;
-}
-
-function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
-  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
-    return null;
-  }
-  const iteratorFn =
-    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
-    maybeIterable[FAUX_ITERATOR_SYMBOL];
-  if (typeof iteratorFn === 'function') {
-    return iteratorFn;
-  }
-  return null;
-}
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
