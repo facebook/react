@@ -7,6 +7,7 @@
 
 'use strict';
 const execFileSync = require('child_process').execFileSync;
+const gte = require('semver').gte;
 const yarnCmds = ['yarnpkg', 'yarn'];
 
 function getVersion(cmd) {
@@ -43,19 +44,6 @@ function getLocalYarnVersion() {
 
     process.exit(1);
   }
-}
-
-function gte(left, right) {
-  left = left.split('.');
-  right = right.split('.');
-
-  return left.every(function(v, i) {
-    if (v >= right[i]) {
-      return true;
-    } else {
-      return false;
-    }
-  });
 }
 
 const reactVersion = require('../../package.json').version;
