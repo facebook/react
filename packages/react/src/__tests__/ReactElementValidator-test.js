@@ -462,12 +462,13 @@ describe('ReactElementValidator', () => {
     ReactTestUtils.renderIntoDocument(
       React.createElement(MisspelledPropTypesComponent, {prop: 'Hi'}),
     );
-
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
-        'instead of `propTypes`. Did you misspell the property assignment?',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
+          'instead of `propTypes`. Did you misspell the property assignment?',
+      );
+    }
   });
 
   it('should warn when accessing .type on an element factory', () => {
