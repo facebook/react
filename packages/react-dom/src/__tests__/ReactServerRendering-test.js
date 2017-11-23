@@ -42,13 +42,6 @@ describe('ReactDOMServer', () => {
       expect(response).toMatch(new RegExp('<img data-reactroot=""' + '/>'));
     });
 
-    it('should generate simple markup for attribute with `>` symbol', () => {
-      var response = ReactDOMServer.renderToString(<img data-attr=">" />);
-      expect(response).toMatch(
-        new RegExp('<img data-attr="&gt;" data-reactroot=""' + '/>'),
-      );
-    });
-
     it('should generate comment markup for component returns null', () => {
       class NullComponent extends React.Component {
         render() {
