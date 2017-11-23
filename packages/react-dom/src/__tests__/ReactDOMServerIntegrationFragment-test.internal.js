@@ -22,7 +22,6 @@ let ReactDOMServer;
 function initModules() {
   // First, reset the modules to load the client renderer.
   jest.resetModuleRegistry();
-
   require('shared/ReactFeatureFlags').enableReactFragment = true;
   React = require('react');
   ReactDOM = require('react-dom');
@@ -41,10 +40,7 @@ function initModules() {
   };
 }
 
-const {
-  resetModules,
-  itRenders,
-} = ReactDOMServerIntegrationUtils(initModules);
+const {resetModules, itRenders} = ReactDOMServerIntegrationUtils(initModules);
 
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
