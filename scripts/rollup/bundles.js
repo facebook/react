@@ -178,14 +178,19 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
+  /******* React Noop Renderer (used for tests) *******/
   {
     label: 'noop',
-    bundleTypes: [NODE_DEV],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
     externals: ['react', 'expect'],
+    // This is necessary for testing production bundle.
+    // Note that this causes GCC to include a generator polyfill.
+    // It's not a problem for this bundle since it's not actually published.
+    // We shouldn't allow this flag in other bundles without a careful look.
+    allowES6Input: true,
   },
 
   /******* React Reconciler *******/
