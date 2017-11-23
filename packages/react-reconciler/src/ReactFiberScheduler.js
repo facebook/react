@@ -1004,7 +1004,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (e) {
         // Prevent cycle if logCapturedError() throws.
         // A cycle may still occur if logCapturedError renders a component that throws.
-        console.error(e);
+        const suppressLogging = e && e.suppressReactErrorLogging;
+        if (!suppressLogging) {
+          console.error(e);
+        }
       }
 
       // If we're in the commit phase, defer scheduling an update on the
