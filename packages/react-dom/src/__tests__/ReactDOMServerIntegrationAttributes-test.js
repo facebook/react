@@ -15,20 +15,11 @@ let React;
 let ReactDOM;
 let ReactDOMServer;
 
-// When there is a test that renders on server and then on client and expects a logged
-// error, you want to see the error show up both on server and client. Unfortunately,
-// React refuses to issue the same error twice to avoid clogging up the console.
-// To get around this, we must reload React modules in between server and client render.
 function initModules() {
-  // First, reset the modules to load the client renderer.
+  // Reset warning cache.
   jest.resetModuleRegistry();
   React = require('react');
   ReactDOM = require('react-dom');
-
-  // Now we reset the modules again to load the server renderer.
-  // Resetting is important because we want to avoid any shared state
-  // influencing the tests.
-  jest.resetModuleRegistry();
   ReactDOMServer = require('react-dom/server');
 
   // Make them available to the helpers.
