@@ -21,50 +21,32 @@ describe('quoteAttributeValueForBrowser', () => {
 
   it('ampersand is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr="&" />);
-    expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="&amp;" data-reactroot=""/>',
-      ),
-    );
+    expect(response).toMatch('<img data-attr="&amp;" data-reactroot=""/>');
   });
 
   it('double quote is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr={'"'} />);
-    expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="&quot;" data-reactroot=""/>',
-      ),
-    );
+    expect(response).toMatch('<img data-attr="&quot;" data-reactroot=""/>');
   });
 
   it('single quote is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr="'" />);
-    expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="&#x27;" data-reactroot=""/>',
-      ),
-    );
+    expect(response).toMatch('<img data-attr="&#x27;" data-reactroot=""/>');
   });
 
   it('greater than entity is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr=">" />);
-    expect(response).toMatch(
-      new RegExp('<img data-attr="&gt;" data-reactroot=""/>'),
-    );
+    expect(response).toMatch('<img data-attr="&gt;" data-reactroot=""/>');
   });
 
   it('lower than entity is escaped inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr="<" />);
-    expect(response).toMatch(
-      new RegExp('<img data-attr="&lt;" data-reactroot=""/>'),
-    );
+    expect(response).toMatch('<img data-attr="&lt;" data-reactroot=""/>');
   });
 
   it('number is escaped to string inside attributes', () => {
     var response = ReactDOMServer.renderToString(<img data-attr={42} />);
-    expect(response).toMatch(
-      new RegExp('<img data-attr="42" data-reactroot=""/>'),
-    );
+    expect(response).toMatch('<img data-attr="42" data-reactroot=""/>');
   });
 
   it('object is passed to a string inside attributes', () => {
@@ -77,11 +59,7 @@ describe('quoteAttributeValueForBrowser', () => {
     var response = ReactDOMServer.renderToString(
       <img data-attr={sampleObject} />,
     );
-    expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="ponys" data-reactroot=""/>',
-      ),
-    );
+    expect(response).toMatch('<img data-attr="ponys" data-reactroot=""/>');
   });
 
   it('script tag is escaped inside attributes', () => {
@@ -89,11 +67,9 @@ describe('quoteAttributeValueForBrowser', () => {
       <img data-attr={'<script type=\'\' src=""></script>'} />,
     );
     expect(response).toMatch(
-      new RegExp(
-        '<img data-attr="&lt;script type=&#x27;&#x27; ' +
+      '<img data-attr="&lt;script type=&#x27;&#x27; ' +
         'src=&quot;&quot;&gt;&lt;/script&gt;" ' +
-          'data-reactroot=""/>',
-      ),
+        'data-reactroot=""/>',
     );
   });
 });
