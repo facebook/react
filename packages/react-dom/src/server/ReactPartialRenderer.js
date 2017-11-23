@@ -26,6 +26,7 @@ import {
   createMarkupForProperty,
   createMarkupForRoot,
 } from './DOMMarkupOperations';
+import escapeTextForBrowser from './escapeTextForBrowser';
 import {
   Namespaces,
   getIntrinsicNamespace,
@@ -34,7 +35,6 @@ import {
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
-import escapeTextForBrowser from '../shared/escapeTextForBrowser';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
