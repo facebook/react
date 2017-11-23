@@ -7,7 +7,6 @@
 
 import {
   registrationNameModules,
-  plugins,
   possibleRegistrationNames,
 } from 'events/EventPluginRegistry';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
@@ -30,60 +29,17 @@ function getStackAddendum() {
 if (__DEV__) {
   var warnedProperties = {};
   var hasOwnProperty = Object.prototype.hasOwnProperty;
-  var EVENT_NAME_REGEX = /^on[A-Z]/;
+  var EVENT_NAME_REGEX = /^on./;
+  var INVALID_EVENT_NAME_REGEX = /^on[^A-Z]/;
   var rARIA = new RegExp('^(aria)-[' + ATTRIBUTE_NAME_CHAR + ']*$');
   var rARIACamel = new RegExp('^(aria)[A-Z][' + ATTRIBUTE_NAME_CHAR + ']*$');
 
-  var validateProperty = function(tagName, name, value) {
+  var validateProperty = function(tagName, name, value, canUseEventSystem) {
     if (hasOwnProperty.call(warnedProperties, name) && warnedProperties[name]) {
       return true;
     }
 
-    if (registrationNameModules.hasOwnProperty(name)) {
-      return true;
-    }
-
-    if (plugins.length === 0 && EVENT_NAME_REGEX.test(name)) {
-      // If no event plugins have been injected, we might be in a server environment.
-      // Don't check events in this case.
-      return true;
-    }
-
     var lowerCasedName = name.toLowerCase();
-    var registrationName = possibleRegistrationNames.hasOwnProperty(
-      lowerCasedName,
-    )
-      ? possibleRegistrationNames[lowerCasedName]
-      : null;
-
-    if (registrationName != null) {
-      warning(
-        false,
-        'Invalid event handler property `%s`. Did you mean `%s`?%s',
-        name,
-        registrationName,
-        getStackAddendum(),
-      );
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    if (lowerCasedName.indexOf('on') === 0 && lowerCasedName.length > 2) {
-      warning(
-        false,
-        'Unknown event handler property `%s`. It will be ignored.%s',
-        name,
-        getStackAddendum(),
-      );
-      warnedProperties[name] = true;
-      return true;
-    }
-
-    // Let the ARIA attribute hook validate ARIA attributes
-    if (rARIA.test(name) || rARIACamel.test(name)) {
-      return true;
-    }
-
     if (lowerCasedName === 'onfocusin' || lowerCasedName === 'onfocusout') {
       warning(
         false,
@@ -92,6 +48,59 @@ if (__DEV__) {
           'are not needed/supported by React.',
       );
       warnedProperties[name] = true;
+      return true;
+    }
+
+    // We can't rely on the event system being injected on the server.
+    if (canUseEventSystem) {
+      if (registrationNameModules.hasOwnProperty(name)) {
+        return true;
+      }
+      var registrationName = possibleRegistrationNames.hasOwnProperty(
+        lowerCasedName,
+      )
+        ? possibleRegistrationNames[lowerCasedName]
+        : null;
+      if (registrationName != null) {
+        warning(
+          false,
+          'Invalid event handler property `%s`. Did you mean `%s`?%s',
+          name,
+          registrationName,
+          getStackAddendum(),
+        );
+        warnedProperties[name] = true;
+        return true;
+      }
+      if (EVENT_NAME_REGEX.test(name)) {
+        warning(
+          false,
+          'Unknown event handler property `%s`. It will be ignored.%s',
+          name,
+          getStackAddendum(),
+        );
+        warnedProperties[name] = true;
+        return true;
+      }
+    } else if (EVENT_NAME_REGEX.test(name)) {
+      // If no event plugins have been injected, we are in a server environment.
+      // So we can't tell if the event name is correct for sure, but we can filter
+      // out known bad ones like `onclick`. We can't suggest a specific replacement though.
+      if (INVALID_EVENT_NAME_REGEX.test(name)) {
+        warning(
+          false,
+          'Invalid event handler property `%s`. ' +
+            'React events use the camelCase naming convention, for example `onClick`.%s',
+          name,
+          getStackAddendum(),
+        );
+      }
+      warnedProperties[name] = true;
+      return true;
+    }
+
+    // Let the ARIA attribute hook validate ARIA attributes
+    if (rARIA.test(name) || rARIACamel.test(name)) {
       return true;
     }
 
@@ -233,10 +242,10 @@ if (__DEV__) {
   };
 }
 
-var warnUnknownProperties = function(type, props) {
+var warnUnknownProperties = function(type, props, canUseEventSystem) {
   var unknownProps = [];
   for (var key in props) {
-    var isValid = validateProperty(type, key, props[key]);
+    var isValid = validateProperty(type, key, props[key], canUseEventSystem);
     if (!isValid) {
       unknownProps.push(key);
     }
@@ -266,9 +275,9 @@ var warnUnknownProperties = function(type, props) {
   }
 };
 
-export function validateProperties(type, props) {
+export function validateProperties(type, props, canUseEventSystem) {
   if (isCustomComponent(type, props)) {
     return;
   }
-  warnUnknownProperties(type, props);
+  warnUnknownProperties(type, props, canUseEventSystem);
 }
