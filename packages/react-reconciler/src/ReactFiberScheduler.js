@@ -1218,6 +1218,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
             nextRenderExpirationTime = NoWork;
           }
           requestWork(root, expirationTime);
+          if (
+            !isWorking &&
+            root === nextRoot &&
+            expirationTime < nextRenderExpirationTime
+          ) {
+          }
         } else {
           if (__DEV__) {
             if (!isErrorRecovery && fiber.tag === ClassComponent) {
