@@ -9,14 +9,11 @@
 
 'use strict';
 
-var ExecutionEnvironment;
 var React;
 var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
 var PropTypes;
-
-var ROOT_ATTRIBUTE_NAME;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -29,39 +26,26 @@ describe('ReactDOMServer', () => {
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
-
-    ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
-    ExecutionEnvironment.canUseDOM = false;
     ReactDOMServer = require('react-dom/server');
-
-    // TODO: can we express this test with only public API?
-    var DOMProperty = require('../shared/DOMProperty');
-    ROOT_ATTRIBUTE_NAME = DOMProperty.ROOT_ATTRIBUTE_NAME;
   });
 
   describe('renderToString', () => {
     it('should generate simple markup', () => {
       var response = ReactDOMServer.renderToString(<span>hello world</span>);
       expect(response).toMatch(
-        new RegExp(
-          '<span ' + ROOT_ATTRIBUTE_NAME + '=""' + '>hello world</span>',
-        ),
+        new RegExp('<span data-reactroot=""' + '>hello world</span>'),
       );
     });
 
     it('should generate simple markup for self-closing tags', () => {
       var response = ReactDOMServer.renderToString(<img />);
-      expect(response).toMatch(
-        new RegExp('<img ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>'),
-      );
+      expect(response).toMatch(new RegExp('<img data-reactroot=""' + '/>'));
     });
 
     it('should generate simple markup for attribute with `>` symbol', () => {
       var response = ReactDOMServer.renderToString(<img data-attr=">" />);
       expect(response).toMatch(
-        new RegExp(
-          '<img data-attr="&gt;" ' + ROOT_ATTRIBUTE_NAME + '=""' + '/>',
-        ),
+        new RegExp('<img data-attr="&gt;" data-reactroot=""' + '/>'),
       );
     });
 
@@ -99,7 +83,7 @@ describe('ReactDOMServer', () => {
       expect(response).toMatch(
         new RegExp(
           '<div ' +
-            ROOT_ATTRIBUTE_NAME +
+            'data-reactroot' +
             '=""' +
             '>' +
             '<span' +
@@ -161,7 +145,7 @@ describe('ReactDOMServer', () => {
         expect(response).toMatch(
           new RegExp(
             '<span ' +
-              ROOT_ATTRIBUTE_NAME +
+              'data-reactroot' +
               '=""' +
               '>' +
               'Component name: <!-- -->TestComponent' +
@@ -176,17 +160,11 @@ describe('ReactDOMServer', () => {
       }
 
       runTest();
-
-      // This should work the same regardless of whether you can use DOM or not.
-      ExecutionEnvironment.canUseDOM = true;
-      runTest();
     });
 
     it('should have the correct mounting behavior (old hydrate API)', () => {
       spyOnDev(console, 'warn');
       spyOnDev(console, 'error');
-      // This test is testing client-side behavior.
-      ExecutionEnvironment.canUseDOM = true;
 
       var mountCount = 0;
       var numClicks = 0;
@@ -234,9 +212,7 @@ describe('ReactDOMServer', () => {
       ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 
-      ExecutionEnvironment.canUseDOM = false;
       lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
-      ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup;
 
       var instance = ReactDOM.render(<TestComponent name="x" />, element);
@@ -287,8 +263,6 @@ describe('ReactDOMServer', () => {
 
     it('should have the correct mounting behavior (new hydrate API)', () => {
       spyOnDev(console, 'error');
-      // This test is testing client-side behavior.
-      ExecutionEnvironment.canUseDOM = true;
 
       var mountCount = 0;
       var numClicks = 0;
@@ -336,9 +310,7 @@ describe('ReactDOMServer', () => {
       ReactDOM.unmountComponentAtNode(element);
       expect(element.innerHTML).toEqual('');
 
-      ExecutionEnvironment.canUseDOM = false;
       lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
-      ExecutionEnvironment.canUseDOM = true;
       element.innerHTML = lastMarkup;
 
       var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
@@ -535,10 +507,6 @@ describe('ReactDOMServer', () => {
         ]);
       }
 
-      runTest();
-
-      // This should work the same regardless of whether you can use DOM or not.
-      ExecutionEnvironment.canUseDOM = true;
       runTest();
     });
 
