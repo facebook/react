@@ -52,6 +52,7 @@ const errorCodeOpts = {
 
 const closureOptions = {
   compilationLevel: 'SIMPLE',
+  languageIn: 'ECMASCRIPT5_STRICT',
   languageOut: 'ECMASCRIPT5_STRICT',
   env: 'CUSTOM',
   warningLevel: 'QUIET',
@@ -220,8 +221,7 @@ function getPlugins(
   globalName,
   moduleType,
   modulesToStub,
-  featureFlags,
-  allowES6Input
+  featureFlags
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
   const shims = Modules.getShims(bundleType, entry, featureFlags);
@@ -281,10 +281,6 @@ function getPlugins(
           // https://github.com/google/closure-compiler/pull/2707
           // and then the compiled version is released via `google-closure-compiler-js`.
           renaming: !shouldStayReadable,
-          // Adjust the language. Usually we want ES5 on both sides.
-          languageIn: allowES6Input
-            ? 'ECMASCRIPT6_STRICT'
-            : 'ECMASCRIPT5_STRICT',
         })
       ),
     // Add the whitespace back if necessary.
@@ -389,8 +385,7 @@ function createBundle(bundle, bundleType) {
       bundle.global,
       bundle.moduleType,
       bundle.modulesToStub,
-      bundle.featureFlags,
-      bundle.allowES6Input || false
+      bundle.featureFlags
     ),
     // We can't use getters in www.
     legacy: bundleType === FB_DEV || bundleType === FB_PROD,
