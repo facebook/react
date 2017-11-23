@@ -11,8 +11,6 @@
 
 const {COMMENT_NODE} = require('../shared/HTMLNodeType');
 
-const invariant = require('invariant');
-
 var React;
 var ReactDOM;
 var ReactDOMServer;
@@ -351,7 +349,7 @@ describe('ReactMount', () => {
       containerDiv = document.createElement('div');
       containerDiv.innerHTML = 'A<!-- react-mount-point-unstable -->B';
       mountPoint = containerDiv.childNodes[1];
-      invariant(mountPoint.nodeType === COMMENT_NODE, 'Expected comment');
+      expect(mountPoint.nodeType).toBe(COMMENT_NODE);
     });
 
     it('renders at a comment node', () => {
