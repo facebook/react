@@ -8,4 +8,4 @@
 'use strict';
 
 // TODO: this is special because it gets imported during build.
-module.exports = '16.1.0-beta.1';
+module.exports = '16.1.1';

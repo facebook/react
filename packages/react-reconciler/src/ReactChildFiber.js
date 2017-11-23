@@ -13,7 +13,15 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
 import {enableReactFragment} from 'shared/ReactFeatureFlags';
-import {NoEffect, Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
+import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
+import {
+  getIteratorFn,
+  REACT_ELEMENT_TYPE,
+  REACT_FRAGMENT_TYPE,
+  REACT_CALL_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_PORTAL_TYPE,
+} from 'shared/ReactSymbols';
 import {
   FunctionalComponent,
   ClassComponent,
@@ -27,7 +35,6 @@ import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-import {REACT_PORTAL_TYPE} from './ReactPortal';
 import {
   createWorkInProgress,
   createFiberFromElement,
@@ -86,40 +93,6 @@ if (__DEV__) {
 }
 
 const isArray = Array.isArray;
-
-const ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-const FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
-
-// The Symbol used to tag the ReactElement-like types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE;
-var REACT_CALL_TYPE;
-var REACT_RETURN_TYPE;
-var REACT_FRAGMENT_TYPE;
-if (typeof Symbol === 'function' && Symbol.for) {
-  REACT_ELEMENT_TYPE = Symbol.for('react.element');
-  REACT_CALL_TYPE = Symbol.for('react.call');
-  REACT_RETURN_TYPE = Symbol.for('react.return');
-  REACT_FRAGMENT_TYPE = Symbol.for('react.fragment');
-} else {
-  REACT_ELEMENT_TYPE = 0xeac7;
-  REACT_CALL_TYPE = 0xeac8;
-  REACT_RETURN_TYPE = 0xeac9;
-  REACT_FRAGMENT_TYPE = 0xeacb;
-}
-
-function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
-  if (maybeIterable === null || typeof maybeIterable === 'undefined') {
-    return null;
-  }
-  const iteratorFn =
-    (ITERATOR_SYMBOL && maybeIterable[ITERATOR_SYMBOL]) ||
-    maybeIterable[FAUX_ITERATOR_SYMBOL];
-  if (typeof iteratorFn === 'function') {
-    return iteratorFn;
-  }
-  return null;
-}
 
 function coerceRef(current: Fiber | null, element: ReactElement) {
   let mixedRef = element.ref;
@@ -222,20 +195,11 @@ function warnOnFunctionType() {
 // to be able to optimize each path individually by branching early. This needs
 // a compiler or we can do it manually. Helpers that don't need this branching
 // live outside of this function.
-function ChildReconciler(shouldClone, shouldTrackSideEffects) {
+function ChildReconciler(shouldTrackSideEffects) {
   function deleteChild(returnFiber: Fiber, childToDelete: Fiber): void {
     if (!shouldTrackSideEffects) {
       // Noop.
       return;
-    }
-    if (!shouldClone) {
-      // When we're reconciling in place we have a work in progress copy. We
-      // actually want the current copy. If there is no current copy, then we
-      // don't need to track deletion side-effects.
-      if (childToDelete.alternate === null) {
-        return;
-      }
-      childToDelete = childToDelete.alternate;
     }
     // Deletions are added in reversed order so we add it to the front.
     // At this point, the return fiber's effect list is empty except for
@@ -300,22 +264,10 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   ): Fiber {
     // We currently set sibling to null and index to 0 here because it is easy
     // to forget to do before returning it. E.g. for the single child case.
-    if (shouldClone) {
-      const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
-      clone.index = 0;
-      clone.sibling = null;
-      return clone;
-    } else {
-      // We override the expiration time even if it is earlier, because if
-      // we're reconciling at a later time that means that this was
-      // down-prioritized.
-      fiber.expirationTime = expirationTime;
-      fiber.effectTag = NoEffect;
-      fiber.index = 0;
-      fiber.sibling = null;
-      fiber.pendingProps = pendingProps;
-      return fiber;
-    }
+    const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
+    clone.index = 0;
+    clone.sibling = null;
+    return clone;
   }
 
   function placeChild(
@@ -1553,11 +1505,8 @@ function ChildReconciler(shouldClone, shouldTrackSideEffects) {
   return reconcileChildFibers;
 }
 
-export const reconcileChildFibers = ChildReconciler(true, true);
-
-export const reconcileChildFibersInPlace = ChildReconciler(false, true);
-
-export const mountChildFibersInPlace = ChildReconciler(false, false);
+export const reconcileChildFibers = ChildReconciler(true);
+export const mountChildFibers = ChildReconciler(false);
 
 export function cloneChildFibers(
   current: Fiber | null,

@@ -12,13 +12,14 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags-www';
 
 // Re-export dynamic flags from the www version.
 export const {
+  debugRenderPhaseSideEffects,
   enableAsyncSchedulingByDefaultInReactDOM,
 } = require('ReactFeatureFlags');
 
 // The rest of the flags are static for better dead code elimination.
 export const enableAsyncSubtreeAPI = true;
 export const enableReactFragment = false;
-export const enableCreateRoot = false;
+export const enableCreateRoot = true;
 
 // The www bundles only use the mutating reconciler.
 export const enableMutatingReconciler = true;

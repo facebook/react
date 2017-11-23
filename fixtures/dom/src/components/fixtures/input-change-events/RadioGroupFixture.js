@@ -1,6 +1,5 @@
-import React from 'react';
-
 import Fixture from '../../Fixture';
+const React = window.React;
 
 class RadioGroupFixture extends React.Component {
   constructor(props, context) {
@@ -27,7 +26,7 @@ class RadioGroupFixture extends React.Component {
 
   render() {
     const {changeCount} = this.state;
-    const color = changeCount === 2 ? 'green' : 'red';
+    const color = changeCount >= 3 ? 'green' : 'red';
 
     return (
       <Fixture>

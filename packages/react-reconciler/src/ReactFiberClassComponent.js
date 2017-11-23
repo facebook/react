@@ -11,7 +11,10 @@ import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {Update} from 'shared/ReactTypeOfSideEffect';
-import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
+import {
+  debugRenderPhaseSideEffects,
+  enableAsyncSubtreeAPI,
+} from 'shared/ReactFeatureFlags';
 import {isMounted} from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
@@ -168,6 +171,11 @@ export default function(
       );
       stopPhaseTimer();
 
+      // Simulate an async bailout/interruption by invoking lifecycle twice.
+      if (debugRenderPhaseSideEffects) {
+        instance.shouldComponentUpdate(newProps, newState, newContext);
+      }
+
       if (__DEV__) {
         warning(
           shouldUpdate !== undefined,
@@ -320,14 +328,14 @@ export default function(
 
     const state = instance.state;
     if (state && (typeof state !== 'object' || isArray(state))) {
-      invariant(
+      warning(
         false,
         '%s.state: must be set to an object or null',
         getComponentName(workInProgress),
       );
     }
     if (typeof instance.getChildContext === 'function') {
-      invariant(
+      warning(
         typeof workInProgress.type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',
@@ -374,8 +382,12 @@ export default function(
     startPhaseTimer(workInProgress, 'componentWillMount');
     const oldState = instance.state;
     instance.componentWillMount();
-
     stopPhaseTimer();
+
+    // Simulate an async bailout/interruption by invoking lifecycle twice.
+    if (debugRenderPhaseSideEffects) {
+      instance.componentWillMount();
+    }
 
     if (oldState !== instance.state) {
       if (__DEV__) {
@@ -401,6 +413,11 @@ export default function(
     const oldState = instance.state;
     instance.componentWillReceiveProps(newProps, newContext);
     stopPhaseTimer();
+
+    // Simulate an async bailout/interruption by invoking lifecycle twice.
+    if (debugRenderPhaseSideEffects) {
+      instance.componentWillReceiveProps(newProps, newContext);
+    }
 
     if (instance.state !== oldState) {
       if (__DEV__) {
@@ -677,6 +694,11 @@ export default function(
         startPhaseTimer(workInProgress, 'componentWillUpdate');
         instance.componentWillUpdate(newProps, newState, newContext);
         stopPhaseTimer();
+
+        // Simulate an async bailout/interruption by invoking lifecycle twice.
+        if (debugRenderPhaseSideEffects) {
+          instance.componentWillUpdate(newProps, newState, newContext);
+        }
       }
       if (typeof instance.componentDidUpdate === 'function') {
         workInProgress.effectTag |= Update;

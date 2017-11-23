@@ -257,42 +257,32 @@ describe('ReactElementClone', () => {
   });
 
   it('warns for keys for arrays of elements in rest args', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     React.cloneElement(<div />, null, [<div />, <div />]);
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Each child in an array or iterator should have a unique "key" prop.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Each child in an array or iterator should have a unique "key" prop.',
+      );
+    }
   });
 
   it('does not warns for arrays of elements with keys', () => {
-    spyOn(console, 'error');
-
     React.cloneElement(<div />, null, [<div key="#1" />, <div key="#2" />]);
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the element is directly in rest args', () => {
-    spyOn(console, 'error');
-
     React.cloneElement(<div />, null, <div />, <div />);
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('does not warn when the array contains a non-element', () => {
-    spyOn(console, 'error');
-
     React.cloneElement(<div />, null, [{}, {}]);
-
-    expectDev(console.error.calls.count()).toBe(0);
   });
 
   it('should check declared prop types after clone', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Component extends React.Component {
       static propTypes = {
         color: PropTypes.string.isRequired,
@@ -314,15 +304,17 @@ describe('ReactElementClone', () => {
       }
     }
     ReactTestUtils.renderIntoDocument(React.createElement(GrandParent));
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      'Warning: Failed prop type: ' +
-        'Invalid prop `color` of type `number` supplied to `Component`, ' +
-        'expected `string`.\n' +
-        '    in Component (created by GrandParent)\n' +
-        '    in Parent (created by GrandParent)\n' +
-        '    in GrandParent',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Failed prop type: ' +
+          'Invalid prop `color` of type `number` supplied to `Component`, ' +
+          'expected `string`.\n' +
+          '    in Component (created by GrandParent)\n' +
+          '    in Parent (created by GrandParent)\n' +
+          '    in GrandParent',
+      );
+    }
   });
 
   it('should ignore key and ref warning getters', () => {
@@ -347,8 +339,10 @@ describe('ReactElementClone', () => {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
     expect(clone.ref).toBe('34');
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(clone.props).toEqual({foo: 'ef'});
   });
 
@@ -367,8 +361,10 @@ describe('ReactElementClone', () => {
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
     expect(clone.ref).toBe(null);
-    expect(Object.isFrozen(element)).toBe(true);
-    expect(Object.isFrozen(element.props)).toBe(true);
+    if (__DEV__) {
+      expect(Object.isFrozen(element)).toBe(true);
+      expect(Object.isFrozen(element.props)).toBe(true);
+    }
     expect(clone.props).toEqual({foo: 'ef'});
   });
 });

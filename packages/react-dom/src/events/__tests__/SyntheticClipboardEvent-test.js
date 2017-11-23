@@ -9,25 +9,33 @@
 
 'use strict';
 
-var SyntheticClipboardEvent;
+var React;
+var ReactDOM;
 
 describe('SyntheticClipboardEvent', () => {
-  var createEvent;
+  var container;
 
   beforeEach(() => {
-    // TODO: can we express this test with only public API?
-    SyntheticClipboardEvent = require('../SyntheticClipboardEvent').default;
-    createEvent = function(nativeEvent) {
-      var target = require('../getEventTarget').default(nativeEvent);
-      return SyntheticClipboardEvent.getPooled({}, '', nativeEvent, target);
-    };
+    React = require('react');
+    ReactDOM = require('react-dom');
+
+    // The container has to be attached for events to fire.
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   describe('ClipboardEvent interface', () => {
     describe('clipboardData', () => {
       describe('when event has clipboardData', () => {
         it("returns event's clipboardData", () => {
-          // Mock clipboardData since native implementation doesn't have a constructor
+          var expectedCount = 0;
+
+          // Mock clipboardData since jsdom implementation doesn't have a constructor
           var clipboardData = {
             dropEffect: null,
             effectAllowed: null,
@@ -35,9 +43,36 @@ describe('SyntheticClipboardEvent', () => {
             items: null,
             types: null,
           };
-          var clipboardEvent = createEvent({clipboardData: clipboardData});
+          var eventHandler = event => {
+            expect(event.clipboardData).toBe(clipboardData);
+            expectedCount++;
+          };
+          var div = ReactDOM.render(
+            <div
+              onCopy={eventHandler}
+              onCut={eventHandler}
+              onPaste={eventHandler}
+            />,
+            container,
+          );
 
-          expect(clipboardEvent.clipboardData).toBe(clipboardData);
+          var event;
+          event = document.createEvent('Event');
+          event.initEvent('copy', true, true);
+          event.clipboardData = clipboardData;
+          div.dispatchEvent(event);
+
+          event = document.createEvent('Event');
+          event.initEvent('cut', true, true);
+          event.clipboardData = clipboardData;
+          div.dispatchEvent(event);
+
+          event = document.createEvent('Event');
+          event.initEvent('paste', true, true);
+          event.clipboardData = clipboardData;
+          div.dispatchEvent(event);
+
+          expect(expectedCount).toBe(3);
         });
       });
     });
@@ -45,32 +80,140 @@ describe('SyntheticClipboardEvent', () => {
 
   describe('EventInterface', () => {
     it('normalizes properties from the Event interface', () => {
-      var target = document.createElement('div');
-      var syntheticEvent = createEvent({srcElement: target});
+      var expectedCount = 0;
+      var div;
 
-      expect(syntheticEvent.target).toBe(target);
-      expect(syntheticEvent.type).toBe(undefined);
+      var eventHandler = type => event => {
+        expect(event.target).toBe(div);
+        expect(event.type).toBe(type);
+        expectedCount++;
+      };
+
+      div = ReactDOM.render(
+        <div
+          onCopy={eventHandler('copy')}
+          onCut={eventHandler('cut')}
+          onPaste={eventHandler('paste')}
+        />,
+        container,
+      );
+
+      var event;
+      event = document.createEvent('Event');
+      event.initEvent('copy', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        },
+      });
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('cut', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        },
+      });
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('paste', true, true);
+      // Emulate IE8
+      Object.defineProperty(event, 'target', {
+        get() {},
+      });
+      Object.defineProperty(event, 'srcElement', {
+        get() {
+          return div;
+        },
+      });
+      div.dispatchEvent(event);
+
+      expect(expectedCount).toBe(3);
     });
 
     it('is able to `preventDefault` and `stopPropagation`', () => {
-      var nativeEvent = {};
-      var syntheticEvent = createEvent(nativeEvent);
+      var expectedCount = 0;
 
-      expect(syntheticEvent.isDefaultPrevented()).toBe(false);
-      syntheticEvent.preventDefault();
-      expect(syntheticEvent.isDefaultPrevented()).toBe(true);
+      var eventHandler = event => {
+        expect(event.isDefaultPrevented()).toBe(false);
+        event.preventDefault();
+        expect(event.isDefaultPrevented()).toBe(true);
+        expect(event.isPropagationStopped()).toBe(false);
+        event.stopPropagation();
+        expect(event.isPropagationStopped()).toBe(true);
+        expectedCount++;
+      };
 
-      expect(syntheticEvent.isPropagationStopped()).toBe(false);
-      syntheticEvent.stopPropagation();
-      expect(syntheticEvent.isPropagationStopped()).toBe(true);
+      var div = ReactDOM.render(
+        <div
+          onCopy={eventHandler}
+          onCut={eventHandler}
+          onPaste={eventHandler}
+        />,
+        container,
+      );
+
+      var event;
+      event = document.createEvent('Event');
+      event.initEvent('copy', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('cut', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('paste', true, true);
+      div.dispatchEvent(event);
+
+      expect(expectedCount).toBe(3);
     });
 
     it('is able to `persist`', () => {
-      var syntheticEvent = createEvent({});
+      const persistentEvents = [];
+      var eventHandler = event => {
+        expect(event.isPersistent()).toBe(false);
+        event.persist();
+        expect(event.isPersistent()).toBe(true);
+        persistentEvents.push(event);
+      };
 
-      expect(syntheticEvent.isPersistent()).toBe(false);
-      syntheticEvent.persist();
-      expect(syntheticEvent.isPersistent()).toBe(true);
+      var div = ReactDOM.render(
+        <div
+          onCopy={eventHandler}
+          onCut={eventHandler}
+          onPaste={eventHandler}
+        />,
+        container,
+      );
+
+      var event;
+      event = document.createEvent('Event');
+      event.initEvent('copy', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('cut', true, true);
+      div.dispatchEvent(event);
+
+      event = document.createEvent('Event');
+      event.initEvent('paste', true, true);
+      div.dispatchEvent(event);
+
+      expect(persistentEvents.length).toBe(3);
+      expect(persistentEvents[0].type).toBe('copy');
+      expect(persistentEvents[1].type).toBe('cut');
+      expect(persistentEvents[2].type).toBe('paste');
     });
   });
 });

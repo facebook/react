@@ -1,6 +1,5 @@
-import React from 'react';
-
 import Fixture from '../../Fixture';
+const React = window.React;
 
 class InputPlaceholderFixture extends React.Component {
   constructor(props, context) {

@@ -109,7 +109,7 @@ describe('ReactDOM', () => {
   });
 
   it('throws in render() if the mount callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -129,31 +129,37 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('throws in render() if the update callback is not a function', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     function Foo() {
       this.a = 1;
@@ -174,29 +180,35 @@ describe('ReactDOM', () => {
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: no.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: no.',
+      );
+    }
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, {foo: 'bar'})).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(1)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(1)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+    }
     ReactDOM.render(<A />, myDiv); // Re-mount
     expect(() => ReactDOM.render(<A />, myDiv, new Foo())).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: [object Object]',
     );
-    expectDev(console.error.calls.argsFor(2)[0]).toContain(
-      'render(...): Expected the last optional `callback` argument to be ' +
-        'a function. Instead received: [object Object].',
-    );
-    expect(console.error.calls.count()).toBe(3);
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(2)[0]).toContain(
+        'render(...): Expected the last optional `callback` argument to be ' +
+          'a function. Instead received: [object Object].',
+      );
+      expect(console.error.calls.count()).toBe(3);
+    }
   });
 
   it('preserves focus', () => {
@@ -337,5 +349,27 @@ describe('ReactDOM', () => {
       "2nd node clicked imperatively from 1st's handler",
     ];
     expect(actual).toEqual(expected);
+  });
+
+  it('should not crash with devtools installed', () => {
+    try {
+      global.__REACT_DEVTOOLS_GLOBAL_HOOK__ = {
+        inject: function() {},
+        onCommitFiberRoot: function() {},
+        onCommitFiberUnmount: function() {},
+        supportsFiber: true,
+      };
+      jest.resetModules();
+      React = require('react');
+      ReactDOM = require('react-dom');
+      class Component extends React.Component {
+        render() {
+          return <div />;
+        }
+      }
+      ReactDOM.render(<Component />, document.createElement('container'));
+    } finally {
+      delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
+    }
   });
 });

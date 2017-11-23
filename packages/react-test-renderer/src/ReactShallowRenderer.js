@@ -103,6 +103,7 @@ class ReactShallowRenderer {
     }
 
     this._rendering = false;
+    this._updater._invokeCallbacks();
 
     return this.getRenderOutput();
   }
@@ -192,6 +193,25 @@ class ReactShallowRenderer {
 class Updater {
   constructor(renderer) {
     this._renderer = renderer;
+    this._callbacks = [];
+  }
+
+  _enqueueCallback(callback, publicInstance) {
+    if (typeof callback === 'function' && publicInstance) {
+      this._callbacks.push({
+        callback,
+        publicInstance,
+      });
+    }
+  }
+
+  _invokeCallbacks() {
+    const callbacks = this._callbacks;
+    this._callbacks = [];
+
+    callbacks.forEach(({callback, publicInstance}) => {
+      callback.call(publicInstance);
+    });
   }
 
   isMounted(publicInstance) {
@@ -199,24 +219,19 @@ class Updater {
   }
 
   enqueueForceUpdate(publicInstance, callback, callerName) {
+    this._enqueueCallback(callback, publicInstance);
     this._renderer._forcedUpdate = true;
     this._renderer.render(this._renderer._element, this._renderer._context);
-
-    if (typeof callback === 'function') {
-      callback.call(publicInstance);
-    }
   }
 
   enqueueReplaceState(publicInstance, completeState, callback, callerName) {
+    this._enqueueCallback(callback, publicInstance);
     this._renderer._newState = completeState;
     this._renderer.render(this._renderer._element, this._renderer._context);
-
-    if (typeof callback === 'function') {
-      callback.call(publicInstance);
-    }
   }
 
   enqueueSetState(publicInstance, partialState, callback, callerName) {
+    this._enqueueCallback(callback, publicInstance);
     const currentState = this._renderer._newState || publicInstance.state;
 
     if (typeof partialState === 'function') {
@@ -229,10 +244,6 @@ class Updater {
     };
 
     this._renderer.render(this._renderer._element, this._renderer._context);
-
-    if (typeof callback === 'function') {
-      callback.call(publicInstance);
-    }
   }
 }
 

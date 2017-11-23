@@ -165,6 +165,14 @@ var SharedHostConfig = {
       );
     }
     scheduledCallback = callback;
+    return 0;
+  },
+
+  cancelDeferredCallback() {
+    if (scheduledCallback === null) {
+      throw new Error('No callback is scheduled.');
+    }
+    scheduledCallback = null;
   },
 
   prepareForCommit(): void {},
@@ -447,7 +455,11 @@ var ReactNoop = {
 
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
-  flushSync: NoopRenderer.flushSync,
+  flushSync(fn: () => mixed) {
+    yieldedValues = [];
+    NoopRenderer.flushSync(fn);
+    return yieldedValues;
+  },
 
   // Logs the current state of the tree.
   dumpTree(rootID: string = DEFAULT_ROOT_ID) {

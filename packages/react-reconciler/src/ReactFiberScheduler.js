@@ -33,6 +33,7 @@ import {
   HostPortal,
   ClassComponent,
 } from 'shared/ReactTypeOfWork';
+import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
@@ -47,6 +48,8 @@ import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {
   recordEffect,
   recordScheduleUpdate,
+  startRequestCallbackTimer,
+  stopRequestCallbackTimer,
   startWorkTimer,
   stopWorkTimer,
   stopFailedWorkTimer,
@@ -69,6 +72,7 @@ import {
   Sync,
   Never,
   msToExpirationTime,
+  expirationTimeToMs,
   computeExpirationBucket,
 } from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
@@ -141,8 +145,8 @@ if (__DEV__) {
   };
 }
 
-export default function<T, P, I, TI, PI, C, CC, CX, PL>(
-  config: HostConfig<T, P, I, TI, PI, C, CC, CX, PL>,
+export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
+  config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ) {
   const hostContext = ReactFiberHostContext(config);
   const hydrationContext: HydrationContext<C, CX> = ReactFiberHydrationContext(
@@ -173,6 +177,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   const {
     now,
     scheduleDeferredCallback,
+    cancelDeferredCallback,
     useSyncScheduling,
     prepareForCommit,
     resetAfterCommit,
@@ -615,6 +620,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     if (__DEV__) {
       ReactDebugCurrentFiber.setCurrentFiber(workInProgress);
     }
+
     let next = beginWork(current, workInProgress, nextRenderExpirationTime);
     if (__DEV__) {
       ReactDebugCurrentFiber.resetCurrentFiber();
@@ -998,7 +1004,10 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       } catch (e) {
         // Prevent cycle if logCapturedError() throws.
         // A cycle may still occur if logCapturedError renders a component that throws.
-        console.error(e);
+        const suppressLogging = e && e.suppressReactErrorLogging;
+        if (!suppressLogging) {
+          console.error(e);
+        }
       }
 
       // If we're in the commit phase, defer scheduling an update on the
@@ -1197,7 +1206,7 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
           if (
             !isWorking &&
             root === nextRoot &&
-            expirationTime <= nextRenderExpirationTime
+            expirationTime < nextRenderExpirationTime
           ) {
             // Restart the root from the top.
             if (nextUnitOfWork !== null) {
@@ -1260,7 +1269,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   let firstScheduledRoot: FiberRoot | null = null;
   let lastScheduledRoot: FiberRoot | null = null;
 
-  let isCallbackScheduled: boolean = false;
+  let callbackExpirationTime: ExpirationTime = NoWork;
+  let callbackID: number = -1;
   let isRendering: boolean = false;
   let nextFlushedRoot: FiberRoot | null = null;
   let nextFlushedExpirationTime: ExpirationTime = NoWork;
@@ -1277,6 +1287,31 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
   let nestedUpdateCount: number = 0;
 
   const timeHeuristicForUnitOfWork = 1;
+
+  function scheduleCallbackWithExpiration(expirationTime) {
+    if (callbackExpirationTime !== NoWork) {
+      // A callback is already scheduled. Check its expiration time (timeout).
+      if (expirationTime > callbackExpirationTime) {
+        // Existing callback has sufficient timeout. Exit.
+        return;
+      } else {
+        // Existing callback has insufficient timeout. Cancel and schedule a
+        // new one.
+        cancelDeferredCallback(callbackID);
+      }
+      // The request callback timer is already running. Don't start a new one.
+    } else {
+      startRequestCallbackTimer();
+    }
+
+    // Compute a timeout for the given expiration time.
+    const currentMs = now() - startTime;
+    const expirationMs = expirationTimeToMs(expirationTime);
+    const timeout = expirationMs - currentMs;
+
+    callbackExpirationTime = expirationTime;
+    callbackID = scheduleDeferredCallback(performAsyncWork, {timeout});
+  }
 
   // requestWork is called by the scheduler whenever a root receives an update.
   // It's up to the renderer to call renderRoot at some point in the future.
@@ -1327,7 +1362,9 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       if (isUnbatchingUpdates) {
         // ...unless we're inside unbatchedUpdates, in which case we should
         // flush it now.
-        performWorkOnRoot(root, Sync);
+        nextFlushedRoot = root;
+        nextFlushedExpirationTime = Sync;
+        performWorkOnRoot(nextFlushedRoot, nextFlushedExpirationTime);
       }
       return;
     }
@@ -1335,9 +1372,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     // TODO: Get rid of Sync and use current time?
     if (expirationTime === Sync) {
       performWork(Sync, null);
-    } else if (!isCallbackScheduled) {
-      isCallbackScheduled = true;
-      scheduleDeferredCallback(performAsyncWork);
+    } else {
+      scheduleCallbackWithExpiration(expirationTime);
     }
   }
 
@@ -1425,8 +1461,14 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
     deadline = dl;
 
     // Keep working on roots until there's no more work, or until the we reach
-    // the deadlne.
+    // the deadline.
     findHighestPriorityRoot();
+
+    if (enableUserTimingAPI && deadline !== null) {
+      const didExpire = nextFlushedExpirationTime < recalculateCurrentTime();
+      stopRequestCallbackTimer(didExpire);
+    }
+
     while (
       nextFlushedRoot !== null &&
       nextFlushedExpirationTime !== NoWork &&
@@ -1444,12 +1486,12 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
 
     // If we're inside a callback, set this to false since we just completed it.
     if (deadline !== null) {
-      isCallbackScheduled = false;
+      callbackExpirationTime = NoWork;
+      callbackID = -1;
     }
     // If there's work left over, schedule a new callback.
-    if (nextFlushedRoot !== null && !isCallbackScheduled) {
-      isCallbackScheduled = true;
-      scheduleDeferredCallback(performAsyncWork);
+    if (nextFlushedExpirationTime !== NoWork) {
+      scheduleCallbackWithExpiration(nextFlushedExpirationTime);
     }
 
     // Clean-up.
@@ -1526,6 +1568,8 @@ export default function<T, P, I, TI, PI, C, CC, CX, PL>(
       return false;
     }
     if (deadline.timeRemaining() > timeHeuristicForUnitOfWork) {
+      // Disregard deadline.didTimeout. Only expired work should be flushed
+      // during a timeout. This path is only hit for non-expired work.
       return false;
     }
     deadlineDidExpire = true;

@@ -58,19 +58,68 @@ describe('ReactChildren', () => {
     const portalContainer = document.createElement('div');
 
     const simpleChild = <span key="simple" />;
-    const portal = ReactDOM.createPortal(simpleChild, portalContainer);
-    const instance = <div>{portal}</div>;
+    const reactPortal = ReactDOM.createPortal(simpleChild, portalContainer);
 
-    React.Children.forEach(instance.props.children, callback, context);
-    expect(callback).toHaveBeenCalledWith(portal, 0);
+    const parentInstance = <div>{reactPortal}</div>;
+    React.Children.forEach(parentInstance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(reactPortal, 0);
     callback.calls.reset();
     const mappedChildren = React.Children.map(
-      instance.props.children,
+      parentInstance.props.children,
       callback,
       context,
     );
-    expect(callback).toHaveBeenCalledWith(portal, 0);
-    expect(mappedChildren[0]).toEqual(portal);
+    expect(callback).toHaveBeenCalledWith(reactPortal, 0);
+    expect(mappedChildren[0]).toEqual(reactPortal);
+  });
+
+  it('should support Call components', () => {
+    const context = {};
+    const callback = jasmine.createSpy().and.callFake(function(kid, index) {
+      expect(this).toBe(context);
+      return kid;
+    });
+    const ReactCallReturn = require('react-call-return');
+    const reactCall = ReactCallReturn.unstable_createCall(
+      <span key="simple" />,
+      () => {},
+    );
+
+    const parentInstance = <div>{reactCall}</div>;
+    React.Children.forEach(parentInstance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(reactCall, 0);
+    callback.calls.reset();
+    const mappedChildren = React.Children.map(
+      parentInstance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(reactCall, 0);
+    expect(mappedChildren[0]).toEqual(reactCall);
+  });
+
+  it('should support Return components', () => {
+    const context = {};
+    const callback = jasmine.createSpy().and.callFake(function(kid, index) {
+      expect(this).toBe(context);
+      return kid;
+    });
+    const ReactCallReturn = require('react-call-return');
+    const reactReturn = ReactCallReturn.unstable_createReturn(
+      <span key="simple" />,
+    );
+
+    const parentInstance = <div>{reactReturn}</div>;
+    React.Children.forEach(parentInstance.props.children, callback, context);
+    expect(callback).toHaveBeenCalledWith(reactReturn, 0);
+    callback.calls.reset();
+    const mappedChildren = React.Children.map(
+      parentInstance.props.children,
+      callback,
+      context,
+    );
+    expect(callback).toHaveBeenCalledWith(reactReturn, 0);
+    expect(mappedChildren[0]).toEqual(reactReturn);
   });
 
   it('should treat single arrayless child as being in array', () => {
@@ -301,7 +350,7 @@ describe('ReactChildren', () => {
   });
 
   it('should be called for each child in an iterable without keys', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var threeDivIterable = {
       '@@iterator': function() {
         var i = 0;
@@ -335,11 +384,13 @@ describe('ReactChildren', () => {
 
     React.Children.forEach(instance.props.children, callback, context);
     assertCalls();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Warning: Each child in an array or iterator should have a unique "key" prop.',
-    );
-    console.error.calls.reset();
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Warning: Each child in an array or iterator should have a unique "key" prop.',
+      );
+      console.error.calls.reset();
+    }
 
     var mappedChildren = React.Children.map(
       instance.props.children,
@@ -347,7 +398,9 @@ describe('ReactChildren', () => {
       context,
     );
     assertCalls();
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
     expect(mappedChildren).toEqual([
       <div key=".0" />,
       <div key=".1" />,
@@ -869,8 +922,11 @@ describe('ReactChildren', () => {
       React.Children.forEach({a: 1, b: 2}, function() {}, null);
     }).toThrowError(
       'Objects are not valid as a React child (found: object with keys ' +
-        '{a, b}). If you meant to render a collection of children, use an ' +
-        'array instead.',
+        '{a, b}).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use an ' +
+            'array instead.'
+          : ''),
     );
   });
 
@@ -880,14 +936,17 @@ describe('ReactChildren', () => {
     expect(function() {
       React.Children.forEach(/abc/, function() {}, null);
     }).toThrowError(
-      'Objects are not valid as a React child (found: /abc/). If you meant ' +
-        'to render a collection of children, use an array instead.',
+      'Objects are not valid as a React child (found: /abc/).' +
+        (__DEV__
+          ? ' If you meant to render a collection of children, use an ' +
+            'array instead.'
+          : ''),
     );
   });
 
   describe('with fragments enabled', () => {
     it('warns for keys for arrays of elements in a fragment', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div />, <div />];
@@ -896,17 +955,19 @@ describe('ReactChildren', () => {
 
       ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.' +
-          '\n    in ComponentReturningArray (at **)',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: ' +
+            'Each child in an array or iterator should have a unique "key" prop.' +
+            ' See https://fb.me/react-warning-keys for more information.' +
+            '\n    in ComponentReturningArray (at **)',
+        );
+      }
     });
 
     it('does not warn when there are keys on  elements in a fragment', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       class ComponentReturningArray extends React.Component {
         render() {
           return [<div key="foo" />, <div key="bar" />];
@@ -915,20 +976,24 @@ describe('ReactChildren', () => {
 
       ReactTestUtils.renderIntoDocument(<ComponentReturningArray />);
 
-      expectDev(console.error.calls.count()).toBe(0);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(0);
+      }
     });
 
     it('warns for keys for arrays at the top level', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
 
       ReactTestUtils.renderIntoDocument([<div />, <div />]);
 
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-        'Warning: ' +
-          'Each child in an array or iterator should have a unique "key" prop.' +
-          ' See https://fb.me/react-warning-keys for more information.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+          'Warning: ' +
+            'Each child in an array or iterator should have a unique "key" prop.' +
+            ' See https://fb.me/react-warning-keys for more information.',
+        );
+      }
     });
   });
 });

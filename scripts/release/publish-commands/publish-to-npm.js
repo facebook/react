@@ -7,9 +7,8 @@ const {readJson} = require('fs-extra');
 const {join} = require('path');
 const semver = require('semver');
 const {execRead, execUnlessDry, logPromise} = require('../utils');
-const {projects} = require('../config');
 
-const push = async ({cwd, dry, version}) => {
+const push = async ({cwd, dry, packages, version}) => {
   const errors = [];
   const isPrerelease = semver.prerelease(version);
   const tag = isPrerelease ? 'next' : 'latest';
@@ -30,6 +29,10 @@ const push = async ({cwd, dry, version}) => {
       const packageVersion = packageJSON.version;
 
       if (!dry) {
+        // Wait a couple of seconds before querying NPM for status;
+        // Anecdotally, querying too soon can result in a false negative.
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
         const status = JSON.parse(
           await execRead(`npm info ${project} dist-tags --json`)
         );
@@ -50,23 +53,24 @@ const push = async ({cwd, dry, version}) => {
         // Update the @next tag to also point to it (so @next doens't lag behind).
         if (!isPrerelease) {
           await execUnlessDry(
-            `npm dist-tag add ${project}@${packageVersion} next`
+            `npm dist-tag add ${project}@${packageVersion} next`,
+            {cwd: path, dry}
           );
         }
       }
     } catch (error) {
-      errors.push(error.message);
+      errors.push(error.stack);
     }
   };
 
-  await Promise.all(projects.map(publishProject));
+  await Promise.all(packages.map(publishProject));
 
   if (errors.length > 0) {
     throw Error(
       chalk`
       Failure publishing to NPM
 
-      {white ${errors.join('\n')}}`
+      {white ${errors.join('\n\n')}}`
     );
   }
 };
