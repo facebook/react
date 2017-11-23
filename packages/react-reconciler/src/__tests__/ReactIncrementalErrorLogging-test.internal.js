@@ -13,7 +13,7 @@ var PropTypes;
 var React;
 var ReactNoop;
 
-describe('ReactIncrementalErrorHandling', () => {
+describe('ReactIncrementalErrorLogging', () => {
   beforeEach(() => {
     jest.resetModules();
     PropTypes = require('prop-types');
