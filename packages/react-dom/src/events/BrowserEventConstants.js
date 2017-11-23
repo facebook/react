@@ -14,7 +14,7 @@ import getVendorPrefixedEventName from './getVendorPrefixedEventName';
  * trap at a lower node than `document`), binding at `document` would
  * cause duplicate events so we don't include them here.
  */
-var topLevelTypes = {
+const topLevelTypes = {
   topAbort: 'abort',
   topAnimationEnd: getVendorPrefixedEventName('animationend') || 'animationend',
   topAnimationIteration:
@@ -90,7 +90,7 @@ var topLevelTypes = {
 
 export type TopLevelTypes = $Enum<typeof topLevelTypes>;
 
-var BrowserEventConstants = {
+const BrowserEventConstants = {
   topLevelTypes,
 };
 
