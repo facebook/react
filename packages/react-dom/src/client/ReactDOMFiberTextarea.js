@@ -91,31 +91,7 @@ export function initWrapperState(element: Element, props: Object) {
 
   // Only bother fetching default value if we're going to use it
   if (initialValue == null) {
-    let defaultValue = props.defaultValue;
-    // TODO (yungsters): Remove support for children content in <textarea>.
-    let children = props.children;
-    if (children != null) {
-      if (__DEV__) {
-        warning(
-          false,
-          'Use the `defaultValue` or `value` props instead of setting ' +
-            'children on <textarea>.',
-        );
-      }
-      invariant(
-        defaultValue == null,
-        'If you supply `defaultValue` on a <textarea>, do not pass children.',
-      );
-      if (Array.isArray(children)) {
-        invariant(
-          children.length <= 1,
-          '<textarea> can only have at most one child.',
-        );
-        children = children[0];
-      }
-
-      defaultValue = '' + children;
-    }
+    let {defaultValue} = props;
     if (defaultValue == null) {
       defaultValue = '';
     }
