@@ -9,7 +9,6 @@
 
 'use strict';
 
-let ExecutionEnvironment;
 let PropTypes;
 let React;
 let ReactDOM;
@@ -73,9 +72,7 @@ async function expectErrors(fn, count) {
 // returns a Promise that resolves when the render is complete.
 function renderIntoDom(reactElement, domElement, forceHydrate, errorCount = 0) {
   return expectErrors(async () => {
-    ExecutionEnvironment.canUseDOM = true;
     await asyncReactDOMRender(reactElement, domElement, forceHydrate);
-    ExecutionEnvironment.canUseDOM = false;
     return domElement.firstChild;
   }, errorCount);
 }
@@ -186,9 +183,7 @@ const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
 
   // Next we render the element into a clean DOM node client side.
   const cleanDomElement = document.createElement('div');
-  ExecutionEnvironment.canUseDOM = true;
   await asyncReactDOMRender(element, cleanDomElement, true);
-  ExecutionEnvironment.canUseDOM = false;
   // This gives us the expected text content.
   const cleanTextContent = cleanDomElement.textContent;
 
@@ -320,8 +315,6 @@ function resetModules() {
   // First, reset the modules to load the client renderer.
   jest.resetModuleRegistry();
 
-  // TODO: can we express this test with only public API?
-  ExecutionEnvironment = require('fbjs/lib/ExecutionEnvironment');
   require('shared/ReactFeatureFlags').enableReactFragment = true;
 
   PropTypes = require('prop-types');
@@ -340,8 +333,6 @@ function resetModules() {
 describe('ReactDOMServerIntegration', () => {
   beforeEach(() => {
     resetModules();
-
-    ExecutionEnvironment.canUseDOM = false;
   });
 
   describe('basic rendering', function() {
