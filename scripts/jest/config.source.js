@@ -1,6 +1,9 @@
 'use strict';
 
 module.exports = {
+  haste: {
+    hasteImplModulePath: require.resolve('./noHaste.js'),
+  },
   modulePathIgnorePatterns: [
     '<rootDir>/scripts/rollup/shims/',
     '<rootDir>/scripts/bench/',
