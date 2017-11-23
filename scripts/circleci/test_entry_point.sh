@@ -8,6 +8,10 @@ if [ $((1 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/test_coverage.sh')
 fi
 
+if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
+  COMMANDS_TO_RUN+=('yarn test-prod --runInBand')
+fi
+
 if [ $((3 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('node ./scripts/tasks/eslint')
 fi
@@ -16,7 +20,7 @@ fi
 if [ $((0 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('node ./scripts/prettier/index')
   COMMANDS_TO_RUN+=('node ./scripts/tasks/flow')
-  COMMANDS_TO_RUN+=('node ./scripts/tasks/jest')
+  COMMANDS_TO_RUN+=('yarn test --runInBand')
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/check_license.sh')
   COMMANDS_TO_RUN+=('./scripts/circleci/check_modules.sh')

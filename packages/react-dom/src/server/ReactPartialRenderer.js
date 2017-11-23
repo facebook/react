@@ -19,6 +19,7 @@ import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import {
   createMarkupForCustomAttribute,
@@ -40,12 +41,6 @@ import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-
-var REACT_FRAGMENT_TYPE =
-  (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.fragment')) ||
-  0xeacb;
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -461,19 +456,22 @@ function resolve(
     var childContext;
     if (typeof inst.getChildContext === 'function') {
       var childContextTypes = Component.childContextTypes;
-      invariant(
-        typeof childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-          'use getChildContext().',
-        getComponentName(Component) || 'Unknown',
-      );
-      childContext = inst.getChildContext();
-      for (let contextKey in childContext) {
-        invariant(
-          contextKey in childContextTypes,
-          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+      if (typeof childContextTypes === 'object') {
+        childContext = inst.getChildContext();
+        for (let contextKey in childContext) {
+          invariant(
+            contextKey in childContextTypes,
+            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+            getComponentName(Component) || 'Unknown',
+            contextKey,
+          );
+        }
+      } else {
+        warning(
+          false,
+          '%s.getChildContext(): childContextTypes must be defined in order to ' +
+            'use getChildContext().',
           getComponentName(Component) || 'Unknown',
-          contextKey,
         );
       }
     }
