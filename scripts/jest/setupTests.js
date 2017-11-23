@@ -75,6 +75,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     };
     const OriginalError = global.Error;
     const ErrorProxy = new Proxy(OriginalError, {
+      apply(target, thisArg, argumentsList) {
+        const error = Reflect.apply(target, thisArg, argumentsList);
+        error.message = decodeErrorMessage(error.message);
+        return error;
+      },
       construct(target, argumentsList, newTarget) {
         const error = Reflect.construct(target, argumentsList, newTarget);
         error.message = decodeErrorMessage(error.message);
