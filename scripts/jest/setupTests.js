@@ -3,7 +3,7 @@
 if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // Inside the class equivalence tester, we have a custom environment, let's
   // require that instead.
-  require('./setupSpecEquivalenceReporter.js');
+  require('./spec-equivalence-reporter/setupTests.js');
 } else {
   var env = jasmine.getEnv();
   var errorMap = require('../error-codes/codes.json');
@@ -75,6 +75,11 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     };
     const OriginalError = global.Error;
     const ErrorProxy = new Proxy(OriginalError, {
+      apply(target, thisArg, argumentsList) {
+        const error = Reflect.apply(target, thisArg, argumentsList);
+        error.message = decodeErrorMessage(error.message);
+        return error;
+      },
       construct(target, argumentsList, newTarget) {
         const error = Reflect.construct(target, argumentsList, newTarget);
         error.message = decodeErrorMessage(error.message);

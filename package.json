@@ -35,6 +35,7 @@
     "babel-plugin-transform-es3-property-literals": "^6.5.0",
     "babel-plugin-transform-object-rest-spread": "^6.6.5",
     "babel-plugin-transform-react-jsx-source": "^6.8.0",
+    "babel-plugin-transform-regenerator": "^6.26.0",
     "babel-preset-react": "^6.5.0",
     "babel-traverse": "^6.9.0",
     "babylon": "6.15.0",
@@ -103,40 +104,14 @@
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
-    "test": "cross-env NODE_ENV=development jest",
-    "test-prod": "cross-env NODE_ENV=production jest",
+    "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
+    "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
+    "test-prod-build": "yarn test-build-prod",
+    "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
+    "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
     "flow": "node ./scripts/tasks/flow.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
     "version-check": "node ./scripts/tasks/version-check.js"
-  },
-  "jest": {
-    "modulePathIgnorePatterns": [
-      "<rootDir>/scripts/rollup/shims/",
-      "<rootDir>/scripts/bench/"
-    ],
-    "transform": {
-      ".*": "./scripts/jest/preprocessor.js"
-    },
-    "setupFiles": [
-      "./scripts/jest/environment.js"
-    ],
-    "setupTestFrameworkScriptFile": "./scripts/jest/test-framework-setup.js",
-    "testRegex": "/__tests__/.*(\\.js|\\.coffee|[^d]\\.ts)$",
-    "moduleFileExtensions": [
-      "js",
-      "json",
-      "node",
-      "coffee",
-      "ts"
-    ],
-    "roots": [
-      "<rootDir>/packages",
-      "<rootDir>/scripts"
-    ],
-    "collectCoverageFrom": [
-      "packages/**/*.js"
-    ],
-    "timers": "fake"
   }
 }

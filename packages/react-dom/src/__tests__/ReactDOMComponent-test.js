@@ -1709,15 +1709,25 @@ describe('ReactDOMComponent', () => {
     it('should warn about incorrect casing on event handlers (ssr)', () => {
       spyOnDev(console, 'error');
       ReactDOMServer.renderToString(
-        React.createElement('input', {type: 'text', onclick: '1'}),
+        React.createElement('input', {type: 'text', oninput: '1'}),
       );
       ReactDOMServer.renderToString(
         React.createElement('input', {type: 'text', onKeydown: '1'}),
       );
       if (__DEV__) {
-        expect(console.error.calls.count()).toBe(2);
-        expect(console.error.calls.argsFor(0)[0]).toContain('onClick');
-        expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid event handler property `oninput`. ' +
+            'React events use the camelCase naming convention, ' +
+            // Note: we don't know the right event name so we
+            // use a generic one (onClick) as a suggestion.
+            // This is because we don't bundle the event system
+            // on the server.
+            'for example `onClick`.',
+        );
+        // We can't warn for `onKeydown` on the server because
+        // there is no way tell if this is a valid event or not
+        // without access to the event system (which we don't bundle).
       }
     });
 
@@ -1735,14 +1745,14 @@ describe('ReactDOMComponent', () => {
     it('should warn about incorrect casing on event handlers', () => {
       spyOnDev(console, 'error');
       ReactTestUtils.renderIntoDocument(
-        React.createElement('input', {type: 'text', onclick: '1'}),
+        React.createElement('input', {type: 'text', oninput: '1'}),
       );
       ReactTestUtils.renderIntoDocument(
         React.createElement('input', {type: 'text', onKeydown: '1'}),
       );
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(2);
-        expect(console.error.calls.argsFor(0)[0]).toContain('onClick');
+        expect(console.error.calls.argsFor(0)[0]).toContain('onInput');
         expect(console.error.calls.argsFor(1)[0]).toContain('onKeyDown');
       }
     });
@@ -1860,15 +1870,20 @@ describe('ReactDOMComponent', () => {
     it('gives source code refs for unknown prop warning (ssr)', () => {
       spyOnDev(console, 'error');
       ReactDOMServer.renderToString(<div class="paladin" />);
-      ReactDOMServer.renderToString(<input type="text" onclick="1" />);
+      ReactDOMServer.renderToString(<input type="text" oninput="1" />);
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(2);
         expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
           'Warning: Invalid DOM property `class`. Did you mean `className`?\n    in div (at **)',
         );
         expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toBe(
-          'Warning: Invalid event handler property `onclick`. Did you mean ' +
-            '`onClick`?\n    in input (at **)',
+          'Warning: Invalid event handler property `oninput`. ' +
+            // Note: we don't know the right event name so we
+            // use a generic one (onClick) as a suggestion.
+            // This is because we don't bundle the event system
+            // on the server.
+            'React events use the camelCase naming convention, for example `onClick`.' +
+            '\n    in input (at **)',
         );
       }
     });

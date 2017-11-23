@@ -27,9 +27,6 @@ describe('ReactJSXElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableReactFragment = true;
-
     PropTypes = require('prop-types');
     React = require('react');
     ReactDOM = require('react-dom');
@@ -92,57 +89,6 @@ describe('ReactJSXElementValidator', () => {
     }
   });
 
-  it('warns for fragments with illegal attributes', () => {
-    spyOnDev(console, 'error');
-
-    class Foo extends React.Component {
-      render() {
-        return (
-          <React.Fragment a={1} b={2}>
-            hello
-          </React.Fragment>
-        );
-      }
-    }
-
-    ReactTestUtils.renderIntoDocument(<Foo />);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain('Invalid prop `');
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        '` supplied to `React.Fragment`. React.Fragment ' +
-          'can only have `key` and `children` props.',
-      );
-    }
-  });
-
-  it('warns for fragments with refs', () => {
-    spyOnDev(console, 'error');
-
-    class Foo extends React.Component {
-      render() {
-        return (
-          <React.Fragment
-            ref={bar => {
-              this.foo = bar;
-            }}>
-            hello
-          </React.Fragment>
-        );
-      }
-    }
-
-    ReactTestUtils.renderIntoDocument(<Foo />);
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Invalid attribute `ref` supplied to `React.Fragment`.',
-      );
-    }
-  });
-
   it('warns for keys for iterables of elements in rest args', () => {
     spyOnDev(console, 'error');
 
@@ -164,34 +110,6 @@ describe('ReactJSXElementValidator', () => {
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         'Each child in an array or iterator should have a unique "key" prop.',
-      );
-    }
-  });
-
-  it('does not warn for fragments of multiple elements without keys', () => {
-    ReactTestUtils.renderIntoDocument(
-      <React.Fragment>
-        <span>1</span>
-        <span>2</span>
-      </React.Fragment>,
-    );
-  });
-
-  it('warns for fragments of multiple elements with same key', () => {
-    spyOnDev(console, 'error');
-
-    ReactTestUtils.renderIntoDocument(
-      <React.Fragment>
-        <span key="a">1</span>
-        <span key="a">2</span>
-        <span key="b">3</span>
-      </React.Fragment>,
-    );
-
-    if (__DEV__) {
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'Encountered two children with the same key, `a`.',
       );
     }
   });
