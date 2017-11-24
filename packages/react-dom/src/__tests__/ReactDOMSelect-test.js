@@ -95,7 +95,9 @@ describe('ReactDOMSelect', () => {
 
     // Changing `defaultValue` should do nothing.
     ReactDOM.render(
-      <select multiple={true} defaultValue={['monkey']}>{options}</select>,
+      <select multiple={true} defaultValue={['monkey']}>
+        {options}
+      </select>,
       container,
     );
 
@@ -121,7 +123,9 @@ describe('ReactDOMSelect', () => {
 
     // Changing the `value` prop should change the selected option.
     ReactDOM.render(
-      <select value="gorilla" onChange={noop}>{options}</select>,
+      <select value="gorilla" onChange={noop}>
+        {options}
+      </select>,
       container,
     );
     expect(node.value).toEqual('gorilla');
@@ -160,7 +164,9 @@ describe('ReactDOMSelect', () => {
 
     // Changing the `value` prop should change the selected option.
     ReactDOM.render(
-      <select value="gorilla" onChange={noop}>{options}</select>,
+      <select value="gorilla" onChange={noop}>
+        {options}
+      </select>,
       container,
     );
     expect(node.value).toEqual('gorilla');
@@ -408,7 +414,9 @@ describe('ReactDOMSelect', () => {
     var node = ReactDOM.findDOMNode(stub);
 
     ReactDOM.render(
-      <select value="gorilla" onChange={noop}>{options}</select>,
+      <select value="gorilla" onChange={noop}>
+        {options}
+      </select>,
       container,
     );
 
@@ -470,9 +478,15 @@ describe('ReactDOMSelect', () => {
 
     var select = ReactDOM.render(
       <select multiple={true} defaultValue={['giraffe']}>
-        <option key="monkey" value="monkey">A monkey!</option>
-        <option key="giraffe" value="giraffe">A giraffe!</option>
-        <option key="gorilla" value="gorilla">A gorilla!</option>
+        <option key="monkey" value="monkey">
+          A monkey!
+        </option>
+        <option key="giraffe" value="giraffe">
+          A giraffe!
+        </option>
+        <option key="gorilla" value="gorilla">
+          A gorilla!
+        </option>
       </select>,
       container,
     );
@@ -484,8 +498,12 @@ describe('ReactDOMSelect', () => {
 
     ReactDOM.render(
       <select multiple={true} defaultValue={['giraffe']}>
-        <option key="monkey" value="monkey">A monkey!</option>
-        <option key="gorilla" value="gorilla">A gorilla!</option>
+        <option key="monkey" value="monkey">
+          A monkey!
+        </option>
+        <option key="gorilla" value="gorilla">
+          A gorilla!
+        </option>
       </select>,
       container,
     );
@@ -495,9 +513,15 @@ describe('ReactDOMSelect', () => {
 
     ReactDOM.render(
       <select multiple={true} defaultValue={['giraffe']}>
-        <option key="monkey" value="monkey">A monkey!</option>
-        <option key="giraffe" value="giraffe">A giraffe!</option>
-        <option key="gorilla" value="gorilla">A gorilla!</option>
+        <option key="monkey" value="monkey">
+          A monkey!
+        </option>
+        <option key="giraffe" value="giraffe">
+          A giraffe!
+        </option>
+        <option key="gorilla" value="gorilla">
+          A gorilla!
+        </option>
       </select>,
       container,
     );
@@ -508,41 +532,57 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value is null', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null}><option value="test" /></select>,
+      <select value={null}>
+        <option value="test" />
+      </select>,
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      '`value` prop on `select` should not be null. ' +
-        'Consider using an empty string to clear the component or `undefined` ' +
-        'for uncontrolled components.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        '`value` prop on `select` should not be null. ' +
+          'Consider using an empty string to clear the component or `undefined` ' +
+          'for uncontrolled components.',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null}><option value="test" /></select>,
+      <select value={null}>
+        <option value="test" />
+      </select>,
     );
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 
   it('should warn if value is null and multiple is true', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(
-      <select value={null} multiple={true}><option value="test" /></select>,
+      <select value={null} multiple={true}>
+        <option value="test" />
+      </select>,
     );
 
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      '`value` prop on `select` should not be null. ' +
-        'Consider using an empty array when `multiple` is ' +
-        'set to `true` to clear the component or `undefined` ' +
-        'for uncontrolled components.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        '`value` prop on `select` should not be null. ' +
+          'Consider using an empty array when `multiple` is ' +
+          'set to `true` to clear the component or `undefined` ' +
+          'for uncontrolled components.',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(
-      <select value={null} multiple={true}><option value="test" /></select>,
+      <select value={null} multiple={true}>
+        <option value="test" />
+      </select>,
     );
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 
   it('should refresh state on change', () => {
@@ -562,7 +602,7 @@ describe('ReactDOMSelect', () => {
   });
 
   it('should warn if value and defaultValue props are specified', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactTestUtils.renderIntoDocument(
       <select value="giraffe" defaultValue="giraffe" readOnly={true}>
         <option value="monkey">A monkey!</option>
@@ -570,13 +610,15 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>,
     );
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'Select elements must be either controlled or uncontrolled ' +
-        '(specify either the value prop, or the defaultValue prop, but not ' +
-        'both). Decide between using a controlled or uncontrolled select ' +
-        'element and remove one of these props. More info: ' +
-        'https://fb.me/react-controlled-components',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Select elements must be either controlled or uncontrolled ' +
+          '(specify either the value prop, or the defaultValue prop, but not ' +
+          'both). Decide between using a controlled or uncontrolled select ' +
+          'element and remove one of these props. More info: ' +
+          'https://fb.me/react-controlled-components',
+      );
+    }
 
     ReactTestUtils.renderIntoDocument(
       <select value="giraffe" defaultValue="giraffe" readOnly={true}>
@@ -585,7 +627,9 @@ describe('ReactDOMSelect', () => {
         <option value="gorilla">A gorilla!</option>
       </select>,
     );
-    expectDev(console.error.calls.count()).toBe(1);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
   });
 
   it('should be able to safely remove select onChange', () => {

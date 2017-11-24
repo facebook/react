@@ -67,8 +67,8 @@ describe('ReactIncrementalSideEffects', () => {
           {props.text === 'World'
             ? [<Bar key="a" text={props.text} />, <div key="b" />]
             : props.text === 'Hi'
-                ? [<div key="b" />, <Bar key="a" text={props.text} />]
-                : null}
+              ? [<div key="b" />, <Bar key="a" text={props.text} />]
+              : null}
           <span prop="test" />
         </div>
       );
@@ -161,11 +161,13 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.useClass
-            ? <ClassComponent />
-            : props.useFunction
-                ? <FunctionalComponent />
-                : props.useText ? 'Text' : null}
+          {props.useClass ? (
+            <ClassComponent />
+          ) : props.useFunction ? (
+            <FunctionalComponent />
+          ) : props.useText ? (
+            'Text'
+          ) : null}
           Trail
         </div>
       );
@@ -211,9 +213,11 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div>
-          {props.useClass
-            ? <ClassComponent key="a" />
-            : props.useFunction ? <FunctionalComponent key="a" /> : null}
+          {props.useClass ? (
+            <ClassComponent key="a" />
+          ) : props.useFunction ? (
+            <FunctionalComponent key="a" />
+          ) : null}
           Trail
         </div>
       );
@@ -311,12 +315,14 @@ describe('ReactIncrementalSideEffects', () => {
     function Foo(props) {
       return (
         <div hidden={true}>
-          {props.step === 0
-            ? <div>
-                <Bar>Hi</Bar>
-                <Bar>{props.text}</Bar>
-              </div>
-            : middleContent}
+          {props.step === 0 ? (
+            <div>
+              <Bar>Hi</Bar>
+              <Bar>{props.text}</Bar>
+            </div>
+          ) : (
+            middleContent
+          )}
         </div>
       );
     }
@@ -879,9 +885,7 @@ describe('ReactIncrementalSideEffects', () => {
                 [<Bar key="e" name="E" />, <Bar key="f" name="F" />],
               ]
             : []}
-          <div>
-            {props.show ? <Bar key="g" name="G" /> : null}
-          </div>
+          <div>{props.show ? <Bar key="g" name="G" /> : null}</div>
           <Bar name="this should not unmount" />
         </div>
       );
@@ -982,7 +986,7 @@ describe('ReactIncrementalSideEffects', () => {
   });
 
   it('invokes ref callbacks after insertion/update/unmount', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     var classInstance = null;
 
     var ops = [];
@@ -999,13 +1003,13 @@ describe('ReactIncrementalSideEffects', () => {
     }
 
     function Foo(props) {
-      return props.show
-        ? <div>
-            <ClassComponent ref={n => ops.push(n)} />
-            <FunctionalComponent ref={n => ops.push(n)} />
-            <div ref={n => ops.push(n)} />
-          </div>
-        : null;
+      return props.show ? (
+        <div>
+          <ClassComponent ref={n => ops.push(n)} />
+          <FunctionalComponent ref={n => ops.push(n)} />
+          <div ref={n => ops.push(n)} />
+        </div>
+      ) : null;
     }
 
     ReactNoop.render(<Foo show={true} />);
@@ -1040,14 +1044,16 @@ describe('ReactIncrementalSideEffects', () => {
       null,
     ]);
 
-    expectDev(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
-      'Warning: Stateless function components cannot be given refs. ' +
-        'Attempts to access this ref will fail.\n\nCheck the render method ' +
-        'of `Foo`.\n' +
-        '    in FunctionalComponent (at **)\n' +
-        '    in div (at **)\n' +
-        '    in Foo (at **)',
-    );
+    if (__DEV__) {
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toBe(
+        'Warning: Stateless function components cannot be given refs. ' +
+          'Attempts to access this ref will fail.\n\nCheck the render method ' +
+          'of `Foo`.\n' +
+          '    in FunctionalComponent (at **)\n' +
+          '    in div (at **)\n' +
+          '    in Foo (at **)',
+      );
+    }
   });
 
   // TODO: Test that mounts, updates, refs, unmounts and deletions happen in the

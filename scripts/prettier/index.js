@@ -85,9 +85,8 @@ Object.keys(config).forEach(key => {
   const options = config[key].options;
   const ignore = config[key].ignore;
 
-  const globPattern = patterns.length > 1
-    ? `{${patterns.join(',')}}`
-    : `${patterns.join(',')}`;
+  const globPattern =
+    patterns.length > 1 ? `{${patterns.join(',')}}` : `${patterns.join(',')}`;
   const files = glob
     .sync(globPattern, {ignore})
     .filter(f => !onlyChanged || changedFiles.has(f));

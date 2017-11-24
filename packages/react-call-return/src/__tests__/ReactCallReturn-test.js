@@ -74,7 +74,13 @@ describe('ReactCallReturn', () => {
     }
 
     function App() {
-      return <div><Parent foo={true}><Indirection /></Parent></div>;
+      return (
+        <div>
+          <Parent foo={true}>
+            <Indirection />
+          </Parent>
+        </div>
+      );
     }
 
     ReactNoop.render(<App />);
@@ -130,7 +136,13 @@ describe('ReactCallReturn', () => {
     }
 
     function App(props) {
-      return <div><Parent foo={props.foo}><Indirection /></Parent></div>;
+      return (
+        <div>
+          <Parent foo={props.foo}>
+            <Indirection />
+          </Parent>
+        </div>
+      );
     }
 
     ReactNoop.render(<App foo={true} />);
@@ -190,7 +202,11 @@ describe('ReactCallReturn', () => {
       }
     }
 
-    ReactNoop.render(<Parent><Child /></Parent>);
+    ReactNoop.render(
+      <Parent>
+        <Child />
+      </Parent>,
+    );
     ReactNoop.flush();
 
     expect(ops).toEqual(['Parent', 'Child', 'HandleReturns', 'Continuation']);

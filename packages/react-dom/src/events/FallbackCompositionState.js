@@ -15,7 +15,7 @@ import getTextContentAccessor from '../client/getTextContentAccessor';
  * both its text content and its current position in the DOM. Since the
  * browser may natively replace the target node during composition, we can
  * use its position to find its replacement.
- * 
+ *
  *
  */
 var compositionState = {

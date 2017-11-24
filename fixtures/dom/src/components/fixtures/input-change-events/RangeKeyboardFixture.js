@@ -1,6 +1,5 @@
-import React from 'react';
-
 import Fixture from '../../Fixture';
+const React = window.React;
 
 class RangeKeyboardFixture extends React.Component {
   constructor(props, context) {
@@ -60,16 +59,16 @@ class RangeKeyboardFixture extends React.Component {
             ref={r => (this.input = r)}
             onChange={this.handleChange}
           />
-          <button onClick={() => this.input.focus()}>
-            Focus Knob
-          </button>
-        </div>
-        {' '}
-
+          <button onClick={() => this.input.focus()}>Focus Knob</button>
+        </div>{' '}
         <p style={{color}}>
-          <code>onKeyDown</code>{' calls: '}<strong>{keydownCount}</strong>
+          <code>onKeyDown</code>
+          {' calls: '}
+          <strong>{keydownCount}</strong>
           {' vs '}
-          <code>onChange</code>{' calls: '}<strong>{changeCount}</strong>
+          <code>onChange</code>
+          {' calls: '}
+          <strong>{changeCount}</strong>
         </p>
         <button onClick={this.handleReset}>Reset counts</button>
       </Fixture>

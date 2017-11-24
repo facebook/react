@@ -23,7 +23,10 @@ import * as EventPluginHub from 'events/EventPluginHub';
 import * as EventPluginRegistry from 'events/EventPluginRegistry';
 import * as EventPropagators from 'events/EventPropagators';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {
+  enableAsyncSchedulingByDefaultInReactDOM,
+  enableCreateRoot,
+} from 'shared/ReactFeatureFlags';
 import ReactVersion from 'shared/ReactVersion';
 import * as ReactDOMFrameScheduling from 'shared/ReactDOMFrameScheduling';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
@@ -89,11 +92,11 @@ ReactControlledComponent.injection.injectFiberControlledHostComponent(
 
 type DOMContainer =
   | (Element & {
-    _reactRootContainer: ?Object,
-  })
+      _reactRootContainer: ?Object,
+    })
   | (Document & {
-    _reactRootContainer: ?Object,
-  });
+      _reactRootContainer: ?Object,
+    });
 
 type Container = Element | Document;
 type Props = {
@@ -123,12 +126,14 @@ let selectionInformation: ?mixed = null;
  * @internal
  */
 function isValidContainer(node) {
-  return !!(node &&
+  return !!(
+    node &&
     (node.nodeType === ELEMENT_NODE ||
       node.nodeType === DOCUMENT_NODE ||
       node.nodeType === DOCUMENT_FRAGMENT_NODE ||
       (node.nodeType === COMMENT_NODE &&
-        node.nodeValue === ' react-mount-point-unstable ')));
+        node.nodeValue === ' react-mount-point-unstable '))
+  );
 }
 
 function getReactRootElementInContainer(container: any) {
@@ -145,9 +150,11 @@ function getReactRootElementInContainer(container: any) {
 
 function shouldHydrateDueToLegacyHeuristic(container) {
   const rootElement = getReactRootElementInContainer(container);
-  return !!(rootElement &&
+  return !!(
+    rootElement &&
     rootElement.nodeType === ELEMENT_NODE &&
-    rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME));
+    rootElement.hasAttribute(ROOT_ATTRIBUTE_NAME)
+  );
 }
 
 function shouldAutoFocusHostComponent(type: string, props: Props): boolean {
@@ -175,9 +182,10 @@ const DOMRenderer = ReactFiberReconciler({
         break;
       }
       default: {
-        const container: any = nodeType === COMMENT_NODE
-          ? rootContainerInstance.parentNode
-          : rootContainerInstance;
+        const container: any =
+          nodeType === COMMENT_NODE
+            ? rootContainerInstance.parentNode
+            : rootContainerInstance;
         const ownNamespace = container.namespaceURI || null;
         type = container.tagName;
         namespace = getChildNamespace(ownNamespace, type);
@@ -451,22 +459,27 @@ const DOMRenderer = ReactFiberReconciler({
       instance: Instance | TextInstance,
       type: string,
       props: Props,
-    ): boolean {
-      return (
-        instance.nodeType === ELEMENT_NODE &&
-        type.toLowerCase() === instance.nodeName.toLowerCase()
-      );
+    ): null | Instance {
+      if (
+        instance.nodeType !== ELEMENT_NODE ||
+        type.toLowerCase() !== instance.nodeName.toLowerCase()
+      ) {
+        return null;
+      }
+      // This has now been refined to an element node.
+      return ((instance: any): Instance);
     },
 
     canHydrateTextInstance(
       instance: Instance | TextInstance,
       text: string,
-    ): boolean {
-      if (text === '') {
+    ): null | TextInstance {
+      if (text === '' || instance.nodeType !== TEXT_NODE) {
         // Empty strings are not parsed by HTML so there won't be a correct match here.
-        return false;
+        return null;
       }
-      return instance.nodeType === TEXT_NODE;
+      // This has now been refined to a text node.
+      return ((instance: any): TextInstance);
     },
 
     getNextHydratableSibling(
@@ -630,8 +643,9 @@ const DOMRenderer = ReactFiberReconciler({
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
+  cancelDeferredCallback: ReactDOMFrameScheduling.cIC,
 
-  useSyncScheduling: !ReactFeatureFlags.enableAsyncSchedulingByDefaultInReactDOM,
+  useSyncScheduling: !enableAsyncSchedulingByDefaultInReactDOM,
 });
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
@@ -670,8 +684,9 @@ function renderSubtreeIntoContainer(
 
     const isRootRenderedBySomeReact = !!container._reactRootContainer;
     const rootEl = getReactRootElementInContainer(container);
-    const hasNonRootReactChild = !!(rootEl &&
-      ReactDOMComponentTree.getInstanceFromNode(rootEl));
+    const hasNonRootReactChild = !!(
+      rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl)
+    );
 
     warning(
       !hasNonRootReactChild || isRootRenderedBySomeReact,
@@ -897,8 +912,9 @@ const ReactDOM: Object = {
     } else {
       if (__DEV__) {
         const rootEl = getReactRootElementInContainer(container);
-        const hasNonRootReactChild = !!(rootEl &&
-          ReactDOMComponentTree.getInstanceFromNode(rootEl));
+        const hasNonRootReactChild = !!(
+          rootEl && ReactDOMComponentTree.getInstanceFromNode(rootEl)
+        );
 
         // Check if the container itself is a React root node.
         const isContainerReactRoot =
@@ -912,9 +928,9 @@ const ReactDOM: Object = {
             'was rendered by React and is not a top-level container. %s',
           isContainerReactRoot
             ? 'You may have accidentally passed in a React root node instead ' +
-                'of its container.'
+              'of its container.'
             : 'Instead, have the parent component update its state and ' +
-                'rerender in order to remove this component.',
+              'rerender in order to remove this component.',
         );
       }
 
@@ -944,7 +960,7 @@ const ReactDOM: Object = {
   },
 };
 
-if (ReactFeatureFlags.enableCreateRoot) {
+if (enableCreateRoot) {
   ReactDOM.createRoot = function createRoot(
     container: DOMContainer,
     options?: RootOptions,
@@ -982,7 +998,7 @@ if (__DEV__) {
             'https://fb.me/react-devtools' +
             (protocol === 'file:'
               ? '\nYou might need to use a local HTTP server (instead of file://): ' +
-                  'https://fb.me/react-devtools-faq'
+                'https://fb.me/react-devtools-faq'
               : ''),
           'font-weight:bold',
         );

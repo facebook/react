@@ -8,15 +8,14 @@
  */
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactDebugCurrentFiber
-  from 'react-reconciler/src/ReactDebugCurrentFiber';
+import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
 import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
-import ReactControlledValuePropTypes
-  from '../shared/ReactControlledValuePropTypes';
+import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
+import * as inputValueTracking from './inputValueTracking';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
@@ -136,12 +135,19 @@ export function initWrapperState(element: Element, props: Object) {
   var defaultValue = props.defaultValue;
   var node = ((element: any): InputWithWrapperState);
   node._wrapperState = {
-    initialChecked: props.checked != null
-      ? props.checked
-      : props.defaultChecked,
+    initialChecked:
+      props.checked != null ? props.checked : props.defaultChecked,
     initialValue: props.value != null ? props.value : defaultValue,
     controlled: isControlled(props),
   };
+}
+
+export function updateChecked(element: Element, props: Object) {
+  var node = ((element: any): InputWithWrapperState);
+  var checked = props.checked;
+  if (checked != null) {
+    DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
+  }
 }
 
 export function updateWrapper(element: Element, props: Object) {
@@ -183,14 +189,7 @@ export function updateWrapper(element: Element, props: Object) {
     }
   }
 
-  var checked = props.checked;
-  if (checked != null) {
-    DOMPropertyOperations.setValueForProperty(
-      node,
-      'checked',
-      checked || false,
-    );
-  }
+  updateChecked(element, props);
 
   var value = props.value;
   if (value != null) {
@@ -323,6 +322,11 @@ function updateNamedCousins(rootNode, props) {
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +
           'same `name` is not supported.',
       );
+
+      // We need update the tracked value on the named cousin since the value
+      // was changed but the input saw no event or value set
+      inputValueTracking.updateValueIfChanged(otherNode);
+
       // If this is a controlled radio button group, forcing the input that
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.

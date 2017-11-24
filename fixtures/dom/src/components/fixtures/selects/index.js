@@ -84,13 +84,15 @@ class SelectFixture extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The initial picked option should be "Please select an
-            item", however it should not be a selectable option.
+            The initial picked option should be "Please select an item", however
+            it should not be a selectable option.
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">
             <select defaultValue="">
-              <option value="" disabled>Please select an item</option>
+              <option value="" disabled>
+                Please select an item
+              </option>
               <option>0</option>
               <option>1</option>
               <option>2</option>
@@ -100,7 +102,8 @@ class SelectFixture extends React.Component {
 
         <TestCase title="An unselected disabled option" relatedIssues="2803">
           <TestCase.ExpectedResult>
-            The initial picked option value should "0": the first non-disabled option.
+            The initial picked option value should "0": the first non-disabled
+            option.
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">

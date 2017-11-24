@@ -55,7 +55,9 @@ describe('ReactFiberHostContext', () => {
 
     const container = Renderer.createContainer(/* root: */ null);
     Renderer.updateContainer(
-      <a><b /></a>,
+      <a>
+        <b />
+      </a>,
       container,
       /* parentComponent: */ null,
       /* callback: */ null,

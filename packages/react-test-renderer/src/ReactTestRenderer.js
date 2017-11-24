@@ -195,8 +195,12 @@ var TestRenderer = ReactFiberReconciler({
     };
   },
 
-  scheduleDeferredCallback(fn: Function): void {
-    setTimeout(fn, 0, {timeRemaining: Infinity});
+  scheduleDeferredCallback(fn: Function): number {
+    return setTimeout(fn, 0, {timeRemaining: Infinity});
+  },
+
+  cancelDeferredCallback(timeoutID: number): void {
+    clearTimeout(timeoutID);
   },
 
   useSyncScheduling: true,
@@ -540,9 +544,10 @@ function expectOne(
     return all[0];
   }
 
-  const prefix = all.length === 0
-    ? 'No instances found '
-    : `Expected 1 but found ${all.length} instances `;
+  const prefix =
+    all.length === 0
+      ? 'No instances found '
+      : `Expected 1 but found ${all.length} instances `;
 
   throw new Error(prefix + message);
 }

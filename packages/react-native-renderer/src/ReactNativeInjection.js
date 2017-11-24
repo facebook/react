@@ -26,8 +26,7 @@ import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import * as ReactNativeEventEmitter from './ReactNativeEventEmitter';
 import ReactNativeEventPluginOrder from './ReactNativeEventPluginOrder';
-import ReactNativeGlobalResponderHandler
-  from './ReactNativeGlobalResponderHandler';
+import ReactNativeGlobalResponderHandler from './ReactNativeGlobalResponderHandler';
 
 /**
  * Register the event emitter with the native bridge

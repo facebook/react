@@ -7,7 +7,8 @@
 
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
-import ReactFeatureFlags from 'shared/ReactFeatureFlags';
+import {enableReactFragment} from 'shared/ReactFeatureFlags';
+import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
@@ -24,12 +25,6 @@ import {
   cloneElementWithValidation,
 } from './ReactElementValidator';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
-
-const REACT_FRAGMENT_TYPE =
-  (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.fragment')) ||
-  0xeacb;
 
 var React = {
   Children: {
@@ -58,7 +53,7 @@ var React = {
   },
 };
 
-if (ReactFeatureFlags.enableReactFragment) {
+if (enableReactFragment) {
   React.Fragment = REACT_FRAGMENT_TYPE;
 }
 

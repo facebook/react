@@ -35,16 +35,18 @@ describe('rendering React components at document', () => {
 
   describe('with old implicit hydration API', () => {
     function expectDeprecationWarningWithFiber() {
-      expectDev(console.warn.calls.count()).toBe(1);
-      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
+      if (__DEV__) {
+        expect(console.warn.calls.count()).toBe(1);
+        expect(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+      }
     }
 
     it('should be able to adopt server markup', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -52,9 +54,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {'Hello ' + this.props.hello}
-              </body>
+              <body>{'Hello ' + this.props.hello}</body>
             </html>
           );
         }
@@ -75,7 +75,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should not be able to unmount component from document node', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Root extends React.Component {
         render() {
           return (
@@ -83,9 +83,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -104,7 +102,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should not be able to switch root constructors', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -112,9 +110,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -127,9 +123,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Goodbye world
-              </body>
+              <body>Goodbye world</body>
             </html>
           );
         }
@@ -149,7 +143,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should be able to mount into document', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       class Component extends React.Component {
         render() {
           return (
@@ -157,9 +151,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -194,9 +186,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -207,20 +197,22 @@ describe('rendering React components at document', () => {
       );
       var testDocument = getTestDocument(markup);
 
-      spyOn(console, 'warn');
-      spyOn(console, 'error');
+      spyOnDev(console, 'warn');
+      spyOnDev(console, 'error');
       ReactDOM.render(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDev(console.warn.calls.count()).toBe(1);
-      expectDev(console.warn.calls.argsFor(0)[0]).toContain(
-        'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
-          'will stop working in React v17. Replace the ReactDOM.render() call ' +
-          'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
-      );
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Text content did not match.',
-      );
+      if (__DEV__) {
+        expect(console.warn.calls.count()).toBe(1);
+        expect(console.warn.calls.argsFor(0)[0]).toContain(
+          'render(): Calling ReactDOM.render() to hydrate server-rendered markup ' +
+            'will stop working in React v17. Replace the ReactDOM.render() call ' +
+            'with ReactDOM.hydrate() if you want React to attach to the server HTML.',
+        );
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Text content did not match.',
+        );
+      }
     });
 
     it('should throw on full document render w/ no markup', () => {
@@ -233,9 +225,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -249,15 +239,13 @@ describe('rendering React components at document', () => {
     });
 
     it('supports findDOMNode on full-page components', () => {
-      spyOn(console, 'warn');
+      spyOnDev(console, 'warn');
       var tree = (
         <html>
           <head>
             <title>Hello World</title>
           </head>
-          <body>
-            Hello world
-          </body>
+          <body>Hello world</body>
         </html>
       );
 
@@ -279,9 +267,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {'Hello ' + this.props.hello}
-              </body>
+              <body>{'Hello ' + this.props.hello}</body>
             </html>
           );
         }
@@ -308,9 +294,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -334,9 +318,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Hello world
-              </body>
+              <body>Hello world</body>
             </html>
           );
         }
@@ -349,9 +331,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                Goodbye world
-              </body>
+              <body>Goodbye world</body>
             </html>
           );
         }
@@ -378,9 +358,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -397,15 +375,17 @@ describe('rendering React components at document', () => {
     });
 
     it('renders over an existing text child without throwing', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       const container = document.createElement('div');
       container.textContent = 'potato';
       ReactDOM.hydrate(<div>parsnip</div>, container);
       expect(container.textContent).toBe('parsnip');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Expected server HTML to contain a matching <div> in <div>.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Expected server HTML to contain a matching <div> in <div>.',
+        );
+      }
     });
 
     it('should give helpful errors on state desync', () => {
@@ -416,9 +396,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -429,17 +407,19 @@ describe('rendering React components at document', () => {
       );
       var testDocument = getTestDocument(markup);
 
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        'Warning: Text content did not match.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Warning: Text content did not match.',
+        );
+      }
     });
 
     it('should render w/ no markup to full document', () => {
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       var testDocument = getTestDocument();
 
       class Component extends React.Component {
@@ -449,9 +429,7 @@ describe('rendering React components at document', () => {
               <head>
                 <title>Hello World</title>
               </head>
-              <body>
-                {this.props.text}
-              </body>
+              <body>{this.props.text}</body>
             </html>
           );
         }
@@ -459,11 +437,13 @@ describe('rendering React components at document', () => {
 
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
-      expectDev(console.error.calls.count()).toBe(1);
-      expectDev(console.error.calls.argsFor(0)[0]).toContain(
-        // getTestDocument() has an extra <meta> that we didn't render.
-        'Did not expect server HTML to contain a <meta> in <head>.',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          // getTestDocument() has an extra <meta> that we didn't render.
+          'Did not expect server HTML to contain a <meta> in <head>.',
+        );
+      }
     });
 
     it('supports findDOMNode on full-page components', () => {
@@ -472,9 +452,7 @@ describe('rendering React components at document', () => {
           <head>
             <title>Hello World</title>
           </head>
-          <body>
-            Hello world
-          </body>
+          <body>Hello world</body>
         </html>
       );
 

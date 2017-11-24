@@ -133,7 +133,12 @@ describe('ReactDOMFiber', () => {
 
     class Fragment extends React.Component {
       render() {
-        return [<Wrapper key="a"><div /></Wrapper>, <span key="b" />];
+        return [
+          <Wrapper key="a">
+            <div />
+          </Wrapper>,
+          <span key="b" />,
+        ];
       }
     }
 
@@ -204,9 +209,7 @@ describe('ReactDOMFiber', () => {
     var portalContainer = document.createElement('div');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<div>portal</div>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<div>portal</div>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<div>portal</div>');
@@ -382,54 +385,42 @@ describe('ReactDOMFiber', () => {
     var portalContainer = document.createElement('div');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<div>portal:1</div>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<div>portal:1</div>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<div>portal:1</div>');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<div>portal:2</div>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<div>portal:2</div>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<div>portal:2</div>');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(<p>portal:3</p>, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(<p>portal:3</p>, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('<p>portal:3</p>');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(['Hi', 'Bye'], portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(['Hi', 'Bye'], portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('HiBye');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(['Bye', 'Hi'], portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(['Bye', 'Hi'], portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('ByeHi');
     expect(container.innerHTML).toBe('<div></div>');
 
     ReactDOM.render(
-      <div>
-        {ReactDOM.createPortal(null, portalContainer)}
-      </div>,
+      <div>{ReactDOM.createPortal(null, portalContainer)}</div>,
       container,
     );
     expect(portalContainer.innerHTML).toBe('');
@@ -928,40 +919,40 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should warn for non-functional event listeners', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Example extends React.Component {
       render() {
         return <div onClick="woops" />;
       }
     }
     ReactDOM.render(<Example />, container);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
-      'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
-        '    in div (at **)\n' +
-        '    in Example (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Expected `onClick` listener to be a function, instead got a value of `string` type.\n' +
+          '    in div (at **)\n' +
+          '    in Example (at **)',
+      );
+    }
   });
 
   it('should warn with a special message for `false` event listeners', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     class Example extends React.Component {
       render() {
         return <div onClick={false} />;
       }
     }
     ReactDOM.render(<Example />, container);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(
-      normalizeCodeLocInfo(console.error.calls.argsFor(0)[0]),
-    ).toContain(
-      'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
-        'If you used to conditionally omit it with onClick={condition && value}, ' +
-        'pass onClick={condition ? value : undefined} instead.\n',
-      '    in div (at **)\n' + '    in Example (at **)',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toContain(
+        'Expected `onClick` listener to be a function, instead got `false`.\n\n' +
+          'If you used to conditionally omit it with onClick={condition && value}, ' +
+          'pass onClick={condition ? value : undefined} instead.\n',
+        '    in div (at **)\n' + '    in Example (at **)',
+      );
+    }
   });
 
   it('should not update event handlers until commit', () => {
@@ -1057,19 +1048,23 @@ describe('ReactDOMFiber', () => {
   });
 
   it('should not warn when rendering into an empty container', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.render(<div>foo</div>, container);
     expect(container.innerHTML).toBe('<div>foo</div>');
     ReactDOM.render(null, container);
     expect(container.innerHTML).toBe('');
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
     ReactDOM.render(<div>bar</div>, container);
     expect(container.innerHTML).toBe('<div>bar</div>');
-    expectDev(console.error.calls.count()).toBe(0);
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(0);
+    }
   });
 
   it('should warn when replacing a container which was manually updated outside of React', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div key="1">foo</div>, container);
     ReactDOM.render(<div key="1">bar</div>, container);
@@ -1081,18 +1076,20 @@ describe('ReactDOMFiber', () => {
       container.innerHTML = '<div>MEOW.</div>';
       ReactDOM.render(<div key="2">baz</div>, container);
     }).toThrowError();
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    }
   });
 
   it('should warn when doing an update to a container manually updated outside of React', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
@@ -1101,18 +1098,20 @@ describe('ReactDOMFiber', () => {
     container.innerHTML = '<div>MEOW.</div>';
     ReactDOM.render(<div>baz</div>, container);
     // silently fails to update
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    }
   });
 
   it('should warn when doing an update to a container manually cleared outside of React', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     // when not messing with the DOM outside of React
     ReactDOM.render(<div>foo</div>, container);
     ReactDOM.render(<div>bar</div>, container);
@@ -1121,14 +1120,16 @@ describe('ReactDOMFiber', () => {
     container.innerHTML = '';
     ReactDOM.render(<div>baz</div>, container);
     // silently fails to update
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toContain(
-      'render(...): ' +
-        'It looks like the React-rendered content of this container was ' +
-        'removed without using React. This is not supported and will ' +
-        'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
-        'to empty a container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'render(...): ' +
+          'It looks like the React-rendered content of this container was ' +
+          'removed without using React. This is not supported and will ' +
+          'cause errors. Instead, call ReactDOM.unmountComponentAtNode ' +
+          'to empty a container.',
+      );
+    }
   });
 
   it('should render a text component with a text DOM node on the same document as the container', () => {

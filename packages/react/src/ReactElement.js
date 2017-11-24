@@ -6,16 +6,11 @@
  */
 
 import warning from 'fbjs/lib/warning';
+import {REACT_ELEMENT_TYPE} from 'shared/ReactSymbols';
 
 import ReactCurrentOwner from './ReactCurrentOwner';
 
 var hasOwnProperty = Object.prototype.hasOwnProperty;
-
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
 
 var RESERVED_PROPS = {
   key: true,
@@ -237,9 +232,10 @@ export function createElement(type, config, children) {
         typeof props.$$typeof === 'undefined' ||
         props.$$typeof !== REACT_ELEMENT_TYPE
       ) {
-        var displayName = typeof type === 'function'
-          ? type.displayName || type.name || 'Unknown'
-          : type;
+        var displayName =
+          typeof type === 'function'
+            ? type.displayName || type.name || 'Unknown'
+            : type;
         if (key) {
           defineKeyPropWarningGetter(props, displayName);
         }
@@ -265,7 +261,7 @@ export function createElement(type, config, children) {
  * See https://reactjs.org/docs/react-api.html#createfactory
  */
 export function createFactory(type) {
-  var factory = ReactElement.createElement.bind(null, type);
+  var factory = createElement.bind(null, type);
   // Expose the type on the factory and the prototype so that it can be
   // easily accessed on elements. E.g. `<Foo />.type === Foo`.
   // This should not be named `constructor` since this may not be the function

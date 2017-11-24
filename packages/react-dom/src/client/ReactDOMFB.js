@@ -10,9 +10,9 @@
 import * as ReactFiberTreeReflection from 'shared/ReactFiberTreeReflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger
-  from 'react-reconciler/src/ReactFiberErrorLogger';
+import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
+import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
 import * as ReactBrowserEventEmitter from '../events/ReactBrowserEventEmitter';
@@ -31,6 +31,8 @@ Object.assign(
     ReactInstanceMap,
     // Used by www msite:
     TapEventPlugin,
+    // Perf experiment
+    addUserTimingListener,
   },
 );
 

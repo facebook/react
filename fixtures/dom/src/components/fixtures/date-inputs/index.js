@@ -16,9 +16,8 @@ class DateInputFixtures extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The month, day, and year values should correctly
-            transfer. The hours/minutes/seconds should not be
-            discarded.
+            The month, day, and year values should correctly transfer. The
+            hours/minutes/seconds should not be discarded.
           </TestCase.ExpectedResult>
 
           <Fixture>

@@ -332,7 +332,7 @@ export function createFiberFromElement(
       ) {
         info +=
           ' You likely forgot to export your component from the file ' +
-          "it's defined in.";
+          "it's defined in, or you might have mixed up default and named imports.";
       }
       const ownerName = owner ? getComponentName(owner) : null;
       if (ownerName) {
