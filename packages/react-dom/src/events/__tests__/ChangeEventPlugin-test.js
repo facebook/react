@@ -12,10 +12,6 @@
 var React = require('react');
 var ReactDOM = require('react-dom');
 
-function getTrackedValue(elem) {
-  return elem.value;
-}
-
 var setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
   'checked',
