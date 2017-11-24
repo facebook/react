@@ -39,7 +39,7 @@ describe('ChangeEventPlugin', () => {
     container = null;
   });
 
-  fit('should fire change for checkbox input', () => {
+  it('should fire change for checkbox input', () => {
     var called = 0;
 
     function cb(e) {
@@ -52,6 +52,10 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
+
+    node.dispatchEvent(new Event('click'));
+    expect(called).toBe(0);
+
     setUntrackedChecked.call(node, false);
     node.dispatchEvent(new Event('click', {bubbles: true, cancelable: true}));
     expect(called).toBe(1);
@@ -63,7 +67,7 @@ describe('ChangeEventPlugin', () => {
     expect(node.checked).toBe(false);
   });
 
-  fit('should not fire change setting the value programmatically', () => {
+  it('should not fire change setting the value programmatically', () => {
     var called = 0;
 
     function cb(e) {
@@ -90,7 +94,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  fit('should not fire change when setting checked programmatically', () => {
+  it('should not fire change when setting checked programmatically', () => {
     var called = 0;
 
     function cb(e) {
@@ -116,22 +120,31 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  fit('should catch setting the value programmatically', () => {
+  it('should catch setting the value programmatically', () => {
+    var called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
     var input = ReactDOM.render(
-      <input type="text" defaultValue="foo" />,
+      <input type="text" onChange={cb} defaultValue="foo" />,
       container,
     );
+
     setUntrackedValue.call(input, 'bar');
+    expect(called).toBe(0);
     expect(getTrackedValue(input)).toBe('bar');
   });
 
-  fit('should unmount', () => {
+  it('should unmount', () => {
     var input = ReactDOM.render(<input />, container);
 
     ReactDOM.unmountComponentAtNode(container);
   });
 
-  fit('should only fire change for checked radio button once', () => {
+  it('should only fire change for checked radio button once', () => {
     var called = 0;
 
     function cb(e) {
@@ -150,7 +163,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
-  fit('should deduplicate input value change events', () => {
+  it('should deduplicate input value change events', () => {
     var called = 0;
 
     function cb(e) {
@@ -182,7 +195,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(3);
   });
 
-  fit('should listen for both change and input events when supported', () => {
+  it('should listen for both change and input events when supported', () => {
     var called = 0;
 
     function cb(e) {
@@ -204,7 +217,7 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(2);
   });
 
-  fit('should only fire events when the value changes for range inputs', () => {
+  it('should only fire events when the value changes for range inputs', () => {
     var called = 0;
 
     function cb(e) {
