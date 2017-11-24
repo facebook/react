@@ -26,6 +26,8 @@ import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 if (__DEV__) {
   var currentlyValidatingElement = null;
 
+  var propTypesMisspellWarningShown = false;
+
   var getDisplayName = function(element): string {
     if (element == null) {
       return '#empty';
@@ -212,11 +214,20 @@ function validatePropTypes(element) {
   }
   var name = componentClass.displayName || componentClass.name;
   var propTypes = componentClass.propTypes;
-
   if (propTypes) {
     currentlyValidatingElement = element;
     checkPropTypes(propTypes, element.props, 'prop', name, getStackAddendum);
     currentlyValidatingElement = null;
+  } else if (
+    componentClass.PropTypes !== undefined &&
+    !propTypesMisspellWarningShown
+  ) {
+    propTypesMisspellWarningShown = true;
+    warning(
+      false,
+      'Component %s declared `PropTypes` instead of `propTypes`. Did you misspell the property assignment?',
+      name || 'Unknown',
+    );
   }
   if (typeof componentClass.getDefaultProps === 'function') {
     warning(
