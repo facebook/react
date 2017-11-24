@@ -52,7 +52,6 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
-
     node.dispatchEvent(new Event('click'));
     expect(called).toBe(0);
 
