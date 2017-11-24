@@ -92,11 +92,8 @@
     "rollup-plugin-replace": "^2.0.0",
     "rollup-plugin-strip-banner": "^0.2.0",
     "run-sequence": "^1.1.4",
-<<<<<<< 313a78f92e4a15b79b2b1f7b50da9ba5ba776ee1
     "targz": "^1.0.1",
-=======
     "semver": "^5.4.1",
->>>>>>> use semver
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
@@ -121,6 +118,6 @@
     "flow": "node ./scripts/tasks/flow.js",
     "prettier": "node ./scripts/prettier/index.js write-changed",
     "prettier-all": "node ./scripts/prettier/index.js write",
-    "version-check": "node ./scripts/tasks/version-check.js"
+    "version-check": "node ./scripts/tasks/check-development-environment.js && node ./scripts/tasks/check-react-versions.js"
   }
 }
