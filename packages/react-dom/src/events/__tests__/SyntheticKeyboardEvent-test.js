@@ -12,8 +12,6 @@
 let React;
 let ReactDOM;
 
-let getEventCharCode;
-
 describe('SyntheticKeyboardEvent', () => {
   let container;
 
