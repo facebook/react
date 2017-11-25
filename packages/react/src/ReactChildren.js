@@ -8,26 +8,17 @@
 import emptyFunction from 'fbjs/lib/emptyFunction';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
+import {
+  getIteratorFn,
+  REACT_ELEMENT_TYPE,
+  REACT_CALL_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_PORTAL_TYPE,
+} from 'shared/ReactSymbols';
 
 import {isValidElement, cloneAndReplaceKey} from './ReactElement';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
-var ITERATOR_SYMBOL = typeof Symbol === 'function' && Symbol.iterator;
-var FAUX_ITERATOR_SYMBOL = '@@iterator'; // Before Symbol spec.
-// The Symbol used to tag the ReactElement type. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_ELEMENT_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element')) ||
-  0xeac7;
-const REACT_CALL_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.call')) ||
-  0xeac8;
-const REACT_RETURN_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.return')) ||
-  0xeac9;
-const REACT_PORTAL_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
-  0xeaca;
 var SEPARATOR = '.';
 var SUBSEPARATOR = ':';
 
@@ -170,9 +161,7 @@ function traverseAllChildrenImpl(
       );
     }
   } else {
-    var iteratorFn =
-      (ITERATOR_SYMBOL && children[ITERATOR_SYMBOL]) ||
-      children[FAUX_ITERATOR_SYMBOL];
+    var iteratorFn = getIteratorFn(children);
     if (typeof iteratorFn === 'function') {
       if (__DEV__) {
         // Warn about using Maps as children

@@ -328,14 +328,14 @@ export default function(
 
     const state = instance.state;
     if (state && (typeof state !== 'object' || isArray(state))) {
-      invariant(
+      warning(
         false,
         '%s.state: must be set to an object or null',
         getComponentName(workInProgress),
       );
     }
     if (typeof instance.getChildContext === 'function') {
-      invariant(
+      warning(
         typeof workInProgress.type.childContextTypes === 'object',
         '%s.getChildContext(): childContextTypes must be defined in order to ' +
           'use getChildContext().',

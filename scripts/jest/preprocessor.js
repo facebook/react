@@ -5,7 +5,7 @@ var path = require('path');
 var babel = require('babel-core');
 var coffee = require('coffee-script');
 
-var tsPreprocessor = require('./ts-preprocessor');
+var tsPreprocessor = require('./typescript/preprocessor');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc

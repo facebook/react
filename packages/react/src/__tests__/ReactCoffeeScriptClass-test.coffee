@@ -149,7 +149,9 @@ describe 'ReactCoffeeScriptClass', ->
     expect(renderCount).toBe 1
     undefined
 
-  it 'should throw with non-object in the initial state property', ->
+  it 'should warn with non-object in the initial state property', ->
+    spyOnDev console, 'error'
+
     [['an array'], 'a string', 1234].forEach (state) ->
       class Foo extends React.Component
         constructor: ->
@@ -158,20 +160,14 @@ describe 'ReactCoffeeScriptClass', ->
         render: ->
           span()
 
+      test React.createElement(Foo), 'SPAN', ''
       if __DEV__
-        expect(->
-          test React.createElement(Foo), 'SPAN', ''
-        ).toThrowError(
+        expect(console.error.calls.count()).toBe 1
+        expect(console.error.calls.argsFor(0)[0]).toContain(
           'Foo.state: must be set to an object or null'
         )
-      else
-        # This is a difference between development and production.
-        # I'm not sure if this is intentional, as generally we avoid this.
-        # TODO: investigate if this was intentional or an oversight.
-        # https://github.com/facebook/react/issues/11618
-        expect(->
-          test React.createElement(Foo), 'SPAN', ''
-        ).not.toThrowError()
+        console.error.calls.reset()
+
     undefined
 
   it 'should render with null in the initial state property', ->

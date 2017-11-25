@@ -448,6 +448,29 @@ describe('ReactElementValidator', () => {
     }
   });
 
+  it('should warn if component declares PropTypes instead of propTypes', () => {
+    spyOn(console, 'error');
+    class MisspelledPropTypesComponent extends React.Component {
+      static PropTypes = {
+        prop: PropTypes.string,
+      };
+      render() {
+        return React.createElement('span', null, this.props.prop);
+      }
+    }
+
+    ReactTestUtils.renderIntoDocument(
+      React.createElement(MisspelledPropTypesComponent, {prop: 'Hi'}),
+    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        'Warning: Component MisspelledPropTypesComponent declared `PropTypes` ' +
+          'instead of `propTypes`. Did you misspell the property assignment?',
+      );
+    }
+  });
+
   it('should warn when accessing .type on an element factory', () => {
     spyOnDev(console, 'warn');
     function TestComponent() {
