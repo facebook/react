@@ -23,7 +23,7 @@ const runYarnTask = async (cwd, task, errorMessage) => {
 module.exports = async ({cwd}) => {
   await logPromise(runYarnTask(cwd, 'lint', 'Lint failed'), 'Running ESLint');
   await logPromise(
-    runYarnTask(cwd, 'lint-build', 'Lint bundle failed'), 
+    runYarnTask(cwd, 'lint-build', 'Lint bundle failed'),
     'Running ESLint on bundle'
   );
   await logPromise(
@@ -41,12 +41,20 @@ module.exports = async ({cwd}) => {
     true
   );
   await logPromise(
-    runYarnTask(cwd, 'test-build', 'Jest tests on the bundle failed in development'),
+    runYarnTask(
+      cwd,
+      'test-build',
+      'Jest tests on the bundle failed in development'
+    ),
     'Running Jest tests on the bundle in the development environment',
     true
   );
   await logPromise(
-    runYarnTask(cwd, 'test-build-prod', 'Jest tests on the bundle failed in production'),
+    runYarnTask(
+      cwd,
+      'test-build-prod',
+      'Jest tests on the bundle failed in production'
+    ),
     'Running Jest tests on the bundle in the production environment',
     true
   );
