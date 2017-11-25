@@ -70,6 +70,9 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
         .map(s => s.substr('args[]='.length))
         .map(decodeURIComponent);
       const format = errorMap[code];
+      if (!format) {
+        return message;
+      }
       let argIndex = 0;
       return format.replace(/%s/g, () => args[argIndex++]);
     };
