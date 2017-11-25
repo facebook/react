@@ -35,6 +35,79 @@ describe('ChangeEventPlugin', () => {
     container = null;
   });
 
+  // We try to avoid firing "duplicate" React change events.
+  // However, to tell which events are "duplicates" and should be ignored,
+  // we are tracking the "current" input value, and only respect events
+  // that occur after it changes. In most of these tests, we verify that we
+  // keep track of the "current" value and only fire events when it changes.
+  // See https://github.com/facebook/react/pull/5746.
+
+  it('should consider initial text value to be current', () => {
+    var called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    var node = ReactDOM.render(
+      <input type="text" onChange={cb} defaultValue="foo" />,
+      container,
+    );
+    node.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    node.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
+  });
+
+  it('should consider initial checkbox checked=true to be current', () => {
+    var called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    var node = ReactDOM.render(
+      <input type="checkbox" onChange={cb} defaultChecked={true} />,
+      container,
+    );
+
+    // Secretly, set `checked` to false, so that dispatching the `click` will
+    // make it `true` again. Thus, at the time of the event, React should not
+    // consider it a change from the initial `true` value.
+    setUntrackedChecked.call(node, false);
+    node.dispatchEvent(
+      new MouseEvent('click', {bubbles: true, cancelable: true}),
+    );
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
+  });
+
+  it('should consider initial checkbox checked=false to be current', () => {
+    var called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    var node = ReactDOM.render(
+      <input type="checkbox" onChange={cb} defaultChecked={false} />,
+      container,
+    );
+
+    // Secretly, set `checked` to true, so that dispatching the `click` will
+    // make it `false` again. Thus, at the time of the event, React should not
+    // consider it a change from the initial `false` value.
+    setUntrackedChecked.call(node, true);
+    node.dispatchEvent(
+      new MouseEvent('click', {bubbles: true, cancelable: true}),
+    );
+    // There should be no React change events because the value stayed the same.
+    expect(called).toBe(0);
+  });
+
   it('should fire change for checkbox input', () => {
     var called = 0;
 
@@ -78,12 +151,6 @@ describe('ChangeEventPlugin', () => {
       container,
     );
 
-    // We try to avoid firing "duplicate" React change events.
-    // However, to tell which events are duplicates and should be ignored,
-    // we are tracking the "current" input value, and only respect events
-    // that occur after it changes. In this test, we verify that we can
-    // keep track of the "current" value even if it is set programatically.
-
     // Set it programmatically.
     input.value = 'bar';
     // Even if a DOM input event fires, React sees that the real input value now
@@ -105,6 +172,30 @@ describe('ChangeEventPlugin', () => {
     // Verify again that extra events without real changes are ignored.
     input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
     expect(called).toBe(1);
+  });
+
+  it('should not distinguish equal string and number values', () => {
+    var called = 0;
+
+    function cb(e) {
+      called++;
+      expect(e.type).toBe('change');
+    }
+
+    var input = ReactDOM.render(
+      <input type="text" defaultValue="42" onChange={cb} />,
+      container,
+    );
+
+    // When we set `value` as a property, React updates the "current" value
+    // that it tracks internally. The "current" value is later used to determine
+    // whether a change event is a duplicate or not.
+    // Even though we set value to a number, we still shouldn't get a change
+    // event because as a string, it's equal to the initial value ('42').
+    input.value = 42;
+    input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
+    expect(input.value).toBe('42');
+    expect(called).toBe(0);
   });
 
   // See a similar input test above for a detailed description of why.
@@ -165,6 +256,53 @@ describe('ChangeEventPlugin', () => {
     expect(called).toBe(1);
   });
 
+  it('should track radio button cousins in a group', () => {
+    var called1 = 0;
+    var called2 = 0;
+
+    function cb1(e) {
+      called1++;
+      expect(e.type).toBe('change');
+    }
+
+    function cb2(e) {
+      called2++;
+      expect(e.type).toBe('change');
+    }
+
+    var div = ReactDOM.render(
+      <div>
+        <input type="radio" name="group" onChange={cb1} />
+        <input type="radio" name="group" onChange={cb2} />
+      </div>,
+      container,
+    );
+    var option1 = div.childNodes[0];
+    var option2 = div.childNodes[1];
+
+    // Select first option.
+    option1.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    expect(called1).toBe(1);
+    expect(called2).toBe(0);
+
+    // Select second option.
+    option2.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    expect(called1).toBe(1);
+    expect(called2).toBe(1);
+
+    // Select the first option.
+    // It should receive the React change event again.
+    option1.dispatchEvent(
+      new Event('click', {bubbles: true, cancelable: true}),
+    );
+    expect(called1).toBe(2);
+    expect(called2).toBe(1);
+  });
+
   it('should deduplicate input value change events', () => {
     var called = 0;
 
@@ -177,10 +315,15 @@ describe('ChangeEventPlugin', () => {
     ['text', 'number', 'range'].forEach(type => {
       called = 0;
       input = ReactDOM.render(<input type={type} onChange={cb} />, container);
+      // Should be ignored (no change):
+      input.dispatchEvent(
+        new Event('change', {bubbles: true, cancelable: true}),
+      );
       setUntrackedValue.call(input, '42');
       input.dispatchEvent(
         new Event('change', {bubbles: true, cancelable: true}),
       );
+      // Should be ignored (no change):
       input.dispatchEvent(
         new Event('change', {bubbles: true, cancelable: true}),
       );
@@ -189,10 +332,15 @@ describe('ChangeEventPlugin', () => {
 
       called = 0;
       input = ReactDOM.render(<input type={type} onChange={cb} />, container);
+      // Should be ignored (no change):
+      input.dispatchEvent(
+        new Event('input', {bubbles: true, cancelable: true}),
+      );
       setUntrackedValue.call(input, '42');
       input.dispatchEvent(
         new Event('input', {bubbles: true, cancelable: true}),
       );
+      // Should be ignored (no change):
       input.dispatchEvent(
         new Event('input', {bubbles: true, cancelable: true}),
       );
@@ -201,10 +349,15 @@ describe('ChangeEventPlugin', () => {
 
       called = 0;
       input = ReactDOM.render(<input type={type} onChange={cb} />, container);
+      // Should be ignored (no change):
+      input.dispatchEvent(
+        new Event('change', {bubbles: true, cancelable: true}),
+      );
       setUntrackedValue.call(input, '42');
       input.dispatchEvent(
         new Event('input', {bubbles: true, cancelable: true}),
       );
+      // Should be ignored (no change):
       input.dispatchEvent(
         new Event('change', {bubbles: true, cancelable: true}),
       );
@@ -256,5 +409,33 @@ describe('ChangeEventPlugin', () => {
     input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
 
     expect(called).toBe(2);
+  });
+
+  it('does not crash for nodes with custom value property', () => {
+    // https://github.com/facebook/react/issues/10196
+    try {
+      var originalCreateElement = document.createElement;
+      document.createElement = function() {
+        var node = originalCreateElement.apply(this, arguments);
+        Object.defineProperty(node, 'value', {
+          get() {},
+          set() {},
+        });
+        return node;
+      };
+      var div = document.createElement('div');
+      // Mount
+      var node = ReactDOM.render(<input type="text" />, div);
+      // Update
+      ReactDOM.render(<input type="text" />, div);
+      // Change
+      node.dispatchEvent(
+        new Event('change', {bubbles: true, cancelable: true}),
+      );
+      // Unmount
+      ReactDOM.unmountComponentAtNode(div);
+    } finally {
+      document.createElement = originalCreateElement;
+    }
   });
 });
