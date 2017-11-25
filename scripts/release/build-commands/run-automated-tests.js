@@ -23,31 +23,31 @@ const runYarnTask = async (cwd, task, errorMessage) => {
 module.exports = async ({cwd}) => {
   await logPromise(runYarnTask(cwd, 'lint', 'Lint failed'), 'Running ESLint');
   await logPromise(
-    runYarnTask(cwd, 'lint-build', 'Lint build failed'), 
-    'Running ESLint on build'
+    runYarnTask(cwd, 'lint-build', 'Lint bundle failed'), 
+    'Running ESLint on bundle'
   );
   await logPromise(
     runYarnTask(cwd, 'flow', 'Flow failed'),
     'Running Flow checks'
   );
   await logPromise(
-    runYarnTask(cwd, 'test', 'Development Jest tests failed'),
-    'Running development Jest tests',
+    runYarnTask(cwd, 'test', 'Jest tests failed in development'),
+    'Running Jest tests in the development environment',
     true
   );
   await logPromise(
-    runYarnTask(cwd, 'test-prod', 'Production Jest tests failed'),
-    'Running production Jest tests',
+    runYarnTask(cwd, 'test-prod', 'Jest tests failed in production'),
+    'Running Jest tests in the production environment',
     true
   );
   await logPromise(
-    runYarnTask(cwd, 'test-build', 'Development build Jest tests failed'),
-    'Running development build Jest tests',
+    runYarnTask(cwd, 'test-build', 'Jest tests on the bundle failed in development'),
+    'Running Jest tests on the bundle in the development environment',
     true
   );
   await logPromise(
-    runYarnTask(cwd, 'test-build-prod', 'Production build Jest tests failed'),
-    'Running production build Jest tests',
+    runYarnTask(cwd, 'test-build-prod', 'Jest tests on the bundle failed in production'),
+    'Running Jest tests on the bundle in the production environment',
     true
   );
 };
