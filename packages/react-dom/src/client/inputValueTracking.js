@@ -96,11 +96,6 @@ function trackValueOnNode(node: any): ?ValueTracker {
   return tracker;
 }
 
-export {
-  // exposed for testing
-  getTracker as _getTrackerFromNode,
-};
-
 export function track(node: ElementWithValueTracker) {
   if (getTracker(node)) {
     return;

@@ -455,7 +455,11 @@ var ReactNoop = {
 
   unbatchedUpdates: NoopRenderer.unbatchedUpdates,
 
-  flushSync: NoopRenderer.flushSync,
+  flushSync(fn: () => mixed) {
+    yieldedValues = [];
+    NoopRenderer.flushSync(fn);
+    return yieldedValues;
+  },
 
   // Logs the current state of the tree.
   dumpTree(rootID: string = DEFAULT_ROOT_ID) {

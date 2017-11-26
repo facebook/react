@@ -27,7 +27,7 @@ module.exports = async ({cwd}) => {
     'Running Flow checks'
   );
   await logPromise(
-    runYarnTask(cwd, 'jest', 'Jest failed'),
+    runYarnTask(cwd, 'test', 'Jest failed'),
     'Running Jest tests',
     true
   );

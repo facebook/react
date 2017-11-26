@@ -123,17 +123,7 @@ export function listenTo(registrationName, contentDocumentHandle) {
   for (var i = 0; i < dependencies.length; i++) {
     var dependency = dependencies[i];
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === 'topWheel') {
-        if (isEventSupported('wheel')) {
-          trapBubbledEvent('topWheel', 'wheel', mountAt);
-        } else if (isEventSupported('mousewheel')) {
-          trapBubbledEvent('topWheel', 'mousewheel', mountAt);
-        } else {
-          // Firefox needs to capture a different mouse scroll event.
-          // @see http://www.quirksmode.org/dom/events/tests/scroll.html
-          trapBubbledEvent('topWheel', 'DOMMouseScroll', mountAt);
-        }
-      } else if (dependency === 'topScroll') {
+      if (dependency === 'topScroll') {
         trapCapturedEvent('topScroll', 'scroll', mountAt);
       } else if (dependency === 'topFocus' || dependency === 'topBlur') {
         trapCapturedEvent('topFocus', 'focus', mountAt);

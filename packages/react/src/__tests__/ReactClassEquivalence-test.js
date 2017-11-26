@@ -10,7 +10,6 @@
 'use strict';
 
 var spawnSync = require('child_process').spawnSync;
-var path = require('path');
 
 describe('ReactClassEquivalence', () => {
   it('tests the same thing for es6 classes and CoffeeScript', () => {
@@ -28,9 +27,7 @@ describe('ReactClassEquivalence', () => {
 
 function runJest(testFile) {
   var cwd = process.cwd();
-  var extension = process.platform === 'win32' ? '.cmd' : '';
-  var jestBin = path.resolve('node_modules', '.bin', 'jest' + extension);
-  var result = spawnSync(jestBin, [testFile], {
+  var result = spawnSync('yarn', ['test', testFile], {
     cwd,
     env: Object.assign({}, process.env, {
       REACT_CLASS_EQUIVALENCE_TEST: 'true',

@@ -1909,7 +1909,7 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('discards a bad root if the root component fails', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     const X = null;
     const Y = undefined;

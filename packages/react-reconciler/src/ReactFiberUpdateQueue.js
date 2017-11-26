@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import {Callback as CallbackEffect} from 'shared/ReactTypeOfSideEffect';
 import {ClassComponent, HostRoot} from 'shared/ReactTypeOfWork';
 import invariant from 'fbjs/lib/invariant';
@@ -181,6 +182,12 @@ function getStateFromUpdate(update, instance, prevState, props) {
   const partialState = update.partialState;
   if (typeof partialState === 'function') {
     const updateFn = partialState;
+
+    // Invoke setState callback an extra time to help detect side-effects.
+    if (debugRenderPhaseSideEffects) {
+      updateFn.call(instance, prevState, props);
+    }
+
     return updateFn.call(instance, prevState, props);
   } else {
     return partialState;

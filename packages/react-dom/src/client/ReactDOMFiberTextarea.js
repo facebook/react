@@ -14,8 +14,8 @@ import ReactDebugCurrentFiber from 'react-reconciler/src/ReactDebugCurrentFiber'
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
-var {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
-var didWarnValDefaultVal = false;
+const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
+let didWarnValDefaultVal = false;
 
 type TextAreaWithWrapperState = HTMLTextAreaElement & {
   _wrapperState: {
@@ -40,7 +40,7 @@ type TextAreaWithWrapperState = HTMLTextAreaElement & {
  */
 
 export function getHostProps(element: Element, props: Object) {
-  var node = ((element: any): TextAreaWithWrapperState);
+  const node = ((element: any): TextAreaWithWrapperState);
   invariant(
     props.dangerouslySetInnerHTML == null,
     '`dangerouslySetInnerHTML` does not make sense on <textarea>.',
@@ -52,17 +52,18 @@ export function getHostProps(element: Element, props: Object) {
   // completely solve this IE9 bug), but Sebastian+Sophie seemed to like this
   // solution. The value can be a boolean or object so that's why it's forced
   // to be a string.
-  var hostProps = Object.assign({}, props, {
+  const hostProps = {
+    ...props,
     value: undefined,
     defaultValue: undefined,
     children: '' + node._wrapperState.initialValue,
-  });
+  };
 
   return hostProps;
 }
 
 export function initWrapperState(element: Element, props: Object) {
-  var node = ((element: any): TextAreaWithWrapperState);
+  const node = ((element: any): TextAreaWithWrapperState);
   if (__DEV__) {
     ReactControlledValuePropTypes.checkPropTypes(
       'textarea',
@@ -86,14 +87,13 @@ export function initWrapperState(element: Element, props: Object) {
     }
   }
 
-  var value = props.value;
-  var initialValue = value;
+  let initialValue = props.value;
 
   // Only bother fetching default value if we're going to use it
-  if (value == null) {
-    var defaultValue = props.defaultValue;
+  if (initialValue == null) {
+    let defaultValue = props.defaultValue;
     // TODO (yungsters): Remove support for children content in <textarea>.
-    var children = props.children;
+    let children = props.children;
     if (children != null) {
       if (__DEV__) {
         warning(
@@ -128,12 +128,12 @@ export function initWrapperState(element: Element, props: Object) {
 }
 
 export function updateWrapper(element: Element, props: Object) {
-  var node = ((element: any): TextAreaWithWrapperState);
-  var value = props.value;
+  const node = ((element: any): TextAreaWithWrapperState);
+  const value = props.value;
   if (value != null) {
     // Cast `value` to a string to ensure the value is set correctly. While
     // browsers typically do this as necessary, jsdom doesn't.
-    var newValue = '' + value;
+    const newValue = '' + value;
 
     // To avoid side effects (such as losing text selection), only set value if changed
     if (newValue !== node.value) {
@@ -149,10 +149,10 @@ export function updateWrapper(element: Element, props: Object) {
 }
 
 export function postMountWrapper(element: Element, props: Object) {
-  var node = ((element: any): TextAreaWithWrapperState);
+  const node = ((element: any): TextAreaWithWrapperState);
   // This is in postMount because we need access to the DOM node, which is not
   // available until after the component has mounted.
-  var textContent = node.textContent;
+  const textContent = node.textContent;
 
   // Only set node.value if textContent is equal to the expected
   // initial value. In IE10/IE11 there is a bug where the placeholder attribute

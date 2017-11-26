@@ -115,6 +115,8 @@ describe('ReactDebugFiberPerf', () => {
     resetFlamechart();
     global.performance = createUserTimingPolyfill();
 
+    require('shared/ReactFeatureFlags').enableUserTimingAPI = true;
+
     // Import after the polyfill is set up:
     React = require('react');
     ReactNoop = require('react-noop-renderer');

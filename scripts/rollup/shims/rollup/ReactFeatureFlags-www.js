@@ -12,6 +12,7 @@ import typeof * as FeatureFlagsShimType from './ReactFeatureFlags-www';
 
 // Re-export dynamic flags from the www version.
 export const {
+  debugRenderPhaseSideEffects,
   enableAsyncSchedulingByDefaultInReactDOM,
 } = require('ReactFeatureFlags');
 

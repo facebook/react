@@ -61,7 +61,7 @@ const bundles = [
   {
     label: 'dom-test-utils',
     moduleType: RENDERER_UTILS,
-    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
     entry: 'react-dom/test-utils',
     global: 'ReactTestUtils',
     externals: ['react', 'react-dom'],
@@ -129,6 +129,7 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
     ],
+    featureFlags: 'react-native-renderer/src/ReactNativeFeatureFlags',
   },
 
   /******* React Native RT *******/
@@ -177,14 +178,27 @@ const bundles = [
     externals: ['react'],
   },
 
-  /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
+  /******* React Noop Renderer (used for tests) *******/
   {
     label: 'noop',
-    bundleTypes: [NODE_DEV],
+    bundleTypes: [NODE_DEV, NODE_PROD],
     moduleType: RENDERER,
     entry: 'react-noop-renderer',
     global: 'ReactNoopRenderer',
     externals: ['react', 'expect'],
+    // React Noop uses generators. However GCC currently
+    // breaks when we attempt to use them in the output.
+    // So we precompile them with regenerator, and include
+    // it as a runtime dependency of React Noop. In practice
+    // this isn't an issue because React Noop is only used
+    // in our tests. We wouldn't want to do this for any
+    // public package though.
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          require.resolve('babel-plugin-transform-regenerator'),
+        ]),
+      }),
   },
 
   /******* React Reconciler *******/
