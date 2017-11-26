@@ -111,10 +111,14 @@ export function getValueForAttribute(node, name, expected) {
  * @param {string} name
  * @param {*} value
  */
-export function setValueForProperty(node, name, value) {
+export function setValueForProperty(node, name, value, isCustomComponentTag) {
   const propertyInfo = getPropertyInfo(name);
 
-  if (propertyInfo && shouldSetAttribute(name, value)) {
+  if (
+    !isCustomComponentTag &&
+    propertyInfo &&
+    shouldSetAttribute(name, value)
+  ) {
     if (shouldIgnoreValue(propertyInfo, value)) {
       if (propertyInfo.mustUseProperty) {
         if (propertyInfo.hasBooleanValue) {
@@ -146,11 +150,8 @@ export function setValueForProperty(node, name, value) {
       }
     }
   } else {
-    setValueForAttribute(
-      node,
-      name,
-      shouldSetAttribute(name, value) ? value : null,
-    );
+    const useValue = isCustomComponentTag || shouldSetAttribute(name, value);
+    setValueForAttribute(node, name, useValue ? value : null);
   }
 }
 
