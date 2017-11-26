@@ -7,7 +7,7 @@
 
 'use strict';
 
-const lintOnFiles = require('../eslint');
+const {lintOnFiles} = require('../eslint');
 const report = lintOnFiles(['.']);
 if (report.errorCount > 0 || report.warningCount > 0) {
   console.log('Lint failed.');

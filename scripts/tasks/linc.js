@@ -7,14 +7,14 @@
 
 'use strict';
 
-const lintOnFiles = require('../eslint');
+const {lintOnFiles, validWarnings} = require('../eslint');
 const listChangedFiles = require('../shared/listChangedFiles');
 
 const changedFiles = [...listChangedFiles()];
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 
 const report = lintOnFiles(jsFiles);
-if (report.errorCount > 0 || report.warningCount > 0) {
+if (report.errorCount > 0 || validWarnings(report)) {
   console.log('Lint failed for changed files.');
   process.exit(1);
 } else {
