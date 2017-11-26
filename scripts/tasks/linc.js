@@ -13,17 +13,20 @@ const mergeBase = execFileSync('git', ['merge-base', 'HEAD', 'master'], {
   stdio: 'pipe',
   encoding: 'utf-8',
 }).trim();
-const changedFiles = execFileSync(
-  'git',
-  ['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase],
-  {
+
+const execGitCmd = args =>
+  execFileSync('git', args, {
     stdio: 'pipe',
     encoding: 'utf-8',
-  }
-)
-  .trim()
-  .toString()
-  .split('\n');
+  })
+    .trim()
+    .toString()
+    .split('\n');
+
+const changedFiles = [
+  ...execGitCmd(['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase]),
+  ...execGitCmd(['ls-files', '--others', '--exclude-standard']),
+];
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 
 const report = lintOnFiles(jsFiles);
