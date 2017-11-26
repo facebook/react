@@ -6,8 +6,6 @@
  */
 
 import {
-  ID_ATTRIBUTE_NAME,
-  ROOT_ATTRIBUTE_NAME,
   getPropertyInfo,
   shouldSetAttribute,
   isAttributeNameSafe,
@@ -23,18 +21,6 @@ function shouldIgnoreValue(propertyInfo, value) {
     (propertyInfo.hasPositiveNumericValue && value < 1) ||
     (propertyInfo.hasOverloadedBooleanValue && value === false)
   );
-}
-
-/**
- * Operations for dealing with DOM properties.
- */
-
-export function setAttributeForID(node, id) {
-  node.setAttribute(ID_ATTRIBUTE_NAME, id);
-}
-
-export function setAttributeForRoot(node) {
-  node.setAttribute(ROOT_ATTRIBUTE_NAME, '');
 }
 
 /**
