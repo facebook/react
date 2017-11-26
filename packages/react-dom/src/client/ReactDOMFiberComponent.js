@@ -342,15 +342,11 @@ function updateDOMProperties(
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
     } else if (isCustomComponentTag) {
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForAttribute(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
-      }
+      DOMPropertyOperations.setValueForAttribute(
+        domElement,
+        propKey,
+        propValue,
+      );
     } else {
       DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
     }
