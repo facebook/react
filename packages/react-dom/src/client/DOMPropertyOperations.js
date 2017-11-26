@@ -130,8 +130,15 @@ export function setValueForProperty(node, name, value) {
 
   if (propertyInfo && shouldSetAttribute(name, value)) {
     if (shouldIgnoreValue(propertyInfo, value)) {
-      deleteValueForProperty(node, name);
-      return;
+      if (propertyInfo.mustUseProperty) {
+        if (propertyInfo.hasBooleanValue) {
+          node[propertyInfo.propertyName] = false;
+        } else {
+          node[propertyInfo.propertyName] = '';
+        }
+      } else {
+        node.removeAttribute(propertyInfo.attributeName);
+      }
     } else if (propertyInfo.mustUseProperty) {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
@@ -158,7 +165,6 @@ export function setValueForProperty(node, name, value) {
       name,
       shouldSetAttribute(name, value) ? value : null,
     );
-    return;
   }
 }
 
@@ -181,28 +187,4 @@ export function setValueForAttribute(node, name, value) {
  */
 export function deleteValueForAttribute(node, name) {
   node.removeAttribute(name);
-}
-
-/**
- * Deletes the value for a property on a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- */
-function deleteValueForProperty(node, name) {
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
-    if (propertyInfo.mustUseProperty) {
-      const propName = propertyInfo.propertyName;
-      if (propertyInfo.hasBooleanValue) {
-        node[propName] = false;
-      } else {
-        node[propName] = '';
-      }
-    } else {
-      node.removeAttribute(propertyInfo.attributeName);
-    }
-  } else {
-    node.removeAttribute(name);
-  }
 }
