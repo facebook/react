@@ -68,15 +68,19 @@ function exec(command, args) {
 }
 
 var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
-var changedFiles = new Set(
-  exec('git', [
+var changedFiles = new Set([
+  ...exec('git', [
     'diff',
     '-z',
     '--name-only',
     '--diff-filter=ACMRTUB',
     mergeBase,
-  ]).match(/[^\0]+/g)
-);
+  ]).match(/[^\0]+/g),
+  ...exec('git', ['ls-files', '--others', '--exclude-standard'])
+    .trim()
+    .toString()
+    .split('\n'),
+]);
 
 let didWarn = false;
 let didError = false;
