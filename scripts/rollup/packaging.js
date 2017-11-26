@@ -8,6 +8,7 @@ const resolve = require('path').resolve;
 const Bundles = require('./bundles');
 const asyncCopyTo = require('./utils').asyncCopyTo;
 const glob = require('glob');
+const mkdirp = require('mkdirp');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -195,8 +196,6 @@ function copyNodePackageTemplate(packageName) {
     );
     process.exit(1);
   }
-  fs.mkdirSync(to);
-  let existingDirCache = {};
   // looping through entries(single file / directory / pattern) in `files`
   const whitelistedFiles = whitelist.reduce((list, pattern) => {
     const matchedFiles = glob.sync(pattern, {
@@ -204,16 +203,7 @@ function copyNodePackageTemplate(packageName) {
     });
     // copy matching files/directories from './npm' to build package.
     matchedFiles.forEach(file => {
-      // create all nesting directories ahead to avoid 'No such file or directory' error
-      const dirnameSegments = dirname(file).split('/');
-      dirnameSegments.reduce((prevPath, currentPath) => {
-        const fullPath = `${prevPath}/${currentPath}`;
-        if (!existingDirCache[fullPath] && !fs.existsSync(fullPath)) {
-          existingDirCache[fullPath] = true;
-          fs.mkdirSync(`${to}/${fullPath}`);
-        }
-        return fullPath;
-      }, '');
+      mkdirp.sync(`${to}/${dirname(file)}`);
       promisesForForwardingModules.push(
         asyncCopyTo(`${npmFrom}/${file}`, `${to}/${file}`)
       );
