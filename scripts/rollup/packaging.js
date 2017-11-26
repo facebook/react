@@ -1,11 +1,14 @@
 'use strict';
 
 const basename = require('path').basename;
+const dirname = require('path').dirname;
 const fs = require('fs');
 const join = require('path').join;
 const resolve = require('path').resolve;
 const Bundles = require('./bundles');
 const asyncCopyTo = require('./utils').asyncCopyTo;
+const glob = require('glob');
+const mkdirp = require('mkdirp');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -156,7 +159,7 @@ function copyBundleIntoNodePackage(packageName, filename, bundleType) {
 function copyNodePackageTemplate(packageName) {
   const from = resolve(`./packages/${packageName}`);
   const to = resolve(`./build/packages/${packageName}`);
-  const npmFrom = resolve(`${from}/npm`);
+  const npmFrom = `${from}/npm`;
   if (!fs.existsSync(npmFrom)) {
     // The package is not meant for npm consumption.
     return Promise.resolve();
@@ -165,15 +168,69 @@ function copyNodePackageTemplate(packageName) {
     // We already created this package (e.g. due to another entry point).
     return Promise.resolve();
   }
-  // TODO: verify that all copied files are either in the "files"
-  // whitelist or implicitly published by npm.
-  return asyncCopyTo(npmFrom, to).then(() =>
-    Promise.all([
-      asyncCopyTo(resolve(`${from}/package.json`), `${to}/package.json`),
-      asyncCopyTo(resolve(`${from}/README.md`), `${to}/README.md`),
-      asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`),
-    ])
-  );
+  // Get all entry points in the package root
+  // Exceptions: *.fb.js
+  const packageEntries = glob.sync('!(*.fb).js', {
+    cwd: from,
+  });
+  const npmFiles = fs.readdirSync(npmFrom);
+  packageEntries.forEach(entry => {
+    if (!npmFiles.includes(entry)) {
+      // Terminate the build if any entry point(Exception: *.fb.js)
+      // does not have an equivalent in ./npm.
+      console.error(
+        `Entry point ${entry} in package ${
+          packageName
+        } does not have an equivalent in ./npm`
+      );
+      process.exit(1);
+    }
+  });
+  const packageJson = `${from}/package.json`;
+  const whitelist = fs.existsSync(packageJson) && require(packageJson).files;
+  let promisesForForwardingModules = [];
+  if (!whitelist) {
+    // Terminate the build if 'files' field is missing from package.json.
+    console.error(
+      `'files' field is missing from package.json in package ${packageName}`
+    );
+    process.exit(1);
+  }
+  // looping through entries(single file / directory / pattern) in `files`
+  const whitelistedFiles = whitelist.reduce((list, pattern) => {
+    const matchedFiles = glob.sync(pattern, {
+      cwd: npmFrom,
+    });
+    // copy matching files/directories from './npm' to build package.
+    matchedFiles.forEach(file => {
+      mkdirp.sync(`${to}/${dirname(file)}`);
+      promisesForForwardingModules.push(
+        asyncCopyTo(`${npmFrom}/${file}`, `${to}/${file}`)
+      );
+    });
+    // return an array of whitelisted files
+    // for entry point check next.
+    // All patterns have been parsed to file/directory
+    return list.concat(matchedFiles);
+  }, []);
+  // terminate the build if any entry point(Exception: *.fb.js)
+  // is not whitelisted in the 'files' field in package.json.
+  packageEntries.forEach(entry => {
+    if (!whitelistedFiles.includes(entry)) {
+      console.error(
+        `Entry point ${entry} in package ${
+          packageName
+        } is not listed in the 'files' field in package.json`
+      );
+      process.exit(1);
+    }
+  });
+  return Promise.all([
+    ...promisesForForwardingModules,
+    asyncCopyTo(resolve(`${from}/package.json`), `${to}/package.json`),
+    asyncCopyTo(resolve(`${from}/README.md`), `${to}/README.md`),
+    asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`),
+  ]);
 }
 
 function createNodePackage(bundleType, packageName, filename) {
