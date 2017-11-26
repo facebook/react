@@ -103,6 +103,7 @@
     "build": "npm run version-check && node scripts/rollup/build.js",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
+    "lint-build": "node ./scripts/rollup/validate/index.js",
     "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",

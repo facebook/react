@@ -9,7 +9,7 @@ yarn build --extract-errors
 # See https://github.com/facebook/react/pull/11655.
 
 # Do a sanity check on bundles
-node ./scripts/rollup/validate/index
+yarn lint-build
 
 # Check that the standalone reconciler isn't borked
 cd fixtures/reconciler
