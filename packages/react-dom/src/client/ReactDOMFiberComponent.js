@@ -314,13 +314,13 @@ function setInitialDOMProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (isCustomComponentTag) {
-      DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (nextProp != null) {
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertently setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
+      DOMPropertyOperations.setValueForProperty(
+        domElement,
+        propKey,
+        nextProp,
+        isCustomComponentTag,
+      );
     }
   }
 }
@@ -341,14 +341,13 @@ function updateDOMProperties(
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
-    } else if (isCustomComponentTag) {
-      DOMPropertyOperations.setValueForAttribute(
+    } else {
+      DOMPropertyOperations.setValueForProperty(
         domElement,
         propKey,
         propValue,
+        isCustomComponentTag,
       );
-    } else {
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
     }
   }
 }
