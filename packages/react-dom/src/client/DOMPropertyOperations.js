@@ -189,7 +189,7 @@ export function deleteValueForAttribute(node, name) {
  * @param {DOMElement} node
  * @param {string} name
  */
-export function deleteValueForProperty(node, name) {
+function deleteValueForProperty(node, name) {
   const propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
     if (propertyInfo.mustUseProperty) {
