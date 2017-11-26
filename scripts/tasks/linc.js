@@ -8,25 +8,9 @@
 'use strict';
 
 const lintOnFiles = require('../eslint');
-const execFileSync = require('child_process').execFileSync;
-const mergeBase = execFileSync('git', ['merge-base', 'HEAD', 'master'], {
-  stdio: 'pipe',
-  encoding: 'utf-8',
-}).trim();
+const listChangedFiles = require('../shared/listChangedFiles');
 
-const execGitCmd = args =>
-  execFileSync('git', args, {
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  })
-    .trim()
-    .toString()
-    .split('\n');
-
-const changedFiles = [
-  ...execGitCmd(['diff', '--name-only', '--diff-filter=ACMRTUB', mergeBase]),
-  ...execGitCmd(['ls-files', '--others', '--exclude-standard']),
-];
+const changedFiles = [...listChangedFiles()];
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 
 const report = lintOnFiles(jsFiles);
