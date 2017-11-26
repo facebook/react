@@ -178,13 +178,3 @@ export function setValueForAttribute(node, name, value) {
     node.setAttribute(name, '' + value);
   }
 }
-
-/**
- * Deletes an attributes from a node.
- *
- * @param {DOMElement} node
- * @param {string} name
- */
-export function deleteValueForAttribute(node, name) {
-  node.removeAttribute(name);
-}
