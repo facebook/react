@@ -351,13 +351,8 @@ function updateDOMProperties(
       } else {
         DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
       }
-    } else if (propValue != null) {
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
     } else {
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertently setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
+      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
     }
   }
 }
