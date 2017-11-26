@@ -32,9 +32,3 @@ test:
   override:
     - ./scripts/circleci/test_entry_point.sh:
         parallel: true
-
-deployment:
-  staging:
-    branch: /.*/
-    commands:
-      - ./scripts/circleci/upload_build.sh

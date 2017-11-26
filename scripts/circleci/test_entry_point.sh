@@ -23,6 +23,7 @@ if [ $((2 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
   COMMANDS_TO_RUN+=('./scripts/circleci/build.sh')
   COMMANDS_TO_RUN+=('yarn test-build --runInBand')
   COMMANDS_TO_RUN+=('yarn test-build-prod --runInBand')
+  COMMANDS_TO_RUN+=('./scripts/circleci/upload_build.sh')
 fi
 
 if [ $((3 % CIRCLE_NODE_TOTAL)) -eq "$CIRCLE_NODE_INDEX" ]; then
