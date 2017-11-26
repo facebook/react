@@ -1909,7 +1909,7 @@ describe('ReactErrorBoundaries', () => {
   });
 
   it('discards a bad root if the root component fails', () => {
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
 
     const X = null;
     const Y = undefined;
@@ -2000,5 +2000,17 @@ describe('ReactErrorBoundaries', () => {
     expect(errors).toEqual(['child sad', 'parent sad']);
     // Error should be the first thrown
     expect(caughtError.message).toBe('child sad');
+  });
+
+  it('propagates uncaught error inside unbatched initial mount', () => {
+    function Foo() {
+      throw new Error('foo error');
+    }
+    const container = document.createElement('div');
+    expect(() => {
+      ReactDOM.unstable_batchedUpdates(() => {
+        ReactDOM.render(<Foo />, container);
+      });
+    }).toThrow('foo error');
   });
 });

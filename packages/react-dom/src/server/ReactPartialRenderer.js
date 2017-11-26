@@ -19,12 +19,14 @@ import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
+import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import {
   createMarkupForCustomAttribute,
   createMarkupForProperty,
   createMarkupForRoot,
 } from './DOMMarkupOperations';
+import escapeTextForBrowser from './escapeTextForBrowser';
 import {
   Namespaces,
   getIntrinsicNamespace,
@@ -33,19 +35,12 @@ import {
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import assertValidProps from '../shared/assertValidProps';
 import dangerousStyleValue from '../shared/dangerousStyleValue';
-import escapeTextContentForBrowser from '../shared/escapeTextContentForBrowser';
 import isCustomComponent from '../shared/isCustomComponent';
 import omittedCloseTags from '../shared/omittedCloseTags';
 import warnValidStyle from '../shared/warnValidStyle';
 import {validateProperties as validateARIAProperties} from '../shared/ReactDOMInvalidARIAHook';
 import {validateProperties as validateInputProperties} from '../shared/ReactDOMNullInputValuePropHook';
 import {validateProperties as validateUnknownProperties} from '../shared/ReactDOMUnknownPropertyHook';
-
-var REACT_FRAGMENT_TYPE =
-  (typeof Symbol === 'function' &&
-    Symbol.for &&
-    Symbol.for('react.fragment')) ||
-  0xeacb;
 
 // Based on reading the React.Children implementation. TODO: type this somewhere?
 type ReactNode = string | number | ReactElement;
@@ -59,7 +54,7 @@ if (__DEV__) {
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props);
+    validateUnknownProperties(type, props, /* canUseEventSystem */ false);
   };
 
   var describeStackFrame = function(element): string {
@@ -209,7 +204,7 @@ function getNonChildrenInnerMarkup(props) {
   } else {
     var content = props.children;
     if (typeof content === 'string' || typeof content === 'number') {
-      return escapeTextContentForBrowser(content);
+      return escapeTextForBrowser(content);
     }
   }
   return null;
@@ -461,19 +456,22 @@ function resolve(
     var childContext;
     if (typeof inst.getChildContext === 'function') {
       var childContextTypes = Component.childContextTypes;
-      invariant(
-        typeof childContextTypes === 'object',
-        '%s.getChildContext(): childContextTypes must be defined in order to ' +
-          'use getChildContext().',
-        getComponentName(Component) || 'Unknown',
-      );
-      childContext = inst.getChildContext();
-      for (let contextKey in childContext) {
-        invariant(
-          contextKey in childContextTypes,
-          '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+      if (typeof childContextTypes === 'object') {
+        childContext = inst.getChildContext();
+        for (let contextKey in childContext) {
+          invariant(
+            contextKey in childContextTypes,
+            '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
+            getComponentName(Component) || 'Unknown',
+            contextKey,
+          );
+        }
+      } else {
+        warning(
+          false,
+          '%s.getChildContext(): childContextTypes must be defined in order to ' +
+            'use getChildContext().',
           getComponentName(Component) || 'Unknown',
-          contextKey,
         );
       }
     }
@@ -574,13 +572,13 @@ class ReactDOMServerRenderer {
         return '';
       }
       if (this.makeStaticMarkup) {
-        return escapeTextContentForBrowser(text);
+        return escapeTextForBrowser(text);
       }
       if (this.previousWasTextNode) {
-        return '<!-- -->' + escapeTextContentForBrowser(text);
+        return '<!-- -->' + escapeTextForBrowser(text);
       }
       this.previousWasTextNode = true;
-      return escapeTextContentForBrowser(text);
+      return escapeTextForBrowser(text);
     } else {
       var nextChild;
       ({child: nextChild, context} = resolve(child, context));

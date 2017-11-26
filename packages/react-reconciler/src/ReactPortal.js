@@ -7,13 +7,9 @@
  * @flow
  */
 
-import type {ReactNodeList, ReactPortal} from 'shared/ReactTypes';
+import {REACT_PORTAL_TYPE} from 'shared/ReactSymbols';
 
-// The Symbol used to tag the special React types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-export const REACT_PORTAL_TYPE =
-  (typeof Symbol === 'function' && Symbol.for && Symbol.for('react.portal')) ||
-  0xeaca;
+import type {ReactNodeList, ReactPortal} from 'shared/ReactTypes';
 
 export function createPortal(
   children: ReactNodeList,

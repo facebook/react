@@ -12,7 +12,7 @@ type ValueTracker = {
   setValue(value: string): void,
   stopTracking(): void,
 };
-type WrapperState = {_valueTracker: ?ValueTracker};
+type WrapperState = {_valueTracker?: ?ValueTracker};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
 
 function isCheckable(elem: HTMLInputElement) {
@@ -95,11 +95,6 @@ function trackValueOnNode(node: any): ?ValueTracker {
   };
   return tracker;
 }
-
-export {
-  // exposed for testing
-  getTracker as _getTrackerFromNode,
-};
 
 export function track(node: ElementWithValueTracker) {
   if (getTracker(node)) {

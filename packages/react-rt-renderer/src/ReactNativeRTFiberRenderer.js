@@ -146,6 +146,7 @@ const NativeRTRenderer = ReactFiberReconciler({
   },
 
   scheduleDeferredCallback: global.requestIdleCallback,
+  cancelDeferredCallback: global.cancelIdleCallback,
 
   shouldSetTextContent(type: string, props: Props): boolean {
     // TODO: Figure out when we should allow text content.

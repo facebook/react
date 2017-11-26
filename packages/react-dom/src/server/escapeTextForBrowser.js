@@ -39,9 +39,9 @@
 var matchHtmlRegExp = /["'&<>]/;
 
 /**
- * Escape special characters in the given string of html.
+ * Escapes special characters and HTML entities in a given html string.
  *
- * @param  {string} string The string to escape for inserting into HTML
+ * @param  {string} string HTML string to escape for later insertion
  * @return {string}
  * @public
  */
@@ -98,7 +98,7 @@ function escapeHtml(string) {
  * @param {*} text Text value to escape.
  * @return {string} An escaped string.
  */
-function escapeTextContentForBrowser(text) {
+function escapeTextForBrowser(text) {
   if (typeof text === 'boolean' || typeof text === 'number') {
     // this shortcircuit helps perf for types that we know will never have
     // special characters, especially given that this function is used often
@@ -108,4 +108,4 @@ function escapeTextContentForBrowser(text) {
   return escapeHtml(text);
 }
 
-export default escapeTextContentForBrowser;
+export default escapeTextForBrowser;

@@ -18,7 +18,6 @@ const now = hasNativePerformanceNow
 
 type Callback = (deadline: Deadline) => void;
 
-let isCallbackScheduled: boolean = false;
 let scheduledCallback: Callback | null = null;
 let frameDeadline: number = 0;
 
@@ -27,8 +26,6 @@ const frameDeadlineObject: Deadline = {
 };
 
 function setTimeoutCallback() {
-  isCallbackScheduled = false;
-
   // TODO (bvaughn) Hard-coded 5ms unblocks initial async testing.
   // React API probably changing to boolean rather than time remaining.
   // Longer-term plan is to rewrite this using shared memory,
@@ -48,13 +45,12 @@ function setTimeoutCallback() {
 function scheduleDeferredCallback(callback: Callback): number {
   // We assume only one callback is scheduled at a time b'c that's how Fiber works.
   scheduledCallback = callback;
-
-  if (!isCallbackScheduled) {
-    isCallbackScheduled = true;
-    setTimeout(setTimeoutCallback, 1);
-  }
-
-  return 0;
+  return setTimeout(setTimeoutCallback, 1);
 }
 
-export {now, scheduleDeferredCallback};
+function cancelDeferredCallback(callbackID: number) {
+  scheduledCallback = null;
+  clearTimeout(callbackID);
+}
+
+export {now, scheduleDeferredCallback, cancelDeferredCallback};

@@ -256,7 +256,7 @@ describe('ref swapping', () => {
     expect(!!instance.refs).toBe(true);
   });
 
-  function testRefCall() {
+  it('ref called correctly for stateless component', () => {
     var refCalled = 0;
     function Inner(props) {
       return <a ref={props.saveA} />;
@@ -278,20 +278,6 @@ describe('ref swapping', () => {
 
     ReactTestUtils.renderIntoDocument(<Outer />);
     expect(refCalled).toBe(1);
-  }
-
-  it('ref called correctly for stateless component when __DEV__ = false', () => {
-    var originalDev = __DEV__;
-    __DEV__ = false;
-    testRefCall();
-    __DEV__ = originalDev;
-  });
-
-  it('ref called correctly for stateless component when __DEV__ = true', () => {
-    var originalDev = __DEV__;
-    __DEV__ = true;
-    testRefCall();
-    __DEV__ = originalDev;
   });
 
   it('coerces numbers to strings', () => {
@@ -400,42 +386,15 @@ describe('creating element with ref in constructor', () => {
     }
   }
 
-  it('throws an error when __DEV__ = true', () => {
+  it('throws an error', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
-    var originalDev = __DEV__;
-    __DEV__ = true;
-
-    try {
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(<RefTest />);
-      }).toThrowError(
-        'Element ref was specified as a string (p) but no owner was ' +
-          'set. You may have multiple copies of React loaded. ' +
-          '(details: https://fb.me/react-refs-must-have-owner).',
-      );
-    } finally {
-      __DEV__ = originalDev;
-    }
-  });
-
-  it('throws an error when __DEV__ = false', () => {
-    ReactTestUtils = require('react-dom/test-utils');
-
-    var originalDev = __DEV__;
-    __DEV__ = false;
-
-    try {
-      expect(function() {
-        ReactTestUtils.renderIntoDocument(<RefTest />);
-      }).toThrowError(
-        'Minified React error #149; visit ' +
-          'http://facebook.github.io/react/docs/error-decoder.html?invariant=149&args[]=p ' +
-          'for the full message or use the non-minified dev environment for full errors and additional ' +
-          'helpful warnings.',
-      );
-    } finally {
-      __DEV__ = originalDev;
-    }
+    expect(function() {
+      ReactTestUtils.renderIntoDocument(<RefTest />);
+    }).toThrowError(
+      'Element ref was specified as a string (p) but no owner was ' +
+        'set. You may have multiple copies of React loaded. ' +
+        '(details: https://fb.me/react-refs-must-have-owner).',
+    );
   });
 });

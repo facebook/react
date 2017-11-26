@@ -15,7 +15,10 @@ describe('EventPluginRegistry', () => {
 
   beforeEach(() => {
     jest.resetModuleRegistry();
-    // TODO: can we express this test with only public API?
+    // These tests are intentionally testing the private injection interface.
+    // The public API surface of this is covered by other tests so
+    // if `EventPluginRegistry` is ever deleted, these tests should be
+    // safe to remove too.
     EventPluginRegistry = require('events/EventPluginRegistry');
 
     createPlugin = function(properties) {

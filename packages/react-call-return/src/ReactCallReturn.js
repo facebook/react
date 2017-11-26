@@ -7,19 +7,9 @@
  * @flow
  */
 
-import type {ReactCall, ReactNodeList, ReactReturn} from 'shared/ReactTypes';
+import {REACT_CALL_TYPE, REACT_RETURN_TYPE} from 'shared/ReactSymbols';
 
-// The Symbol used to tag the special React types. If there is no native Symbol
-// nor polyfill, then a plain number is used for performance.
-var REACT_CALL_TYPE;
-var REACT_RETURN_TYPE;
-if (typeof Symbol === 'function' && Symbol.for) {
-  REACT_CALL_TYPE = Symbol.for('react.call');
-  REACT_RETURN_TYPE = Symbol.for('react.return');
-} else {
-  REACT_CALL_TYPE = 0xeac8;
-  REACT_RETURN_TYPE = 0xeac9;
-}
+import type {ReactCall, ReactNodeList, ReactReturn} from 'shared/ReactTypes';
 
 type CallHandler<T> = (props: T, returns: Array<mixed>) => ReactNodeList;
 

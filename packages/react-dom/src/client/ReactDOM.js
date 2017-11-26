@@ -643,6 +643,7 @@ const DOMRenderer = ReactFiberReconciler({
   },
 
   scheduleDeferredCallback: ReactDOMFrameScheduling.rIC,
+  cancelDeferredCallback: ReactDOMFrameScheduling.cIC,
 
   useSyncScheduling: !enableAsyncSchedulingByDefaultInReactDOM,
 });

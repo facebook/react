@@ -23,7 +23,7 @@ import invariant from 'fbjs/lib/invariant';
  */
 
 function accumulateInto<T>(
-  current: ?(T | Array<T>),
+  current: ?(Array<T> | T),
   next: T | Array<T>,
 ): T | Array<T> {
   invariant(

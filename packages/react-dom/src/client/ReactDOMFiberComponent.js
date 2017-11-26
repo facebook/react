@@ -67,7 +67,7 @@ if (__DEV__) {
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props);
+    validateUnknownProperties(type, props, /* canUseEventSystem */ true);
   };
 
   // HTML parsing normalizes CR and CRLF to LF.
@@ -764,6 +764,17 @@ export function updateProperties(
   lastRawProps: Object,
   nextRawProps: Object,
 ): void {
+  // Update checked *before* name.
+  // In the middle of an update, it is possible to have multiple checked.
+  // When a checked radio tries to change name, browser makes another radio's checked false.
+  if (
+    tag === 'input' &&
+    nextRawProps.type === 'radio' &&
+    nextRawProps.name != null
+  ) {
+    ReactDOMFiberInput.updateChecked(domElement, nextRawProps);
+  }
+
   var wasCustomComponentTag = isCustomComponent(tag, lastRawProps);
   var isCustomComponentTag = isCustomComponent(tag, nextRawProps);
   // Apply the diff.
@@ -782,10 +793,6 @@ export function updateProperties(
       // happen after `updateDOMProperties`. Otherwise HTML5 input validations
       // raise warnings and prevent the new value from being assigned.
       ReactDOMFiberInput.updateWrapper(domElement, nextRawProps);
-
-      // We also check that we haven't missed a value update, such as a
-      // Radio group shifting the checked value to another named radio input.
-      inputValueTracking.updateValueIfChanged((domElement: any));
       break;
     case 'textarea':
       ReactDOMFiberTextarea.updateWrapper(domElement, nextRawProps);

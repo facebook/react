@@ -14,16 +14,13 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @return {?object}
  */
 export function getOffsets(outerNode) {
-  var selection = window.getSelection && window.getSelection();
+  const selection = window.getSelection && window.getSelection();
 
   if (!selection || selection.rangeCount === 0) {
     return null;
   }
 
-  var anchorNode = selection.anchorNode;
-  var anchorOffset = selection.anchorOffset;
-  var focusNode = selection.focusNode;
-  var focusOffset = selection.focusOffset;
+  const {anchorNode, anchorOffset, focusNode, focusOffset} = selection;
 
   // In Firefox, anchorNode and focusNode can be "anonymous divs", e.g. the
   // up/down buttons on an <input type="number">. Anonymous divs do not seem to
@@ -157,21 +154,21 @@ export function setOffsets(node, offsets) {
     return;
   }
 
-  var selection = window.getSelection();
-  var length = node[getTextContentAccessor()].length;
-  var start = Math.min(offsets.start, length);
-  var end = offsets.end === undefined ? start : Math.min(offsets.end, length);
+  const selection = window.getSelection();
+  const length = node[getTextContentAccessor()].length;
+  let start = Math.min(offsets.start, length);
+  let end = offsets.end === undefined ? start : Math.min(offsets.end, length);
 
   // IE 11 uses modern selection, but doesn't support the extend method.
   // Flip backward selections, so we can set with a single range.
   if (!selection.extend && start > end) {
-    var temp = end;
+    let temp = end;
     end = start;
     start = temp;
   }
 
-  var startMarker = getNodeForCharacterOffset(node, start);
-  var endMarker = getNodeForCharacterOffset(node, end);
+  const startMarker = getNodeForCharacterOffset(node, start);
+  const endMarker = getNodeForCharacterOffset(node, end);
 
   if (startMarker && endMarker) {
     if (
@@ -183,7 +180,7 @@ export function setOffsets(node, offsets) {
     ) {
       return;
     }
-    var range = document.createRange();
+    const range = document.createRange();
     range.setStart(startMarker.node, startMarker.offset);
     selection.removeAllRanges();
 

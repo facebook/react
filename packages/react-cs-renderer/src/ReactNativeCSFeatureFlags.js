@@ -12,6 +12,7 @@ import invariant from 'fbjs/lib/invariant';
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
 import typeof * as CSFeatureFlagsType from './ReactNativeCSFeatureFlags';
 
+export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableAsyncSchedulingByDefaultInReactDOM = false;
 export const enableReactFragment = false;

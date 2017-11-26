@@ -86,7 +86,9 @@ export type HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL> = {
 
   scheduleDeferredCallback(
     callback: (deadline: Deadline) => void,
-  ): number | void,
+    options?: {timeout: number},
+  ): number,
+  cancelDeferredCallback(callbackID: number): void,
 
   prepareForCommit(): void,
   resetAfterCommit(): void,

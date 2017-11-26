@@ -8,7 +8,7 @@
  */
 
 import type {ReactNativeBaseComponentViewConfig} from './ReactNativeTypes';
-
+import type {AnyNativeEvent} from 'events/PluginModuleType';
 import {
   accumulateTwoPhaseDispatches,
   accumulateDirectDispatches,
@@ -28,7 +28,7 @@ const ReactNativeBridgeEventPlugin = {
   extractEvents: function(
     topLevelType: string,
     targetInst: Object,
-    nativeEvent: Event,
+    nativeEvent: AnyNativeEvent,
     nativeEventTarget: Object,
   ): ?Object {
     const bubbleDispatchConfig = customBubblingEventTypes[topLevelType];
