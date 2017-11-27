@@ -16,6 +16,8 @@ var ReactTestUtils;
 var SelectEventPlugin;
 
 describe('SelectEventPlugin', () => {
+  var container;
+
   function extract(node, topLevelEvent) {
     return SelectEventPlugin.extractEvents(
       topLevelEvent,
@@ -32,6 +34,14 @@ describe('SelectEventPlugin', () => {
     // TODO: can we express this test with only public API?
     ReactDOMComponentTree = require('../../client/ReactDOMComponentTree');
     SelectEventPlugin = require('../SelectEventPlugin').default;
+
+    container = document.createElement('div');
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
   });
 
   it('should skip extraction if no listeners are present', () => {
@@ -67,27 +77,21 @@ describe('SelectEventPlugin', () => {
       select(event.currentTarget);
     };
 
-    var childContainer = document.createElement('div');
-    var childNode = ReactDOM.render(
+    var node = ReactDOM.render(
       <input type="text" onSelect={onSelect} />,
-      childContainer,
+      container,
     );
-    document.body.appendChild(childContainer);
-
-    var node = ReactDOM.findDOMNode(childNode);
     node.focus();
     expect(select.mock.calls.length).toBe(0);
 
     var nativeEvent = document.createEvent('Event');
     nativeEvent.initEvent('mousedown', true, true);
-    childNode.dispatchEvent(nativeEvent);
+    node.dispatchEvent(nativeEvent);
     expect(select.mock.calls.length).toBe(0);
 
     nativeEvent = document.createEvent('Event');
     nativeEvent.initEvent('mouseup', true, true);
-    childNode.dispatchEvent(nativeEvent);
+    node.dispatchEvent(nativeEvent);
     expect(select.mock.calls.length).toBe(1);
-
-    document.body.removeChild(childContainer);
   });
 });
