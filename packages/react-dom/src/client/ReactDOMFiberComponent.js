@@ -24,7 +24,11 @@ import setTextContent from './setTextContent';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
-import {getPropertyInfo, shouldSetAttribute} from '../shared/DOMProperty';
+import {
+  getPropertyInfo,
+  shouldSkipAttribute,
+  shouldTreatAttributeValueAsNull,
+} from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
@@ -1000,7 +1004,14 @@ export function diffHydratedProperties(
         if (nextProp !== serverValue) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
-      } else if (shouldSetAttribute(propKey, nextProp, isCustomComponentTag)) {
+      } else if (
+        !shouldSkipAttribute(propKey, isCustomComponentTag) &&
+        !shouldTreatAttributeValueAsNull(
+          propKey,
+          nextProp,
+          isCustomComponentTag,
+        )
+      ) {
         if ((propertyInfo = getPropertyInfo(propKey))) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);
