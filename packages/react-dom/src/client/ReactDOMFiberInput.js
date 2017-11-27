@@ -197,7 +197,7 @@ export function updateWrapper(element: Element, props: Object) {
     } else if (node.value !== '' + value) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      node.value = '' + value
+      node.value = '' + value;
     }
     synchronizeDefaultValue(node, props.type, '' + value);
   } else {
