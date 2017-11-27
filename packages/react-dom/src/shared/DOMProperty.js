@@ -180,17 +180,7 @@ export function shouldSkipAttribute(name, isCustomComponentTag) {
   return false;
 }
 
-export function shouldTreatAttributeValueAsNull(
-  name,
-  value,
-  isCustomComponentTag,
-) {
-  if (value === null) {
-    return true;
-  }
-  if (isCustomComponentTag) {
-    return typeof value === 'undefined';
-  }
+export function isBadlyTypedAttributeValue(name, value, isCustomComponentTag) {
   switch (typeof value) {
     case 'boolean':
       return !shouldAttributeAcceptBooleanValue(name, isCustomComponentTag);
@@ -205,14 +195,25 @@ export function shouldTreatAttributeValueAsNull(
   }
 }
 
+export function shouldTreatAttributeValueAsNull(
+  name,
+  value,
+  isCustomComponentTag,
+) {
+  if (value === null || typeof value === 'undefined') {
+    return true;
+  }
+  if (isBadlyTypedAttributeValue(name, value, isCustomComponentTag)) {
+    return true;
+  }
+  return false;
+}
+
 export function shouldSetAttribute(name, value, isCustomComponentTag) {
   if (shouldSkipAttribute(name, isCustomComponentTag)) {
     return false;
   }
-  if (
-    value !== null &&
-    shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)
-  ) {
+  if (shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)) {
     return false;
   }
   return true;
