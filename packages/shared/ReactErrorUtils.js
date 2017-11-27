@@ -8,6 +8,7 @@
  */
 
 import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
@@ -167,6 +168,16 @@ if (__DEV__) {
       e,
       f,
     ) {
+      warning(
+        typeof document !== 'undefined',
+        'The `document` global was defined when React was initialized, but is not ' +
+          'defined anymore. This can happen in a test environment if a component ' +
+          'schedules an update from an asynchronous callback, but the test has already ' +
+          'finished running. To solve this, you can either unmount the component at ' +
+          'the end of your test (and ensure that any asynchronous operations get ' +
+          'canceled in `componentWillUnmount`), or you can change the test itself ' +
+          'to be asynchronous.',
+      );
       // Keeps track of whether the user-provided callback threw an error. We
       // set this to true at the beginning, then set it to false right after
       // calling the function. If the function errors, `didError` will never be
