@@ -9,10 +9,9 @@ import {
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
   getPropertyInfo,
-  shouldAttributeAcceptBooleanValue,
-  shouldIgnoreValue,
-  shouldSetAttribute,
   isAttributeNameSafe,
+  shouldSkipAttribute,
+  shouldTreatAttributeValueAsNull,
 } from '../shared/DOMProperty';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 
@@ -42,30 +41,29 @@ export function createMarkupForRoot() {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name, value) {
+  if (name !== 'style' && shouldSkipAttribute(name)) {
+    return '';
+  }
+  if (shouldTreatAttributeValueAsNull(name, value, false)) {
+    value = null;
+  }
+  if (value === null) {
+    return '';
+  }
   const propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
-      return '';
-    }
     const attributeName = propertyInfo.attributeName;
     if (
       propertyInfo.hasBooleanValue ||
       (propertyInfo.hasOverloadedBooleanValue && value === true)
     ) {
       return attributeName + '=""';
-    } else if (
-      typeof value !== 'boolean' ||
-      shouldAttributeAcceptBooleanValue(name, false)
-    ) {
+    } else {
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     }
-  } else if (shouldSetAttribute(name, value, false)) {
-    if (value == null) {
-      return '';
-    }
+  } else {
     return name + '=' + quoteAttributeValueForBrowser(value);
   }
-  return null;
 }
 
 /**

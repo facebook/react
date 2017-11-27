@@ -7,7 +7,6 @@
 
 import {
   getPropertyInfo,
-  shouldIgnoreValue,
   shouldSkipAttribute,
   shouldTreatAttributeValueAsNull,
   isAttributeNameSafe,
@@ -35,7 +34,7 @@ export function getValueForProperty(node, name, expected) {
             if (value === '') {
               return true;
             }
-            if (shouldIgnoreValue(propertyInfo, expected)) {
+            if (shouldTreatAttributeValueAsNull(name, expected, false)) {
               return value;
             }
             if (value === '' + expected) {
@@ -44,7 +43,7 @@ export function getValueForProperty(node, name, expected) {
             return value;
           }
         } else if (node.hasAttribute(attributeName)) {
-          if (shouldIgnoreValue(propertyInfo, expected)) {
+          if (shouldTreatAttributeValueAsNull(name, expected, false)) {
             // We had an attribute but shouldn't have had one, so read it
             // for the error message.
             return node.getAttribute(attributeName);
@@ -61,7 +60,7 @@ export function getValueForProperty(node, name, expected) {
           stringValue = node.getAttribute(attributeName);
         }
 
-        if (shouldIgnoreValue(propertyInfo, expected)) {
+        if (shouldTreatAttributeValueAsNull(name, expected, false)) {
           return stringValue === null ? expected : stringValue;
         } else if (stringValue === '' + expected) {
           return expected;
@@ -128,7 +127,7 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
   } = propertyInfo;
   if (mustUseProperty) {
     const {propertyName} = propertyInfo;
-    if (shouldIgnoreValue(propertyInfo, value)) {
+    if (value === null) {
       node[propertyName] = hasBooleanValue ? false : '';
     } else {
       // Contrary to `setAttribute`, object properties are properly
@@ -139,7 +138,7 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
   }
   // The rest are treated as attributes with special cases.
   const {attributeName, attributeNamespace} = propertyInfo;
-  if (shouldIgnoreValue(propertyInfo, value)) {
+  if (value === null) {
     node.removeAttribute(attributeName);
   } else {
     let attributeValue;
