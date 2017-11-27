@@ -7,7 +7,8 @@
 
 import {
   getPropertyInfo,
-  shouldSetAttribute,
+  shouldSkipAttribute,
+  shouldTreatAttributeValueAsNull,
   isAttributeNameSafe,
 } from '../shared/DOMProperty';
 
@@ -112,13 +113,14 @@ export function getValueForAttribute(node, name, expected) {
  * @param {*} value
  */
 export function setValueForProperty(node, name, value, isCustomComponentTag) {
+  if (shouldSkipAttribute(name, isCustomComponentTag)) {
+    return;
+  }
+  if (shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)) {
+    value = null;
+  }
   const propertyInfo = getPropertyInfo(name);
-
-  if (
-    !isCustomComponentTag &&
-    propertyInfo &&
-    shouldSetAttribute(name, value)
-  ) {
+  if (!isCustomComponentTag && propertyInfo) {
     if (shouldIgnoreValue(propertyInfo, value)) {
       if (propertyInfo.mustUseProperty) {
         if (propertyInfo.hasBooleanValue) {
@@ -149,19 +151,11 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
         node.setAttribute(attributeName, '' + value);
       }
     }
-  } else {
-    const useValue = isCustomComponentTag || shouldSetAttribute(name, value);
-    setValueForAttribute(node, name, useValue ? value : null);
-  }
-}
-
-export function setValueForAttribute(node, name, value) {
-  if (!isAttributeNameSafe(name)) {
-    return;
-  }
-  if (value == null) {
-    node.removeAttribute(name);
-  } else {
-    node.setAttribute(name, '' + value);
+  } else if (isAttributeNameSafe(name)) {
+    if (value == null) {
+      node.removeAttribute(name);
+    } else {
+      node.setAttribute(name, '' + value);
+    }
   }
 }
