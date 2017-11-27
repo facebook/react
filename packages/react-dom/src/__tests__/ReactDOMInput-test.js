@@ -1376,36 +1376,6 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('2');
     });
 
-    it('initially sets the value attribute on mount', () => {
-      var Input = getTestInput();
-      var stub = ReactTestUtils.renderIntoDocument(
-        <Input type="number" value="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      expect(node.getAttribute('value')).toBe('1');
-    });
-
-    it('initially sets the value attribute for submit on mount', () => {
-      var Input = getTestInput();
-      var stub = ReactTestUtils.renderIntoDocument(
-        <Input type="submit" value="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      expect(node.getAttribute('value')).toBe('1');
-    });
-
-    it('initially sets the value attribute for reset on mount', () => {
-      var Input = getTestInput();
-      var stub = ReactTestUtils.renderIntoDocument(
-        <Input type="reset" value="1" />,
-      );
-      var node = ReactDOM.findDOMNode(stub);
-
-      expect(node.getAttribute('value')).toBe('1');
-    });
-
     it('does not set the value attribute on number inputs if focused', () => {
       var Input = getTestInput();
       var stub = ReactTestUtils.renderIntoDocument(
