@@ -191,7 +191,7 @@ if (__DEV__) {
 
     if (
       typeof value === 'boolean' &&
-      !shouldAttributeAcceptBooleanValue(name)
+      !shouldAttributeAcceptBooleanValue(name, false)
     ) {
       if (value) {
         warning(
@@ -235,7 +235,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (!shouldSetAttribute(name, value)) {
+    if (!shouldSetAttribute(name, value, false)) {
       warnedProperties[name] = true;
       return false;
     }

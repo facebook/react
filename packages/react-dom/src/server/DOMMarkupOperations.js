@@ -66,11 +66,11 @@ export function createMarkupForProperty(name, value) {
       return attributeName + '=""';
     } else if (
       typeof value !== 'boolean' ||
-      shouldAttributeAcceptBooleanValue(name)
+      shouldAttributeAcceptBooleanValue(name, false)
     ) {
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
     }
-  } else if (shouldSetAttribute(name, value)) {
+  } else if (shouldSetAttribute(name, value, false)) {
     if (value == null) {
       return '';
     }

@@ -163,12 +163,11 @@ export function isAttributeNameSafe(attributeName) {
  */
 export const properties = {};
 
-/**
- * Checks whether a property name is a writeable attribute.
- * @method
- */
-export function shouldSetAttribute(name, value) {
+export function shouldSkipAttribute(name, isCustomComponentTag) {
   if (isReservedProp(name)) {
+    return true;
+  }
+  if (isCustomComponentTag) {
     return false;
   }
   if (
@@ -176,31 +175,58 @@ export function shouldSetAttribute(name, value) {
     (name[0] === 'o' || name[0] === 'O') &&
     (name[1] === 'n' || name[1] === 'N')
   ) {
-    return false;
+    return true;
   }
+  return false;
+}
+
+export function shouldTreatAttributeValueAsNull(
+  name,
+  value,
+  isCustomComponentTag,
+) {
   if (value === null) {
     return true;
   }
+  if (isCustomComponentTag) {
+    return typeof value === 'undefined';
+  }
   switch (typeof value) {
     case 'boolean':
-      return shouldAttributeAcceptBooleanValue(name);
+      return !shouldAttributeAcceptBooleanValue(name, isCustomComponentTag);
     case 'undefined':
     case 'number':
     case 'string':
     case 'object':
-      return true;
+      return false;
     default:
       // function, symbol
-      return false;
+      return true;
   }
+}
+
+export function shouldSetAttribute(name, value, isCustomComponentTag) {
+  if (shouldSkipAttribute(name, isCustomComponentTag)) {
+    return false;
+  }
+  if (
+    value !== null &&
+    shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)
+  ) {
+    return false;
+  }
+  return true;
 }
 
 export function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
-export function shouldAttributeAcceptBooleanValue(name) {
+export function shouldAttributeAcceptBooleanValue(name, isCustomComponentTag) {
   if (isReservedProp(name)) {
+    return true;
+  }
+  if (isCustomComponentTag) {
     return true;
   }
   let propertyInfo = getPropertyInfo(name);

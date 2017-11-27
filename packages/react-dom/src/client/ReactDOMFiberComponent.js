@@ -1000,7 +1000,7 @@ export function diffHydratedProperties(
         if (nextProp !== serverValue) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
-      } else if (shouldSetAttribute(propKey, nextProp)) {
+      } else if (shouldSetAttribute(propKey, nextProp, isCustomComponentTag)) {
         if ((propertyInfo = getPropertyInfo(propKey))) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);
