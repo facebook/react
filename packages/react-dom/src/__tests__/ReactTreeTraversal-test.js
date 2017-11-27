@@ -89,6 +89,8 @@ describe('ReactTreeTraversal', () => {
 
     container = document.createElement('div');
     document.body.appendChild(container);
+
+    ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
   });
 
   afterEach(() => {
@@ -98,19 +100,6 @@ describe('ReactTreeTraversal', () => {
 
   describe('Two phase traversal', () => {
     it('should not traverse when target is outside component boundary', () => {
-      const Component = ({eventHandler}) => (
-        <div
-          onClickCapture={e =>
-            eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
-          }
-          onClick={e =>
-            eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)
-          }
-        />
-      );
-
-      ReactDOM.render(<Component eventHandler={mockFn} />, container);
-
       const outerNode = document.createElement('div');
       document.body.appendChild(outerNode);
 
@@ -122,8 +111,6 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse two phase across component boundary', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var expectedCalls = [
         ['P', 'captured', 'click', ARG],
         ['P_P1', 'captured', 'click', ARG],
@@ -145,8 +132,6 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse two phase at shallowest node', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var node = document.getElementById('P');
       node.dispatchEvent(
         new MouseEvent('click', {bubbles: true, cancelable: true}),
@@ -164,6 +149,7 @@ describe('ReactTreeTraversal', () => {
     it('should not traverse when enter/leaving outside DOM', () => {
       var leaveNode = document.createElement('div');
       var enterNode = document.createElement('div');
+
       document.body.appendChild(leaveNode);
       document.body.appendChild(enterNode);
 
@@ -179,8 +165,6 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should not traverse if enter/leave the same node', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.getElementById('P_P1_C1__DIV_1');
       var enterNode = document.getElementById('P_P1_C1__DIV_1');
 
@@ -196,8 +180,6 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse enter/leave to sibling - avoids parent', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.getElementById('P_P1_C1__DIV_1');
       var enterNode = document.getElementById('P_P1_C1__DIV_2');
 
@@ -219,8 +201,6 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse enter/leave to parent - avoids parent', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.getElementById('P_P1_C1__DIV_1');
       var enterNode = document.getElementById('P_P1_C1__DIV');
 
@@ -238,11 +218,10 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should enter from the window', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.createElement('div');
-      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
       var enterNode = document.getElementById('P_P1_C1__DIV');
+
+      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
 
       var expectedCalls = [
         ['P', 'mouseenter', ARG],
@@ -262,11 +241,10 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should enter from the window to the shallowest', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.createElement('div');
-      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
       var enterNode = document.getElementById('P');
+
+      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
 
       var expectedCalls = [['P', 'mouseenter', ARG]];
 
@@ -282,10 +260,9 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should leave to the window', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.getElementById('P_P1_C1__DIV');
       var enterNode = document.createElement('div');
+
       document.body.appendChild(enterNode); // To the window or outside of the React sandbox.
 
       var expectedCalls = [
@@ -306,10 +283,9 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should leave to the window from the shallowest', () => {
-      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
-
       var leaveNode = document.getElementById('P');
       var enterNode = document.createElement('div');
+
       document.body.appendChild(enterNode); // To the window or outside of the React sandbox.
 
       var expectedCalls = [['P', 'mouseleave', ARG]];
@@ -324,9 +300,5 @@ describe('ReactTreeTraversal', () => {
 
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
-  });
-
-  describe('getFirstCommonAncestor', () => {
-    // TODO
   });
 });
