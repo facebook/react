@@ -48,7 +48,3 @@ jobs:
           key: v1-node-{{ arch }}-{{ .Branch }}-{{ checksum "yarn.lock" }}
           paths:
             - node_modules
-
-      - deploy:
-          name: Upload Build
-          command: ./scripts/circleci/upload_build.sh
