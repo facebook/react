@@ -12,7 +12,6 @@ import type {ReactCall, ReactPortal, ReactReturn} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
-import {enableReactFragment} from 'shared/ReactFeatureFlags';
 import {Placement, Deletion} from 'shared/ReactTypeOfSideEffect';
 import {
   getIteratorFn,
@@ -1376,7 +1375,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     // This leads to an ambiguity between <>{[...]}</> and <>...</>.
     // We treat the ambiguous cases above the same.
     if (
-      enableReactFragment &&
       typeof newChild === 'object' &&
       newChild !== null &&
       newChild.type === REACT_FRAGMENT_TYPE &&

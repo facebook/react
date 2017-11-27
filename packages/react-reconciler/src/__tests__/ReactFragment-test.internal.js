@@ -15,9 +15,6 @@ describe('ReactFragment', () => {
   beforeEach(function() {
     jest.resetModules();
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableReactFragment = true;
-
     React = require('react');
     ReactNoop = require('react-noop-renderer');
   });
