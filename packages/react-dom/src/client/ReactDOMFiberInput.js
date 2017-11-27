@@ -18,8 +18,6 @@ import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTyp
 import * as inputValueTracking from './inputValueTracking';
 
 type InputWithWrapperState = HTMLInputElement & {
-  value: string,
-  defaultValue: string,
   _wrapperState: {
     initialValue: string,
     initialChecked: ?boolean,
