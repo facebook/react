@@ -82,15 +82,22 @@ describe('SelectEventPlugin', () => {
       container,
     );
     node.focus();
-    expect(select.mock.calls.length).toBe(0);
 
-    var nativeEvent = document.createEvent('Event');
-    nativeEvent.initEvent('mousedown', true, true);
+    var nativeEvent = new MouseEvent('focus', {
+      bubbles: true,
+      cancelable: true,
+    });
     node.dispatchEvent(nativeEvent);
     expect(select.mock.calls.length).toBe(0);
 
-    nativeEvent = document.createEvent('Event');
-    nativeEvent.initEvent('mouseup', true, true);
+    nativeEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
+    expect(select.mock.calls.length).toBe(0);
+
+    nativeEvent = new MouseEvent('mouseup', {bubbles: true, cancelable: true});
     node.dispatchEvent(nativeEvent);
     expect(select.mock.calls.length).toBe(1);
   });
