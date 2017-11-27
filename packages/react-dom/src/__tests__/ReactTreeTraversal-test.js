@@ -20,13 +20,18 @@ const ChildComponent = ({id, eventHandler}) => (
     id={id + '__DIV'}
     onClickCapture={e =>
       eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
-    }>
+    }
+    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
+    onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+    onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}>
     <div
       id={id + '__DIV_1'}
       onClickCapture={e =>
         eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
       }
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}
     />
     <div
       id={id + '__DIV_2'}
@@ -34,6 +39,8 @@ const ChildComponent = ({id, eventHandler}) => (
         eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
       }
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG2)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}
     />
   </div>
 );
@@ -44,13 +51,17 @@ const ParentComponent = ({eventHandler}) => (
     onClickCapture={e =>
       eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
     }
-    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}>
+    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
+    onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+    onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}>
     <div
       id="P_P1"
       onClickCapture={e =>
         eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
       }
-      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}>
+      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}>
       <ChildComponent id="P_P1_C1" eventHandler={eventHandler} />
       <ChildComponent id="P_P1_C2" eventHandler={eventHandler} />
     </div>
@@ -60,6 +71,8 @@ const ParentComponent = ({eventHandler}) => (
         eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
       }
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}
     />
   </div>
 );
@@ -148,7 +161,169 @@ describe('ReactTreeTraversal', () => {
   });
 
   describe('Enter leave traversal', () => {
-    // TODO
+    it('should not traverse when enter/leaving outside DOM', () => {
+      var leaveNode = document.createElement('div');
+      var enterNode = document.createElement('div');
+      document.body.appendChild(leaveNode);
+      document.body.appendChild(enterNode);
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn).not.toHaveBeenCalled();
+    });
+
+    it('should not traverse if enter/leave the same node', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.getElementById('P_P1_C1__DIV_1');
+      var enterNode = document.getElementById('P_P1_C1__DIV_1');
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn).not.toHaveBeenCalled();
+    });
+
+    it('should traverse enter/leave to sibling - avoids parent', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.getElementById('P_P1_C1__DIV_1');
+      var enterNode = document.getElementById('P_P1_C1__DIV_2');
+
+      var expectedCalls = [
+        ['P_P1_C1__DIV_1', 'mouseleave', ARG],
+        // enter/leave shouldn't fire anything on the parent
+        ['P_P1_C1__DIV_2', 'mouseenter', ARG2],
+      ];
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
+
+    it('should traverse enter/leave to parent - avoids parent', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.getElementById('P_P1_C1__DIV_1');
+      var enterNode = document.getElementById('P_P1_C1__DIV');
+
+      var expectedCalls = [['P_P1_C1__DIV_1', 'mouseleave', ARG]];
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
+
+    it('should enter from the window', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.createElement('div');
+      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
+      var enterNode = document.getElementById('P_P1_C1__DIV');
+
+      var expectedCalls = [
+        ['P', 'mouseenter', ARG],
+        ['P_P1', 'mouseenter', ARG],
+        ['P_P1_C1__DIV', 'mouseenter', ARG],
+      ];
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
+
+    it('should enter from the window to the shallowest', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.createElement('div');
+      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
+      var enterNode = document.getElementById('P');
+
+      var expectedCalls = [['P', 'mouseenter', ARG]];
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
+
+    it('should leave to the window', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.getElementById('P_P1_C1__DIV');
+      var enterNode = document.createElement('div');
+      document.body.appendChild(enterNode); // To the window or outside of the React sandbox.
+
+      var expectedCalls = [
+        ['P_P1_C1__DIV', 'mouseleave', ARG],
+        ['P_P1', 'mouseleave', ARG],
+        ['P', 'mouseleave', ARG],
+      ];
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
+
+    it('should leave to the window from the shallowest', () => {
+      ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
+
+      var leaveNode = document.getElementById('P');
+      var enterNode = document.createElement('div');
+      document.body.appendChild(enterNode); // To the window or outside of the React sandbox.
+
+      var expectedCalls = [['P', 'mouseleave', ARG]];
+
+      leaveNode.dispatchEvent(
+        new MouseEvent('mouseout', {
+          bubbles: true,
+          cancelable: true,
+          relatedTarget: enterNode,
+        }),
+      );
+
+      expect(mockFn.mock.calls).toEqual(expectedCalls);
+    });
   });
 
   describe('getFirstCommonAncestor', () => {
