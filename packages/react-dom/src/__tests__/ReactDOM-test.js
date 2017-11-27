@@ -389,7 +389,7 @@ describe('ReactDOM', () => {
     );
     try {
       // Emulate jsdom environment cleanup.
-      // This is rouhly what happens if the test finished and then
+      // This is roughly what happens if the test finished and then
       // an asynchronous callback tried to setState() after this.
       delete global.document;
       const fn = () => instance.setState({x: 2});
