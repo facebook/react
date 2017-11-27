@@ -7,7 +7,6 @@
 
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
-import {enableReactFragment} from 'shared/ReactFeatureFlags';
 import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
 import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
@@ -39,6 +38,8 @@ var React = {
   PureComponent,
   unstable_AsyncComponent: AsyncComponent,
 
+  Fragment: REACT_FRAGMENT_TYPE,
+
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
   createFactory: __DEV__ ? createFactoryWithValidation : createFactory,
@@ -52,10 +53,6 @@ var React = {
     assign,
   },
 };
-
-if (enableReactFragment) {
-  React.Fragment = REACT_FRAGMENT_TYPE;
-}
 
 if (__DEV__) {
   Object.assign(React.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED, {

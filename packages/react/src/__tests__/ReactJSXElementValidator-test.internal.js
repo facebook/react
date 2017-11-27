@@ -16,9 +16,6 @@ describe('ReactJSXElementValidator', () => {
   beforeEach(() => {
     jest.resetModules();
 
-    const ReactFeatureFlags = require('shared/ReactFeatureFlags');
-    ReactFeatureFlags.enableReactFragment = true;
-
     React = require('react');
     ReactTestUtils = require('react-dom/test-utils');
   });

@@ -18,7 +18,6 @@ let ReactDOMServer;
 function initModules() {
   // Reset warning cache.
   jest.resetModuleRegistry();
-  require('shared/ReactFeatureFlags').enableReactFragment = true;
   React = require('react');
   ReactDOM = require('react-dom');
   ReactDOMServer = require('react-dom/server');

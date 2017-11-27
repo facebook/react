@@ -18,7 +18,6 @@ export const {
 
 // The rest of the flags are static for better dead code elimination.
 export const enableAsyncSubtreeAPI = true;
-export const enableReactFragment = false;
 export const enableCreateRoot = true;
 
 // The www bundles only use the mutating reconciler.
