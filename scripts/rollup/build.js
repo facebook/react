@@ -89,10 +89,8 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
           resolve('./scripts/babel/transform-object-assign-require'),
-
           // Minify invariant messages
           require('../error-codes/replace-invariant-error-codes'),
-
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
           require('./plugins/wrap-warning-with-env-check'),
         ]),
@@ -310,17 +308,17 @@ function getPlugins(
   ].filter(Boolean);
 }
 
-function createBundle(bundle, bundleType) {
+async function createBundle(bundle, bundleType) {
   const shouldSkipBundleType = bundle.bundleTypes.indexOf(bundleType) === -1;
   if (shouldSkipBundleType) {
-    return Promise.resolve();
+    return;
   }
   if (requestedBundleTypes.length > 0) {
     const isAskingForDifferentType = requestedBundleTypes.every(
       requestedType => bundleType.indexOf(requestedType) === -1
     );
     if (isAskingForDifferentType) {
-      return Promise.resolve();
+      return;
     }
   }
   if (requestedBundleNames.length > 0) {
@@ -328,7 +326,7 @@ function createBundle(bundle, bundleType) {
       requestedName => bundle.label.indexOf(requestedName) === -1
     );
     if (isAskingForDifferentNames) {
-      return Promise.resolve();
+      return;
     }
   }
 
@@ -364,160 +362,125 @@ function createBundle(bundle, bundleType) {
   );
 
   console.log(`${chalk.bgYellow.black(' BUILDING ')} ${logKey}`);
-  return rollup({
-    input: resolvedEntry,
-    pureExternalModules,
-    external(id) {
-      const containsThisModule = pkg => id === pkg || id.startsWith(pkg + '/');
-      const isProvidedByDependency = externals.some(containsThisModule);
-      if (!shouldBundleDependencies && isProvidedByDependency) {
-        return true;
-      }
-      return !!peerGlobals[id];
-    },
-    onwarn: handleRollupWarnings,
-    plugins: getPlugins(
-      bundle.entry,
-      externals,
-      bundle.babel,
-      filename,
-      bundleType,
-      bundle.global,
-      bundle.moduleType,
-      bundle.modulesToStub,
-      bundle.featureFlags
-    ),
-    // We can't use getters in www.
-    legacy: bundleType === FB_DEV || bundleType === FB_PROD,
-  })
-    .then(result =>
-      result.write(
-        getRollupOutputOptions(
-          filename,
-          format,
-          bundleType,
-          peerGlobals,
-          bundle.global,
-          bundle.moduleType
-        )
-      )
-    )
-    .then(() => Packaging.createNodePackage(bundleType, packageName, filename))
-    .then(() => {
-      console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
-    })
-    .catch(error => {
-      if (error.code) {
-        console.error(
-          `\x1b[31m-- ${error.code}${
-            error.plugin ? ` (${error.plugin})` : ''
-          } --`
-        );
-        console.error(error.message);
-
-        const {file, line, column} = error.loc;
-        if (file) {
-          // This looks like an error from Rollup, e.g. missing export.
-          // We'll use the accurate line numbers provided by Rollup but
-          // use Babel code frame because it looks nicer.
-          const rawLines = fs.readFileSync(file, 'utf-8');
-          // column + 1 is required due to rollup counting column start position from 0
-          // whereas babel-code-frame counts from 1
-          const frame = codeFrame(rawLines, line, column + 1, {
-            highlightCode: true,
-          });
-          console.error(frame);
-        } else {
-          // This looks like an error from a plugin (e.g. Babel).
-          // In this case we'll resort to displaying the provided code frame
-          // because we can't be sure the reported location is accurate.
-          console.error(error.codeFrame);
+  try {
+    const result = await rollup({
+      input: resolvedEntry,
+      pureExternalModules,
+      external(id) {
+        const containsThisModule = pkg =>
+          id === pkg || id.startsWith(pkg + '/');
+        const isProvidedByDependency = externals.some(containsThisModule);
+        if (!shouldBundleDependencies && isProvidedByDependency) {
+          return true;
         }
-      } else {
-        console.error(error);
-      }
-      process.exit(1);
+        return !!peerGlobals[id];
+      },
+      onwarn: handleRollupWarnings,
+      plugins: getPlugins(
+        bundle.entry,
+        externals,
+        bundle.babel,
+        filename,
+        bundleType,
+        bundle.global,
+        bundle.moduleType,
+        bundle.modulesToStub,
+        bundle.featureFlags
+      ),
+      // We can't use getters in www.
+      legacy: bundleType === FB_DEV || bundleType === FB_PROD,
     });
+    await result.write(
+      getRollupOutputOptions(
+        filename,
+        format,
+        bundleType,
+        peerGlobals,
+        bundle.global,
+        bundle.moduleType
+      )
+    );
+    await Packaging.createNodePackage(bundleType, packageName, filename);
+    console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
+  } catch (error) {
+    if (error.code) {
+      console.error(
+        `\x1b[31m-- ${error.code}${error.plugin ? ` (${error.plugin})` : ''} --`
+      );
+      console.error(error.message);
+      const {file, line, column} = error.loc;
+      if (file) {
+        // This looks like an error from Rollup, e.g. missing export.
+        // We'll use the accurate line numbers provided by Rollup but
+        // use Babel code frame because it looks nicer.
+        const rawLines = fs.readFileSync(file, 'utf-8');
+        // column + 1 is required due to rollup counting column start position from 0
+        // whereas babel-code-frame counts from 1
+        const frame = codeFrame(rawLines, line, column + 1, {
+          highlightCode: true,
+        });
+        console.error(frame);
+      } else {
+        // This looks like an error from a plugin (e.g. Babel).
+        // In this case we'll resort to displaying the provided code frame
+        // because we can't be sure the reported location is accurate.
+        console.error(error.codeFrame);
+      }
+    } else {
+      console.error(error);
+    }
+    process.exit(1);
+  }
 }
 
 // clear the build directory
-rimraf('build', () => {
-  // create a new build directory
-  fs.mkdirSync('build');
-  // create the packages folder for NODE+UMD bundles
-  fs.mkdirSync(join('build', 'packages'));
-  // create the dist folder for UMD bundles
-  fs.mkdirSync(join('build', 'dist'));
+rimraf('build', async () => {
+  try {
+    // create a new build directory
+    fs.mkdirSync('build');
+    // create the packages folder for NODE+UMD bundles
+    fs.mkdirSync(join('build', 'packages'));
+    // create the dist folder for UMD bundles
+    fs.mkdirSync(join('build', 'dist'));
 
-  const tasks = [
-    Packaging.createFacebookWWWBuild,
-    Packaging.createReactNativeBuild,
-    Packaging.createReactNativeRTBuild,
-    Packaging.createReactNativeCSBuild,
-  ];
-  for (const bundle of Bundles.bundles) {
-    tasks.push(
-      () => createBundle(bundle, UMD_DEV),
-      () => createBundle(bundle, UMD_PROD),
-      () => createBundle(bundle, NODE_DEV),
-      () => createBundle(bundle, NODE_PROD),
-      () => createBundle(bundle, FB_DEV),
-      () => createBundle(bundle, FB_PROD),
-      () => createBundle(bundle, RN_DEV),
-      () => createBundle(bundle, RN_PROD)
-    );
+    await Packaging.createFacebookWWWBuild();
+    await Packaging.createReactNativeBuild();
+    await Packaging.createReactNativeRTBuild();
+    await Packaging.createReactNativeCSBuild();
+
+    // Run them serially for better console output
+    // and to avoid any potential race conditions.
+    for (const bundle of Bundles.bundles) {
+      await createBundle(bundle, UMD_DEV);
+      await createBundle(bundle, UMD_PROD);
+      await createBundle(bundle, NODE_DEV);
+      await createBundle(bundle, NODE_PROD);
+      await createBundle(bundle, FB_DEV);
+      await createBundle(bundle, FB_PROD);
+      await createBundle(bundle, RN_DEV);
+      await createBundle(bundle, RN_PROD);
+    }
+
+    if (syncFbsource) {
+      await syncReactNative(join('build', 'react-native'), syncFbsource);
+      await syncReactNativeRT(join('build', 'react-rt'), syncFbsource);
+      await syncReactNativeCS(join('build', 'react-cs'), syncFbsource);
+    } else if (syncWww) {
+      await syncReactDom(join('build', 'facebook-www'), syncWww);
+    }
+
+    console.log(Stats.printResults());
+    // save the results for next run
+    Stats.saveResults();
+    if (shouldExtractErrors) {
+      console.warn(
+        '\nWarning: this build was created with --extract-errors enabled.\n' +
+          'this will result in extremely slow builds and should only be\n' +
+          'used when the error map needs to be rebuilt.\n'
+      );
+    }
+  } catch (err) {
+    console.error(err);
+    process.exit(1);
   }
-  if (syncFbsource) {
-    tasks.push(() =>
-      syncReactNative(join('build', 'react-native'), syncFbsource)
-    );
-    tasks.push(() =>
-      syncReactNativeRT(join('build', 'react-rt'), syncFbsource)
-    );
-    tasks.push(() =>
-      syncReactNativeCS(join('build', 'react-cs'), syncFbsource)
-    );
-  } else if (syncWww) {
-    tasks.push(() => syncReactDom(join('build', 'facebook-www'), syncWww));
-  }
-  // rather than run concurrently, opt to run them serially
-  // this helps improve console/warning/error output
-  // and fixes a bunch of IO failures that sometimes occurred
-  return runWaterfall(tasks)
-    .then(() => {
-      // output the results
-      console.log(Stats.printResults());
-      // save the results for next run
-      Stats.saveResults();
-      if (shouldExtractErrors) {
-        console.warn(
-          '\nWarning: this build was created with --extract-errors enabled.\n' +
-            'this will result in extremely slow builds and should only be\n' +
-            'used when the error map needs to be rebuilt.\n'
-        );
-      }
-    })
-    .catch(err => {
-      console.error(err);
-      process.exit(1);
-    });
 });
-
-function runWaterfall(promiseFactories) {
-  if (promiseFactories.length === 0) {
-    return Promise.resolve();
-  }
-
-  const head = promiseFactories[0];
-  const tail = promiseFactories.slice(1);
-
-  const nextPromiseFactory = head;
-  const nextPromise = nextPromiseFactory();
-  if (!nextPromise || typeof nextPromise.then !== 'function') {
-    throw new Error('runWaterfall() received something that is not a Promise.');
-  }
-
-  return nextPromise.then(() => {
-    return runWaterfall(tail);
-  });
-}
