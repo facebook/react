@@ -181,18 +181,31 @@ export function shouldSkipAttribute(name, isCustomComponentTag) {
 }
 
 export function isBadlyTypedAttributeValue(name, value, isCustomComponentTag) {
-  switch (typeof value) {
-    case 'boolean':
-      return !shouldAttributeAcceptBooleanValue(name, isCustomComponentTag);
-    case 'undefined':
-    case 'number':
-    case 'string':
-    case 'object':
-      return false;
-    default:
-      // function, symbol
-      return true;
+  if (isReservedProp(name)) {
+    return false;
   }
+  switch (typeof value) {
+    case 'function':
+    case 'symbol':
+      return true;
+    case 'boolean':
+      break;
+    default:
+      return false;
+  }
+  if (isCustomComponentTag) {
+    return false;
+  }
+  let propertyInfo = getPropertyInfo(name);
+  if (propertyInfo) {
+    return !(
+      propertyInfo.hasBooleanValue ||
+      propertyInfo.hasStringBooleanValue ||
+      propertyInfo.hasOverloadedBooleanValue
+    );
+  }
+  const prefix = name.toLowerCase().slice(0, 5);
+  return prefix !== 'data-' && prefix !== 'aria-';
 }
 
 export function shouldTreatAttributeValueAsNull(
@@ -202,6 +215,18 @@ export function shouldTreatAttributeValueAsNull(
 ) {
   if (value === null || typeof value === 'undefined') {
     return true;
+  }
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo) {
+    if (propertyInfo.hasBooleanValue) {
+      return !value;
+    } else if (propertyInfo.hasOverloadedBooleanValue) {
+      return value === false;
+    } else if (propertyInfo.hasNumericValue && isNaN(value)) {
+      return true;
+    } else if (propertyInfo.hasPositiveNumericValue && value < 1) {
+      return true;
+    }
   }
   if (isBadlyTypedAttributeValue(name, value, isCustomComponentTag)) {
     return true;
@@ -219,37 +244,8 @@ export function shouldSetAttribute(name, value, isCustomComponentTag) {
   return true;
 }
 
-export function shouldIgnoreValue(propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
-}
-
 export function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
-}
-
-export function shouldAttributeAcceptBooleanValue(name, isCustomComponentTag) {
-  if (isReservedProp(name)) {
-    return true;
-  }
-  if (isCustomComponentTag) {
-    return true;
-  }
-  let propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
-    return (
-      propertyInfo.hasBooleanValue ||
-      propertyInfo.hasStringBooleanValue ||
-      propertyInfo.hasOverloadedBooleanValue
-    );
-  }
-  const prefix = name.toLowerCase().slice(0, 5);
-  return prefix === 'data-' || prefix === 'aria-';
 }
 
 /**
