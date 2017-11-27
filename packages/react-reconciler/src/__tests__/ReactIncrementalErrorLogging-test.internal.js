@@ -19,10 +19,6 @@ describe('ReactIncrementalErrorLogging', () => {
     ReactNoop = require('react-noop-renderer');
   });
 
-  afterEach(() => {
-    jest.unmock('../ReactFiberErrorLogger');
-  });
-
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
@@ -122,48 +118,54 @@ describe('ReactIncrementalErrorLogging', () => {
   it('should ignore errors thrown in log method to prevent cycle', () => {
     jest.resetModules();
     jest.mock('../ReactFiberErrorLogger');
-    React = require('react');
-    ReactNoop = require('react-noop-renderer');
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
-
-    class ErrorThrowingComponent extends React.Component {
-      render() {
-        throw new Error('render error');
-      }
-    }
-
-    const logCapturedErrorCalls = [];
-
-    const ReactFiberErrorLogger = require('../ReactFiberErrorLogger');
-    ReactFiberErrorLogger.logCapturedError.mockImplementation(capturedError => {
-      logCapturedErrorCalls.push(capturedError);
-      const error = new Error('logCapturedError error');
-      // Note: it's `true` on the Error prototype our test environment.
-      // That lets us avoid asserting on warnings for each expected error.
-      // Here we intentionally shadow it to test logging, like in real apps.
-      error.suppressReactErrorLogging = undefined;
-      throw error;
-    });
-
     try {
-      ReactNoop.render(
-        <div>
-          <span>
-            <ErrorThrowingComponent />
-          </span>
-        </div>,
+      React = require('react');
+      ReactNoop = require('react-noop-renderer');
+      // Intentionally spy in production too.
+      spyOn(console, 'error');
+
+      class ErrorThrowingComponent extends React.Component {
+        render() {
+          throw new Error('render error');
+        }
+      }
+
+      const logCapturedErrorCalls = [];
+
+      const ReactFiberErrorLogger = require('../ReactFiberErrorLogger');
+      ReactFiberErrorLogger.logCapturedError.mockImplementation(
+        capturedError => {
+          logCapturedErrorCalls.push(capturedError);
+          const error = new Error('logCapturedError error');
+          // Note: it's `true` on the Error prototype our test environment.
+          // That lets us avoid asserting on warnings for each expected error.
+          // Here we intentionally shadow it to test logging, like in real apps.
+          error.suppressReactErrorLogging = undefined;
+          throw error;
+        },
       );
-      ReactNoop.flushDeferredPri();
-    } catch (error) {}
 
-    expect(logCapturedErrorCalls.length).toBe(1);
+      try {
+        ReactNoop.render(
+          <div>
+            <span>
+              <ErrorThrowingComponent />
+            </span>
+          </div>,
+        );
+        ReactNoop.flushDeferredPri();
+      } catch (error) {}
 
-    // The error thrown in logCapturedError should also be logged
-    expect(console.error.calls.count()).toBe(1);
-    expect(console.error.calls.argsFor(0)[0].message).toContain(
-      'logCapturedError error',
-    );
+      expect(logCapturedErrorCalls.length).toBe(1);
+
+      // The error thrown in logCapturedError should also be logged
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0].message).toContain(
+        'logCapturedError error',
+      );
+    } finally {
+      jest.unmock('../ReactFiberErrorLogger');
+    }
   });
 
   it('should relay info about error boundary and retry attempts if applicable', () => {
