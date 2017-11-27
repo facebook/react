@@ -41,7 +41,7 @@ export function createMarkupForRoot() {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name, value) {
-  if (name !== 'style' && shouldSkipAttribute(name)) {
+  if (name !== 'style' && shouldSkipAttribute(name, false)) {
     return '';
   }
   if (shouldTreatAttributeValueAsNull(name, value, false)) {

@@ -234,16 +234,6 @@ export function shouldTreatAttributeValueAsNull(
   return false;
 }
 
-export function shouldSetAttribute(name, value, isCustomComponentTag) {
-  if (shouldSkipAttribute(name, isCustomComponentTag)) {
-    return false;
-  }
-  if (shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)) {
-    return false;
-  }
-  return true;
-}
-
 export function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
