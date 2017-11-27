@@ -11,9 +11,9 @@
 
 const chalk = require('chalk');
 const glob = require('glob');
-const execFileSync = require('child_process').execFileSync;
 const prettier = require('prettier');
 const fs = require('fs');
+const listChangedFiles = require('../shared/listChangedFiles');
 
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
@@ -56,28 +56,7 @@ const config = {
   },
 };
 
-function exec(command, args) {
-  console.log('> ' + [command].concat(args).join(' '));
-  var options = {
-    cwd: process.cwd(),
-    env: process.env,
-    stdio: 'pipe',
-    encoding: 'utf-8',
-  };
-  return execFileSync(command, args, options);
-}
-
-var mergeBase = exec('git', ['merge-base', 'HEAD', 'master']).trim();
-var changedFiles = new Set(
-  exec('git', [
-    'diff',
-    '-z',
-    '--name-only',
-    '--diff-filter=ACMRTUB',
-    mergeBase,
-  ]).match(/[^\0]+/g)
-);
-
+var changedFiles = listChangedFiles();
 let didWarn = false;
 let didError = false;
 Object.keys(config).forEach(key => {
