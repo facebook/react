@@ -214,7 +214,7 @@ export function postMountWrapper(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
   var initialValue = node._wrapperState.initialValue;
 
-  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
+  if (props.value != null || props.defaultValue != null) {
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (node.value === '') {
