@@ -116,46 +116,55 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
   if (shouldSkipAttribute(name, isCustomComponentTag)) {
     return;
   }
+  const propertyInfo = isCustomComponentTag ? null : getPropertyInfo(name);
   if (shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)) {
     value = null;
   }
-  const propertyInfo = getPropertyInfo(name);
-  if (!isCustomComponentTag && propertyInfo) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
-      if (propertyInfo.mustUseProperty) {
-        if (propertyInfo.hasBooleanValue) {
-          node[propertyInfo.propertyName] = false;
-        } else {
-          node[propertyInfo.propertyName] = '';
-        }
-      } else {
-        node.removeAttribute(propertyInfo.attributeName);
-      }
-    } else if (propertyInfo.mustUseProperty) {
-      // Contrary to `setAttribute`, object properties are properly
-      // `toString`ed by IE8/9.
-      node[propertyInfo.propertyName] = value;
-    } else {
-      const attributeName = propertyInfo.attributeName;
-      const namespace = propertyInfo.attributeNamespace;
-      // `setAttribute` with objects becomes only `[object]` in IE8/9,
-      // ('' + value) makes it output the correct toString()-value.
-      if (namespace) {
-        node.setAttributeNS(namespace, attributeName, '' + value);
-      } else if (
-        propertyInfo.hasBooleanValue ||
-        (propertyInfo.hasOverloadedBooleanValue && value === true)
-      ) {
-        node.setAttribute(attributeName, '');
+  // If the prop is in the special list, treat it as a simple attribute.
+  if (!propertyInfo) {
+    if (isAttributeNameSafe(name)) {
+      const attributeName = name;
+      if (value == null) {
+        node.removeAttribute(attributeName);
       } else {
         node.setAttribute(attributeName, '' + value);
       }
     }
-  } else if (isAttributeNameSafe(name)) {
-    if (value == null) {
-      node.removeAttribute(name);
+    return;
+  }
+  const {
+    hasBooleanValue,
+    hasOverloadedBooleanValue,
+    mustUseProperty,
+  } = propertyInfo;
+  if (mustUseProperty) {
+    const {propertyName} = propertyInfo;
+    if (shouldIgnoreValue(propertyInfo, value)) {
+      node[propertyName] = hasBooleanValue ? false : '';
     } else {
-      node.setAttribute(name, '' + value);
+      // Contrary to `setAttribute`, object properties are properly
+      // `toString`ed by IE8/9.
+      node[propertyName] = value;
+    }
+    return;
+  }
+  // The rest are treated as attributes with special cases.
+  const {attributeName, attributeNamespace} = propertyInfo;
+  if (shouldIgnoreValue(propertyInfo, value)) {
+    node.removeAttribute(attributeName);
+  } else {
+    let attributeValue;
+    if (hasBooleanValue || (hasOverloadedBooleanValue && value === true)) {
+      attributeValue = '';
+    } else {
+      // `setAttribute` with objects becomes only `[object]` in IE8/9,
+      // ('' + value) makes it output the correct toString()-value.
+      attributeValue = '' + value;
+    }
+    if (attributeNamespace) {
+      node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
+    } else {
+      node.setAttribute(attributeName, attributeValue);
     }
   }
 }
