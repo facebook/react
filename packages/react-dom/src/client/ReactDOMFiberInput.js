@@ -176,7 +176,6 @@ export function updateWrapper(element: Element, props: Object) {
   updateChecked(element, props);
 
   var value = props.value;
-  var valueAsString = '' + props.value;
   if (value != null) {
     if (value === 0 && node.value === '') {
       node.value = '0';
@@ -193,14 +192,14 @@ export function updateWrapper(element: Element, props: Object) {
       ) {
         // Cast `value` to a string to ensure the value is set correctly. While
         // browsers typically do this as necessary, jsdom doesn't.
-        node.value = valueAsString;
+        node.value = '' + value;
       }
-    } else if (node.value !== valueAsString) {
+    } else if (node.value !== '' + value) {
       // Cast `value` to a string to ensure the value is set correctly. While
       // browsers typically do this as necessary, jsdom doesn't.
-      node.value = valueAsString;
+      node.value = '' + value
     }
-    synchronizeDefaultValue(node, props.type, valueAsString);
+    synchronizeDefaultValue(node, props.type, '' + value);
   } else {
     if (props.value == null && props.defaultValue != null) {
       synchronizeDefaultValue(node, props.type, '' + props.defaultValue);
