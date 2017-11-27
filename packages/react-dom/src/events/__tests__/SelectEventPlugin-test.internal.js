@@ -58,34 +58,36 @@ describe('SelectEventPlugin', () => {
     expect(mouseup).toBe(null);
   });
 
-  it('should extract if an `onSelect` listener is present', () => {
-    class WithSelect extends React.Component {
-      render() {
-        return <input type="text" onSelect={this.props.onSelect} />;
-      }
-    }
+  it('should register event only if the `onSelect` listener is present', () => {
+    var select = jest.fn();
+    var onSelect = event => {
+      expect(typeof event).toBe('object');
+      expect(event.type).toBe('select');
+      expect(event.target).toBe(node);
+      select(event.currentTarget);
+    };
 
-    var cb = jest.fn();
-
-    var rendered = ReactTestUtils.renderIntoDocument(
-      <WithSelect onSelect={cb} />,
+    var childContainer = document.createElement('div');
+    var childNode = ReactDOM.render(
+      <input type="text" onSelect={onSelect} />,
+      childContainer,
     );
-    var node = ReactDOM.findDOMNode(rendered);
+    document.body.appendChild(childContainer);
 
-    node.selectionStart = 0;
-    node.selectionEnd = 0;
+    var node = ReactDOM.findDOMNode(childNode);
     node.focus();
+    expect(select.mock.calls.length).toBe(0);
 
-    var focus = extract(node, 'topFocus');
-    expect(focus).toBe(null);
+    var nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('mousedown', true, true);
+    childNode.dispatchEvent(nativeEvent);
+    expect(select.mock.calls.length).toBe(0);
 
-    var mousedown = extract(node, 'topMouseDown');
-    expect(mousedown).toBe(null);
+    nativeEvent = document.createEvent('Event');
+    nativeEvent.initEvent('mouseup', true, true);
+    childNode.dispatchEvent(nativeEvent);
+    expect(select.mock.calls.length).toBe(1);
 
-    var mouseup = extract(node, 'topMouseUp');
-    expect(mouseup).not.toBe(null);
-    expect(typeof mouseup).toBe('object');
-    expect(mouseup.type).toBe('select');
-    expect(mouseup.target).toBe(node);
+    document.body.removeChild(childContainer);
   });
 });
