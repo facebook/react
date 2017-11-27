@@ -218,6 +218,16 @@ export function shouldSetAttribute(name, value, isCustomComponentTag) {
   return true;
 }
 
+export function shouldIgnoreValue(propertyInfo, value) {
+  return (
+    value == null ||
+    (propertyInfo.hasBooleanValue && !value) ||
+    (propertyInfo.hasNumericValue && isNaN(value)) ||
+    (propertyInfo.hasPositiveNumericValue && value < 1) ||
+    (propertyInfo.hasOverloadedBooleanValue && value === false)
+  );
+}
+
 export function getPropertyInfo(name) {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }

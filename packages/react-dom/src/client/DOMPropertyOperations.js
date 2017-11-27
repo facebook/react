@@ -7,22 +7,11 @@
 
 import {
   getPropertyInfo,
+  shouldIgnoreValue,
   shouldSkipAttribute,
   shouldTreatAttributeValueAsNull,
   isAttributeNameSafe,
 } from '../shared/DOMProperty';
-
-// shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
-}
 
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.

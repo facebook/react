@@ -10,22 +10,11 @@ import {
   ROOT_ATTRIBUTE_NAME,
   getPropertyInfo,
   shouldAttributeAcceptBooleanValue,
+  shouldIgnoreValue,
   shouldSetAttribute,
   isAttributeNameSafe,
 } from '../shared/DOMProperty';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
-
-// shouldIgnoreValue() is currently duplicated in DOMPropertyOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
-}
 
 /**
  * Operations for dealing with DOM properties.
