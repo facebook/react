@@ -215,20 +215,19 @@ export function updateWrapper(element: Element, props: Object) {
 
 export function postMountWrapper(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
-  var hasUserInput = node.value !== '';
-  var value = node._wrapperState.initialValue;
+  var initialValue = node._wrapperState.initialValue;
 
-  if (value !== '' || props.hasOwnProperty('value')) {
+  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
-    if (!hasUserInput) {
-      node.value = value;
+    if (node.value === '') {
+      node.value = initialValue;
     }
 
     // value must be assigned before defaultValue. This fixes an issue where the
     // visually displayed value of date inputs disappears on mobile Safari and Chrome:
     // https://github.com/facebook/react/issues/7233
-    node.defaultValue = value;
+    node.defaultValue = initialValue;
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
