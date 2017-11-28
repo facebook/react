@@ -12,6 +12,7 @@
     "LICENSE",
     "README.md",
     "index.js",
+    "reflection.js",
     "cjs/"
   ],
   "main": "index.js",

@@ -12,7 +12,7 @@ import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import {
   findCurrentHostFiber,
   findCurrentFiberUsingSlowPath,
-} from 'shared/ReactFiberTreeReflection';
+} from 'react-reconciler/reflection';
 import getComponentName from 'shared/getComponentName';
 import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
