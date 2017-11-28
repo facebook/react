@@ -189,8 +189,8 @@
       "gzip": 2725
     },
     "react-noop-renderer.development.js (NODE_DEV)": {
-      "size": 277788,
-      "gzip": 58527
+      "size": 17474,
+      "gzip": 4855
     },
     "react-reconciler.development.js (NODE_DEV)": {
       "size": 262177,
@@ -217,8 +217,16 @@
       "gzip": 3917
     },
     "react-noop-renderer.production.min.js (NODE_PROD)": {
-      "size": 45144,
-      "gzip": 14079
+      "size": 6011,
+      "gzip": 2418
+    },
+    "react-reconciler-reflection.development.js (NODE_DEV)": {
+      "size": 10398,
+      "gzip": 3198
+    },
+    "react-reconciler-reflection.production.min.js (NODE_PROD)": {
+      "size": 2408,
+      "gzip": 1062
     }
   }
 }
