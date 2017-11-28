@@ -6,7 +6,7 @@
  */
 
 import {batchedUpdates} from 'events/ReactGenericBatching';
-import {isFiberMounted} from 'shared/ReactFiberTreeReflection';
+import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
 import EventListener from 'fbjs/lib/EventListener';
 

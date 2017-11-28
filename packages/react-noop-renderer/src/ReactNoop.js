@@ -17,8 +17,6 @@
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import ReactFiberInstrumentation from 'react-reconciler/src/ReactFiberInstrumentation';
 import ReactFiberReconciler from 'react-reconciler';
 import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
@@ -566,10 +564,7 @@ var ReactNoop = {
     }
   },
 
-  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {
-    // Private. Used only by fixtures/fiber-debugger.
-    ReactFiberInstrumentation,
-  },
+  __SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED: {},
 };
 
 export default ReactNoop;

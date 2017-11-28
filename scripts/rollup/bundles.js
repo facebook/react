@@ -211,6 +211,16 @@ const bundles = [
     externals: ['react'],
   },
 
+  /******* Reflection *******/
+  {
+    label: 'reconciler-reflection',
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    entry: 'react-reconciler/reflection',
+    global: 'ReactFiberTreeReflection',
+    externals: [],
+  },
+
   /******* React Call Return (experimental) *******/
   {
     label: 'react-call-return',

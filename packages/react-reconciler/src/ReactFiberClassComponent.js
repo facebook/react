@@ -15,7 +15,7 @@ import {
   debugRenderPhaseSideEffects,
   enableAsyncSubtreeAPI,
 } from 'shared/ReactFeatureFlags';
-import {isMounted} from 'shared/ReactFiberTreeReflection';
+import {isMounted} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import emptyObject from 'fbjs/lib/emptyObject';
 import getComponentName from 'shared/getComponentName';

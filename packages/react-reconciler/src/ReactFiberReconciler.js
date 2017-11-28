@@ -15,7 +15,7 @@ import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
-} from 'shared/ReactFiberTreeReflection';
+} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {HostComponent} from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
