@@ -5,6 +5,28 @@
     Click to see more.
   </summary>
 
+### React
+
+* Add `Fragment` as named export to React. ([@clemmy](https://github.com/clemmy) in [#10783](https://github.com/facebook/react/pull/10783))
+* Support experimental Call/Return types in `React.Children` utilities. ([@MatteoVH](https://github.com/MatteoVH) in [#11422](https://github.com/facebook/react/pull/11422))
+
+### React DOM
+
+* Fix radio buttons not getting checked when using multiple lists of radios. ([@landvibe](https://github.com/landvibe) in [#11227](https://github.com/facebook/react/pull/11227))
+* Fix radio buttons not receiving the `onChange` event in some cases. ([@jquense](https://github.com/jquense) in [#11028](https://github.com/facebook/react/pull/11028))
+
+### React Test Renderer
+
+* Fix `setState()` callback firing too early when called from `componentWillMount`. ([@accordeiro](https://github.com/accordeiro) in [#11507](https://github.com/facebook/react/pull/11507))
+
+### React Reconciler
+
+* Expose `react-reconciler/reflection` with utlities useful to custom renderers. ([@rivenhk](https://github.com/rivenhk) in [#11683](https://github.com/facebook/react/pull/11683))
+
+### Internal Changes
+
+* Many tests were rewritten against the public API. Big thanks to [everyone who contributed](https://github.com/facebook/react/issues/11299)!
+
 </details>
 
 ## 16.1.1 (November 13, 2017)
