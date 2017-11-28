@@ -372,4 +372,26 @@ describe('ReactDOM', () => {
       delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
     }
   });
+
+  // https://github.com/facebook/react/issues/11689
+  it('should warn when attempting to inject an event plugin', () => {
+    spyOnDev(console, 'warn');
+    ReactDOM.__SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED.EventPluginHub.injection.injectEventPluginsByName(
+      {
+        TapEventPlugin: {
+          extractEvents() {},
+        },
+      },
+    );
+    if (__DEV__) {
+      expect(console.warn.calls.count()).toBe(1);
+      expect(console.warn.calls.argsFor(0)[0]).toContain(
+        'Injecting custom event plugins (TapEventPlugin) is deprecated ' +
+          'and will not work in React 17+. Please update your code ' +
+          'to not depend on React internals. The stack trace for this ' +
+          'warning should reveal the library that is using them. ' +
+          'See https://github.com/facebook/react/issues/11689 for a discussion.',
+      );
+    }
+  });
 });
