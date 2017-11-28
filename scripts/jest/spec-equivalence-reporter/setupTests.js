@@ -27,7 +27,7 @@ global.spyOn = function() {
   throw new Error(
     'Do not use spyOn(). ' +
       'It can accidentally hide unexpected errors in production builds. ' +
-      'Use spyOnDev() and/or spyOnProd() instead.'
+      'Use spyOnDev(), spyOnProd(), or spyOnDevAndProd() instead.'
   );
 };
 
