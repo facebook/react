@@ -449,7 +449,7 @@ describe('ReactElementValidator', () => {
   });
 
   it('should warn if component declares PropTypes instead of propTypes', () => {
-    spyOn(console, 'error');
+    spyOnDevAndProd(console, 'error');
     class MisspelledPropTypesComponent extends React.Component {
       static PropTypes = {
         prop: PropTypes.string,

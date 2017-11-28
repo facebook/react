@@ -24,8 +24,7 @@ describe('ReactIncrementalErrorLogging', () => {
   }
 
   it('should log errors that occur during the begin phase', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
+    spyOnDevAndProd(console, 'error');
 
     class ErrorThrowingComponent extends React.Component {
       componentWillMount() {
@@ -70,8 +69,7 @@ describe('ReactIncrementalErrorLogging', () => {
   });
 
   it('should log errors that occur during the commit phase', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
+    spyOnDevAndProd(console, 'error');
 
     class ErrorThrowingComponent extends React.Component {
       componentDidMount() {
@@ -121,8 +119,7 @@ describe('ReactIncrementalErrorLogging', () => {
     try {
       React = require('react');
       ReactNoop = require('react-noop-renderer');
-      // Intentionally spy in production too.
-      spyOn(console, 'error');
+      spyOnDevAndProd(console, 'error');
 
       class ErrorThrowingComponent extends React.Component {
         render() {
@@ -169,8 +166,7 @@ describe('ReactIncrementalErrorLogging', () => {
   });
 
   it('should relay info about error boundary and retry attempts if applicable', () => {
-    // Intentionally spy in production too.
-    spyOn(console, 'error');
+    spyOnDevAndProd(console, 'error');
 
     class ParentComponent extends React.Component {
       render() {

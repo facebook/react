@@ -122,7 +122,7 @@ describe('DOMPropertyOperations', () => {
         <input type="radio" value="" onChange={function() {}} />,
         container,
       );
-      spyOn(container.firstChild, 'setAttribute');
+      spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(
         <input type="radio" value={0} onChange={function() {}} />,
         container,
@@ -133,7 +133,7 @@ describe('DOMPropertyOperations', () => {
     it('should always assign the value attribute for non-inputs', function() {
       var container = document.createElement('div');
       ReactDOM.render(<progress />, container);
-      spyOn(container.firstChild, 'setAttribute');
+      spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(<progress value={30} />, container);
       ReactDOM.render(<progress value="30" />, container);
       expect(container.firstChild.setAttribute.calls.count()).toBe(2);

@@ -877,7 +877,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work error event on <source> element', () => {
-      spyOn(console, 'log');
+      spyOnDevAndProd(console, 'log');
       var container = document.createElement('div');
       ReactDOM.render(
         <video>
@@ -1239,7 +1239,7 @@ describe('ReactDOMComponent', () => {
 
     it('should support custom elements which extend native elements', () => {
       var container = document.createElement('div');
-      spyOn(document, 'createElement').and.callThrough();
+      spyOnDevAndProd(document, 'createElement').and.callThrough();
       ReactDOM.render(<div is="custom-div" />, container);
       expect(document.createElement).toHaveBeenCalledWith('div', {
         is: 'custom-div',
@@ -1247,7 +1247,7 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should work load and error events on <image> element in SVG', () => {
-      spyOn(console, 'log');
+      spyOnDevAndProd(console, 'log');
       var container = document.createElement('div');
       ReactDOM.render(
         <svg>

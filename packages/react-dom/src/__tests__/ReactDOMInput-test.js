@@ -1247,7 +1247,7 @@ describe('ReactDOMInput', () => {
   it('sets type, step, min, max before value always', () => {
     var log = [];
     var originalCreateElement = document.createElement;
-    spyOn(document, 'createElement').and.callFake(function(type) {
+    spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
       var el = originalCreateElement.apply(this, arguments);
       if (type === 'input') {
         Object.defineProperty(el, 'value', {
@@ -1256,7 +1256,7 @@ describe('ReactDOMInput', () => {
             log.push('set value');
           },
         });
-        spyOn(el, 'setAttribute').and.callFake(function(name, value) {
+        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name, value) {
           log.push('set ' + name);
         });
       }
@@ -1311,7 +1311,7 @@ describe('ReactDOMInput', () => {
 
     var log = [];
     var originalCreateElement = document.createElement;
-    spyOn(document, 'createElement').and.callFake(function(type) {
+    spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
       var el = originalCreateElement.apply(this, arguments);
       if (type === 'input') {
         Object.defineProperty(el, 'value', {
@@ -1319,7 +1319,7 @@ describe('ReactDOMInput', () => {
             log.push(`node.value = ${strify(val)}`);
           },
         });
-        spyOn(el, 'setAttribute').and.callFake(function(name, val) {
+        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name, val) {
           log.push(`node.setAttribute(${strify(name)}, ${strify(val)})`);
         });
       }

@@ -1149,7 +1149,7 @@ describe('ReactDOMFiber', () => {
     var actualDocument;
     var textNode;
 
-    spyOn(iframeContainer, 'appendChild').and.callFake(node => {
+    spyOnDevAndProd(iframeContainer, 'appendChild').and.callFake(node => {
       actualDocument = node.ownerDocument;
       textNode = node;
     });
