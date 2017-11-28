@@ -80,6 +80,8 @@ const ParentComponent = ({eventHandler}) => (
 describe('ReactTreeTraversal', () => {
   var mockFn = jest.fn();
   var container;
+  var outerNode1;
+  var outerNode2;
 
   beforeEach(() => {
     React = require('react');
@@ -88,22 +90,27 @@ describe('ReactTreeTraversal', () => {
     mockFn.mockReset();
 
     container = document.createElement('div');
+    outerNode1 = document.createElement('div');
+    outerNode2 = document.createElement('div');
     document.body.appendChild(container);
+    document.body.appendChild(outerNode1);
+    document.body.appendChild(outerNode2);
 
     ReactDOM.render(<ParentComponent eventHandler={mockFn} />, container);
   });
 
   afterEach(() => {
     document.body.removeChild(container);
+    document.body.removeChild(outerNode1);
+    document.body.removeChild(outerNode2);
     container = null;
+    outerNode1 = null;
+    outerNode2 = null;
   });
 
   describe('Two phase traversal', () => {
     it('should not traverse when target is outside component boundary', () => {
-      const outerNode = document.createElement('div');
-      document.body.appendChild(outerNode);
-
-      outerNode.dispatchEvent(
+      outerNode1.dispatchEvent(
         new MouseEvent('click', {bubbles: true, cancelable: true}),
       );
 
@@ -147,17 +154,11 @@ describe('ReactTreeTraversal', () => {
 
   describe('Enter leave traversal', () => {
     it('should not traverse when enter/leaving outside DOM', () => {
-      var leaveNode = document.createElement('div');
-      var enterNode = document.createElement('div');
-
-      document.body.appendChild(leaveNode);
-      document.body.appendChild(enterNode);
-
-      leaveNode.dispatchEvent(
+      outerNode1.dispatchEvent(
         new MouseEvent('mouseout', {
           bubbles: true,
           cancelable: true,
-          relatedTarget: enterNode,
+          relatedTarget: outerNode2,
         }),
       );
 
@@ -218,10 +219,7 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should enter from the window', () => {
-      var leaveNode = document.createElement('div');
       var enterNode = document.getElementById('P_P1_C1__DIV');
-
-      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
 
       var expectedCalls = [
         ['P', 'mouseenter', ARG],
@@ -229,7 +227,7 @@ describe('ReactTreeTraversal', () => {
         ['P_P1_C1__DIV', 'mouseenter', ARG],
       ];
 
-      leaveNode.dispatchEvent(
+      outerNode1.dispatchEvent(
         new MouseEvent('mouseout', {
           bubbles: true,
           cancelable: true,
@@ -241,14 +239,11 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should enter from the window to the shallowest', () => {
-      var leaveNode = document.createElement('div');
       var enterNode = document.getElementById('P');
-
-      document.body.appendChild(leaveNode); // From the window or outside of the React sandbox.
 
       var expectedCalls = [['P', 'mouseenter', ARG]];
 
-      leaveNode.dispatchEvent(
+      outerNode1.dispatchEvent(
         new MouseEvent('mouseout', {
           bubbles: true,
           cancelable: true,
@@ -261,9 +256,6 @@ describe('ReactTreeTraversal', () => {
 
     it('should leave to the window', () => {
       var leaveNode = document.getElementById('P_P1_C1__DIV');
-      var enterNode = document.createElement('div');
-
-      document.body.appendChild(enterNode); // To the window or outside of the React sandbox.
 
       var expectedCalls = [
         ['P_P1_C1__DIV', 'mouseleave', ARG],
@@ -275,7 +267,7 @@ describe('ReactTreeTraversal', () => {
         new MouseEvent('mouseout', {
           bubbles: true,
           cancelable: true,
-          relatedTarget: enterNode,
+          relatedTarget: outerNode1,
         }),
       );
 
@@ -284,9 +276,6 @@ describe('ReactTreeTraversal', () => {
 
     it('should leave to the window from the shallowest', () => {
       var leaveNode = document.getElementById('P');
-      var enterNode = document.createElement('div');
-
-      document.body.appendChild(enterNode); // To the window or outside of the React sandbox.
 
       var expectedCalls = [['P', 'mouseleave', ARG]];
 
@@ -294,7 +283,7 @@ describe('ReactTreeTraversal', () => {
         new MouseEvent('mouseout', {
           bubbles: true,
           cancelable: true,
-          relatedTarget: enterNode,
+          relatedTarget: outerNode1,
         }),
       );
 
