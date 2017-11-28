@@ -9,4 +9,4 @@
 
 'use strict';
 
-export * from './src/ReactFiberTreeReflection';
+module.exports = require('./src/ReactFiberTreeReflection');
