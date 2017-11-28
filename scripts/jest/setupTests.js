@@ -21,7 +21,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // It's too easy to accidentally use the more familiar spyOn() helper though,
   // So we disable it entirely.
   // Spying on both dev and prod will require using both spyOnDev() and spyOnProd().
-  global.spyOn = function spyOn() {
+  global.spyOn = function() {
     throw new Error(
       'Do not use spyOn(). ' +
         'It can accidentally hide unexpected errors in production builds. ' +
