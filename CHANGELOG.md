@@ -5,6 +5,11 @@
     Click to see more.
   </summary>
 
+
+</details>
+
+## 16.2.0 (November 28, 2017)
+
 ### React
 
 * Add `Fragment` as named export to React. ([@clemmy](https://github.com/clemmy) in [#10783](https://github.com/facebook/react/pull/10783))
@@ -26,8 +31,6 @@
 ### Internal Changes
 
 * Many tests were rewritten against the public API. Big thanks to [everyone who contributed](https://github.com/facebook/react/issues/11299)!
-
-</details>
 
 ## 16.1.1 (November 13, 2017)
 
