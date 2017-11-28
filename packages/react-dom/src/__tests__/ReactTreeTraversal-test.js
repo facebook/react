@@ -12,35 +12,32 @@
 var React;
 var ReactDOM;
 
-var ARG = {arg: true};
-var ARG2 = {arg2: true};
-
 const ChildComponent = ({id, eventHandler}) => (
   <div
     id={id + '__DIV'}
     onClickCapture={e =>
-      eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
+      eventHandler(e.currentTarget.id, 'captured', e.type)
     }
-    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
-    onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
-    onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}>
+    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
+    onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
+    onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}>
     <div
       id={id + '__DIV_1'}
       onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
+        eventHandler(e.currentTarget.id, 'captured', e.type)
       }
-      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
-      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
-      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}
     />
     <div
       id={id + '__DIV_2'}
       onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
+        eventHandler(e.currentTarget.id, 'captured', e.type)
       }
-      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
-      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG2)}
-      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}
     />
   </div>
 );
@@ -49,30 +46,30 @@ const ParentComponent = ({eventHandler}) => (
   <div
     id="P"
     onClickCapture={e =>
-      eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
+      eventHandler(e.currentTarget.id, 'captured', e.type)
     }
-    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
-    onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
-    onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}>
+    onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
+    onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
+    onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}>
     <div
       id="P_P1"
       onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
+        eventHandler(e.currentTarget.id, 'captured', e.type)
       }
-      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
-      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
-      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}>
+      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}>
       <ChildComponent id="P_P1_C1" eventHandler={eventHandler} />
       <ChildComponent id="P_P1_C2" eventHandler={eventHandler} />
     </div>
     <div
       id="P_OneOff"
       onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type, ARG)
+        eventHandler(e.currentTarget.id, 'captured', e.type)
       }
-      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type, ARG)}
-      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type, ARG)}
-      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type, ARG)}
+      onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
+      onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
+      onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}
     />
   </div>
 );
@@ -119,15 +116,15 @@ describe('ReactTreeTraversal', () => {
 
     it('should traverse two phase across component boundary', () => {
       var expectedCalls = [
-        ['P', 'captured', 'click', ARG],
-        ['P_P1', 'captured', 'click', ARG],
-        ['P_P1_C1__DIV', 'captured', 'click', ARG],
-        ['P_P1_C1__DIV_1', 'captured', 'click', ARG],
+        ['P', 'captured', 'click'],
+        ['P_P1', 'captured', 'click'],
+        ['P_P1_C1__DIV', 'captured', 'click'],
+        ['P_P1_C1__DIV_1', 'captured', 'click'],
 
-        ['P_P1_C1__DIV_1', 'bubbled', 'click', ARG],
-        ['P_P1_C1__DIV', 'bubbled', 'click', ARG],
-        ['P_P1', 'bubbled', 'click', ARG],
-        ['P', 'bubbled', 'click', ARG],
+        ['P_P1_C1__DIV_1', 'bubbled', 'click'],
+        ['P_P1_C1__DIV', 'bubbled', 'click'],
+        ['P_P1', 'bubbled', 'click'],
+        ['P', 'bubbled', 'click'],
       ];
 
       var node = document.getElementById('P_P1_C1__DIV_1');
@@ -145,8 +142,8 @@ describe('ReactTreeTraversal', () => {
       );
 
       var expectedCalls = [
-        ['P', 'captured', 'click', ARG],
-        ['P', 'bubbled', 'click', ARG],
+        ['P', 'captured', 'click'],
+        ['P', 'bubbled', 'click'],
       ];
       expect(mockFn.mock.calls).toEqual(expectedCalls);
     });
@@ -185,9 +182,9 @@ describe('ReactTreeTraversal', () => {
       var enterNode = document.getElementById('P_P1_C1__DIV_2');
 
       var expectedCalls = [
-        ['P_P1_C1__DIV_1', 'mouseleave', ARG],
+        ['P_P1_C1__DIV_1', 'mouseleave'],
         // enter/leave shouldn't fire anything on the parent
-        ['P_P1_C1__DIV_2', 'mouseenter', ARG2],
+        ['P_P1_C1__DIV_2', 'mouseenter'],
       ];
 
       leaveNode.dispatchEvent(
@@ -205,7 +202,7 @@ describe('ReactTreeTraversal', () => {
       var leaveNode = document.getElementById('P_P1_C1__DIV_1');
       var enterNode = document.getElementById('P_P1_C1__DIV');
 
-      var expectedCalls = [['P_P1_C1__DIV_1', 'mouseleave', ARG]];
+      var expectedCalls = [['P_P1_C1__DIV_1', 'mouseleave']];
 
       leaveNode.dispatchEvent(
         new MouseEvent('mouseout', {
@@ -222,9 +219,9 @@ describe('ReactTreeTraversal', () => {
       var enterNode = document.getElementById('P_P1_C1__DIV');
 
       var expectedCalls = [
-        ['P', 'mouseenter', ARG],
-        ['P_P1', 'mouseenter', ARG],
-        ['P_P1_C1__DIV', 'mouseenter', ARG],
+        ['P', 'mouseenter'],
+        ['P_P1', 'mouseenter'],
+        ['P_P1_C1__DIV', 'mouseenter'],
       ];
 
       outerNode1.dispatchEvent(
@@ -241,7 +238,7 @@ describe('ReactTreeTraversal', () => {
     it('should enter from the window to the shallowest', () => {
       var enterNode = document.getElementById('P');
 
-      var expectedCalls = [['P', 'mouseenter', ARG]];
+      var expectedCalls = [['P', 'mouseenter']];
 
       outerNode1.dispatchEvent(
         new MouseEvent('mouseout', {
@@ -258,9 +255,9 @@ describe('ReactTreeTraversal', () => {
       var leaveNode = document.getElementById('P_P1_C1__DIV');
 
       var expectedCalls = [
-        ['P_P1_C1__DIV', 'mouseleave', ARG],
-        ['P_P1', 'mouseleave', ARG],
-        ['P', 'mouseleave', ARG],
+        ['P_P1_C1__DIV', 'mouseleave'],
+        ['P_P1', 'mouseleave'],
+        ['P', 'mouseleave'],
       ];
 
       leaveNode.dispatchEvent(
@@ -277,7 +274,7 @@ describe('ReactTreeTraversal', () => {
     it('should leave to the window from the shallowest', () => {
       var leaveNode = document.getElementById('P');
 
-      var expectedCalls = [['P', 'mouseleave', ARG]];
+      var expectedCalls = [['P', 'mouseleave']];
 
       leaveNode.dispatchEvent(
         new MouseEvent('mouseout', {
