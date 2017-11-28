@@ -1362,6 +1362,8 @@ describe('ResponderEventPlugin', () => {
   });
 
   it('should determine the first common ancestor correctly', () => {
+    // This test was moved here from the ReactTreeTraversal test since only the 
+    // ResponderEventPlugin uses `getLowestCommonAncestor`
     var React = require('react');
     var ReactTestUtils = require('react-dom/test-utils');
     var ReactTreeTraversal = require('shared/ReactTreeTraversal');
