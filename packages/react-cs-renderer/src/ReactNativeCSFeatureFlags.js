@@ -15,7 +15,6 @@ import typeof * as CSFeatureFlagsType from './ReactNativeCSFeatureFlags';
 export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;
 export const enableAsyncSchedulingByDefaultInReactDOM = false;
-export const enableReactFragment = false;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 

@@ -7,7 +7,7 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom';
-import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
+import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
 import {
   ClassComponent,

@@ -14,7 +14,7 @@ import {
   shouldAttributeAcceptBooleanValue,
   shouldSetAttribute,
 } from '../shared/DOMProperty';
-import quoteAttributeValueForBrowser from '../shared/quoteAttributeValueForBrowser';
+import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 import warning from 'fbjs/lib/warning';
 
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.

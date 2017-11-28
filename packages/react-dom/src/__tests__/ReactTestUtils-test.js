@@ -270,7 +270,7 @@ describe('ReactTestUtils', () => {
           e.persist();
         },
       };
-      spyOn(obj, 'handler').and.callThrough();
+      spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
       const instance = ReactDOM.render(
         <input type="text" onChange={obj.handler} />,
@@ -306,7 +306,7 @@ describe('ReactTestUtils', () => {
           e.persist();
         },
       };
-      spyOn(obj, 'handler').and.callThrough();
+      spyOnDevAndProd(obj, 'handler').and.callThrough();
       const container = document.createElement('div');
       const instance = ReactDOM.render(
         <SomeComponent handleChange={obj.handler} />,
@@ -365,8 +365,6 @@ describe('ReactTestUtils', () => {
     });
 
     it('should not warn when used with extra properties', () => {
-      spyOn(console, 'error');
-
       const CLIENT_X = 100;
 
       class Component extends React.Component {
@@ -384,7 +382,6 @@ describe('ReactTestUtils', () => {
       ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(instance), {
         clientX: CLIENT_X,
       });
-      expectDev(console.error.calls.count()).toBe(0);
     });
 
     it('should set the type of the event', () => {

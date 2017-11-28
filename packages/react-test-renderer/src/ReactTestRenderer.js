@@ -12,7 +12,7 @@ import type {FiberRoot} from 'react-reconciler/src/ReactFiberRoot';
 
 import ReactFiberReconciler from 'react-reconciler';
 import {batchedUpdates} from 'events/ReactGenericBatching';
-import {findCurrentFiberUsingSlowPath} from 'shared/ReactFiberTreeReflection';
+import {findCurrentFiberUsingSlowPath} from 'react-reconciler/reflection';
 import emptyObject from 'fbjs/lib/emptyObject';
 import {
   Fragment,

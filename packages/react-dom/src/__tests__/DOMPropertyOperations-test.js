@@ -122,7 +122,7 @@ describe('DOMPropertyOperations', () => {
         <input type="radio" value="" onChange={function() {}} />,
         container,
       );
-      spyOn(container.firstChild, 'setAttribute');
+      spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(
         <input type="radio" value={0} onChange={function() {}} />,
         container,
@@ -133,7 +133,7 @@ describe('DOMPropertyOperations', () => {
     it('should always assign the value attribute for non-inputs', function() {
       var container = document.createElement('div');
       ReactDOM.render(<progress />, container);
-      spyOn(container.firstChild, 'setAttribute');
+      spyOnDevAndProd(container.firstChild, 'setAttribute');
       ReactDOM.render(<progress value={30} />, container);
       ReactDOM.render(<progress value="30" />, container);
       expect(container.firstChild.setAttribute.calls.count()).toBe(2);
@@ -151,7 +151,7 @@ describe('DOMPropertyOperations', () => {
 
     it('should not remove attributes for special properties', () => {
       var container = document.createElement('div');
-      spyOn(console, 'error');
+      spyOnDev(console, 'error');
       ReactDOM.render(
         <input type="text" value="foo" onChange={function() {}} />,
         container,
@@ -164,10 +164,12 @@ describe('DOMPropertyOperations', () => {
       );
       expect(container.firstChild.getAttribute('value')).toBe('foo');
       expect(container.firstChild.value).toBe('foo');
-      expect(console.error.calls.count()).toBe(1);
-      expect(console.error.calls.argsFor(0)[0]).toContain(
-        'A component is changing a controlled input of type text to be uncontrolled',
-      );
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'A component is changing a controlled input of type text to be uncontrolled',
+        );
+      }
     });
   });
 });

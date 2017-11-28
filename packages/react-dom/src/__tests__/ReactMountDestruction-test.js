@@ -50,15 +50,17 @@ describe('ReactMount', () => {
 
     // Test that unmounting at a root node gives a helpful warning
     var rootDiv = mainContainerDiv.firstChild;
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.unmountComponentAtNode(rootDiv);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      "Warning: unmountComponentAtNode(): The node you're attempting to " +
-        'unmount was rendered by React and is not a top-level container. You ' +
-        'may have accidentally passed in a React root node instead of its ' +
-        'container.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        "Warning: unmountComponentAtNode(): The node you're attempting to " +
+          'unmount was rendered by React and is not a top-level container. You ' +
+          'may have accidentally passed in a React root node instead of its ' +
+          'container.',
+      );
+    }
   });
 
   it('should warn when unmounting a non-container, non-root node', () => {
@@ -75,14 +77,16 @@ describe('ReactMount', () => {
 
     // Test that unmounting at a non-root node gives a different warning
     var nonRootDiv = mainContainerDiv.firstChild.firstChild;
-    spyOn(console, 'error');
+    spyOnDev(console, 'error');
     ReactDOM.unmountComponentAtNode(nonRootDiv);
-    expectDev(console.error.calls.count()).toBe(1);
-    expectDev(console.error.calls.argsFor(0)[0]).toBe(
-      "Warning: unmountComponentAtNode(): The node you're attempting to " +
-        'unmount was rendered by React and is not a top-level container. ' +
-        'Instead, have the parent component update its state and rerender in ' +
-        'order to remove this component.',
-    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toBe(
+        "Warning: unmountComponentAtNode(): The node you're attempting to " +
+          'unmount was rendered by React and is not a top-level container. ' +
+          'Instead, have the parent component update its state and rerender in ' +
+          'order to remove this component.',
+      );
+    }
   });
 });

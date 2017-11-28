@@ -1004,7 +1004,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       } catch (e) {
         // Prevent cycle if logCapturedError() throws.
         // A cycle may still occur if logCapturedError renders a component that throws.
-        console.error(e);
+        const suppressLogging = e && e.suppressReactErrorLogging;
+        if (!suppressLogging) {
+          console.error(e);
+        }
       }
 
       // If we're in the commit phase, defer scheduling an update on the
@@ -1165,6 +1168,27 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return scheduleWorkImpl(fiber, expirationTime, false);
   }
 
+  function checkRootNeedsClearing(
+    root: FiberRoot,
+    fiber: Fiber,
+    expirationTime: ExpirationTime,
+  ) {
+    if (
+      !isWorking &&
+      root === nextRoot &&
+      expirationTime < nextRenderExpirationTime
+    ) {
+      // Restart the root from the top.
+      if (nextUnitOfWork !== null) {
+        // This is an interruption. (Used for performance tracking.)
+        interruptedBy = fiber;
+      }
+      nextRoot = null;
+      nextUnitOfWork = null;
+      nextRenderExpirationTime = NoWork;
+    }
+  }
+
   function scheduleWorkImpl(
     fiber: Fiber,
     expirationTime: ExpirationTime,
@@ -1200,21 +1224,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       if (node.return === null) {
         if (node.tag === HostRoot) {
           const root: FiberRoot = (node.stateNode: any);
-          if (
-            !isWorking &&
-            root === nextRoot &&
-            expirationTime < nextRenderExpirationTime
-          ) {
-            // Restart the root from the top.
-            if (nextUnitOfWork !== null) {
-              // This is an interruption. (Used for performance tracking.)
-              interruptedBy = fiber;
-            }
-            nextRoot = null;
-            nextUnitOfWork = null;
-            nextRenderExpirationTime = NoWork;
-          }
+
+          checkRootNeedsClearing(root, fiber, expirationTime);
           requestWork(root, expirationTime);
+          checkRootNeedsClearing(root, fiber, expirationTime);
         } else {
           if (__DEV__) {
             if (!isErrorRecovery && fiber.tag === ClassComponent) {

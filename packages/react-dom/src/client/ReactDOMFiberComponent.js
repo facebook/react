@@ -67,7 +67,7 @@ if (__DEV__) {
   var validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
-    validateUnknownProperties(type, props);
+    validateUnknownProperties(type, props, /* canUseEventSystem */ true);
   };
 
   // HTML parsing normalizes CR and CRLF to LF.
