@@ -7,7 +7,6 @@ jobs:
 
     environment:
       TZ: /usr/share/zoneinfo/America/Los_Angeles
-      YARN_VERSION: 1.2.1
       TRAVIS_REPO_SLUG: facebook/react
 
     parallelism: 4
@@ -16,13 +15,6 @@ jobs:
       - checkout
 
       - run: echo $CIRCLE_COMPARE_URL | cut -d/ -f7
-
-      - run:
-          name: Install Yarn
-          command: |
-            if [[ ! -e ~/.yarn/bin/yarn || $(yarn --version) != "${YARN_VERSION}" ]]; then
-              curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version $YARN_VERSION
-            fi
 
       - restore_cache:
           name: Restore node_modules cache
