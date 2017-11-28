@@ -13,9 +13,31 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   // https://github.com/facebook/jest/blob/v20.0.4/packages/jest-matchers/src/spyMatchers.js#L160
   const isSpy = spy => spy.calls && typeof spy.calls.count === 'function';
 
-  // Dev-only spyOn should be ignored in production runs.
-  global.spyOnDev =
-    process.env.NODE_ENV === 'production' ? () => {} : global.spyOn;
+  const spyOn = global.spyOn;
+  const noop = function() {};
+
+  // Spying on console methods in production builds can mask errors.
+  // This is why we added an explicit spyOnDev() helper.
+  // It's too easy to accidentally use the more familiar spyOn() helper though,
+  // So we disable it entirely.
+  // Spying on both dev and prod will require using both spyOnDev() and spyOnProd().
+  global.spyOn = function() {
+    throw new Error(
+      'Do not use spyOn(). ' +
+        'It can accidentally hide unexpected errors in production builds. ' +
+        'Use spyOnDev(), spyOnProd(), or spyOnDevAndProd() instead.'
+    );
+  };
+
+  if (process.env.NODE_ENV === 'production') {
+    global.spyOnDev = noop;
+    global.spyOnProd = spyOn;
+    global.spyOnDevAndProd = spyOn;
+  } else {
+    global.spyOnDev = spyOn;
+    global.spyOnProd = noop;
+    global.spyOnDevAndProd = spyOn;
+  }
 
   ['error', 'warn'].forEach(methodName => {
     var oldMethod = console[methodName];
@@ -33,19 +55,17 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     env.afterEach(() => {
       if (console[methodName] !== newMethod && !isSpy(console[methodName])) {
         throw new Error(
-          'Test did not tear down console.' + methodName + ' mock properly.'
+          `Test did not tear down console.${methodName} mock properly.`
         );
       }
       if (console[methodName].__callCount !== 0) {
         throw new Error(
-          'Expected test not to call console.' +
-            methodName +
-            '(). ' +
+          `Expected test not to call console.${methodName}(). ` +
             'If the warning is expected, mock it out using ' +
-            "spyOn(console, '" +
-            methodName +
-            "') and test that the " +
-            'warning occurs.'
+            `spyOnDev(console, '${methodName}') or spyOnProd(console, '${
+              methodName
+            }'), ` +
+            'and test that the warning occurs.'
         );
       }
     });

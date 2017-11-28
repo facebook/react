@@ -404,7 +404,7 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('should warn if component declares PropTypes instead of propTypes', () => {
-    spyOn(console, 'error');
+    spyOnDevAndProd(console, 'error');
     class MisspelledPropTypesComponent extends React.Component {
       render() {
         return <span>{this.props.prop}</span>;
