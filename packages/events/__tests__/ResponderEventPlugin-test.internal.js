@@ -1362,7 +1362,7 @@ describe('ResponderEventPlugin', () => {
   });
 
   it('should determine the first common ancestor correctly', () => {
-    var React = require("react");
+    var React = require('react');
     var ReactTestUtils = require('react-dom/test-utils');
     var ReactTreeTraversal = require('shared/ReactTreeTraversal');
     var ReactDOMComponentTree = require('../../react-dom/src/client/ReactDOMComponentTree');
