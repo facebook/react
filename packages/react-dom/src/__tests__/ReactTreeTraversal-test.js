@@ -15,26 +15,20 @@ var ReactDOM;
 const ChildComponent = ({id, eventHandler}) => (
   <div
     id={id + '__DIV'}
-    onClickCapture={e =>
-      eventHandler(e.currentTarget.id, 'captured', e.type)
-    }
+    onClickCapture={e => eventHandler(e.currentTarget.id, 'captured', e.type)}
     onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
     onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
     onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}>
     <div
       id={id + '__DIV_1'}
-      onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type)
-      }
+      onClickCapture={e => eventHandler(e.currentTarget.id, 'captured', e.type)}
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
       onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
       onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}
     />
     <div
       id={id + '__DIV_2'}
-      onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type)
-      }
+      onClickCapture={e => eventHandler(e.currentTarget.id, 'captured', e.type)}
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
       onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
       onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}
@@ -45,17 +39,13 @@ const ChildComponent = ({id, eventHandler}) => (
 const ParentComponent = ({eventHandler}) => (
   <div
     id="P"
-    onClickCapture={e =>
-      eventHandler(e.currentTarget.id, 'captured', e.type)
-    }
+    onClickCapture={e => eventHandler(e.currentTarget.id, 'captured', e.type)}
     onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
     onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
     onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}>
     <div
       id="P_P1"
-      onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type)
-      }
+      onClickCapture={e => eventHandler(e.currentTarget.id, 'captured', e.type)}
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
       onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
       onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}>
@@ -64,9 +54,7 @@ const ParentComponent = ({eventHandler}) => (
     </div>
     <div
       id="P_OneOff"
-      onClickCapture={e =>
-        eventHandler(e.currentTarget.id, 'captured', e.type)
-      }
+      onClickCapture={e => eventHandler(e.currentTarget.id, 'captured', e.type)}
       onClick={e => eventHandler(e.currentTarget.id, 'bubbled', e.type)}
       onMouseEnter={e => eventHandler(e.currentTarget.id, e.type)}
       onMouseLeave={e => eventHandler(e.currentTarget.id, e.type)}
