@@ -450,14 +450,7 @@ export default function(
 
     const instance = workInProgress.stateNode;
     const state = instance.state || null;
-
-    let props = workInProgress.pendingProps;
-    invariant(
-      props,
-      'There must be pending props for an initial mount. This error is ' +
-        'likely caused by a bug in React. Please file an issue.',
-    );
-
+    const props = workInProgress.pendingProps;
     const unmaskedContext = getUnmaskedContext(workInProgress);
 
     instance.props = props;
@@ -610,17 +603,7 @@ export default function(
     resetInputPointers(workInProgress, instance);
 
     const oldProps = workInProgress.memoizedProps;
-    let newProps = workInProgress.pendingProps;
-    if (!newProps) {
-      // If there aren't any new props, then we'll reuse the memoized props.
-      // This could be from already completed work.
-      newProps = oldProps;
-      invariant(
-        newProps != null,
-        'There should always be pending or memoized props. This error is ' +
-          'likely caused by a bug in React. Please file an issue.',
-      );
-    }
+    const newProps = workInProgress.pendingProps;
     const oldContext = instance.context;
     const newUnmaskedContext = getUnmaskedContext(workInProgress);
     const newContext = getMaskedContext(workInProgress, newUnmaskedContext);
