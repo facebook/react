@@ -8,24 +8,72 @@ const UMD_PROD = bundleTypes.UMD_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
 
+// If you need to replace a file with another file for a specific environment,
+// add it to this list with the logic for choosing the right replacement.
+const forkedModules = Object.freeze({
+  // Optimization: for UMDs, use object-assign polyfill that is already a part
+  // of the React package instead of bundling it again.
+  'object-assign': (bundleType, entry) => {
+    if (bundleType !== UMD_DEV && bundleType !== UMD_PROD) {
+      // It's only relevant for UMD bundles since that's where the duplication
+      // happens. Other bundles just require('object-assign') anyway.
+      return null;
+    }
+    if (getDependencies(bundleType, entry).indexOf('react') === -1) {
+      // We can only apply the optimizations to bundle that depend on React
+      // because we read assign() from an object exposed on React internals.
+      return null;
+    }
+    // We can use the fork!
+    return 'shared/forks/object-assign.umd.js';
+  },
+
+  // We have a few forks for different environments.
+  'shared/ReactFeatureFlags': (bundleType, entry) => {
+    switch (entry) {
+      case 'react-native-renderer':
+        return 'shared/forks/ReactFeatureFlags.native.js';
+      case 'react-cs-renderer':
+        return 'shared/forks/ReactFeatureFlags.native-cs.js';
+      default:
+        switch (bundleType) {
+          case FB_DEV:
+          case FB_PROD:
+            return 'shared/forks/ReactFeatureFlags.www.js';
+        }
+    }
+    return null;
+  },
+
+  // This logic is forked on www to blacklist warnings.
+  'shared/lowPriorityWarning': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_DEV:
+      case FB_PROD:
+        return 'shared/forks/lowPriorityWarning.www.js';
+      default:
+        return null;
+    }
+  },
+
+  // In FB bundles, we preserve an inline require to ReactCurrentOwner.
+  // See the explanation in FB version of ReactCurrentOwner in www:
+  'react/src/ReactCurrentOwner': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_DEV:
+      case FB_PROD:
+        return 'react/src/forks/ReactCurrentOwner.www.js';
+      default:
+        return null;
+    }
+  },
+});
+
 // Bundles exporting globals that other modules rely on.
 const knownGlobals = Object.freeze({
   react: 'React',
   'react-dom': 'ReactDOM',
 });
-
-// Redirect some modules to Haste forks in www.
-// Assuming their names in www are the same, and also match
-// imported names in corresponding ./shims/rollup/*-www.js shims.
-const forkedFBModules = Object.freeze([
-  // At FB, we don't know them statically:
-  'shared/ReactFeatureFlags',
-  // This logic is also forked internally.
-  'shared/lowPriorityWarning',
-  // In FB bundles, we preserve an inline require to ReactCurrentOwner.
-  // See the explanation in FB version of ReactCurrentOwner in www:
-  'react/src/ReactCurrentOwner',
-]);
 
 // For any external that is used in a DEV-only condition, explicitly
 // specify whether it has side effects during import or not. This lets
@@ -62,72 +110,45 @@ function getDependencies(bundleType, entry) {
     path.dirname(require.resolve(entry))
   ) + '/package.json');
   // Both deps and peerDeps are assumed as accessible.
-  let deps = Array.from(
+  return Array.from(
     new Set([
       ...Object.keys(packageJson.dependencies || {}),
       ...Object.keys(packageJson.peerDependencies || {}),
     ])
   );
-  // In www, forked modules are also require-able.
-  if (bundleType === FB_DEV || bundleType === FB_PROD) {
-    deps = [...deps, ...forkedFBModules.map(name => path.basename(name))];
-  }
-  return deps;
+}
+
+// Hijacks some modules for optimization and integration reasons.
+function getForks(bundleType, entry) {
+  const shims = {};
+  Object.keys(forkedModules).forEach(srcModule => {
+    const targetModule = forkedModules[srcModule](bundleType, entry);
+    if (targetModule === null) {
+      return;
+    }
+    const targetPath = require.resolve(targetModule);
+    shims[srcModule] = targetPath;
+    // <hack>
+    // Unfortunately the above doesn't work for relative imports,
+    // and Rollup isn't smart enough to understand they refer to the same file.
+    // We should come up with a real fix for this, but for now this will do.
+    // FIXME: this is gross.
+    const fileName = path.parse(srcModule).name;
+    shims['./' + fileName] = targetPath;
+    shims['../' + fileName] = targetPath;
+    // We don't have deeper relative requires between source files.
+    // </hack>
+  });
+  return shims;
 }
 
 function getImportSideEffects() {
   return importSideEffects;
 }
 
-// Hijacks some modules for optimization and integration reasons.
-function getShims(bundleType, entry, featureFlags) {
-  const shims = {};
-  switch (bundleType) {
-    case UMD_DEV:
-    case UMD_PROD:
-      if (getDependencies(bundleType, entry).indexOf('react') !== -1) {
-        // Optimization: rely on object-assign polyfill that is already a part
-        // of the React package instead of bundling it again.
-        shims['object-assign'] = path.resolve(
-          __dirname + '/shims/rollup/assign-umd.js'
-        );
-      }
-      break;
-    case FB_DEV:
-    case FB_PROD:
-      // FB forks a few modules in www that are usually bundled.
-      // Instead of bundling them, they need to be kept as require()s in the
-      // final bundles so that they import www modules with the same names.
-      // Rollup doesn't make it very easy to rewrite and ignore such a require,
-      // so we resort to using a shim that re-exports the www module, and then
-      // treating shim's target destinations as external (see getDependencies).
-      forkedFBModules.forEach(srcPath => {
-        const fileName = path.parse(srcPath).name;
-        const shimPath = path.resolve(
-          __dirname + `/shims/rollup/${fileName}-www.js`
-        );
-        shims[srcPath] = shimPath;
-        // <hack>
-        // Unfortunately the above doesn't work for relative imports,
-        // and Rollup isn't smart enough to understand they refer to the same file.
-        // We should come up with a real fix for this, but for now this will do.
-        // FIXME: this is gross.
-        shims['./' + fileName] = shimPath;
-        shims['../' + fileName] = shimPath;
-        // We don't have deeper relative requires between source files.
-        // </hack>
-      });
-      break;
-  }
-  if (featureFlags) {
-    shims['shared/ReactFeatureFlags'] = require.resolve(featureFlags);
-  }
-  return shims;
-}
-
 module.exports = {
   getImportSideEffects,
   getPeerGlobals,
   getDependencies,
-  getShims,
+  getForks,
 };

@@ -218,11 +218,10 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  modulesToStub,
-  featureFlags
+  modulesToStub
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
-  const shims = Modules.getShims(bundleType, entry, featureFlags);
+  const forks = Modules.getForks(bundleType, entry);
   const isProduction = isProductionBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
@@ -236,8 +235,8 @@ function getPlugins(
         return source;
       },
     },
-    // Shim some modules for www custom behavior and optimizations.
-    alias(shims),
+    // Shim any modules that need forking in this environment.
+    alias(forks),
     // Use Node resolution mechanism.
     resolvePlugin({
       skip: externals,
@@ -384,8 +383,7 @@ async function createBundle(bundle, bundleType) {
         bundleType,
         bundle.global,
         bundle.moduleType,
-        bundle.modulesToStub,
-        bundle.featureFlags
+        bundle.modulesToStub
       ),
       // We can't use getters in www.
       legacy: bundleType === FB_DEV || bundleType === FB_PROD,
