@@ -19,7 +19,12 @@ import warning from 'fbjs/lib/warning';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
-import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_FRAGMENT_TYPE,
+  REACT_CALL_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_PORTAL_TYPE,
+} from 'shared/ReactSymbols';
 
 import {
   createMarkupForCustomAttribute,
@@ -585,6 +590,27 @@ class ReactDOMServerRenderer {
       if (nextChild === null || nextChild === false) {
         return '';
       } else if (!React.isValidElement(nextChild)) {
+        if (nextChild != null && nextChild.$$typeof != null) {
+          // Catch unexpected special types early.
+          const $$typeof = nextChild.$$typeof;
+          invariant(
+            $$typeof !== REACT_PORTAL_TYPE,
+            'Portals are not currently supported by the server renderer. ' +
+              'Render them conditionally so that they only appear on the client render.',
+          );
+          invariant(
+            $$typeof !== REACT_CALL_TYPE && $$typeof !== REACT_RETURN_TYPE,
+            'The experimental Call and Return types are not currently ' +
+              'supported by the server renderer.',
+          );
+          // Catch-all to prevent an infinite loop if React.Children.toArray() supports some new type.
+          invariant(
+            false,
+            'Unknown element-like object type: %s. This is likely a bug in React. ' +
+              'Please file an issue.',
+            ($$typeof: any).toString(),
+          );
+        }
         const nextChildren = toArray(nextChild);
         const frame: Frame = {
           domNamespace: parentNamespace,
