@@ -181,6 +181,8 @@ if (__DEV__) {
           'canceled in `componentWillUnmount`), or you can change the test itself ' +
           'to be asynchronous.',
       );
+      const evt = document.createEvent('Event');
+
       // Keeps track of whether the user-provided callback threw an error. We
       // set this to true at the beginning, then set it to false right after
       // calling the function. If the function errors, `didError` will never be
@@ -236,7 +238,6 @@ if (__DEV__) {
 
       // Synchronously dispatch our fake event. If the user-provided function
       // errors, it will trigger our global error handler.
-      const evt = document.createEvent('Event');
       evt.initEvent(evtType, false, false);
       fakeNode.dispatchEvent(evt);
 
