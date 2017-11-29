@@ -238,7 +238,7 @@ export function injectEventPluginsByName(
           'to not depend on React internals. The stack trace for this ' +
           'warning should reveal the library that is using them. ' +
           'See https://github.com/facebook/react/issues/11689 for a discussion.',
-          names,
+        names,
       );
     }
   }
