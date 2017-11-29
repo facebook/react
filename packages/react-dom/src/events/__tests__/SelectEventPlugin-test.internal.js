@@ -28,34 +28,49 @@ describe('SelectEventPlugin', () => {
     container = null;
   });
 
-  it('should verify that `onSelect` fails to fire when no `topMouseUp` has yet occurred to unset the flag', () => {
+  // See https://github.com/facebook/react/pull/3639 for details.
+  it('does not get confused when dependent events are registered independently', () => {
     var select = jest.fn();
     var onSelect = event => select(event.currentTarget);
 
+    // Pass `onMouseDown` so React registers a top-level listener.
     var node = ReactDOM.render(
-      <input type="text" onSelect={onSelect} />,
+      <input type="text" onMouseDown={function() {}} />,
       container,
     );
     node.focus();
 
-    var nativeEvent = new MouseEvent('focus', {
-      bubbles: true,
-      cancelable: true,
-    });
-    node.dispatchEvent(nativeEvent);
+    // Trigger `mousedown` and `mouseup`. Note that
+    // React is not currently listening to `mouseup`.
+    node.dispatchEvent(
+      new MouseEvent('mousedown', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    node.dispatchEvent(
+      new MouseEvent('mouseup', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
 
-    nativeEvent = new MouseEvent('mousedown', {
-      bubbles: true,
-      cancelable: true,
-    });
-    node.dispatchEvent(nativeEvent);
+    // Now subscribe to `onSelect`.
+    ReactDOM.render(<input type="text" onSelect={select} />, container);
+    node.focus();
 
-    nativeEvent = new MouseEvent('keyup', {bubbles: true, cancelable: true});
-    node.dispatchEvent(nativeEvent);
-    expect(select.mock.calls.length).toBe(0);
+    // This triggers a `select` event in our polyfill.
+    node.dispatchEvent(
+      new KeyboardEvent('keydown', {bubbles: true, cancelable: true}),
+    );
+
+    // Verify that it doesn't get "stuck" waiting for
+    // a `mouseup` event that it has "missed" because
+    // a top-level listener didn't exist yet.
+    expect(select.mock.calls.length).toBe(1);
   });
 
-  it('should verify that `onSelect` fires when the listener is present', () => {
+  it('should fire `onSelect` when a listener is present', () => {
     var select = jest.fn();
     var onSelect = event => {
       expect(typeof event).toBe('object');
