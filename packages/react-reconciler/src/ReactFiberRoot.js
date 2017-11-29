@@ -13,6 +13,14 @@ import type {ExpirationTime} from './ReactFiberExpirationTime';
 import {createHostRootFiber} from './ReactFiber';
 import {NoWork} from './ReactFiberExpirationTime';
 
+// TODO: This should be lifted into the renderer.
+export type Batch = {
+  _defer: boolean,
+  _expirationTime: ExpirationTime,
+  _onComplete: () => mixed,
+  _next: Batch | null,
+};
+
 export type FiberRoot = {
   // Any additional information from the host associated with this root.
   containerInfo: any,
@@ -34,6 +42,10 @@ export type FiberRoot = {
   pendingContext: Object | null,
   // Determines if we should attempt to hydrate on the initial mount
   +hydrate: boolean,
+  // List of top-level batches. This list indicates whether a commit should be
+  // deferred. Also contains completion callbacks.
+  // TODO: Lift this into the renderer
+  firstBatch: Batch | null,
   // Linked-list of roots
   nextScheduledRoot: FiberRoot | null,
 };
@@ -55,6 +67,7 @@ export function createFiberRoot(
     context: null,
     pendingContext: null,
     hydrate,
+    firstBatch: null,
     nextScheduledRoot: null,
   };
   uninitializedFiber.stateNode = root;

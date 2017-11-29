@@ -10,6 +10,7 @@
 import type {Fiber} from './ReactFiber';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
+import type {ExpirationTime} from './ReactFiberExpirationTime';
 
 import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {
@@ -238,12 +239,22 @@ export type Reconciler<C, I, TI> = {
     container: OpaqueRoot,
     parentComponent: ?React$Component<any, any>,
     callback: ?Function,
-  ): void,
+  ): ExpirationTime,
+  updateContainerAtExpirationTime(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
+    expirationTime: ExpirationTime,
+    callback: ?Function,
+  ): ExpirationTime,
+  flushRoot(root: OpaqueRoot, expirationTime: ExpirationTime): void,
+  requestWork(root: OpaqueRoot, expirationTime: ExpirationTime): void,
   batchedUpdates<A>(fn: () => A): A,
   unbatchedUpdates<A>(fn: () => A): A,
   flushSync<A>(fn: () => A): A,
   deferredUpdates<A>(fn: () => A): A,
   injectIntoDevTools(devToolsConfig: DevToolsConfig<I, TI>): boolean,
+  computeUniqueAsyncExpiration(): ExpirationTime,
 
   // Used to extract the return value from the initial render. Legacy API.
   getPublicRootInstance(
@@ -278,17 +289,40 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   var {
     computeAsyncExpiration,
+    computeUniqueAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
+    requestWork,
+    flushRoot,
     batchedUpdates,
     unbatchedUpdates,
     flushSync,
     deferredUpdates,
   } = ReactFiberScheduler(config);
 
-  function scheduleTopLevelUpdate(
+  function computeRootExpirationTime(current, element) {
+    let expirationTime;
+    // Check if the top-level element is an async wrapper component. If so,
+    // treat updates to the root as async. This is a bit weird but lets us
+    // avoid a separate `renderAsync` API.
+    if (
+      enableAsyncSubtreeAPI &&
+      element != null &&
+      (element: any).type != null &&
+      (element: any).type.prototype != null &&
+      (element: any).type.prototype.unstable_isAsyncReactComponent === true
+    ) {
+      expirationTime = computeAsyncExpiration();
+    } else {
+      expirationTime = computeExpirationForFiber(current);
+    }
+    return expirationTime;
+  }
+
+  function scheduleRootUpdate(
     current: Fiber,
     element: ReactNodeList,
+    expirationTime: ExpirationTime,
     callback: ?Function,
   ) {
     if (__DEV__) {
@@ -319,33 +353,50 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       );
     }
 
-    let expirationTime;
-    // Check if the top-level element is an async wrapper component. If so,
-    // treat updates to the root as async. This is a bit weird but lets us
-    // avoid a separate `renderAsync` API.
-    if (
-      enableAsyncSubtreeAPI &&
-      element != null &&
-      (element: any).type != null &&
-      (element: any).type.prototype != null &&
-      (element: any).type.prototype.unstable_isAsyncReactComponent === true
-    ) {
-      expirationTime = computeAsyncExpiration();
-    } else {
-      expirationTime = computeExpirationForFiber(current);
-    }
-
     const update = {
       expirationTime,
       partialState: {element},
       callback,
       isReplace: false,
       isForced: false,
-      nextCallback: null,
       next: null,
     };
     insertUpdateIntoFiber(current, update);
     scheduleWork(current, expirationTime);
+
+    return expirationTime;
+  }
+
+  function updateContainerAtExpirationTime(
+    element: ReactNodeList,
+    container: OpaqueRoot,
+    parentComponent: ?React$Component<any, any>,
+    expirationTime: ExpirationTime,
+    callback: ?Function,
+  ) {
+    // TODO: If this is a nested container, this won't be the root.
+    const current = container.current;
+
+    if (__DEV__) {
+      if (ReactFiberInstrumentation.debugTool) {
+        if (current.alternate === null) {
+          ReactFiberInstrumentation.debugTool.onMountContainer(container);
+        } else if (element === null) {
+          ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
+        } else {
+          ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
+        }
+      }
+    }
+
+    const context = getContextForSubtree(parentComponent);
+    if (container.context === null) {
+      container.context = context;
+    } else {
+      container.pendingContext = context;
+    }
+
+    return scheduleRootUpdate(current, element, expirationTime, callback);
   }
 
   function findHostInstance(fiber: Fiber): PI | null {
@@ -366,31 +417,25 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       container: OpaqueRoot,
       parentComponent: ?React$Component<any, any>,
       callback: ?Function,
-    ): void {
-      // TODO: If this is a nested container, this won't be the root.
+    ): ExpirationTime {
       const current = container.current;
-
-      if (__DEV__) {
-        if (ReactFiberInstrumentation.debugTool) {
-          if (current.alternate === null) {
-            ReactFiberInstrumentation.debugTool.onMountContainer(container);
-          } else if (element === null) {
-            ReactFiberInstrumentation.debugTool.onUnmountContainer(container);
-          } else {
-            ReactFiberInstrumentation.debugTool.onUpdateContainer(container);
-          }
-        }
-      }
-
-      const context = getContextForSubtree(parentComponent);
-      if (container.context === null) {
-        container.context = context;
-      } else {
-        container.pendingContext = context;
-      }
-
-      scheduleTopLevelUpdate(current, element, callback);
+      const expirationTime = computeRootExpirationTime(current, element);
+      return updateContainerAtExpirationTime(
+        element,
+        container,
+        parentComponent,
+        expirationTime,
+        callback,
+      );
     },
+
+    updateContainerAtExpirationTime,
+
+    flushRoot,
+
+    requestWork,
+
+    computeUniqueAsyncExpiration,
 
     batchedUpdates,
 
