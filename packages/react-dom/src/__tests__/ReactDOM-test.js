@@ -372,4 +372,43 @@ describe('ReactDOM', () => {
       delete global.__REACT_DEVTOOLS_GLOBAL_HOOK__;
     }
   });
+
+  it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
+    spyOnDev(console, 'error');
+    class App extends React.Component {
+      state = {x: 1};
+      render() {
+        return <div />;
+      }
+    }
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<App />, container);
+    const documentDescriptor = Object.getOwnPropertyDescriptor(
+      global,
+      'document',
+    );
+    try {
+      // Emulate jsdom environment cleanup.
+      // This is roughly what happens if the test finished and then
+      // an asynchronous callback tried to setState() after this.
+      delete global.document;
+      const fn = () => instance.setState({x: 2});
+      if (__DEV__) {
+        expect(fn).toThrow(
+          'The `document` global was defined when React was initialized, but is not ' +
+            'defined anymore. This can happen in a test environment if a component ' +
+            'schedules an update from an asynchronous callback, but the test has already ' +
+            'finished running. To solve this, you can either unmount the component at ' +
+            'the end of your test (and ensure that any asynchronous operations get ' +
+            'canceled in `componentWillUnmount`), or you can change the test itself ' +
+            'to be asynchronous.',
+        );
+      } else {
+        expect(fn).not.toThrow();
+      }
+    } finally {
+      // Don't break other tests.
+      Object.defineProperty(global, 'document', documentDescriptor);
+    }
+  });
 });
