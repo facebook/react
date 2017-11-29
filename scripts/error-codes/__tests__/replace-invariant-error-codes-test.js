@@ -17,11 +17,11 @@ function transform(input) {
 }
 
 function compare(input, output) {
-  var compiled = transform(input);
+  const compiled = transform(input);
   expect(compiled).toEqual(output);
 }
 
-var oldEnv;
+let oldEnv;
 
 describe('error codes transform', () => {
   beforeEach(() => {
