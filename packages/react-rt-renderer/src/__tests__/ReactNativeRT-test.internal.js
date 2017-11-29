@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactNativeRT;
-var RTManager;
+let React;
+let ReactNativeRT;
+let RTManager;
 
 describe('ReactNativeRT', () => {
   beforeEach(() => {

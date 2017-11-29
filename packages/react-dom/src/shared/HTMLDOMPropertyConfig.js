@@ -7,14 +7,14 @@
 
 import {injection} from './DOMProperty';
 
-var MUST_USE_PROPERTY = injection.MUST_USE_PROPERTY;
-var HAS_BOOLEAN_VALUE = injection.HAS_BOOLEAN_VALUE;
-var HAS_NUMERIC_VALUE = injection.HAS_NUMERIC_VALUE;
-var HAS_POSITIVE_NUMERIC_VALUE = injection.HAS_POSITIVE_NUMERIC_VALUE;
-var HAS_OVERLOADED_BOOLEAN_VALUE = injection.HAS_OVERLOADED_BOOLEAN_VALUE;
-var HAS_STRING_BOOLEAN_VALUE = injection.HAS_STRING_BOOLEAN_VALUE;
+const MUST_USE_PROPERTY = injection.MUST_USE_PROPERTY;
+const HAS_BOOLEAN_VALUE = injection.HAS_BOOLEAN_VALUE;
+const HAS_NUMERIC_VALUE = injection.HAS_NUMERIC_VALUE;
+const HAS_POSITIVE_NUMERIC_VALUE = injection.HAS_POSITIVE_NUMERIC_VALUE;
+const HAS_OVERLOADED_BOOLEAN_VALUE = injection.HAS_OVERLOADED_BOOLEAN_VALUE;
+const HAS_STRING_BOOLEAN_VALUE = injection.HAS_STRING_BOOLEAN_VALUE;
 
-var HTMLDOMPropertyConfig = {
+const HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
   // the `possibleStandardNames` module to ensure casing and incorrect
   // name warnings.

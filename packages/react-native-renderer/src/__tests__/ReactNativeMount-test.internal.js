@@ -9,10 +9,10 @@
 
 'use strict';
 
-var React;
-var ReactNative;
-var createReactNativeComponentClass;
-var UIManager;
+let React;
+let ReactNative;
+let createReactNativeComponentClass;
+let UIManager;
 
 describe('ReactNative', () => {
   beforeEach(() => {
@@ -26,7 +26,7 @@ describe('ReactNative', () => {
   });
 
   it('should be able to create and render a native component', () => {
-    var View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'View',
     }));
@@ -39,7 +39,7 @@ describe('ReactNative', () => {
   });
 
   it('should be able to create and update a native component', () => {
-    var View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'View',
     }));
@@ -121,14 +121,14 @@ describe('ReactNative', () => {
   });
 
   it('returns the correct instance and calls it in the callback', () => {
-    var View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {foo: true},
       uiViewClassName: 'View',
     }));
 
-    var a;
-    var b;
-    var c = ReactNative.render(
+    let a;
+    let b;
+    const c = ReactNative.render(
       <View foo="foo" ref={v => (a = v)} />,
       11,
       function() {
@@ -142,14 +142,14 @@ describe('ReactNative', () => {
   });
 
   it('renders and reorders children', () => {
-    var View = createReactNativeComponentClass('View', () => ({
+    const View = createReactNativeComponentClass('View', () => ({
       validAttributes: {title: true},
       uiViewClassName: 'View',
     }));
 
     class Component extends React.Component {
       render() {
-        var chars = this.props.chars.split('');
+        const chars = this.props.chars.split('');
         return (
           <View>{chars.map(text => <View key={text} title={text} />)}</View>
         );
@@ -157,8 +157,8 @@ describe('ReactNative', () => {
     }
 
     // Mini multi-child stress test: lots of reorders, some adds, some removes.
-    var before = 'abcdefghijklmnopqrst';
-    var after = 'mxhpgwfralkeoivcstzy';
+    const before = 'abcdefghijklmnopqrst';
+    const after = 'mxhpgwfralkeoivcstzy';
 
     ReactNative.render(<Component chars={before} />, 11);
     expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
@@ -168,7 +168,7 @@ describe('ReactNative', () => {
   });
 
   it('calls setState with no arguments', () => {
-    var mockArgs;
+    let mockArgs;
     class Component extends React.Component {
       componentDidMount() {
         this.setState({}, (...args) => (mockArgs = args));

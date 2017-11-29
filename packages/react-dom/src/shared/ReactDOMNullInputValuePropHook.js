@@ -8,10 +8,10 @@
 import {ReactDebugCurrentFrame} from 'shared/ReactGlobalSharedState';
 import warning from 'fbjs/lib/warning';
 
-var didWarnValueNull = false;
+let didWarnValueNull = false;
 
 function getStackAddendum() {
-  var stack = ReactDebugCurrentFrame.getStackAddendum();
+  const stack = ReactDebugCurrentFrame.getStackAddendum();
   return stack != null ? stack : '';
 }
 

@@ -25,7 +25,7 @@ export {getListener, registrationNameModules as registrationNames};
  */
 
 // Shared default empty native event - conserve memory.
-var EMPTY_NATIVE_EVENT = {};
+const EMPTY_NATIVE_EVENT = {};
 
 /**
  * Selects a subsequence of `Touch`es, without destroying `touches`.
@@ -34,9 +34,9 @@ var EMPTY_NATIVE_EVENT = {};
  * @param {Array<number>} indices Indices by which to pull subsequence.
  * @return {Array<Touch>} Subsequence of touch objects.
  */
-var touchSubsequence = function(touches, indices) {
-  var ret = [];
-  for (var i = 0; i < indices.length; i++) {
+const touchSubsequence = function(touches, indices) {
+  const ret = [];
+  for (let i = 0; i < indices.length; i++) {
     ret.push(touches[indices[i]]);
   }
   return ret;
@@ -53,22 +53,22 @@ var touchSubsequence = function(touches, indices) {
  * @param {Array<number>} indices Indices to remove from `touches`.
  * @return {Array<Touch>} Subsequence of removed touch objects.
  */
-var removeTouchesAtIndices = function(
+const removeTouchesAtIndices = function(
   touches: Array<Object>,
   indices: Array<number>,
 ): Array<Object> {
-  var rippedOut = [];
+  const rippedOut = [];
   // use an unsafe downcast to alias to nullable elements,
   // so we can delete and then compact.
-  var temp: Array<?Object> = (touches: Array<any>);
-  for (var i = 0; i < indices.length; i++) {
-    var index = indices[i];
+  const temp: Array<?Object> = (touches: Array<any>);
+  for (let i = 0; i < indices.length; i++) {
+    const index = indices[i];
     rippedOut.push(touches[index]);
     temp[index] = null;
   }
-  var fillAt = 0;
-  for (var j = 0; j < temp.length; j++) {
-    var cur = temp[j];
+  let fillAt = 0;
+  for (let j = 0; j < temp.length; j++) {
+    const cur = temp[j];
     if (cur !== null) {
       temp[fillAt++] = cur;
     }
@@ -92,8 +92,8 @@ export function _receiveRootNodeIDEvent(
   topLevelType: string,
   nativeEventParam: ?Object,
 ) {
-  var nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
-  var inst = getInstanceFromNode(rootNodeID);
+  const nativeEvent = nativeEventParam || EMPTY_NATIVE_EVENT;
+  const inst = getInstanceFromNode(rootNodeID);
   batchedUpdates(function() {
     handleTopLevel(topLevelType, inst, nativeEvent, nativeEvent.target);
   });
@@ -145,21 +145,21 @@ export function receiveTouches(
   touches: Array<Object>,
   changedIndices: Array<number>,
 ) {
-  var changedTouches =
+  const changedTouches =
     eventTopLevelType === 'topTouchEnd' ||
     eventTopLevelType === 'topTouchCancel'
       ? removeTouchesAtIndices(touches, changedIndices)
       : touchSubsequence(touches, changedIndices);
 
-  for (var jj = 0; jj < changedTouches.length; jj++) {
-    var touch = changedTouches[jj];
+  for (let jj = 0; jj < changedTouches.length; jj++) {
+    const touch = changedTouches[jj];
     // Touch objects can fulfill the role of `DOM` `Event` objects if we set
     // the `changedTouches`/`touches`. This saves allocations.
     touch.changedTouches = changedTouches;
     touch.touches = touches;
-    var nativeEvent = touch;
-    var rootNodeID = null;
-    var target = nativeEvent.target;
+    const nativeEvent = touch;
+    let rootNodeID = null;
+    const target = nativeEvent.target;
     if (target !== null && target !== undefined) {
       if (target < ReactNativeTagHandles.tagsStartAt) {
         if (__DEV__) {

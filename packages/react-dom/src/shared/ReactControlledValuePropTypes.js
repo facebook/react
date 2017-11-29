@@ -7,12 +7,12 @@
 
 import checkPropTypes from 'prop-types/checkPropTypes';
 
-var ReactControlledValuePropTypes = {
+const ReactControlledValuePropTypes = {
   checkPropTypes: null,
 };
 
 if (__DEV__) {
-  var hasReadOnlyValue = {
+  const hasReadOnlyValue = {
     button: true,
     checkbox: true,
     image: true,
@@ -22,7 +22,7 @@ if (__DEV__) {
     submit: true,
   };
 
-  var propTypes = {
+  const propTypes = {
     value: function(props, propName, componentName) {
       if (
         !props[propName] ||

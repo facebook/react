@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
+let React;
+let ReactDOM;
+let ReactDOMServer;
 
 // In standard React, TextComponent keeps track of different Text templates
 // using comments. However, in React Fiber, those comments are not outputted due
@@ -30,8 +30,8 @@ describe('ReactDOMTextComponent', () => {
   });
 
   it('updates a mounted text component in place', () => {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(
       <div>
         <span />
         {'foo'}
@@ -64,8 +64,8 @@ describe('ReactDOMTextComponent', () => {
   });
 
   it('can be toggled in and out of the markup', () => {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(
       <div>
         {'foo'}
         <div />
@@ -74,7 +74,7 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    var container = ReactDOM.findDOMNode(inst);
+    let container = ReactDOM.findDOMNode(inst);
     let childNodes = filterOutComments(container.childNodes);
     let childDiv = childNodes[1];
 
@@ -113,8 +113,8 @@ describe('ReactDOMTextComponent', () => {
    */
 
   xit('can reconcile text merged by Node.normalize() alongside other elements', () => {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(
       <div>
         {'foo'}
         {'bar'}
@@ -125,7 +125,7 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    var container = ReactDOM.findDOMNode(inst);
+    let container = ReactDOM.findDOMNode(inst);
     container.normalize();
 
     inst = ReactDOM.render(
@@ -143,8 +143,8 @@ describe('ReactDOMTextComponent', () => {
   });
 
   xit('can reconcile text merged by Node.normalize()', () => {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(
       <div>
         {'foo'}
         {'bar'}
@@ -153,7 +153,7 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    var container = ReactDOM.findDOMNode(inst);
+    let container = ReactDOM.findDOMNode(inst);
     container.normalize();
 
     inst = ReactDOM.render(
@@ -169,8 +169,8 @@ describe('ReactDOMTextComponent', () => {
   });
 
   it('can reconcile text from pre-rendered markup', () => {
-    var el = document.createElement('div');
-    var reactEl = (
+    const el = document.createElement('div');
+    let reactEl = (
       <div>
         {'foo'}
         {'bar'}
@@ -198,8 +198,8 @@ describe('ReactDOMTextComponent', () => {
   });
 
   xit('can reconcile text arbitrarily split into multiple nodes', () => {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(
       <div>
         <span />
         {'foobarbaz'}
@@ -207,7 +207,7 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    var container = ReactDOM.findDOMNode(inst);
+    let container = ReactDOM.findDOMNode(inst);
     let childNodes = filterOutComments(ReactDOM.findDOMNode(inst).childNodes);
     let textNode = childNodes[1];
     textNode.textContent = 'foo';
@@ -232,8 +232,8 @@ describe('ReactDOMTextComponent', () => {
   });
 
   xit('can reconcile text arbitrarily split into multiple nodes on some substitutions only', () => {
-    var el = document.createElement('div');
-    var inst = ReactDOM.render(
+    const el = document.createElement('div');
+    let inst = ReactDOM.render(
       <div>
         <span />
         {'bar'}
@@ -246,7 +246,7 @@ describe('ReactDOMTextComponent', () => {
       el,
     );
 
-    var container = ReactDOM.findDOMNode(inst);
+    let container = ReactDOM.findDOMNode(inst);
     let childNodes = filterOutComments(ReactDOM.findDOMNode(inst).childNodes);
     let textNode = childNodes[3];
     textNode.textContent = 'foo';
@@ -282,7 +282,7 @@ describe('ReactDOMTextComponent', () => {
   });
 
   xit('can unmount normalized text nodes', () => {
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(
       <div>
         {''}

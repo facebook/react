@@ -9,12 +9,12 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var TogglingComponent;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let TogglingComponent;
 
-var log;
+let log;
 
 describe('ReactEmptyComponent', () => {
   beforeEach(() => {
@@ -39,7 +39,7 @@ describe('ReactEmptyComponent', () => {
       }
 
       render() {
-        var Component = this.state.component;
+        const Component = this.state.component;
         return Component ? <Component /> : null;
       }
     };
@@ -58,11 +58,11 @@ describe('ReactEmptyComponent', () => {
       }
     }
 
-    var container1 = document.createElement('div');
+    const container1 = document.createElement('div');
     ReactDOM.render(<Component1 />, container1);
     expect(container1.children.length).toBe(0);
 
-    var container2 = document.createElement('div');
+    const container2 = document.createElement('div');
     ReactDOM.render(<Component2 />, container2);
     expect(container2.children.length).toBe(0);
   });
@@ -81,10 +81,10 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should be able to switch between rendering null and a normal tag', () => {
-    var instance1 = (
+    const instance1 = (
       <TogglingComponent firstComponent={null} secondComponent={'div'} />
     );
-    var instance2 = (
+    const instance2 = (
       <TogglingComponent firstComponent={'div'} secondComponent={null} />
     );
 
@@ -99,7 +99,7 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should be able to switch in a list of children', () => {
-    var instance1 = (
+    const instance1 = (
       <TogglingComponent firstComponent={null} secondComponent={'div'} />
     );
 
@@ -121,10 +121,10 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('should distinguish between a script placeholder and an actual script tag', () => {
-    var instance1 = (
+    const instance1 = (
       <TogglingComponent firstComponent={null} secondComponent={'script'} />
     );
-    var instance2 = (
+    const instance2 = (
       <TogglingComponent firstComponent={'script'} secondComponent={null} />
     );
 
@@ -158,10 +158,10 @@ describe('ReactEmptyComponent', () => {
         }
       }
 
-      var instance1 = (
+      const instance1 = (
         <TogglingComponent firstComponent={'div'} secondComponent={Child} />
       );
-      var instance2 = (
+      const instance2 = (
         <TogglingComponent firstComponent={Child} secondComponent={'div'} />
       );
 
@@ -181,7 +181,7 @@ describe('ReactEmptyComponent', () => {
   );
 
   it('works when switching components', () => {
-    var assertions = 0;
+    let assertions = 0;
 
     class Inner extends React.Component {
       render() {
@@ -209,8 +209,8 @@ describe('ReactEmptyComponent', () => {
       }
     }
 
-    var el = document.createElement('div');
-    var component;
+    const el = document.createElement('div');
+    let component;
 
     // Render the <Inner /> component...
     component = ReactDOM.render(<Wrapper showInner={true} />, el);
@@ -228,7 +228,7 @@ describe('ReactEmptyComponent', () => {
   });
 
   it('can render null at the top level', () => {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     ReactDOM.render(null, div);
     expect(div.innerHTML).toBe('');
   });
@@ -278,15 +278,15 @@ describe('ReactEmptyComponent', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<Empty />, container);
-    var noscript1 = container.firstChild;
+    const noscript1 = container.firstChild;
     expect(noscript1).toBe(null);
 
     // This update shouldn't create a DOM node
     ReactDOM.render(<Empty />, container);
-    var noscript2 = container.firstChild;
+    const noscript2 = container.firstChild;
     expect(noscript2).toBe(null);
   });
 });

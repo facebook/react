@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactFeatureFlags;
-var ReactTestRenderer;
+let React;
+let ReactFeatureFlags;
+let ReactTestRenderer;
 
 describe('ReactAsyncClassComponent', () => {
   describe('debugRenderPhaseSideEffects', () => {

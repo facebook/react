@@ -79,7 +79,11 @@ import {AsyncUpdates} from './ReactTypeOfInternalContext';
 import {getUpdateExpirationTime} from './ReactFiberUpdateQueue';
 import {resetContext} from './ReactFiberContext';
 
-var {invokeGuardedCallback, hasCaughtError, clearCaughtError} = ReactErrorUtils;
+const {
+  invokeGuardedCallback,
+  hasCaughtError,
+  clearCaughtError,
+} = ReactErrorUtils;
 
 export type CapturedError = {
   componentName: ?string,
@@ -96,9 +100,9 @@ export type HandleErrorInfo = {
 };
 
 if (__DEV__) {
-  var didWarnAboutStateTransition = false;
-  var didWarnSetStateChildContext = false;
-  var didWarnStateUpdateForUnmountedComponent = {};
+  let didWarnAboutStateTransition = false;
+  let didWarnSetStateChildContext = false;
+  const didWarnStateUpdateForUnmountedComponent = {};
 
   var warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
     const componentName = getComponentName(fiber) || 'ReactClass';

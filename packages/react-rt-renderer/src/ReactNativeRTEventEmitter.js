@@ -13,7 +13,7 @@ import BatchedBridge from 'BatchedBridge';
 
 import {getFiberCurrentPropsFromTag} from './ReactNativeRTComponentTree';
 
-var ReactNativeRTEventEmitter = {
+const ReactNativeRTEventEmitter = {
   /**
    * Publicly exposed method on module for native objc to invoke when a top
    * level event is extracted.
@@ -26,12 +26,12 @@ var ReactNativeRTEventEmitter = {
     topLevelType: string,
     nativeEventParam: Object,
   ) {
-    var nativeEvent = nativeEventParam;
-    var props = getFiberCurrentPropsFromTag(tag);
+    const nativeEvent = nativeEventParam;
+    const props = getFiberCurrentPropsFromTag(tag);
     if (props == null) {
       return;
     }
-    var eventHandler = props[topLevelType];
+    const eventHandler = props[topLevelType];
     if (typeof eventHandler !== 'function') {
       return;
     }

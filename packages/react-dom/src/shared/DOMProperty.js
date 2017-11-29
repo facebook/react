@@ -9,7 +9,7 @@ import invariant from 'fbjs/lib/invariant';
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
-var RESERVED_PROPS = {
+const RESERVED_PROPS = {
   children: true,
   dangerouslySetInnerHTML: true,
   defaultValue: true,
@@ -24,7 +24,7 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
-var DOMPropertyInjection = {
+const DOMPropertyInjection = {
   /**
    * Mapping from normalized, camelcased property names to a configuration that
    * specifies how the associated DOM property should be accessed or rendered.
@@ -60,13 +60,14 @@ var DOMPropertyInjection = {
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
-    var Injection = DOMPropertyInjection;
-    var Properties = domPropertyConfig.Properties || {};
-    var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-    var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
+    const Injection = DOMPropertyInjection;
+    const Properties = domPropertyConfig.Properties || {};
+    const DOMAttributeNamespaces =
+      domPropertyConfig.DOMAttributeNamespaces || {};
+    const DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+    const DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
-    for (var propName in Properties) {
+    for (const propName in Properties) {
       invariant(
         !properties.hasOwnProperty(propName),
         "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
@@ -76,10 +77,10 @@ var DOMPropertyInjection = {
         propName,
       );
 
-      var lowerCased = propName.toLowerCase();
-      var propConfig = Properties[propName];
+      const lowerCased = propName.toLowerCase();
+      const propConfig = Properties[propName];
 
-      var propertyInfo = {
+      const propertyInfo = {
         attributeName: lowerCased,
         attributeNamespace: null,
         propertyName: propName,
@@ -222,7 +223,7 @@ export function shouldAttributeAcceptBooleanValue(name) {
       propertyInfo.hasOverloadedBooleanValue
     );
   }
-  var prefix = name.toLowerCase().slice(0, 5);
+  const prefix = name.toLowerCase().slice(0, 5);
   return prefix === 'data-' || prefix === 'aria-';
 }
 

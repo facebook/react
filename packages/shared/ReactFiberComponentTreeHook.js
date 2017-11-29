@@ -24,10 +24,10 @@ function describeFiber(fiber: Fiber): string {
     case FunctionalComponent:
     case ClassComponent:
     case HostComponent:
-      var owner = fiber._debugOwner;
-      var source = fiber._debugSource;
-      var name = getComponentName(fiber);
-      var ownerName = null;
+      const owner = fiber._debugOwner;
+      const source = fiber._debugSource;
+      const name = getComponentName(fiber);
+      let ownerName = null;
       if (owner) {
         ownerName = getComponentName(owner);
       }
@@ -43,8 +43,8 @@ function describeFiber(fiber: Fiber): string {
 export function getStackAddendumByWorkInProgressFiber(
   workInProgress: Fiber,
 ): string {
-  var info = '';
-  var node = workInProgress;
+  let info = '';
+  let node = workInProgress;
   do {
     info += describeFiber(node);
     // Otherwise this return pointer might point to the wrong tree:

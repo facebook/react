@@ -7,7 +7,7 @@
  * @flow
  */
 
-var ReactNativeRT = require('./src/ReactNativeRT');
+const ReactNativeRT = require('./src/ReactNativeRT');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.

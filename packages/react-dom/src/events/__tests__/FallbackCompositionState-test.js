@@ -10,9 +10,9 @@
 'use strict';
 
 describe('FallbackCompositionState', () => {
-  var FallbackCompositionState;
+  let FallbackCompositionState;
 
-  var TEXT = 'Hello world';
+  const TEXT = 'Hello world';
 
   beforeEach(() => {
     // TODO: can we express this test with only public API?
@@ -20,27 +20,27 @@ describe('FallbackCompositionState', () => {
   });
 
   function getInput() {
-    var input = document.createElement('input');
+    const input = document.createElement('input');
     input.value = TEXT;
     return input;
   }
 
   function getTextarea() {
-    var textarea = document.createElement('textarea');
+    const textarea = document.createElement('textarea');
     textarea.value = TEXT;
     return textarea;
   }
 
   function getContentEditable() {
-    var editable = document.createElement('div');
-    var inner = document.createElement('span');
+    const editable = document.createElement('div');
+    const inner = document.createElement('span');
     inner.appendChild(document.createTextNode(TEXT));
     editable.appendChild(inner);
     return editable;
   }
 
   function assertExtractedData(modifiedValue, expectedData) {
-    var input = getInput();
+    const input = getInput();
     FallbackCompositionState.initialize(input);
     input.value = modifiedValue;
     expect(FallbackCompositionState.getData()).toBe(expectedData);

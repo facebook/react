@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMComponentTree;
-var ReactTestUtils;
-var SelectEventPlugin;
+let React;
+let ReactDOM;
+let ReactDOMComponentTree;
+let ReactTestUtils;
+let SelectEventPlugin;
 
 describe('SelectEventPlugin', () => {
   function extract(node, topLevelEvent) {
@@ -41,20 +41,20 @@ describe('SelectEventPlugin', () => {
       }
     }
 
-    var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
-    var node = ReactDOM.findDOMNode(rendered);
+    const rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
+    const node = ReactDOM.findDOMNode(rendered);
     node.focus();
 
     // It seems that .focus() isn't triggering this event in our test
     // environment so we need to ensure it gets set for this test to be valid.
-    var fakeNativeEvent = function() {};
+    const fakeNativeEvent = function() {};
     fakeNativeEvent.target = node;
     ReactTestUtils.simulateNativeEventOnNode('topFocus', node, fakeNativeEvent);
 
-    var mousedown = extract(node, 'topMouseDown');
+    const mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, 'topMouseUp');
+    const mouseup = extract(node, 'topMouseUp');
     expect(mouseup).toBe(null);
   });
 
@@ -65,12 +65,12 @@ describe('SelectEventPlugin', () => {
       }
     }
 
-    var cb = jest.fn();
+    const cb = jest.fn();
 
-    var rendered = ReactTestUtils.renderIntoDocument(
+    const rendered = ReactTestUtils.renderIntoDocument(
       <WithSelect onSelect={cb} />,
     );
-    var node = ReactDOM.findDOMNode(rendered);
+    const node = ReactDOM.findDOMNode(rendered);
 
     node.selectionStart = 0;
     node.selectionEnd = 0;
@@ -79,10 +79,10 @@ describe('SelectEventPlugin', () => {
     var focus = extract(node, 'topFocus');
     expect(focus).toBe(null);
 
-    var mousedown = extract(node, 'topMouseDown');
+    const mousedown = extract(node, 'topMouseDown');
     expect(mousedown).toBe(null);
 
-    var mouseup = extract(node, 'topMouseUp');
+    const mouseup = extract(node, 'topMouseUp');
     expect(mouseup).not.toBe(null);
     expect(typeof mouseup).toBe('object');
     expect(mouseup.type).toBe('select');

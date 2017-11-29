@@ -57,7 +57,7 @@ function removeChild(parent, child) {
   childInfo.parent = null;
 }
 
-var RCTUIManager = {
+const RCTUIManager = {
   __dumpHierarchyForJestTestsOnly: function() {
     return roots.map(tag => dumpSubtree(tag, 0)).join('\n');
 

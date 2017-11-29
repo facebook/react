@@ -13,7 +13,7 @@ import warning from 'fbjs/lib/warning';
 
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 
-var {
+const {
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 } = ReactDebugCurrentFiber;
@@ -30,14 +30,14 @@ type SelectWithWrapperState = HTMLSelectElement & {
 };
 
 function getDeclarationErrorAddendum() {
-  var ownerName = getCurrentFiberOwnerName();
+  const ownerName = getCurrentFiberOwnerName();
   if (ownerName) {
     return '\n\nCheck the render method of `' + ownerName + '`.';
   }
   return '';
 }
 
-var valuePropNames = ['value', 'defaultValue'];
+const valuePropNames = ['value', 'defaultValue'];
 
 /**
  * Validation function for `value` and `defaultValue`.
@@ -49,12 +49,12 @@ function checkSelectPropTypes(props) {
     getCurrentFiberStackAddendum,
   );
 
-  for (var i = 0; i < valuePropNames.length; i++) {
-    var propName = valuePropNames[i];
+  for (let i = 0; i < valuePropNames.length; i++) {
+    const propName = valuePropNames[i];
     if (props[propName] == null) {
       continue;
     }
-    var isArray = Array.isArray(props[propName]);
+    const isArray = Array.isArray(props[propName]);
     if (props.multiple && !isArray) {
       warning(
         false,
@@ -84,7 +84,7 @@ function updateOptions(
   type IndexableHTMLOptionsCollection = HTMLOptionsCollection & {
     [key: number]: HTMLOptionElement,
   };
-  var options: IndexableHTMLOptionsCollection = node.options;
+  const options: IndexableHTMLOptionsCollection = node.options;
 
   if (multiple) {
     let selectedValues = (propValue: Array<string>);
@@ -148,12 +148,12 @@ export function getHostProps(element: Element, props: Object) {
 }
 
 export function initWrapperState(element: Element, props: Object) {
-  var node = ((element: any): SelectWithWrapperState);
+  const node = ((element: any): SelectWithWrapperState);
   if (__DEV__) {
     checkSelectPropTypes(props);
   }
 
-  var value = props.value;
+  const value = props.value;
   node._wrapperState = {
     initialValue: value != null ? value : props.defaultValue,
     wasMultiple: !!props.multiple,
@@ -179,9 +179,9 @@ export function initWrapperState(element: Element, props: Object) {
 }
 
 export function postMountWrapper(element: Element, props: Object) {
-  var node = ((element: any): SelectWithWrapperState);
+  const node = ((element: any): SelectWithWrapperState);
   node.multiple = !!props.multiple;
-  var value = props.value;
+  const value = props.value;
   if (value != null) {
     updateOptions(node, !!props.multiple, value, false);
   } else if (props.defaultValue != null) {
@@ -190,15 +190,15 @@ export function postMountWrapper(element: Element, props: Object) {
 }
 
 export function postUpdateWrapper(element: Element, props: Object) {
-  var node = ((element: any): SelectWithWrapperState);
+  const node = ((element: any): SelectWithWrapperState);
   // After the initial mount, we control selected-ness manually so don't pass
   // this value down
   node._wrapperState.initialValue = undefined;
 
-  var wasMultiple = node._wrapperState.wasMultiple;
+  const wasMultiple = node._wrapperState.wasMultiple;
   node._wrapperState.wasMultiple = !!props.multiple;
 
-  var value = props.value;
+  const value = props.value;
   if (value != null) {
     updateOptions(node, !!props.multiple, value, false);
   } else if (wasMultiple !== !!props.multiple) {
@@ -213,8 +213,8 @@ export function postUpdateWrapper(element: Element, props: Object) {
 }
 
 export function restoreControlledState(element: Element, props: Object) {
-  var node = ((element: any): SelectWithWrapperState);
-  var value = props.value;
+  const node = ((element: any): SelectWithWrapperState);
+  const value = props.value;
 
   if (value != null) {
     updateOptions(node, !!props.multiple, value, false);
