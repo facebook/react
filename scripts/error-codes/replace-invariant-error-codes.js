@@ -11,9 +11,9 @@ var evalToString = require('../shared/evalToString');
 var invertObject = require('./invertObject');
 
 module.exports = function(babel) {
-  var t = babel.types;
+  const t = babel.types;
 
-  var SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
+  const SEEN_SYMBOL = Symbol('replace-invariant-error-codes.seen');
 
   // Generate a hygienic identifier
   function getProdInvariantIdentifier(path, file, localState) {
@@ -27,17 +27,17 @@ module.exports = function(babel) {
     return localState.prodInvariantIdentifier;
   }
 
-  var DEV_EXPRESSION = t.identifier('__DEV__');
+  const DEV_EXPRESSION = t.identifier('__DEV__');
 
   return {
-    pre: function() {
+    pre() {
       this.prodInvariantIdentifier = null;
     },
 
     visitor: {
       CallExpression: {
-        exit: function(path, file) {
-          var node = path.node;
+        exit(path, file) {
+          const node = path.node;
           // Ignore if it's already been processed
           if (node[SEEN_SYMBOL]) {
             return;
@@ -74,10 +74,10 @@ module.exports = function(babel) {
             //   - `reactProdInvariant` is always renamed to avoid shadowing
             // The generated code is longer than the original code but will dead
             // code removal in a minifier will strip that out.
-            var condition = node.arguments[0];
-            var errorMsgLiteral = evalToString(node.arguments[1]);
+            const condition = node.arguments[0];
+            const errorMsgLiteral = evalToString(node.arguments[1]);
 
-            var devInvariant = t.callExpression(
+            const devInvariant = t.callExpression(
               node.callee,
               [
                 t.booleanLiteral(false),
@@ -88,14 +88,18 @@ module.exports = function(babel) {
             devInvariant[SEEN_SYMBOL] = true;
 
             // Avoid caching because we write it as we go.
-            var existingErrorMap = JSON.parse(
+            const existingErrorMap = JSON.parse(
               fs.readFileSync(__dirname + '/codes.json', 'utf-8')
             );
-            var errorMap = invertObject(existingErrorMap);
+            const errorMap = invertObject(existingErrorMap);
 
-            var localInvariantId = getProdInvariantIdentifier(path, file, this);
-            var prodErrorId = errorMap[errorMsgLiteral];
-            var body = null;
+            const localInvariantId = getProdInvariantIdentifier(
+              path,
+              file,
+              this
+            );
+            const prodErrorId = errorMap[errorMsgLiteral];
+            let body = null;
 
             if (prodErrorId === undefined) {
               // The error wasn't found in the map.
@@ -103,7 +107,7 @@ module.exports = function(babel) {
               // Keep the original invariant.
               body = t.expressionStatement(devInvariant);
             } else {
-              var prodInvariant = t.callExpression(
+              const prodInvariant = t.callExpression(
                 localInvariantId,
                 [t.stringLiteral(prodErrorId)].concat(node.arguments.slice(2))
               );
