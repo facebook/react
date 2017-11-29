@@ -31,7 +31,12 @@ describe('SelectEventPlugin', () => {
   // See https://github.com/facebook/react/pull/3639 for details.
   it('does not get confused when dependent events are registered independently', () => {
     var select = jest.fn();
-    var onSelect = event => select(event.currentTarget);
+    var onSelect = event => {
+      expect(typeof event).toBe('object');
+      expect(event.type).toBe('select');
+      expect(event.target).toBe(node);
+      select(event.currentTarget);
+    };
 
     // Pass `onMouseDown` so React registers a top-level listener.
     var node = ReactDOM.render(
@@ -56,7 +61,7 @@ describe('SelectEventPlugin', () => {
     );
 
     // Now subscribe to `onSelect`.
-    ReactDOM.render(<input type="text" onSelect={select} />, container);
+    ReactDOM.render(<input type="text" onSelect={onSelect} />, container);
     node.focus();
 
     // This triggers a `select` event in our polyfill.
