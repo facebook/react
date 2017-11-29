@@ -99,7 +99,7 @@
     "node": "8.x"
   },
   "scripts": {
-    "build": "npm run version-check && node scripts/rollup/build.js",
+    "build": "npm run version-check && node ./scripts/rollup/build.js",
     "linc": "node ./scripts/tasks/linc.js",
     "lint": "node ./scripts/tasks/eslint.js",
     "lint-build": "node ./scripts/rollup/validate/index.js",
