@@ -27,7 +27,8 @@ describe('ReactClassEquivalence', () => {
 
 function runJest(testFile) {
   var cwd = process.cwd();
-  var result = spawnSync('yarn', ['test', testFile], {
+  var extension = process.platform === 'win32' ? '.cmd' : '';
+  var result = spawnSync('yarn' + extension, ['test', testFile], {
     cwd,
     env: Object.assign({}, process.env, {
       REACT_CLASS_EQUIVALENCE_TEST: 'true',

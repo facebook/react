@@ -1360,4 +1360,90 @@ describe('ResponderEventPlugin', () => {
     run(config, three, nativeEvent);
     expect(ResponderEventPlugin._getResponder()).toBe(null);
   });
+
+  it('should determine the first common ancestor correctly', () => {
+    // This test was moved here from the ReactTreeTraversal test since only the 
+    // ResponderEventPlugin uses `getLowestCommonAncestor`
+    var React = require('react');
+    var ReactTestUtils = require('react-dom/test-utils');
+    var ReactTreeTraversal = require('shared/ReactTreeTraversal');
+    var ReactDOMComponentTree = require('../../react-dom/src/client/ReactDOMComponentTree');
+
+    class ChildComponent extends React.Component {
+      render() {
+        return (
+          <div ref="DIV" id={this.props.id + '__DIV'}>
+            <div ref="DIV_1" id={this.props.id + '__DIV_1'} />
+            <div ref="DIV_2" id={this.props.id + '__DIV_2'} />
+          </div>
+        );
+      }
+    }
+    
+    class ParentComponent extends React.Component {
+      render() {
+        return (
+          <div ref="P" id="P">
+            <div ref="P_P1" id="P_P1">
+              <ChildComponent ref="P_P1_C1" id="P_P1_C1" />
+              <ChildComponent ref="P_P1_C2" id="P_P1_C2" />
+            </div>
+            <div ref="P_OneOff" id="P_OneOff" />
+          </div>
+        );
+      }
+    }
+
+    var parent = ReactTestUtils.renderIntoDocument(<ParentComponent />);
+
+    var ancestors = [
+      // Common ancestor with self is self.
+      {
+        one: parent.refs.P_P1_C1.refs.DIV_1,
+        two: parent.refs.P_P1_C1.refs.DIV_1,
+        com: parent.refs.P_P1_C1.refs.DIV_1,
+      },
+      // Common ancestor with self is self - even if topmost DOM.
+      {one: parent.refs.P, two: parent.refs.P, com: parent.refs.P},
+      // Siblings
+      {
+        one: parent.refs.P_P1_C1.refs.DIV_1,
+        two: parent.refs.P_P1_C1.refs.DIV_2,
+        com: parent.refs.P_P1_C1.refs.DIV,
+      },
+      // Common ancestor with parent is the parent.
+      {
+        one: parent.refs.P_P1_C1.refs.DIV_1,
+        two: parent.refs.P_P1_C1.refs.DIV,
+        com: parent.refs.P_P1_C1.refs.DIV,
+      },
+      // Common ancestor with grandparent is the grandparent.
+      {
+        one: parent.refs.P_P1_C1.refs.DIV_1,
+        two: parent.refs.P_P1,
+        com: parent.refs.P_P1,
+      },
+      // Grandparent across subcomponent boundaries.
+      {
+        one: parent.refs.P_P1_C1.refs.DIV_1,
+        two: parent.refs.P_P1_C2.refs.DIV_1,
+        com: parent.refs.P_P1,
+      },
+      // Something deep with something one-off.
+      {
+        one: parent.refs.P_P1_C1.refs.DIV_1,
+        two: parent.refs.P_OneOff,
+        com: parent.refs.P,
+      },
+    ];
+    var i;
+    for (i = 0; i < ancestors.length; i++) {
+      var plan = ancestors[i];
+      var firstCommon = ReactTreeTraversal.getLowestCommonAncestor(
+        ReactDOMComponentTree.getInstanceFromNode(plan.one),
+        ReactDOMComponentTree.getInstanceFromNode(plan.two),
+      );
+      expect(firstCommon).toBe(ReactDOMComponentTree.getInstanceFromNode(plan.com));
+    }
+  });
 });
