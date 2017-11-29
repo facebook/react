@@ -8,7 +8,6 @@
  */
 
 import invariant from 'fbjs/lib/invariant';
-import warning from 'fbjs/lib/warning';
 
 const ReactErrorUtils = {
   // Used by Fiber to simulate a try-catch.
@@ -168,9 +167,11 @@ if (__DEV__) {
       e,
       f,
     ) {
-      // If document doesn't exist we know for sure we will crash in this method later.
-      // So we show a warning explaining a potential cause.
-      warning(
+      // If document doesn't exist we know for sure we will crash in this method
+      // when we call document.createEvent(). However this can cause confusing
+      // errors: https://github.com/facebookincubator/create-react-app/issues/3482
+      // So we preemptively throw with a better message instead.
+      invariant(
         typeof document !== 'undefined',
         'The `document` global was defined when React was initialized, but is not ' +
           'defined anymore. This can happen in a test environment if a component ' +

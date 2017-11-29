@@ -373,7 +373,7 @@ describe('ReactDOM', () => {
     }
   });
 
-  it('warns in DEV if jsdom is destroyed by the time setState() is called', () => {
+  it('throws in DEV if jsdom is destroyed by the time setState() is called', () => {
     spyOnDev(console, 'error');
     class App extends React.Component {
       state = {x: 1};
@@ -394,9 +394,7 @@ describe('ReactDOM', () => {
       delete global.document;
       const fn = () => instance.setState({x: 2});
       if (__DEV__) {
-        expect(fn).toThrow('document is not defined');
-        expect(console.error.calls.count()).toBe(1);
-        expect(console.error.calls.argsFor(0)[0]).toContain(
+        expect(fn).toThrow(
           'The `document` global was defined when React was initialized, but is not ' +
             'defined anymore. This can happen in a test environment if a component ' +
             'schedules an update from an asynchronous callback, but the test has already ' +
