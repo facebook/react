@@ -11,29 +11,13 @@
 
 var React;
 var ReactDOM;
-var ReactDOMComponentTree;
-var ReactTestUtils;
-var SelectEventPlugin;
 
 describe('SelectEventPlugin', () => {
   var container;
 
-  function extract(node, topLevelEvent) {
-    return SelectEventPlugin.extractEvents(
-      topLevelEvent,
-      ReactDOMComponentTree.getInstanceFromNode(node),
-      {target: node},
-      node,
-    );
-  }
-
   beforeEach(() => {
     React = require('react');
     ReactDOM = require('react-dom');
-    ReactTestUtils = require('react-dom/test-utils');
-    // TODO: can we express this test with only public API?
-    ReactDOMComponentTree = require('../../client/ReactDOMComponentTree');
-    SelectEventPlugin = require('../SelectEventPlugin').default;
 
     container = document.createElement('div');
     document.body.appendChild(container);
@@ -44,31 +28,34 @@ describe('SelectEventPlugin', () => {
     container = null;
   });
 
-  it('should skip extraction if no listeners are present', () => {
-    class WithoutSelect extends React.Component {
-      render() {
-        return <input type="text" />;
-      }
-    }
+  it('should verify that `onSelect` fails to fire when no `topMouseUp` has yet occurred to unset the flag', () => {
+    var select = jest.fn();
+    var onSelect = event => select(event.currentTarget);
 
-    var rendered = ReactTestUtils.renderIntoDocument(<WithoutSelect />);
-    var node = ReactDOM.findDOMNode(rendered);
+    var node = ReactDOM.render(
+      <input type="text" onSelect={onSelect} />,
+      container,
+    );
     node.focus();
 
-    // It seems that .focus() isn't triggering this event in our test
-    // environment so we need to ensure it gets set for this test to be valid.
-    var fakeNativeEvent = function() {};
-    fakeNativeEvent.target = node;
-    ReactTestUtils.simulateNativeEventOnNode('topFocus', node, fakeNativeEvent);
+    var nativeEvent = new MouseEvent('focus', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
 
-    var mousedown = extract(node, 'topMouseDown');
-    expect(mousedown).toBe(null);
+    nativeEvent = new MouseEvent('mousedown', {
+      bubbles: true,
+      cancelable: true,
+    });
+    node.dispatchEvent(nativeEvent);
 
-    var mouseup = extract(node, 'topMouseUp');
-    expect(mouseup).toBe(null);
+    nativeEvent = new MouseEvent('keyup', {bubbles: true, cancelable: true});
+    node.dispatchEvent(nativeEvent);
+    expect(select.mock.calls.length).toBe(0);
   });
 
-  it('should register event only if the `onSelect` listener is present', () => {
+  it('should verify that `onSelect` fires when the listener is present', () => {
     var select = jest.fn();
     var onSelect = event => {
       expect(typeof event).toBe('object');
