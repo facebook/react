@@ -12,8 +12,8 @@
 jest.mock('../events/isEventSupported');
 
 describe('EventPluginHub', () => {
-  var React;
-  var ReactTestUtils;
+  let React;
+  let ReactTestUtils;
 
   beforeEach(() => {
     jest.resetModules();
@@ -23,7 +23,7 @@ describe('EventPluginHub', () => {
 
   it('should prevent non-function listeners, at dispatch', () => {
     spyOnDev(console, 'error');
-    var node = ReactTestUtils.renderIntoDocument(
+    const node = ReactTestUtils.renderIntoDocument(
       <div onClick="not a function" />,
     );
     expect(function() {
@@ -40,7 +40,7 @@ describe('EventPluginHub', () => {
   });
 
   it('should not prevent null listeners, at dispatch', () => {
-    var node = ReactTestUtils.renderIntoDocument(<div onClick={null} />);
+    const node = ReactTestUtils.renderIntoDocument(<div onClick={null} />);
     expect(function() {
       ReactTestUtils.SimulateNative.click(node);
     }).not.toThrow();

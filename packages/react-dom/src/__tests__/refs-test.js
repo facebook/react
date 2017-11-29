@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React = require('react');
-var ReactTestUtils = require('react-dom/test-utils');
+let React = require('react');
+let ReactTestUtils = require('react-dom/test-utils');
 
 /**
  * Counts clicks and has a renders an item for each click. Each item rendered
@@ -28,8 +28,8 @@ class ClickCounter extends React.Component {
   };
 
   render() {
-    var children = [];
-    var i;
+    const children = [];
+    let i;
     for (i = 0; i < this.state.count; i++) {
       children.push(
         <div
@@ -84,23 +84,23 @@ class TestRefsComponent extends React.Component {
 /**
  * Render a TestRefsComponent and ensure that the main refs are wired up.
  */
-var renderTestRefsComponent = function() {
-  var testRefsComponent = ReactTestUtils.renderIntoDocument(
+const renderTestRefsComponent = function() {
+  const testRefsComponent = ReactTestUtils.renderIntoDocument(
     <TestRefsComponent />,
   );
   expect(testRefsComponent instanceof TestRefsComponent).toBe(true);
 
-  var generalContainer = testRefsComponent.refs.myContainer;
+  const generalContainer = testRefsComponent.refs.myContainer;
   expect(generalContainer instanceof GeneralContainerComponent).toBe(true);
 
-  var counter = testRefsComponent.refs.myCounter;
+  const counter = testRefsComponent.refs.myCounter;
   expect(counter instanceof ClickCounter).toBe(true);
 
   return testRefsComponent;
 };
 
-var expectClickLogsLengthToBe = function(instance, length) {
-  var clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
+const expectClickLogsLengthToBe = function(instance, length) {
+  const clickLogs = ReactTestUtils.scryRenderedDOMComponentsWithClass(
     instance,
     'clickLogDiv',
   );
@@ -120,8 +120,8 @@ describe('reactiverefs', () => {
    * perspective of the injected ClickCounter component.
    */
   it('Should increase refs with an increase in divs', () => {
-    var testRefsComponent = renderTestRefsComponent();
-    var clickIncrementer = ReactTestUtils.findRenderedDOMComponentWithClass(
+    const testRefsComponent = renderTestRefsComponent();
+    const clickIncrementer = ReactTestUtils.findRenderedDOMComponentWithClass(
       testRefsComponent,
       'clickIncrementer',
     );
@@ -178,7 +178,7 @@ describe('ref swapping', () => {
       };
 
       render() {
-        var count = this.state.count;
+        const count = this.state.count;
         /**
          * What we have here, is three divs with refs (div1/2/3), but a single
          * moving cursor ref `hopRef` that "hops" around the three. We'll call the
@@ -206,17 +206,17 @@ describe('ref swapping', () => {
   });
 
   it('Allow refs to hop around children correctly', () => {
-    var refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
+    const refHopsAround = ReactTestUtils.renderIntoDocument(<RefHopsAround />);
 
-    var firstDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+    const firstDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
       refHopsAround,
       'first',
     );
-    var secondDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+    const secondDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
       refHopsAround,
       'second',
     );
-    var thirdDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
+    const thirdDiv = ReactTestUtils.findRenderedDOMComponentWithClass(
       refHopsAround,
       'third',
     );
@@ -252,12 +252,12 @@ describe('ref swapping', () => {
       }
     }
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     expect(!!instance.refs).toBe(true);
   });
 
   it('ref called correctly for stateless component', () => {
-    var refCalled = 0;
+    let refCalled = 0;
     function Inner(props) {
       return <a ref={props.saveA} />;
     }
@@ -293,13 +293,13 @@ describe('ref swapping', () => {
 
 describe('root level refs', () => {
   it('attaches and detaches root refs', () => {
-    var ReactDOM = require('react-dom');
-    var inst = null;
+    const ReactDOM = require('react-dom');
+    let inst = null;
 
     // host node
-    var ref = jest.fn(value => (inst = value));
-    var container = document.createElement('div');
-    var result = ReactDOM.render(<div ref={ref} />, container);
+    let ref = jest.fn(value => (inst = value));
+    const container = document.createElement('div');
+    let result = ReactDOM.render(<div ref={ref} />, container);
     expect(ref).toHaveBeenCalledTimes(1);
     expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLDivElement);
     expect(result).toBe(ref.mock.calls[0][0]);
@@ -336,8 +336,8 @@ describe('root level refs', () => {
     // fragment
     inst = null;
     ref = jest.fn(value => (inst = value));
-    var divInst = null;
-    var ref2 = jest.fn(value => (divInst = value));
+    let divInst = null;
+    const ref2 = jest.fn(value => (divInst = value));
     result = ReactDOM.render(
       [
         <Comp ref={ref} key="a" />,

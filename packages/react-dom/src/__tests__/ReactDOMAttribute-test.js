@@ -10,8 +10,8 @@
 'use strict';
 
 describe('ReactDOM unknown attribute', () => {
-  var React;
-  var ReactDOM;
+  let React;
+  let ReactDOM;
 
   beforeEach(() => {
     jest.resetModules();
@@ -24,7 +24,7 @@ describe('ReactDOM unknown attribute', () => {
   }
 
   function testUnknownAttributeRemoval(givenValue) {
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(<div unknown="something" />, el);
     expect(el.firstChild.getAttribute('unknown')).toBe('something');
     ReactDOM.render(<div unknown={givenValue} />, el);
@@ -32,7 +32,7 @@ describe('ReactDOM unknown attribute', () => {
   }
 
   function testUnknownAttributeAssignment(givenValue, expectedDOMValue) {
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(<div unknown="something" />, el);
     expect(el.firstChild.getAttribute('unknown')).toBe('something');
     ReactDOM.render(<div unknown={givenValue} />, el);
@@ -63,7 +63,7 @@ describe('ReactDOM unknown attribute', () => {
     });
 
     it('removes unknown attributes that were rendered but are now missing', () => {
-      var el = document.createElement('div');
+      const el = document.createElement('div');
       ReactDOM.render(<div unknown="something" />, el);
       expect(el.firstChild.getAttribute('unknown')).toBe('something');
       ReactDOM.render(<div />, el);
@@ -140,7 +140,7 @@ describe('ReactDOM unknown attribute', () => {
     it('allows camelCase unknown attributes and warns', () => {
       spyOnDev(console, 'error');
 
-      var el = document.createElement('div');
+      const el = document.createElement('div');
       ReactDOM.render(<div helloWorld="something" />, el);
       expect(el.firstChild.getAttribute('helloworld')).toBe('something');
 

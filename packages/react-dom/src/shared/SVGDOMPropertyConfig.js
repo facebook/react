@@ -7,9 +7,9 @@
 
 import {injection} from './DOMProperty';
 
-var {HAS_STRING_BOOLEAN_VALUE} = injection;
+const {HAS_STRING_BOOLEAN_VALUE} = injection;
 
-var NS = {
+const NS = {
   xlink: 'http://www.w3.org/1999/xlink',
   xml: 'http://www.w3.org/XML/1998/namespace',
 };
@@ -27,7 +27,7 @@ var NS = {
  * SMIL Spec:
  * https://www.w3.org/TR/smil
  */
-var ATTRS = [
+const ATTRS = [
   'accent-height',
   'alignment-baseline',
   'arabic-form',
@@ -113,7 +113,7 @@ var ATTRS = [
   'xml:space',
 ];
 
-var SVGDOMPropertyConfig = {
+const SVGDOMPropertyConfig = {
   Properties: {
     autoReverse: HAS_STRING_BOOLEAN_VALUE,
     externalResourcesRequired: HAS_STRING_BOOLEAN_VALUE,
@@ -138,11 +138,11 @@ var SVGDOMPropertyConfig = {
   },
 };
 
-var CAMELIZE = /[\-\:]([a-z])/g;
-var capitalize = token => token[1].toUpperCase();
+const CAMELIZE = /[\-\:]([a-z])/g;
+const capitalize = token => token[1].toUpperCase();
 
 ATTRS.forEach(original => {
-  var reactName = original.replace(CAMELIZE, capitalize);
+  const reactName = original.replace(CAMELIZE, capitalize);
 
   SVGDOMPropertyConfig.Properties[reactName] = 0;
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;

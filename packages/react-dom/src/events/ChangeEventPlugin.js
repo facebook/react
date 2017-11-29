@@ -18,7 +18,7 @@ import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
 
-var eventTypes = {
+const eventTypes = {
   change: {
     phasedRegistrationNames: {
       bubbled: 'onChange',
@@ -38,7 +38,7 @@ var eventTypes = {
 };
 
 function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
-  var event = SyntheticEvent.getPooled(
+  const event = SyntheticEvent.getPooled(
     eventTypes.change,
     inst,
     nativeEvent,
@@ -53,21 +53,21 @@ function createAndAccumulateChangeEvent(inst, nativeEvent, target) {
 /**
  * For IE shims
  */
-var activeElement = null;
-var activeElementInst = null;
+let activeElement = null;
+let activeElementInst = null;
 
 /**
  * SECTION: handle `change` event
  */
 function shouldUseChangeEvent(elem) {
-  var nodeName = elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName === 'select' || (nodeName === 'input' && elem.type === 'file')
   );
 }
 
 function manualDispatchChangeEvent(nativeEvent) {
-  var event = createAndAccumulateChangeEvent(
+  const event = createAndAccumulateChangeEvent(
     activeElementInst,
     nativeEvent,
     getEventTarget(nativeEvent),
@@ -108,7 +108,7 @@ function getTargetInstForChangeEvent(topLevelType, targetInst) {
 /**
  * SECTION: handle `input` event
  */
-var isInputEventSupported = false;
+let isInputEventSupported = false;
 if (ExecutionEnvironment.canUseDOM) {
   // IE9 claims to support the input event but fails to trigger it when
   // deleting text, so we ignore its input events.
@@ -201,7 +201,7 @@ function shouldUseClickEvent(elem) {
   // Use the `click` event to detect changes to checkbox and radio inputs.
   // This approach works across all browsers, whereas `change` does not fire
   // until `blur` in IE8.
-  var nodeName = elem.nodeName;
+  const nodeName = elem.nodeName;
   return (
     nodeName &&
     nodeName.toLowerCase() === 'input' &&
@@ -251,7 +251,7 @@ function handleControlledInputBlur(inst, node) {
  * - textarea
  * - select
  */
-var ChangeEventPlugin = {
+const ChangeEventPlugin = {
   eventTypes: eventTypes,
 
   _isInputEventSupported: isInputEventSupported,
@@ -262,9 +262,9 @@ var ChangeEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+    const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
-    var getTargetInstFunc, handleEventFunc;
+    let getTargetInstFunc, handleEventFunc;
     if (shouldUseChangeEvent(targetNode)) {
       getTargetInstFunc = getTargetInstForChangeEvent;
     } else if (isTextInputElement(targetNode)) {
@@ -279,9 +279,9 @@ var ChangeEventPlugin = {
     }
 
     if (getTargetInstFunc) {
-      var inst = getTargetInstFunc(topLevelType, targetInst);
+      const inst = getTargetInstFunc(topLevelType, targetInst);
       if (inst) {
-        var event = createAndAccumulateChangeEvent(
+        const event = createAndAccumulateChangeEvent(
           inst,
           nativeEvent,
           nativeEventTarget,

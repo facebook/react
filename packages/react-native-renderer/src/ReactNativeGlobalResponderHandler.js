@@ -8,10 +8,10 @@
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-var ReactNativeGlobalResponderHandler = {
+const ReactNativeGlobalResponderHandler = {
   onChange: function(from, to, blockNativeResponder) {
     if (to !== null) {
-      var tag = to.stateNode._nativeTag;
+      const tag = to.stateNode._nativeTag;
       UIManager.setJSResponder(tag, blockNativeResponder);
     } else {
       UIManager.clearJSResponder();

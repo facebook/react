@@ -19,7 +19,7 @@ export function unstable_createCall<T>(
   props: T,
   key: ?string = null,
 ): ReactCall {
-  var call = {
+  const call = {
     // This tag allow us to uniquely identify this as a React Call
     $$typeof: REACT_CALL_TYPE,
     key: key == null ? null : '' + key,
@@ -40,7 +40,7 @@ export function unstable_createCall<T>(
 }
 
 export function unstable_createReturn(value: mixed): ReactReturn {
-  var returnNode = {
+  const returnNode = {
     // This tag allow us to uniquely identify this as a React Return
     $$typeof: REACT_RETURN_TYPE,
     value: value,

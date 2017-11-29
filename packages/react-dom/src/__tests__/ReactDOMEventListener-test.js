@@ -10,8 +10,8 @@
 'use strict';
 
 describe('ReactDOMEventListener', () => {
-  var React;
-  var ReactDOM;
+  let React;
+  let ReactDOM;
 
   beforeEach(() => {
     jest.resetModules();
@@ -20,11 +20,11 @@ describe('ReactDOMEventListener', () => {
   });
 
   it('should dispatch events from outside React tree', () => {
-    var mock = jest.fn();
+    const mock = jest.fn();
 
-    var container = document.createElement('div');
-    var node = ReactDOM.render(<div onMouseEnter={mock} />, container);
-    var otherNode = document.createElement('h1');
+    const container = document.createElement('div');
+    const node = ReactDOM.render(<div onMouseEnter={mock} />, container);
+    const otherNode = document.createElement('h1');
     document.body.appendChild(container);
     document.body.appendChild(otherNode);
 
@@ -40,23 +40,23 @@ describe('ReactDOMEventListener', () => {
 
   describe('Propagation', () => {
     it('should propagate events one level down', () => {
-      var mouseOut = jest.fn();
-      var onMouseOut = event => mouseOut(event.currentTarget);
+      const mouseOut = jest.fn();
+      const onMouseOut = event => mouseOut(event.currentTarget);
 
-      var childContainer = document.createElement('div');
-      var parentContainer = document.createElement('div');
-      var childNode = ReactDOM.render(
+      const childContainer = document.createElement('div');
+      const parentContainer = document.createElement('div');
+      const childNode = ReactDOM.render(
         <div onMouseOut={onMouseOut}>Child</div>,
         childContainer,
       );
-      var parentNode = ReactDOM.render(
+      const parentNode = ReactDOM.render(
         <div onMouseOut={onMouseOut}>div</div>,
         parentContainer,
       );
       parentNode.appendChild(childContainer);
       document.body.appendChild(parentContainer);
 
-      var nativeEvent = document.createEvent('Event');
+      const nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
       childNode.dispatchEvent(nativeEvent);
 
@@ -69,21 +69,21 @@ describe('ReactDOMEventListener', () => {
     });
 
     it('should propagate events two levels down', () => {
-      var mouseOut = jest.fn();
-      var onMouseOut = event => mouseOut(event.currentTarget);
+      const mouseOut = jest.fn();
+      const onMouseOut = event => mouseOut(event.currentTarget);
 
-      var childContainer = document.createElement('div');
-      var parentContainer = document.createElement('div');
-      var grandParentContainer = document.createElement('div');
-      var childNode = ReactDOM.render(
+      const childContainer = document.createElement('div');
+      const parentContainer = document.createElement('div');
+      const grandParentContainer = document.createElement('div');
+      const childNode = ReactDOM.render(
         <div onMouseOut={onMouseOut}>Child</div>,
         childContainer,
       );
-      var parentNode = ReactDOM.render(
+      const parentNode = ReactDOM.render(
         <div onMouseOut={onMouseOut}>Parent</div>,
         parentContainer,
       );
-      var grandParentNode = ReactDOM.render(
+      const grandParentNode = ReactDOM.render(
         <div onMouseOut={onMouseOut}>Parent</div>,
         grandParentContainer,
       );
@@ -92,7 +92,7 @@ describe('ReactDOMEventListener', () => {
 
       document.body.appendChild(grandParentContainer);
 
-      var nativeEvent = document.createEvent('Event');
+      const nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
       childNode.dispatchEvent(nativeEvent);
 
@@ -107,7 +107,7 @@ describe('ReactDOMEventListener', () => {
 
     // Regression test for https://github.com/facebook/react/issues/1105
     it('should not get confused by disappearing elements', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       document.body.appendChild(container);
       class MyComponent extends React.Component {
         state = {clicked: false};
@@ -139,32 +139,32 @@ describe('ReactDOMEventListener', () => {
     });
 
     it('should batch between handlers from different roots', () => {
-      var mock = jest.fn();
+      const mock = jest.fn();
 
-      var childContainer = document.createElement('div');
-      var handleChildMouseOut = () => {
+      const childContainer = document.createElement('div');
+      const handleChildMouseOut = () => {
         ReactDOM.render(<div>1</div>, childContainer);
         mock(childNode.textContent);
       };
 
-      var parentContainer = document.createElement('div');
-      var handleParentMouseOut = () => {
+      const parentContainer = document.createElement('div');
+      const handleParentMouseOut = () => {
         ReactDOM.render(<div>2</div>, childContainer);
         mock(childNode.textContent);
       };
 
-      var childNode = ReactDOM.render(
+      const childNode = ReactDOM.render(
         <div onMouseOut={handleChildMouseOut}>Child</div>,
         childContainer,
       );
-      var parentNode = ReactDOM.render(
+      const parentNode = ReactDOM.render(
         <div onMouseOut={handleParentMouseOut}>Parent</div>,
         parentContainer,
       );
       parentNode.appendChild(childContainer);
       document.body.appendChild(parentContainer);
 
-      var nativeEvent = document.createEvent('Event');
+      const nativeEvent = document.createEvent('Event');
       nativeEvent.initEvent('mouseout', true, true);
       childNode.dispatchEvent(nativeEvent);
 
@@ -183,8 +183,8 @@ describe('ReactDOMEventListener', () => {
   });
 
   it('should not fire duplicate events for a React DOM tree', () => {
-    var mouseOut = jest.fn();
-    var onMouseOut = event => mouseOut(event.target);
+    const mouseOut = jest.fn();
+    const onMouseOut = event => mouseOut(event.target);
 
     class Wrapper extends React.Component {
       getInner = () => {
@@ -192,7 +192,7 @@ describe('ReactDOMEventListener', () => {
       };
 
       render() {
-        var inner = <div ref="inner">Inner</div>;
+        const inner = <div ref="inner">Inner</div>;
         return (
           <div>
             <div onMouseOut={onMouseOut} id="outer">
@@ -203,12 +203,12 @@ describe('ReactDOMEventListener', () => {
       }
     }
 
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<Wrapper />, container);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Wrapper />, container);
 
     document.body.appendChild(container);
 
-    var nativeEvent = document.createEvent('Event');
+    const nativeEvent = document.createEvent('Event');
     nativeEvent.initEvent('mouseout', true, true);
     instance.getInner().dispatchEvent(nativeEvent);
 

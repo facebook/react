@@ -10,8 +10,8 @@
 'use strict';
 
 describe('EventPluginRegistry', () => {
-  var EventPluginRegistry;
-  var createPlugin;
+  let EventPluginRegistry;
+  let createPlugin;
 
   beforeEach(() => {
     jest.resetModuleRegistry();
@@ -27,9 +27,9 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should be able to inject ordering before plugins', () => {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
-    var ThreePlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
+    const ThreePlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginOrder(['one', 'two', 'three']);
     EventPluginRegistry.injectEventPluginsByName({
@@ -47,9 +47,9 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should be able to inject plugins before and after ordering', () => {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
-    var ThreePlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
+    const ThreePlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
@@ -67,9 +67,9 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should be able to inject repeated plugins and out-of-order', () => {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
-    var ThreePlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
+    const ThreePlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginsByName({
       one: OnePlugin,
@@ -88,7 +88,7 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if plugin does not implement `extractEvents`', () => {
-    var BadPlugin = {};
+    const BadPlugin = {};
 
     EventPluginRegistry.injectEventPluginOrder(['bad']);
 
@@ -103,8 +103,8 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if plugin does not exist in ordering', () => {
-    var OnePlugin = createPlugin();
-    var RandomPlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const RandomPlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginOrder(['one']);
 
@@ -120,7 +120,7 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if ordering is injected more than once', () => {
-    var pluginOrdering = [];
+    const pluginOrdering = [];
 
     EventPluginRegistry.injectEventPluginOrder(pluginOrdering);
 
@@ -133,8 +133,8 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if different plugins injected using same name', () => {
-    var OnePlugin = createPlugin();
-    var TwoPlugin = createPlugin();
+    const OnePlugin = createPlugin();
+    const TwoPlugin = createPlugin();
 
     EventPluginRegistry.injectEventPluginsByName({same: OnePlugin});
 
@@ -147,13 +147,13 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should publish registration names of injected plugins', () => {
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         click: {registrationName: 'onClick'},
         focus: {registrationName: 'onFocus'},
       },
     });
-    var TwoPlugin = createPlugin({
+    const TwoPlugin = createPlugin({
       eventTypes: {
         magic: {
           phasedRegistrationNames: {
@@ -187,12 +187,12 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if multiple registration names collide', () => {
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         photoCapture: {registrationName: 'onPhotoCapture'},
       },
     });
-    var TwoPlugin = createPlugin({
+    const TwoPlugin = createPlugin({
       eventTypes: {
         photo: {
           phasedRegistrationNames: {
@@ -217,7 +217,7 @@ describe('EventPluginRegistry', () => {
   });
 
   it('should throw if an invalid event is published', () => {
-    var OnePlugin = createPlugin({
+    const OnePlugin = createPlugin({
       eventTypes: {
         badEvent: {
           /* missing configuration */

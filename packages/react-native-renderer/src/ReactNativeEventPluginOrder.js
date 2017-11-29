@@ -7,7 +7,7 @@
  * @flow
  */
 
-var ReactNativeEventPluginOrder = [
+const ReactNativeEventPluginOrder = [
   'ResponderEventPlugin',
   'ReactNativeBridgeEventPlugin',
 ];

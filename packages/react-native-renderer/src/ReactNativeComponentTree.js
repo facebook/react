@@ -7,8 +7,8 @@
 
 import invariant from 'fbjs/lib/invariant';
 
-var instanceCache = {};
-var instanceProps = {};
+const instanceCache = {};
+const instanceProps = {};
 
 export function precacheFiberNode(hostInst, tag) {
   instanceCache[tag] = hostInst;
@@ -24,7 +24,7 @@ function getInstanceFromTag(tag) {
 }
 
 function getTagFromInstance(inst) {
-  var tag = inst.stateNode._nativeTag;
+  const tag = inst.stateNode._nativeTag;
   invariant(tag, 'All native instances should have a tag.');
   return tag;
 }

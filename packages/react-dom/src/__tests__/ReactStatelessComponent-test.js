@@ -9,10 +9,10 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 function StatelessComponent(props) {
   return <div>{props.name}</div>;
@@ -32,7 +32,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('should render stateless component', () => {
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(<StatelessComponent name="A" />, el);
 
     expect(el.textContent).toBe('A');
@@ -45,7 +45,7 @@ describe('ReactStatelessComponent', () => {
       }
     }
 
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(<Parent name="A" />, el);
     expect(el.textContent).toBe('A');
 
@@ -54,7 +54,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('should unmount stateless component', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<StatelessComponent name="A" />, container);
     expect(container.textContent).toBe('A');
@@ -92,7 +92,7 @@ describe('ReactStatelessComponent', () => {
       }
     }
 
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(<GrandParent test="test" />, el);
 
     expect(el.textContent).toBe('test');
@@ -112,7 +112,7 @@ describe('ReactStatelessComponent', () => {
       foo: PropTypes.string,
     };
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
     ReactDOM.render(<StatelessComponentWithChildContext name="A" />, container);
 
@@ -376,7 +376,7 @@ describe('ReactStatelessComponent', () => {
       return <div />;
     }
 
-    var comp = ReactTestUtils.renderIntoDocument(<Child />);
+    const comp = ReactTestUtils.renderIntoDocument(<Child />);
     expect(comp).toBe(null);
   });
 
@@ -437,13 +437,13 @@ describe('ReactStatelessComponent', () => {
     }
     Child.contextTypes = {lang: PropTypes.string};
 
-    var el = document.createElement('div');
+    const el = document.createElement('div');
     ReactDOM.render(<Parent />, el);
     expect(el.textContent).toBe('en');
   });
 
   it('should work with arrow functions', () => {
-    var Child = function() {
+    let Child = function() {
       return <div />;
     };
     // Will create a new bound function without a prototype, much like a native
@@ -454,7 +454,7 @@ describe('ReactStatelessComponent', () => {
   });
 
   it('should allow simple functions to return null', () => {
-    var Child = function() {
+    const Child = function() {
       return null;
     };
     expect(() => ReactTestUtils.renderIntoDocument(<Child />)).not.toThrow();

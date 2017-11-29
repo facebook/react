@@ -226,7 +226,7 @@ describe('ReactDOMServerIntegration', () => {
     });
 
     describe('selects', function() {
-      var options;
+      let options;
       beforeEach(function() {
         options = [
           <option key={1} value="foo" id="foo">
@@ -255,7 +255,7 @@ describe('ReactDOMServerIntegration', () => {
 
         ['foo', 'bar', 'baz'].forEach(value => {
           const expectedValue = selected.indexOf(value) !== -1;
-          var option = element.querySelector(`#${value}`);
+          const option = element.querySelector(`#${value}`);
           expect(option.selected).toBe(expectedValue);
         });
       };

@@ -78,7 +78,7 @@ class ReactNativeFiberHostComponent {
       warnForStyleProps(nativeProps, this.viewConfig.validAttributes);
     }
 
-    var updatePayload = ReactNativeAttributePayload.create(
+    const updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
       this.viewConfig.validAttributes,
     );

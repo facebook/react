@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactCompositeComponentNestedState-state', () => {
   beforeEach(() => {
@@ -94,10 +94,10 @@ describe('ReactCompositeComponentNestedState-state', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
 
-    var logger = jest.fn();
+    const logger = jest.fn();
 
     void ReactDOM.render(<ParentComponent logger={logger} />, container);
 
