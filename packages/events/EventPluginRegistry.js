@@ -233,11 +233,12 @@ export function injectEventPluginsByName(
       const names = Object.keys(injectedNamesToPlugins).join(', ');
       lowPriorityWarning(
         false,
-        `Injecting custom event plugins (${names}) is deprecated ` +
+        'Injecting custom event plugins (%s) is deprecated ' +
           'and will not work in React 17+. Please update your code ' +
           'to not depend on React internals. The stack trace for this ' +
           'warning should reveal the library that is using them. ' +
           'See https://github.com/facebook/react/issues/11689 for a discussion.',
+          names,
       );
     }
   }
