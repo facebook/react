@@ -168,6 +168,8 @@ if (__DEV__) {
       e,
       f,
     ) {
+      // If document doesn't exist we know for sure we will crash in this method later.
+      // So we show a warning explaining a potential cause.
       warning(
         typeof document !== 'undefined',
         'The `document` global was defined when React was initialized, but is not ' +
