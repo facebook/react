@@ -10,6 +10,7 @@
 'use strict';
 
 var React;
+var ReactCallReturn;
 var ReactDOM;
 var ReactDOMServer;
 var ReactTestUtils;
@@ -23,6 +24,7 @@ describe('ReactDOMServer', () => {
   beforeEach(() => {
     jest.resetModules();
     React = require('react');
+    ReactCallReturn = require('react-call-return');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
     PropTypes = require('prop-types');
@@ -771,5 +773,37 @@ describe('ReactDOMServer', () => {
           'is probably not intentional.\n    in div (at **)',
       );
     }
+  });
+
+  it('should throw rendering portals on the server', () => {
+    var div = document.createElement('div');
+    expect(() => {
+      ReactDOMServer.renderToString(
+        <div>{ReactDOM.createPortal(<div />, div)}</div>,
+      );
+    }).toThrow(
+      'Portals are not currently supported by the server renderer. ' +
+        'Render them conditionally so that they only appear on the client render.',
+    );
+  });
+
+  it('should throw rendering call/return on the server', () => {
+    var div = document.createElement('div');
+    expect(() => {
+      ReactDOMServer.renderToString(
+        <div>{ReactCallReturn.unstable_createReturn(42)}</div>,
+      );
+    }).toThrow(
+      'The experimental Call and Return types are not currently supported by the server renderer.',
+    );
+    expect(() => {
+      ReactDOMServer.renderToString(
+        <div>
+          {ReactCallReturn.unstable_createCall(null, function() {}, {})}
+        </div>,
+      );
+    }).toThrow(
+      'The experimental Call and Return types are not currently supported by the server renderer.',
+    );
   });
 });
