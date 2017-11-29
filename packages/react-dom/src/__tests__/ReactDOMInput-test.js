@@ -1261,7 +1261,7 @@ describe('ReactDOMInput', () => {
             log.push('set property value');
           },
         });
-        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name, value) {
+        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name) {
           log.push('set attribute ' + name);
         });
       }
