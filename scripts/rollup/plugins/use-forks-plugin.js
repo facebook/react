@@ -7,17 +7,43 @@
 'use strict';
 
 const path = require('path');
+const semver = require('semver');
+
+function resolveRelatively(importee, importer) {
+  if (semver.gte(process.version, '8.9.0')) {
+    return require.resolve(importee, {
+      paths: [path.dirname(importer)],
+    });
+  } else {
+    // `paths` argument is not available in older Node.
+    // This works though.
+    // https://github.com/nodejs/node/issues/5963
+    const Module = require('module');
+    return Module._findPath(importee, [
+      path.dirname(importer),
+      ...module.paths,
+    ]);
+  }
+}
 
 let resolveCache = new Map();
 function useForks(forks) {
-  let resolvedForks = {};
+  let resolvedForks = new Map();
   Object.keys(forks).forEach(srcModule => {
     const targetModule = forks[srcModule];
-    resolvedForks[require.resolve(srcModule)] = require.resolve(targetModule);
+    resolvedForks.set(
+      require.resolve(srcModule),
+      require.resolve(targetModule)
+    );
   });
   return {
     resolveId(importee, importer) {
       if (!importer || !importee) {
+        return null;
+      }
+      if (importee.startsWith('\u0000')) {
+        // Internal Rollup reference, ignore.
+        // Passing that to Node file functions can fatal.
         return null;
       }
       let resolvedImportee = null;
@@ -27,9 +53,7 @@ function useForks(forks) {
         resolvedImportee = resolveCache.get(cacheKey);
       } else {
         try {
-          resolvedImportee = require.resolve(importee, {
-            paths: [path.dirname(importer)],
-          });
+          resolvedImportee = resolveRelatively(importee, importer);
         } catch (err) {
           // Not our fault, let Rollup fail later.
         }
@@ -37,9 +61,9 @@ function useForks(forks) {
           resolveCache.set(cacheKey, resolvedImportee);
         }
       }
-      if (resolvedImportee && resolvedForks.hasOwnProperty(resolvedImportee)) {
+      if (resolvedImportee && resolvedForks.has(resolvedImportee)) {
         // We found a fork!
-        return resolvedForks[resolvedImportee];
+        return resolvedForks.get(resolvedImportee);
       }
       return null;
     },
