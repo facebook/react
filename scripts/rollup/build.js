@@ -267,6 +267,11 @@ function getPlugins(
         return source.replace(/require\(['"]react['"]\)/g, "require('React')");
       },
     },
+    isProduction && {
+      transformBundle(code) {
+        return require('prepack').prepack(code)
+      }
+    },
     // Apply dead code elimination and/or minification.
     isProduction &&
       closure(

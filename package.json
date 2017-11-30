@@ -76,6 +76,7 @@
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
+    "prepack": "^0.2.12",
     "prettier": "1.8.1",
     "prop-types": "^15.6.0",
     "rimraf": "^2.6.1",
