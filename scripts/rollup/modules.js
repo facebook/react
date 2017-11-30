@@ -126,18 +126,7 @@ function getForks(bundleType, entry) {
     if (targetModule === null) {
       return;
     }
-    const targetPath = require.resolve(targetModule);
-    shims[srcModule] = targetPath;
-    // <hack>
-    // Unfortunately the above doesn't work for relative imports,
-    // and Rollup isn't smart enough to understand they refer to the same file.
-    // We should come up with a real fix for this, but for now this will do.
-    // FIXME: this is gross.
-    const fileName = path.parse(srcModule).name;
-    shims['./' + fileName] = targetPath;
-    shims['../' + fileName] = targetPath;
-    // We don't have deeper relative requires between source files.
-    // </hack>
+    shims[srcModule] = targetModule;
   });
   return shims;
 }

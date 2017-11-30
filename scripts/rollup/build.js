@@ -4,14 +4,12 @@ const rollup = require('rollup').rollup;
 const babel = require('rollup-plugin-babel');
 const closure = require('rollup-plugin-closure-compiler-js');
 const commonjs = require('rollup-plugin-commonjs');
-const alias = require('rollup-plugin-alias');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const join = require('path').join;
-const resolve = require('path').resolve;
-const resolvePlugin = require('rollup-plugin-node-resolve');
+const path = require('path');
+const resolve = require('rollup-plugin-node-resolve');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
@@ -88,7 +86,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
-          resolve('./scripts/babel/transform-object-assign-require'),
+          path.resolve('./scripts/babel/transform-object-assign-require'),
           // Minify invariant messages
           require('../error-codes/replace-invariant-error-codes'),
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
@@ -113,11 +111,11 @@ function handleRollupWarnings(warning) {
       );
     }
     const importSideEffects = Modules.getImportSideEffects();
-    const path = match[1];
-    if (typeof importSideEffects[path] !== 'boolean') {
+    const externalModule = match[1];
+    if (typeof importSideEffects[externalModule] !== 'boolean') {
       throw new Error(
         'An external module "' +
-          path +
+          externalModule +
           '" is used in a DEV-only code path ' +
           'but we do not know if it is safe to omit an unused require() to it in production. ' +
           'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
@@ -210,6 +208,44 @@ function isProductionBundleType(bundleType) {
   }
 }
 
+let resolveCache = new Map();
+function useForks(forks) {
+  let resolvedForks = {};
+  Object.keys(forks).forEach(srcModule => {
+    const targetModule = forks[srcModule];
+    resolvedForks[require.resolve(srcModule)] = require.resolve(targetModule);
+  });
+  return {
+    resolveId(importee, importer) {
+      if (!importer || !importee) {
+        return null;
+      }
+      let resolvedImportee = null;
+      let cacheKey = `${importer}:::${importee}`;
+      if (resolveCache.has(cacheKey)) {
+        // Avoid hitting file system if possible.
+        resolvedImportee = resolveCache.get(cacheKey);
+      } else {
+        try {
+          resolvedImportee = require.resolve(importee, {
+            paths: [path.dirname(importer)],
+          });
+        } catch (err) {
+          // Not our fault, let Rollup fail later.
+        }
+        if (resolvedImportee) {
+          resolveCache.set(cacheKey, resolvedImportee);
+        }
+      }
+      if (resolvedImportee && resolvedForks.hasOwnProperty(resolvedImportee)) {
+        // We found a fork!
+        return resolvedForks[resolvedImportee];
+      }
+      return null;
+    },
+  };
+}
+
 function getPlugins(
   entry,
   externals,
@@ -236,9 +272,9 @@ function getPlugins(
       },
     },
     // Shim any modules that need forking in this environment.
-    alias(forks),
+    useForks(forks),
     // Use Node resolution mechanism.
-    resolvePlugin({
+    resolve({
       skip: externals,
     }),
     // Remove license headers from individual modules
@@ -437,9 +473,9 @@ rimraf('build', async () => {
     // create a new build directory
     fs.mkdirSync('build');
     // create the packages folder for NODE+UMD bundles
-    fs.mkdirSync(join('build', 'packages'));
+    fs.mkdirSync(path.join('build', 'packages'));
     // create the dist folder for UMD bundles
-    fs.mkdirSync(join('build', 'dist'));
+    fs.mkdirSync(path.join('build', 'dist'));
 
     await Packaging.createFacebookWWWBuild();
     await Packaging.createReactNativeBuild();
@@ -460,11 +496,11 @@ rimraf('build', async () => {
     }
 
     if (syncFbsource) {
-      await syncReactNative(join('build', 'react-native'), syncFbsource);
-      await syncReactNativeRT(join('build', 'react-rt'), syncFbsource);
-      await syncReactNativeCS(join('build', 'react-cs'), syncFbsource);
+      await syncReactNative(path.join('build', 'react-native'), syncFbsource);
+      await syncReactNativeRT(path.join('build', 'react-rt'), syncFbsource);
+      await syncReactNativeCS(path.join('build', 'react-cs'), syncFbsource);
     } else if (syncWww) {
-      await syncReactDom(join('build', 'facebook-www'), syncWww);
+      await syncReactDom(path.join('build', 'facebook-www'), syncWww);
     }
 
     console.log(Stats.printResults());
