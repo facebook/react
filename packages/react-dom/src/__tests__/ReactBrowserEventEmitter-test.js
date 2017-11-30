@@ -12,6 +12,7 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let ReactBrowserEventEmitter;
 let EventPluginHub;
 let EventPluginRegistry;
 let TapEventPlugin;
@@ -62,6 +63,7 @@ describe('ReactBrowserEventEmitter', () => {
     EventPluginRegistry = require('events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
+    ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
     TapEventPlugin = require('../events/TapEventPlugin').default;
 
@@ -177,7 +179,20 @@ describe('ReactBrowserEventEmitter', () => {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {});
+  /**
+   * used ../events/ReactBrowserEventEmitter by origin test,
+   * change it to use the public modules react-dom/src/events/ReactBrowserEventEmitter
+   * to instead.
+   */
+  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
+    registerSimpleTestHandler();
+    ReactBrowserEventEmitter.setEnabled(false);
+    ReactTestUtils.SimulateNative.click(CHILD);
+    expect(LISTENER.mock.calls.length).toBe(0);
+    ReactBrowserEventEmitter.setEnabled(true);
+    ReactTestUtils.SimulateNative.click(CHILD);
+    expect(LISTENER.mock.calls.length).toBe(1);
+  });
 
   it('should bubble simply', () => {
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
