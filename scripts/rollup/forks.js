@@ -6,6 +6,8 @@ const UMD_DEV = bundleTypes.UMD_DEV;
 const UMD_PROD = bundleTypes.UMD_PROD;
 const FB_DEV = bundleTypes.FB_DEV;
 const FB_PROD = bundleTypes.FB_PROD;
+const RN_DEV = bundleTypes.RN_DEV;
+const RN_PROD = bundleTypes.RN_PROD;
 
 // If you need to replace a file with another file for a specific environment,
 // add it to this list with the logic for choosing the right replacement.
@@ -62,6 +64,28 @@ const forks = Object.freeze({
       case FB_DEV:
       case FB_PROD:
         return 'react/src/forks/ReactCurrentOwner.www.js';
+      default:
+        return null;
+    }
+  },
+
+  // Different behavior for caught errors.
+  'react-reconciler/src/ReactFiberErrorDialog': (bundleType, entry) => {
+    switch (bundleType) {
+      case FB_DEV:
+      case FB_PROD:
+        // Use the www fork which shows an error dialog.
+        return 'react-reconciler/src/forks/ReactFiberErrorDialog.www.js';
+      case RN_DEV:
+      case RN_PROD:
+        switch (entry) {
+          case 'react-native-renderer':
+          case 'react-rt-renderer':
+            // Use the RN fork which plays well with redbox.
+            return 'react-reconciler/src/forks/ReactFiberErrorDialog.native.js';
+          default:
+            return null;
+        }
       default:
         return null;
     }
