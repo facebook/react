@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalErrorLogging', () => {
   beforeEach(() => {

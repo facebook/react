@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactNoop;
+let React;
+let ReactNoop;
 
 describe('ReactIncrementalTriangle', () => {
   beforeEach(() => {
@@ -359,7 +359,7 @@ describe('ReactIncrementalTriangle', () => {
           simulate(...actions);
         } catch (e) {
           console.error(
-            `Triangle fuzz tester error! Copy and paste the following line into the test suite:         
+            `Triangle fuzz tester error! Copy and paste the following line into the test suite:
 ${formatActions(actions)}
           `,
           );

@@ -180,10 +180,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // It used to be here.
     }
 
-    var unmaskedContext = getUnmaskedContext(workInProgress);
-    var context = getMaskedContext(workInProgress, unmaskedContext);
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+    const context = getMaskedContext(workInProgress, unmaskedContext);
 
-    var nextChildren;
+    let nextChildren;
 
     if (__DEV__) {
       ReactCurrentOwner.current = workInProgress;
@@ -438,12 +438,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       'An indeterminate component should never have mounted. This error is ' +
         'likely caused by a bug in React. Please file an issue.',
     );
-    var fn = workInProgress.type;
-    var props = workInProgress.pendingProps;
-    var unmaskedContext = getUnmaskedContext(workInProgress);
-    var context = getMaskedContext(workInProgress, unmaskedContext);
+    const fn = workInProgress.type;
+    const props = workInProgress.pendingProps;
+    const unmaskedContext = getUnmaskedContext(workInProgress);
+    const context = getMaskedContext(workInProgress, unmaskedContext);
 
-    var value;
+    let value;
 
     if (__DEV__) {
       if (fn.prototype && typeof fn.prototype.render === 'function') {
@@ -523,7 +523,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function updateCallComponent(current, workInProgress, renderExpirationTime) {
-    var nextCall = (workInProgress.pendingProps: ReactCall);
+    let nextCall = (workInProgress.pendingProps: ReactCall);
     if (hasContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
