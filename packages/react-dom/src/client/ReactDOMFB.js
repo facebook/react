@@ -9,8 +9,6 @@
 
 import * as ReactFiberTreeReflection from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
 import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
@@ -25,7 +23,6 @@ Object.assign(
     // These are real internal dependencies that are trickier to remove:
     ReactBrowserEventEmitter,
     ReactErrorUtils,
-    ReactFiberErrorLogger,
     ReactFiberTreeReflection,
     ReactDOMComponentTree,
     ReactInstanceMap,
