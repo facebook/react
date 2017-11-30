@@ -24,7 +24,11 @@ import setTextContent from './setTextContent';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
-import {getPropertyInfo, shouldSetAttribute} from '../shared/DOMProperty';
+import {
+  getAttributeName,
+  getPropertyInfo,
+  shouldSetAttribute,
+} from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
@@ -952,7 +956,6 @@ export function diffHydratedProperties(
     } else if (__DEV__) {
       // Validate that the properties correspond to their expected values.
       var serverValue;
-      var propertyInfo;
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
@@ -995,9 +998,10 @@ export function diffHydratedProperties(
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       } else if (shouldSetAttribute(propKey, nextProp)) {
-        if ((propertyInfo = getPropertyInfo(propKey))) {
+        if (getPropertyInfo(propKey)) {
+          const attributeName = getAttributeName(propKey);
           // $FlowFixMe - Should be inferred as not undefined.
-          extraAttributeNames.delete(propertyInfo.attributeName);
+          extraAttributeNames.delete(attributeName);
           serverValue = DOMPropertyOperations.getValueForProperty(
             domElement,
             propKey,

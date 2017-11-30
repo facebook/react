@@ -10,6 +10,7 @@ import {
   ATTRIBUTE_NAME_START_CHAR,
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
+  getAttributeName,
   getPropertyInfo,
   shouldAttributeAcceptBooleanValue,
   shouldSetAttribute,
@@ -85,7 +86,7 @@ export function createMarkupForProperty(name, value) {
     if (shouldIgnoreValue(propertyInfo, value)) {
       return '';
     }
-    var attributeName = propertyInfo.attributeName;
+    var attributeName = getAttributeName(name);
     if (
       propertyInfo.hasBooleanValue ||
       (propertyInfo.hasOverloadedBooleanValue && value === true)

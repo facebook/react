@@ -10,6 +10,7 @@ import {
   ATTRIBUTE_NAME_START_CHAR,
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
+  getAttributeName,
   getAttributeNamespace,
   getPropertyInfo,
   shouldSetAttribute,
@@ -77,7 +78,7 @@ export function getValueForProperty(node, name, expected) {
       if (propertyInfo.mustUseProperty) {
         return node[name];
       } else {
-        var attributeName = propertyInfo.attributeName;
+        var attributeName = getAttributeName(name);
 
         var stringValue = null;
 
@@ -165,7 +166,7 @@ export function setValueForProperty(node, name, value) {
       // `toString`ed by IE8/9.
       node[name] = value;
     } else {
-      var attributeName = propertyInfo.attributeName;
+      var attributeName = getAttributeName(name);
       var namespace = getAttributeNamespace(name);
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
@@ -237,7 +238,8 @@ export function deleteValueForProperty(node, name) {
         node[name] = '';
       }
     } else {
-      node.removeAttribute(propertyInfo.attributeName);
+      const attributeName = getAttributeName(name);
+      node.removeAttribute(attributeName);
     }
   } else {
     node.removeAttribute(name);

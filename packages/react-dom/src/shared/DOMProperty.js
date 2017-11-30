@@ -33,7 +33,6 @@ const HAS_STRING_BOOLEAN_VALUE = 0x40;
 
 function injectDOMPropertyConfig(domPropertyConfig) {
   var Properties = domPropertyConfig.Properties || {};
-  var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
 
   for (var propName in Properties) {
     if (__DEV__) {
@@ -47,12 +46,9 @@ function injectDOMPropertyConfig(domPropertyConfig) {
       );
     }
 
-    var lowerCased = propName.toLowerCase();
     var propConfig = Properties[propName];
 
     var propertyInfo = {
-      attributeName: lowerCased,
-
       mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
       hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
       hasNumericValue: checkMask(propConfig, HAS_NUMERIC_VALUE),
@@ -78,12 +74,6 @@ function injectDOMPropertyConfig(domPropertyConfig) {
       );
     }
 
-    if (DOMAttributeNames.hasOwnProperty(propName)) {
-      var attributeName = DOMAttributeNames[propName];
-
-      propertyInfo.attributeName = attributeName;
-    }
-
     // Downcase references to whitelist properties to check for membership
     // without case-sensitivity. This allows the whitelist to pick up
     // `allowfullscreen`, which should be written using the property configuration
@@ -106,8 +96,6 @@ export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
  * Map from property "standard name" to an object with info about how to set
  * the property in the DOM. Each object contains:
  *
- * attributeName:
- *   Used when rendering markup or with `*Attribute()`.
  * mustUseProperty:
  *   Whether the property must be accessed and mutated as an object property.
  * hasBooleanValue:
@@ -190,6 +178,29 @@ export function isReservedProp(name) {
   return RESERVED_PROPS.hasOwnProperty(name);
 }
 
+const attributeNames = new Map([
+  ['acceptCharset', 'accept-charset'],
+  ['className', 'class'],
+  ['htmlFor', 'for'],
+  ['httpEquiv', 'http-equiv'],
+
+  ['autoReverse', 'autoReverse'],
+  ['externalResourcesRequired', 'externalResourcesRequired'],
+  ['preserveAlpha', 'preserveAlpha'],
+]);
+
+export function getAttributeName(name) {
+  if (attributeNames.has(name)) {
+    return attributeNames.get(name);
+  }
+  // TODO: it is odd that this depends on `properties` whitelist.
+  const attributeName = properties.hasOwnProperty(name)
+    ? name.toLowerCase()
+    : name;
+  attributeNames.set(name, attributeName);
+  return attributeName;
+}
+
 export function getAttributeNamespace(name) {
   switch (name) {
     case 'xlinkActuate':
@@ -263,19 +274,15 @@ var HTMLDOMPropertyConfig = {
     // See http://schema.org/docs/gs.html
     itemScope: HAS_BOOLEAN_VALUE,
     // These attributes must stay in the white-list because they have
-    // different attribute names (see DOMAttributeNames below)
+    // different attribute names (see `attributeNames`)
+    // TODO: this doesn't seem great? Probably means we depend on
+    // existence in the whitelist somewhere we shouldn't need to.
     acceptCharset: 0,
     className: 0,
     htmlFor: 0,
     httpEquiv: 0,
     // Set the string boolean flag to allow the behavior
     value: HAS_STRING_BOOLEAN_VALUE,
-  },
-  DOMAttributeNames: {
-    acceptCharset: 'accept-charset',
-    className: 'class',
-    htmlFor: 'for',
-    httpEquiv: 'http-equiv',
   },
 };
 
@@ -384,11 +391,6 @@ var SVGDOMPropertyConfig = {
     externalResourcesRequired: HAS_STRING_BOOLEAN_VALUE,
     preserveAlpha: HAS_STRING_BOOLEAN_VALUE,
   },
-  DOMAttributeNames: {
-    autoReverse: 'autoReverse',
-    externalResourcesRequired: 'externalResourcesRequired',
-    preserveAlpha: 'preserveAlpha',
-  },
 };
 
 var CAMELIZE = /[\-\:]([a-z])/g;
@@ -396,9 +398,8 @@ var capitalize = token => token[1].toUpperCase();
 
 SVG_ATTRS.forEach(original => {
   var reactName = original.replace(CAMELIZE, capitalize);
-
   SVGDOMPropertyConfig.Properties[reactName] = 0;
-  SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
+  attributeNames.set(reactName, original);
 });
 
 injectDOMPropertyConfig(HTMLDOMPropertyConfig);
