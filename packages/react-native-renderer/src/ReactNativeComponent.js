@@ -151,7 +151,7 @@ class ReactNativeComponent<DefaultProps, Props, State> extends React.Component<
     const viewConfig: ReactNativeBaseComponentViewConfig =
       maybeInstance.viewConfig;
 
-    var updatePayload = ReactNativeAttributePayload.create(
+    const updatePayload = ReactNativeAttributePayload.create(
       nativeProps,
       viewConfig.validAttributes,
     );

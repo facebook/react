@@ -7,7 +7,7 @@
 
 'use strict';
 
-var BatchedBridge = {
+const BatchedBridge = {
   registerCallableModule: jest.fn(),
 };
 
