@@ -1429,4 +1429,66 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('1');
     });
   });
+
+  describe('setting a controlled input to undefined', () => {
+    var input;
+
+    beforeEach(() => {
+      class Input extends React.Component {
+        state = {value: 'first'};
+        render() {
+          return (
+            <input
+              onChange={e => this.setState({value: e.target.value})}
+              value={this.state.value}
+            />
+          );
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Input />);
+      input = ReactDOM.findDOMNode(stub);
+      ReactTestUtils.Simulate.change(input, {target: {value: 'latest'}});
+      ReactTestUtils.Simulate.change(input, {target: {value: undefined}});
+    });
+
+    it('reverts the value attribute to the initial value', () => {
+      expect(input.getAttribute('value')).toBe('first');
+    });
+
+    it('preserves the value property', () => {
+      expect(input.value).toBe('latest');
+    });
+  });
+
+  describe('setting a controlled input to null', () => {
+    var input;
+
+    beforeEach(() => {
+      class Input extends React.Component {
+        state = {value: 'first'};
+        render() {
+          return (
+            <input
+              onChange={e => this.setState({value: e.target.value})}
+              value={this.state.value}
+            />
+          );
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Input />);
+      input = ReactDOM.findDOMNode(stub);
+      ReactTestUtils.Simulate.change(input, {target: {value: 'latest'}});
+      ReactTestUtils.Simulate.change(input, {target: {value: null}});
+    });
+
+    it('reverts the value attribute to the initial value', () => {
+      expect(input.getAttribute('value')).toBe('first');
+    });
+
+    it('preserves the value property', () => {
+      expect(input.value).toBe('latest');
+    });
+  });
 });

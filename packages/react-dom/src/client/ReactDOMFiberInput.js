@@ -199,14 +199,16 @@ export function updateWrapper(element: Element, props: Object) {
       // browsers typically do this as necessary, jsdom doesn't.
       node.value = '' + value;
     }
-    synchronizeDefaultValue(node, props.type, '' + value);
-  } else {
-    if (props.value == null && props.defaultValue != null) {
-      synchronizeDefaultValue(node, props.type, '' + props.defaultValue);
-    }
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
-    }
+    synchronizeDefaultValue(node, props.type, value);
+  } else if (
+    props.hasOwnProperty('value') ||
+    props.hasOwnProperty('defaultValue')
+  ) {
+    synchronizeDefaultValue(node, props.type, props.defaultValue);
+  }
+
+  if (props.checked == null && props.defaultChecked != null) {
+    node.defaultChecked = !!props.defaultChecked;
   }
 }
 
@@ -308,13 +310,17 @@ function updateNamedCousins(rootNode, props) {
 function synchronizeDefaultValue(
   node: InputWithWrapperState,
   type: ?string,
-  value: string,
+  value: *,
 ) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
     (type !== 'number' || node.ownerDocument.activeElement !== node) &&
-    node.defaultValue !== value
+    node.defaultValue !== '' + value
   ) {
-    node.defaultValue = value;
+    if (value != null) {
+      node.defaultValue = '' + value;
+    } else {
+      node.defaultValue = node._wrapperState.initialValue;
+    }
   }
 }
