@@ -247,7 +247,7 @@ class Updater {
   }
 }
 
-var currentlyValidatingElement = null;
+let currentlyValidatingElement = null;
 
 function getDisplayName(element) {
   if (element == null) {
@@ -262,10 +262,10 @@ function getDisplayName(element) {
 }
 
 function getStackAddendum() {
-  var stack = '';
+  let stack = '';
   if (currentlyValidatingElement) {
-    var name = getDisplayName(currentlyValidatingElement);
-    var owner = currentlyValidatingElement._owner;
+    const name = getDisplayName(currentlyValidatingElement);
+    const owner = currentlyValidatingElement._owner;
     stack += describeComponentFrame(
       name,
       currentlyValidatingElement._source,
@@ -276,7 +276,7 @@ function getStackAddendum() {
 }
 
 function getName(type, instance) {
-  var constructor = instance && instance.constructor;
+  const constructor = instance && instance.constructor;
   return (
     type.displayName ||
     (constructor && constructor.displayName) ||
