@@ -11,18 +11,18 @@
 
 // TODO: All these warnings should become static errors using Flow instead
 // of dynamic errors when using JSX with Flow.
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let PropTypes;
 
 describe('ReactJSXElementValidator', () => {
   function normalizeCodeLocInfo(str) {
     return str && str.replace(/at .+?:\d+/g, 'at **');
   }
 
-  var Component;
-  var RequiredPropComponent;
+  let Component;
+  let RequiredPropComponent;
 
   beforeEach(() => {
     jest.resetModules();
@@ -92,12 +92,12 @@ describe('ReactJSXElementValidator', () => {
   it('warns for keys for iterables of elements in rest args', () => {
     spyOnDev(console, 'error');
 
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : <Component />, done: done};
           },
         };
@@ -121,12 +121,12 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('does not warn for iterable elements with keys', () => {
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {
               value: done ? undefined : <Component key={'#' + i} />,
               done: done,
@@ -140,12 +140,12 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('does not warn for numeric keys in entry iterable as a child', () => {
-    var iterable = {
+    const iterable = {
       '@@iterator': function() {
-        var i = 0;
+        let i = 0;
         return {
           next: function() {
-            var done = ++i > 2;
+            const done = ++i > 2;
             return {value: done ? undefined : [i, <Component />], done: done};
           },
         };
@@ -219,7 +219,7 @@ describe('ReactJSXElementValidator', () => {
       return React.createElement(MiddleComp, {color: 'blue'});
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<ParentComp warn={false} />, container);
     ReactDOM.render(<ParentComp warn={true} />, container);
 
@@ -239,10 +239,10 @@ describe('ReactJSXElementValidator', () => {
   });
 
   it('gives a helpful error when passing null, undefined, or boolean', () => {
-    var Undefined = undefined;
-    var Null = null;
-    var True = true;
-    var Div = 'div';
+    const Undefined = undefined;
+    const Null = null;
+    const True = true;
+    const Div = 'div';
     spyOnDev(console, 'error');
     void <Undefined />;
     void <Null />;

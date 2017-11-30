@@ -10,8 +10,8 @@
 'use strict';
 
 describe('onlyChild', () => {
-  var React;
-  var WrapComponent;
+  let React;
+  let WrapComponent;
 
   beforeEach(() => {
     React = require('react');
@@ -28,7 +28,7 @@ describe('onlyChild', () => {
 
   it('should fail when passed two children', () => {
     expect(function() {
-      var instance = (
+      const instance = (
         <WrapComponent>
           <div />
           <span />
@@ -40,32 +40,32 @@ describe('onlyChild', () => {
 
   it('should fail when passed nully values', () => {
     expect(function() {
-      var instance = <WrapComponent>{null}</WrapComponent>;
+      const instance = <WrapComponent>{null}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).toThrow();
 
     expect(function() {
-      var instance = <WrapComponent>{undefined}</WrapComponent>;
+      const instance = <WrapComponent>{undefined}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).toThrow();
   });
 
   it('should fail when key/value objects', () => {
     expect(function() {
-      var instance = <WrapComponent>{[<span key="abc" />]}</WrapComponent>;
+      const instance = <WrapComponent>{[<span key="abc" />]}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).toThrow();
   });
 
   it('should not fail when passed interpolated single child', () => {
     expect(function() {
-      var instance = <WrapComponent>{<span />}</WrapComponent>;
+      const instance = <WrapComponent>{<span />}</WrapComponent>;
       React.Children.only(instance.props.children);
     }).not.toThrow();
   });
 
   it('should return the only child', () => {
-    var instance = (
+    const instance = (
       <WrapComponent>
         <span />
       </WrapComponent>

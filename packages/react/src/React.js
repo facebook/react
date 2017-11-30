@@ -25,7 +25,7 @@ import {
 } from './ReactElementValidator';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
-var React = {
+const React = {
   Children: {
     map,
     forEach,

@@ -9,19 +9,19 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactDOM;
+let PropTypes;
+let React;
+let ReactDOM;
 
 describe('ReactES6Class', () => {
-  var container;
-  var freeze = function(expectation) {
+  let container;
+  const freeze = function(expectation) {
     Object.freeze(expectation);
     return expectation;
   };
-  var Inner;
-  var attachedListener = null;
-  var renderedName = null;
+  let Inner;
+  let attachedListener = null;
+  let renderedName = null;
 
   beforeEach(() => {
     PropTypes = require('prop-types');
@@ -43,7 +43,7 @@ describe('ReactES6Class', () => {
   });
 
   function test(element, expectedTag, expectedClassName) {
-    var instance = ReactDOM.render(element, container);
+    const instance = ReactDOM.render(element, container);
     expect(container.firstChild).not.toBeNull();
     expect(container.firstChild.tagName).toBe(expectedTag);
     expect(container.firstChild.className).toBe(expectedClassName);
@@ -108,7 +108,7 @@ describe('ReactES6Class', () => {
         return <span className={this.state.bar} />;
       }
     }
-    var instance = test(<Foo initialValue="foo" />, 'DIV', 'foo');
+    const instance = test(<Foo initialValue="foo" />, 'DIV', 'foo');
     instance.changeState();
     test(<Foo />, 'SPAN', 'bar');
   });
@@ -120,7 +120,7 @@ describe('ReactES6Class', () => {
         this.state = {tag: context.tag, className: this.context.className};
       }
       render() {
-        var Tag = this.state.tag;
+        const Tag = this.state.tag;
         return <Tag className={this.state.className} />;
       }
     }
@@ -145,7 +145,7 @@ describe('ReactES6Class', () => {
   });
 
   it('renders only once when setting state in componentWillMount', () => {
-    var renderCount = 0;
+    let renderCount = 0;
     class Foo extends React.Component {
       constructor(props) {
         super(props);
@@ -261,7 +261,7 @@ describe('ReactES6Class', () => {
   });
 
   it('will call all the normal life cycle methods', () => {
-    var lifeCycles = [];
+    let lifeCycles = [];
     class Foo extends React.Component {
       constructor() {
         super();
@@ -311,8 +311,8 @@ describe('ReactES6Class', () => {
 
   it('warns when classic properties are defined on the instance, but does not invoke them.', () => {
     spyOnDev(console, 'error');
-    var getDefaultPropsWasCalled = false;
-    var getInitialStateWasCalled = false;
+    let getDefaultPropsWasCalled = false;
+    let getInitialStateWasCalled = false;
     class Foo extends React.Component {
       constructor() {
         super();
@@ -417,7 +417,7 @@ describe('ReactES6Class', () => {
 
   it('should throw AND warn when trying to access classic APIs', () => {
     spyOnDev(console, 'warn');
-    var instance = test(<Inner name="foo" />, 'DIV', 'foo');
+    const instance = test(<Inner name="foo" />, 'DIV', 'foo');
     expect(() => instance.replaceState({})).toThrow();
     expect(() => instance.isMounted()).toThrow();
     if (__DEV__) {
@@ -456,13 +456,13 @@ describe('ReactES6Class', () => {
         return <Inner name="foo" ref="inner" />;
       }
     }
-    var instance = test(<Foo />, 'DIV', 'foo');
+    const instance = test(<Foo />, 'DIV', 'foo');
     expect(instance.refs.inner.getName()).toBe('foo');
   });
 
   it('supports drilling through to the DOM using findDOMNode', () => {
-    var instance = test(<Inner name="foo" />, 'DIV', 'foo');
-    var node = ReactDOM.findDOMNode(instance);
+    const instance = test(<Inner name="foo" />, 'DIV', 'foo');
+    const node = ReactDOM.findDOMNode(instance);
     expect(node).toBe(container.firstChild);
   });
 });

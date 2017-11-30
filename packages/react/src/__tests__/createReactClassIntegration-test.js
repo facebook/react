@@ -9,11 +9,11 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var createReactClass;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let createReactClass;
 
 describe('create-react-class-integration', () => {
   beforeEach(() => {
@@ -37,8 +37,8 @@ describe('create-react-class-integration', () => {
   });
 
   it('should copy prop types onto the Constructor', () => {
-    var propValidator = jest.fn();
-    var TestComponent = createReactClass({
+    const propValidator = jest.fn();
+    const TestComponent = createReactClass({
       propTypes: {
         value: propValidator,
       },
@@ -233,7 +233,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should support statics', () => {
-    var Component = createReactClass({
+    const Component = createReactClass({
       statics: {
         abc: 'def',
         def: 0,
@@ -248,7 +248,7 @@ describe('create-react-class-integration', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.constructor.abc).toBe('def');
     expect(Component.abc).toBe('def');
@@ -263,7 +263,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should work with object getInitialState() return values', () => {
-    var Component = createReactClass({
+    const Component = createReactClass({
       getInitialState: function() {
         return {
           occupation: 'clown',
@@ -273,13 +273,13 @@ describe('create-react-class-integration', () => {
         return <span />;
       },
     });
-    var instance = <Component />;
+    let instance = <Component />;
     instance = ReactTestUtils.renderIntoDocument(instance);
     expect(instance.state.occupation).toEqual('clown');
   });
 
   it('renders based on context getInitialState', () => {
-    var Foo = createReactClass({
+    const Foo = createReactClass({
       contextTypes: {
         className: PropTypes.string,
       },
@@ -291,7 +291,7 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var Outer = createReactClass({
+    const Outer = createReactClass({
       childContextTypes: {
         className: PropTypes.string,
       },
@@ -303,14 +303,14 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Outer />, container);
     expect(container.firstChild.className).toBe('foo');
   });
 
   it('should throw with non-object getInitialState() return values', () => {
     [['an array'], 'a string', 1234].forEach(function(state) {
-      var Component = createReactClass({
+      const Component = createReactClass({
         getInitialState: function() {
           return state;
         },
@@ -318,7 +318,7 @@ describe('create-react-class-integration', () => {
           return <span />;
         },
       });
-      var instance = <Component />;
+      let instance = <Component />;
       expect(function() {
         instance = ReactTestUtils.renderIntoDocument(instance);
       }).toThrowError(
@@ -328,7 +328,7 @@ describe('create-react-class-integration', () => {
   });
 
   it('should work with a null getInitialState() return value', () => {
-    var Component = createReactClass({
+    const Component = createReactClass({
       getInitialState: function() {
         return null;
       },
@@ -343,7 +343,7 @@ describe('create-react-class-integration', () => {
 
   it('should throw when using legacy factories', () => {
     spyOnDev(console, 'error');
-    var Component = createReactClass({
+    const Component = createReactClass({
       render() {
         return <div />;
       },
@@ -360,8 +360,8 @@ describe('create-react-class-integration', () => {
   });
 
   it('replaceState and callback works', () => {
-    var ops = [];
-    var Component = createReactClass({
+    const ops = [];
+    const Component = createReactClass({
       getInitialState() {
         return {step: 0};
       },
@@ -371,7 +371,7 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var instance = ReactTestUtils.renderIntoDocument(<Component />);
+    const instance = ReactTestUtils.renderIntoDocument(<Component />);
     instance.replaceState({step: 1}, () => {
       ops.push('Callback: ' + instance.state.step);
     });
@@ -381,9 +381,9 @@ describe('create-react-class-integration', () => {
   it('isMounted works', () => {
     spyOnDev(console, 'error');
 
-    var ops = [];
-    var instance;
-    var Component = createReactClass({
+    const ops = [];
+    let instance;
+    const Component = createReactClass({
       displayName: 'MyComponent',
       mixins: [
         {
@@ -433,7 +433,7 @@ describe('create-react-class-integration', () => {
       },
     });
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Component />, container);
     ReactDOM.render(<Component />, container);
     ReactDOM.unmountComponentAtNode(container);
