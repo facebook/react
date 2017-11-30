@@ -13,7 +13,6 @@ describe('ReactDebugFiberPerf', () => {
   let React;
   let ReactCallReturn;
   let ReactNoop;
-  let ReactPortal;
   let PropTypes;
 
   let root;
@@ -121,8 +120,6 @@ describe('ReactDebugFiberPerf', () => {
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     ReactCallReturn = require('react-call-return');
-    // TODO: can we express this test with only public API?
-    ReactPortal = require('shared/ReactPortal');
     PropTypes = require('prop-types');
   });
 
@@ -142,7 +139,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         <Child />
-      </Parent>,
+      </Parent>
     );
     addComment('Mount');
     ReactNoop.flush();
@@ -150,7 +147,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         <Child />
-      </Parent>,
+      </Parent>
     );
     addComment('Update');
     ReactNoop.flush();
@@ -187,7 +184,7 @@ describe('ReactDebugFiberPerf', () => {
         <Parent>
           <B ref={inst => (b = inst)} />
         </Parent>
-      </Parent>,
+      </Parent>
     );
     ReactNoop.flush();
     resetFlamechart();
@@ -212,7 +209,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         <Cascading />
-      </Parent>,
+      </Parent>
     );
     addComment('Should print a warning');
     ReactNoop.flush();
@@ -253,14 +250,14 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         <NotCascading />
-      </Parent>,
+      </Parent>
     );
     addComment('Should not print a warning');
     ReactNoop.flush();
     ReactNoop.render(
       <Parent>
         <NotCascading />
-      </Parent>,
+      </Parent>
     );
     addComment('Should not print a warning');
     ReactNoop.flush();
@@ -276,7 +273,7 @@ describe('ReactDebugFiberPerf', () => {
         return true;
       }
       getChildContext() {
-        return {foo: 42};
+        return { foo: 42 };
       }
       componentWillMount() {}
       componentDidMount() {}
@@ -308,7 +305,7 @@ describe('ReactDebugFiberPerf', () => {
           <div hidden={true}>
             <Child />
           </div>
-        </Parent>,
+        </Parent>
       );
     });
     addComment('Flush the child');
@@ -337,7 +334,7 @@ describe('ReactDebugFiberPerf', () => {
         <B>
           <Child />
         </B>
-      </Parent>,
+      </Parent>
     );
     addComment('Start mounting Parent and A');
     ReactNoop.flushDeferredPri(40);
@@ -356,7 +353,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         <Baddie />
-      </Parent>,
+      </Parent>
     );
     try {
       addComment('Will fatal');
@@ -367,7 +364,7 @@ describe('ReactDebugFiberPerf', () => {
     ReactNoop.render(
       <Parent>
         <Child />
-      </Parent>,
+      </Parent>
     );
     addComment('Will reconcile from a clean state');
     ReactNoop.flush();
@@ -384,9 +381,9 @@ describe('ReactDebugFiberPerf', () => {
     }
 
     class Boundary extends React.Component {
-      state = {error: null};
+      state = { error: null };
       componentDidCatch(error) {
-        this.setState({error});
+        this.setState({ error });
       }
       render() {
         if (this.state.error) {
@@ -403,7 +400,7 @@ describe('ReactDebugFiberPerf', () => {
             <Baddie />
           </Parent>
         </Boundary>
-      </Parent>,
+      </Parent>
     );
     addComment('Stop on Baddie and restart from Boundary');
     ReactNoop.flush();
@@ -435,7 +432,7 @@ describe('ReactDebugFiberPerf', () => {
         <B />
         <A />
         <B />
-      </Parent>,
+      </Parent>
     );
     ReactNoop.flush();
     resetFlamechart();
@@ -446,7 +443,7 @@ describe('ReactDebugFiberPerf', () => {
         <B />
         <A />
         <B />
-      </Parent>,
+      </Parent>
     );
     addComment('The commit phase should mention A and B just once');
     ReactNoop.flush();
@@ -456,7 +453,7 @@ describe('ReactDebugFiberPerf', () => {
         <B />
         <A />
         <B cascade={true} />
-      </Parent>,
+      </Parent>
     );
     addComment("Because of deduplication, we don't know B was cascading,");
     addComment('but we should still see the warning for the commit phase.');
@@ -465,11 +462,11 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('supports returns', () => {
-    function Continuation({isSame}) {
+    function Continuation({ isSame }) {
       return <span prop={isSame ? 'foo==bar' : 'foo!=bar'} />;
     }
 
-    function CoChild({bar}) {
+    function CoChild({ bar }) {
       return ReactCallReturn.unstable_createReturn({
         props: {
           bar: bar,
@@ -492,7 +489,7 @@ describe('ReactDebugFiberPerf', () => {
       return ReactCallReturn.unstable_createCall(
         props.children,
         HandleReturns,
-        props,
+        props
       );
     }
 
@@ -512,11 +509,9 @@ describe('ReactDebugFiberPerf', () => {
   });
 
   it('supports portals', () => {
-    const noopContainer = {children: []};
+    const noopContainer = { children: [] };
     ReactNoop.render(
-      <Parent>
-        {ReactPortal.createPortal(<Child />, noopContainer, null)}
-      </Parent>,
+      <Parent>{ReactNoop.createPortal(<Child />, noopContainer, null)}</Parent>
     );
     ReactNoop.flush();
     expect(getFlameChart()).toMatchSnapshot();
@@ -524,9 +519,9 @@ describe('ReactDebugFiberPerf', () => {
 
   it('does not schedule an extra callback if setState is called during a synchronous commit phase', () => {
     class Component extends React.Component {
-      state = {step: 1};
+      state = { step: 1 };
       componentDidMount() {
-        this.setState({step: 2});
+        this.setState({ step: 2 });
       }
       render() {
         return <span prop={this.state.step} />;
