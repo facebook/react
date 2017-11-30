@@ -16,7 +16,7 @@
 
 import type { Fiber } from 'react-reconciler/src/ReactFiber';
 import type { UpdateQueue } from 'react-reconciler/src/ReactFiberUpdateQueue';
-
+import type { ReactNodeList } from 'shared/ReactTypes';
 import ReactFiberReconciler from 'react-reconciler';
 import { enablePersistentReconciler } from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
