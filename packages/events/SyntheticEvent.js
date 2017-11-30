@@ -11,11 +11,11 @@ import emptyFunction from 'fbjs/lib/emptyFunction';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
-var didWarnForAddedNewProperty = false;
-var isProxySupported = typeof Proxy === 'function';
-var EVENT_POOL_SIZE = 10;
+let didWarnForAddedNewProperty = false;
+const isProxySupported = typeof Proxy === 'function';
+const EVENT_POOL_SIZE = 10;
 
-var shouldBeReleasedProperties = [
+const shouldBeReleasedProperties = [
   'dispatchConfig',
   '_targetInst',
   'nativeEvent',
@@ -29,7 +29,7 @@ var shouldBeReleasedProperties = [
  * @interface Event
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var EventInterface = {
+const EventInterface = {
   type: null,
   target: null,
   // currentTarget is set when dispatching; no use in copying it here
@@ -79,15 +79,15 @@ function SyntheticEvent(
   this._targetInst = targetInst;
   this.nativeEvent = nativeEvent;
 
-  var Interface = this.constructor.Interface;
-  for (var propName in Interface) {
+  const Interface = this.constructor.Interface;
+  for (const propName in Interface) {
     if (!Interface.hasOwnProperty(propName)) {
       continue;
     }
     if (__DEV__) {
       delete this[propName]; // this has a getter/setter for warnings
     }
-    var normalize = Interface[propName];
+    const normalize = Interface[propName];
     if (normalize) {
       this[propName] = normalize(nativeEvent);
     } else {
@@ -99,7 +99,7 @@ function SyntheticEvent(
     }
   }
 
-  var defaultPrevented =
+  const defaultPrevented =
     nativeEvent.defaultPrevented != null
       ? nativeEvent.defaultPrevented
       : nativeEvent.returnValue === false;
@@ -115,7 +115,7 @@ function SyntheticEvent(
 Object.assign(SyntheticEvent.prototype, {
   preventDefault: function() {
     this.defaultPrevented = true;
-    var event = this.nativeEvent;
+    const event = this.nativeEvent;
     if (!event) {
       return;
     }
@@ -129,7 +129,7 @@ Object.assign(SyntheticEvent.prototype, {
   },
 
   stopPropagation: function() {
-    var event = this.nativeEvent;
+    const event = this.nativeEvent;
     if (!event) {
       return;
     }
@@ -168,8 +168,8 @@ Object.assign(SyntheticEvent.prototype, {
    * `PooledClass` looks for `destructor` on each instance it releases.
    */
   destructor: function() {
-    var Interface = this.constructor.Interface;
-    for (var propName in Interface) {
+    const Interface = this.constructor.Interface;
+    for (const propName in Interface) {
       if (__DEV__) {
         Object.defineProperty(
           this,
@@ -180,7 +180,7 @@ Object.assign(SyntheticEvent.prototype, {
         this[propName] = null;
       }
     }
-    for (var i = 0; i < shouldBeReleasedProperties.length; i++) {
+    for (let i = 0; i < shouldBeReleasedProperties.length; i++) {
       this[shouldBeReleasedProperties[i]] = null;
     }
     if (__DEV__) {
@@ -212,11 +212,11 @@ SyntheticEvent.Interface = EventInterface;
  * @param {?object} Interface
  */
 SyntheticEvent.augmentClass = function(Class, Interface) {
-  var Super = this;
+  const Super = this;
 
-  var E = function() {};
+  const E = function() {};
   E.prototype = Super.prototype;
-  var prototype = new E();
+  const prototype = new E();
 
   Object.assign(prototype, Class.prototype);
   Class.prototype = prototype;
@@ -275,7 +275,7 @@ addEventPoolingTo(SyntheticEvent);
  * @return {object} defineProperty object
  */
 function getPooledWarningPropertyDefinition(propName, getVal) {
-  var isFunction = typeof getVal === 'function';
+  const isFunction = typeof getVal === 'function';
   return {
     configurable: true,
     set: set,
@@ -283,14 +283,16 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   };
 
   function set(val) {
-    var action = isFunction ? 'setting the method' : 'setting the property';
+    const action = isFunction ? 'setting the method' : 'setting the property';
     warn(action, 'This is effectively a no-op');
     return val;
   }
 
   function get() {
-    var action = isFunction ? 'accessing the method' : 'accessing the property';
-    var result = isFunction
+    const action = isFunction
+      ? 'accessing the method'
+      : 'accessing the property';
+    const result = isFunction
       ? 'This is a no-op function'
       : 'This is set to null';
     warn(action, result);
@@ -298,7 +300,7 @@ function getPooledWarningPropertyDefinition(propName, getVal) {
   }
 
   function warn(action, result) {
-    var warningCondition = false;
+    const warningCondition = false;
     warning(
       warningCondition,
       "This synthetic event is reused for performance reasons. If you're seeing this, " +
@@ -334,7 +336,7 @@ function getPooledEvent(dispatchConfig, targetInst, nativeEvent, nativeInst) {
 }
 
 function releasePooledEvent(event) {
-  var EventConstructor = this;
+  const EventConstructor = this;
   invariant(
     event instanceof EventConstructor,
     'Trying to release an event instance  into a pool of a different type.',

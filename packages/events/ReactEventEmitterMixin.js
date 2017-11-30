@@ -26,7 +26,7 @@ export function handleTopLevel(
   nativeEvent,
   nativeEventTarget,
 ) {
-  var events = extractEvents(
+  const events = extractEvents(
     topLevelType,
     targetInst,
     nativeEvent,
