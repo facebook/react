@@ -7,8 +7,8 @@
  * @flow
  */
 
-import type { ReactNativeType } from './ReactNativeTypes';
-import type { ReactNodeList } from 'shared/ReactTypes';
+import type {ReactNativeType} from './ReactNativeTypes';
+import type {ReactNodeList} from 'shared/ReactTypes';
 
 import './ReactNativeInjection';
 
@@ -22,20 +22,20 @@ import ReactVersion from 'shared/ReactVersion';
 // Module provided by RN:
 import UIManager from 'UIManager';
 
-import { showDialog } from './ReactNativeFiberErrorDialog';
+import {showDialog} from './ReactNativeFiberErrorDialog';
 import NativeMethodsMixin from './NativeMethodsMixin';
 import ReactNativeBridgeEventPlugin from './ReactNativeBridgeEventPlugin';
 import ReactNativeComponent from './ReactNativeComponent';
 import * as ReactNativeComponentTree from './ReactNativeComponentTree';
 import ReactNativeFiberRenderer from './ReactNativeFiberRenderer';
 import ReactNativePropRegistry from './ReactNativePropRegistry';
-import { getInspectorDataForViewTag } from './ReactNativeFiberInspector';
+import {getInspectorDataForViewTag} from './ReactNativeFiberInspector';
 import createReactNativeComponentClass from './createReactNativeComponentClass';
 import findNumericNodeHandle from './findNumericNodeHandle';
 import takeSnapshot from './takeSnapshot';
 
 ReactGenericBatching.injection.injectFiberBatchedUpdates(
-  ReactNativeFiberRenderer.batchedUpdates
+  ReactNativeFiberRenderer.batchedUpdates,
 );
 
 const roots = new Map();
@@ -83,7 +83,7 @@ const ReactNativeRenderer: ReactNativeType = {
   createPortal(
     children: ReactNodeList,
     containerTag: number,
-    key: ?string = null
+    key: ?string = null,
   ) {
     return ReactPortal.createPortal(children, containerTag, null, key);
   },
@@ -124,7 +124,7 @@ if (__DEV__) {
         printInclusive() {},
         printWasted() {},
       },
-    }
+    },
   );
 }
 

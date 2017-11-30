@@ -34,12 +34,12 @@ describe('ReactPersistent', () => {
   }
 
   function div(...children) {
-    children = children.map(c => (typeof c === 'string' ? { text: c } : c));
-    return { type: 'div', children, prop: undefined };
+    children = children.map(c => (typeof c === 'string' ? {text: c} : c));
+    return {type: 'div', children, prop: undefined};
   }
 
   function span(prop) {
-    return { type: 'span', children: [], prop };
+    return {type: 'span', children: [], prop};
   }
 
   function getChildren() {
@@ -159,12 +159,12 @@ describe('ReactPersistent', () => {
         </div>
       );
     }
-    const portalContainer = { rootID: 'persistent-portal-test', children: [] };
+    const portalContainer = {rootID: 'persistent-portal-test', children: []};
     const emptyPortalChildSet = portalContainer.children;
     render(
       <Parent>
         {ReactPortal.createPortal(<Child />, portalContainer, null)}
-      </Parent>
+      </Parent>,
     );
     ReactNoop.flush();
 
@@ -180,9 +180,9 @@ describe('ReactPersistent', () => {
         {ReactPortal.createPortal(
           <Child>Hello {'World'}</Child>,
           portalContainer,
-          null
+          null,
         )}
-      </Parent>
+      </Parent>,
     );
     ReactNoop.flush();
 
@@ -196,7 +196,7 @@ describe('ReactPersistent', () => {
 
     // Reused portal children should have reference equality
     expect(newPortalChildren[0].children[0]).toBe(
-      originalPortalChildren[0].children[0]
+      originalPortalChildren[0].children[0],
     );
 
     // Deleting the Portal, should clear its children

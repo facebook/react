@@ -92,8 +92,8 @@ it('fails if unknown/unsupported event types are dispatched', () => {
   expect(() => {
     EventEmitter.receiveTouches(
       'unspecifiedEvent',
-      [{ target, identifier: 17 }],
-      [0]
+      [{target, identifier: 17}],
+      [0],
     );
   }).toThrow('Unsupported top level event type "unspecifiedEvent" dispatched');
 });
@@ -101,7 +101,7 @@ it('fails if unknown/unsupported event types are dispatched', () => {
 it('handles events', () => {
   expect(RCTEventEmitter.register.mock.calls.length).toBe(1);
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = fakeRequireNativeComponent('View', { foo: true });
+  var View = fakeRequireNativeComponent('View', {foo: true});
 
   var log = [];
   ReactNative.render(
@@ -110,8 +110,7 @@ it('handles events', () => {
       onTouchEnd={() => log.push('outer touchend')}
       onTouchEndCapture={() => log.push('outer touchend capture')}
       onTouchStart={() => log.push('outer touchstart')}
-      onTouchStartCapture={() => log.push('outer touchstart capture')}
-    >
+      onTouchStartCapture={() => log.push('outer touchstart capture')}>
       <View
         foo="inner"
         onTouchEndCapture={() => log.push('inner touchend capture')}
@@ -120,7 +119,7 @@ it('handles events', () => {
         onTouchStart={() => log.push('inner touchstart')}
       />
     </View>,
-    1
+    1,
   );
 
   expect(UIManager.__dumpHierarchyForJestTestsOnly()).toMatchSnapshot();
@@ -129,18 +128,18 @@ it('handles events', () => {
   // Don't depend on the order of createView() calls.
   // Stack creates views outside-in; fiber creates them inside-out.
   var innerTag = UIManager.createView.mock.calls.find(
-    args => args[3].foo === 'inner'
+    args => args[3].foo === 'inner',
   )[0];
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: innerTag, identifier: 17 }],
-    [0]
+    [{target: innerTag, identifier: 17}],
+    [0],
   );
   EventEmitter.receiveTouches(
     'topTouchEnd',
-    [{ target: innerTag, identifier: 17 }],
-    [0]
+    [{target: innerTag, identifier: 17}],
+    [0],
   );
 
   expect(log).toEqual([
@@ -161,9 +160,9 @@ it('handles events on text nodes', () => {
   var Text = fakeRequireNativeComponent('Text', {});
 
   class ContextHack extends React.Component {
-    static childContextTypes = { isInAParentText: PropTypes.bool };
+    static childContextTypes = {isInAParentText: PropTypes.bool};
     getChildContext() {
-      return { isInAParentText: true };
+      return {isInAParentText: true};
     }
     render() {
       return this.props.children;
@@ -178,21 +177,19 @@ it('handles events on text nodes', () => {
           onTouchEnd={() => log.push('string touchend')}
           onTouchEndCapture={() => log.push('string touchend capture')}
           onTouchStart={() => log.push('string touchstart')}
-          onTouchStartCapture={() => log.push('string touchstart capture')}
-        >
+          onTouchStartCapture={() => log.push('string touchstart capture')}>
           Text Content
         </Text>
         <Text
           onTouchEnd={() => log.push('number touchend')}
           onTouchEndCapture={() => log.push('number touchend capture')}
           onTouchStart={() => log.push('number touchstart')}
-          onTouchStartCapture={() => log.push('number touchstart capture')}
-        >
+          onTouchStartCapture={() => log.push('number touchstart capture')}>
           {123}
         </Text>
       </Text>
     </ContextHack>,
-    1
+    1,
   );
 
   expect(UIManager.createView.mock.calls.length).toBe(5);
@@ -200,32 +197,32 @@ it('handles events on text nodes', () => {
   // Don't depend on the order of createView() calls.
   // Stack creates views outside-in; fiber creates them inside-out.
   var innerTagString = UIManager.createView.mock.calls.find(
-    args => args[3] && args[3].text === 'Text Content'
+    args => args[3] && args[3].text === 'Text Content',
   )[0];
   var innerTagNumber = UIManager.createView.mock.calls.find(
-    args => args[3] && args[3].text === '123'
+    args => args[3] && args[3].text === '123',
   )[0];
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: innerTagString, identifier: 17 }],
-    [0]
+    [{target: innerTagString, identifier: 17}],
+    [0],
   );
   EventEmitter.receiveTouches(
     'topTouchEnd',
-    [{ target: innerTagString, identifier: 17 }],
-    [0]
+    [{target: innerTagString, identifier: 17}],
+    [0],
   );
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: innerTagNumber, identifier: 18 }],
-    [0]
+    [{target: innerTagNumber, identifier: 18}],
+    [0],
   );
   EventEmitter.receiveTouches(
     'topTouchEnd',
-    [{ target: innerTagNumber, identifier: 18 }],
-    [0]
+    [{target: innerTagNumber, identifier: 18}],
+    [0],
   );
 
   expect(log).toEqual([
@@ -242,11 +239,11 @@ it('handles events on text nodes', () => {
 
 it('handles when a responder is unmounted while a touch sequence is in progress', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
-  var View = fakeRequireNativeComponent('View', { id: true });
+  var View = fakeRequireNativeComponent('View', {id: true});
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
-      args => args[3] && args[3].id === id
+      args => args[3] && args[3].id === id,
     )[0];
   }
 
@@ -279,13 +276,13 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
         />
       </View>
     </View>,
-    1
+    1,
   );
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: getViewById('one'), identifier: 17 }],
-    [0]
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
   );
 
   expect(getResponderId()).toBe('one');
@@ -303,7 +300,7 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
         />
       </View>
     </View>,
-    1
+    1,
   );
 
   // TODO Verify the onResponderEnd listener has been called (before the unmount)
@@ -312,8 +309,8 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 
   EventEmitter.receiveTouches(
     'topTouchEnd',
-    [{ target: getViewById('two'), identifier: 17 }],
-    [0]
+    [{target: getViewById('two'), identifier: 17}],
+    [0],
   );
 
   expect(getResponderId()).toBeNull();
@@ -321,8 +318,8 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: getViewById('two'), identifier: 17 }],
-    [0]
+    [{target: getViewById('two'), identifier: 17}],
+    [0],
   );
 
   expect(getResponderId()).toBe('two');
@@ -332,11 +329,11 @@ it('handles when a responder is unmounted while a touch sequence is in progress'
 it('handles events without target', () => {
   var EventEmitter = RCTEventEmitter.register.mock.calls[0][0];
 
-  var View = fakeRequireNativeComponent('View', { id: true });
+  var View = fakeRequireNativeComponent('View', {id: true});
 
   function getViewById(id) {
     return UIManager.createView.mock.calls.find(
-      args => args[3] && args[3].id === id
+      args => args[3] && args[3].id === id,
     )[0];
   }
 
@@ -373,7 +370,7 @@ it('handles events without target', () => {
           />
         </View>
       </View>,
-      1
+      1,
     );
   }
 
@@ -381,8 +378,8 @@ it('handles events without target', () => {
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: getViewById('one'), identifier: 17 }],
-    [0]
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
   );
 
   // Unmounting component 'one'.
@@ -390,24 +387,24 @@ it('handles events without target', () => {
 
   EventEmitter.receiveTouches(
     'topTouchEnd',
-    [{ target: getViewById('one'), identifier: 17 }],
-    [0]
+    [{target: getViewById('one'), identifier: 17}],
+    [0],
   );
 
   expect(getResponderId()).toBe(null);
 
   EventEmitter.receiveTouches(
     'topTouchStart',
-    [{ target: getViewById('two'), identifier: 18 }],
-    [0]
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
   );
 
   expect(getResponderId()).toBe('two');
 
   EventEmitter.receiveTouches(
     'topTouchEnd',
-    [{ target: getViewById('two'), identifier: 18 }],
-    [0]
+    [{target: getViewById('two'), identifier: 18}],
+    [0],
   );
 
   expect(getResponderId()).toBe(null);
