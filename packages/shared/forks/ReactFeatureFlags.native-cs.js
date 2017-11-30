@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as CSFeatureFlagsType from './ReactNativeCSFeatureFlags';
+import typeof * as CSFeatureFlagsType from './ReactFeatureFlags.native-cs';
 
 export const debugRenderPhaseSideEffects = false;
 export const enableAsyncSubtreeAPI = true;

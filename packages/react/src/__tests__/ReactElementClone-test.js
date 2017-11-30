@@ -9,13 +9,13 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactElementClone', () => {
-  var ComponentClass;
+  let ComponentClass;
 
   beforeEach(() => {
     PropTypes = require('prop-types');
@@ -47,7 +47,7 @@ describe('ReactElementClone', () => {
         );
       }
     }
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
@@ -71,12 +71,12 @@ describe('ReactElementClone', () => {
         );
       }
     }
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(ReactDOM.findDOMNode(component).childNodes[0].className).toBe('xyz');
   });
 
   it('does not fail if config has no prototype', () => {
-    var config = Object.create(null, {foo: {value: 1, enumerable: true}});
+    const config = Object.create(null, {foo: {value: 1, enumerable: true}});
     React.cloneElement(<div />, config);
   });
 
@@ -95,7 +95,7 @@ describe('ReactElementClone', () => {
       }
     }
 
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs.yolo.tagName).toBe('DIV');
   });
 
@@ -105,7 +105,7 @@ describe('ReactElementClone', () => {
         return null;
       }
     }
-    var clone = React.cloneElement(<Component />, {key: 'xyz'});
+    const clone = React.cloneElement(<Component />, {key: 'xyz'});
     expect(clone.key).toBe('xyz');
   });
 
@@ -142,7 +142,7 @@ describe('ReactElementClone', () => {
       }
     }
 
-    var clone = React.cloneElement(
+    const clone = React.cloneElement(
       <Component>xyz</Component>,
       {children: <Component />},
       <div />,
@@ -153,7 +153,7 @@ describe('ReactElementClone', () => {
   });
 
   it('should override children if undefined is provided as an argument', () => {
-    var element = React.createElement(
+    const element = React.createElement(
       ComponentClass,
       {
         children: 'text',
@@ -162,7 +162,7 @@ describe('ReactElementClone', () => {
     );
     expect(element.props.children).toBe(undefined);
 
-    var element2 = React.cloneElement(
+    const element2 = React.cloneElement(
       React.createElement(ComponentClass, {
         children: 'text',
       }),
@@ -175,7 +175,7 @@ describe('ReactElementClone', () => {
   it('should support keys and refs', () => {
     class Parent extends React.Component {
       render() {
-        var clone = React.cloneElement(this.props.children, {
+        const clone = React.cloneElement(this.props.children, {
           key: 'xyz',
           ref: 'xyz',
         });
@@ -195,14 +195,14 @@ describe('ReactElementClone', () => {
       }
     }
 
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
   });
 
   it('should steal the ref if a new ref is specified', () => {
     class Parent extends React.Component {
       render() {
-        var clone = React.cloneElement(this.props.children, {ref: 'xyz'});
+        const clone = React.cloneElement(this.props.children, {ref: 'xyz'});
         return <div>{clone}</div>;
       }
     }
@@ -217,7 +217,7 @@ describe('ReactElementClone', () => {
       }
     }
 
-    var component = ReactTestUtils.renderIntoDocument(<Grandparent />);
+    const component = ReactTestUtils.renderIntoDocument(<Grandparent />);
     expect(component.refs.child).toBeUndefined();
     expect(component.refs.parent.refs.xyz.tagName).toBe('SPAN');
   });
@@ -243,16 +243,16 @@ describe('ReactElementClone', () => {
     }
     Component.defaultProps = {prop: 'testKey'};
 
-    var instance = React.createElement(Component);
-    var clonedInstance = React.cloneElement(instance, {prop: undefined});
+    const instance = React.createElement(Component);
+    const clonedInstance = React.cloneElement(instance, {prop: undefined});
     expect(clonedInstance.props.prop).toBe('testKey');
-    var clonedInstance2 = React.cloneElement(instance, {prop: null});
+    const clonedInstance2 = React.cloneElement(instance, {prop: null});
     expect(clonedInstance2.props.prop).toBe(null);
 
-    var instance2 = React.createElement(Component, {prop: 'newTestKey'});
-    var cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
+    const instance2 = React.createElement(Component, {prop: 'newTestKey'});
+    const cloneInstance3 = React.cloneElement(instance2, {prop: undefined});
     expect(cloneInstance3.props.prop).toBe('testKey');
-    var cloneInstance4 = React.cloneElement(instance2, {});
+    const cloneInstance4 = React.cloneElement(instance2, {});
     expect(cloneInstance4.props.prop).toBe('newTestKey');
   });
 
@@ -318,24 +318,24 @@ describe('ReactElementClone', () => {
   });
 
   it('should ignore key and ref warning getters', () => {
-    var elementA = React.createElement('div');
-    var elementB = React.cloneElement(elementA, elementA.props);
+    const elementA = React.createElement('div');
+    const elementB = React.cloneElement(elementA, elementA.props);
     expect(elementB.key).toBe(null);
     expect(elementB.ref).toBe(null);
   });
 
   it('should ignore undefined key and ref', () => {
-    var element = React.createFactory(ComponentClass)({
+    const element = React.createFactory(ComponentClass)({
       key: '12',
       ref: '34',
       foo: '56',
     });
-    var props = {
+    const props = {
       key: undefined,
       ref: undefined,
       foo: 'ef',
     };
-    var clone = React.cloneElement(element, props);
+    const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('12');
     expect(clone.ref).toBe('34');
@@ -347,17 +347,17 @@ describe('ReactElementClone', () => {
   });
 
   it('should extract null key and ref', () => {
-    var element = React.createFactory(ComponentClass)({
+    const element = React.createFactory(ComponentClass)({
       key: '12',
       ref: '34',
       foo: '56',
     });
-    var props = {
+    const props = {
       key: null,
       ref: null,
       foo: 'ef',
     };
-    var clone = React.cloneElement(element, props);
+    const clone = React.cloneElement(element, props);
     expect(clone.type).toBe(ComponentClass);
     expect(clone.key).toBe('null');
     expect(clone.ref).toBe(null);

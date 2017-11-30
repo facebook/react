@@ -16,10 +16,11 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
-
+import type {ReactNodeList} from 'shared/ReactTypes';
 import ReactFiberReconciler from 'react-reconciler';
 import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import * as ReactPortal from 'shared/ReactPortal';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
@@ -316,6 +317,14 @@ var ReactNoop = {
     } else {
       return null;
     }
+  },
+
+  createPortal(
+    children: ReactNodeList,
+    container: Container,
+    key: ?string = null,
+  ) {
+    return ReactPortal.createPortal(children, container, null, key);
   },
 
   // Shortcut for testing a single root

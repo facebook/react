@@ -12,7 +12,7 @@ import SyntheticEvent from './SyntheticEvent';
  * interface will ensure that it is cleaned up when pooled/destroyed. The
  * `ResponderEventPlugin` will populate it appropriately.
  */
-var ResponderEventInterface = {
+const ResponderEventInterface = {
   touchHistory: function(nativeEvent) {
     return null; // Actually doesn't even look at the native event.
   },

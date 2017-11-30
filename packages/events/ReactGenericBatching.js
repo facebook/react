@@ -14,11 +14,11 @@ import {restoreStateIfNeeded} from './ReactControlledComponent';
 // scheduled work and instead do synchronous work.
 
 // Defaults
-var fiberBatchedUpdates = function(fn, bookkeeping) {
+let fiberBatchedUpdates = function(fn, bookkeeping) {
   return fn(bookkeeping);
 };
 
-var isNestingBatched = false;
+let isNestingBatched = false;
 export function batchedUpdates(fn, bookkeeping) {
   if (isNestingBatched) {
     // If we are currently inside another batch, we need to wait until it
@@ -39,7 +39,7 @@ export function batchedUpdates(fn, bookkeeping) {
   }
 }
 
-var ReactGenericBatchingInjection = {
+const ReactGenericBatchingInjection = {
   injectFiberBatchedUpdates: function(_batchedUpdates) {
     fiberBatchedUpdates = _batchedUpdates;
   },

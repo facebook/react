@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
 describe('ReactPureComponent', () => {
   beforeEach(() => {
@@ -19,7 +19,7 @@ describe('ReactPureComponent', () => {
   });
 
   it('should render', () => {
-    var renders = 0;
+    let renders = 0;
     class Component extends React.PureComponent {
       constructor() {
         super();
@@ -31,9 +31,9 @@ describe('ReactPureComponent', () => {
       }
     }
 
-    var container = document.createElement('div');
-    var text;
-    var component;
+    const container = document.createElement('div');
+    let text;
+    let component;
 
     text = ['porcini'];
     component = ReactDOM.render(<Component text={text} />, container);
@@ -63,7 +63,7 @@ describe('ReactPureComponent', () => {
 
   it('can override shouldComponentUpdate', () => {
     spyOnDev(console, 'error');
-    var renders = 0;
+    let renders = 0;
     class Component extends React.PureComponent {
       render() {
         renders++;
@@ -73,7 +73,7 @@ describe('ReactPureComponent', () => {
         return true;
       }
     }
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Component />, container);
     ReactDOM.render(<Component />, container);
     if (__DEV__) {
@@ -89,7 +89,7 @@ describe('ReactPureComponent', () => {
   });
 
   it('extends React.Component', () => {
-    var renders = 0;
+    let renders = 0;
     class Component extends React.PureComponent {
       render() {
         expect(this instanceof React.Component).toBe(true);
@@ -113,7 +113,7 @@ describe('ReactPureComponent', () => {
         return <div />;
       }
     }
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<PureComponent />, container);
 
     if (__DEV__) {
