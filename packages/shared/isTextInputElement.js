@@ -10,7 +10,7 @@
 /**
  * @see http://www.whatwg.org/specs/web-apps/current-work/multipage/the-input-element.html#input-type-attr-summary
  */
-var supportedInputTypes: {[key: string]: true | void} = {
+const supportedInputTypes: {[key: string]: true | void} = {
   color: true,
   date: true,
   datetime: true,
@@ -29,7 +29,7 @@ var supportedInputTypes: {[key: string]: true | void} = {
 };
 
 function isTextInputElement(elem: ?HTMLElement): boolean {
-  var nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
 
   if (nodeName === 'input') {
     return !!supportedInputTypes[((elem: any): HTMLInputElement).type];

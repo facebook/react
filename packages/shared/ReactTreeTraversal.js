@@ -27,12 +27,12 @@ function getParent(inst) {
  * different trees.
  */
 export function getLowestCommonAncestor(instA, instB) {
-  var depthA = 0;
-  for (var tempA = instA; tempA; tempA = getParent(tempA)) {
+  let depthA = 0;
+  for (let tempA = instA; tempA; tempA = getParent(tempA)) {
     depthA++;
   }
-  var depthB = 0;
-  for (var tempB = instB; tempB; tempB = getParent(tempB)) {
+  let depthB = 0;
+  for (let tempB = instB; tempB; tempB = getParent(tempB)) {
     depthB++;
   }
 
@@ -49,7 +49,7 @@ export function getLowestCommonAncestor(instA, instB) {
   }
 
   // Walk in lockstep until we find a match.
-  var depth = depthA;
+  let depth = depthA;
   while (depth--) {
     if (instA === instB || instA === instB.alternate) {
       return instA;
@@ -84,12 +84,12 @@ export function getParentInstance(inst) {
  * Simulates the traversal of a two-phase, capture/bubble event dispatch.
  */
 export function traverseTwoPhase(inst, fn, arg) {
-  var path = [];
+  const path = [];
   while (inst) {
     path.push(inst);
     inst = getParent(inst);
   }
-  var i;
+  let i;
   for (i = path.length; i-- > 0; ) {
     fn(path[i], 'captured', arg);
   }

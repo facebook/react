@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactErrorUtils;
+let ReactErrorUtils;
 
 describe('ReactErrorUtils', () => {
   beforeEach(() => {
@@ -18,8 +18,8 @@ describe('ReactErrorUtils', () => {
   });
 
   it(`it should rethrow caught errors`, () => {
-    var err = new Error('foo');
-    var callback = function() {
+    const err = new Error('foo');
+    const callback = function() {
       throw err;
     };
     ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
@@ -32,7 +32,7 @@ describe('ReactErrorUtils', () => {
   });
 
   it(`should call the callback the passed arguments`, () => {
-    var callback = jest.fn();
+    const callback = jest.fn();
     ReactErrorUtils.invokeGuardedCallback(
       'foo',
       callback,
@@ -44,7 +44,7 @@ describe('ReactErrorUtils', () => {
   });
 
   it(`should call the callback with the provided context`, () => {
-    var context = {didCall: false};
+    const context = {didCall: false};
     ReactErrorUtils.invokeGuardedCallback(
       'foo',
       function() {
@@ -72,7 +72,7 @@ describe('ReactErrorUtils', () => {
   });
 
   it(`should return false from clearCaughtError if no error was thrown`, () => {
-    var callback = jest.fn();
+    const callback = jest.fn();
     ReactErrorUtils.invokeGuardedCallback('foo', callback, null);
     expect(ReactErrorUtils.hasCaughtError()).toBe(false);
     expect(ReactErrorUtils.clearCaughtError).toThrow('no error was captured');
@@ -193,8 +193,8 @@ describe('ReactErrorUtils', () => {
     ReactErrorUtils = require('shared/ReactErrorUtils').default;
 
     try {
-      var err = new Error('foo');
-      var callback = function() {
+      const err = new Error('foo');
+      const callback = function() {
         throw err;
       };
       ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
