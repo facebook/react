@@ -9,7 +9,17 @@
 
 import invariant from 'fbjs/lib/invariant';
 
-let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
+let invokeGuardedCallback = function<A, B, C, D, E, F, Context>(
+  name: string | null,
+  func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
+  context: Context,
+  a: A,
+  b: B,
+  c: C,
+  d: D,
+  e: E,
+  f: F,
+) {
   this._hasCaughtError = false;
   this._caughtError = null;
   const funcArgs = Array.prototype.slice.call(arguments, 3);
@@ -51,16 +61,16 @@ if (__DEV__) {
   ) {
     const fakeNode = document.createElement('react');
 
-    const invokeGuardedCallbackDev = function(
-      name,
-      func,
-      context,
-      a,
-      b,
-      c,
-      d,
-      e,
-      f,
+    const invokeGuardedCallbackDev = function<A, B, C, D, E, F, Context>(
+      name: string | null,
+      func: (a: A, b: B, c: C, d: D, e: E, f: F) => void,
+      context: Context,
+      a: A,
+      b: B,
+      c: C,
+      d: D,
+      e: E,
+      f: F,
     ) {
       // If document doesn't exist we know for sure we will crash in this method
       // when we call document.createEvent(). However this can cause confusing
