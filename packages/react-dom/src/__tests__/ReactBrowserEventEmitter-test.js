@@ -65,7 +65,12 @@ describe('ReactBrowserEventEmitter', () => {
     ReactDOM = require('react-dom');
     ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
-    TapEventPlugin = require('../events/TapEventPlugin').default;
+    /**
+     * used ../events/TapEventPlugin by origin test,
+     * change it to use the public modules react-dom/src/events/TapEventPlugin
+     * to instead.
+     */
+    TapEventPlugin = require('react-dom/src/events/TapEventPlugin').default;
 
     container = document.createElement('div');
 
@@ -354,8 +359,10 @@ describe('ReactBrowserEventEmitter', () => {
     expect(idCallOrder[0]).toEqual(CHILD);
   });
 
-  // The onTouchTap is ignore ?
-
+  /**
+   * The onTouchTap inject is ignore future,
+   * we should always test the deprecated message correct.
+   */
   it('should infer onTouchTap from a touchStart/End', () => {
     putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
