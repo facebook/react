@@ -14,7 +14,7 @@ import './ReactNativeInjection';
 
 // TODO: direct imports like some-package/src/* are bad. Fix me.
 import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
-import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import TouchHistoryMath from 'events/TouchHistoryMath';
 import * as ReactGlobalSharedState from 'shared/ReactGlobalSharedState';
