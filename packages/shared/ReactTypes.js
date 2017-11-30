@@ -30,12 +30,12 @@ export type ReactCall = {
   children: any,
   // This should be a more specific CallHandler
   handler: (props: any, returns: Array<mixed>) => ReactNodeList,
-  props: any,
+  props: any
 };
 
 export type ReactReturn = {
   $$typeof: Symbol | number,
-  value: mixed,
+  value: mixed
 };
 
 export type ReactPortal = {
@@ -44,5 +44,5 @@ export type ReactPortal = {
   containerInfo: any,
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
-  implementation: any,
+  implementation: any
 };

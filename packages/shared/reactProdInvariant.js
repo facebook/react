@@ -31,7 +31,7 @@ function reactProdInvariant(code: string): void {
     ' for the full message or use the non-minified dev environment' +
     ' for full errors and additional helpful warnings.';
 
-  var error: Error & {framesToPop?: number} = new Error(message);
+  var error: Error & { framesToPop?: number } = new Error(message);
   error.name = 'Invariant Violation';
   error.framesToPop = 1; // we don't care about reactProdInvariant's own frame
 

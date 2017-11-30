@@ -14,12 +14,13 @@
  * environment.
  */
 
-import type {Fiber} from 'react-reconciler/src/ReactFiber';
-import type {UpdateQueue} from 'react-reconciler/src/ReactFiberUpdateQueue';
+import type { Fiber } from 'react-reconciler/src/ReactFiber';
+import type { UpdateQueue } from 'react-reconciler/src/ReactFiberUpdateQueue';
 
 import ReactFiberReconciler from 'react-reconciler';
-import {enablePersistentReconciler} from 'shared/ReactFeatureFlags';
+import { enablePersistentReconciler } from 'shared/ReactFeatureFlags';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
+import * as ReactPortal from 'shared/ReactPortal';
 import emptyObject from 'fbjs/lib/emptyObject';
 import expect from 'expect';
 
@@ -27,15 +28,15 @@ const UPDATE_SIGNAL = {};
 
 var scheduledCallback = null;
 
-type Container = {rootID: string, children: Array<Instance | TextInstance>};
-type Props = {prop: any, hidden?: boolean};
+type Container = { rootID: string, children: Array<Instance | TextInstance> };
+type Props = { prop: any, hidden?: boolean };
 type Instance = {|
   type: string,
   id: number,
   children: Array<Instance | TextInstance>,
-  prop: any,
+  prop: any
 |};
-type TextInstance = {|text: string, id: number|};
+type TextInstance = {| text: string, id: number |};
 
 var instanceCounter = 0;
 
@@ -43,7 +44,7 @@ var failInBeginPhase = false;
 
 function appendChild(
   parentInstance: Instance | Container,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance
 ): void {
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
@@ -55,7 +56,7 @@ function appendChild(
 function insertBefore(
   parentInstance: Instance | Container,
   child: Instance | TextInstance,
-  beforeChild: Instance | TextInstance,
+  beforeChild: Instance | TextInstance
 ): void {
   const index = parentInstance.children.indexOf(child);
   if (index !== -1) {
@@ -70,7 +71,7 @@ function insertBefore(
 
 function removeChild(
   parentInstance: Instance | Container,
-  child: Instance | TextInstance,
+  child: Instance | TextInstance
 ): void {
   const index = parentInstance.children.indexOf(child);
   if (index === -1) {
@@ -105,13 +106,13 @@ var SharedHostConfig = {
       prop: props.prop,
     };
     // Hide from unit tests
-    Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+    Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
     return inst;
   },
 
   appendInitialChild(
     parentInstance: Instance,
-    child: Instance | TextInstance,
+    child: Instance | TextInstance
   ): void {
     parentInstance.children.push(child);
   },
@@ -119,7 +120,7 @@ var SharedHostConfig = {
   finalizeInitialChildren(
     domElement: Instance,
     type: string,
-    props: Props,
+    props: Props
   ): boolean {
     return false;
   },
@@ -128,7 +129,7 @@ var SharedHostConfig = {
     instance: Instance,
     type: string,
     oldProps: Props,
-    newProps: Props,
+    newProps: Props
   ): null | {} {
     return UPDATE_SIGNAL;
   },
@@ -147,11 +148,11 @@ var SharedHostConfig = {
     text: string,
     rootContainerInstance: Container,
     hostContext: Object,
-    internalInstanceHandle: Object,
+    internalInstanceHandle: Object
   ): TextInstance {
-    var inst = {text: text, id: instanceCounter++};
+    var inst = { text: text, id: instanceCounter++ };
     // Hide from unit tests
-    Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
+    Object.defineProperty(inst, 'id', { value: inst.id, enumerable: false });
     return inst;
   },
 
@@ -159,7 +160,7 @@ var SharedHostConfig = {
     if (scheduledCallback) {
       throw new Error(
         'Scheduling a callback twice is excessive. Instead, keep track of ' +
-          'whether the callback has already been scheduled.',
+          'whether the callback has already been scheduled.'
       );
     }
     scheduledCallback = callback;
@@ -194,7 +195,7 @@ var NoopRenderer = ReactFiberReconciler({
       updatePayload: Object,
       type: string,
       oldProps: Props,
-      newProps: Props,
+      newProps: Props
     ): void {
       instance.prop = newProps.prop;
     },
@@ -202,7 +203,7 @@ var NoopRenderer = ReactFiberReconciler({
     commitTextUpdate(
       textInstance: TextInstance,
       oldText: string,
-      newText: string,
+      newText: string
     ): void {
       textInstance.text = newText;
     },
@@ -230,7 +231,7 @@ var PersistentNoopRenderer = enablePersistentReconciler
           newProps: Props,
           internalInstanceHandle: Object,
           keepChildren: boolean,
-          recyclableInstance: null | Instance,
+          recyclableInstance: null | Instance
         ): Instance {
           const clone = {
             id: instance.id,
@@ -246,26 +247,26 @@ var PersistentNoopRenderer = enablePersistentReconciler
         },
 
         createContainerChildSet(
-          container: Container,
+          container: Container
         ): Array<Instance | TextInstance> {
           return [];
         },
 
         appendChildToContainerChildSet(
           childSet: Array<Instance | TextInstance>,
-          child: Instance | TextInstance,
+          child: Instance | TextInstance
         ): void {
           childSet.push(child);
         },
 
         finalizeContainerChildren(
           container: Container,
-          newChildren: Array<Instance | TextInstance>,
+          newChildren: Array<Instance | TextInstance>
         ): void {},
 
         replaceContainerChildren(
           container: Container,
-          newChildren: Array<Instance | TextInstance>,
+          newChildren: Array<Instance | TextInstance>
         ): void {
           container.children = newChildren;
         },
@@ -318,6 +319,14 @@ var ReactNoop = {
     }
   },
 
+  createPortal(
+    children: ReactNodeList,
+    container: Container,
+    key: ?string = null
+  ) {
+    return ReactPortal.createPortal(children, container, null, key);
+  },
+
   // Shortcut for testing a single root
   render(element: React$Element<any>, callback: ?Function) {
     ReactNoop.renderToRootWithID(element, DEFAULT_ROOT_ID, callback);
@@ -326,11 +335,11 @@ var ReactNoop = {
   renderToRootWithID(
     element: React$Element<any>,
     rootID: string,
-    callback: ?Function,
+    callback: ?Function
   ) {
     let root = roots.get(rootID);
     if (!root) {
-      const container = {rootID: rootID, children: []};
+      const container = { rootID: rootID, children: [] };
       rootContainers.set(rootID, container);
       root = NoopRenderer.createContainer(container, false);
       roots.set(rootID, root);
@@ -341,16 +350,16 @@ var ReactNoop = {
   renderToPersistentRootWithID(
     element: React$Element<any>,
     rootID: string,
-    callback: ?Function,
+    callback: ?Function
   ) {
     if (PersistentNoopRenderer === null) {
       throw new Error(
-        'Enable ReactFeatureFlags.enablePersistentReconciler to use it in tests.',
+        'Enable ReactFeatureFlags.enablePersistentReconciler to use it in tests.'
       );
     }
     let root = persistentRoots.get(rootID);
     if (!root) {
-      const container = {rootID: rootID, children: []};
+      const container = { rootID: rootID, children: [] };
       rootContainers.set(rootID, container);
       root = PersistentNoopRenderer.createContainer(container, false);
       persistentRoots.set(rootID, root);
@@ -369,7 +378,7 @@ var ReactNoop = {
   },
 
   findInstance(
-    componentOrElement: Element | ?React$Component<any, any>,
+    componentOrElement: Element | ?React$Component<any, any>
   ): null | Instance | TextInstance {
     if (componentOrElement == null) {
       return null;
@@ -401,7 +410,7 @@ var ReactNoop = {
   },
 
   flushAndYield(
-    unitsOfWork: number = Infinity,
+    unitsOfWork: number = Infinity
   ): Generator<Array<mixed>, void, void> {
     return flushUnitsOfWork(unitsOfWork);
   },
@@ -503,7 +512,7 @@ var ReactNoop = {
         '  '.repeat(depth + 1) + '~',
         firstUpdate && firstUpdate.partialState,
         firstUpdate.callback ? 'with callback' : '',
-        '[' + firstUpdate.expirationTime + ']',
+        '[' + firstUpdate.expirationTime + ']'
       );
       var next;
       while ((next = firstUpdate.next)) {
@@ -511,7 +520,7 @@ var ReactNoop = {
           '  '.repeat(depth + 1) + '~',
           next.partialState,
           next.callback ? 'with callback' : '',
-          '[' + firstUpdate.expirationTime + ']',
+          '[' + firstUpdate.expirationTime + ']'
         );
       }
     }
@@ -522,7 +531,7 @@ var ReactNoop = {
           '- ' +
           // need to explicitly coerce Symbol to a string
           (fiber.type ? fiber.type.name || fiber.type.toString() : '[root]'),
-        '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']',
+        '[' + fiber.expirationTime + (fiber.pendingProps ? '*' : '') + ']'
       );
       if (fiber.updateQueue) {
         logUpdateQueue(fiber.updateQueue, depth);
