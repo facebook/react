@@ -85,7 +85,7 @@ Component.prototype.forceUpdate = function(callback) {
  * modern base class. Instead, we define a getter that warns if it's accessed.
  */
 if (__DEV__) {
-  var deprecatedAPIs = {
+  const deprecatedAPIs = {
     isMounted: [
       'isMounted',
       'Instead, make sure to clean up subscriptions and pending requests in ' +
@@ -97,7 +97,7 @@ if (__DEV__) {
         'https://github.com/facebook/react/issues/3236).',
     ],
   };
-  var defineDeprecationWarning = function(methodName, info) {
+  const defineDeprecationWarning = function(methodName, info) {
     Object.defineProperty(Component.prototype, methodName, {
       get: function() {
         lowPriorityWarning(
@@ -110,7 +110,7 @@ if (__DEV__) {
       },
     });
   };
-  for (var fnName in deprecatedAPIs) {
+  for (const fnName in deprecatedAPIs) {
     if (deprecatedAPIs.hasOwnProperty(fnName)) {
       defineDeprecationWarning(fnName, deprecatedAPIs[fnName]);
     }
@@ -132,7 +132,7 @@ function PureComponent(props, context, updater) {
 
 function ComponentDummy() {}
 ComponentDummy.prototype = Component.prototype;
-var pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
+const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
 pureComponentPrototype.constructor = PureComponent;
 // Avoid an extra prototype jump for these methods.
 Object.assign(pureComponentPrototype, Component.prototype);
@@ -148,7 +148,7 @@ function AsyncComponent(props, context, updater) {
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-var asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
+const asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
 asyncComponentPrototype.constructor = AsyncComponent;
 // Avoid an extra prototype jump for these methods.
 Object.assign(asyncComponentPrototype, Component.prototype);

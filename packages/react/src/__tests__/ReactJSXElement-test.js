@@ -9,12 +9,12 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactJSXElement', () => {
-  var Component;
+  let Component;
 
   beforeEach(() => {
     jest.resetModules();
@@ -30,38 +30,38 @@ describe('ReactJSXElement', () => {
   });
 
   it('returns a complete element according to spec', () => {
-    var element = <Component />;
+    const element = <Component />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {};
+    const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
 
   it('allows a lower-case to be passed as the string type', () => {
-    var element = <div />;
+    const element = <div />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {};
+    const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
 
   it('allows a string to be passed as the type', () => {
-    var TagName = 'div';
-    var element = <TagName />;
+    const TagName = 'div';
+    const element = <TagName />;
     expect(element.type).toBe('div');
     expect(element.key).toBe(null);
     expect(element.ref).toBe(null);
-    var expectation = {};
+    const expectation = {};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
 
   it('returns an immutable element', () => {
-    var element = <Component />;
+    const element = <Component />;
     if (__DEV__) {
       expect(() => (element.type = 'div')).toThrow();
     } else {
@@ -70,54 +70,54 @@ describe('ReactJSXElement', () => {
   });
 
   it('does not reuse the object that is spread into props', () => {
-    var config = {foo: 1};
-    var element = <Component {...config} />;
+    const config = {foo: 1};
+    const element = <Component {...config} />;
     expect(element.props.foo).toBe(1);
     config.foo = 2;
     expect(element.props.foo).toBe(1);
   });
 
   it('extracts key and ref from the rest of the props', () => {
-    var element = <Component key="12" ref="34" foo="56" />;
+    const element = <Component key="12" ref="34" foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe('34');
-    var expectation = {foo: '56'};
+    const expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
 
   it('coerces the key to a string', () => {
-    var element = <Component key={12} foo="56" />;
+    const element = <Component key={12} foo="56" />;
     expect(element.type).toBe(Component);
     expect(element.key).toBe('12');
     expect(element.ref).toBe(null);
-    var expectation = {foo: '56'};
+    const expectation = {foo: '56'};
     Object.freeze(expectation);
     expect(element.props).toEqual(expectation);
   });
 
   it('merges JSX children onto the children prop', () => {
-    var a = 1;
-    var element = <Component children="text">{a}</Component>;
+    const a = 1;
+    const element = <Component children="text">{a}</Component>;
     expect(element.props.children).toBe(a);
   });
 
   it('does not override children if no JSX children are provided', () => {
-    var element = <Component children="text" />;
+    const element = <Component children="text" />;
     expect(element.props.children).toBe('text');
   });
 
   it('overrides children if null is provided as a JSX child', () => {
-    var element = <Component children="text">{null}</Component>;
+    const element = <Component children="text">{null}</Component>;
     expect(element.props.children).toBe(null);
   });
 
   it('overrides children if undefined is provided as an argument', () => {
-    var element = <Component children="text">{undefined}</Component>;
+    const element = <Component children="text">{undefined}</Component>;
     expect(element.props.children).toBe(undefined);
 
-    var element2 = React.cloneElement(
+    const element2 = React.cloneElement(
       <Component children="text" />,
       {},
       undefined,
@@ -126,10 +126,10 @@ describe('ReactJSXElement', () => {
   });
 
   it('merges JSX children onto the children prop in an array', () => {
-    var a = 1;
-    var b = 2;
-    var c = 3;
-    var element = (
+    const a = 1;
+    const b = 2;
+    const c = 3;
+    const element = (
       <Component>
         {a}
         {b}
@@ -149,7 +149,7 @@ describe('ReactJSXElement', () => {
       }
     }
 
-    var element = <StaticMethodComponent />;
+    const element = <StaticMethodComponent />;
     expect(element.type.someStaticMethod()).toBe('someReturnValue');
   });
 
@@ -166,16 +166,16 @@ describe('ReactJSXElement', () => {
   });
 
   it('is indistinguishable from a plain object', () => {
-    var element = <div className="foo" />;
-    var object = {};
+    const element = <div className="foo" />;
+    const object = {};
     expect(element.constructor).toBe(object.constructor);
   });
 
   it('should use default prop value when removing a prop', () => {
     Component.defaultProps = {fruit: 'persimmon'};
 
-    var container = document.createElement('div');
-    var instance = ReactDOM.render(<Component fruit="mango" />, container);
+    const container = document.createElement('div');
+    const instance = ReactDOM.render(<Component fruit="mango" />, container);
     expect(instance.props.fruit).toBe('mango');
 
     ReactDOM.render(<Component />, container);
@@ -190,10 +190,12 @@ describe('ReactJSXElement', () => {
     }
     NormalizingComponent.defaultProps = {prop: 'testKey'};
 
-    var instance = ReactTestUtils.renderIntoDocument(<NormalizingComponent />);
+    const instance = ReactTestUtils.renderIntoDocument(
+      <NormalizingComponent />,
+    );
     expect(instance.props.prop).toBe('testKey');
 
-    var inst2 = ReactTestUtils.renderIntoDocument(
+    const inst2 = ReactTestUtils.renderIntoDocument(
       <NormalizingComponent prop={null} />,
     );
     expect(inst2.props.prop).toBe(null);
