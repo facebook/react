@@ -115,14 +115,14 @@ const ReactErrorUtils = {
 };
 
 let invokeGuardedCallback = function(name, func, context, a, b, c, d, e, f) {
-  ReactErrorUtils._hasCaughtError = false;
-  ReactErrorUtils._caughtError = null;
+  this._hasCaughtError = false;
+  this._caughtError = null;
   const funcArgs = Array.prototype.slice.call(arguments, 3);
   try {
     func.apply(context, funcArgs);
   } catch (error) {
-    ReactErrorUtils._caughtError = error;
-    ReactErrorUtils._hasCaughtError = true;
+    this._caughtError = error;
+    this._hasCaughtError = true;
   }
 };
 
@@ -261,11 +261,11 @@ if (__DEV__) {
               'See https://fb.me/react-crossorigin-error for more information.',
           );
         }
-        ReactErrorUtils._hasCaughtError = true;
-        ReactErrorUtils._caughtError = error;
+        this._hasCaughtError = true;
+        this._caughtError = error;
       } else {
-        ReactErrorUtils._hasCaughtError = false;
-        ReactErrorUtils._caughtError = null;
+        this._hasCaughtError = false;
+        this._caughtError = null;
       }
 
       // Remove our event listeners
