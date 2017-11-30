@@ -52,7 +52,6 @@ function injectDOMPropertyConfig(domPropertyConfig) {
 
     var propertyInfo = {
       attributeName: lowerCased,
-      propertyName: propName,
 
       mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
       hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
@@ -109,9 +108,6 @@ export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
  *
  * attributeName:
  *   Used when rendering markup or with `*Attribute()`.
- * propertyName:
- *   Used on DOM node instances. (This includes properties that mutate due to
- *   external factors.)
  * mustUseProperty:
  *   Whether the property must be accessed and mutated as an object property.
  * hasBooleanValue:

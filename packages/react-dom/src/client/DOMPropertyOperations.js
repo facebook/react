@@ -75,7 +75,7 @@ export function getValueForProperty(node, name, expected) {
     var propertyInfo = getPropertyInfo(name);
     if (propertyInfo) {
       if (propertyInfo.mustUseProperty) {
-        return node[propertyInfo.propertyName];
+        return node[name];
       } else {
         var attributeName = propertyInfo.attributeName;
 
@@ -163,7 +163,7 @@ export function setValueForProperty(node, name, value) {
     } else if (propertyInfo.mustUseProperty) {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
-      node[propertyInfo.propertyName] = value;
+      node[name] = value;
     } else {
       var attributeName = propertyInfo.attributeName;
       var namespace = getAttributeNamespace(name);
@@ -231,11 +231,10 @@ export function deleteValueForProperty(node, name) {
   var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
     if (propertyInfo.mustUseProperty) {
-      var propName = propertyInfo.propertyName;
       if (propertyInfo.hasBooleanValue) {
-        node[propName] = false;
+        node[name] = false;
       } else {
-        node[propName] = '';
+        node[name] = '';
       }
     } else {
       node.removeAttribute(propertyInfo.attributeName);
