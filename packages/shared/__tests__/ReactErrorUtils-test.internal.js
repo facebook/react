@@ -176,30 +176,37 @@ describe('ReactErrorUtils', () => {
 
   it(`can be shimmed`, () => {
     const ops = [];
-    // Override the original invokeGuardedCallback
-    ReactErrorUtils.injection.injectErrorUtils({
-      invokeGuardedCallback(name, func, context, a) {
-        ops.push(a);
-        try {
-          func.call(context, a);
-        } catch (error) {
-          this._hasCaughtError = true;
-          this._caughtError = error;
-        }
-      },
-    });
-
-    var err = new Error('foo');
-    var callback = function() {
-      throw err;
-    };
-    ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
-      'foo',
-      callback,
-      null,
-      'somearg',
+    jest.resetModules();
+    jest.mock(
+      'shared/invokeGuardedCallback',
+      () =>
+        function invokeGuardedCallback(name, func, context, a) {
+          ops.push(a);
+          try {
+            func.call(context, a);
+          } catch (error) {
+            this._hasCaughtError = true;
+            this._caughtError = error;
+          }
+        },
     );
-    expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
-    expect(ops).toEqual(['somearg']);
+    ReactErrorUtils = require('shared/ReactErrorUtils').default;
+
+    try {
+      var err = new Error('foo');
+      var callback = function() {
+        throw err;
+      };
+      ReactErrorUtils.invokeGuardedCallbackAndCatchFirstError(
+        'foo',
+        callback,
+        null,
+        'somearg',
+      );
+      expect(() => ReactErrorUtils.rethrowCaughtError()).toThrow(err);
+      expect(ops).toEqual(['somearg']);
+    } finally {
+      jest.unmock('shared/invokeGuardedCallback');
+    }
   });
 });

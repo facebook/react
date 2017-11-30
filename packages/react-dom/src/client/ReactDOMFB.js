@@ -9,7 +9,6 @@
 
 import * as ReactFiberTreeReflection from 'react-reconciler/reflection';
 import * as ReactInstanceMap from 'shared/ReactInstanceMap';
-import ReactErrorUtils from 'shared/ReactErrorUtils';
 import {addUserTimingListener} from 'shared/ReactFeatureFlags';
 
 import ReactDOM from './ReactDOM';
@@ -22,7 +21,6 @@ Object.assign(
   {
     // These are real internal dependencies that are trickier to remove:
     ReactBrowserEventEmitter,
-    ReactErrorUtils,
     ReactFiberTreeReflection,
     ReactDOMComponentTree,
     ReactInstanceMap,
