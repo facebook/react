@@ -12,6 +12,9 @@
 let React;
 let ReactDOM;
 let ReactTestUtils;
+let EventPluginHub;
+let EventPluginRegistry;
+let TapEventPlugin;
 
 let CHILD, PARENT, GRANDPARENT;
 let CHILD_C;
@@ -26,9 +29,10 @@ let container;
 let idCallOrder;
 
 const LISTENER = jest.fn();
-var ON_CLICK_KEY = 'onClick';
-var ON_CHANGE_KEY = 'onChange';
-var ON_MOUSE_ENTER_KEY = 'onMouseEnter';
+const ON_CLICK_KEY = 'onClick';
+const ON_CHANGE_KEY = 'onChange';
+const ON_TOUCH_TAP_KEY = 'onTouchTap';
+const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
 
 let putListener, getListener, deleteAllListeners;
 
@@ -54,9 +58,12 @@ describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
     LISTENER.mockClear();
 
+    EventPluginHub = require('events/EventPluginHub');
+    EventPluginRegistry = require('events/EventPluginRegistry');
     React = require('react');
     ReactDOM = require('react-dom');
     ReactTestUtils = require('react-dom/test-utils');
+    TapEventPlugin = require('../events/TapEventPlugin').default;
 
     container = document.createElement('div');
 
@@ -126,11 +133,23 @@ describe('ReactBrowserEventEmitter', () => {
     };
 
     idCallOrder = [];
+    tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
+    spyOnDev(console, 'warn');
+    EventPluginHub.injection.injectEventPluginsByName({
+      TapEventPlugin: TapEventPlugin
+    });
   });
 
   afterEach(() => {
     container = null;
     idCallOrder = [];
+
+    if (__DEV__) {
+      expect(console.warn.calls.count()).toBe(1);
+      expect(console.warn.calls.argsFor(0)[0]).toContain(
+        'Injecting custom event plugins (TapEventPlugin) is deprecated'
+      );
+    }
   });
 
   it('should store a listener correctly', () => {
@@ -158,9 +177,7 @@ describe('ReactBrowserEventEmitter', () => {
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
-  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
-    // Q: How do I setEnabled from public API ?
-  });
+  it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {});
 
   it('should bubble simply', () => {
     putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
@@ -324,46 +341,46 @@ describe('ReactBrowserEventEmitter', () => {
 
   // The onTouchTap is ignore ?
 
-  // it('should infer onTouchTap from a touchStart/End', () => {
-  // putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  //   ReactTestUtils.SimulateNative.touchStart(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchEnd(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   expect(idCallOrder.length).toBe(1);
-  //   expect(idCallOrder[0]).toBe(CHILD);
-  // });
+  it('should infer onTouchTap from a touchStart/End', () => {
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
+    ReactTestUtils.SimulateNative.touchStart(
+      CHILD,
+      ReactTestUtils.nativeTouchData(0, 0)
+    );
+    ReactTestUtils.SimulateNative.touchEnd(
+      CHILD,
+      ReactTestUtils.nativeTouchData(0, 0)
+    );
+    expect(idCallOrder.length).toBe(1);
+    expect(idCallOrder[0]).toEqual(CHILD);
+  });
 
-  // it('should infer onTouchTap from when dragging below threshold', () => {
-  //   putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  // ReactTestUtils.SimulateNative.touchStart(
-  //   CHILD,
-  //   ReactTestUtils.nativeTouchData(0, 0)
-  // );
-  // ReactTestUtils.SimulateNative.touchEnd(
-  //   CHILD,
-  //   ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
-  // );
-  // expect(idCallOrder.length).toBe(1);
-  // expect(idCallOrder[0]).toBe(CHILD);
-  // });
+  it('should infer onTouchTap from when dragging below threshold', () => {
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
+    ReactTestUtils.SimulateNative.touchStart(
+      CHILD,
+      ReactTestUtils.nativeTouchData(0, 0)
+    );
+    ReactTestUtils.SimulateNative.touchEnd(
+      CHILD,
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
+    );
+    expect(idCallOrder.length).toBe(1);
+    expect(idCallOrder[0]).toEqual(CHILD);
+  });
 
-  // it('should not onTouchTap from when dragging beyond threshold', () => {
-  //   putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
-  //   ReactTestUtils.SimulateNative.touchStart(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, 0)
-  //   );
-  //   ReactTestUtils.SimulateNative.touchEnd(
-  //     CHILD,
-  //     ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
-  //   );
-  //   expect(idCallOrder.length).toBe(0);
-  // });
+  it('should not onTouchTap from when dragging beyond threshold', () => {
+    putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
+    ReactTestUtils.SimulateNative.touchStart(
+      CHILD,
+      ReactTestUtils.nativeTouchData(0, 0)
+    );
+    ReactTestUtils.SimulateNative.touchEnd(
+      CHILD,
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
+    );
+    expect(idCallOrder.length).toBe(0);
+  });
 
   // it('should listen to events only once', () => {
   //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
