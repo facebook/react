@@ -20,14 +20,6 @@ var idCallOrder;
 var recordID = function(id) {
   idCallOrder.push(id);
 };
-var recordIDAndStopPropagation = function(id, event) {
-  recordID(id);
-  event.stopPropagation();
-};
-var recordIDAndReturnFalse = function(id, event) {
-  recordID(id);
-  return false;
-};
 var LISTENER = jest.fn();
 var ON_TOUCH_TAP_KEY = 'onTouchTap';
 
