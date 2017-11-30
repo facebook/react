@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import '../shared/ReactDOMInjection';
 import ReactVersion from 'shared/ReactVersion';
 import invariant from 'fbjs/lib/invariant';
 
