@@ -129,7 +129,6 @@ const bundles = [
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
     ],
-    featureFlags: 'react-native-renderer/src/ReactNativeFeatureFlags',
   },
 
   /******* React Native RT *******/
@@ -156,7 +155,6 @@ const bundles = [
     entry: 'react-cs-renderer',
     global: 'ReactCSRenderer',
     externals: ['CSStatefulComponent'],
-    featureFlags: 'react-cs-renderer/src/ReactNativeCSFeatureFlags',
   },
 
   /******* React Test Renderer *******/

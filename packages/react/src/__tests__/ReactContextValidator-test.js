@@ -15,10 +15,10 @@
 
 'use strict';
 
-var PropTypes;
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let PropTypes;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactContextValidator', () => {
   function normalizeCodeLocInfo(str) {
@@ -64,16 +64,16 @@ describe('ReactContextValidator', () => {
       bar: PropTypes.number,
     };
 
-    var instance = ReactTestUtils.renderIntoDocument(
+    const instance = ReactTestUtils.renderIntoDocument(
       <ComponentInFooBarContext />,
     );
     expect(instance.refs.child.context).toEqual({foo: 'abc'});
   });
 
   it('should pass next context to lifecycles', () => {
-    var actualComponentWillReceiveProps;
-    var actualShouldComponentUpdate;
-    var actualComponentWillUpdate;
+    let actualComponentWillReceiveProps;
+    let actualShouldComponentUpdate;
+    let actualComponentWillUpdate;
 
     class Parent extends React.Component {
       getChildContext() {
@@ -115,7 +115,7 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.string,
     };
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentWillReceiveProps).toEqual({foo: 'def'});
@@ -124,7 +124,7 @@ describe('ReactContextValidator', () => {
   });
 
   it('should not pass previous context to lifecycles', () => {
-    var actualComponentDidUpdate;
+    let actualComponentDidUpdate;
 
     class Parent extends React.Component {
       getChildContext() {
@@ -154,7 +154,7 @@ describe('ReactContextValidator', () => {
       foo: PropTypes.string,
     };
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Parent foo="abc" />, container);
     ReactDOM.render(<Parent foo="def" />, container);
     expect(actualComponentDidUpdate).toHaveLength(2);
@@ -367,7 +367,7 @@ describe('ReactContextValidator', () => {
       }
     }
 
-    var childContext;
+    let childContext;
     class ChildContextConsumer extends React.Component {
       render() {
         childContext = this.context;
