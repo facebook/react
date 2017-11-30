@@ -43,7 +43,7 @@ const infiniteDeadline = {
 };
 
 const arePropsEqual = (oldProps: Props, newProps: Props): boolean => {
-  var key;
+  let key;
   for (key in newProps) {
     if (key === 'children') {
       // Skip special case.
