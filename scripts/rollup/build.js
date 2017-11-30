@@ -16,6 +16,7 @@ const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
 const sizes = require('./plugins/sizes-plugin');
+const useForks = require('./plugins/use-forks-plugin');
 const Stats = require('./stats');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const syncReactDom = require('./sync').syncReactDom;
@@ -206,44 +207,6 @@ function isProductionBundleType(bundleType) {
     default:
       throw new Error(`Unknown type: ${bundleType}`);
   }
-}
-
-let resolveCache = new Map();
-function useForks(forks) {
-  let resolvedForks = {};
-  Object.keys(forks).forEach(srcModule => {
-    const targetModule = forks[srcModule];
-    resolvedForks[require.resolve(srcModule)] = require.resolve(targetModule);
-  });
-  return {
-    resolveId(importee, importer) {
-      if (!importer || !importee) {
-        return null;
-      }
-      let resolvedImportee = null;
-      let cacheKey = `${importer}:::${importee}`;
-      if (resolveCache.has(cacheKey)) {
-        // Avoid hitting file system if possible.
-        resolvedImportee = resolveCache.get(cacheKey);
-      } else {
-        try {
-          resolvedImportee = require.resolve(importee, {
-            paths: [path.dirname(importer)],
-          });
-        } catch (err) {
-          // Not our fault, let Rollup fail later.
-        }
-        if (resolvedImportee) {
-          resolveCache.set(cacheKey, resolvedImportee);
-        }
-      }
-      if (resolvedImportee && resolvedForks.hasOwnProperty(resolvedImportee)) {
-        // We found a fork!
-        return resolvedForks[resolvedImportee];
-      }
-      return null;
-    },
-  };
 }
 
 function getPlugins(
