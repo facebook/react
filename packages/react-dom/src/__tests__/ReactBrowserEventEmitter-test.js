@@ -14,9 +14,9 @@ let ReactTestUtils;
 let ReactBrowserEventEmitter;
 
 let CHILD, PARENT, GRANDPARENT;
-let CHILD_PROPS = {};
-let PARENT_PROPS = {};
-let GRANDPARENT_PROPS = {};
+let CHILD_PROPS;
+let PARENT_PROPS;
+let GRANDPARENT_PROPS;
 
 let container;
 let idCallOrder;
@@ -58,6 +58,9 @@ describe('ReactBrowserEventEmitter', () => {
     ReactTestUtils = require('react-dom/test-utils');
 
     container = document.createElement('div');
+    CHILD_PROPS = {};
+    PARENT_PROPS = {};
+    GRANDPARENT_PROPS = {};
 
     let instance;
 
