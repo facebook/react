@@ -120,15 +120,15 @@ function getDependencies(bundleType, entry) {
 
 // Hijacks some modules for optimization and integration reasons.
 function getForks(bundleType, entry) {
-  const shims = {};
+  const forks = {};
   Object.keys(forkedModules).forEach(srcModule => {
     const targetModule = forkedModules[srcModule](bundleType, entry);
     if (targetModule === null) {
       return;
     }
-    shims[srcModule] = targetModule;
+    forks[srcModule] = targetModule;
   });
-  return shims;
+  return forks;
 }
 
 function getImportSideEffects() {
