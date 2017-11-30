@@ -54,9 +54,6 @@ var DOMPropertyInjection = {
    * DOMPropertyNames: similar to DOMAttributeNames but for DOM properties.
    * Property names not specified use the normalized name.
    *
-   * DOMMutationMethods: Properties that require special mutation methods. If
-   * `value` is undefined, the mutation method should unset the property.
-   *
    * @param {object} domPropertyConfig the config as described above.
    */
   injectDOMPropertyConfig: function(domPropertyConfig) {
@@ -64,7 +61,6 @@ var DOMPropertyInjection = {
     var Properties = domPropertyConfig.Properties || {};
     var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
     var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-    var DOMMutationMethods = domPropertyConfig.DOMMutationMethods || {};
 
     for (var propName in Properties) {
       invariant(
@@ -83,7 +79,6 @@ var DOMPropertyInjection = {
         attributeName: lowerCased,
         attributeNamespace: null,
         propertyName: propName,
-        mutationMethod: null,
 
         mustUseProperty: checkMask(propConfig, Injection.MUST_USE_PROPERTY),
         hasBooleanValue: checkMask(propConfig, Injection.HAS_BOOLEAN_VALUE),
@@ -121,10 +116,6 @@ var DOMPropertyInjection = {
         propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
       }
 
-      if (DOMMutationMethods.hasOwnProperty(propName)) {
-        propertyInfo.mutationMethod = DOMMutationMethods[propName];
-      }
-
       // Downcase references to whitelist properties to check for membership
       // without case-sensitivity. This allows the whitelist to pick up
       // `allowfullscreen`, which should be written using the property configuration
@@ -154,9 +145,6 @@ export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
  * propertyName:
  *   Used on DOM node instances. (This includes properties that mutate due to
  *   external factors.)
- * mutationMethod:
- *   If non-null, used instead of the property or `setAttribute()` after
- *   initial render.
  * mustUseProperty:
  *   Whether the property must be accessed and mutated as an object property.
  * hasBooleanValue:

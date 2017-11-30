@@ -19,7 +19,7 @@ import * as inputValueTracking from './inputValueTracking';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
-    initialValue: ?string,
+    initialValue: string,
     initialChecked: ?boolean,
     controlled?: boolean,
   },
@@ -58,30 +58,14 @@ function isControlled(props) {
 
 export function getHostProps(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
-  var value = props.value;
   var checked = props.checked;
 
-  var hostProps = Object.assign(
-    {
-      // Make sure we set .type before any other properties (setting .value
-      // before .type means .value is lost in IE11 and below)
-      type: undefined,
-      // Make sure we set .step before .value (setting .value before .step
-      // means .value is rounded on mount, based upon step precision)
-      step: undefined,
-      // Make sure we set .min & .max before .value (to ensure proper order
-      // in corner cases such as min or max deriving from value, e.g. Issue #7170)
-      min: undefined,
-      max: undefined,
-    },
-    props,
-    {
-      defaultChecked: undefined,
-      defaultValue: undefined,
-      value: value != null ? value : node._wrapperState.initialValue,
-      checked: checked != null ? checked : node._wrapperState.initialChecked,
-    },
-  );
+  var hostProps = Object.assign({}, props, {
+    defaultChecked: undefined,
+    defaultValue: undefined,
+    value: undefined,
+    checked: checked != null ? checked : node._wrapperState.initialChecked,
+  });
 
   return hostProps;
 }
@@ -132,7 +116,7 @@ export function initWrapperState(element: Element, props: Object) {
     }
   }
 
-  var defaultValue = props.defaultValue;
+  var defaultValue = props.defaultValue == null ? '' : props.defaultValue;
   var node = ((element: any): InputWithWrapperState);
   node._wrapperState = {
     initialChecked:
@@ -215,54 +199,34 @@ export function updateWrapper(element: Element, props: Object) {
       // browsers typically do this as necessary, jsdom doesn't.
       node.value = '' + value;
     }
-  } else {
-    if (props.value == null && props.defaultValue != null) {
-      // In Chrome, assigning defaultValue to certain input types triggers input validation.
-      // For number inputs, the display value loses trailing decimal points. For email inputs,
-      // Chrome raises "The specified value <x> is not a valid email address".
-      //
-      // Here we check to see if the defaultValue has actually changed, avoiding these problems
-      // when the user is inputting text
-      //
-      // https://github.com/facebook/react/issues/7253
-      if (node.defaultValue !== '' + props.defaultValue) {
-        node.defaultValue = '' + props.defaultValue;
-      }
-    }
-    if (props.checked == null && props.defaultChecked != null) {
-      node.defaultChecked = !!props.defaultChecked;
-    }
+    synchronizeDefaultValue(node, props.type, value);
+  } else if (
+    props.hasOwnProperty('value') ||
+    props.hasOwnProperty('defaultValue')
+  ) {
+    synchronizeDefaultValue(node, props.type, props.defaultValue);
+  }
+
+  if (props.checked == null && props.defaultChecked != null) {
+    node.defaultChecked = !!props.defaultChecked;
   }
 }
 
 export function postMountWrapper(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
+  var initialValue = node._wrapperState.initialValue;
 
-  // Detach value from defaultValue. We won't do anything if we're working on
-  // submit or reset inputs as those values & defaultValues are linked. They
-  // are not resetable nodes so this operation doesn't matter and actually
-  // removes browser-default values (eg "Submit Query") when no value is
-  // provided.
+  if (props.value != null || props.defaultValue != null) {
+    // Do not assign value if it is already set. This prevents user text input
+    // from being lost during SSR hydration.
+    if (node.value === '') {
+      node.value = initialValue;
+    }
 
-  switch (props.type) {
-    case 'submit':
-    case 'reset':
-      break;
-    case 'color':
-    case 'date':
-    case 'datetime':
-    case 'datetime-local':
-    case 'month':
-    case 'time':
-    case 'week':
-      // This fixes the no-show issue on iOS Safari and Android Chrome:
-      // https://github.com/facebook/react/issues/7233
-      node.value = '';
-      node.value = node.defaultValue;
-      break;
-    default:
-      node.value = node.value;
-      break;
+    // value must be assigned before defaultValue. This fixes an issue where the
+    // visually displayed value of date inputs disappears on mobile Safari and Chrome:
+    // https://github.com/facebook/react/issues/7233
+    node.defaultValue = initialValue;
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -331,6 +295,32 @@ function updateNamedCousins(rootNode, props) {
       // was previously checked to update will cause it to be come re-checked
       // as appropriate.
       updateWrapper(otherNode, otherProps);
+    }
+  }
+}
+
+// In Chrome, assigning defaultValue to certain input types triggers input validation.
+// For number inputs, the display value loses trailing decimal points. For email inputs,
+// Chrome raises "The specified value <x> is not a valid email address".
+//
+// Here we check to see if the defaultValue has actually changed, avoiding these problems
+// when the user is inputting text
+//
+// https://github.com/facebook/react/issues/7253
+function synchronizeDefaultValue(
+  node: InputWithWrapperState,
+  type: ?string,
+  value: *,
+) {
+  if (
+    // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
+    (type !== 'number' || node.ownerDocument.activeElement !== node) &&
+    node.defaultValue !== '' + value
+  ) {
+    if (value != null) {
+      node.defaultValue = '' + value;
+    } else {
+      node.defaultValue = node._wrapperState.initialValue;
     }
   }
 }

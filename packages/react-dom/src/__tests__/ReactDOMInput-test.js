@@ -1249,15 +1249,20 @@ describe('ReactDOMInput', () => {
     var originalCreateElement = document.createElement;
     spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
       var el = originalCreateElement.apply(this, arguments);
+      var value = '';
+
       if (type === 'input') {
         Object.defineProperty(el, 'value', {
-          get: function() {},
-          set: function() {
-            log.push('set value');
+          get: function() {
+            return value;
+          },
+          set: function(val) {
+            value = '' + val;
+            log.push('set property value');
           },
         });
-        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name, value) {
-          log.push('set ' + name);
+        spyOnDevAndProd(el, 'setAttribute').and.callFake(function(name) {
+          log.push('set attribute ' + name);
         });
       }
       return el;
@@ -1267,14 +1272,14 @@ describe('ReactDOMInput', () => {
       <input value="0" type="range" min="0" max="100" step="1" />,
     );
     expect(log).toEqual([
-      'set type',
-      'set step',
-      'set min',
-      'set max',
-      'set value',
-      'set value',
-      'set checked',
-      'set checked',
+      'set attribute type',
+      'set attribute min',
+      'set attribute max',
+      'set attribute step',
+      'set property value',
+      'set attribute value',
+      'set attribute checked',
+      'set attribute checked',
     ]);
   });
 
@@ -1313,9 +1318,14 @@ describe('ReactDOMInput', () => {
     var originalCreateElement = document.createElement;
     spyOnDevAndProd(document, 'createElement').and.callFake(function(type) {
       var el = originalCreateElement.apply(this, arguments);
+      var value = '';
       if (type === 'input') {
         Object.defineProperty(el, 'value', {
+          get: function() {
+            return value;
+          },
           set: function(val) {
+            value = '' + val;
             log.push(`node.value = ${strify(val)}`);
           },
         });
@@ -1331,9 +1341,8 @@ describe('ReactDOMInput', () => {
     );
     expect(log).toEqual([
       'node.setAttribute("type", "date")',
+      'node.value = "1980-01-01"',
       'node.setAttribute("value", "1980-01-01")',
-      'node.value = ""',
-      'node.value = ""',
       'node.setAttribute("checked", "")',
       'node.setAttribute("checked", "")',
     ]);
@@ -1418,6 +1427,68 @@ describe('ReactDOMInput', () => {
       ReactTestUtils.SimulateNative.blur(node);
 
       expect(node.getAttribute('value')).toBe('1');
+    });
+  });
+
+  describe('setting a controlled input to undefined', () => {
+    var input;
+
+    beforeEach(() => {
+      class Input extends React.Component {
+        state = {value: 'first'};
+        render() {
+          return (
+            <input
+              onChange={e => this.setState({value: e.target.value})}
+              value={this.state.value}
+            />
+          );
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Input />);
+      input = ReactDOM.findDOMNode(stub);
+      ReactTestUtils.Simulate.change(input, {target: {value: 'latest'}});
+      ReactTestUtils.Simulate.change(input, {target: {value: undefined}});
+    });
+
+    it('reverts the value attribute to the initial value', () => {
+      expect(input.getAttribute('value')).toBe('first');
+    });
+
+    it('preserves the value property', () => {
+      expect(input.value).toBe('latest');
+    });
+  });
+
+  describe('setting a controlled input to null', () => {
+    var input;
+
+    beforeEach(() => {
+      class Input extends React.Component {
+        state = {value: 'first'};
+        render() {
+          return (
+            <input
+              onChange={e => this.setState({value: e.target.value})}
+              value={this.state.value}
+            />
+          );
+        }
+      }
+
+      var stub = ReactTestUtils.renderIntoDocument(<Input />);
+      input = ReactDOM.findDOMNode(stub);
+      ReactTestUtils.Simulate.change(input, {target: {value: 'latest'}});
+      ReactTestUtils.Simulate.change(input, {target: {value: null}});
+    });
+
+    it('reverts the value attribute to the initial value', () => {
+      expect(input.getAttribute('value')).toBe('first');
+    });
+
+    it('preserves the value property', () => {
+      expect(input.value).toBe('latest');
     });
   });
 });

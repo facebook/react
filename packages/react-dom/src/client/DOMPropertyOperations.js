@@ -73,8 +73,7 @@ export function getValueForProperty(node, name, expected) {
   if (__DEV__) {
     var propertyInfo = getPropertyInfo(name);
     if (propertyInfo) {
-      var mutationMethod = propertyInfo.mutationMethod;
-      if (mutationMethod || propertyInfo.mustUseProperty) {
+      if (propertyInfo.mustUseProperty) {
         return node[propertyInfo.propertyName];
       } else {
         var attributeName = propertyInfo.attributeName;
@@ -157,10 +156,7 @@ export function setValueForProperty(node, name, value) {
   var propertyInfo = getPropertyInfo(name);
 
   if (propertyInfo && shouldSetAttribute(name, value)) {
-    var mutationMethod = propertyInfo.mutationMethod;
-    if (mutationMethod) {
-      mutationMethod(node, value);
-    } else if (shouldIgnoreValue(propertyInfo, value)) {
+    if (shouldIgnoreValue(propertyInfo, value)) {
       deleteValueForProperty(node, name);
       return;
     } else if (propertyInfo.mustUseProperty) {
@@ -233,10 +229,7 @@ export function deleteValueForAttribute(node, name) {
 export function deleteValueForProperty(node, name) {
   var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
-    var mutationMethod = propertyInfo.mutationMethod;
-    if (mutationMethod) {
-      mutationMethod(node, undefined);
-    } else if (propertyInfo.mustUseProperty) {
+    if (propertyInfo.mustUseProperty) {
       var propName = propertyInfo.propertyName;
       if (propertyInfo.hasBooleanValue) {
         node[propName] = false;
