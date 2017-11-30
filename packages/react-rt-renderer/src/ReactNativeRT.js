@@ -19,7 +19,7 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import 'InitializeCore';
 import './ReactNativeRTEventEmitter';
 
-import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import * as ReactPortal from 'shared/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
 

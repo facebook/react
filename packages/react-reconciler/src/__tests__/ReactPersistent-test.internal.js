@@ -24,7 +24,7 @@ describe('ReactPersistent', () => {
 
     React = require('react');
     ReactNoop = require('react-noop-renderer');
-    ReactPortal = require('../ReactPortal');
+    ReactPortal = require('shared/ReactPortal');
   });
 
   const DEFAULT_ROOT_ID = 'persistent-test';

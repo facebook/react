@@ -21,7 +21,7 @@ import './ReactDOMClientInjection';
 
 import ReactFiberReconciler from 'react-reconciler';
 // TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactPortal from 'react-reconciler/src/ReactPortal';
+import * as ReactPortal from 'shared/ReactPortal';
 import ExecutionEnvironment from 'fbjs/lib/ExecutionEnvironment';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import * as ReactControlledComponent from 'events/ReactControlledComponent';
