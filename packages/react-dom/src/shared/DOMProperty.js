@@ -33,7 +33,6 @@ const HAS_STRING_BOOLEAN_VALUE = 0x40;
 
 function injectDOMPropertyConfig(domPropertyConfig) {
   var Properties = domPropertyConfig.Properties || {};
-  var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
   var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
 
   for (var propName in Properties) {
@@ -53,7 +52,6 @@ function injectDOMPropertyConfig(domPropertyConfig) {
 
     var propertyInfo = {
       attributeName: lowerCased,
-      attributeNamespace: null,
       propertyName: propName,
 
       mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
@@ -87,10 +85,6 @@ function injectDOMPropertyConfig(domPropertyConfig) {
       propertyInfo.attributeName = attributeName;
     }
 
-    if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-      propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-    }
-
     // Downcase references to whitelist properties to check for membership
     // without case-sensitivity. This allows the whitelist to pick up
     // `allowfullscreen`, which should be written using the property configuration
@@ -115,7 +109,6 @@ export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
  *
  * attributeName:
  *   Used when rendering markup or with `*Attribute()`.
- * attributeNamespace
  * propertyName:
  *   Used on DOM node instances. (This includes properties that mutate due to
  *   external factors.)
@@ -201,6 +194,25 @@ export function isReservedProp(name) {
   return RESERVED_PROPS.hasOwnProperty(name);
 }
 
+export function getAttributeNamespace(name) {
+  switch (name) {
+    case 'xlinkActuate':
+    case 'xlinkArcrole':
+    case 'xlinkHref':
+    case 'xlinkRole':
+    case 'xlinkShow':
+    case 'xlinkTitle':
+    case 'xlinkType':
+      return 'http://www.w3.org/1999/xlink';
+    case 'xmlBase':
+    case 'xmlLang':
+    case 'xmlSpace':
+      return 'http://www.w3.org/XML/1998/namespace';
+    default:
+      return null;
+  }
+}
+
 var HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
   // the `possibleStandardNames` module to ensure casing and incorrect
@@ -269,11 +281,6 @@ var HTMLDOMPropertyConfig = {
     htmlFor: 'for',
     httpEquiv: 'http-equiv',
   },
-};
-
-var NS = {
-  xlink: 'http://www.w3.org/1999/xlink',
-  xml: 'http://www.w3.org/XML/1998/namespace',
 };
 
 /**
@@ -385,18 +392,6 @@ var SVGDOMPropertyConfig = {
     autoReverse: 'autoReverse',
     externalResourcesRequired: 'externalResourcesRequired',
     preserveAlpha: 'preserveAlpha',
-  },
-  DOMAttributeNamespaces: {
-    xlinkActuate: NS.xlink,
-    xlinkArcrole: NS.xlink,
-    xlinkHref: NS.xlink,
-    xlinkRole: NS.xlink,
-    xlinkShow: NS.xlink,
-    xlinkTitle: NS.xlink,
-    xlinkType: NS.xlink,
-    xmlBase: NS.xml,
-    xmlLang: NS.xml,
-    xmlSpace: NS.xml,
   },
 };
 

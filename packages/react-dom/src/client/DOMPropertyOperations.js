@@ -10,6 +10,7 @@ import {
   ATTRIBUTE_NAME_START_CHAR,
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
+  getAttributeNamespace,
   getPropertyInfo,
   shouldSetAttribute,
 } from '../shared/DOMProperty';
@@ -165,7 +166,7 @@ export function setValueForProperty(node, name, value) {
       node[propertyInfo.propertyName] = value;
     } else {
       var attributeName = propertyInfo.attributeName;
-      var namespace = propertyInfo.attributeNamespace;
+      var namespace = getAttributeNamespace(name);
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
       if (namespace) {
