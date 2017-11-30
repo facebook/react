@@ -24,7 +24,11 @@ function isInDocument(node) {
  */
 
 export function hasSelectionCapabilities(elem) {
-  const nodeName = elem && elem.nodeName && elem.nodeName.toLowerCase();
+  if (!elem || elem.window === elem) {
+    return false;
+  }
+
+  const nodeName = elem.nodeName && elem.nodeName.toLowerCase();
   return (
     nodeName &&
     ((nodeName === 'input' && elem.type === 'text') ||

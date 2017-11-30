@@ -16,6 +16,10 @@ type WrapperState = {_valueTracker?: ?ValueTracker};
 type ElementWithValueTracker = HTMLInputElement & WrapperState;
 
 function isCheckable(elem: HTMLInputElement) {
+  if (elem.window === elem) {
+    return false;
+  }
+
   const type = elem.type;
   const nodeName = elem.nodeName;
   return (
