@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactNativeCS;
+let React;
+let ReactNativeCS;
 
 jest.mock('shared/ReactFeatureFlags', () =>
   require('shared/forks/ReactFeatureFlags.native-cs'),
@@ -26,9 +26,9 @@ describe('ReactNativeCS', () => {
 
   it('should be able to create and render a native component', () => {
     const CSView = 'View';
-    var props = <CSView foo="test" />;
-    var state = ReactNativeCS.getInitialState({});
-    var stateUpdater = function() {};
+    const props = <CSView foo="test" />;
+    const state = ReactNativeCS.getInitialState({});
+    const stateUpdater = function() {};
     ReactNativeCS.render({props, state, stateUpdater});
   });
 });
