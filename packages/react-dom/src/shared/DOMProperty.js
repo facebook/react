@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-import invariant from 'fbjs/lib/invariant';
+import warning from 'fbjs/lib/warning';
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
@@ -37,14 +37,16 @@ function injectDOMPropertyConfig(domPropertyConfig) {
   var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
 
   for (var propName in Properties) {
-    invariant(
-      !properties.hasOwnProperty(propName),
-      "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-        "'%s' which has already been injected. You may be accidentally " +
-        'injecting the same DOM property config twice, or you may be ' +
-        'injecting two configs that have conflicting property names.',
-      propName,
-    );
+    if (__DEV__) {
+      warning(
+        !properties.hasOwnProperty(propName),
+        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
+          "'%s' which has already been injected. You may be accidentally " +
+          'injecting the same DOM property config twice, or you may be ' +
+          'injecting two configs that have conflicting property names.',
+        propName,
+      );
+    }
 
     var lowerCased = propName.toLowerCase();
     var propConfig = Properties[propName];
@@ -67,15 +69,17 @@ function injectDOMPropertyConfig(domPropertyConfig) {
       ),
       hasStringBooleanValue: checkMask(propConfig, HAS_STRING_BOOLEAN_VALUE),
     };
-    invariant(
-      propertyInfo.hasBooleanValue +
-        propertyInfo.hasNumericValue +
-        propertyInfo.hasOverloadedBooleanValue <=
-        1,
-      'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-        'numeric value, but not a combination: %s',
-      propName,
-    );
+    if (__DEV__) {
+      warning(
+        propertyInfo.hasBooleanValue +
+          propertyInfo.hasNumericValue +
+          propertyInfo.hasOverloadedBooleanValue <=
+          1,
+        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
+          'numeric value, but not a combination: %s',
+        propName,
+      );
+    }
 
     if (DOMAttributeNames.hasOwnProperty(propName)) {
       var attributeName = DOMAttributeNames[propName];
