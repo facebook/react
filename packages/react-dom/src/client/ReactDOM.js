@@ -16,7 +16,6 @@ import type {
 } from 'react-reconciler/src/ReactFiberRoot';
 
 import '../shared/checkReact';
-import '../shared/ReactDOMInjection';
 import './ReactDOMClientInjection';
 
 import ReactFiberReconciler from 'react-reconciler';
