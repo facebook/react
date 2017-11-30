@@ -25,20 +25,20 @@ import {getClosestInstanceFromNode} from './ReactNativeComponentTree';
 let getInspectorDataForViewTag;
 
 if (__DEV__) {
-  var traverseOwnerTreeUp = function(hierarchy, instance: any) {
+  const traverseOwnerTreeUp = function(hierarchy, instance: any) {
     if (instance) {
       hierarchy.unshift(instance);
       traverseOwnerTreeUp(hierarchy, instance._debugOwner);
     }
   };
 
-  var getOwnerHierarchy = function(instance: any) {
-    var hierarchy = [];
+  const getOwnerHierarchy = function(instance: any) {
+    const hierarchy = [];
     traverseOwnerTreeUp(hierarchy, instance);
     return hierarchy;
   };
 
-  var lastNonHostInstance = function(hierarchy) {
+  const lastNonHostInstance = function(hierarchy) {
     for (let i = hierarchy.length - 1; i > 1; i--) {
       const instance = hierarchy[i];
 
@@ -49,7 +49,7 @@ if (__DEV__) {
     return hierarchy[0];
   };
 
-  var getHostProps = function(fiber) {
+  const getHostProps = function(fiber) {
     const host = findCurrentHostFiber(fiber);
     if (host) {
       return host.memoizedProps || emptyObject;
@@ -57,7 +57,7 @@ if (__DEV__) {
     return emptyObject;
   };
 
-  var getHostNode = function(fiber: Fiber | null, findNodeHandle) {
+  const getHostNode = function(fiber: Fiber | null, findNodeHandle) {
     let hostNode;
     // look for children first for the hostNode
     // as composite fibers do not have a hostNode
@@ -73,7 +73,7 @@ if (__DEV__) {
     return null;
   };
 
-  var createHierarchy = function(fiberHierarchy) {
+  const createHierarchy = function(fiberHierarchy) {
     return fiberHierarchy.map(fiber => ({
       name: getComponentName(fiber),
       getInspectorData: findNodeHandle => ({
