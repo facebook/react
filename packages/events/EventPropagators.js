@@ -23,7 +23,7 @@ type PropagationPhases = 'bubbled' | 'captured';
  * "phases" of propagation. This finds listeners by a given phase.
  */
 function listenerAtPhase(inst, event, propagationPhase: PropagationPhases) {
-  var registrationName =
+  const registrationName =
     event.dispatchConfig.phasedRegistrationNames[propagationPhase];
   return getListener(inst, registrationName);
 }
@@ -48,7 +48,7 @@ function accumulateDirectionalDispatches(inst, phase, event) {
   if (__DEV__) {
     warning(inst, 'Dispatching inst must not be null');
   }
-  var listener = listenerAtPhase(inst, event, phase);
+  const listener = listenerAtPhase(inst, event, phase);
   if (listener) {
     event._dispatchListeners = accumulateInto(
       event._dispatchListeners,
@@ -76,8 +76,8 @@ function accumulateTwoPhaseDispatchesSingle(event) {
  */
 function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
   if (event && event.dispatchConfig.phasedRegistrationNames) {
-    var targetInst = event._targetInst;
-    var parentInst = targetInst ? getParentInstance(targetInst) : null;
+    const targetInst = event._targetInst;
+    const parentInst = targetInst ? getParentInstance(targetInst) : null;
     traverseTwoPhase(parentInst, accumulateDirectionalDispatches, event);
   }
 }
@@ -89,8 +89,8 @@ function accumulateTwoPhaseDispatchesSingleSkipTarget(event) {
  */
 function accumulateDispatches(inst, ignoredDirection, event) {
   if (inst && event && event.dispatchConfig.registrationName) {
-    var registrationName = event.dispatchConfig.registrationName;
-    var listener = getListener(inst, registrationName);
+    const registrationName = event.dispatchConfig.registrationName;
+    const listener = getListener(inst, registrationName);
     if (listener) {
       event._dispatchListeners = accumulateInto(
         event._dispatchListeners,
