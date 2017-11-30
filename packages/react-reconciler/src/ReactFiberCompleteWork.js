@@ -115,7 +115,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
-    var call = (workInProgress.memoizedProps: ?ReactCall);
+    const call = (workInProgress.memoizedProps: ?ReactCall);
     invariant(
       call,
       'Should be resolved by now. This error is likely caused by a bug in ' +
@@ -133,13 +133,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     // Build up the returns.
     // TODO: Compare this to a generator or opaque helpers like Children.
-    var returns: Array<mixed> = [];
+    const returns: Array<mixed> = [];
     appendAllReturns(returns, workInProgress);
-    var fn = call.handler;
-    var props = call.props;
-    var nextChildren = fn(props, returns);
+    const fn = call.handler;
+    const props = call.props;
+    const nextChildren = fn(props, returns);
 
-    var currentFirstChild = current !== null ? current.child : null;
+    const currentFirstChild = current !== null ? current.child : null;
     workInProgress.child = reconcileChildFibers(
       workInProgress,
       currentFirstChild,

@@ -285,9 +285,9 @@ function getContextForSubtree(
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
 ): Reconciler<C, I, TI> {
-  var {getPublicInstance} = config;
+  const {getPublicInstance} = config;
 
-  var {
+  const {
     computeAsyncExpiration,
     computeUniqueAsyncExpiration,
     computeExpirationForFiber,

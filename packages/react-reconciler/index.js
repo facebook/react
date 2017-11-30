@@ -16,7 +16,7 @@ export type {
   Reconciler,
 } from './src/ReactFiberReconciler';
 
-var ReactFiberReconciler = require('./src/ReactFiberReconciler');
+const ReactFiberReconciler = require('./src/ReactFiberReconciler');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.

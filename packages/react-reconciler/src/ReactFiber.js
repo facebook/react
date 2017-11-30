@@ -40,7 +40,7 @@ import {NoContext} from './ReactTypeOfInternalContext';
 if (__DEV__) {
   var hasBadMapPolyfill = false;
   try {
-    const nonExtensibleObject = Object.preventExtensions({});
+    var nonExtensibleObject = Object.preventExtensions({});
     /* eslint-disable no-new */
     new Map([[nonExtensibleObject, null]]);
     new Set([nonExtensibleObject]);
@@ -212,7 +212,7 @@ function FiberNode(
 //    is faster.
 // 5) It should be easy to port this to a C struct and keep a C implementation
 //    compatible.
-var createFiber = function(
+const createFiber = function(
   tag: TypeOfWork,
   pendingProps: mixed,
   key: null | string,
