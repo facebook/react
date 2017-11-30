@@ -289,7 +289,7 @@ var NS = {
  * SMIL Spec:
  * https://www.w3.org/TR/smil
  */
-var ATTRS = [
+var SVG_ATTRS = [
   'accent-height',
   'alignment-baseline',
   'arabic-form',
@@ -403,7 +403,7 @@ var SVGDOMPropertyConfig = {
 var CAMELIZE = /[\-\:]([a-z])/g;
 var capitalize = token => token[1].toUpperCase();
 
-ATTRS.forEach(original => {
+SVG_ATTRS.forEach(original => {
   var reactName = original.replace(CAMELIZE, capitalize);
 
   SVGDOMPropertyConfig.Properties[reactName] = 0;
