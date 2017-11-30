@@ -13,7 +13,14 @@ declare var __REACT_DEVTOOLS_GLOBAL_HOOK__: any; /*?{
   inject: ?((stuff: Object) => void)
 };*/
 
-// ReactFeatureFlags rollup shim for www imports the www implementation.
+// ReactFeatureFlags www fork
 declare module 'ReactFeatureFlags' {
   declare module.exports: any;
+}
+
+// ReactFiberErrorDialog www fork
+declare module 'ReactFiberErrorDialog' {
+  declare module.exports: {
+    showErrorDialog: (error: mixed) => boolean,
+  };
 }

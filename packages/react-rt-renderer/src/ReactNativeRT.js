@@ -19,9 +19,6 @@ import type {ReactNodeList} from 'shared/ReactTypes';
 import 'InitializeCore';
 import './ReactNativeRTEventEmitter';
 
-// TODO: direct imports like some-package/src/* are bad. Fix me.
-import * as ReactFiberErrorLogger from 'react-reconciler/src/ReactFiberErrorLogger';
-import {showDialog} from 'react-native-renderer/src/ReactNativeFiberErrorDialog';
 import * as ReactPortal from 'react-reconciler/src/ReactPortal';
 import * as ReactGenericBatching from 'events/ReactGenericBatching';
 import ReactVersion from 'shared/ReactVersion';
@@ -35,10 +32,6 @@ ReactGenericBatching.injection.injectFiberBatchedUpdates(
 );
 
 const roots = new Map();
-
-// Intercept lifecycle errors and ensure they are shown with the correct stack
-// trace within the native redbox component.
-ReactFiberErrorLogger.injection.injectDialog(showDialog);
 
 const ReactNativeRTFiber: ReactNativeRTType = {
   render(element: React$Element<any>, containerTag: any, callback: ?Function) {

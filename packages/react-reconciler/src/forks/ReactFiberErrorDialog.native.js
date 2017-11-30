@@ -7,7 +7,7 @@
  * @flow
  */
 
-import type {CapturedError} from 'react-reconciler/src/ReactFiberScheduler';
+import type {CapturedError} from '../ReactFiberScheduler';
 
 // Module provided by RN:
 import ExceptionsManager from 'ExceptionsManager';
@@ -16,7 +16,7 @@ import ExceptionsManager from 'ExceptionsManager';
  * Intercept lifecycle errors and ensure they are shown with the correct stack
  * trace within the native redbox component.
  */
-export function showDialog(capturedError: CapturedError): boolean {
+export function showErrorDialog(capturedError: CapturedError): boolean {
   const {componentStack, error} = capturedError;
 
   let errorToHandle: Error;
