@@ -35,6 +35,7 @@ import {
 } from 'shared/ReactTypeOfWork';
 import {enableUserTimingAPI} from 'shared/ReactFeatureFlags';
 import getComponentName from 'shared/getComponentName';
+import parseStackInfo from 'shared/parseStackInfo';
 import invariant from 'fbjs/lib/invariant';
 import warning from 'fbjs/lib/warning';
 
@@ -979,7 +980,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // We might be in the commit phase when an error is captured.
       // The risk is that the return path from this Fiber may not be accurate.
       // That risk is acceptable given the benefit of providing users more context.
-      const componentStack = getStackAddendumByWorkInProgressFiber(failedWork);
+      const componentStack = parseStackInfo(
+        getStackAddendumByWorkInProgressFiber(failedWork),
+      );
       const componentName = getComponentName(failedWork);
 
       // Add to the collection of captured errors. This is stored as a global
