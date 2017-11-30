@@ -482,17 +482,6 @@ if (__DEV__) {
 
   // TODO: turn this into a named export
   validateDOMNesting.updatedAncestorInfo = updatedAncestorInfo;
-
-  // For testing
-  validateDOMNesting.isTagValidInContext = function(tag, ancestorInfo) {
-    ancestorInfo = ancestorInfo || emptyAncestorInfo;
-    const parentInfo = ancestorInfo.current;
-    const parentTag = parentInfo && parentInfo.tag;
-    return (
-      isTagValidWithParent(tag, parentTag) &&
-      !findInvalidAncestorForTag(tag, ancestorInfo)
-    );
-  };
 }
 
 export default validateDOMNesting;
