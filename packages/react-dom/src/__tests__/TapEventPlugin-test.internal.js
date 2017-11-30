@@ -71,7 +71,7 @@ describe('TapEventPlugin', () => {
             <ChildWrapper {...CHILD_PROPS} />
           </div>
         </div>,
-        container
+        container,
       );
     }
 
@@ -96,7 +96,7 @@ describe('TapEventPlugin', () => {
     tapMoveThreshold = TapEventPlugin.tapMoveThreshold;
     spyOnDev(console, 'warn');
     EventPluginHub.injection.injectEventPluginsByName({
-      TapEventPlugin: TapEventPlugin
+      TapEventPlugin: TapEventPlugin,
     });
   });
 
@@ -104,7 +104,7 @@ describe('TapEventPlugin', () => {
     if (__DEV__) {
       expect(console.warn.calls.count()).toBe(1);
       expect(console.warn.calls.argsFor(0)[0]).toContain(
-        'Injecting custom event plugins (TapEventPlugin) is deprecated'
+        'Injecting custom event plugins (TapEventPlugin) is deprecated',
       );
     }
   });
@@ -119,11 +119,11 @@ describe('TapEventPlugin', () => {
     putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(CHILD);
@@ -133,11 +133,11 @@ describe('TapEventPlugin', () => {
     putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1)
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold - 1),
     );
     expect(idCallOrder.length).toBe(1);
     expect(idCallOrder[0]).toBe(CHILD);
@@ -147,11 +147,11 @@ describe('TapEventPlugin', () => {
     putListener(CHILD, ON_TOUCH_TAP_KEY, recordID.bind(null, CHILD));
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1)
+      ReactTestUtils.nativeTouchData(0, tapMoveThreshold + 1),
     );
     expect(idCallOrder.length).toBe(0);
   });
@@ -162,15 +162,15 @@ describe('TapEventPlugin', () => {
     putListener(
       GRANDPARENT,
       ON_TOUCH_TAP_KEY,
-      recordID.bind(null, GRANDPARENT)
+      recordID.bind(null, GRANDPARENT),
     );
     ReactTestUtils.SimulateNative.touchStart(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     ReactTestUtils.SimulateNative.touchEnd(
       CHILD,
-      ReactTestUtils.nativeTouchData(0, 0)
+      ReactTestUtils.nativeTouchData(0, 0),
     );
     expect(idCallOrder.length).toBe(3);
     expect(idCallOrder[0] === CHILD).toBe(true);
