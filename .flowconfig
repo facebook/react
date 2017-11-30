@@ -8,9 +8,6 @@
 <PROJECT_ROOT>/scripts/rollup/shims/facebook-www/.*
 <PROJECT_ROOT>/scripts/rollup/shims/react-native/.*
 
-# Note: intentionally *don't* ignore /scripts/rollup/shims/rollup/
-# because it is part of the build and isn't external.
-
 <PROJECT_ROOT>/.*/node_modules/y18n/.*
 <PROJECT_ROOT>/node_modules/chrome-devtools-frontend/.*
 <PROJECT_ROOT>/node_modules/devtools-timeline-model/.*

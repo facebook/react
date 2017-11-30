@@ -10,7 +10,7 @@
 import invariant from 'fbjs/lib/invariant';
 
 import typeof * as FeatureFlagsType from 'shared/ReactFeatureFlags';
-import typeof * as FeatureFlagsShimType from './ReactNativeFeatureFlags';
+import typeof * as FeatureFlagsShimType from './ReactFeatureFlags.native';
 
 // Re-export dynamic flags from the fbsource version.
 export const {debugRenderPhaseSideEffects} = require('ReactFeatureFlags');

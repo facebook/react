@@ -4,20 +4,19 @@ const rollup = require('rollup').rollup;
 const babel = require('rollup-plugin-babel');
 const closure = require('rollup-plugin-closure-compiler-js');
 const commonjs = require('rollup-plugin-commonjs');
-const alias = require('rollup-plugin-alias');
 const prettier = require('rollup-plugin-prettier');
 const replace = require('rollup-plugin-replace');
 const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
-const join = require('path').join;
-const resolve = require('path').resolve;
-const resolvePlugin = require('rollup-plugin-node-resolve');
+const path = require('path');
+const resolve = require('rollup-plugin-node-resolve');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
 const sizes = require('./plugins/sizes-plugin');
+const useForks = require('./plugins/use-forks-plugin');
 const Stats = require('./stats');
 const extractErrorCodes = require('../error-codes/extract-errors');
 const syncReactDom = require('./sync').syncReactDom;
@@ -88,7 +87,7 @@ function getBabelConfig(updateBabelOptions, bundleType, filename) {
       return Object.assign({}, options, {
         plugins: options.plugins.concat([
           // Use object-assign polyfill in open source
-          resolve('./scripts/babel/transform-object-assign-require'),
+          path.resolve('./scripts/babel/transform-object-assign-require'),
           // Minify invariant messages
           require('../error-codes/replace-invariant-error-codes'),
           // Wrap warning() calls in a __DEV__ check so they are stripped from production.
@@ -113,11 +112,11 @@ function handleRollupWarnings(warning) {
       );
     }
     const importSideEffects = Modules.getImportSideEffects();
-    const path = match[1];
-    if (typeof importSideEffects[path] !== 'boolean') {
+    const externalModule = match[1];
+    if (typeof importSideEffects[externalModule] !== 'boolean') {
       throw new Error(
         'An external module "' +
-          path +
+          externalModule +
           '" is used in a DEV-only code path ' +
           'but we do not know if it is safe to omit an unused require() to it in production. ' +
           'Please add it to the `importSideEffects` list in `scripts/rollup/modules.js`.'
@@ -218,11 +217,10 @@ function getPlugins(
   bundleType,
   globalName,
   moduleType,
-  modulesToStub,
-  featureFlags
+  modulesToStub
 ) {
   const findAndRecordErrorCodes = extractErrorCodes(errorCodeOpts);
-  const shims = Modules.getShims(bundleType, entry, featureFlags);
+  const forks = Modules.getForks(bundleType, entry);
   const isProduction = isProductionBundleType(bundleType);
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
@@ -236,10 +234,10 @@ function getPlugins(
         return source;
       },
     },
-    // Shim some modules for www custom behavior and optimizations.
-    alias(shims),
+    // Shim any modules that need forking in this environment.
+    useForks(forks),
     // Use Node resolution mechanism.
-    resolvePlugin({
+    resolve({
       skip: externals,
     }),
     // Remove license headers from individual modules
@@ -384,8 +382,7 @@ async function createBundle(bundle, bundleType) {
         bundleType,
         bundle.global,
         bundle.moduleType,
-        bundle.modulesToStub,
-        bundle.featureFlags
+        bundle.modulesToStub
       ),
       // We can't use getters in www.
       legacy: bundleType === FB_DEV || bundleType === FB_PROD,
@@ -439,9 +436,9 @@ rimraf('build', async () => {
     // create a new build directory
     fs.mkdirSync('build');
     // create the packages folder for NODE+UMD bundles
-    fs.mkdirSync(join('build', 'packages'));
+    fs.mkdirSync(path.join('build', 'packages'));
     // create the dist folder for UMD bundles
-    fs.mkdirSync(join('build', 'dist'));
+    fs.mkdirSync(path.join('build', 'dist'));
 
     await Packaging.createFacebookWWWBuild();
     await Packaging.createReactNativeBuild();
@@ -462,11 +459,11 @@ rimraf('build', async () => {
     }
 
     if (syncFbsource) {
-      await syncReactNative(join('build', 'react-native'), syncFbsource);
-      await syncReactNativeRT(join('build', 'react-rt'), syncFbsource);
-      await syncReactNativeCS(join('build', 'react-cs'), syncFbsource);
+      await syncReactNative(path.join('build', 'react-native'), syncFbsource);
+      await syncReactNativeRT(path.join('build', 'react-rt'), syncFbsource);
+      await syncReactNativeCS(path.join('build', 'react-cs'), syncFbsource);
     } else if (syncWww) {
-      await syncReactDom(join('build', 'facebook-www'), syncWww);
+      await syncReactDom(path.join('build', 'facebook-www'), syncWww);
     }
 
     console.log(Stats.printResults());

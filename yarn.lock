@@ -4122,12 +4122,6 @@ rimraf@^2.5.4:
   dependencies:
     glob "^7.0.5"
 
-rollup-plugin-alias@^1.2.1:
-  version "1.3.1"
-  resolved "https://registry.yarnpkg.com/rollup-plugin-alias/-/rollup-plugin-alias-1.3.1.tgz#a9152fec4b6a6510dae93989517ca7853c32a6fa"
-  dependencies:
-    slash "^1.0.0"
-
 rollup-plugin-babel@^2.7.1:
   version "2.7.1"
   resolved "https://registry.yarnpkg.com/rollup-plugin-babel/-/rollup-plugin-babel-2.7.1.tgz#16528197b0f938a1536f44683c7a93d573182f57"
