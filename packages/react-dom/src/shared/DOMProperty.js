@@ -7,8 +7,6 @@
  * @flow
  */
 
-import warning from 'fbjs/lib/warning';
-
 // These attributes should be all lowercase to allow for
 // case insensitive checks
 var RESERVED_PROPS = {
@@ -42,27 +40,6 @@ const OVERLOADED_BOOLEAN = 5;
 
 type PropertyType = 0 | 1 | 2 | 3 | 4 | 5;
 
-function injectDOMPropertyConfig(domPropertyConfig) {
-  for (var propName in domPropertyConfig) {
-    if (__DEV__) {
-      warning(
-        !propertyTypes.has(propName),
-        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-          "'%s' which has already been injected. You may be accidentally " +
-          'injecting the same DOM property config twice, or you may be ' +
-          'injecting two configs that have conflicting property names.',
-        propName,
-      );
-    }
-    // Downcase references to whitelist properties to check for membership
-    // without case-sensitivity. This allows the whitelist to pick up
-    // `allowfullscreen`, which should be written using the property configuration
-    // for `allowFullscreen`
-    const propertyType = domPropertyConfig[propName];
-    propertyTypes.set(propName, propertyType);
-  }
-}
-
 /* eslint-disable max-len */
 export const ATTRIBUTE_NAME_START_CHAR =
   ':A-Z_a-z\\u00C0-\\u00D6\\u00D8-\\u00F6\\u00F8-\\u02FF\\u0370-\\u037D\\u037F-\\u1FFF\\u200C-\\u200D\\u2070-\\u218F\\u2C00-\\u2FEF\\u3001-\\uD7FF\\uF900-\\uFDCF\\uFDF0-\\uFFFD';
@@ -73,7 +50,72 @@ export const ATTRIBUTE_NAME_CHAR =
 export const ID_ATTRIBUTE_NAME = 'data-reactid';
 export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 
-const propertyTypes: Map<string, PropertyType> = new Map();
+const propertyTypes: Map<string, PropertyType> = new Map([
+  // When adding attributes to this list, be sure to also add them to
+  // the `possibleStandardNames` module to ensure casing and incorrect
+  // name warnings.
+  ['allowFullScreen', BOOLEAN],
+  // specifies target context for links with `preload` type
+  ['async', BOOLEAN],
+  // Note: there is a special case that prevents it from being written to the DOM
+  // on the client side because the browsers are inconsistent. Instead we call focus().
+  ['autoFocus', BOOLEAN],
+  ['autoPlay', BOOLEAN],
+  ['capture', OVERLOADED_BOOLEAN],
+  ['checked', BOOLEAN],
+  ['cols', POSITIVE_NUMERIC],
+  ['contentEditable', STRING_BOOLEAN],
+  ['controls', BOOLEAN],
+  ['default', BOOLEAN],
+  ['defer', BOOLEAN],
+  ['disabled', BOOLEAN],
+  ['download', OVERLOADED_BOOLEAN],
+  ['draggable', STRING_BOOLEAN],
+  ['formNoValidate', BOOLEAN],
+  ['hidden', BOOLEAN],
+  ['loop', BOOLEAN],
+  // Caution; `option.selected` is not updated if `select.multiple` is
+  // disabled with `removeAttribute`.
+  ['multiple', BOOLEAN],
+  ['muted', BOOLEAN],
+  ['noValidate', BOOLEAN],
+  ['open', BOOLEAN],
+  ['playsInline', BOOLEAN],
+  ['readOnly', BOOLEAN],
+  ['required', BOOLEAN],
+  ['reversed', BOOLEAN],
+  ['rows', POSITIVE_NUMERIC],
+  ['rowSpan', NUMERIC],
+  ['scoped', BOOLEAN],
+  ['seamless', BOOLEAN],
+  ['selected', BOOLEAN],
+  ['size', POSITIVE_NUMERIC],
+  ['start', NUMERIC],
+  // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
+  ['span', POSITIVE_NUMERIC],
+  ['spellCheck', STRING_BOOLEAN],
+  // Style must be explicitly set in the attribute list. React components
+  // expect a style object
+  ['style', STRING],
+  // Keep it in the whitelist because it is case-sensitive for SVG.
+  ['tabIndex', STRING],
+  // itemScope is for for Microdata support.
+  // See http://schema.org/docs/gs.html
+  ['itemScope', BOOLEAN],
+  // These attributes must stay in the white-list because they have
+  // different attribute names (see `attributeNames`)
+  // TODO: this doesn't seem great? Probably means we depend on
+  // existence in the whitelist somewhere we shouldn't need to.
+  ['acceptCharset', STRING],
+  ['className', STRING],
+  ['htmlFor', STRING],
+  ['httpEquiv', STRING],
+  // Set the string boolean flag to allow the behavior
+  ['value', STRING_BOOLEAN],
+  ['autoReverse', STRING_BOOLEAN],
+  ['externalResourcesRequired', STRING_BOOLEAN],
+  ['preserveAlpha', STRING_BOOLEAN],
+]);
 
 /**
  * Checks whether a property name is a writeable attribute.
@@ -228,71 +270,6 @@ const usePropertiesFor: Set<string> = new Set([
 export function shouldUseProperty(name: string): boolean {
   return usePropertiesFor.has(name);
 }
-
-var HTMLDOMPropertyConfig = {
-  // When adding attributes to this list, be sure to also add them to
-  // the `possibleStandardNames` module to ensure casing and incorrect
-  // name warnings.
-  allowFullScreen: BOOLEAN,
-  // specifies target context for links with `preload` type
-  async: BOOLEAN,
-  // Note: there is a special case that prevents it from being written to the DOM
-  // on the client side because the browsers are inconsistent. Instead we call focus().
-  autoFocus: BOOLEAN,
-  autoPlay: BOOLEAN,
-  capture: OVERLOADED_BOOLEAN,
-  checked: BOOLEAN,
-  cols: POSITIVE_NUMERIC,
-  contentEditable: STRING_BOOLEAN,
-  controls: BOOLEAN,
-  default: BOOLEAN,
-  defer: BOOLEAN,
-  disabled: BOOLEAN,
-  download: OVERLOADED_BOOLEAN,
-  draggable: STRING_BOOLEAN,
-  formNoValidate: BOOLEAN,
-  hidden: BOOLEAN,
-  loop: BOOLEAN,
-  // Caution; `option.selected` is not updated if `select.multiple` is
-  // disabled with `removeAttribute`.
-  multiple: BOOLEAN,
-  muted: BOOLEAN,
-  noValidate: BOOLEAN,
-  open: BOOLEAN,
-  playsInline: BOOLEAN,
-  readOnly: BOOLEAN,
-  required: BOOLEAN,
-  reversed: BOOLEAN,
-  rows: POSITIVE_NUMERIC,
-  rowSpan: NUMERIC,
-  scoped: BOOLEAN,
-  seamless: BOOLEAN,
-  selected: BOOLEAN,
-  size: POSITIVE_NUMERIC,
-  start: NUMERIC,
-  // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
-  span: POSITIVE_NUMERIC,
-  spellCheck: STRING_BOOLEAN,
-  // Style must be explicitly set in the attribute list. React components
-  // expect a style object
-  style: STRING,
-  // Keep it in the whitelist because it is case-sensitive for SVG.
-  tabIndex: STRING,
-  // itemScope is for for Microdata support.
-  // See http://schema.org/docs/gs.html
-  itemScope: BOOLEAN,
-  // These attributes must stay in the white-list because they have
-  // different attribute names (see `attributeNames`)
-  // TODO: this doesn't seem great? Probably means we depend on
-  // existence in the whitelist somewhere we shouldn't need to.
-  acceptCharset: STRING,
-  className: STRING,
-  htmlFor: STRING,
-  httpEquiv: STRING,
-  // Set the string boolean flag to allow the behavior
-  value: STRING_BOOLEAN,
-};
-
 /**
  * This is a list of all SVG attributes that need special casing,
  * namespacing, or boolean value assignment.
@@ -392,20 +369,11 @@ var SVG_ATTRS = [
   'xml:space',
 ];
 
-var SVGDOMPropertyConfig = {
-  autoReverse: STRING_BOOLEAN,
-  externalResourcesRequired: STRING_BOOLEAN,
-  preserveAlpha: STRING_BOOLEAN,
-};
-
 var CAMELIZE = /[\-\:]([a-z])/g;
 var capitalize = token => token[1].toUpperCase();
 
 SVG_ATTRS.forEach(original => {
   var reactName = original.replace(CAMELIZE, capitalize);
-  SVGDOMPropertyConfig[reactName] = STRING;
   attributeNames.set(reactName, original);
+  propertyTypes.set(reactName, STRING);
 });
-
-injectDOMPropertyConfig(HTMLDOMPropertyConfig);
-injectDOMPropertyConfig(SVGDOMPropertyConfig);
