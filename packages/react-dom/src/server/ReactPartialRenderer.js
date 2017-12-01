@@ -56,7 +56,7 @@ var toArray = ((React.Children.toArray: any): toArrayType);
 var getStackAddendum = emptyFunction.thatReturns('');
 
 if (__DEV__) {
-  var validatePropertiesInDevelopment = function(type, props) {
+  let validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, /* canUseEventSystem */ false);
