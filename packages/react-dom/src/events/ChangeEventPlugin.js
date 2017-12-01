@@ -229,6 +229,7 @@ function handleControlledInputBlur(inst, node) {
   }
 
   // Fiber and ReactDOM keep wrapper state in separate places
+  // TODO: Is this still necessary now that Stack is gone?
   let state = inst._wrapperState || node._wrapperState;
 
   if (!state || !state.controlled || node.type !== 'number') {
