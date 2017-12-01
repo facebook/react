@@ -178,11 +178,6 @@ export function setValueForProperty(node, name, value) {
     );
     return;
   }
-
-  if (__DEV__) {
-    var payload = {};
-    payload[name] = value;
-  }
 }
 
 export function setValueForAttribute(node, name, value) {
@@ -193,11 +188,6 @@ export function setValueForAttribute(node, name, value) {
     node.removeAttribute(name);
   } else {
     node.setAttribute(name, '' + value);
-  }
-
-  if (__DEV__) {
-    var payload = {};
-    payload[name] = value;
   }
 }
 
