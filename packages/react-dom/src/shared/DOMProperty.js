@@ -109,7 +109,7 @@ export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
  *   Removed when strictly equal to false; present without a value when
  *   strictly equal to true; present with a value otherwise.
  */
-export const properties = {};
+const properties = {};
 
 /**
  * Checks whether a property name is a writeable attribute.
