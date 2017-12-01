@@ -26,20 +26,20 @@ import warning from 'fbjs/lib/warning';
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
+var illegalAttributeNameCache = new Set();
+var validatedAttributeNameCache = new Set();
 function isAttributeNameSafe(attributeName) {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (validatedAttributeNameCache.has(attributeName)) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (illegalAttributeNameCache.has(attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
+    validatedAttributeNameCache.add(attributeName);
     return true;
   }
-  illegalAttributeNameCache[attributeName] = true;
+  illegalAttributeNameCache.add(attributeName);
   if (__DEV__) {
     warning(false, 'Invalid attribute name: `%s`', attributeName);
   }

@@ -9,16 +9,16 @@
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
-var RESERVED_PROPS = {
-  children: true,
-  dangerouslySetInnerHTML: true,
-  defaultValue: true,
-  defaultChecked: true,
-  innerHTML: true,
-  suppressContentEditableWarning: true,
-  suppressHydrationWarning: true,
-  style: true,
-};
+var RESERVED_PROPS = new Set([
+  'children',
+  'dangerouslySetInnerHTML',
+  'defaultValue',
+  'defaultChecked',
+  'innerHTML',
+  'suppressContentEditableWarning',
+  'suppressHydrationWarning',
+  'style',
+]);
 
 // A simple string attribute.
 const STRING = 0;
@@ -162,14 +162,14 @@ export function shouldAttributeAcceptBooleanValue(name: string) {
     return true;
   }
   if (propertyTypes.has(name)) {
-    const propertyType = propertyTypes.get(name);
-    return (
-      propertyType === BOOLEAN ||
-      propertyType === STRING_BOOLEAN ||
-      propertyType === OVERLOADED_BOOLEAN
-    );
+    switch (propertyTypes.get(name)) {
+      case BOOLEAN:
+      case STRING_BOOLEAN:
+      case OVERLOADED_BOOLEAN:
+        return true;
+    }
   }
-  var prefix = name.toLowerCase().slice(0, 5);
+  const prefix = name.toLowerCase().slice(0, 5);
   return prefix === 'data-' || prefix === 'aria-';
 }
 
@@ -183,7 +183,7 @@ export function shouldAttributeAcceptBooleanValue(name: string) {
  * @return {boolean} If the name is within reserved props
  */
 export function isReservedProp(name: string) {
-  return RESERVED_PROPS.hasOwnProperty(name);
+  return RESERVED_PROPS.has(name);
 }
 
 const attributeNames: Map<string, string> = new Map([
@@ -207,23 +207,27 @@ export function getAttributeName(name: string): string {
   return attributeName;
 }
 
+const NS_XLINK = 'http://www.w3.org/1999/xlink';
+const NS_XML = 'http://www.w3.org/XML/1998/namespace';
+const attributeNamespaces: Map<string, string> = new Map([
+  ['xlinkActuate', NS_XLINK],
+  ['xlinkArcrole', NS_XLINK],
+  ['xlinkHref', NS_XLINK],
+  ['xlinkRole', NS_XLINK],
+  ['xlinkShow', NS_XLINK],
+  ['xlinkTitle', NS_XLINK],
+  ['xlinkType', NS_XLINK],
+  ['xmlBase', NS_XML],
+  ['xmlLang', NS_XML],
+  ['xmlSpace', NS_XML],
+]);
+
 export function getAttributeNamespace(name: string): string | null {
-  switch (name) {
-    case 'xlinkActuate':
-    case 'xlinkArcrole':
-    case 'xlinkHref':
-    case 'xlinkRole':
-    case 'xlinkShow':
-    case 'xlinkTitle':
-    case 'xlinkType':
-      return 'http://www.w3.org/1999/xlink';
-    case 'xmlBase':
-    case 'xmlLang':
-    case 'xmlSpace':
-      return 'http://www.w3.org/XML/1998/namespace';
-    default:
-      return null;
+  const attributeNamespace = attributeNamespaces.get(name);
+  if (typeof attributeNamespace === 'string') {
+    return attributeNamespace;
   }
+  return null;
 }
 
 export function hasBooleanValue(name: string): boolean {
