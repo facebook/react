@@ -74,20 +74,20 @@ if (!ExecutionEnvironment.canUseDOM) {
 ) {
   // Polyfill requestIdleCallback and cancelIdleCallback
 
-  var scheduledRICCallback = null;
-  var isIdleScheduled = false;
-  var timeoutTime = -1;
+  let scheduledRICCallback = null;
+  let isIdleScheduled = false;
+  let timeoutTime = -1;
 
-  var isAnimationFrameScheduled = false;
+  let isAnimationFrameScheduled = false;
 
-  var frameDeadline = 0;
+  let frameDeadline = 0;
   // We start out assuming that we run at 30fps but then the heuristic tracking
   // will adjust this value to a faster fps if we get more frequent animation
   // frames.
-  var previousFrameTime = 33;
-  var activeFrameTime = 33;
+  let previousFrameTime = 33;
+  let activeFrameTime = 33;
 
-  var frameDeadlineObject;
+  let frameDeadlineObject;
   if (hasNativePerformanceNow) {
     frameDeadlineObject = {
       didTimeout: false,
@@ -110,12 +110,12 @@ if (!ExecutionEnvironment.canUseDOM) {
   }
 
   // We use the postMessage trick to defer idle work until after the repaint.
-  var messageKey =
+  const messageKey =
     '__reactIdleCallback$' +
     Math.random()
       .toString(36)
       .slice(2);
-  var idleTick = function(event) {
+  const idleTick = function(event) {
     if (event.source !== window || event.data !== messageKey) {
       return;
     }
@@ -146,7 +146,7 @@ if (!ExecutionEnvironment.canUseDOM) {
     }
 
     timeoutTime = -1;
-    var callback = scheduledRICCallback;
+    const callback = scheduledRICCallback;
     scheduledRICCallback = null;
     if (callback !== null) {
       callback(frameDeadlineObject);
@@ -156,9 +156,9 @@ if (!ExecutionEnvironment.canUseDOM) {
   // something better for old IE.
   window.addEventListener('message', idleTick, false);
 
-  var animationTick = function(rafTime) {
+  const animationTick = function(rafTime) {
     isAnimationFrameScheduled = false;
-    var nextFrameTime = rafTime - frameDeadline + activeFrameTime;
+    let nextFrameTime = rafTime - frameDeadline + activeFrameTime;
     if (
       nextFrameTime < activeFrameTime &&
       previousFrameTime < activeFrameTime
