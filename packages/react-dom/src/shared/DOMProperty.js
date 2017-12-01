@@ -12,11 +12,11 @@ import warning from 'fbjs/lib/warning';
 var RESERVED_PROPS = {
   children: true,
   dangerouslySetInnerHTML: true,
-  defaultChecked: true,
   // TODO: This prevents the assignment of defaultValue to regular
   // elements (not just inputs). Now that ReactDOMInput assigns to the
   // defaultValue property -- do we need this?
   defaultValue: true,
+  defaultChecked: true,
   innerHTML: true,
   suppressContentEditableWarning: true,
   suppressHydrationWarning: true,
