@@ -10,43 +10,16 @@
 'use strict';
 
 let React;
+let ReactDOM;
 let ReactTestUtils;
 let ReactBrowserEventEmitter;
+let LISTENER = jest.fn();
 
-let CHILD, PARENT, GRANDPARENT;
-let CHILD_PROPS;
-let PARENT_PROPS;
-let GRANDPARENT_PROPS;
-
-let container;
-let idCallOrder;
-
-const LISTENER = jest.fn();
-const ON_CLICK_KEY = 'onClick';
-// const ON_CHANGE_KEY = 'onChange';
-const ON_MOUSE_ENTER_KEY = 'onMouseEnter';
-
-let putListener;
-let getListener;
-let deleteAllListeners;
-
-function recordID(id) {
-  idCallOrder.push(id);
-}
-function registerSimpleTestHandler() {
-  putListener(CHILD, ON_CLICK_KEY, LISTENER);
-  var listener = getListener(CHILD, ON_CLICK_KEY);
-  expect(listener).toEqual(LISTENER);
-  return getListener(CHILD, ON_CLICK_KEY);
-}
-function recordIDAndStopPropagation(id, event) {
-  recordID(id);
-  event.stopPropagation();
-}
-function recordIDAndReturnFalse(id, event) {
-  recordID(id);
-  return false;
-}
+let ParentComponent;
+let createInitialInstance;
+let getChildInstance;
+let getParentInstance;
+let updateInstance;
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
@@ -54,107 +27,116 @@ describe('ReactBrowserEventEmitter', () => {
     LISTENER.mockClear();
 
     React = require('react');
+    ReactDOM = require('react-dom');
     ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
 
-    container = document.createElement('div');
-    CHILD_PROPS = {};
-    PARENT_PROPS = {};
-    GRANDPARENT_PROPS = {};
+    let container = document.createElement('div');
 
-    let instance;
-
-    function Child(props) {
-      return <div ref={node => (CHILD = node)} {...props} />;
-    }
-
-    class ChildWrapper extends React.PureComponent {
+    class Child extends React.PureComponent {
       render() {
-        return <Child {...this.props} />;
+        return <div {...this.props} />;
       }
     }
 
-    class CommonComponent extends React.Component {
+    ParentComponent = class Parent extends React.Component {
       render() {
         return (
-          <div ref={c => (GRANDPARENT = c)} {...GRANDPARENT_PROPS}>
-            <div ref={c => (PARENT = c)} {...PARENT_PROPS}>
-              <ChildWrapper {...CHILD_PROPS} />
-            </div>
+          <div {...this.props.parentProps}>
+            <Child {...this.props.childProps} />
           </div>
         );
       }
-    }
-
-    function renderTree() {
-      instance = ReactTestUtils.renderIntoDocument(<CommonComponent />);
-    }
-    renderTree();
-
-    putListener = function(node, eventName, listener) {
-      switch (node) {
-        case CHILD:
-          CHILD_PROPS[eventName] = listener;
-          break;
-        case PARENT:
-          PARENT_PROPS[eventName] = listener;
-          break;
-        case GRANDPARENT:
-          GRANDPARENT_PROPS[eventName] = listener;
-          break;
-      }
-      renderTree();
     };
 
-    deleteAllListeners = function(node) {
-      switch (node) {
-        case CHILD:
-          CHILD_PROPS = {};
-          break;
-        case PARENT:
-          PARENT_PROPS = {};
-          break;
-        case GRANDPARENT:
-          GRANDPARENT_PROPS = {};
-          break;
-      }
-      renderTree();
+    /**
+     * alway initial the new instance for child component to bind click listener
+     * @param {}
+     * @return {Component Instance} initial instance
+     */
+    createInitialInstance = () => {
+      const initialInstance = ReactDOM.render(
+        <ParentComponent parentProps={{}} childProps={{onClick: LISTENER}} />,
+        container,
+      );
+      const child = getChildInstance(initialInstance);
+      expect(child.props.onClick).toBe(LISTENER);
+
+      return initialInstance;
     };
 
-    getListener = function(node, eventName) {
-      const trees = ReactTestUtils.findAllInRenderedTree(instance, () => true);
-      return trees[3].props[eventName];
+    /**
+     * update and rerender the same instance
+     * @param {object} parentProps - props for parent component to update
+     * @param {object} childProps - props for child component to update
+     */
+    updateInstance = ({parentProps, childProps}) => {
+      return ReactDOM.render(
+        <ParentComponent parentProps={parentProps} childProps={childProps} />,
+        container,
+      );
     };
 
-    idCallOrder = [];
-  });
+    /**
+     * helper to find the specified instance
+     * @param {Component Instance} inst - main instance
+     * @return {Component Instance} Child instance
+     */
+    getChildInstance = inst => {
+      return ReactTestUtils.findRenderedComponentWithType(inst, Child);
+    };
 
-  afterEach(() => {
-    idCallOrder = [];
+    /**
+     * helper to find the specified instance
+     * @param {Component Instance} inst - main instance
+     * @return {Component Instance} Parent instance
+     */
+    getParentInstance = inst => {
+      return ReactTestUtils.findRenderedComponentWithType(
+        inst,
+        ParentComponent,
+      );
+    };
   });
 
   it('should store a listener correctly', () => {
-    registerSimpleTestHandler();
-    var listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(LISTENER);
+    createInitialInstance();
+    const inst = updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+      },
+    });
+    const child = getChildInstance(inst);
+    expect(child.props.onClick).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', () => {
-    registerSimpleTestHandler();
-    var listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(LISTENER);
+    createInitialInstance();
+    const inst = updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: LISTENER,
+      },
+    });
+    const child = getChildInstance(inst);
+    expect(child.props.onClick).toBe(LISTENER);
   });
 
   it('should clear all handlers when asked to', () => {
-    registerSimpleTestHandler();
-    deleteAllListeners(CHILD);
-    var listener = getListener(CHILD, ON_CLICK_KEY);
-    expect(listener).toBe(undefined);
+    createInitialInstance();
+    const inst = updateInstance({
+      parentProps: {},
+      childProps: {},
+    });
+    const child = getChildInstance(inst);
+    expect(child.props.onClick).toBe(undefined);
   });
 
   it('should invoke a simple handler registered on a node', () => {
-    registerSimpleTestHandler();
-    ReactTestUtils.Simulate.click(CHILD);
+    const inst = createInitialInstance();
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
@@ -164,134 +146,233 @@ describe('ReactBrowserEventEmitter', () => {
    * to instead.
    */
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
-    registerSimpleTestHandler();
+    const inst = createInitialInstance();
     ReactBrowserEventEmitter.setEnabled(false);
-    ReactTestUtils.SimulateNative.click(CHILD);
+    const child = getChildInstance(inst);
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(child));
     expect(LISTENER.mock.calls.length).toBe(0);
     ReactBrowserEventEmitter.setEnabled(true);
-    ReactTestUtils.SimulateNative.click(CHILD);
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(child));
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
   it('should bubble simply', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toEqual(CHILD);
-    expect(idCallOrder[1]).toEqual(PARENT);
-    expect(idCallOrder[2]).toEqual(GRANDPARENT);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall() {
+      calls = calls.concat('child is call');
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
   });
 
   it('should bubble to the right handler after an update', () => {
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, 'GRANDPARENT'));
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, 'PARENT'));
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, 'CHILD'));
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'GRANDPARENT']);
-
-    idCallOrder = [];
-
-    // Update just the grand parent without updating the child.
-    putListener(
-      GRANDPARENT,
-      ON_CLICK_KEY,
-      recordID.bind(null, 'UPDATED_GRANDPARENT'),
-    );
-
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder).toEqual(['CHILD', 'PARENT', 'UPDATED_GRANDPARENT']);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function parentUpdateCall() {
+      calls = calls.concat('parentUpdate is call');
+    }
+    function childCall() {
+      calls = calls.concat('child is call');
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
+    calls = [];
+    updateInstance({
+      parentProps: {
+        onClick: parentUpdateCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parentUpdate is call');
   });
 
   it('should continue bubbling if an error is thrown', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, function() {
-      recordID(PARENT);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall() {
+      calls = calls.concat('child is call');
       throw new Error('Handler interrupted');
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
     });
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    expect(function() {
-      ReactTestUtils.Simulate.click(CHILD);
-    }).toThrow();
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toEqual(CHILD);
-    expect(idCallOrder[1]).toEqual(PARENT);
-    expect(idCallOrder[2]).toEqual(GRANDPARENT);
+    const child = getChildInstance(inst);
+    expect(() =>
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child)),
+    ).toThrow();
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
   });
 
   it('should set currentTarget', () => {
-    putListener(CHILD, ON_CLICK_KEY, function(event) {
-      recordID(CHILD);
-      expect(event.currentTarget).toBe(CHILD);
+    let targets = [];
+    function parentCall(event) {
+      targets = targets.concat(event.currentTarget);
+    }
+    function childCall(event) {
+      targets = targets.concat(event.currentTarget);
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
     });
-    putListener(PARENT, ON_CLICK_KEY, function(event) {
-      recordID(PARENT);
-      expect(event.currentTarget).toBe(PARENT);
-    });
-    putListener(GRANDPARENT, ON_CLICK_KEY, function(event) {
-      recordID(GRANDPARENT);
-      expect(event.currentTarget).toBe(GRANDPARENT);
-    });
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toEqual(CHILD);
-    expect(idCallOrder[1]).toEqual(PARENT);
-    expect(idCallOrder[2]).toEqual(GRANDPARENT);
+    const child = getChildInstance(inst);
+    const parent = getParentInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(targets.length).toBe(2);
+    expect(targets[0]).toBe(ReactDOM.findDOMNode(child));
+    expect(targets[1]).toBe(ReactDOM.findDOMNode(parent));
   });
 
+  /**
+   * when call stopPropagation only call child,
+   * don't bubbling
+   */
   it('should support stopPropagation()', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(
-      PARENT,
-      ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, PARENT),
-    );
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toEqual(CHILD);
-    expect(idCallOrder[1]).toEqual(PARENT);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      event.stopPropagation();
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe('child is call');
   });
 
   it('should support overriding .isPropagationStopped()', () => {
-    // Ew. See D4504876.
-    putListener(CHILD, ON_CLICK_KEY, recordID.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, function(e) {
-      recordID(PARENT, e);
+    let calls = [];
+    function parentCall(event) {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
       // This stops React bubbling but avoids touching the native event
-      e.isPropagationStopped = () => true;
+      event.isPropagationStopped = () => true;
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
     });
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(2);
-    expect(idCallOrder[0]).toEqual(CHILD);
-    expect(idCallOrder[1]).toEqual(PARENT);
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe('child is call');
   });
 
   it('should stop after first dispatch if stopPropagation', () => {
-    putListener(
-      CHILD,
-      ON_CLICK_KEY,
-      recordIDAndStopPropagation.bind(null, CHILD),
-    );
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toEqual(CHILD);
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      event.stopPropagation();
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(1);
+    expect(calls[0]).toBe('child is call');
   });
 
   it('should not stopPropagation if false is returned', () => {
-    putListener(CHILD, ON_CLICK_KEY, recordIDAndReturnFalse.bind(null, CHILD));
-    putListener(PARENT, ON_CLICK_KEY, recordID.bind(null, PARENT));
-    putListener(GRANDPARENT, ON_CLICK_KEY, recordID.bind(null, GRANDPARENT));
+    let calls = [];
+    function parentCall() {
+      calls = calls.concat('parent is call');
+    }
+    function childCall(event) {
+      calls = calls.concat('child is call');
+      return false;
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
     spyOnDev(console, 'error');
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(idCallOrder.length).toBe(3);
-    expect(idCallOrder[0]).toEqual(CHILD);
-    expect(idCallOrder[1]).toEqual(PARENT);
-    expect(idCallOrder[2]).toEqual(GRANDPARENT);
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(calls.length).toBe(2);
+    expect(calls[0]).toBe('child is call');
+    expect(calls[1]).toBe('parent is call');
     if (__DEV__) {
       expect(console.error.calls.count()).toEqual(0);
     }
@@ -307,67 +388,111 @@ describe('ReactBrowserEventEmitter', () => {
    */
 
   it('should invoke handlers that were removed while bubbling', () => {
-    var handleParentClick = jest.fn();
-    var handleChildClick = function(event) {
-      deleteAllListeners(PARENT);
-    };
-    putListener(CHILD, ON_CLICK_KEY, handleChildClick);
-    putListener(PARENT, ON_CLICK_KEY, handleParentClick);
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(handleParentClick.mock.calls.length).toBe(1);
+    let parentMockFn = jest.fn();
+    function parentCall() {
+      parentMockFn();
+    }
+    /**
+     * click child and remove parent onClick event
+     */
+    function childCall() {
+      updateInstance({
+        parentProps: {},
+        childProps: {
+          onClick: childCall,
+        },
+      });
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {
+        onClick: parentCall,
+      },
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(parentMockFn.mock.calls.length).toBe(1);
   });
 
   it('should not invoke newly inserted handlers while bubbling', () => {
-    var handleParentClick = jest.fn();
-    var handleChildClick = function(event) {
-      putListener(PARENT, ON_CLICK_KEY, handleParentClick);
-    };
-    putListener(CHILD, ON_CLICK_KEY, handleChildClick);
-    ReactTestUtils.Simulate.click(CHILD);
-    expect(handleParentClick.mock.calls.length).toBe(0);
+    let parentMockFn = jest.fn();
+    function parentCall() {
+      parentMockFn();
+    }
+    /**
+     * click child and update parent onClick event,
+     * but don't bubbling parent click event
+     */
+    function childCall() {
+      updateInstance({
+        parentProps: {
+          onClick: parentCall,
+        },
+        childProps: {
+          onClick: childCall,
+        },
+      });
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onClick: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    expect(parentMockFn.mock.calls.length).toBe(0);
   });
 
   it('should have mouse enter simulated by test utils', () => {
-    putListener(CHILD, ON_MOUSE_ENTER_KEY, recordID.bind(null, CHILD));
-    ReactTestUtils.Simulate.mouseEnter(CHILD);
-    expect(idCallOrder.length).toBe(1);
-    expect(idCallOrder[0]).toEqual(CHILD);
+    let targets = [];
+    function childCall(event) {
+      targets = targets.concat(event.currentTarget);
+    }
+    const inst = createInitialInstance();
+    updateInstance({
+      parentProps: {},
+      childProps: {
+        onMouseEnter: childCall,
+      },
+    });
+    const child = getChildInstance(inst);
+    ReactTestUtils.Simulate.mouseEnter(ReactDOM.findDOMNode(child));
+    expect(targets[0]).toBe(ReactDOM.findDOMNode(child));
   });
 
   it('should listen to events only once', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, container);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, container);
+    ReactBrowserEventEmitter.listenTo('onClick', document);
+    ReactBrowserEventEmitter.listenTo('onClick', document);
     expect(EventTarget.prototype.addEventListener.calls.count()).toBe(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, container);
-
+    ReactBrowserEventEmitter.listenTo('onClick', document);
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
     );
   });
 
-  // it('should work with event plugins with dependencies', () => {
-  //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-
-  //   ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
-
-  //   var setEventListeners = [];
-  //   var listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
-  //   for (var i = 0; i < listenCalls.length; i++) {
-  //     setEventListeners.push(listenCalls[i][1]);
-  //   }
-
-  //   var module = EventPluginRegistry.registrationNameModules[ON_CHANGE_KEY];
-  //   var dependencies = module.eventTypes.change.dependencies;
-  //   expect(setEventListeners.length).toEqual(dependencies.length);
-
-  //   for (i = 0; i < setEventListeners.length; i++) {
-  //     expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
-  //   }
-  // });
+  it('should work with event plugins with dependencies', () => {
+    //   spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
+    //   ReactBrowserEventEmitter.listenTo('onClick', document);
+    //   var setEventListeners = [];
+    //   var listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
+    //   for (var i = 0; i < listenCalls.length; i++) {
+    //     setEventListeners.push(listenCalls[i][1]);
+    //   }
+    //   var module = EventPluginRegistry.registrationNameModules['onChange'];
+    //   var dependencies = module.eventTypes.change.dependencies;
+    //   expect(setEventListeners.length).toEqual(dependencies.length);
+    //   for (i = 0; i < setEventListeners.length; i++) {
+    //     expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
+    //   }
+  });
 });
