@@ -37,10 +37,12 @@ import getComponentName from 'shared/getComponentName';
 import {NoWork} from './ReactFiberExpirationTime';
 import {NoContext} from './ReactTypeOfInternalContext';
 
+let hasBadMapPolyfill;
+
 if (__DEV__) {
-  var hasBadMapPolyfill = false;
+  hasBadMapPolyfill = false;
   try {
-    var nonExtensibleObject = Object.preventExtensions({});
+    const nonExtensibleObject = Object.preventExtensions({});
     /* eslint-disable no-new */
     new Map([[nonExtensibleObject, null]]);
     new Set([nonExtensibleObject]);
@@ -146,8 +148,10 @@ export type Fiber = {|
   _debugIsCurrentlyTiming?: boolean,
 |};
 
+let debugCounter;
+
 if (__DEV__) {
-  var debugCounter = 1;
+  debugCounter = 1;
 }
 
 function FiberNode(

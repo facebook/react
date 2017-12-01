@@ -18,8 +18,10 @@ import warning from 'fbjs/lib/warning';
 
 import {NoWork} from './ReactFiberExpirationTime';
 
+let didWarnUpdateInsideUpdate;
+
 if (__DEV__) {
-  var didWarnUpdateInsideUpdate = false;
+  didWarnUpdateInsideUpdate = false;
 }
 
 type PartialState<State, Props> =
