@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import warning from 'fbjs/lib/warning';
@@ -38,6 +40,8 @@ const POSITIVE_NUMERIC = 4;
 // strictly equal to true; present with a value otherwise.
 const OVERLOADED_BOOLEAN = 5;
 
+type PropertyType = 0 | 1 | 2 | 3 | 4 | 5;
+
 function injectDOMPropertyConfig(domPropertyConfig) {
   for (var propName in domPropertyConfig) {
     if (__DEV__) {
@@ -69,13 +73,13 @@ export const ATTRIBUTE_NAME_CHAR =
 export const ID_ATTRIBUTE_NAME = 'data-reactid';
 export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
 
-const propertyTypes = new Map();
+const propertyTypes: Map<string, PropertyType> = new Map();
 
 /**
  * Checks whether a property name is a writeable attribute.
  * @method
  */
-export function shouldSetAttribute(name, value) {
+export function shouldSetAttribute(name: string, value: mixed) {
   if (isReservedProp(name)) {
     return false;
   }
@@ -107,11 +111,11 @@ export function shouldSetAttribute(name, value) {
 // It shouldn't be observable whether something is whitelisted if it
 // doesn't have special behavior except being an alias. But at least
 // we're explicit about this now.
-export function isWhitelisted(name) {
+export function isWhitelisted(name: string) {
   return propertyTypes.has(name);
 }
 
-export function shouldAttributeAcceptBooleanValue(name) {
+export function shouldAttributeAcceptBooleanValue(name: string) {
   if (isReservedProp(name)) {
     return true;
   }
@@ -136,11 +140,11 @@ export function shouldAttributeAcceptBooleanValue(name) {
  * @param {string} name
  * @return {boolean} If the name is within reserved props
  */
-export function isReservedProp(name) {
+export function isReservedProp(name: string) {
   return RESERVED_PROPS.hasOwnProperty(name);
 }
 
-const attributeNames = new Map([
+const attributeNames: Map<string, string> = new Map([
   ['acceptCharset', 'accept-charset'],
   ['className', 'class'],
   ['htmlFor', 'for'],
@@ -151,16 +155,17 @@ const attributeNames = new Map([
   ['preserveAlpha', 'preserveAlpha'],
 ]);
 
-export function getAttributeName(name) {
-  if (attributeNames.has(name)) {
-    return attributeNames.get(name);
+export function getAttributeName(name: string): string {
+  let attributeName = attributeNames.get(name);
+  if (typeof attributeName === 'string') {
+    return attributeName;
   }
-  const attributeName = isWhitelisted(name) ? name.toLowerCase() : name;
+  attributeName = isWhitelisted(name) ? name.toLowerCase() : name;
   attributeNames.set(name, attributeName);
   return attributeName;
 }
 
-export function getAttributeNamespace(name) {
+export function getAttributeNamespace(name: string): string | null {
   switch (name) {
     case 'xlinkActuate':
     case 'xlinkArcrole':
@@ -179,15 +184,15 @@ export function getAttributeNamespace(name) {
   }
 }
 
-export function hasBooleanValue(name) {
+export function hasBooleanValue(name: string): boolean {
   return propertyTypes.get(name) === BOOLEAN;
 }
 
-export function hasOverloadedBooleanValue(name) {
+export function hasOverloadedBooleanValue(name: string): boolean {
   return propertyTypes.get(name) === OVERLOADED_BOOLEAN;
 }
 
-export function shouldIgnoreValue(name, value) {
+export function shouldIgnoreValue(name: string, value: mixed): boolean {
   if (value == null) {
     return true;
   }
@@ -201,7 +206,8 @@ export function shouldIgnoreValue(name, value) {
     case OVERLOADED_BOOLEAN:
       return value === false;
     case POSITIVE_NUMERIC:
-      if (value < 1) {
+      // Intentional implicit coercion (e.g. '0' < 1)
+      if ((value: any) < 1) {
         return true;
       }
     // intentional fallthrough
@@ -212,9 +218,14 @@ export function shouldIgnoreValue(name, value) {
   }
 }
 
-const usePropertiesFor = new Set(['checked', 'multiple', 'muted', 'selected']);
+const usePropertiesFor: Set<string> = new Set([
+  'checked',
+  'multiple',
+  'muted',
+  'selected',
+]);
 
-export function shouldUseProperty(name) {
+export function shouldUseProperty(name: string): boolean {
   return usePropertiesFor.has(name);
 }
 
