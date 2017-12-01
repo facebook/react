@@ -9,12 +9,12 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
+let React;
+let ReactDOM;
+let ReactDOMServer;
 
 function getTestDocument(markup) {
-  var doc = document.implementation.createHTMLDocument('');
+  const doc = document.implementation.createHTMLDocument('');
   doc.open();
   doc.write(
     markup ||
@@ -60,9 +60,9 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(<Root hello="world" />);
-      var testDocument = getTestDocument(markup);
-      var body = testDocument.body;
+      const markup = ReactDOMServer.renderToString(<Root hello="world" />);
+      const testDocument = getTestDocument(markup);
+      const body = testDocument.body;
 
       ReactDOM.render(<Root hello="world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -89,8 +89,8 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(<Root />);
-      var testDocument = getTestDocument(markup);
+      const markup = ReactDOMServer.renderToString(<Root />);
+      const testDocument = getTestDocument(markup);
       ReactDOM.render(<Root />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
 
@@ -129,8 +129,8 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(<Component />);
-      var testDocument = getTestDocument(markup);
+      const markup = ReactDOMServer.renderToString(<Component />);
+      const testDocument = getTestDocument(markup);
 
       ReactDOM.render(<Component />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -157,10 +157,10 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToString(
         <Component text="Hello world" />,
       );
-      var testDocument = getTestDocument(markup);
+      const testDocument = getTestDocument(markup);
 
       ReactDOM.render(<Component text="Hello world" />, testDocument);
 
@@ -192,10 +192,10 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToString(
         <Component text="Goodbye world" />,
       );
-      var testDocument = getTestDocument(markup);
+      const testDocument = getTestDocument(markup);
 
       spyOnDev(console, 'warn');
       spyOnDev(console, 'error');
@@ -216,7 +216,7 @@ describe('rendering React components at document', () => {
     });
 
     it('should throw on full document render w/ no markup', () => {
-      var testDocument = getTestDocument();
+      const testDocument = getTestDocument();
 
       class Component extends React.Component {
         render() {
@@ -240,7 +240,7 @@ describe('rendering React components at document', () => {
 
     it('supports findDOMNode on full-page components', () => {
       spyOnDev(console, 'warn');
-      var tree = (
+      const tree = (
         <html>
           <head>
             <title>Hello World</title>
@@ -249,9 +249,9 @@ describe('rendering React components at document', () => {
         </html>
       );
 
-      var markup = ReactDOMServer.renderToString(tree);
-      var testDocument = getTestDocument(markup);
-      var component = ReactDOM.render(tree, testDocument);
+      const markup = ReactDOMServer.renderToString(tree);
+      const testDocument = getTestDocument(markup);
+      const component = ReactDOM.render(tree, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
       expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
       expectDeprecationWarningWithFiber();
@@ -273,9 +273,9 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(<Root hello="world" />);
-      var testDocument = getTestDocument(markup);
-      var body = testDocument.body;
+      const markup = ReactDOMServer.renderToString(<Root hello="world" />);
+      const testDocument = getTestDocument(markup);
+      const body = testDocument.body;
 
       ReactDOM.hydrate(<Root hello="world" />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
@@ -300,8 +300,8 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(<Root />);
-      var testDocument = getTestDocument(markup);
+      const markup = ReactDOMServer.renderToString(<Root />);
+      const testDocument = getTestDocument(markup);
       ReactDOM.hydrate(<Root />, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
 
@@ -337,8 +337,8 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(<Component />);
-      var testDocument = getTestDocument(markup);
+      const markup = ReactDOMServer.renderToString(<Component />);
+      const testDocument = getTestDocument(markup);
 
       ReactDOM.hydrate(<Component />, testDocument);
 
@@ -364,10 +364,10 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToString(
         <Component text="Hello world" />,
       );
-      var testDocument = getTestDocument(markup);
+      const testDocument = getTestDocument(markup);
 
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
 
@@ -402,10 +402,10 @@ describe('rendering React components at document', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToString(
         <Component text="Goodbye world" />,
       );
-      var testDocument = getTestDocument(markup);
+      const testDocument = getTestDocument(markup);
 
       spyOnDev(console, 'error');
       ReactDOM.hydrate(<Component text="Hello world" />, testDocument);
@@ -420,7 +420,7 @@ describe('rendering React components at document', () => {
 
     it('should render w/ no markup to full document', () => {
       spyOnDev(console, 'error');
-      var testDocument = getTestDocument();
+      const testDocument = getTestDocument();
 
       class Component extends React.Component {
         render() {
@@ -447,7 +447,7 @@ describe('rendering React components at document', () => {
     });
 
     it('supports findDOMNode on full-page components', () => {
-      var tree = (
+      const tree = (
         <html>
           <head>
             <title>Hello World</title>
@@ -456,9 +456,9 @@ describe('rendering React components at document', () => {
         </html>
       );
 
-      var markup = ReactDOMServer.renderToString(tree);
-      var testDocument = getTestDocument(markup);
-      var component = ReactDOM.hydrate(tree, testDocument);
+      const markup = ReactDOMServer.renderToString(tree);
+      const testDocument = getTestDocument(markup);
+      const component = ReactDOM.hydrate(tree, testDocument);
       expect(testDocument.body.innerHTML).toBe('Hello world');
       expect(ReactDOM.findDOMNode(component).tagName).toBe('HTML');
     });

@@ -9,10 +9,10 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
-var TestComponent;
+let TestComponent;
 
 describe('ReactCompositeComponent-state', () => {
   beforeEach(() => {
@@ -123,11 +123,11 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should support setting state', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     document.body.appendChild(container);
 
-    var stateListener = jest.fn();
-    var instance = ReactDOM.render(
+    const stateListener = jest.fn();
+    const instance = ReactDOM.render(
       <TestComponent stateListener={stateListener} />,
       container,
       function peekAtInitialCallback() {
@@ -217,12 +217,12 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should call componentDidUpdate of children first', () => {
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
-    var ops = [];
+    let ops = [];
 
-    var child = null;
-    var parent = null;
+    let child = null;
+    let parent = null;
 
     class Child extends React.Component {
       state = {bar: false};
@@ -237,7 +237,7 @@ describe('ReactCompositeComponent-state', () => {
       }
     }
 
-    var shouldUpdate = true;
+    let shouldUpdate = true;
 
     class Intermediate extends React.Component {
       shouldComponentUpdate() {
@@ -284,7 +284,7 @@ describe('ReactCompositeComponent-state', () => {
   });
 
   it('should batch unmounts', () => {
-    var outer;
+    let outer;
 
     class Inner extends React.Component {
       render() {
@@ -306,7 +306,7 @@ describe('ReactCompositeComponent-state', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     outer = ReactDOM.render(<Outer />, container);
     expect(() => {
       ReactDOM.unmountComponentAtNode(container);
@@ -338,7 +338,7 @@ describe('ReactCompositeComponent-state', () => {
         return <div>{this.props.value}</div>;
       }
     }
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Parent />, container);
     ReactDOM.render(<Parent />, container);
     expect(log).toEqual([
