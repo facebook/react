@@ -31,7 +31,20 @@ describe('ReactDOMSVG', () => {
 
   it('creates elements with SVG namespace inside SVG tag during mount', () => {
     const node = document.createElement('div');
-    let div, div2, div3, foreignObject, foreignObject2, g, image, image2, image3, p, svg, svg2, svg3, svg4;
+    let div,
+      div2,
+      div3,
+      foreignObject,
+      foreignObject2,
+      g,
+      image,
+      image2,
+      image3,
+      p,
+      svg,
+      svg2,
+      svg3,
+      svg4;
     ReactDOM.render(
       <div>
         <svg ref={el => (svg = el)}>
@@ -98,7 +111,18 @@ describe('ReactDOMSVG', () => {
   });
 
   it('creates elements with SVG namespace inside SVG tag during update', () => {
-    let inst, div, div2, foreignObject, foreignObject2, g, image, image2, svg, svg2, svg3, svg4;
+    let inst,
+      div,
+      div2,
+      foreignObject,
+      foreignObject2,
+      g,
+      image,
+      image2,
+      svg,
+      svg2,
+      svg3,
+      svg4;
 
     class App extends React.Component {
       state = {step: 0};
@@ -174,7 +198,10 @@ describe('ReactDOMSVG', () => {
       'http://www.w3.org/2000/svg',
       'svg',
     );
-    const container = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    const container = document.createElementNS(
+      'http://www.w3.org/2000/svg',
+      'g',
+    );
     outerSVGRoot.appendChild(container);
     let image;
     ReactDOM.render(<image ref={el => (image = el)} />, container);

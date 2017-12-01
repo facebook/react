@@ -46,7 +46,12 @@ describe('ReactDOMComponent', () => {
       const stubStyle = container.firstChild.style;
 
       // set initial style
-      const setup = {display: 'block', left: '1px', top: 2, fontFamily: 'Arial'};
+      const setup = {
+        display: 'block',
+        left: '1px',
+        top: 2,
+        fontFamily: 'Arial',
+      };
       ReactDOM.render(<div style={setup} />, container);
       expect(stubStyle.display).toEqual('block');
       expect(stubStyle.left).toEqual('1px');
@@ -63,7 +68,11 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should not update styles when mutating a proxy style object', () => {
-      const styleStore = {display: 'none', fontFamily: 'Arial', lineHeight: 1.2};
+      const styleStore = {
+        display: 'none',
+        fontFamily: 'Arial',
+        lineHeight: 1.2,
+      };
       // We use a proxy style object so that we can mutate it even if it is
       // frozen in DEV.
       const styles = {

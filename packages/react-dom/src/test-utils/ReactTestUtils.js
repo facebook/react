@@ -409,7 +409,8 @@ function buildSimulators() {
 }
 
 // Rebuild ReactTestUtils.Simulate whenever event plugins are injected
-const oldInjectEventPluginOrder = EventPluginHub.injection.injectEventPluginOrder;
+const oldInjectEventPluginOrder =
+  EventPluginHub.injection.injectEventPluginOrder;
 EventPluginHub.injection.injectEventPluginOrder = function() {
   oldInjectEventPluginOrder.apply(this, arguments);
   buildSimulators();
