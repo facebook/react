@@ -26,7 +26,7 @@ import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getAttributeName,
-  getPropertyInfo,
+  isWhitelisted,
   shouldSetAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
@@ -998,7 +998,7 @@ export function diffHydratedProperties(
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       } else if (shouldSetAttribute(propKey, nextProp)) {
-        if (getPropertyInfo(propKey)) {
+        if (isWhitelisted(propKey)) {
           const attributeName = getAttributeName(propKey);
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(attributeName);

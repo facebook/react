@@ -143,8 +143,16 @@ export function shouldSetAttribute(name, value) {
   }
 }
 
-export function getPropertyInfo(name) {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
+// TODO: the fact that we rely on this in many code paths seems bad.
+// It shouldn't be observable whether something is whitelisted if it
+// doesn't have special behavior except being an alias. But at least
+// we're explicit about this now.
+export function isWhitelisted(name) {
+  return properties.hasOwnProperty(name);
+}
+
+function getPropertyInfo(name) {
+  return isWhitelisted(name) ? properties[name] : null;
 }
 
 export function shouldAttributeAcceptBooleanValue(name) {
@@ -191,10 +199,7 @@ export function getAttributeName(name) {
   if (attributeNames.has(name)) {
     return attributeNames.get(name);
   }
-  // TODO: it is odd that this depends on `properties` whitelist.
-  const attributeName = properties.hasOwnProperty(name)
-    ? name.toLowerCase()
-    : name;
+  const attributeName = isWhitelisted(name) ? name.toLowerCase() : name;
   attributeNames.set(name, attributeName);
   return attributeName;
 }

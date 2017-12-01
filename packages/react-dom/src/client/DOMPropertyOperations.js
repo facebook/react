@@ -12,7 +12,7 @@ import {
   ROOT_ATTRIBUTE_NAME,
   getAttributeName,
   getAttributeNamespace,
-  getPropertyInfo,
+  isWhitelisted,
   hasBooleanValue,
   hasOverloadedBooleanValue,
   hasNumericValue,
@@ -78,8 +78,7 @@ export function setAttributeForRoot(node) {
  */
 export function getValueForProperty(node, name, expected) {
   if (__DEV__) {
-    var propertyInfo = getPropertyInfo(name);
-    if (propertyInfo) {
+    if (isWhitelisted(name)) {
       if (shouldUseProperty(name)) {
         return node[name];
       } else {
@@ -160,9 +159,7 @@ export function getValueForAttribute(node, name, expected) {
  * @param {*} value
  */
 export function setValueForProperty(node, name, value) {
-  var propertyInfo = getPropertyInfo(name);
-
-  if (propertyInfo && shouldSetAttribute(name, value)) {
+  if (isWhitelisted(name) && shouldSetAttribute(name, value)) {
     if (shouldIgnoreValue(name, value)) {
       deleteValueForProperty(node, name);
       return;
@@ -234,8 +231,7 @@ export function deleteValueForAttribute(node, name) {
  * @param {string} name
  */
 export function deleteValueForProperty(node, name) {
-  var propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
+  if (isWhitelisted(name)) {
     if (shouldUseProperty(name)) {
       if (hasBooleanValue(name)) {
         node[name] = false;

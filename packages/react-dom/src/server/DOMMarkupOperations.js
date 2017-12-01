@@ -11,7 +11,7 @@ import {
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
   getAttributeName,
-  getPropertyInfo,
+  isWhitelisted,
   hasBooleanValue,
   hasOverloadedBooleanValue,
   hasNumericValue,
@@ -85,8 +85,7 @@ export function createMarkupForRoot() {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name, value) {
-  var propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
+  if (isWhitelisted(name)) {
     if (shouldIgnoreValue(name, value)) {
       return '';
     }
