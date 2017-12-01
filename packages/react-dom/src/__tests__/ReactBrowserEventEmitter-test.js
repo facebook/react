@@ -22,6 +22,8 @@ let updateInstance;
 let CHILD, PARENT;
 
 describe('ReactBrowserEventEmitter', () => {
+  let container;
+
   beforeEach(() => {
     jest.resetModules();
     LISTENER.mockClear();
@@ -31,7 +33,8 @@ describe('ReactBrowserEventEmitter', () => {
     ReactBrowserEventEmitter = require('react-dom/src/events/ReactBrowserEventEmitter');
     ReactTestUtils = require('react-dom/test-utils');
 
-    let container = document.createElement('div');
+    container = document.createElement('div');
+    document.body.appendChild(container);
 
     class Child extends React.PureComponent {
       render() {
@@ -82,6 +85,8 @@ describe('ReactBrowserEventEmitter', () => {
   });
 
   afterEach(() => {
+    document.body.removeChild(container);
+    container = null;
     CHILD = null;
     PARENT = null;
   });
@@ -119,7 +124,13 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should invoke a simple handler registered on a node', () => {
     createInitialInstance();
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
@@ -131,10 +142,21 @@ describe('ReactBrowserEventEmitter', () => {
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
     createInitialInstance();
     ReactBrowserEventEmitter.setEnabled(false);
-    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(LISTENER.mock.calls.length).toBe(0);
     ReactBrowserEventEmitter.setEnabled(true);
-    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(CHILD));
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
@@ -154,7 +176,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -180,7 +208,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -193,7 +227,12 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parentUpdate is call');
@@ -217,9 +256,10 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    expect(() =>
-      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD)),
-    ).toThrow();
+    let node = ReactDOM.findDOMNode(CHILD);
+    expect(() => ReactTestUtils.Simulate.click(node)).toThrowError(
+      'Handler interrupted',
+    );
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -242,10 +282,17 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    let parentNode = ReactDOM.findDOMNode(PARENT);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(targets.length).toBe(2);
-    expect(targets[0]).toBe(ReactDOM.findDOMNode(CHILD));
-    expect(targets[1]).toBe(ReactDOM.findDOMNode(PARENT));
+    expect(targets[0]).toBe(node);
+    expect(targets[1]).toBe(parentNode);
   });
 
   /**
@@ -270,7 +317,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
   });
@@ -294,7 +347,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
   });
@@ -317,7 +376,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
   });
@@ -341,7 +406,13 @@ describe('ReactBrowserEventEmitter', () => {
       },
     });
     spyOnDev(console, 'error');
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -384,7 +455,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(parentMockFn.mock.calls.length).toBe(1);
   });
 
@@ -414,7 +491,13 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('click', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
     expect(parentMockFn.mock.calls.length).toBe(0);
   });
 
@@ -430,8 +513,14 @@ describe('ReactBrowserEventEmitter', () => {
         onMouseEnter: childCall,
       },
     });
-    ReactTestUtils.Simulate.mouseEnter(ReactDOM.findDOMNode(CHILD));
-    expect(targets[0]).toBe(ReactDOM.findDOMNode(CHILD));
+    let node = ReactDOM.findDOMNode(CHILD);
+    node.dispatchEvent(
+      new MouseEvent('mouseover', {
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+    expect(targets[0]).toBe(node);
   });
 
   it('should listen to events only once', () => {
