@@ -12,6 +12,10 @@ import {
   ROOT_ATTRIBUTE_NAME,
   getAttributeName,
   getPropertyInfo,
+  hasBooleanValue,
+  hasOverloadedBooleanValue,
+  hasNumericValue,
+  hasPositiveNumericValue,
   shouldAttributeAcceptBooleanValue,
   shouldSetAttribute,
 } from '../shared/DOMProperty';
@@ -45,13 +49,13 @@ function isAttributeNameSafe(attributeName) {
 
 // shouldIgnoreValue() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
+function shouldIgnoreValue(name, value) {
   return (
     value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
+    (hasBooleanValue(name) && !value) ||
+    (hasNumericValue(name) && isNaN(value)) ||
+    (hasPositiveNumericValue(name) && value < 1) ||
+    (hasOverloadedBooleanValue(name) && value === false)
   );
 }
 
@@ -83,13 +87,13 @@ export function createMarkupForRoot() {
 export function createMarkupForProperty(name, value) {
   var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
+    if (shouldIgnoreValue(name, value)) {
       return '';
     }
     var attributeName = getAttributeName(name);
     if (
-      propertyInfo.hasBooleanValue ||
-      (propertyInfo.hasOverloadedBooleanValue && value === true)
+      hasBooleanValue(name) ||
+      (hasOverloadedBooleanValue(name) && value === true)
     ) {
       return attributeName;
     } else if (

@@ -218,6 +218,38 @@ export function getAttributeNamespace(name) {
   }
 }
 
+export function hasBooleanValue(name) {
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo !== null) {
+    return propertyInfo.hasBooleanValue;
+  }
+  return false;
+}
+
+export function hasOverloadedBooleanValue(name) {
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo !== null) {
+    return propertyInfo.hasOverloadedBooleanValue;
+  }
+  return false;
+}
+
+export function hasNumericValue(name) {
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo !== null) {
+    return propertyInfo.hasNumericValue;
+  }
+  return false;
+}
+
+export function hasPositiveNumericValue(name) {
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo !== null) {
+    return propertyInfo.hasPositiveNumericValue;
+  }
+  return false;
+}
+
 const usePropertiesFor = new Set(['checked', 'multiple', 'muted', 'selected']);
 
 export function shouldUseProperty(name) {

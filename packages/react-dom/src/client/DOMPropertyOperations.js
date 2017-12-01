@@ -13,6 +13,10 @@ import {
   getAttributeName,
   getAttributeNamespace,
   getPropertyInfo,
+  hasBooleanValue,
+  hasOverloadedBooleanValue,
+  hasNumericValue,
+  hasPositiveNumericValue,
   shouldSetAttribute,
   shouldUseProperty,
 } from '../shared/DOMProperty';
@@ -45,13 +49,13 @@ function isAttributeNameSafe(attributeName) {
 
 // shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
 // TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
+function shouldIgnoreValue(name, value) {
   return (
     value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
+    (hasBooleanValue(name) && !value) ||
+    (hasNumericValue(name) && isNaN(value)) ||
+    (hasPositiveNumericValue(name) && value < 1) ||
+    (hasOverloadedBooleanValue(name) && value === false)
   );
 }
 
@@ -83,13 +87,13 @@ export function getValueForProperty(node, name, expected) {
 
         var stringValue = null;
 
-        if (propertyInfo.hasOverloadedBooleanValue) {
+        if (hasOverloadedBooleanValue(name)) {
           if (node.hasAttribute(attributeName)) {
             var value = node.getAttribute(attributeName);
             if (value === '') {
               return true;
             }
-            if (shouldIgnoreValue(propertyInfo, expected)) {
+            if (shouldIgnoreValue(name, expected)) {
               return value;
             }
             if (value === '' + expected) {
@@ -98,12 +102,12 @@ export function getValueForProperty(node, name, expected) {
             return value;
           }
         } else if (node.hasAttribute(attributeName)) {
-          if (shouldIgnoreValue(propertyInfo, expected)) {
+          if (shouldIgnoreValue(name, expected)) {
             // We had an attribute but shouldn't have had one, so read it
             // for the error message.
             return node.getAttribute(attributeName);
           }
-          if (propertyInfo.hasBooleanValue) {
+          if (hasBooleanValue(name)) {
             // If this was a boolean, it doesn't matter what the value is
             // the fact that we have it is the same as the expected.
             return expected;
@@ -115,7 +119,7 @@ export function getValueForProperty(node, name, expected) {
           stringValue = node.getAttribute(attributeName);
         }
 
-        if (shouldIgnoreValue(propertyInfo, expected)) {
+        if (shouldIgnoreValue(name, expected)) {
           return stringValue === null ? expected : stringValue;
         } else if (stringValue === '' + expected) {
           return expected;
@@ -159,7 +163,7 @@ export function setValueForProperty(node, name, value) {
   var propertyInfo = getPropertyInfo(name);
 
   if (propertyInfo && shouldSetAttribute(name, value)) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
+    if (shouldIgnoreValue(name, value)) {
       deleteValueForProperty(node, name);
       return;
     } else if (shouldUseProperty(name)) {
@@ -174,8 +178,8 @@ export function setValueForProperty(node, name, value) {
       if (namespace) {
         node.setAttributeNS(namespace, attributeName, '' + value);
       } else if (
-        propertyInfo.hasBooleanValue ||
-        (propertyInfo.hasOverloadedBooleanValue && value === true)
+        hasBooleanValue(name) ||
+        (hasOverloadedBooleanValue(name) && value === true)
       ) {
         node.setAttribute(attributeName, '');
       } else {
@@ -233,7 +237,7 @@ export function deleteValueForProperty(node, name) {
   var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
     if (shouldUseProperty(name)) {
-      if (propertyInfo.hasBooleanValue) {
+      if (hasBooleanValue(name)) {
         node[name] = false;
       } else {
         node[name] = '';
