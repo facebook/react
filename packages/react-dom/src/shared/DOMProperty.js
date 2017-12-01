@@ -24,7 +24,6 @@ function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
 }
 
-const MUST_USE_PROPERTY = 0x1;
 const HAS_BOOLEAN_VALUE = 0x4;
 const HAS_NUMERIC_VALUE = 0x8;
 const HAS_POSITIVE_NUMERIC_VALUE = 0x10 | 0x8;
@@ -49,7 +48,6 @@ function injectDOMPropertyConfig(domPropertyConfig) {
     var propConfig = Properties[propName];
 
     var propertyInfo = {
-      mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
       hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
       hasNumericValue: checkMask(propConfig, HAS_NUMERIC_VALUE),
       hasPositiveNumericValue: checkMask(
@@ -220,6 +218,12 @@ export function getAttributeNamespace(name) {
   }
 }
 
+const usePropertiesFor = new Set(['checked', 'multiple', 'muted', 'selected']);
+
+export function shouldUseProperty(name) {
+  return usePropertiesFor.has(name);
+}
+
 var HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
   // the `possibleStandardNames` module to ensure casing and incorrect
@@ -233,7 +237,7 @@ var HTMLDOMPropertyConfig = {
     autoFocus: HAS_BOOLEAN_VALUE,
     autoPlay: HAS_BOOLEAN_VALUE,
     capture: HAS_OVERLOADED_BOOLEAN_VALUE,
-    checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    checked: HAS_BOOLEAN_VALUE,
     cols: HAS_POSITIVE_NUMERIC_VALUE,
     contentEditable: HAS_STRING_BOOLEAN_VALUE,
     controls: HAS_BOOLEAN_VALUE,
@@ -247,8 +251,8 @@ var HTMLDOMPropertyConfig = {
     loop: HAS_BOOLEAN_VALUE,
     // Caution; `option.selected` is not updated if `select.multiple` is
     // disabled with `removeAttribute`.
-    multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    muted: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    multiple: HAS_BOOLEAN_VALUE,
+    muted: HAS_BOOLEAN_VALUE,
     noValidate: HAS_BOOLEAN_VALUE,
     open: HAS_BOOLEAN_VALUE,
     playsInline: HAS_BOOLEAN_VALUE,
@@ -259,7 +263,7 @@ var HTMLDOMPropertyConfig = {
     rowSpan: HAS_NUMERIC_VALUE,
     scoped: HAS_BOOLEAN_VALUE,
     seamless: HAS_BOOLEAN_VALUE,
-    selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
+    selected: HAS_BOOLEAN_VALUE,
     size: HAS_POSITIVE_NUMERIC_VALUE,
     start: HAS_NUMERIC_VALUE,
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )

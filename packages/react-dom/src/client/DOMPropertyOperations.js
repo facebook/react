@@ -14,6 +14,7 @@ import {
   getAttributeNamespace,
   getPropertyInfo,
   shouldSetAttribute,
+  shouldUseProperty,
 } from '../shared/DOMProperty';
 import warning from 'fbjs/lib/warning';
 
@@ -75,7 +76,7 @@ export function getValueForProperty(node, name, expected) {
   if (__DEV__) {
     var propertyInfo = getPropertyInfo(name);
     if (propertyInfo) {
-      if (propertyInfo.mustUseProperty) {
+      if (shouldUseProperty(name)) {
         return node[name];
       } else {
         var attributeName = getAttributeName(name);
@@ -161,7 +162,7 @@ export function setValueForProperty(node, name, value) {
     if (shouldIgnoreValue(propertyInfo, value)) {
       deleteValueForProperty(node, name);
       return;
-    } else if (propertyInfo.mustUseProperty) {
+    } else if (shouldUseProperty(name)) {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
       node[name] = value;
@@ -231,7 +232,7 @@ export function deleteValueForAttribute(node, name) {
 export function deleteValueForProperty(node, name) {
   var propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
-    if (propertyInfo.mustUseProperty) {
+    if (shouldUseProperty(name)) {
       if (propertyInfo.hasBooleanValue) {
         node[name] = false;
       } else {
