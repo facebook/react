@@ -50,7 +50,7 @@ const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 let didWarnAboutMaps;
 let ownerHasKeyUseWarning;
 let ownerHasFunctionTypeWarning;
-let warnForMissingKey = () => {}
+let warnForMissingKey = () => {};
 
 if (__DEV__) {
   didWarnAboutMaps = false;
