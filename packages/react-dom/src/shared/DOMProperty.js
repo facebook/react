@@ -94,8 +94,6 @@ export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
  * Map from property "standard name" to an object with info about how to set
  * the property in the DOM. Each object contains:
  *
- * mustUseProperty:
- *   Whether the property must be accessed and mutated as an object property.
  * hasBooleanValue:
  *   Whether the property should be removed when set to a falsey value.
  * hasNumericValue:
