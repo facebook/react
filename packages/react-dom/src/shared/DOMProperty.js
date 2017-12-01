@@ -239,29 +239,19 @@ export function hasOverloadedBooleanValue(name) {
   return false;
 }
 
-export function hasNumericValue(name) {
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo !== null) {
-    return propertyInfo.hasNumericValue;
-  }
-  return false;
-}
-
-export function hasPositiveNumericValue(name) {
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo !== null) {
-    return propertyInfo.hasPositiveNumericValue;
-  }
-  return false;
-}
-
 export function shouldIgnoreValue(name, value) {
+  if (value == null) {
+    return true;
+  }
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo === null) {
+    return false;
+  }
   return (
-    value == null ||
-    (hasBooleanValue(name) && !value) ||
-    (hasNumericValue(name) && isNaN(value)) ||
-    (hasPositiveNumericValue(name) && value < 1) ||
-    (hasOverloadedBooleanValue(name) && value === false)
+    (propertyInfo.hasBooleanValue && !value) ||
+    (propertyInfo.hasNumericValue && isNaN(value)) ||
+    (propertyInfo.hasPositiveNumericValue && value < 1) ||
+    (propertyInfo.hasOverloadedBooleanValue && value === false)
   );
 }
 
