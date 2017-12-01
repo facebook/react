@@ -17,7 +17,6 @@ import getEventTarget from './getEventTarget';
 import isEventSupported from './isEventSupported';
 import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as inputValueTracking from '../client/inputValueTracking';
-import {synchronizeDefaultValue} from '../client/ReactDOMFiberInput';
 
 var eventTypes = {
   change: {
@@ -229,7 +228,6 @@ function handleControlledInputBlur(inst, node) {
   }
 
   // Fiber and ReactDOM keep wrapper state in separate places
-  // TODO: Is this still necessary now that Stack is gone?
   let state = inst._wrapperState || node._wrapperState;
 
   if (!state || !state.controlled || node.type !== 'number') {
