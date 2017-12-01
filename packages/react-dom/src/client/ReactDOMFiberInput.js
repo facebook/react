@@ -182,10 +182,10 @@ export function updateWrapper(element: Element, props: Object) {
 
   updateChecked(element, props);
 
-  var value = shouldSetAttribute('value', props.value) ? props.value : null;
+  var value = shouldSetAttribute('value', props.value) ? props.value : '';
   var defaultValue = shouldSetAttribute('value', props.defaultValue)
     ? props.defaultValue
-    : null;
+    : '';
 
   if (value != null) {
     if (value === 0 && node.value === '') {

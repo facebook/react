@@ -1591,7 +1591,7 @@ describe('ReactDOMInput', () => {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
-        <input value={Symbol('foobar')} onChange={() => {}} readOnly={true} />,
+        <input value={Symbol('foobar')} onChange={() => {}} />,
         container,
       );
       var node = container.firstChild;
@@ -1611,17 +1611,17 @@ describe('ReactDOMInput', () => {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
-        <input value="foo" onChange={() => {}} readOnly={true} />,
+        <input value="foo" onChange={() => {}} />,
         container,
       );
       ReactDOM.render(
-        <input value={Symbol('foobar')} onChange={() => {}} readOnly={true} />,
+        <input value={Symbol('foobar')} onChange={() => {}} />,
         container,
       );
       var node = container.firstChild;
 
-      expect(node.value).toBe('foo');
-      expect(node.getAttribute('value')).toBe('foo');
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
 
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(1);
@@ -1648,7 +1648,7 @@ describe('ReactDOMInput', () => {
       var node = container.firstChild;
 
       expect(node.value).toBe('foo');
-      expect(node.getAttribute('value')).toBe('foo');
+      expect(node.getAttribute('value')).toBe('');
     });
   });
 
@@ -1657,7 +1657,7 @@ describe('ReactDOMInput', () => {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
-        <input value={() => {}} onChange={() => {}} readOnly={true} />,
+        <input value={() => {}} onChange={() => {}} />,
         container,
       );
       var node = container.firstChild;
@@ -1683,8 +1683,8 @@ describe('ReactDOMInput', () => {
       );
       var node = container.firstChild;
 
-      expect(node.value).toBe('foo');
-      expect(node.getAttribute('value')).toBe('foo');
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
 
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(1);
@@ -1710,7 +1710,7 @@ describe('ReactDOMInput', () => {
       var node = container.firstChild;
 
       expect(node.value).toBe('foo');
-      expect(node.getAttribute('value')).toBe('foo');
+      expect(node.getAttribute('value')).toBe('');
     });
   });
 });
