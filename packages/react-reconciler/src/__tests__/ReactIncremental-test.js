@@ -2715,4 +2715,77 @@ describe('ReactIncremental', () => {
 
     expect(ReactNoop.flush()).toEqual([]);
   });
+
+  it('does not break with a bad Map polyfill', () => {
+    const realMapSet = Map.prototype.set;
+
+    function triggerCodePathThatUsesFibersAsMapKeys() {
+      function Thing() {
+        throw new Error('No.');
+      }
+      class Boundary extends React.Component {
+        state = {didError: false};
+        componentDidCatch() {
+          this.setState({didError: true});
+        }
+        render() {
+          return this.state.didError ? null : <Thing />;
+        }
+      }
+      ReactNoop.render(<Boundary />);
+      ReactNoop.flush();
+    }
+
+    // First, verify that this code path normally receives Fibers as keys,
+    // and that they're not extensible.
+    jest.resetModules();
+    let receivedNonExtensibleObjects;
+    // eslint-disable-next-line no-extend-native
+    Map.prototype.set = function(key) {
+      if (typeof key === 'object' && key !== null) {
+        if (!Object.isExtensible(key)) {
+          receivedNonExtensibleObjects = true;
+        }
+      }
+      return realMapSet.apply(this, arguments);
+    };
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    try {
+      receivedNonExtensibleObjects = false;
+      triggerCodePathThatUsesFibersAsMapKeys();
+    } finally {
+      // eslint-disable-next-line no-extend-native
+      Map.prototype.set = realMapSet;
+    }
+    // If this fails, find another code path in Fiber
+    // that passes Fibers as keys to Maps.
+    // Note that we only expect them to be non-extensible
+    // in development.
+    expect(receivedNonExtensibleObjects).toBe(__DEV__);
+
+    // Next, verify that a Map polyfill that "writes" to keys
+    // doesn't cause a failure.
+    jest.resetModules();
+    // eslint-disable-next-line no-extend-native
+    Map.prototype.set = function(key, value) {
+      if (typeof key === 'object' && key !== null) {
+        // A polyfill could do something like this.
+        // It would throw if an object is not extensible.
+        key.__internalValueSlot = value;
+      }
+      return realMapSet.apply(this, arguments);
+    };
+    React = require('react');
+    ReactNoop = require('react-noop-renderer');
+    try {
+      triggerCodePathThatUsesFibersAsMapKeys();
+    } finally {
+      // eslint-disable-next-line no-extend-native
+      Map.prototype.set = realMapSet;
+    }
+    // If we got this far, our feature detection worked.
+    // We knew that Map#set() throws for non-extensible objects,
+    // so we didn't set them as non-extensible for that reason.
+  });
 });
