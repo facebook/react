@@ -1587,11 +1587,11 @@ describe('ReactDOMInput', () => {
   });
 
   describe('When given a Symbol value', function() {
-    it('does not allow initial assignment of Symbols to value', function() {
+    it('treats initial Symbol value as an empty string', function() {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(
-        <input value={Symbol('foobar')} readOnly={true} />,
+        <input value={Symbol('foobar')} onChange={() => {}} readOnly={true} />,
         container,
       );
       var node = container.firstChild;
@@ -1607,18 +1607,21 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('does not update the value to a Symbol', function() {
+    it('treats updated Symbol value as an empty string', function() {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<input value={''} readOnly={true} />, container);
       ReactDOM.render(
-        <input value={Symbol('foobar')} readOnly={true} />,
+        <input value="foo" onChange={() => {}} readOnly={true} />,
+        container,
+      );
+      ReactDOM.render(
+        <input value={Symbol('foobar')} onChange={() => {}} readOnly={true} />,
         container,
       );
       var node = container.firstChild;
 
-      expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      expect(node.value).toBe('foo');
+      expect(node.getAttribute('value')).toBe('foo');
 
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(1);
@@ -1628,31 +1631,35 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('does not allow initial assignment of Symbols to defaultValue', function() {
+    it('treats initial Symbol defaultValue as an empty string', function() {
       var container = document.createElement('div');
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       var node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
     });
 
-    it('does not update defaultValue to a Symbol', function() {
+    it('treats updated Symbol defaultValue as an empty string', function() {
       var container = document.createElement('div');
-      ReactDOM.render(<input defaultValue={''} />, container);
+      ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       var node = container.firstChild;
 
-      expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      expect(node.value).toBe('foo');
+      expect(node.getAttribute('value')).toBe('foo');
     });
   });
 
   describe('When given a function value', function() {
-    it('does not allow initial assignment of functions to value', function() {
+    it('treats initial function value as an empty string', function() {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<input value={() => {}} readOnly={true} />, container);
+      ReactDOM.render(
+        <input value={() => {}} onChange={() => {}} readOnly={true} />,
+        container,
+      );
       var node = container.firstChild;
 
       expect(node.value).toBe('');
@@ -1666,15 +1673,18 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('does not update the value to a function', function() {
+    it('treats updated function value as an empty string', function() {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<input value={''} />, container);
-      ReactDOM.render(<input value={() => {}} />, container);
+      ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
+      ReactDOM.render(
+        <input value={() => {}} onChange={() => {}} />,
+        container,
+      );
       var node = container.firstChild;
 
-      expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      expect(node.value).toBe('foo');
+      expect(node.getAttribute('value')).toBe('foo');
 
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(1);
@@ -1684,7 +1694,7 @@ describe('ReactDOMInput', () => {
       }
     });
 
-    it('does not allow initial assignment of functions to defaultValue', function() {
+    it('treats initial function defaultValue as an empty string', function() {
       var container = document.createElement('div');
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       var node = container.firstChild;
@@ -1693,14 +1703,14 @@ describe('ReactDOMInput', () => {
       expect(node.getAttribute('value')).toBe('');
     });
 
-    it('does not update defaultValue to a function', function() {
+    it('treats updated function defaultValue as an empty string', function() {
       var container = document.createElement('div');
-      ReactDOM.render(<input defaultValue={''} />, container);
+      ReactDOM.render(<input defaultValue="foo" />, container);
       ReactDOM.render(<input defaultValue={() => {}} />, container);
       var node = container.firstChild;
 
-      expect(node.value).toBe('');
-      expect(node.getAttribute('value')).toBe('');
+      expect(node.value).toBe('foo');
+      expect(node.getAttribute('value')).toBe('foo');
     });
   });
 });
