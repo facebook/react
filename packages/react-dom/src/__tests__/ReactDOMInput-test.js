@@ -1588,27 +1588,43 @@ describe('ReactDOMInput', () => {
 
   describe('When given a Symbol value', function() {
     it('does not allow initial assignment of Symbols to value', function() {
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<input value={Symbol('foobar')} />, container);
+      ReactDOM.render(<input value={Symbol('foobar')} readOnly />, container);
       var node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
     });
 
     it('does not update the value to a Symbol', function() {
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<input value={''} />, container);
-      ReactDOM.render(<input value={Symbol('foobar')} />, container);
+      ReactDOM.render(<input value={''} readOnly />, container);
+      ReactDOM.render(<input value={Symbol('foobar')} readOnly />, container);
       var node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
     });
 
     it('does not allow initial assignment of Symbols to defaultValue', function() {
       var container = document.createElement('div');
-      ReactDOM.render(<input value={Symbol('foobar')} />, container);
+      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
       var node = container.firstChild;
 
       expect(node.value).toBe('');
@@ -1628,15 +1644,24 @@ describe('ReactDOMInput', () => {
 
   describe('When given a function value', function() {
     it('does not allow initial assignment of functions to value', function() {
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(<input value={() => {}} />, container);
+      ReactDOM.render(<input value={() => {}} readOnly />, container);
       var node = container.firstChild;
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
     });
 
     it('does not update the value to a function', function() {
+      spyOnDev(console, 'error');
       var container = document.createElement('div');
       ReactDOM.render(<input value={''} />, container);
       ReactDOM.render(<input value={() => {}} />, container);
@@ -1644,11 +1669,18 @@ describe('ReactDOMInput', () => {
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
     });
 
     it('does not allow initial assignment of functions to defaultValue', function() {
       var container = document.createElement('div');
-      ReactDOM.render(<input value={() => {}} />, container);
+      ReactDOM.render(<input defaultValue={() => {}} readOnly />, container);
       var node = container.firstChild;
 
       expect(node.value).toBe('');
