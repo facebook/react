@@ -178,7 +178,7 @@ export function updateWrapper(element: Element, props: Object) {
   var value = props.value;
   if (value != null) {
     if (value === 0 && node.value === '') {
-      node.value = '0';
+      assignProperty(node, 'value', '0');
       // Note: IE9 reports a number inputs as 'text', so check props instead.
     } else if (props.type === 'number') {
       // Simulate `input.valueAsNumber`. IE9 does not support it
@@ -190,14 +190,10 @@ export function updateWrapper(element: Element, props: Object) {
         // eslint-disable-next-line
         (value == valueAsNumber && node.value != value)
       ) {
-        // Cast `value` to a string to ensure the value is set correctly. While
-        // browsers typically do this as necessary, jsdom doesn't.
-        node.value = '' + value;
+        assignProperty(node, 'value', value);
       }
-    } else if (node.value !== '' + value) {
-      // Cast `value` to a string to ensure the value is set correctly. While
-      // browsers typically do this as necessary, jsdom doesn't.
-      node.value = '' + value;
+    } else {
+      assignProperty(node, 'value', value);
     }
     synchronizeDefaultValue(node, props.type, value);
   } else if (
@@ -220,13 +216,13 @@ export function postMountWrapper(element: Element, props: Object) {
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (node.value === '') {
-      node.value = initialValue;
+      assignProperty(node, 'value', initialValue);
     }
 
     // value must be assigned before defaultValue. This fixes an issue where the
     // visually displayed value of date inputs disappears on mobile Safari and Chrome:
     // https://github.com/facebook/react/issues/7233
-    node.defaultValue = initialValue;
+    assignProperty(node, 'defaultValue', initialValue);
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -314,13 +310,39 @@ export function synchronizeDefaultValue(
 ) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    (type !== 'number' || node.ownerDocument.activeElement !== node) &&
-    node.defaultValue !== '' + value
+    type !== 'number' ||
+    node.ownerDocument.activeElement !== node
   ) {
-    if (value != null) {
-      node.defaultValue = '' + value;
-    } else {
-      node.defaultValue = node._wrapperState.initialValue;
-    }
+    assignProperty(
+      node,
+      'defaultValue',
+      value == null ? node._wrapperState.initialValue : value,
+    );
+  }
+}
+
+function assignProperty(
+  node: InputWithWrapperState,
+  property: string,
+  value: *,
+) {
+  // TODO: This should use DOMProperty.shouldSetAttribute, however the current
+  // behavior is such that invalid attributes do not update the current attribute,
+  // instead of removing it.
+  switch (typeof value) {
+    case 'boolean':
+    case 'number':
+    case 'string':
+    case 'object':
+      // Use hasOwnProperty instead of checking for '' to ensure properties
+      // are set for the first time. This is important for defaultValue, which
+      // otherwise does not set an empty value attribute
+      if (!node.hasOwnProperty(property) || node[property] !== '' + value) {
+        // Cast `value` to a string to ensure the value is set correctly. While
+        // browsers typically do this as necessary, jsdom doesn't.
+        // TODO: Is this still true with reasonably modern JSDOM?
+        node[property] = '' + value;
+      }
+      break;
   }
 }

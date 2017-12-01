@@ -1585,4 +1585,84 @@ describe('ReactDOMInput', () => {
       }
     });
   });
+
+  describe('When given a Symbol value', function() {
+    it('does not allow initial assignment of Symbols to value', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input value={Symbol('foobar')} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe(null);
+    });
+
+    it('does not update the value to a Symbol', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input value={''} />, container);
+      ReactDOM.render(<input value={Symbol('foobar')} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+    });
+
+    it('does not allow initial assignment of Symbols to defaultValue', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input value={Symbol('foobar')} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe(null);
+    });
+
+    it('does not update defaultValue to a Symbol', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input defaultValue={''} />, container);
+      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+    });
+  });
+
+  describe('When given a function value', function() {
+    it('does not allow initial assignment of functions to value', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input value={() => {}} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe(null);
+    });
+
+    it('does not update the value to a function', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input value={''} />, container);
+      ReactDOM.render(<input value={() => {}} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+    });
+
+    it('does not allow initial assignment of functions to defaultValue', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input value={() => {}} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe(null);
+    });
+
+    it('does not update defaultValue to a function', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input defaultValue={''} />, container);
+      ReactDOM.render(<input defaultValue={() => {}} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+    });
+  });
 });
