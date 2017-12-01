@@ -255,6 +255,16 @@ export function hasPositiveNumericValue(name) {
   return false;
 }
 
+export function shouldIgnoreValue(name, value) {
+  return (
+    value == null ||
+    (hasBooleanValue(name) && !value) ||
+    (hasNumericValue(name) && isNaN(value)) ||
+    (hasPositiveNumericValue(name) && value < 1) ||
+    (hasOverloadedBooleanValue(name) && value === false)
+  );
+}
+
 const usePropertiesFor = new Set(['checked', 'multiple', 'muted', 'selected']);
 
 export function shouldUseProperty(name) {

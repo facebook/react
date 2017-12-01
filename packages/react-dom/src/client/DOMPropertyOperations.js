@@ -15,8 +15,7 @@ import {
   isWhitelisted,
   hasBooleanValue,
   hasOverloadedBooleanValue,
-  hasNumericValue,
-  hasPositiveNumericValue,
+  shouldIgnoreValue,
   shouldSetAttribute,
   shouldUseProperty,
 } from '../shared/DOMProperty';
@@ -45,18 +44,6 @@ function isAttributeNameSafe(attributeName) {
     warning(false, 'Invalid attribute name: `%s`', attributeName);
   }
   return false;
-}
-
-// shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(name, value) {
-  return (
-    value == null ||
-    (hasBooleanValue(name) && !value) ||
-    (hasNumericValue(name) && isNaN(value)) ||
-    (hasPositiveNumericValue(name) && value < 1) ||
-    (hasOverloadedBooleanValue(name) && value === false)
-  );
 }
 
 /**
