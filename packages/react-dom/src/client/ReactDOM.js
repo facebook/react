@@ -700,11 +700,13 @@ const DOMRenderer = ReactFiberReconciler({
       newProps: Props,
       internalInstanceHandle: Object,
     ): void {
-      ((domElement: any):
-        | HTMLButtonElement
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement).focus();
+      if (shouldAutoFocusHostComponent(type, newProps)) {
+        ((domElement: any):
+          | HTMLButtonElement
+          | HTMLInputElement
+          | HTMLSelectElement
+          | HTMLTextAreaElement).focus();
+      }
     },
 
     commitUpdate(
