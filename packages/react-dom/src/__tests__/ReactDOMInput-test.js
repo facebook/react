@@ -1610,10 +1610,7 @@ describe('ReactDOMInput', () => {
     it('treats updated Symbol value as an empty string', function() {
       spyOnDev(console, 'error');
       var container = document.createElement('div');
-      ReactDOM.render(
-        <input value="foo" onChange={() => {}} />,
-        container,
-      );
+      ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
       ReactDOM.render(
         <input value={Symbol('foobar')} onChange={() => {}} />,
         container,
