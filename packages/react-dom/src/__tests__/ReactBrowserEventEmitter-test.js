@@ -15,11 +15,11 @@ let ReactTestUtils;
 let ReactBrowserEventEmitter;
 let LISTENER = jest.fn();
 
-let ParentComponent;
 let createInitialInstance;
-let getChildInstance;
-let getParentInstance;
+
 let updateInstance;
+
+let CHILD, PARENT;
 
 describe('ReactBrowserEventEmitter', () => {
   beforeEach(() => {
@@ -39,15 +39,15 @@ describe('ReactBrowserEventEmitter', () => {
       }
     }
 
-    ParentComponent = class Parent extends React.Component {
+    class Parent extends React.Component {
       render() {
         return (
           <div {...this.props.parentProps}>
-            <Child {...this.props.childProps} />
+            <Child ref={n => (CHILD = n)} {...this.props.childProps} />
           </div>
         );
       }
-    };
+    }
 
     /**
      * alway initial the new instance for child component to bind click listener
@@ -56,11 +56,10 @@ describe('ReactBrowserEventEmitter', () => {
      */
     createInitialInstance = () => {
       const initialInstance = ReactDOM.render(
-        <ParentComponent parentProps={{}} childProps={{onClick: LISTENER}} />,
+        <Parent parentProps={{}} childProps={{onClick: LISTENER}} />,
         container,
       );
-      const child = getChildInstance(initialInstance);
-      expect(child.props.onClick).toBe(LISTENER);
+      expect(CHILD.props.onClick).toBe(LISTENER);
 
       return initialInstance;
     };
@@ -72,71 +71,55 @@ describe('ReactBrowserEventEmitter', () => {
      */
     updateInstance = ({parentProps, childProps}) => {
       return ReactDOM.render(
-        <ParentComponent parentProps={parentProps} childProps={childProps} />,
+        <Parent
+          ref={n => (PARENT = n)}
+          parentProps={parentProps}
+          childProps={childProps}
+        />,
         container,
       );
     };
+  });
 
-    /**
-     * helper to find the specified instance
-     * @param {Component Instance} inst - main instance
-     * @return {Component Instance} Child instance
-     */
-    getChildInstance = inst => {
-      return ReactTestUtils.findRenderedComponentWithType(inst, Child);
-    };
-
-    /**
-     * helper to find the specified instance
-     * @param {Component Instance} inst - main instance
-     * @return {Component Instance} Parent instance
-     */
-    getParentInstance = inst => {
-      return ReactTestUtils.findRenderedComponentWithType(
-        inst,
-        ParentComponent,
-      );
-    };
+  afterEach(() => {
+    CHILD = null;
+    PARENT = null;
   });
 
   it('should store a listener correctly', () => {
     createInitialInstance();
-    const inst = updateInstance({
+    updateInstance({
       parentProps: {},
       childProps: {
         onClick: LISTENER,
       },
     });
-    const child = getChildInstance(inst);
-    expect(child.props.onClick).toBe(LISTENER);
+    expect(CHILD.props.onClick).toBe(LISTENER);
   });
 
   it('should retrieve a listener correctly', () => {
     createInitialInstance();
-    const inst = updateInstance({
+    updateInstance({
       parentProps: {},
       childProps: {
         onClick: LISTENER,
       },
     });
-    const child = getChildInstance(inst);
-    expect(child.props.onClick).toBe(LISTENER);
+    expect(CHILD.props.onClick).toBe(LISTENER);
   });
 
   it('should clear all handlers when asked to', () => {
     createInitialInstance();
-    const inst = updateInstance({
+    updateInstance({
       parentProps: {},
       childProps: {},
     });
-    const child = getChildInstance(inst);
-    expect(child.props.onClick).toBe(undefined);
+    expect(CHILD.props.onClick).toBe(undefined);
   });
 
   it('should invoke a simple handler registered on a node', () => {
-    const inst = createInitialInstance();
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    createInitialInstance();
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
@@ -146,13 +129,12 @@ describe('ReactBrowserEventEmitter', () => {
    * to instead.
    */
   it('should not invoke handlers if ReactBrowserEventEmitter is disabled', () => {
-    const inst = createInitialInstance();
+    createInitialInstance();
     ReactBrowserEventEmitter.setEnabled(false);
-    const child = getChildInstance(inst);
-    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(CHILD));
     expect(LISTENER.mock.calls.length).toBe(0);
     ReactBrowserEventEmitter.setEnabled(true);
-    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.SimulateNative.click(ReactDOM.findDOMNode(CHILD));
     expect(LISTENER.mock.calls.length).toBe(1);
   });
 
@@ -164,7 +146,6 @@ describe('ReactBrowserEventEmitter', () => {
     function childCall() {
       calls = calls.concat('child is call');
     }
-    const inst = createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -173,8 +154,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -191,7 +171,7 @@ describe('ReactBrowserEventEmitter', () => {
     function childCall() {
       calls = calls.concat('child is call');
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -200,8 +180,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -214,7 +193,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parentUpdate is call');
@@ -229,7 +208,7 @@ describe('ReactBrowserEventEmitter', () => {
       calls = calls.concat('child is call');
       throw new Error('Handler interrupted');
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -238,9 +217,8 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
     expect(() =>
-      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child)),
+      ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD)),
     ).toThrow();
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
@@ -255,7 +233,7 @@ describe('ReactBrowserEventEmitter', () => {
     function childCall(event) {
       targets = targets.concat(event.currentTarget);
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -264,12 +242,10 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    const parent = getParentInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(targets.length).toBe(2);
-    expect(targets[0]).toBe(ReactDOM.findDOMNode(child));
-    expect(targets[1]).toBe(ReactDOM.findDOMNode(parent));
+    expect(targets[0]).toBe(ReactDOM.findDOMNode(CHILD));
+    expect(targets[1]).toBe(ReactDOM.findDOMNode(PARENT));
   });
 
   /**
@@ -285,7 +261,7 @@ describe('ReactBrowserEventEmitter', () => {
       calls = calls.concat('child is call');
       event.stopPropagation();
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -294,8 +270,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
   });
@@ -310,7 +285,7 @@ describe('ReactBrowserEventEmitter', () => {
       // This stops React bubbling but avoids touching the native event
       event.isPropagationStopped = () => true;
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -319,8 +294,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
   });
@@ -334,7 +308,7 @@ describe('ReactBrowserEventEmitter', () => {
       calls = calls.concat('child is call');
       event.stopPropagation();
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -343,8 +317,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(1);
     expect(calls[0]).toBe('child is call');
   });
@@ -358,7 +331,7 @@ describe('ReactBrowserEventEmitter', () => {
       calls = calls.concat('child is call');
       return false;
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -368,8 +341,7 @@ describe('ReactBrowserEventEmitter', () => {
       },
     });
     spyOnDev(console, 'error');
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(calls.length).toBe(2);
     expect(calls[0]).toBe('child is call');
     expect(calls[1]).toBe('parent is call');
@@ -403,7 +375,7 @@ describe('ReactBrowserEventEmitter', () => {
         },
       });
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {
         onClick: parentCall,
@@ -412,8 +384,7 @@ describe('ReactBrowserEventEmitter', () => {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(parentMockFn.mock.calls.length).toBe(1);
   });
 
@@ -436,15 +407,14 @@ describe('ReactBrowserEventEmitter', () => {
         },
       });
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {},
       childProps: {
         onClick: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(CHILD));
     expect(parentMockFn.mock.calls.length).toBe(0);
   });
 
@@ -453,16 +423,15 @@ describe('ReactBrowserEventEmitter', () => {
     function childCall(event) {
       targets = targets.concat(event.currentTarget);
     }
-    const inst = createInitialInstance();
+    createInitialInstance();
     updateInstance({
       parentProps: {},
       childProps: {
         onMouseEnter: childCall,
       },
     });
-    const child = getChildInstance(inst);
-    ReactTestUtils.Simulate.mouseEnter(ReactDOM.findDOMNode(child));
-    expect(targets[0]).toBe(ReactDOM.findDOMNode(child));
+    ReactTestUtils.Simulate.mouseEnter(ReactDOM.findDOMNode(CHILD));
+    expect(targets[0]).toBe(ReactDOM.findDOMNode(CHILD));
   });
 
   it('should listen to events only once', () => {
