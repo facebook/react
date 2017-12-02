@@ -248,6 +248,23 @@ describe('ReactDOMInput', () => {
     }
   });
 
+  it('performs as state change from "" to 0', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '',
+      };
+      render() {
+        return <input type="number" value={this.state.value} readOnly />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: 0});
+
+    expect(node.value).toEqual('0');
+  });
+
   it('distinguishes precision for extra zeroes in string number values', () => {
     spyOnDev(console, 'error');
     class Stub extends React.Component {
@@ -620,6 +637,30 @@ describe('ReactDOMInput', () => {
 
     expect(node.value).toBe('0.0');
     expect(node.defaultValue).toBe('0.0');
+  });
+
+  it('should properly transition a number input from "" to 0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="number" value="" />, container);
+    ReactDOM.render(<input type="number" value={0} />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+  });
+
+  it('should properly transition a number input from "" to "0"', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="number" value="" />, container);
+    ReactDOM.render(<input type="number" value="0" />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should have the correct target value', () => {
