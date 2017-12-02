@@ -53,7 +53,6 @@ let getStack = emptyFunction.thatReturns('');
 
 let warnedUnknownTags;
 let suppressHydrationWarning;
-let extraAttributeNames: Set<string>;
 
 let validatePropertiesInDevelopment;
 let warnForTextDifference;
@@ -828,6 +827,7 @@ export function diffHydratedProperties(
   rootContainerElement: Element | Document,
 ): null | Array<mixed> {
   let isCustomComponentTag;
+  let extraAttributeNames: Set<string>;
 
   if (__DEV__) {
     suppressHydrationWarning = rawProps[SUPPRESS_HYDRATION_WARNING] === true;
