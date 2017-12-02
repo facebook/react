@@ -10,7 +10,7 @@ import warning from 'fbjs/lib/warning';
 
 import voidElementTags from './voidElementTags';
 
-var HTML = '__html';
+const HTML = '__html';
 
 function assertValidProps(tag: string, props: ?Object, getStack: () => string) {
   if (!props) {
