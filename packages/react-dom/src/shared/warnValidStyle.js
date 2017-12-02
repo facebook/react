@@ -9,21 +9,21 @@ import emptyFunction from 'fbjs/lib/emptyFunction';
 import camelizeStyleName from 'fbjs/lib/camelizeStyleName';
 import warning from 'fbjs/lib/warning';
 
-var warnValidStyle = emptyFunction;
+let warnValidStyle = emptyFunction;
 
 if (__DEV__) {
   // 'msTransform' is correct, but the other prefixes should be capitalized
-  var badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
+  const badVendoredStyleNamePattern = /^(?:webkit|moz|o)[A-Z]/;
 
   // style values shouldn't contain a semicolon
-  var badStyleValueWithSemicolonPattern = /;\s*$/;
+  const badStyleValueWithSemicolonPattern = /;\s*$/;
 
-  var warnedStyleNames = {};
-  var warnedStyleValues = {};
-  var warnedForNaNValue = false;
-  var warnedForInfinityValue = false;
+  const warnedStyleNames = {};
+  const warnedStyleValues = {};
+  let warnedForNaNValue = false;
+  let warnedForInfinityValue = false;
 
-  var warnHyphenatedStyleName = function(name, getStack) {
+  const warnHyphenatedStyleName = function(name, getStack) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -38,7 +38,7 @@ if (__DEV__) {
     );
   };
 
-  var warnBadVendoredStyleName = function(name, getStack) {
+  const warnBadVendoredStyleName = function(name, getStack) {
     if (warnedStyleNames.hasOwnProperty(name) && warnedStyleNames[name]) {
       return;
     }
@@ -53,7 +53,7 @@ if (__DEV__) {
     );
   };
 
-  var warnStyleValueWithSemicolon = function(name, value, getStack) {
+  const warnStyleValueWithSemicolon = function(name, value, getStack) {
     if (warnedStyleValues.hasOwnProperty(value) && warnedStyleValues[value]) {
       return;
     }
@@ -69,7 +69,7 @@ if (__DEV__) {
     );
   };
 
-  var warnStyleValueIsNaN = function(name, value, getStack) {
+  const warnStyleValueIsNaN = function(name, value, getStack) {
     if (warnedForNaNValue) {
       return;
     }
@@ -83,7 +83,7 @@ if (__DEV__) {
     );
   };
 
-  var warnStyleValueIsInfinity = function(name, value, getStack) {
+  const warnStyleValueIsInfinity = function(name, value, getStack) {
     if (warnedForInfinityValue) {
       return;
     }

@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactDOM = require('./src/client/ReactDOM');
+const ReactDOM = require('./src/client/ReactDOM');
 
 // TODO: decide on the top-level export form.
 // This is hacky but makes it work with both Rollup and Jest.

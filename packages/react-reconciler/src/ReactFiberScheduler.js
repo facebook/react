@@ -99,13 +99,18 @@ export type HandleErrorInfo = {
   componentStack: string,
 };
 
-if (__DEV__) {
-  var didWarnAboutStateTransition = false;
-  var didWarnSetStateChildContext = false;
-  var didWarnStateUpdateForUnmountedComponent = {};
+let didWarnAboutStateTransition;
+let didWarnSetStateChildContext;
+let warnAboutUpdateOnUnmounted;
+let warnAboutInvalidUpdates;
 
-  var warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
-    var componentName = getComponentName(fiber) || 'ReactClass';
+if (__DEV__) {
+  didWarnAboutStateTransition = false;
+  didWarnSetStateChildContext = false;
+  const didWarnStateUpdateForUnmountedComponent = {};
+
+  warnAboutUpdateOnUnmounted = function(fiber: Fiber) {
+    const componentName = getComponentName(fiber) || 'ReactClass';
     if (didWarnStateUpdateForUnmountedComponent[componentName]) {
       return;
     }
@@ -120,7 +125,7 @@ if (__DEV__) {
     didWarnStateUpdateForUnmountedComponent[componentName] = true;
   };
 
-  var warnAboutInvalidUpdates = function(instance: React$Component<any>) {
+  warnAboutInvalidUpdates = function(instance: React$Component<any>) {
     switch (ReactDebugCurrentFiber.phase) {
       case 'getChildContext':
         if (didWarnSetStateChildContext) {

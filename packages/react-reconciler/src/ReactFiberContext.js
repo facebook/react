@@ -22,8 +22,10 @@ import {createCursor, pop, push} from './ReactFiberStack';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 import {startPhaseTimer, stopPhaseTimer} from './ReactDebugFiberPerf';
 
+let warnedAboutMissingGetChildContext;
+
 if (__DEV__) {
-  var warnedAboutMissingGetChildContext = {};
+  warnedAboutMissingGetChildContext = {};
 }
 
 // A cursor to the current merged context object on the stack.

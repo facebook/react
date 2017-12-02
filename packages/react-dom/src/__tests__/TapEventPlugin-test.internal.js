@@ -9,25 +9,25 @@
 
 'use strict';
 
-var EventPluginHub;
-var React;
-var ReactDOM;
-var ReactTestUtils;
-var TapEventPlugin;
+let EventPluginHub;
+let React;
+let ReactDOM;
+let ReactTestUtils;
+let TapEventPlugin;
 
-var tapMoveThreshold;
-var idCallOrder;
-var recordID = function(id) {
+let tapMoveThreshold;
+let idCallOrder;
+const recordID = function(id) {
   idCallOrder.push(id);
 };
-var LISTENER = jest.fn();
-var ON_TOUCH_TAP_KEY = 'onTouchTap';
+const LISTENER = jest.fn();
+const ON_TOUCH_TAP_KEY = 'onTouchTap';
 
-var GRANDPARENT;
-var PARENT;
-var CHILD;
+let GRANDPARENT;
+let PARENT;
+let CHILD;
 
-var putListener;
+let putListener;
 
 describe('TapEventPlugin', () => {
   beforeEach(() => {
@@ -40,11 +40,11 @@ describe('TapEventPlugin', () => {
     ReactTestUtils = require('react-dom/test-utils');
     TapEventPlugin = require('react-dom/src/events/TapEventPlugin').default;
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
-    var GRANDPARENT_PROPS = {};
-    var PARENT_PROPS = {};
-    var CHILD_PROPS = {};
+    const GRANDPARENT_PROPS = {};
+    const PARENT_PROPS = {};
+    const CHILD_PROPS = {};
 
     function Child(props) {
       return <div ref={c => (CHILD = c)} {...props} />;
