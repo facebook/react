@@ -385,7 +385,9 @@ describe('ReactDOMServer', () => {
       ReactDOM.hydrate(<button autoFocus={false}>client</button>, element);
 
       expect(element.firstChild.focus).not.toHaveBeenCalled();
-      expect(console.error.calls.count()).toBe(1);
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+      }
     });
 
     it('should throw with silly args', () => {
