@@ -390,7 +390,6 @@ describe('ReactDOMInput', () => {
     const element = <input type="text" value="1" onChange={() => {}} />;
     const markup = ReactDOMServer.renderToString(element);
     const div = document.createElement('div');
-
     div.innerHTML = markup;
     expect(div.firstChild.getAttribute('value')).toBe('1');
     expect(div.firstChild.getAttribute('defaultValue')).toBe(null);
@@ -1011,7 +1010,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="text" />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="text" value="controlled" />, container);
     if (__DEV__) {
@@ -1030,7 +1028,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="text" value={null} />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="text" value="controlled" />, container);
     if (__DEV__) {
@@ -1109,7 +1106,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="checkbox" />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="checkbox" checked={true} />, container);
     if (__DEV__) {
@@ -1128,7 +1124,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="checkbox" checked={null} />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="checkbox" checked={true} />, container);
     if (__DEV__) {
@@ -1147,7 +1142,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="radio" />, container);
     if (__DEV__) {
@@ -1166,7 +1160,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="radio" checked={null} />, container);
     if (__DEV__) {
@@ -1182,9 +1175,9 @@ describe('ReactDOMInput', () => {
   });
 
   it('should warn if controlled radio switches to uncontrolled with defaultChecked', () => {
+    spyOnDev(console, 'error');
     const stub = <input type="radio" checked={true} onChange={emptyFunction} />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="radio" defaultChecked={true} />, container);
     if (__DEV__) {
@@ -1203,7 +1196,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="radio" />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="radio" checked={true} />, container);
     if (__DEV__) {
@@ -1222,7 +1214,6 @@ describe('ReactDOMInput', () => {
     spyOnDev(console, 'error');
     const stub = <input type="radio" checked={null} />;
     const container = document.createElement('div');
-
     ReactDOM.render(stub, container);
     ReactDOM.render(<input type="radio" checked={true} />, container);
     if (__DEV__) {
@@ -1273,7 +1264,6 @@ describe('ReactDOMInput', () => {
   it('should warn if radio checked false changes to become uncontrolled', () => {
     spyOnDev(console, 'error');
     const container = document.createElement('div');
-
     ReactDOM.render(
       <input
         type="radio"
