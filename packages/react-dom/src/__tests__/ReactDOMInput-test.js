@@ -254,7 +254,7 @@ describe('ReactDOMInput', () => {
         value: '',
       };
       render() {
-        return <input type="number" value={this.state.value} readOnly />;
+        return <input type="number" value={this.state.value} readOnly={true} />;
       }
     }
 
