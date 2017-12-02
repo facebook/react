@@ -266,8 +266,9 @@ describe('ReactIncrementalTriangle', () => {
       let expectedCounterAtEnd = app.state.counter;
 
       let activeTriangle = null;
+      let action;
       while (true) {
-        var action = yield;
+        action = yield;
         if (action === STOP) {
           break;
         }

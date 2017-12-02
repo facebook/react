@@ -60,8 +60,10 @@ import {
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 
+let warnedAboutStatelessRefs;
+
 if (__DEV__) {
-  var warnedAboutStatelessRefs = {};
+  warnedAboutStatelessRefs = {};
 }
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(

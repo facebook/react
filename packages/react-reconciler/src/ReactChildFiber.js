@@ -47,17 +47,22 @@ import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
 const {getCurrentFiberStackAddendum} = ReactDebugCurrentFiber;
 
+let didWarnAboutMaps;
+let ownerHasKeyUseWarning;
+let ownerHasFunctionTypeWarning;
+let warnForMissingKey = (child: mixed) => {};
+
 if (__DEV__) {
-  var didWarnAboutMaps = false;
+  didWarnAboutMaps = false;
   /**
    * Warn if there's no key explicitly set on dynamic arrays of children or
    * object keys are not valid. This allows us to keep track of children between
    * updates.
    */
-  var ownerHasKeyUseWarning = {};
-  var ownerHasFunctionTypeWarning = {};
+  ownerHasKeyUseWarning = {};
+  ownerHasFunctionTypeWarning = {};
 
-  var warnForMissingKey = (child: mixed) => {
+  warnForMissingKey = (child: mixed) => {
     if (child === null || typeof child !== 'object') {
       return;
     }
@@ -71,7 +76,7 @@ if (__DEV__) {
     );
     child._store.validated = true;
 
-    var currentComponentErrorInfo =
+    const currentComponentErrorInfo =
       'Each child in an array or iterator should have a unique ' +
       '"key" prop. See https://fb.me/react-warning-keys for ' +
       'more information.' +
