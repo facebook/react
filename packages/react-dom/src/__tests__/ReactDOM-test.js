@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactTestUtils = require('react-dom/test-utils');
+let React = require('react');
+let ReactDOM = require('react-dom');
+const ReactTestUtils = require('react-dom/test-utils');
 
 describe('ReactDOM', () => {
   // TODO: uncomment this test once we can run in phantom, which
@@ -44,24 +44,24 @@ describe('ReactDOM', () => {
   */
 
   it('allows a DOM element to be used with a string', () => {
-    var element = React.createElement('div', {className: 'foo'});
-    var instance = ReactTestUtils.renderIntoDocument(element);
+    const element = React.createElement('div', {className: 'foo'});
+    const instance = ReactTestUtils.renderIntoDocument(element);
     expect(ReactDOM.findDOMNode(instance).tagName).toBe('DIV');
   });
 
   it('should allow children to be passed as an argument', () => {
-    var argDiv = ReactTestUtils.renderIntoDocument(
+    const argDiv = ReactTestUtils.renderIntoDocument(
       React.createElement('div', null, 'child'),
     );
-    var argNode = ReactDOM.findDOMNode(argDiv);
+    const argNode = ReactDOM.findDOMNode(argDiv);
     expect(argNode.innerHTML).toBe('child');
   });
 
   it('should overwrite props.children with children argument', () => {
-    var conflictDiv = ReactTestUtils.renderIntoDocument(
+    const conflictDiv = ReactTestUtils.renderIntoDocument(
       React.createElement('div', {children: 'fakechild'}, 'child'),
     );
-    var conflictNode = ReactDOM.findDOMNode(conflictDiv);
+    const conflictNode = ReactDOM.findDOMNode(conflictDiv);
     expect(conflictNode.innerHTML).toBe('child');
   });
 
@@ -70,7 +70,7 @@ describe('ReactDOM', () => {
    * DOM, instead of a stale cache.
    */
   it('should purge the DOM cache when removing nodes', () => {
-    var myDiv = ReactTestUtils.renderIntoDocument(
+    let myDiv = ReactTestUtils.renderIntoDocument(
       <div>
         <div key="theDog" className="dog" />,
         <div key="theBird" className="bird" />
@@ -103,8 +103,8 @@ describe('ReactDOM', () => {
         <div key="theBird" className="bird" />,
       </div>,
     );
-    var root = ReactDOM.findDOMNode(myDiv);
-    var dog = root.childNodes[0];
+    const root = ReactDOM.findDOMNode(myDiv);
+    const dog = root.childNodes[0];
     expect(dog.className).toBe('bigdog');
   });
 
@@ -124,7 +124,7 @@ describe('ReactDOM', () => {
       }
     }
 
-    var myDiv = document.createElement('div');
+    const myDiv = document.createElement('div');
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
         'received: no',
@@ -174,7 +174,7 @@ describe('ReactDOM', () => {
       }
     }
 
-    var myDiv = document.createElement('div');
+    const myDiv = document.createElement('div');
     ReactDOM.render(<A />, myDiv);
     expect(() => ReactDOM.render(<A />, myDiv, 'no')).toThrowError(
       'Invalid argument passed as callback. Expected a function. Instead ' +
@@ -235,8 +235,8 @@ describe('ReactDOM', () => {
       }
     }
 
-    var log = [];
-    var container = document.createElement('div');
+    const log = [];
+    const container = document.createElement('div');
     document.body.appendChild(container);
     ReactDOM.render(<A showTwo={false} />, container);
     input.focus();
@@ -245,9 +245,9 @@ describe('ReactDOM', () => {
     // something that could happen when manipulating DOM nodes (but is hard to
     // deterministically force without relying intensely on React DOM
     // implementation details)
-    var div = container.firstChild;
+    const div = container.firstChild;
     ['appendChild', 'insertBefore'].forEach(name => {
-      var mutator = div[name];
+      const mutator = div[name];
       div[name] = function() {
         if (input) {
           input.blur();
@@ -305,7 +305,7 @@ describe('ReactDOM', () => {
     const actual = [];
 
     function click(node) {
-      var fakeNativeEvent = function() {};
+      const fakeNativeEvent = function() {};
       fakeNativeEvent.target = node;
       fakeNativeEvent.path = [node, container];
       ReactTestUtils.simulateNativeEventOnNode(
@@ -341,7 +341,7 @@ describe('ReactDOM', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Wrapper />, container);
 
     const expected = [

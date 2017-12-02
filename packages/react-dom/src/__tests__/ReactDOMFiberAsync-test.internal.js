@@ -9,15 +9,15 @@
 
 'use strict';
 
-var React = require('react');
-var ReactFeatureFlags = require('shared/ReactFeatureFlags');
+const React = require('react');
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
 
-var ReactDOM;
+let ReactDOM;
 
-var AsyncComponent = React.unstable_AsyncComponent;
+const AsyncComponent = React.unstable_AsyncComponent;
 
 describe('ReactDOMFiberAsync', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -25,7 +25,7 @@ describe('ReactDOMFiberAsync', () => {
   });
 
   it('renders synchronously by default', () => {
-    var ops = [];
+    const ops = [];
     ReactDOM.render(<div>Hi</div>, container, () => {
       ops.push(container.textContent);
     });
