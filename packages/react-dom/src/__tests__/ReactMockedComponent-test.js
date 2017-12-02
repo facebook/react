@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
-var MockedComponent;
-var ReactDOMServer;
+let MockedComponent;
+let ReactDOMServer;
 
 describe('ReactMockedComponent', () => {
   beforeEach(() => {
@@ -31,7 +31,7 @@ describe('ReactMockedComponent', () => {
   });
 
   it('should allow a mocked component to be rendered in dev', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
     if (__DEV__) {
       ReactDOM.render(<MockedComponent />, container);
     } else {
@@ -42,7 +42,7 @@ describe('ReactMockedComponent', () => {
   });
 
   it('should allow a mocked component to be updated in dev', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
     if (__DEV__) {
       ReactDOM.render(<MockedComponent />, container);
     } else {

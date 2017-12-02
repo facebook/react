@@ -10,9 +10,9 @@
 'use strict';
 
 describe('ReactDOMInvalidARIAHook', () => {
-  var React;
-  var ReactTestUtils;
-  var mountComponent;
+  let React;
+  let ReactTestUtils;
+  let mountComponent;
 
   beforeEach(() => {
     jest.resetModules();
