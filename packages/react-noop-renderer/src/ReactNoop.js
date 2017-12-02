@@ -26,7 +26,7 @@ import expect from 'expect';
 
 const UPDATE_SIGNAL = {};
 
-var scheduledCallback = null;
+let scheduledCallback = null;
 
 type Container = {rootID: string, children: Array<Instance | TextInstance>};
 type Props = {prop: any, hidden?: boolean};
@@ -38,9 +38,8 @@ type Instance = {|
 |};
 type TextInstance = {|text: string, id: number|};
 
-var instanceCounter = 0;
-
-var failInBeginPhase = false;
+let instanceCounter = 0;
+let failInBeginPhase = false;
 
 function appendChild(
   parentInstance: Instance | Container,
@@ -82,7 +81,7 @@ function removeChild(
 
 let elapsedTimeInMs = 0;
 
-var SharedHostConfig = {
+let SharedHostConfig = {
   getRootHostContext() {
     if (failInBeginPhase) {
       throw new Error('Error in host config.');
@@ -150,7 +149,7 @@ var SharedHostConfig = {
     hostContext: Object,
     internalInstanceHandle: Object,
   ): TextInstance {
-    var inst = {text: text, id: instanceCounter++};
+    const inst = {text: text, id: instanceCounter++};
     // Hide from unit tests
     Object.defineProperty(inst, 'id', {value: inst.id, enumerable: false});
     return inst;
@@ -183,7 +182,7 @@ var SharedHostConfig = {
   },
 };
 
-var NoopRenderer = ReactFiberReconciler({
+const NoopRenderer = ReactFiberReconciler({
   ...SharedHostConfig,
   mutation: {
     commitMount(instance: Instance, type: string, newProps: Props): void {
@@ -219,7 +218,7 @@ var NoopRenderer = ReactFiberReconciler({
   },
 });
 
-var PersistentNoopRenderer = enablePersistentReconciler
+const PersistentNoopRenderer = enablePersistentReconciler
   ? ReactFiberReconciler({
       ...SharedHostConfig,
       persistence: {
@@ -274,20 +273,22 @@ var PersistentNoopRenderer = enablePersistentReconciler
     })
   : null;
 
-var rootContainers = new Map();
-var roots = new Map();
-var persistentRoots = new Map();
-var DEFAULT_ROOT_ID = '<default>';
+const rootContainers = new Map();
+const roots = new Map();
+const persistentRoots = new Map();
+const DEFAULT_ROOT_ID = '<default>';
 
 let yieldedValues = null;
 
+let unitsRemaining;
+
 function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
-  var didStop = false;
+  let didStop = false;
   while (!didStop && scheduledCallback !== null) {
-    var cb = scheduledCallback;
+    let cb = scheduledCallback;
     scheduledCallback = null;
     yieldedValues = null;
-    var unitsRemaining = n;
+    unitsRemaining = n;
     cb({
       timeRemaining() {
         if (yieldedValues !== null) {
@@ -309,7 +310,7 @@ function* flushUnitsOfWork(n: number): Generator<Array<mixed>, void, void> {
   }
 }
 
-var ReactNoop = {
+const ReactNoop = {
   getChildren(rootID: string = DEFAULT_ROOT_ID) {
     const container = rootContainers.get(rootID);
     if (container) {
@@ -477,15 +478,15 @@ var ReactNoop = {
       return;
     }
 
-    var bufferedLog = [];
+    let bufferedLog = [];
     function log(...args) {
       bufferedLog.push(...args, '\n');
     }
 
     function logHostInstances(children: Array<Instance | TextInstance>, depth) {
-      for (var i = 0; i < children.length; i++) {
-        var child = children[i];
-        var indent = '  '.repeat(depth);
+      for (let i = 0; i < children.length; i++) {
+        const child = children[i];
+        const indent = '  '.repeat(depth);
         if (typeof child.text === 'string') {
           log(indent + '- ' + child.text);
         } else {
@@ -514,7 +515,7 @@ var ReactNoop = {
         firstUpdate.callback ? 'with callback' : '',
         '[' + firstUpdate.expirationTime + ']',
       );
-      var next;
+      let next;
       while ((next = firstUpdate.next)) {
         log(
           '  '.repeat(depth + 1) + '~',
