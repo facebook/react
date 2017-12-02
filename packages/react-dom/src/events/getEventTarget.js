@@ -15,7 +15,7 @@ import {TEXT_NODE} from '../shared/HTMLNodeType';
  * @return {DOMEventTarget} Target node.
  */
 function getEventTarget(nativeEvent) {
-  var target = nativeEvent.target || nativeEvent.srcElement || window;
+  let target = nativeEvent.target || nativeEvent.srcElement || window;
 
   // Normalize SVG <use> element events #4963
   if (target.correspondingUseElement) {

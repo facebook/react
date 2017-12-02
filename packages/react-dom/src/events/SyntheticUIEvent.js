@@ -11,7 +11,7 @@ import SyntheticEvent from 'events/SyntheticEvent';
  * @interface UIEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var UIEventInterface = {
+const UIEventInterface = {
   view: null,
   detail: null,
 };
