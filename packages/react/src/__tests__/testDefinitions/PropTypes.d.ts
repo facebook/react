@@ -13,5 +13,5 @@
  */
 
 declare module 'prop-types' {
-  export var string : any;
+  export let string : any;
 }
