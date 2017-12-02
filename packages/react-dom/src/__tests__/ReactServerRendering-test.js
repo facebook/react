@@ -372,6 +372,22 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
     });
 
+    it('should not focus on either server or client with autofocus={false} even if the markup is mismatch', () => {
+      spyOnDev(console, 'error');
+
+      var element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(
+        <button autoFocus={false}>server</button>,
+      );
+      expect(element.firstChild.autofocus).toBe(false);
+
+      element.firstChild.focus = jest.fn();
+      ReactDOM.hydrate(<button autoFocus={false}>client</button>, element);
+
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+      expect(console.error.calls.count()).toBe(1);
+    });
+
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
