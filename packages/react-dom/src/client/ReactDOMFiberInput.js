@@ -307,7 +307,7 @@ function updateNamedCousins(rootNode, props) {
 // when the user is inputting text
 //
 // https://github.com/facebook/react/issues/7253
-function synchronizeDefaultValue(
+export function synchronizeDefaultValue(
   node: InputWithWrapperState,
   type: ?string,
   value: *,
