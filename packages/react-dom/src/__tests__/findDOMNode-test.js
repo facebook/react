@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactTestUtils = require('react-dom/test-utils');
+const React = require('react');
+const ReactDOM = require('react-dom');
+const ReactTestUtils = require('react-dom/test-utils');
 
 describe('findDOMNode', () => {
   it('findDOMNode should return null if passed null', () => {
@@ -29,9 +29,9 @@ describe('findDOMNode', () => {
       }
     }
 
-    var myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
-    var myDiv = ReactDOM.findDOMNode(myNode);
-    var mySameDiv = ReactDOM.findDOMNode(myDiv);
+    const myNode = ReactTestUtils.renderIntoDocument(<MyNode />);
+    const myDiv = ReactDOM.findDOMNode(myNode);
+    const mySameDiv = ReactDOM.findDOMNode(myDiv);
     expect(myDiv.tagName).toBe('DIV');
     expect(mySameDiv).toBe(myDiv);
   });
@@ -49,16 +49,16 @@ describe('findDOMNode', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
 
-    var myNodeA = ReactDOM.render(<MyNode />, container);
-    var a = ReactDOM.findDOMNode(myNodeA);
+    const myNodeA = ReactDOM.render(<MyNode />, container);
+    const a = ReactDOM.findDOMNode(myNodeA);
     expect(a).toBe(null);
 
-    var myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
+    const myNodeB = ReactDOM.render(<MyNode flag={true} />, container);
     expect(myNodeA === myNodeB).toBe(true);
 
-    var b = ReactDOM.findDOMNode(myNodeB);
+    const b = ReactDOM.findDOMNode(myNodeB);
     expect(b.tagName).toBe('SPAN');
   });
 
@@ -77,8 +77,8 @@ describe('findDOMNode', () => {
       }
     }
 
-    var container = document.createElement('div');
-    var inst = ReactDOM.render(<Foo />, container);
+    const container = document.createElement('div');
+    const inst = ReactDOM.render(<Foo />, container);
     ReactDOM.unmountComponentAtNode(container);
 
     expect(() => ReactDOM.findDOMNode(inst)).toThrowError(

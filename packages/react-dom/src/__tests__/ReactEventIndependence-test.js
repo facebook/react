@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactEventIndependence', () => {
   beforeEach(() => {
@@ -23,8 +23,8 @@ describe('ReactEventIndependence', () => {
   });
 
   it('does not crash with other react inside', () => {
-    var clicks = 0;
-    var div = ReactTestUtils.renderIntoDocument(
+    let clicks = 0;
+    const div = ReactTestUtils.renderIntoDocument(
       <div
         onClick={() => clicks++}
         dangerouslySetInnerHTML={{
@@ -37,10 +37,10 @@ describe('ReactEventIndependence', () => {
   });
 
   it('does not crash with other react outside', () => {
-    var clicks = 0;
-    var outer = document.createElement('div');
+    let clicks = 0;
+    const outer = document.createElement('div');
     outer.setAttribute('data-reactid', '.z');
-    var inner = ReactDOM.render(
+    const inner = ReactDOM.render(
       <button onClick={() => clicks++}>click me</button>,
       outer,
     );
@@ -49,9 +49,9 @@ describe('ReactEventIndependence', () => {
   });
 
   it('does not when event fired on unmounted tree', () => {
-    var clicks = 0;
-    var container = document.createElement('div');
-    var button = ReactDOM.render(
+    let clicks = 0;
+    const container = document.createElement('div');
+    const button = ReactDOM.render(
       <button onClick={() => clicks++}>click me</button>,
       container,
     );

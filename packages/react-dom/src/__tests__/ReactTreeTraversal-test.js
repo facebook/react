@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
 const ChildComponent = ({id, eventHandler}) => (
   <div
@@ -63,10 +63,10 @@ const ParentComponent = ({eventHandler}) => (
 );
 
 describe('ReactTreeTraversal', () => {
-  var mockFn = jest.fn();
-  var container;
-  var outerNode1;
-  var outerNode2;
+  const mockFn = jest.fn();
+  let container;
+  let outerNode1;
+  let outerNode2;
 
   beforeEach(() => {
     React = require('react');
@@ -103,7 +103,7 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse two phase across component boundary', () => {
-      var expectedCalls = [
+      const expectedCalls = [
         ['P', 'captured', 'click'],
         ['P_P1', 'captured', 'click'],
         ['P_P1_C1__DIV', 'captured', 'click'],
@@ -115,7 +115,7 @@ describe('ReactTreeTraversal', () => {
         ['P', 'bubbled', 'click'],
       ];
 
-      var node = document.getElementById('P_P1_C1__DIV_1');
+      const node = document.getElementById('P_P1_C1__DIV_1');
       node.dispatchEvent(
         new MouseEvent('click', {bubbles: true, cancelable: true}),
       );
@@ -124,12 +124,12 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse two phase at shallowest node', () => {
-      var node = document.getElementById('P');
+      const node = document.getElementById('P');
       node.dispatchEvent(
         new MouseEvent('click', {bubbles: true, cancelable: true}),
       );
 
-      var expectedCalls = [
+      const expectedCalls = [
         ['P', 'captured', 'click'],
         ['P', 'bubbled', 'click'],
       ];
@@ -151,8 +151,8 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should not traverse if enter/leave the same node', () => {
-      var leaveNode = document.getElementById('P_P1_C1__DIV_1');
-      var enterNode = document.getElementById('P_P1_C1__DIV_1');
+      const leaveNode = document.getElementById('P_P1_C1__DIV_1');
+      const enterNode = document.getElementById('P_P1_C1__DIV_1');
 
       leaveNode.dispatchEvent(
         new MouseEvent('mouseout', {
@@ -166,10 +166,10 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse enter/leave to sibling - avoids parent', () => {
-      var leaveNode = document.getElementById('P_P1_C1__DIV_1');
-      var enterNode = document.getElementById('P_P1_C1__DIV_2');
+      const leaveNode = document.getElementById('P_P1_C1__DIV_1');
+      const enterNode = document.getElementById('P_P1_C1__DIV_2');
 
-      var expectedCalls = [
+      const expectedCalls = [
         ['P_P1_C1__DIV_1', 'mouseleave'],
         // enter/leave shouldn't fire anything on the parent
         ['P_P1_C1__DIV_2', 'mouseenter'],
@@ -187,10 +187,10 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should traverse enter/leave to parent - avoids parent', () => {
-      var leaveNode = document.getElementById('P_P1_C1__DIV_1');
-      var enterNode = document.getElementById('P_P1_C1__DIV');
+      const leaveNode = document.getElementById('P_P1_C1__DIV_1');
+      const enterNode = document.getElementById('P_P1_C1__DIV');
 
-      var expectedCalls = [['P_P1_C1__DIV_1', 'mouseleave']];
+      const expectedCalls = [['P_P1_C1__DIV_1', 'mouseleave']];
 
       leaveNode.dispatchEvent(
         new MouseEvent('mouseout', {
@@ -204,9 +204,9 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should enter from the window', () => {
-      var enterNode = document.getElementById('P_P1_C1__DIV');
+      const enterNode = document.getElementById('P_P1_C1__DIV');
 
-      var expectedCalls = [
+      const expectedCalls = [
         ['P', 'mouseenter'],
         ['P_P1', 'mouseenter'],
         ['P_P1_C1__DIV', 'mouseenter'],
@@ -224,9 +224,9 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should enter from the window to the shallowest', () => {
-      var enterNode = document.getElementById('P');
+      const enterNode = document.getElementById('P');
 
-      var expectedCalls = [['P', 'mouseenter']];
+      const expectedCalls = [['P', 'mouseenter']];
 
       outerNode1.dispatchEvent(
         new MouseEvent('mouseout', {
@@ -240,9 +240,9 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should leave to the window', () => {
-      var leaveNode = document.getElementById('P_P1_C1__DIV');
+      const leaveNode = document.getElementById('P_P1_C1__DIV');
 
-      var expectedCalls = [
+      const expectedCalls = [
         ['P_P1_C1__DIV', 'mouseleave'],
         ['P_P1', 'mouseleave'],
         ['P', 'mouseleave'],
@@ -260,9 +260,9 @@ describe('ReactTreeTraversal', () => {
     });
 
     it('should leave to the window from the shallowest', () => {
-      var leaveNode = document.getElementById('P');
+      const leaveNode = document.getElementById('P');
 
-      var expectedCalls = [['P', 'mouseleave']];
+      const expectedCalls = [['P', 'mouseleave']];
 
       leaveNode.dispatchEvent(
         new MouseEvent('mouseout', {

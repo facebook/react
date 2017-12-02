@@ -57,7 +57,7 @@ module.exports = function(initModules) {
       );
       if (console.error.calls.count() > 0) {
         console.log(`We saw these warnings:`);
-        for (var i = 0; i < console.error.calls.count(); i++) {
+        for (let i = 0; i < console.error.calls.count(); i++) {
           console.log(console.error.calls.argsFor(i)[0]);
         }
       }
@@ -97,7 +97,7 @@ module.exports = function(initModules) {
   // Does not render on client or perform client-side revival.
   async function serverRender(reactElement, errorCount = 0) {
     const markup = await renderIntoString(reactElement, errorCount);
-    var domElement = document.createElement('div');
+    const domElement = document.createElement('div');
     domElement.innerHTML = markup;
     return domElement.firstChild;
   }
@@ -133,7 +133,7 @@ module.exports = function(initModules) {
   // Does not render on client or perform client-side revival.
   async function streamRender(reactElement, errorCount = 0) {
     const markup = await renderIntoStream(reactElement, errorCount);
-    var domElement = document.createElement('div');
+    const domElement = document.createElement('div');
     domElement.innerHTML = markup;
     return domElement.firstChild;
   }
@@ -147,7 +147,7 @@ module.exports = function(initModules) {
     const markup = await renderIntoString(element, errorCount);
     resetModules();
 
-    var domElement = document.createElement('div');
+    const domElement = document.createElement('div');
     domElement.innerHTML = markup;
     let serverNode = domElement.firstChild;
 
@@ -178,13 +178,13 @@ module.exports = function(initModules) {
 
   const clientRenderOnBadMarkup = async (element, errorCount = 0) => {
     // First we render the top of bad mark up.
-    var domElement = document.createElement('div');
+    const domElement = document.createElement('div');
     domElement.innerHTML =
       '<div id="badIdWhichWillCauseMismatch" data-reactroot="" data-reactid="1"></div>';
     await renderIntoDom(element, domElement, true, errorCount + 1);
 
     // This gives us the resulting text content.
-    var hydratedTextContent = domElement.textContent;
+    const hydratedTextContent = domElement.textContent;
 
     // Next we render the element into a clean DOM node client side.
     const cleanDomElement = document.createElement('div');
