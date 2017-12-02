@@ -435,6 +435,8 @@ rimraf('build', async () => {
   try {
     // create a new build directory
     fs.mkdirSync('build');
+    // create the .tmp folder for local npm packing and unpacking
+    fs.mkdirSync(path.join('build', '.tmp'));
     // create the packages folder for NODE+UMD bundles
     fs.mkdirSync(path.join('build', 'packages'));
     // create the dist folder for UMD bundles
