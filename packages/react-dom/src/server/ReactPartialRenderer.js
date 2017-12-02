@@ -51,41 +51,50 @@ import {validateProperties as validateUnknownProperties} from '../shared/ReactDO
 type ReactNode = string | number | ReactElement;
 type FlatReactChildren = Array<null | ReactNode>;
 type toArrayType = (children: mixed) => FlatReactChildren;
-var toArray = ((React.Children.toArray: any): toArrayType);
+const toArray = ((React.Children.toArray: any): toArrayType);
 
-var getStackAddendum = emptyFunction.thatReturns('');
+let currentDebugStack;
+let currentDebugElementStack;
+
+let getStackAddendum = emptyFunction.thatReturns('');
+let describeStackFrame = emptyFunction.thatReturns('');
+
+let validatePropertiesInDevelopment = (type, props) => {};
+let setCurrentDebugStack = (stack: Array<Frame>) => {};
+let pushElementToDebugStack = (element: ReactElement) => {};
+let resetCurrentDebugStack = () => {};
 
 if (__DEV__) {
-  var validatePropertiesInDevelopment = function(type, props) {
+  validatePropertiesInDevelopment = function(type, props) {
     validateARIAProperties(type, props);
     validateInputProperties(type, props);
     validateUnknownProperties(type, props, /* canUseEventSystem */ false);
   };
 
-  var describeStackFrame = function(element): string {
-    var source = element._source;
-    var type = element.type;
-    var name = getComponentName(type);
-    var ownerName = null;
+  describeStackFrame = function(element): string {
+    const source = element._source;
+    const type = element.type;
+    const name = getComponentName(type);
+    const ownerName = null;
     return describeComponentFrame(name, source, ownerName);
   };
 
-  var currentDebugStack = null;
-  var currentDebugElementStack = null;
-  var setCurrentDebugStack = function(stack: Array<Frame>) {
-    var frame: Frame = stack[stack.length - 1];
+  currentDebugStack = null;
+  currentDebugElementStack = null;
+  setCurrentDebugStack = function(stack: Array<Frame>) {
+    const frame: Frame = stack[stack.length - 1];
     currentDebugElementStack = ((frame: any): FrameDev).debugElementStack;
     // We are about to enter a new composite stack, reset the array.
     currentDebugElementStack.length = 0;
     currentDebugStack = stack;
     ReactDebugCurrentFrame.getCurrentStack = getStackAddendum;
   };
-  var pushElementToDebugStack = function(element: ReactElement) {
+  pushElementToDebugStack = function(element: ReactElement) {
     if (currentDebugElementStack !== null) {
       currentDebugElementStack.push(element);
     }
   };
-  var resetCurrentDebugStack = function() {
+  resetCurrentDebugStack = function() {
     currentDebugElementStack = null;
     currentDebugStack = null;
     ReactDebugCurrentFrame.getCurrentStack = null;
@@ -107,14 +116,14 @@ if (__DEV__) {
   };
 }
 
-var didWarnDefaultInputValue = false;
-var didWarnDefaultChecked = false;
-var didWarnDefaultSelectValue = false;
-var didWarnDefaultTextareaValue = false;
-var didWarnInvalidOptionChildren = false;
-var didWarnAboutNoopUpdateForComponent = {};
-var valuePropNames = ['value', 'defaultValue'];
-var newlineEatingTags = {
+let didWarnDefaultInputValue = false;
+let didWarnDefaultChecked = false;
+let didWarnDefaultSelectValue = false;
+let didWarnDefaultTextareaValue = false;
+let didWarnInvalidOptionChildren = false;
+const didWarnAboutNoopUpdateForComponent = {};
+const valuePropNames = ['value', 'defaultValue'];
+const newlineEatingTags = {
   listing: true,
   pre: true,
   textarea: true,
@@ -129,8 +138,8 @@ function getComponentName(type) {
 // We accept any tag to be rendered but since this gets injected into arbitrary
 // HTML, we want to make sure that it's a safe tag.
 // http://www.w3.org/TR/REC-xml/#NT-Name
-var VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
-var validatedTagCache = {};
+const VALID_TAG_REGEX = /^[a-zA-Z][a-zA-Z:_\.\-\d]*$/; // Simplified subset
+const validatedTagCache = {};
 function validateDangerousTag(tag) {
   if (!validatedTagCache.hasOwnProperty(tag)) {
     invariant(VALID_TAG_REGEX.test(tag), 'Invalid tag: %s', tag);
@@ -138,19 +147,19 @@ function validateDangerousTag(tag) {
   }
 }
 
-var processStyleName = memoizeStringOnly(function(styleName) {
+const processStyleName = memoizeStringOnly(function(styleName) {
   return hyphenateStyleName(styleName);
 });
 
 function createMarkupForStyles(styles): string | null {
-  var serialized = '';
-  var delimiter = '';
-  for (var styleName in styles) {
+  let serialized = '';
+  let delimiter = '';
+  for (const styleName in styles) {
     if (!styles.hasOwnProperty(styleName)) {
       continue;
     }
-    var isCustomProperty = styleName.indexOf('--') === 0;
-    var styleValue = styles[styleName];
+    const isCustomProperty = styleName.indexOf('--') === 0;
+    const styleValue = styles[styleName];
     if (__DEV__) {
       if (!isCustomProperty) {
         warnValidStyle(styleName, styleValue, getStackAddendum);
@@ -175,7 +184,7 @@ function warnNoop(
   callerName: string,
 ) {
   if (__DEV__) {
-    var constructor = publicInstance.constructor;
+    const constructor = publicInstance.constructor;
     const componentName =
       (constructor && getComponentName(constructor)) || 'ReactClass';
     const warningKey = `${componentName}.${callerName}`;
@@ -201,13 +210,13 @@ function shouldConstruct(Component) {
 }
 
 function getNonChildrenInnerMarkup(props) {
-  var innerHTML = props.dangerouslySetInnerHTML;
+  const innerHTML = props.dangerouslySetInnerHTML;
   if (innerHTML != null) {
     if (innerHTML.__html != null) {
       return innerHTML.__html;
     }
   } else {
-    var content = props.children;
+    const content = props.children;
     if (typeof content === 'string' || typeof content === 'number') {
       return escapeTextForBrowser(content);
     }
@@ -232,7 +241,7 @@ function flattenTopLevelChildren(children: mixed): FlatReactChildren {
 }
 
 function flattenOptionChildren(children: mixed): string {
-  var content = '';
+  let content = '';
   // Flatten children and warn if they aren't strings or numbers;
   // invalid types are ignored.
   React.Children.forEach(children, function(child) {
@@ -257,12 +266,12 @@ function flattenOptionChildren(children: mixed): string {
 }
 
 function maskContext(type, context) {
-  var contextTypes = type.contextTypes;
+  const contextTypes = type.contextTypes;
   if (!contextTypes) {
     return emptyObject;
   }
-  var maskedContext = {};
-  for (var contextName in contextTypes) {
+  const maskedContext = {};
+  for (const contextName in contextTypes) {
     maskedContext[contextName] = context[contextName];
   }
   return maskedContext;
@@ -275,7 +284,7 @@ function checkContextTypes(typeSpecs, values, location: string) {
 }
 
 function processContext(type, context) {
-  var maskedContext = maskContext(type, context);
+  const maskedContext = maskContext(type, context);
   if (__DEV__) {
     if (type.contextTypes) {
       checkContextTypes(type.contextTypes, maskedContext, 'context');
@@ -284,8 +293,8 @@ function processContext(type, context) {
   return maskedContext;
 }
 
-var STYLE = 'style';
-var RESERVED_PROPS = {
+const STYLE = 'style';
+const RESERVED_PROPS = {
   children: null,
   dangerouslySetInnerHTML: null,
   suppressContentEditableWarning: null,
@@ -300,20 +309,20 @@ function createOpenTagMarkup(
   makeStaticMarkup: boolean,
   isRootElement: boolean,
 ): string {
-  var ret = '<' + tagVerbatim;
+  let ret = '<' + tagVerbatim;
 
-  for (var propKey in props) {
+  for (const propKey in props) {
     if (!props.hasOwnProperty(propKey)) {
       continue;
     }
-    var propValue = props[propKey];
+    let propValue = props[propKey];
     if (propValue == null) {
       continue;
     }
     if (propKey === STYLE) {
       propValue = createMarkupForStyles(propValue);
     }
-    var markup = null;
+    let markup = null;
     if (isCustomComponent(tagLowercase, props)) {
       if (!RESERVED_PROPS.hasOwnProperty(propKey)) {
         markup = createMarkupForCustomAttribute(propKey, propValue);
@@ -357,21 +366,36 @@ function resolve(
   child: mixed,
   context: Object,
 |} {
+  let element: ReactElement;
+
+  let Component;
+  let publicContext;
+  let inst, queue, replace;
+  let updater;
+
+  let initialState;
+  let oldQueue, oldReplace;
+  let nextState, dontMutate;
+  let partial, partialState;
+
+  let childContext;
+  let childContextTypes, contextKey;
+
   while (React.isValidElement(child)) {
     // Safe because we just checked it's an element.
-    var element: ReactElement = ((child: any): ReactElement);
+    element = ((child: any): ReactElement);
     if (__DEV__) {
       pushElementToDebugStack(element);
     }
-    var Component = element.type;
+    Component = element.type;
     if (typeof Component !== 'function') {
       break;
     }
-    var publicContext = processContext(Component, context);
-    var inst;
-    var queue = [];
-    var replace = false;
-    var updater = {
+    publicContext = processContext(Component, context);
+
+    queue = [];
+    replace = false;
+    updater = {
       isMounted: function(publicInstance) {
         return false;
       },
@@ -385,12 +409,12 @@ function resolve(
         replace = true;
         queue = [completeState];
       },
-      enqueueSetState: function(publicInstance, partialState) {
+      enqueueSetState: function(publicInstance, currentPartialState) {
         if (queue === null) {
           warnNoop(publicInstance, 'setState');
           return null;
         }
-        queue.push(partialState);
+        queue.push(currentPartialState);
       },
     };
 
@@ -409,26 +433,26 @@ function resolve(
     inst.context = publicContext;
     inst.updater = updater;
 
-    var initialState = inst.state;
+    initialState = inst.state;
     if (initialState === undefined) {
       inst.state = initialState = null;
     }
     if (inst.componentWillMount) {
       inst.componentWillMount();
       if (queue.length) {
-        var oldQueue = queue;
-        var oldReplace = replace;
+        oldQueue = queue;
+        oldReplace = replace;
         queue = null;
         replace = false;
 
         if (oldReplace && oldQueue.length === 1) {
           inst.state = oldQueue[0];
         } else {
-          var nextState = oldReplace ? oldQueue[0] : inst.state;
-          var dontMutate = true;
-          for (var i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
-            var partial = oldQueue[i];
-            var partialState =
+          nextState = oldReplace ? oldQueue[0] : inst.state;
+          dontMutate = true;
+          for (let i = oldReplace ? 1 : 0; i < oldQueue.length; i++) {
+            partial = oldQueue[i];
+            partialState =
               typeof partial === 'function'
                 ? partial.call(inst, nextState, element.props, publicContext)
                 : partial;
@@ -458,12 +482,11 @@ function resolve(
     }
     validateRenderResult(child, Component);
 
-    var childContext;
     if (typeof inst.getChildContext === 'function') {
-      var childContextTypes = Component.childContextTypes;
+      childContextTypes = Component.childContextTypes;
       if (typeof childContextTypes === 'object') {
         childContext = inst.getChildContext();
-        for (let contextKey in childContext) {
+        for (contextKey in childContext) {
           invariant(
             contextKey in childContextTypes,
             '%s.getChildContext(): key "%s" is not defined in childContextTypes.',
@@ -510,7 +533,7 @@ class ReactDOMServerRenderer {
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
 
-    var topFrame: Frame = {
+    const topFrame: Frame = {
       // Assume all trees start in the HTML namespace (not totally true, but
       // this is what we did historically)
       domNamespace: Namespaces.html,
@@ -534,15 +557,15 @@ class ReactDOMServerRenderer {
       return null;
     }
 
-    var out = '';
+    let out = '';
     while (out.length < bytes) {
       if (this.stack.length === 0) {
         this.exhausted = true;
         break;
       }
-      var frame: Frame = this.stack[this.stack.length - 1];
+      const frame: Frame = this.stack[this.stack.length - 1];
       if (frame.childIndex >= frame.children.length) {
-        var footer = frame.footer;
+        const footer = frame.footer;
         out += footer;
         if (footer !== '') {
           this.previousWasTextNode = false;
@@ -553,7 +576,7 @@ class ReactDOMServerRenderer {
         }
         continue;
       }
-      var child = frame.children[frame.childIndex++];
+      const child = frame.children[frame.childIndex++];
       if (__DEV__) {
         setCurrentDebugStack(this.stack);
       }
@@ -572,7 +595,7 @@ class ReactDOMServerRenderer {
     parentNamespace: string,
   ): string {
     if (typeof child === 'string' || typeof child === 'number') {
-      var text = '' + child;
+      const text = '' + child;
       if (text === '') {
         return '';
       }
@@ -585,7 +608,7 @@ class ReactDOMServerRenderer {
       this.previousWasTextNode = true;
       return escapeTextForBrowser(text);
     } else {
-      var nextChild;
+      let nextChild;
       ({child: nextChild, context} = resolve(child, context));
       if (nextChild === null || nextChild === false) {
         return '';
@@ -644,7 +667,7 @@ class ReactDOMServerRenderer {
         return '';
       } else {
         // Safe because we just checked it's an element.
-        var nextElement = ((nextChild: any): ReactElement);
+        const nextElement = ((nextChild: any): ReactElement);
         return this.renderDOM(nextElement, context, parentNamespace);
       }
     }
@@ -655,7 +678,7 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    var tag = element.type.toLowerCase();
+    const tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
     if (parentNamespace === Namespaces.html) {
@@ -677,7 +700,7 @@ class ReactDOMServerRenderer {
 
     validateDangerousTag(tag);
 
-    var props = element.props;
+    let props = element.props;
     if (tag === 'input') {
       if (__DEV__) {
         ReactControlledValuePropTypes.checkPropTypes(
@@ -760,11 +783,11 @@ class ReactDOMServerRenderer {
         }
       }
 
-      var initialValue = props.value;
+      let initialValue = props.value;
       if (initialValue == null) {
-        var defaultValue = props.defaultValue;
+        let defaultValue = props.defaultValue;
         // TODO (yungsters): Remove support for children content in <textarea>.
-        var textareaChildren = props.children;
+        let textareaChildren = props.children;
         if (textareaChildren != null) {
           if (__DEV__) {
             warning(
@@ -805,12 +828,12 @@ class ReactDOMServerRenderer {
           getStackAddendum,
         );
 
-        for (var i = 0; i < valuePropNames.length; i++) {
-          var propName = valuePropNames[i];
+        for (let i = 0; i < valuePropNames.length; i++) {
+          const propName = valuePropNames[i];
           if (props[propName] == null) {
             continue;
           }
-          var isArray = Array.isArray(props[propName]);
+          const isArray = Array.isArray(props[propName]);
           if (props.multiple && !isArray) {
             warning(
               false,
@@ -852,11 +875,11 @@ class ReactDOMServerRenderer {
         value: undefined,
       });
     } else if (tag === 'option') {
-      var selected = null;
-      var selectValue = this.currentSelectValue;
-      var optionChildren = flattenOptionChildren(props.children);
+      let selected = null;
+      const selectValue = this.currentSelectValue;
+      const optionChildren = flattenOptionChildren(props.children);
       if (selectValue != null) {
-        var value;
+        let value;
         if (props.value != null) {
           value = props.value + '';
         } else {
@@ -865,7 +888,7 @@ class ReactDOMServerRenderer {
         selected = false;
         if (Array.isArray(selectValue)) {
           // multiple
-          for (var j = 0; j < selectValue.length; j++) {
+          for (let j = 0; j < selectValue.length; j++) {
             if ('' + selectValue[j] === value) {
               selected = true;
               break;
@@ -895,7 +918,7 @@ class ReactDOMServerRenderer {
 
     assertValidProps(tag, props, getStackAddendum);
 
-    var out = createOpenTagMarkup(
+    let out = createOpenTagMarkup(
       element.type,
       tag,
       props,
@@ -903,15 +926,15 @@ class ReactDOMServerRenderer {
       this.makeStaticMarkup,
       this.stack.length === 1,
     );
-    var footer = '';
+    let footer = '';
     if (omittedCloseTags.hasOwnProperty(tag)) {
       out += '/>';
     } else {
       out += '>';
       footer = '</' + element.type + '>';
     }
-    var children;
-    var innerMarkup = getNonChildrenInnerMarkup(props);
+    let children;
+    const innerMarkup = getNonChildrenInnerMarkup(props);
     if (innerMarkup != null) {
       children = [];
       if (newlineEatingTags[tag] && innerMarkup.charAt(0) === '\n') {
@@ -931,7 +954,7 @@ class ReactDOMServerRenderer {
     } else {
       children = toArray(props.children);
     }
-    var frame = {
+    const frame = {
       domNamespace: getChildNamespace(parentNamespace, element.type),
       tag,
       children,
