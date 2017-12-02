@@ -72,8 +72,12 @@ const {
 const {updatedAncestorInfo} = validateDOMNesting;
 const {precacheFiberNode, updateFiberProps} = ReactDOMComponentTree;
 
+let SUPPRESS_HYDRATION_WARNING;
+let topLevelUpdateWarnings;
+let warnOnInvalidCallback;
+
 if (__DEV__) {
-  var SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
+  SUPPRESS_HYDRATION_WARNING = 'suppressHydrationWarning';
   if (
     typeof Map !== 'function' ||
     Map.prototype == null ||
@@ -90,7 +94,7 @@ if (__DEV__) {
     );
   }
 
-  var topLevelUpdateWarnings = (container: DOMContainer) => {
+  topLevelUpdateWarnings = (container: DOMContainer) => {
     if (__DEV__) {
       if (
         container._reactRootContainer &&
@@ -137,7 +141,7 @@ if (__DEV__) {
     }
   };
 
-  var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +
