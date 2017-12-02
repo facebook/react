@@ -9,12 +9,12 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('SyntheticEvent', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
     React = require('react');
@@ -31,17 +31,17 @@ describe('SyntheticEvent', () => {
   });
 
   it('should normalize `target` from the nativeEvent', () => {
-    var node;
-    var expectedCount = 0;
+    let node;
+    let expectedCount = 0;
 
-    var eventHandler = syntheticEvent => {
+    const eventHandler = syntheticEvent => {
       expect(syntheticEvent.target).toBe(node);
 
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     // Emulate IE8
     Object.defineProperty(event, 'target', {
@@ -58,10 +58,10 @@ describe('SyntheticEvent', () => {
   });
 
   it('should be able to `preventDefault`', () => {
-    var node;
-    var expectedCount = 0;
+    let node;
+    let expectedCount = 0;
 
-    var eventHandler = syntheticEvent => {
+    const eventHandler = syntheticEvent => {
       expect(syntheticEvent.isDefaultPrevented()).toBe(false);
       syntheticEvent.preventDefault();
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
@@ -71,7 +71,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -79,17 +79,17 @@ describe('SyntheticEvent', () => {
   });
 
   it('should be prevented if nativeEvent is prevented', () => {
-    var node;
-    var expectedCount = 0;
+    let node;
+    let expectedCount = 0;
 
-    var eventHandler = syntheticEvent => {
+    const eventHandler = syntheticEvent => {
       expect(syntheticEvent.isDefaultPrevented()).toBe(true);
 
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event;
+    let event;
     event = document.createEvent('Event');
     event.initEvent('click', true, true);
     event.preventDefault();
@@ -112,10 +112,10 @@ describe('SyntheticEvent', () => {
   });
 
   it('should be able to `stopPropagation`', () => {
-    var node;
-    var expectedCount = 0;
+    let node;
+    let expectedCount = 0;
 
-    var eventHandler = syntheticEvent => {
+    const eventHandler = syntheticEvent => {
       expect(syntheticEvent.isPropagationStopped()).toBe(false);
       syntheticEvent.stopPropagation();
       expect(syntheticEvent.isPropagationStopped()).toBe(true);
@@ -124,7 +124,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -132,11 +132,11 @@ describe('SyntheticEvent', () => {
   });
 
   it('should be able to `persist`', () => {
-    var node;
-    var expectedCount = 0;
-    var syntheticEvent;
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
 
-    var eventHandler = e => {
+    const eventHandler = e => {
       expect(e.isPersistent()).toBe(false);
       e.persist();
       syntheticEvent = e;
@@ -146,7 +146,7 @@ describe('SyntheticEvent', () => {
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -158,18 +158,18 @@ describe('SyntheticEvent', () => {
 
   it('should be nullified and log warnings if the synthetic event has not been persisted', () => {
     spyOnDev(console, 'error');
-    var node;
-    var expectedCount = 0;
-    var syntheticEvent;
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
 
-    var eventHandler = e => {
+    const eventHandler = e => {
       syntheticEvent = e;
 
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -193,18 +193,18 @@ describe('SyntheticEvent', () => {
 
   it('should warn when setting properties of a synthetic event that has not been persisted', () => {
     spyOnDev(console, 'error');
-    var node;
-    var expectedCount = 0;
-    var syntheticEvent;
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
 
-    var eventHandler = e => {
+    const eventHandler = e => {
       syntheticEvent = e;
 
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -224,17 +224,17 @@ describe('SyntheticEvent', () => {
 
   it('should warn when calling `preventDefault` if the synthetic event has not been persisted', () => {
     spyOnDev(console, 'error');
-    var node;
-    var expectedCount = 0;
-    var syntheticEvent;
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
 
-    var eventHandler = e => {
+    const eventHandler = e => {
       syntheticEvent = e;
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
     node.dispatchEvent(event);
 
@@ -254,17 +254,17 @@ describe('SyntheticEvent', () => {
 
   it('should warn when calling `stopPropagation` if the synthetic event has not been persisted', () => {
     spyOnDev(console, 'error');
-    var node;
-    var expectedCount = 0;
-    var syntheticEvent;
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
 
-    var eventHandler = e => {
+    const eventHandler = e => {
       syntheticEvent = e;
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
 
     node.dispatchEvent(event);
@@ -288,12 +288,12 @@ describe('SyntheticEvent', () => {
   // way we simulate events.
   xit('should properly log warnings when events simulated with rendered components', () => {
     spyOnDev(console, 'error');
-    var event;
-    var element = document.createElement('div');
+    let event;
+    const element = document.createElement('div');
     function assignEvent(e) {
       event = e;
     }
-    var node = ReactDOM.render(<div onClick={assignEvent} />, element);
+    const node = ReactDOM.render(<div onClick={assignEvent} />, element);
     ReactTestUtils.Simulate.click(ReactDOM.findDOMNode(node));
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(0);
@@ -316,18 +316,18 @@ describe('SyntheticEvent', () => {
 
   it('should warn if Proxy is supported and the synthetic event is added a property', () => {
     spyOnDev(console, 'error');
-    var node;
-    var expectedCount = 0;
-    var syntheticEvent;
+    let node;
+    let expectedCount = 0;
+    let syntheticEvent;
 
-    var eventHandler = e => {
+    const eventHandler = e => {
       e.foo = 'bar';
       syntheticEvent = e;
       expectedCount++;
     };
     node = ReactDOM.render(<div onClick={eventHandler} />, container);
 
-    var event = document.createEvent('Event');
+    const event = document.createEvent('Event');
     event.initEvent('click', true, true);
 
     node.dispatchEvent(event);

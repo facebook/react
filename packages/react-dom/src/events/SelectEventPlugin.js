@@ -17,12 +17,12 @@ import {getNodeFromInstance} from '../client/ReactDOMComponentTree';
 import * as ReactInputSelection from '../client/ReactInputSelection';
 import {DOCUMENT_NODE} from '../shared/HTMLNodeType';
 
-var skipSelectionChangeEvent =
+const skipSelectionChangeEvent =
   ExecutionEnvironment.canUseDOM &&
   'documentMode' in document &&
   document.documentMode <= 11;
 
-var eventTypes = {
+const eventTypes = {
   select: {
     phasedRegistrationNames: {
       bubbled: 'onSelect',
@@ -41,10 +41,10 @@ var eventTypes = {
   },
 };
 
-var activeElement = null;
-var activeElementInst = null;
-var lastSelection = null;
-var mouseDown = false;
+let activeElement = null;
+let activeElementInst = null;
+let lastSelection = null;
+let mouseDown = false;
 
 /**
  * Get an object which is a unique representation of the current selection.
@@ -65,7 +65,7 @@ function getSelection(node) {
       end: node.selectionEnd,
     };
   } else if (window.getSelection) {
-    var selection = window.getSelection();
+    const selection = window.getSelection();
     return {
       anchorNode: selection.anchorNode,
       anchorOffset: selection.anchorOffset,
@@ -95,11 +95,11 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
   }
 
   // Only fire when selection has actually changed.
-  var currentSelection = getSelection(activeElement);
+  const currentSelection = getSelection(activeElement);
   if (!lastSelection || !shallowEqual(lastSelection, currentSelection)) {
     lastSelection = currentSelection;
 
-    var syntheticEvent = SyntheticEvent.getPooled(
+    const syntheticEvent = SyntheticEvent.getPooled(
       eventTypes.select,
       activeElementInst,
       nativeEvent,
@@ -131,7 +131,7 @@ function constructSelectEvent(nativeEvent, nativeEventTarget) {
  * - Fires for collapsed selection.
  * - Fires after user input.
  */
-var SelectEventPlugin = {
+const SelectEventPlugin = {
   eventTypes: eventTypes,
 
   extractEvents: function(
@@ -140,7 +140,7 @@ var SelectEventPlugin = {
     nativeEvent,
     nativeEventTarget,
   ) {
-    var doc =
+    const doc =
       nativeEventTarget.window === nativeEventTarget
         ? nativeEventTarget.document
         : nativeEventTarget.nodeType === DOCUMENT_NODE
@@ -152,7 +152,7 @@ var SelectEventPlugin = {
       return null;
     }
 
-    var targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
+    const targetNode = targetInst ? getNodeFromInstance(targetInst) : window;
 
     switch (topLevelType) {
       // Track the input node that has focus.

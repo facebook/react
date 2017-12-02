@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
 describe('getEventKey', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
     React = require('react');
@@ -41,7 +41,7 @@ describe('getEventKey', () => {
 
         ReactDOM.render(<Comp />, container);
 
-        var nativeEvent = new KeyboardEvent('keydown', {
+        const nativeEvent = new KeyboardEvent('keydown', {
           key: 'Del',
           bubbles: true,
           cancelable: true,
@@ -62,7 +62,7 @@ describe('getEventKey', () => {
 
         ReactDOM.render(<Comp />, container);
 
-        var nativeEvent = new KeyboardEvent('keydown', {
+        const nativeEvent = new KeyboardEvent('keydown', {
           key: 'f',
           bubbles: true,
           cancelable: true,
@@ -86,7 +86,7 @@ describe('getEventKey', () => {
 
           ReactDOM.render(<Comp />, container);
 
-          var nativeEvent = new KeyboardEvent('keypress', {
+          const nativeEvent = new KeyboardEvent('keypress', {
             charCode: 13,
             bubbles: true,
             cancelable: true,
@@ -107,7 +107,7 @@ describe('getEventKey', () => {
 
           ReactDOM.render(<Comp />, container);
 
-          var nativeEvent = new KeyboardEvent('keypress', {
+          const nativeEvent = new KeyboardEvent('keypress', {
             charCode: 65,
             bubbles: true,
             cancelable: true,
@@ -130,7 +130,7 @@ describe('getEventKey', () => {
 
           ReactDOM.render(<Comp />, container);
 
-          var nativeEvent = new KeyboardEvent('keydown', {
+          const nativeEvent = new KeyboardEvent('keydown', {
             keyCode: 45,
             bubbles: true,
             cancelable: true,
@@ -151,7 +151,7 @@ describe('getEventKey', () => {
 
           ReactDOM.render(<Comp />, container);
 
-          var nativeEvent = new KeyboardEvent('keydown', {
+          const nativeEvent = new KeyboardEvent('keydown', {
             keyCode: 1337,
             bubbles: true,
             cancelable: true,

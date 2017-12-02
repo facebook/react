@@ -11,7 +11,7 @@ import SyntheticEvent from 'events/SyntheticEvent';
  * @interface Event
  * @see http://www.w3.org/TR/clipboard-apis/
  */
-var ClipboardEventInterface = {
+const ClipboardEventInterface = {
   clipboardData: function(event) {
     return 'clipboardData' in event
       ? event.clipboardData
