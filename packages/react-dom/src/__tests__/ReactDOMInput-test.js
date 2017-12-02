@@ -595,6 +595,7 @@ describe('ReactDOMInput', () => {
     var node = container.firstChild;
 
     expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should properly transition from 0 to an empty value', function() {
@@ -606,6 +607,19 @@ describe('ReactDOMInput', () => {
     var node = container.firstChild;
 
     expect(node.value).toBe('');
+    expect(node.defaultValue).toBe('');
+  });
+
+  it('should properly transition a text input from 0 to an empty 0.0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value={0} />, container);
+    ReactDOM.render(<input type="text" value="0.0" />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0.0');
+    expect(node.defaultValue).toBe('0.0');
   });
 
   it('should have the correct target value', () => {

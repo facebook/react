@@ -181,19 +181,9 @@ export function updateWrapper(element: Element, props: Object) {
   var value = getSafeValue(props.value);
 
   if (value != null) {
-    if (value === 0 && node.value === '') {
-      node.value = '0';
-      // Note: IE9 reports a number inputs as 'text', so check props instead.
-    } else if (props.type === 'number') {
-      // Simulate `input.valueAsNumber`. IE9 does not support it
-      var valueAsNumber = parseFloat(node.value) || 0;
-
-      if (
-        // eslint-disable-next-line
-        value != valueAsNumber ||
-        // eslint-disable-next-line
-        (value == valueAsNumber && node.value != value)
-      ) {
+    if (props.type === 'number') {
+      // eslint-disable-next-line
+      if (node.valueAsNumber !== value && node.value != value) {
         node.value = '' + value;
       }
     } else if (node.value !== '' + value) {
