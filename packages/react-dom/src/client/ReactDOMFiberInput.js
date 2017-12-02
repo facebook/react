@@ -16,7 +16,6 @@ import * as DOMPropertyOperations from './DOMPropertyOperations';
 import {getFiberCurrentPropsFromNode} from './ReactDOMComponentTree';
 import ReactControlledValuePropTypes from '../shared/ReactControlledValuePropTypes';
 import * as inputValueTracking from './inputValueTracking';
-import {shouldSetAttribute} from '../shared/DOMProperty.js';
 
 type InputWithWrapperState = HTMLInputElement & {
   _wrapperState: {
