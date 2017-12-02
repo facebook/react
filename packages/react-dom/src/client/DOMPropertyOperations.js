@@ -10,8 +10,14 @@ import {
   ATTRIBUTE_NAME_START_CHAR,
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
-  getPropertyInfo,
+  getAttributeName,
+  getAttributeNamespace,
+  isWhitelisted,
+  hasBooleanValue,
+  hasOverloadedBooleanValue,
+  shouldIgnoreValue,
   shouldSetAttribute,
+  shouldUseProperty,
 } from '../shared/DOMProperty';
 import warning from 'fbjs/lib/warning';
 
@@ -20,36 +26,24 @@ import warning from 'fbjs/lib/warning';
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
+var illegalAttributeNameCache = new Set();
+var validatedAttributeNameCache = new Set();
 function isAttributeNameSafe(attributeName) {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (validatedAttributeNameCache.has(attributeName)) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (illegalAttributeNameCache.has(attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
+    validatedAttributeNameCache.add(attributeName);
     return true;
   }
-  illegalAttributeNameCache[attributeName] = true;
+  illegalAttributeNameCache.add(attributeName);
   if (__DEV__) {
     warning(false, 'Invalid attribute name: `%s`', attributeName);
   }
   return false;
-}
-
-// shouldIgnoreValue() is currently duplicated in DOMMarkupOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
 }
 
 /**
@@ -71,22 +65,21 @@ export function setAttributeForRoot(node) {
  */
 export function getValueForProperty(node, name, expected) {
   if (__DEV__) {
-    var propertyInfo = getPropertyInfo(name);
-    if (propertyInfo) {
-      if (propertyInfo.mustUseProperty) {
-        return node[propertyInfo.propertyName];
+    if (isWhitelisted(name)) {
+      if (shouldUseProperty(name)) {
+        return node[name];
       } else {
-        var attributeName = propertyInfo.attributeName;
+        var attributeName = getAttributeName(name);
 
         var stringValue = null;
 
-        if (propertyInfo.hasOverloadedBooleanValue) {
+        if (hasOverloadedBooleanValue(name)) {
           if (node.hasAttribute(attributeName)) {
             var value = node.getAttribute(attributeName);
             if (value === '') {
               return true;
             }
-            if (shouldIgnoreValue(propertyInfo, expected)) {
+            if (shouldIgnoreValue(name, expected)) {
               return value;
             }
             if (value === '' + expected) {
@@ -95,12 +88,12 @@ export function getValueForProperty(node, name, expected) {
             return value;
           }
         } else if (node.hasAttribute(attributeName)) {
-          if (shouldIgnoreValue(propertyInfo, expected)) {
+          if (shouldIgnoreValue(name, expected)) {
             // We had an attribute but shouldn't have had one, so read it
             // for the error message.
             return node.getAttribute(attributeName);
           }
-          if (propertyInfo.hasBooleanValue) {
+          if (hasBooleanValue(name)) {
             // If this was a boolean, it doesn't matter what the value is
             // the fact that we have it is the same as the expected.
             return expected;
@@ -112,7 +105,7 @@ export function getValueForProperty(node, name, expected) {
           stringValue = node.getAttribute(attributeName);
         }
 
-        if (shouldIgnoreValue(propertyInfo, expected)) {
+        if (shouldIgnoreValue(name, expected)) {
           return stringValue === null ? expected : stringValue;
         } else if (stringValue === '' + expected) {
           return expected;
@@ -153,26 +146,24 @@ export function getValueForAttribute(node, name, expected) {
  * @param {*} value
  */
 export function setValueForProperty(node, name, value) {
-  var propertyInfo = getPropertyInfo(name);
-
-  if (propertyInfo && shouldSetAttribute(name, value)) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
+  if (isWhitelisted(name) && shouldSetAttribute(name, value)) {
+    if (shouldIgnoreValue(name, value)) {
       deleteValueForProperty(node, name);
       return;
-    } else if (propertyInfo.mustUseProperty) {
+    } else if (shouldUseProperty(name)) {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
-      node[propertyInfo.propertyName] = value;
+      node[name] = value;
     } else {
-      var attributeName = propertyInfo.attributeName;
-      var namespace = propertyInfo.attributeNamespace;
+      var attributeName = getAttributeName(name);
+      var namespace = getAttributeNamespace(name);
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
       if (namespace) {
         node.setAttributeNS(namespace, attributeName, '' + value);
       } else if (
-        propertyInfo.hasBooleanValue ||
-        (propertyInfo.hasOverloadedBooleanValue && value === true)
+        hasBooleanValue(name) ||
+        (hasOverloadedBooleanValue(name) && value === true)
       ) {
         node.setAttribute(attributeName, '');
       } else {
@@ -217,17 +208,16 @@ export function deleteValueForAttribute(node, name) {
  * @param {string} name
  */
 export function deleteValueForProperty(node, name) {
-  var propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
-    if (propertyInfo.mustUseProperty) {
-      var propName = propertyInfo.propertyName;
-      if (propertyInfo.hasBooleanValue) {
-        node[propName] = false;
+  if (isWhitelisted(name)) {
+    if (shouldUseProperty(name)) {
+      if (hasBooleanValue(name)) {
+        node[name] = false;
       } else {
-        node[propName] = '';
+        node[name] = '';
       }
     } else {
-      node.removeAttribute(propertyInfo.attributeName);
+      const attributeName = getAttributeName(name);
+      node.removeAttribute(attributeName);
     }
   } else {
     node.removeAttribute(name);

@@ -10,8 +10,12 @@ import {
   ATTRIBUTE_NAME_START_CHAR,
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
-  getPropertyInfo,
+  getAttributeName,
+  isWhitelisted,
+  hasBooleanValue,
+  hasOverloadedBooleanValue,
   shouldAttributeAcceptBooleanValue,
+  shouldIgnoreValue,
   shouldSetAttribute,
 } from '../shared/DOMProperty';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
@@ -22,36 +26,24 @@ import warning from 'fbjs/lib/warning';
 var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
+var illegalAttributeNameCache = new Set();
+var validatedAttributeNameCache = new Set();
 function isAttributeNameSafe(attributeName) {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (validatedAttributeNameCache.has(attributeName)) {
     return true;
   }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+  if (illegalAttributeNameCache.has(attributeName)) {
     return false;
   }
   if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
+    validatedAttributeNameCache.add(attributeName);
     return true;
   }
-  illegalAttributeNameCache[attributeName] = true;
+  illegalAttributeNameCache.add(attributeName);
   if (__DEV__) {
     warning(false, 'Invalid attribute name: `%s`', attributeName);
   }
   return false;
-}
-
-// shouldIgnoreValue() is currently duplicated in DOMPropertyOperations.
-// TODO: Find a better place for this.
-function shouldIgnoreValue(propertyInfo, value) {
-  return (
-    value == null ||
-    (propertyInfo.hasBooleanValue && !value) ||
-    (propertyInfo.hasNumericValue && isNaN(value)) ||
-    (propertyInfo.hasPositiveNumericValue && value < 1) ||
-    (propertyInfo.hasOverloadedBooleanValue && value === false)
-  );
 }
 
 /**
@@ -80,15 +72,14 @@ export function createMarkupForRoot() {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name, value) {
-  var propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
-    if (shouldIgnoreValue(propertyInfo, value)) {
+  if (isWhitelisted(name)) {
+    if (shouldIgnoreValue(name, value)) {
       return '';
     }
-    var attributeName = propertyInfo.attributeName;
+    var attributeName = getAttributeName(name);
     if (
-      propertyInfo.hasBooleanValue ||
-      (propertyInfo.hasOverloadedBooleanValue && value === true)
+      hasBooleanValue(name) ||
+      (hasOverloadedBooleanValue(name) && value === true)
     ) {
       return attributeName;
     } else if (
