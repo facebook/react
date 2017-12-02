@@ -9,7 +9,7 @@ import warning from 'fbjs/lib/warning';
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
-var RESERVED_PROPS = {
+const RESERVED_PROPS = {
   children: true,
   dangerouslySetInnerHTML: true,
   // TODO: This prevents the assignment of defaultValue to regular
@@ -35,11 +35,11 @@ const HAS_OVERLOADED_BOOLEAN_VALUE = 0x20;
 const HAS_STRING_BOOLEAN_VALUE = 0x40;
 
 function injectDOMPropertyConfig(domPropertyConfig) {
-  var Properties = domPropertyConfig.Properties || {};
-  var DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-  var DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
+  const Properties = domPropertyConfig.Properties || {};
+  const DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
+  const DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
 
-  for (var propName in Properties) {
+  for (const propName in Properties) {
     if (__DEV__) {
       warning(
         !properties.hasOwnProperty(propName),
@@ -51,10 +51,10 @@ function injectDOMPropertyConfig(domPropertyConfig) {
       );
     }
 
-    var lowerCased = propName.toLowerCase();
-    var propConfig = Properties[propName];
+    const lowerCased = propName.toLowerCase();
+    const propConfig = Properties[propName];
 
-    var propertyInfo = {
+    const propertyInfo = {
       attributeName: lowerCased,
       attributeNamespace: null,
       propertyName: propName,
@@ -85,7 +85,7 @@ function injectDOMPropertyConfig(domPropertyConfig) {
     }
 
     if (DOMAttributeNames.hasOwnProperty(propName)) {
-      var attributeName = DOMAttributeNames[propName];
+      const attributeName = DOMAttributeNames[propName];
 
       propertyInfo.attributeName = attributeName;
     }
@@ -187,7 +187,7 @@ export function shouldAttributeAcceptBooleanValue(name) {
       propertyInfo.hasOverloadedBooleanValue
     );
   }
-  var prefix = name.toLowerCase().slice(0, 5);
+  const prefix = name.toLowerCase().slice(0, 5);
   return prefix === 'data-' || prefix === 'aria-';
 }
 
@@ -204,7 +204,7 @@ export function isReservedProp(name) {
   return RESERVED_PROPS.hasOwnProperty(name);
 }
 
-var HTMLDOMPropertyConfig = {
+const HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
   // the `possibleStandardNames` module to ensure casing and incorrect
   // name warnings.
@@ -274,7 +274,7 @@ var HTMLDOMPropertyConfig = {
   },
 };
 
-var NS = {
+const NS = {
   xlink: 'http://www.w3.org/1999/xlink',
   xml: 'http://www.w3.org/XML/1998/namespace',
 };
@@ -292,7 +292,7 @@ var NS = {
  * SMIL Spec:
  * https://www.w3.org/TR/smil
  */
-var SVG_ATTRS = [
+const SVG_ATTRS = [
   'accent-height',
   'alignment-baseline',
   'arabic-form',
@@ -378,7 +378,7 @@ var SVG_ATTRS = [
   'xml:space',
 ];
 
-var SVGDOMPropertyConfig = {
+const SVGDOMPropertyConfig = {
   Properties: {
     autoReverse: HAS_STRING_BOOLEAN_VALUE,
     externalResourcesRequired: HAS_STRING_BOOLEAN_VALUE,
@@ -403,11 +403,11 @@ var SVGDOMPropertyConfig = {
   },
 };
 
-var CAMELIZE = /[\-\:]([a-z])/g;
-var capitalize = token => token[1].toUpperCase();
+const CAMELIZE = /[\-\:]([a-z])/g;
+const capitalize = token => token[1].toUpperCase();
 
 SVG_ATTRS.forEach(original => {
-  var reactName = original.replace(CAMELIZE, capitalize);
+  const reactName = original.replace(CAMELIZE, capitalize);
 
   SVGDOMPropertyConfig.Properties[reactName] = 0;
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
