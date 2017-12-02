@@ -117,18 +117,15 @@ export function initWrapperState(element: Element, props: Object) {
     }
   }
 
-  var defaultValue = props.defaultValue == null ? '' : props.defaultValue;
-  var initialValue = props.value != null ? props.value : defaultValue;
   var node = ((element: any): InputWithWrapperState);
-
-  if (!shouldSetAttribute('value', initialValue)) {
-    initialValue = '';
-  }
+  var defaultValue = props.defaultValue == null ? '' : props.defaultValue;
 
   node._wrapperState = {
     initialChecked:
       props.checked != null ? props.checked : props.defaultChecked,
-    initialValue: initialValue,
+    initialValue: getSafeValue(
+      props.value != null ? props.value : defaultValue,
+    ),
     controlled: isControlled(props),
   };
 }
@@ -182,10 +179,7 @@ export function updateWrapper(element: Element, props: Object) {
 
   updateChecked(element, props);
 
-  var value = shouldSetAttribute('value', props.value) ? props.value : '';
-  var defaultValue = shouldSetAttribute('value', props.defaultValue)
-    ? props.defaultValue
-    : '';
+  var value = getSafeValue(props.value);
 
   if (value != null) {
     if (value === 0 && node.value === '') {
@@ -209,9 +203,9 @@ export function updateWrapper(element: Element, props: Object) {
   }
 
   if (props.hasOwnProperty('value')) {
-    synchronizeDefaultValue(node, props.type, value);
+    setDefaultValue(node, props.type, value);
   } else if (props.hasOwnProperty('defaultValue')) {
-    synchronizeDefaultValue(node, props.type, defaultValue);
+    setDefaultValue(node, props.type, getSafeValue(props.defaultValue));
   }
 
   if (props.checked == null && props.defaultChecked != null) {
@@ -313,7 +307,7 @@ function updateNamedCousins(rootNode, props) {
 // when the user is inputting text
 //
 // https://github.com/facebook/react/issues/7253
-export function synchronizeDefaultValue(
+export function setDefaultValue(
   node: InputWithWrapperState,
   type: ?string,
   value: *,
@@ -328,5 +322,19 @@ export function synchronizeDefaultValue(
     } else if (node.defaultValue !== '' + value) {
       node.defaultValue = '' + value;
     }
+  }
+}
+
+function getSafeValue(value: *): * {
+  switch (typeof value) {
+    case 'boolean':
+    case 'number':
+    case 'object':
+    case 'string':
+    case 'undefined':
+      return value;
+    default:
+      // function, symbol are assigned as empty strings
+      return '';
   }
 }
