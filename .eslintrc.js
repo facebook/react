@@ -64,6 +64,6 @@ module.exports = {
   globals: {
     spyOnDev: true,
     spyOnDevAndProd: true,
-    spyOnProd: true,
+    spyOnProd: false,
   },
 };
