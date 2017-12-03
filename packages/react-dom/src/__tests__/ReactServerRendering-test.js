@@ -372,7 +372,7 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
     });
 
-    it('should not focus on either server or client with autofocus={false} even if the markup is mismatch', () => {
+    it('should not focus on either server or client with autofocus={false} even if there is a markup mismatch', () => {
       spyOnDev(console, 'error');
 
       var element = document.createElement('div');
@@ -387,6 +387,9 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toBe(
+          'Warning: Text content did not match. Server: "server" Client: "client"'
+        );
       }
     });
 
