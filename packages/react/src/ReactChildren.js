@@ -32,20 +32,16 @@ const escapeRegex = /[=:]/g;
 function escape(key: string): string {
   const str = '' + key;
 
-  const match = escapeRegex.exec(str);
-
-  // shortcut optimization for keys that don't have ":" or "="
-  if (!match) {
-    return '$' + str;
-  }
-
   let escapeChar;
   let result = '$';
-  let index = 0;
   let lastIndex = 0;
 
-  for (index = match.index; index < str.length; index++) {
-    switch (str.charCodeAt(index)) {
+  for (
+    let match = escapeRegex.exec(str);
+    match;
+    match = escapeRegex.exec(str)
+  ) {
+    switch (str.charCodeAt(match.index)) {
       case 61: // =
         escapeChar = '=0';
         break;
@@ -56,15 +52,13 @@ function escape(key: string): string {
         continue;
     }
 
-    if (lastIndex !== index) {
-      result += str.substring(lastIndex, index);
+    if (lastIndex !== match.index) {
+      result += str.substring(lastIndex, match.index);
     }
-    lastIndex = index + 1;
+    lastIndex = match.index + 1;
     result += escapeChar;
   }
-  return lastIndex !== index
-    ? result + str.substring(lastIndex, index)
-    : result;
+  return result + str.substring(lastIndex);
 }
 
 /**

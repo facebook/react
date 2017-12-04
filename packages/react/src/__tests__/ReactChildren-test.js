@@ -911,10 +911,20 @@ describe('ReactChildren', () => {
   it('should escape keys', () => {
     const zero = <div key="1" />;
     const one = <div key="1=::=2" />;
+    const two = <div key="=foo" />;
+    const three = <div key="foo=" />;
+    const four = <div key=":foo" />;
+    const five = <div key="foo:" />;
+    const six = <div key="foo" />;
     const instance = (
       <div>
         {zero}
         {one}
+        {two}
+        {three}
+        {four}
+        {five}
+        {six}
       </div>
     );
     const mappedChildren = React.Children.map(
@@ -924,6 +934,11 @@ describe('ReactChildren', () => {
     expect(mappedChildren).toEqual([
       <div key=".$1" />,
       <div key=".$1=0=2=2=02" />,
+      <div key=".$=0foo" />,
+      <div key=".$foo=0" />,
+      <div key=".$=2foo" />,
+      <div key=".$foo=2" />,
+      <div key=".$foo" />,
     ]);
   });
 
