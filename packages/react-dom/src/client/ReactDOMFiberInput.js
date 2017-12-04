@@ -182,8 +182,11 @@ export function updateWrapper(element: Element, props: Object) {
 
   if (value != null) {
     if (props.type === 'number') {
-      // eslint-disable-next-line
-      if (node.value != value || (value === 0 && node.value === '')) {
+      if (
+        (value === 0 && node.value === '') ||
+        // eslint-disable-next-line
+        node.value != value
+      ) {
         node.value = '' + value;
       }
     } else if (node.value !== '' + value) {
