@@ -17,8 +17,10 @@ export type StackCursor<T> = {
 
 const valueStack: Array<any> = [];
 
+let fiberStack: Array<Fiber | null>;
+
 if (__DEV__) {
-  var fiberStack: Array<Fiber | null> = [];
+  fiberStack = [];
 }
 
 let index = -1;

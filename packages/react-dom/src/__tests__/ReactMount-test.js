@@ -11,10 +11,10 @@
 
 const {COMMENT_NODE} = require('../shared/HTMLNodeType');
 
-var React;
-var ReactDOM;
-var ReactDOMServer;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactDOMServer;
+let ReactTestUtils;
 
 describe('ReactMount', () => {
   beforeEach(() => {
@@ -28,7 +28,7 @@ describe('ReactMount', () => {
 
   describe('unmountComponentAtNode', () => {
     it('throws when given a non-node', () => {
-      var nodeArray = document.getElementsByTagName('div');
+      const nodeArray = document.getElementsByTagName('div');
       expect(function() {
         ReactDOM.unmountComponentAtNode(nodeArray);
       }).toThrowError(
@@ -37,14 +37,14 @@ describe('ReactMount', () => {
     });
 
     it('returns false on non-React containers', () => {
-      var d = document.createElement('div');
+      const d = document.createElement('div');
       d.innerHTML = '<b>hellooo</b>';
       expect(ReactDOM.unmountComponentAtNode(d)).toBe(false);
       expect(d.textContent).toBe('hellooo');
     });
 
     it('returns true on React containers', () => {
-      var d = document.createElement('div');
+      const d = document.createElement('div');
       ReactDOM.render(<b>hellooo</b>, d);
       expect(d.textContent).toBe('hellooo');
       expect(ReactDOM.unmountComponentAtNode(d)).toBe(true);
@@ -72,7 +72,7 @@ describe('ReactMount', () => {
   });
 
   it('should render different components in same root', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
     document.body.appendChild(container);
 
     ReactDOM.render(<div />, container);
@@ -83,10 +83,10 @@ describe('ReactMount', () => {
   });
 
   it('should unmount and remount if the key changes', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
 
-    var mockMount = jest.fn();
-    var mockUnmount = jest.fn();
+    const mockMount = jest.fn();
+    const mockUnmount = jest.fn();
 
     class Component extends React.Component {
       componentDidMount = mockMount;
@@ -118,15 +118,15 @@ describe('ReactMount', () => {
   });
 
   it('should reuse markup if rendering to the same target twice', () => {
-    var container = document.createElement('container');
-    var instance1 = ReactDOM.render(<div />, container);
-    var instance2 = ReactDOM.render(<div />, container);
+    const container = document.createElement('container');
+    const instance1 = ReactDOM.render(<div />, container);
+    const instance2 = ReactDOM.render(<div />, container);
 
     expect(instance1 === instance2).toBe(true);
   });
 
   it('should warn if mounting into left padded rendered markup', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
     container.innerHTML = ReactDOMServer.renderToString(<div />) + ' ';
 
     spyOnDev(console, 'error');
@@ -140,7 +140,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn if mounting into right padded rendered markup', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
     container.innerHTML = ' ' + ReactDOMServer.renderToString(<div />);
 
     spyOnDev(console, 'error');
@@ -154,7 +154,7 @@ describe('ReactMount', () => {
   });
 
   it('should not warn if mounting into non-empty node', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
     container.innerHTML = '<div></div>';
 
     spyOnDev(console, 'error');
@@ -165,7 +165,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn when mounting into document.body', () => {
-    var iFrame = document.createElement('iframe');
+    const iFrame = document.createElement('iframe');
     document.body.appendChild(iFrame);
     spyOnDev(console, 'error');
 
@@ -180,8 +180,8 @@ describe('ReactMount', () => {
   });
 
   it('should account for escaping on a checksum mismatch', () => {
-    var div = document.createElement('div');
-    var markup = ReactDOMServer.renderToString(
+    const div = document.createElement('div');
+    const markup = ReactDOMServer.renderToString(
       <div>This markup contains an nbsp entity: &nbsp; server text</div>,
     );
     div.innerHTML = markup;
@@ -201,7 +201,7 @@ describe('ReactMount', () => {
   });
 
   it('should warn if render removes React-rendered children', () => {
-    var container = document.createElement('container');
+    const container = document.createElement('container');
 
     class Component extends React.Component {
       render() {
@@ -217,7 +217,7 @@ describe('ReactMount', () => {
 
     // Test that blasting away children throws a warning
     spyOnDev(console, 'error');
-    var rootNode = container.firstChild;
+    const rootNode = container.firstChild;
     ReactDOM.render(<span />, rootNode);
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
@@ -232,8 +232,8 @@ describe('ReactMount', () => {
 
   it('should warn if the unmounted node was rendered by another copy of React', () => {
     jest.resetModules();
-    var ReactDOMOther = require('react-dom');
-    var container = document.createElement('div');
+    const ReactDOMOther = require('react-dom');
+    const container = document.createElement('div');
 
     class Component extends React.Component {
       render() {
@@ -267,8 +267,8 @@ describe('ReactMount', () => {
   });
 
   it('passes the correct callback context', () => {
-    var container = document.createElement('div');
-    var calls = 0;
+    const container = document.createElement('div');
+    let calls = 0;
 
     ReactDOM.render(<div />, container, function() {
       expect(this.nodeName).toBe('DIV');
@@ -307,8 +307,8 @@ describe('ReactMount', () => {
   });
 
   it('initial mount is sync inside batchedUpdates, but task work is deferred until the end of the batch', () => {
-    var container1 = document.createElement('div');
-    var container2 = document.createElement('div');
+    const container1 = document.createElement('div');
+    const container2 = document.createElement('div');
 
     class Foo extends React.Component {
       state = {active: false};

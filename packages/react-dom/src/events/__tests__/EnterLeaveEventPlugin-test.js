@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
+let React;
+let ReactDOM;
 
 describe('EnterLeaveEventPlugin', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
     jest.resetModules();

@@ -16,7 +16,7 @@ let ReactDOMServer;
 let ReactTestUtils;
 
 function getTestDocument(markup) {
-  var doc = document.implementation.createHTMLDocument('');
+  const doc = document.implementation.createHTMLDocument('');
   doc.open();
   doc.write(
     markup ||
@@ -47,7 +47,7 @@ describe('ReactTestUtils', () => {
     // Patch it up so it returns its children.
     ReactTestUtils.mockComponent(MockedComponent);
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<MockedComponent>Hello</MockedComponent>, container);
     expect(container.textContent).toBe('Hello');
   });

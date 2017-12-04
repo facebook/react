@@ -9,11 +9,11 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
-var TestComponent;
+let TestComponent;
 
 describe('refs-destruction', () => {
   beforeEach(() => {
@@ -37,8 +37,8 @@ describe('refs-destruction', () => {
   });
 
   it('should remove refs when destroying the parent', () => {
-    var container = document.createElement('div');
-    var testInstance = ReactDOM.render(<TestComponent />, container);
+    const container = document.createElement('div');
+    const testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
       true,
     );
@@ -54,8 +54,8 @@ describe('refs-destruction', () => {
   });
 
   it('should remove refs when destroying the child', () => {
-    var container = document.createElement('div');
-    var testInstance = ReactDOM.render(<TestComponent />, container);
+    const container = document.createElement('div');
+    const testInstance = ReactDOM.render(<TestComponent />, container);
     expect(ReactTestUtils.isDOMComponent(testInstance.refs.theInnerDiv)).toBe(
       true,
     );
@@ -83,7 +83,7 @@ describe('refs-destruction', () => {
       }
 
       componentWillUnmount() {
-        var self = this;
+        const self = this;
         // some async animation
         setTimeout(function() {
           expect(function() {
@@ -114,7 +114,7 @@ describe('refs-destruction', () => {
       }
     }
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<App />, container);
     ReactDOM.render(<App hidden={true} />, container);
     jest.runAllTimers();

@@ -12,7 +12,7 @@ import SyntheticEvent from 'events/SyntheticEvent';
  * @see http://www.w3.org/TR/2013/WD-DOM-Level-3-Events-20131105
  *      /#events-inputevents
  */
-var InputEventInterface = {
+const InputEventInterface = {
   data: null,
 };
 

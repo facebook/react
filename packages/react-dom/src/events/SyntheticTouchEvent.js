@@ -12,7 +12,7 @@ import getEventModifierState from './getEventModifierState';
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
  */
-var TouchEventInterface = {
+const TouchEventInterface = {
   touches: null,
   targetTouches: null,
   changedTouches: null,

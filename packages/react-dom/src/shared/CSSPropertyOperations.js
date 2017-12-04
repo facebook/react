@@ -21,15 +21,15 @@ import warnValidStyle from './warnValidStyle';
  */
 export function createDangerousStringForStyles(styles) {
   if (__DEV__) {
-    var serialized = '';
-    var delimiter = '';
-    for (var styleName in styles) {
+    let serialized = '';
+    let delimiter = '';
+    for (const styleName in styles) {
       if (!styles.hasOwnProperty(styleName)) {
         continue;
       }
-      var styleValue = styles[styleName];
+      const styleValue = styles[styleName];
       if (styleValue != null) {
-        var isCustomProperty = styleName.indexOf('--') === 0;
+        const isCustomProperty = styleName.indexOf('--') === 0;
         serialized += delimiter + hyphenateStyleName(styleName) + ':';
         serialized += dangerousStyleValue(
           styleName,
@@ -52,18 +52,18 @@ export function createDangerousStringForStyles(styles) {
  * @param {object} styles
  */
 export function setValueForStyles(node, styles, getStack) {
-  var style = node.style;
-  for (var styleName in styles) {
+  const style = node.style;
+  for (let styleName in styles) {
     if (!styles.hasOwnProperty(styleName)) {
       continue;
     }
-    var isCustomProperty = styleName.indexOf('--') === 0;
+    const isCustomProperty = styleName.indexOf('--') === 0;
     if (__DEV__) {
       if (!isCustomProperty) {
         warnValidStyle(styleName, styles[styleName], getStack);
       }
     }
-    var styleValue = dangerousStyleValue(
+    const styleValue = dangerousStyleValue(
       styleName,
       styles[styleName],
       isCustomProperty,

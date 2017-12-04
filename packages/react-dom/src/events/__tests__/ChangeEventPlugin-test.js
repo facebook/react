@@ -9,21 +9,21 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
+const React = require('react');
+const ReactDOM = require('react-dom');
 
-var setUntrackedChecked = Object.getOwnPropertyDescriptor(
+const setUntrackedChecked = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
   'checked',
 ).set;
 
-var setUntrackedValue = Object.getOwnPropertyDescriptor(
+const setUntrackedValue = Object.getOwnPropertyDescriptor(
   HTMLInputElement.prototype,
   'value',
 ).set;
 
 describe('ChangeEventPlugin', () => {
-  var container;
+  let container;
 
   beforeEach(() => {
     container = document.createElement('div');
@@ -43,14 +43,14 @@ describe('ChangeEventPlugin', () => {
   // See https://github.com/facebook/react/pull/5746.
 
   it('should consider initial text value to be current', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var node = ReactDOM.render(
+    const node = ReactDOM.render(
       <input type="text" onChange={cb} defaultValue="foo" />,
       container,
     );
@@ -61,14 +61,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should consider initial checkbox checked=true to be current', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var node = ReactDOM.render(
+    const node = ReactDOM.render(
       <input type="checkbox" onChange={cb} defaultChecked={true} />,
       container,
     );
@@ -85,14 +85,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should consider initial checkbox checked=false to be current', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var node = ReactDOM.render(
+    const node = ReactDOM.render(
       <input type="checkbox" onChange={cb} defaultChecked={false} />,
       container,
     );
@@ -109,14 +109,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should fire change for checkbox input', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var node = ReactDOM.render(
+    const node = ReactDOM.render(
       <input type="checkbox" onChange={cb} />,
       container,
     );
@@ -139,14 +139,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should not fire change setting the value programmatically', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactDOM.render(
+    const input = ReactDOM.render(
       <input type="text" defaultValue="foo" onChange={cb} />,
       container,
     );
@@ -175,14 +175,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should not distinguish equal string and number values', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactDOM.render(
+    const input = ReactDOM.render(
       <input type="text" defaultValue="42" onChange={cb} />,
       container,
     );
@@ -200,14 +200,14 @@ describe('ChangeEventPlugin', () => {
 
   // See a similar input test above for a detailed description of why.
   it('should not fire change when setting checked programmatically', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactDOM.render(
+    const input = ReactDOM.render(
       <input type="checkbox" onChange={cb} defaultChecked={false} />,
       container,
     );
@@ -232,20 +232,20 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should unmount', () => {
-    var input = ReactDOM.render(<input />, container);
+    const input = ReactDOM.render(<input />, container);
 
     ReactDOM.unmountComponentAtNode(container);
   });
 
   it('should only fire change for checked radio button once', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactDOM.render(
+    const input = ReactDOM.render(
       <input type="radio" onChange={cb} />,
       container,
     );
@@ -257,8 +257,8 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should track radio button cousins in a group', () => {
-    var called1 = 0;
-    var called2 = 0;
+    let called1 = 0;
+    let called2 = 0;
 
     function cb1(e) {
       called1++;
@@ -270,15 +270,15 @@ describe('ChangeEventPlugin', () => {
       expect(e.type).toBe('change');
     }
 
-    var div = ReactDOM.render(
+    const div = ReactDOM.render(
       <div>
         <input type="radio" name="group" onChange={cb1} />
         <input type="radio" name="group" onChange={cb2} />
       </div>,
       container,
     );
-    var option1 = div.childNodes[0];
-    var option2 = div.childNodes[1];
+    const option1 = div.childNodes[0];
+    const option2 = div.childNodes[1];
 
     // Select first option.
     option1.dispatchEvent(
@@ -304,14 +304,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should deduplicate input value change events', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input;
+    let input;
     ['text', 'number', 'range'].forEach(type => {
       called = 0;
       input = ReactDOM.render(<input type={type} onChange={cb} />, container);
@@ -367,14 +367,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should listen for both change and input events when supported', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactDOM.render(
+    const input = ReactDOM.render(
       <input type="range" onChange={cb} />,
       container,
     );
@@ -389,14 +389,14 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('should only fire events when the value changes for range inputs', () => {
-    var called = 0;
+    let called = 0;
 
     function cb(e) {
       called++;
       expect(e.type).toBe('change');
     }
 
-    var input = ReactDOM.render(
+    const input = ReactDOM.render(
       <input type="range" onChange={cb} />,
       container,
     );
@@ -412,20 +412,21 @@ describe('ChangeEventPlugin', () => {
   });
 
   it('does not crash for nodes with custom value property', () => {
+    let originalCreateElement;
     // https://github.com/facebook/react/issues/10196
     try {
-      var originalCreateElement = document.createElement;
+      originalCreateElement = document.createElement;
       document.createElement = function() {
-        var node = originalCreateElement.apply(this, arguments);
+        const node = originalCreateElement.apply(this, arguments);
         Object.defineProperty(node, 'value', {
           get() {},
           set() {},
         });
         return node;
       };
-      var div = document.createElement('div');
+      const div = document.createElement('div');
       // Mount
-      var node = ReactDOM.render(<input type="text" />, div);
+      const node = ReactDOM.render(<input type="text" />, div);
       // Update
       ReactDOM.render(<input type="text" />, div);
       // Change

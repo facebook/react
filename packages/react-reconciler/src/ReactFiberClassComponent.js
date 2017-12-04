@@ -40,10 +40,13 @@ import {hasContextChanged} from './ReactFiberContext';
 const fakeInternalInstance = {};
 const isArray = Array.isArray;
 
-if (__DEV__) {
-  var didWarnAboutStateAssignmentForComponent = {};
+let didWarnAboutStateAssignmentForComponent;
+let warnOnInvalidCallback;
 
-  var warnOnInvalidCallback = function(callback: mixed, callerName: string) {
+if (__DEV__) {
+  didWarnAboutStateAssignmentForComponent = {};
+
+  warnOnInvalidCallback = function(callback: mixed, callerName: string) {
     warning(
       callback === null || typeof callback === 'function',
       '%s(...): Expected the last optional `callback` argument to be a ' +

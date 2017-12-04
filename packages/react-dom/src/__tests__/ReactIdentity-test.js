@@ -9,9 +9,9 @@
 
 'use strict';
 
-var React;
-var ReactDOM;
-var ReactTestUtils;
+let React;
+let ReactDOM;
+let ReactTestUtils;
 
 describe('ReactIdentity', () => {
   beforeEach(() => {
@@ -22,19 +22,19 @@ describe('ReactIdentity', () => {
   });
 
   it('should allow key property to express identity', () => {
-    var node;
-    var Component = props => (
+    let node;
+    const Component = props => (
       <div ref={c => (node = c)}>
         <div key={props.swap ? 'banana' : 'apple'} />
         <div key={props.swap ? 'apple' : 'banana'} />
       </div>
     );
 
-    var container = document.createElement('div');
+    const container = document.createElement('div');
     ReactDOM.render(<Component />, container);
-    var origChildren = Array.from(node.childNodes);
+    const origChildren = Array.from(node.childNodes);
     ReactDOM.render(<Component swap={true} />, container);
-    var newChildren = Array.from(node.childNodes);
+    const newChildren = Array.from(node.childNodes);
     expect(origChildren[0]).toBe(newChildren[1]);
     expect(origChildren[1]).toBe(newChildren[0]);
   });
@@ -46,9 +46,9 @@ describe('ReactIdentity', () => {
       }
     }
 
-    var container = document.createElement('div');
-    var node1;
-    var node2;
+    const container = document.createElement('div');
+    let node1;
+    let node2;
     ReactDOM.render(
       <Wrapper key="wrap1">
         <span ref={c => (node1 = c)} />
@@ -76,20 +76,20 @@ describe('ReactIdentity', () => {
       }
     }
 
-    var instance = ReactDOM.render(<Wrapper />, container);
-    var span = instance.refs.span;
+    const instance = ReactDOM.render(<Wrapper />, container);
+    const span = instance.refs.span;
     expect(ReactDOM.findDOMNode(span)).not.toBe(null);
   }
 
   it('should allow any character as a key, in a detached parent', () => {
-    var detachedContainer = document.createElement('div');
+    const detachedContainer = document.createElement('div');
     renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", detachedContainer);
   });
 
   it('should allow any character as a key, in an attached parent', () => {
     // This test exists to protect against implementation details that
     // incorrectly query escaped IDs using DOM tools like getElementById.
-    var attachedContainer = document.createElement('div');
+    const attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);
 
     renderAComponentWithKeyIntoContainer("<'WEIRD/&\\key'>", attachedContainer);
@@ -98,10 +98,10 @@ describe('ReactIdentity', () => {
   });
 
   it('should not allow scripts in keys to execute', () => {
-    var h4x0rKey =
+    const h4x0rKey =
       '"><script>window[\'YOUVEBEENH4X0RED\']=true;</script><div id="';
 
-    var attachedContainer = document.createElement('div');
+    const attachedContainer = document.createElement('div');
     document.body.appendChild(attachedContainer);
 
     renderAComponentWithKeyIntoContainer(h4x0rKey, attachedContainer);
@@ -113,9 +113,9 @@ describe('ReactIdentity', () => {
   });
 
   it('should let restructured components retain their uniqueness', () => {
-    var instance0 = <span />;
-    var instance1 = <span />;
-    var instance2 = <span />;
+    const instance0 = <span />;
+    const instance1 = <span />;
+    const instance2 = <span />;
 
     class TestComponent extends React.Component {
       render() {
@@ -146,9 +146,9 @@ describe('ReactIdentity', () => {
   });
 
   it('should let nested restructures retain their uniqueness', () => {
-    var instance0 = <span />;
-    var instance1 = <span />;
-    var instance2 = <span />;
+    const instance0 = <span />;
+    const instance1 = <span />;
+    const instance2 = <span />;
 
     class TestComponent extends React.Component {
       render() {
@@ -232,26 +232,26 @@ describe('ReactIdentity', () => {
       }
     }
 
-    var instance0 = <span key="A" />;
-    var instance1 = <span key="B" />;
+    const instance0 = <span key="A" />;
+    const instance1 = <span key="B" />;
 
-    var wrapped = <TestContainer first={instance0} second={instance1} />;
+    let wrapped = <TestContainer first={instance0} second={instance1} />;
 
     wrapped = ReactDOM.render(wrapped, document.createElement('div'));
-    var div = ReactDOM.findDOMNode(wrapped);
+    const div = ReactDOM.findDOMNode(wrapped);
 
-    var beforeA = div.childNodes[0];
-    var beforeB = div.childNodes[1];
+    const beforeA = div.childNodes[0];
+    const beforeB = div.childNodes[1];
     wrapped.swap();
-    var afterA = div.childNodes[1];
-    var afterB = div.childNodes[0];
+    const afterA = div.childNodes[1];
+    const afterB = div.childNodes[0];
 
     expect(beforeA).toBe(afterA);
     expect(beforeB).toBe(afterB);
   });
 
   it('should not allow implicit and explicit keys to collide', () => {
-    var component = (
+    const component = (
       <div>
         <span />
         <span key="0" />

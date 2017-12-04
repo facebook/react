@@ -271,11 +271,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     }
   }
 
+  let emptyPortalContainer;
+
   if (!mutation) {
     let commitContainer;
     if (persistence) {
       const {replaceContainerChildren, createContainerChildSet} = persistence;
-      var emptyPortalContainer = function(current: Fiber) {
+      emptyPortalContainer = function(current: Fiber) {
         const portal: {containerInfo: C, pendingChildren: CC} =
           current.stateNode;
         const {containerInfo} = portal;
