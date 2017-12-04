@@ -28,17 +28,37 @@ const SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
-function escape(key) {
-  const escapeRegex = /[=:]/g;
-  const escaperLookup = {
-    '=': '=0',
-    ':': '=2',
-  };
-  const escapedString = ('' + key).replace(escapeRegex, function(match) {
-    return escaperLookup[match];
-  });
+const escapeRegex = /[=:]/g;
+function escape(key: string): string {
+  const str = '' + key;
 
-  return '$' + escapedString;
+  let escapeChar;
+  let result = '$';
+  let lastIndex = 0;
+
+  for (
+    let match = escapeRegex.exec(str);
+    match;
+    match = escapeRegex.exec(str)
+  ) {
+    switch (str.charCodeAt(match.index)) {
+      case 61: // =
+        escapeChar = '=0';
+        break;
+      case 58: // :
+        escapeChar = '=2';
+        break;
+      default:
+        continue;
+    }
+
+    if (lastIndex !== match.index) {
+      result += str.substring(lastIndex, match.index);
+    }
+    lastIndex = match.index + 1;
+    result += escapeChar;
+  }
+  return result + str.substring(lastIndex);
 }
 
 /**
