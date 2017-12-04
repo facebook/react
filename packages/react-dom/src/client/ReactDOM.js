@@ -376,8 +376,8 @@ type Root = {
   _internalRoot: FiberRoot,
 };
 
-function ReactRoot(container: Container, hydrate: boolean) {
-  const root = DOMRenderer.createContainer(container, hydrate);
+function ReactRoot(container: Container, isAsync: boolean, hydrate: boolean) {
+  const root = DOMRenderer.createContainer(container, isAsync, hydrate);
   this._internalRoot = root;
 }
 ReactRoot.prototype.render = function(
@@ -1031,8 +1031,9 @@ function legacyCreateRootFromDOMContainer(
       );
     }
   }
-  const root: Root = new ReactRoot(container, shouldHydrate);
-  return root;
+  // Legacy roots are not async by default.
+  const isAsync = false;
+  return new ReactRoot(container, isAsync, shouldHydrate);
 }
 
 function legacyRenderSubtreeIntoContainer(
@@ -1300,7 +1301,7 @@ if (enableCreateRoot) {
     options?: RootOptions,
   ): ReactRoot {
     const hydrate = options != null && options.hydrate === true;
-    return new ReactRoot(container, hydrate);
+    return new ReactRoot(container, true, hydrate);
   };
 }
 

@@ -12,7 +12,6 @@ import type {FiberRoot} from './ReactFiberRoot';
 import type {ReactNodeList} from 'shared/ReactTypes';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
-import {enableAsyncSubtreeAPI} from 'shared/ReactFeatureFlags';
 import {
   findCurrentHostFiber,
   findCurrentHostFiberWithNoPortals,
@@ -233,7 +232,11 @@ type DevToolsConfig<I, TI> = {|
 |};
 
 export type Reconciler<C, I, TI> = {
-  createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot,
+  createContainer(
+    containerInfo: C,
+    isAsync: boolean,
+    hydrate: boolean,
+  ): OpaqueRoot,
   updateContainer(
     element: ReactNodeList,
     container: OpaqueRoot,
@@ -288,7 +291,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   const {getPublicInstance} = config;
 
   const {
-    computeAsyncExpiration,
     computeUniqueAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
@@ -299,25 +301,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     flushSync,
     deferredUpdates,
   } = ReactFiberScheduler(config);
-
-  function computeRootExpirationTime(current, element) {
-    let expirationTime;
-    // Check if the top-level element is an async wrapper component. If so,
-    // treat updates to the root as async. This is a bit weird but lets us
-    // avoid a separate `renderAsync` API.
-    if (
-      enableAsyncSubtreeAPI &&
-      element != null &&
-      (element: any).type != null &&
-      (element: any).type.prototype != null &&
-      (element: any).type.prototype.unstable_isAsyncReactComponent === true
-    ) {
-      expirationTime = computeAsyncExpiration();
-    } else {
-      expirationTime = computeExpirationForFiber(current);
-    }
-    return expirationTime;
-  }
 
   function scheduleRootUpdate(
     current: Fiber,
@@ -408,8 +391,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   return {
-    createContainer(containerInfo: C, hydrate: boolean): OpaqueRoot {
-      return createFiberRoot(containerInfo, hydrate);
+    createContainer(
+      containerInfo: C,
+      isAsync: boolean,
+      hydrate: boolean,
+    ): OpaqueRoot {
+      return createFiberRoot(containerInfo, isAsync, hydrate);
     },
 
     updateContainer(
@@ -419,7 +406,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       callback: ?Function,
     ): ExpirationTime {
       const current = container.current;
-      const expirationTime = computeRootExpirationTime(current, element);
+      const expirationTime = computeExpirationForFiber(current);
       return updateContainerAtExpirationTime(
         element,
         container,

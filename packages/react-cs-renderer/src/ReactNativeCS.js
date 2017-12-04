@@ -265,7 +265,11 @@ const ReactCS = CSStatefulComponent({
     let container = {
       pendingChild: null,
     };
-    let root = ReactNativeCSFiberRenderer.createContainer(container, false);
+    let root = ReactNativeCSFiberRenderer.createContainer(
+      container,
+      false,
+      false,
+    );
     return {root, container};
   },
   render({

@@ -76,14 +76,17 @@ describe('ReactDOMRoot', () => {
   it('renders children', () => {
     const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
+    flush();
     expect(container.textContent).toEqual('Hi');
   });
 
   it('unmounts children', () => {
     const root = ReactDOM.createRoot(container);
     root.render(<div>Hi</div>);
+    flush();
     expect(container.textContent).toEqual('Hi');
     root.unmount();
+    flush();
     expect(container.textContent).toEqual('');
   });
 
@@ -138,6 +141,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
+    flush();
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(0);
     }
@@ -151,6 +155,7 @@ describe('ReactDOMRoot', () => {
         <span />
       </div>,
     );
+    flush();
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toMatch('Extra attributes');
@@ -167,6 +172,7 @@ describe('ReactDOMRoot', () => {
         <span>d</span>
       </div>,
     );
+    flush();
     expect(container.textContent).toEqual('abcd');
     root.render(
       <div>
@@ -174,6 +180,7 @@ describe('ReactDOMRoot', () => {
         <span>c</span>
       </div>,
     );
+    flush();
     expect(container.textContent).toEqual('abdc');
   });
 

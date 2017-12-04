@@ -52,11 +52,12 @@ export type FiberRoot = {
 
 export function createFiberRoot(
   containerInfo: any,
+  isAsync: boolean,
   hydrate: boolean,
 ): FiberRoot {
   // Cyclic construction. This cheats the type system right now because
   // stateNode is any.
-  const uninitializedFiber = createHostRootFiber();
+  const uninitializedFiber = createHostRootFiber(isAsync);
   const root = {
     current: uninitializedFiber,
     containerInfo: containerInfo,

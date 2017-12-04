@@ -1738,7 +1738,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   return {
-    computeAsyncExpiration,
     computeExpirationForFiber,
     scheduleWork,
     requestWork,

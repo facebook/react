@@ -35,7 +35,7 @@ import {
 import getComponentName from 'shared/getComponentName';
 
 import {NoWork} from './ReactFiberExpirationTime';
-import {NoContext} from './ReactTypeOfInternalContext';
+import {NoContext, AsyncUpdates} from './ReactTypeOfInternalContext';
 
 if (__DEV__) {
   var hasBadMapPolyfill = false;
@@ -288,9 +288,9 @@ export function createWorkInProgress(
   return workInProgress;
 }
 
-export function createHostRootFiber(): Fiber {
-  const fiber = createFiber(HostRoot, null, NoContext);
-  return fiber;
+export function createHostRootFiber(isAsync): Fiber {
+  const internalContextTag = isAsync ? AsyncUpdates : NoContext;
+  return createFiber(HostRoot, null, null, internalContextTag);
 }
 
 export function createFiberFromElement(

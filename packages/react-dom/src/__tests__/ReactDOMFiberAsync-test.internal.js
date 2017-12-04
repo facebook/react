@@ -69,26 +69,18 @@ describe('ReactDOMFiberAsync', () => {
       ReactFeatureFlags = require('shared/ReactFeatureFlags');
       container = document.createElement('div');
       ReactFeatureFlags.enableAsyncSubtreeAPI = true;
+      ReactFeatureFlags.enableCreateRoot = true;
       ReactDOM = require('react-dom');
     });
 
-    it('AsyncComponent at the root makes the entire tree async', () => {
-      ReactDOM.render(
-        <AsyncComponent>
-          <div>Hi</div>
-        </AsyncComponent>,
-        container,
-      );
+    it('createRoot makes the entire tree async', () => {
+      const root = ReactDOM.createRoot(container);
+      root.render(<div>Hi</div>);
       expect(container.textContent).toEqual('');
       jest.runAllTimers();
       expect(container.textContent).toEqual('Hi');
 
-      ReactDOM.render(
-        <AsyncComponent>
-          <div>Bye</div>
-        </AsyncComponent>,
-        container,
-      );
+      root.render(<div>Bye</div>);
       expect(container.textContent).toEqual('Hi');
       jest.runAllTimers();
       expect(container.textContent).toEqual('Bye');
@@ -104,12 +96,8 @@ describe('ReactDOMFiberAsync', () => {
         }
       }
 
-      ReactDOM.render(
-        <AsyncComponent>
-          <Component />
-        </AsyncComponent>,
-        container,
-      );
+      const root = ReactDOM.createRoot(container);
+      root.render(<Component />);
       expect(container.textContent).toEqual('');
       jest.runAllTimers();
       expect(container.textContent).toEqual('0');
