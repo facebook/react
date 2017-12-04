@@ -2593,8 +2593,8 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `defaultValue=(function)`| (changed, ssr warning)| `"function f() {}"` |
+| `defaultValue=(symbol)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
+| `defaultValue=(function)`| (initial, ssr mismatch)| `<empty string>` |
 | `defaultValue=(null)`| (initial, ssr warning)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
@@ -11768,8 +11768,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `value=(function)`| (changed, warning, ssr warning)| `"function f() {}"` |
+| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11793,8 +11793,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `value=(function)`| (changed, warning)| `"function f() {}"` |
+| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11818,7 +11818,7 @@
 | `value=(string 'false')`| (initial)| `<empty string>` |
 | `value=(string 'on')`| (initial)| `<empty string>` |
 | `value=(string 'off')`| (initial)| `<empty string>` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
