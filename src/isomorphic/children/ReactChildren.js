@@ -36,17 +36,43 @@ var SUBSEPARATOR = ':';
  * @param {string} key to be escaped.
  * @return {string} the escaped key.
  */
+var escapeRegex = /[=:]/g;
 function escape(key: string): string {
-  var escapeRegex = /[=:]/g;
-  var escaperLookup = {
-    '=': '=0',
-    ':': '=2',
-  };
-  var escapedString = ('' + key).replace(escapeRegex, function(match) {
-    return escaperLookup[match];
-  });
+  var str = '' + key;
 
-  return '$' + escapedString;
+  var match = escapeRegex.exec(str);
+
+  // shortcut optimization for keys that don't have ":" or "="
+  if (!match) {
+    return '$' + str;
+  }
+
+  var escapeChar;
+  var result = '$';
+  var index = 0;
+  var lastIndex = 0;
+
+  for (index = match.index; index < str.length; index++) {
+    switch (str.charCodeAt(index)) {
+      case 61: // =
+        escapeChar = '=0';
+        break;
+      case 58: // :
+        escapeChar = '=2';
+        break;
+      default:
+        continue;
+    }
+
+    if (lastIndex !== index) {
+      result += str.substring(lastIndex, index);
+    }
+    lastIndex = index + 1;
+    result += escapeChar;
+  }
+  return lastIndex !== index
+    ? result + str.substring(lastIndex, index)
+    : result;
 }
 
 /**
