@@ -173,10 +173,10 @@ export function createElement(type, config, children) {
   // Reserved names are extracted
   const props = {};
 
-  let key = null;
-  let ref = null;
-  let self = null;
-  let source = null;
+  let key = null,
+      ref = null,
+      self = null,
+      source = null;
 
   if (config != null) {
     if (hasValidRef(config)) {
