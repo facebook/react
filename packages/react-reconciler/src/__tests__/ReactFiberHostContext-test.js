@@ -45,7 +45,6 @@ describe('ReactFiberHostContext', () => {
       now: function() {
         return 0;
       },
-      useSyncScheduling: true,
       mutation: {
         appendChildToContainer: function() {
           return null;

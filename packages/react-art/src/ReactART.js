@@ -478,8 +478,6 @@ const ARTRenderer = ReactFiberReconciler({
 
   now: ReactDOMFrameScheduling.now,
 
-  useSyncScheduling: true,
-
   mutation: {
     appendChild(parentInstance, child) {
       if (child.parentNode === parentInstance) {

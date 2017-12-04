@@ -193,8 +193,6 @@ const NativeRenderer = ReactFiberReconciler({
     return false;
   },
 
-  useSyncScheduling: true,
-
   mutation: {
     appendChild(
       parentInstance: Instance,

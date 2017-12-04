@@ -182,7 +182,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     now,
     scheduleDeferredCallback,
     cancelDeferredCallback,
-    useSyncScheduling,
     prepareForCommit,
     resetAfterCommit,
   } = config;
@@ -1173,12 +1172,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     } else {
       // No explicit expiration context was set, and we're not currently
       // performing work. Calculate a new expiration time.
-      if (useSyncScheduling && !(fiber.internalContextTag & AsyncUpdates)) {
-        // This is a sync update
-        expirationTime = Sync;
-      } else {
+      if (fiber.internalContextTag & AsyncUpdates) {
         // This is an async update
         expirationTime = computeAsyncExpiration();
+      } else {
+        // This is a sync update
+        expirationTime = Sync;
       }
     }
     return expirationTime;

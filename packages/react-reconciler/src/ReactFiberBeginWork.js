@@ -59,6 +59,7 @@ import {
   invalidateContextProvider,
 } from './ReactFiberContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
+import {AsyncUpdates} from './ReactTypeOfInternalContext';
 
 if (__DEV__) {
   var warnedAboutStatelessRefs = {};
@@ -71,11 +72,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   scheduleWork: (fiber: Fiber, expirationTime: ExpirationTime) => void,
   computeExpirationForFiber: (fiber: Fiber) => ExpirationTime,
 ) {
-  const {
-    shouldSetTextContent,
-    useSyncScheduling,
-    shouldDeprioritizeSubtree,
-  } = config;
+  const {shouldSetTextContent, shouldDeprioritizeSubtree} = config;
 
   const {pushHostContext, pushHostContainer} = hostContext;
 
@@ -403,7 +400,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Check the host config to see if the children are offscreen/hidden.
     if (
       renderExpirationTime !== Never &&
-      !useSyncScheduling &&
+      workInProgress.internalContextTag & AsyncUpdates &&
       shouldDeprioritizeSubtree(type, nextProps)
     ) {
       // Down-prioritize the children.
