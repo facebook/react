@@ -28,8 +28,8 @@ describe('ReactAsyncClassComponent', () => {
       let shouldComponentUpdate = false;
       class ClassComponent extends React.Component {
         state = {};
-        constructor() {
-          super();
+        constructor(props) {
+          super(props);
           log.push('constructor');
         }
         componentDidMount() {
