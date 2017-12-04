@@ -341,7 +341,7 @@ var ReactNoop = {
     if (!root) {
       const container = {rootID: rootID, children: []};
       rootContainers.set(rootID, container);
-      root = NoopRenderer.createContainer(container, false);
+      root = NoopRenderer.createContainer(container, true, false);
       roots.set(rootID, root);
     }
     NoopRenderer.updateContainer(element, root, null, callback);
@@ -361,7 +361,7 @@ var ReactNoop = {
     if (!root) {
       const container = {rootID: rootID, children: []};
       rootContainers.set(rootID, container);
-      root = PersistentNoopRenderer.createContainer(container, false);
+      root = PersistentNoopRenderer.createContainer(container, true, false);
       persistentRoots.set(rootID, root);
     }
     PersistentNoopRenderer.updateContainer(element, root, null, callback);

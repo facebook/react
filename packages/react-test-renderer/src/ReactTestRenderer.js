@@ -572,7 +572,11 @@ const ReactTestRendererFiber = {
       createNodeMock,
       tag: 'CONTAINER',
     };
-    let root: FiberRoot | null = TestRenderer.createContainer(container, false);
+    let root: FiberRoot | null = TestRenderer.createContainer(
+      container,
+      false,
+      false,
+    );
     invariant(root != null, 'something went wrong');
     TestRenderer.updateContainer(element, root, null, null);
 
