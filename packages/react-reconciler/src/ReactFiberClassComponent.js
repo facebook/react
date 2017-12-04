@@ -384,11 +384,6 @@ export default function(
     instance.componentWillMount();
     stopPhaseTimer();
 
-    // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (debugRenderPhaseSideEffects) {
-      instance.componentWillMount();
-    }
-
     if (oldState !== instance.state) {
       if (__DEV__) {
         warning(
