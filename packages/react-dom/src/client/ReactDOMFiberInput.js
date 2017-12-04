@@ -116,12 +116,15 @@ export function initWrapperState(element: Element, props: Object) {
     }
   }
 
-  var defaultValue = props.defaultValue == null ? '' : props.defaultValue;
   var node = ((element: any): InputWithWrapperState);
+  var defaultValue = props.defaultValue == null ? '' : props.defaultValue;
+
   node._wrapperState = {
     initialChecked:
       props.checked != null ? props.checked : props.defaultChecked,
-    initialValue: props.value != null ? props.value : defaultValue,
+    initialValue: getSafeValue(
+      props.value != null ? props.value : defaultValue,
+    ),
     controlled: isControlled(props),
   };
 }
@@ -175,36 +178,26 @@ export function updateWrapper(element: Element, props: Object) {
 
   updateChecked(element, props);
 
-  var value = props.value;
-  if (value != null) {
-    if (value === 0 && node.value === '') {
-      node.value = '0';
-      // Note: IE9 reports a number inputs as 'text', so check props instead.
-    } else if (props.type === 'number') {
-      // Simulate `input.valueAsNumber`. IE9 does not support it
-      var valueAsNumber = parseFloat(node.value) || 0;
+  var value = getSafeValue(props.value);
 
+  if (value != null) {
+    if (props.type === 'number') {
       if (
+        (value === 0 && node.value === '') ||
         // eslint-disable-next-line
-        value != valueAsNumber ||
-        // eslint-disable-next-line
-        (value == valueAsNumber && node.value != value)
+        node.value != value
       ) {
-        // Cast `value` to a string to ensure the value is set correctly. While
-        // browsers typically do this as necessary, jsdom doesn't.
         node.value = '' + value;
       }
     } else if (node.value !== '' + value) {
-      // Cast `value` to a string to ensure the value is set correctly. While
-      // browsers typically do this as necessary, jsdom doesn't.
       node.value = '' + value;
     }
-    synchronizeDefaultValue(node, props.type, value);
-  } else if (
-    props.hasOwnProperty('value') ||
-    props.hasOwnProperty('defaultValue')
-  ) {
-    synchronizeDefaultValue(node, props.type, props.defaultValue);
+  }
+
+  if (props.hasOwnProperty('value')) {
+    setDefaultValue(node, props.type, value);
+  } else if (props.hasOwnProperty('defaultValue')) {
+    setDefaultValue(node, props.type, getSafeValue(props.defaultValue));
   }
 
   if (props.checked == null && props.defaultChecked != null) {
@@ -214,19 +207,18 @@ export function updateWrapper(element: Element, props: Object) {
 
 export function postMountWrapper(element: Element, props: Object) {
   var node = ((element: any): InputWithWrapperState);
-  var initialValue = node._wrapperState.initialValue;
 
-  if (props.value != null || props.defaultValue != null) {
+  if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
     // Do not assign value if it is already set. This prevents user text input
     // from being lost during SSR hydration.
     if (node.value === '') {
-      node.value = initialValue;
+      node.value = '' + node._wrapperState.initialValue;
     }
 
     // value must be assigned before defaultValue. This fixes an issue where the
     // visually displayed value of date inputs disappears on mobile Safari and Chrome:
     // https://github.com/facebook/react/issues/7233
-    node.defaultValue = initialValue;
+    node.defaultValue = '' + node._wrapperState.initialValue;
   }
 
   // Normally, we'd just do `node.checked = node.checked` upon initial mount, less this bug
@@ -307,20 +299,34 @@ function updateNamedCousins(rootNode, props) {
 // when the user is inputting text
 //
 // https://github.com/facebook/react/issues/7253
-export function synchronizeDefaultValue(
+export function setDefaultValue(
   node: InputWithWrapperState,
   type: ?string,
   value: *,
 ) {
   if (
     // Focused number inputs synchronize on blur. See ChangeEventPlugin.js
-    (type !== 'number' || node.ownerDocument.activeElement !== node) &&
-    node.defaultValue !== '' + value
+    type !== 'number' ||
+    node.ownerDocument.activeElement !== node
   ) {
-    if (value != null) {
+    if (value == null) {
+      node.defaultValue = '' + node._wrapperState.initialValue;
+    } else if (node.defaultValue !== '' + value) {
       node.defaultValue = '' + value;
-    } else {
-      node.defaultValue = node._wrapperState.initialValue;
     }
+  }
+}
+
+function getSafeValue(value: *): * {
+  switch (typeof value) {
+    case 'boolean':
+    case 'number':
+    case 'object':
+    case 'string':
+    case 'undefined':
+      return value;
+    default:
+      // function, symbol are assigned as empty strings
+      return '';
   }
 }

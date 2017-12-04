@@ -248,6 +248,23 @@ describe('ReactDOMInput', () => {
     }
   });
 
+  it('performs a state change from "" to 0', () => {
+    class Stub extends React.Component {
+      state = {
+        value: '',
+      };
+      render() {
+        return <input type="number" value={this.state.value} readOnly={true} />;
+      }
+    }
+
+    var stub = ReactTestUtils.renderIntoDocument(<Stub />);
+    var node = ReactDOM.findDOMNode(stub);
+    stub.setState({value: 0});
+
+    expect(node.value).toEqual('0');
+  });
+
   it('distinguishes precision for extra zeroes in string number values', () => {
     spyOnDev(console, 'error');
     class Stub extends React.Component {
@@ -595,6 +612,7 @@ describe('ReactDOMInput', () => {
     var node = container.firstChild;
 
     expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should properly transition from 0 to an empty value', function() {
@@ -606,6 +624,43 @@ describe('ReactDOMInput', () => {
     var node = container.firstChild;
 
     expect(node.value).toBe('');
+    expect(node.defaultValue).toBe('');
+  });
+
+  it('should properly transition a text input from 0 to an empty 0.0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="text" value={0} />, container);
+    ReactDOM.render(<input type="text" value="0.0" />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0.0');
+    expect(node.defaultValue).toBe('0.0');
+  });
+
+  it('should properly transition a number input from "" to 0', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="number" value="" />, container);
+    ReactDOM.render(<input type="number" value={0} />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
+  });
+
+  it('should properly transition a number input from "" to "0"', function() {
+    var container = document.createElement('div');
+
+    ReactDOM.render(<input type="number" value="" />, container);
+    ReactDOM.render(<input type="number" value="0" />, container);
+
+    var node = container.firstChild;
+
+    expect(node.value).toBe('0');
+    expect(node.defaultValue).toBe('0');
   });
 
   it('should have the correct target value', () => {
@@ -1583,6 +1638,134 @@ describe('ReactDOMInput', () => {
             'to uncontrolled (or vice versa).',
         );
       }
+    });
+  });
+
+  describe('When given a Symbol value', function() {
+    it('treats initial Symbol value as an empty string', function() {
+      spyOnDev(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <input value={Symbol('foobar')} onChange={() => {}} />,
+        container,
+      );
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
+    });
+
+    it('treats updated Symbol value as an empty string', function() {
+      spyOnDev(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
+      ReactDOM.render(
+        <input value={Symbol('foobar')} onChange={() => {}} />,
+        container,
+      );
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
+    });
+
+    it('treats initial Symbol defaultValue as an empty string', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
+    });
+
+    it('treats updated Symbol defaultValue as an empty string', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input defaultValue="foo" />, container);
+      ReactDOM.render(<input defaultValue={Symbol('foobar')} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('foo');
+      expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
+    });
+  });
+
+  describe('When given a function value', function() {
+    it('treats initial function value as an empty string', function() {
+      spyOnDev(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(
+        <input value={() => {}} onChange={() => {}} />,
+        container,
+      );
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
+    });
+
+    it('treats updated function value as an empty string', function() {
+      spyOnDev(console, 'error');
+      var container = document.createElement('div');
+      ReactDOM.render(<input value="foo" onChange={() => {}} />, container);
+      ReactDOM.render(
+        <input value={() => {}} onChange={() => {}} />,
+        container,
+      );
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toContain(
+          'Invalid value for prop `value`',
+        );
+      }
+    });
+
+    it('treats initial function defaultValue as an empty string', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input defaultValue={() => {}} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('');
+      expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
+    });
+
+    it('treats updated function defaultValue as an empty string', function() {
+      var container = document.createElement('div');
+      ReactDOM.render(<input defaultValue="foo" />, container);
+      ReactDOM.render(<input defaultValue={() => {}} />, container);
+      var node = container.firstChild;
+
+      expect(node.value).toBe('foo');
+      expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
     });
   });
 });
