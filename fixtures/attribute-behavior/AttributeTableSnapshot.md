@@ -1251,24 +1251,24 @@
 ## `capture` (on `<input>` inside `<div>`)
 | Test Case | Flags | Result |
 | --- | --- | --- |
-| `capture=(string)`| (changed)| `<empty string>` |
-| `capture=(empty string)`| (initial)| `<null>` |
-| `capture=(array with string)`| (changed)| `<empty string>` |
+| `capture=(string)`| (changed)| `"environment"` |
+| `capture=(empty string)`| (changed)| `<empty string>` |
+| `capture=(array with string)`| (changed)| `"environment"` |
 | `capture=(empty array)`| (changed)| `<empty string>` |
-| `capture=(object)`| (changed)| `<empty string>` |
-| `capture=(numeric string)`| (changed)| `<empty string>` |
-| `capture=(-1)`| (changed)| `<empty string>` |
-| `capture=(0)`| (initial)| `<null>` |
-| `capture=(integer)`| (changed)| `<empty string>` |
-| `capture=(NaN)`| (initial, warning)| `<null>` |
-| `capture=(float)`| (changed)| `<empty string>` |
+| `capture=(object)`| (changed)| `"result of toString()"` |
+| `capture=(numeric string)`| (changed)| `"42"` |
+| `capture=(-1)`| (changed)| `"-1"` |
+| `capture=(0)`| (changed)| `"0"` |
+| `capture=(integer)`| (changed)| `"1"` |
+| `capture=(NaN)`| (changed, warning)| `"NaN"` |
+| `capture=(float)`| (changed)| `"99.99"` |
 | `capture=(true)`| (changed)| `<empty string>` |
 | `capture=(false)`| (initial)| `<null>` |
-| `capture=(string 'true')`| (changed)| `<empty string>` |
-| `capture=(string 'false')`| (changed)| `<empty string>` |
-| `capture=(string 'on')`| (changed)| `<empty string>` |
-| `capture=(string 'off')`| (changed)| `<empty string>` |
-| `capture=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
+| `capture=(string 'true')`| (changed)| `"true"` |
+| `capture=(string 'false')`| (changed)| `"false"` |
+| `capture=(string 'on')`| (changed)| `"on"` |
+| `capture=(string 'off')`| (changed)| `"off"` |
+| `capture=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
 | `capture=(function)`| (initial, warning, ssr mismatch)| `<null>` |
 | `capture=(null)`| (initial)| `<null>` |
 | `capture=(undefined)`| (initial)| `<null>` |
@@ -2593,8 +2593,8 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
-| `defaultValue=(function)`| (initial, ssr mismatch)| `<empty string>` |
+| `defaultValue=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `defaultValue=(function)`| (changed, ssr warning)| `"function f() {}"` |
 | `defaultValue=(null)`| (initial, ssr warning)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
@@ -11768,8 +11768,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `value=(function)`| (changed, warning, ssr warning)| `"function f() {}"` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11793,8 +11793,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
+| `value=(function)`| (changed, warning)| `"function f() {}"` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11818,7 +11818,7 @@
 | `value=(string 'false')`| (initial)| `<empty string>` |
 | `value=(string 'on')`| (initial)| `<empty string>` |
 | `value=(string 'off')`| (initial)| `<empty string>` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |

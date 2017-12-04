@@ -41,7 +41,8 @@ class Persistence extends React.Component {
         </TestCase.Steps>
 
         <TestCase.ExpectedResult>
-          The pool size should not increase above 1, but reduce to 0 when hovering over the persisted region.
+          The pool size should not increase above 1, but reduce to 0 when
+          hovering over the persisted region.
         </TestCase.ExpectedResult>
 
         <h2>Add Pooled Event:</h2>
@@ -50,13 +51,9 @@ class Persistence extends React.Component {
         <h2>Add Persisted Event:</h2>
         <HitBox onMouseMove={this.addPersisted} />
 
-        <p>
-          Pool size: {pooled.length}
-        </p>
+        <p>Pool size: {pooled.length}</p>
 
-        <p>
-          Persisted size: {persisted}
-        </p>
+        <p>Persisted size: {persisted}</p>
       </TestCase>
     );
   }

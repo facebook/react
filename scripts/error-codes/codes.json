@@ -233,5 +233,20 @@
   "231": "Expected `%s` listener to be a function, instead got a value of `%s` type.",
   "232": "_processChildContext is not available in React 16+. This likely means you have multiple copies of React and are attempting to nest a React 15 tree inside a React 16 tree using unstable_renderSubtreeIntoContainer, which isn't supported. Try to make sure you have only one copy of React (and ideally, switch to ReactDOM.createPortal).",
   "233": "Unsupported top level event type \"%s\" dispatched",
-  "234": "Event cannot be both direct and bubbling: %s"
+  "234": "Event cannot be both direct and bubbling: %s",
+  "235": "Persistent reconciler is disabled.",
+  "236": "Noop reconciler is disabled.",
+  "237": "Mutating reconciler is disabled.",
+  "238": "Task updates can only be scheduled as a nested update or inside batchedUpdates. This error is likely caused by a bug in React. Please file an issue.",
+  "239": "Measure not implemented yet",
+  "240": "Text components are not supported for now.",
+  "241": "Text components are not yet supported.",
+  "242": "%s: %s type `%s` is invalid; it must be a function, usually from the `prop-types` package, but received `%s`.",
+  "243": "renderRoot was called recursively. This error is likely caused by a bug in React. Please file an issue.",
+  "244": "Should have a previous and last root. This error is likely caused by a bug in React. Please file an issue.",
+  "245": "performWorkOnRoot was called recursively. This error is likely caused by a bug in React. Please file an issue.",
+  "246": "Should be working on a root. This error is likely caused by a bug in React. Please file an issue.",
+  "247": "A call cannot have host component children.",
+  "248": "Not implemented.",
+  "249": "ReactShallowRenderer render(): Shallow rendering works only with custom components, but the provided element type was `%s`."
 }

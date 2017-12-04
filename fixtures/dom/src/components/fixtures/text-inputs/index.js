@@ -36,9 +36,9 @@ class TextInputFixtures extends React.Component {
           </Fixture>
 
           <p className="footnote">
-            This issue was first introduced when we added extra logic
-            to number inputs to prevent unexpected behavior in Chrome
-            and Safari (see the number input test case).
+            This issue was first introduced when we added extra logic to number
+            inputs to prevent unexpected behavior in Chrome and Safari (see the
+            number input test case).
           </p>
         </TestCase>
 

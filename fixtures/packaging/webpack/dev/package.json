@@ -1,6 +1,6 @@
 {
-  "name": "webpack-test",
   "private": true,
+  "name": "webpack-dev-fixture",
   "dependencies": {
     "webpack": "^1.14.0"
   },

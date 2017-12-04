@@ -20,246 +20,103 @@ const FB_PROD = bundleTypes.FB_PROD;
 const RN_DEV = bundleTypes.RN_DEV;
 const RN_PROD = bundleTypes.RN_PROD;
 
-const babelOptsReact = {
-  exclude: 'node_modules/**',
-  presets: [],
-  plugins: [],
+const moduleTypes = {
+  ISOMORPHIC: 'ISOMORPHIC',
+  RENDERER: 'RENDERER',
+  RENDERER_UTILS: 'RENDERER_UTILS',
+  RECONCILER: 'RECONCILER',
 };
 
-const babelOptsReactART = Object.assign({}, babelOptsReact, {
-  // Include JSX
-  presets: babelOptsReact.presets.concat([
-    require.resolve('babel-preset-react'),
-  ]),
-});
+// React
+const ISOMORPHIC = moduleTypes.ISOMORPHIC;
+// Individual renderers. They bundle the reconciler. (e.g. ReactDOM)
+const RENDERER = moduleTypes.RENDERER;
+// Helper packages that access specific renderer's internals. (e.g. TestUtils)
+const RENDERER_UTILS = moduleTypes.RENDERER_UTILS;
+// Standalone reconciler for third-party renderers.
+const RECONCILER = moduleTypes.RECONCILER;
 
 const bundles = [
   /******* Isomorphic *******/
   {
-    babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      moduleName: 'React',
-      sourceMap: false,
-    },
-    entry: 'src/isomorphic/ReactEntry',
-    externals: [
-      'create-react-class/factory',
-      'prop-types',
-      'prop-types/checkPropTypes',
-    ],
-    fbEntry: 'src/isomorphic/ReactEntry',
-    hasteName: 'React',
-    isRenderer: false,
     label: 'core',
-    manglePropertiesOnProd: false,
-    name: 'react',
-    paths: [
-      'src/isomorphic/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react',
+    global: 'React',
+    externals: [],
   },
 
   /******* React DOM *******/
   {
-    babelOpts: babelOptsReact,
+    label: 'dom-client',
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactDOM',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/fiber/ReactDOMFiberEntry',
-    externals: ['prop-types', 'prop-types/checkPropTypes'],
-    fbEntry: 'src/fb/ReactDOMFiberFBEntry',
-    hasteName: 'ReactDOMFiber',
-    isRenderer: true,
-    label: 'dom-fiber',
-    manglePropertiesOnProd: false,
-    name: 'react-dom',
-    paths: [
-      'src/renderers/dom/**/*.js',
-      'src/renderers/shared/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    moduleType: RENDERER,
+    entry: 'react-dom',
+    global: 'ReactDOM',
+    externals: ['react'],
   },
+
+  //******* Test Utils *******/
   {
-    babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactTestUtils',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/test/ReactTestUtilsEntry',
-    externals: [
-      'prop-types',
-      'prop-types/checkPropTypes',
-      'react',
-      'react-dom',
-      'react-test-renderer', // TODO (bvaughn) Remove this dependency before 16.0.0
-    ],
-    fbEntry: 'src/renderers/dom/test/ReactTestUtilsEntry',
-    hasteName: 'ReactTestUtils',
-    isRenderer: true,
-    label: 'test-utils',
-    manglePropertiesOnProd: false,
-    name: 'react-dom/test-utils',
-    paths: [
-      'src/renderers/dom/test/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/renderers/testing/**/*.js', // TODO (bvaughn) Remove this dependency before 16.0.0
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    label: 'dom-test-utils',
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD, UMD_DEV, UMD_PROD],
+    entry: 'react-dom/test-utils',
+    global: 'ReactTestUtils',
+    externals: ['react', 'react-dom'],
   },
+
   /* React DOM internals required for react-native-web (e.g., to shim native events from react-dom) */
   {
-    babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-        'react-dom': 'ReactDOM',
-      },
-      moduleName: 'ReactDOMUnstableNativeDependencies',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
-    externals: [
-      'react-dom',
-      'ReactDOM',
-      'prop-types',
-      'prop-types/checkPropTypes',
-    ],
-    fbEntry: 'src/renderers/dom/shared/ReactDOMUnstableNativeDependenciesEntry',
-    hasteName: 'ReactDOMUnstableNativeDependencies',
-    isRenderer: false,
     label: 'dom-unstable-native-dependencies',
-    manglePropertiesOnProd: false,
-    name: 'react-dom/unstable-native-dependencies',
-    paths: [
-      'src/renderers/dom/**/*.js',
-      'src/renderers/shared/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    moduleType: RENDERER_UTILS,
+    entry: 'react-dom/unstable-native-dependencies',
+    global: 'ReactDOMUnstableNativeDependencies',
+    externals: ['react', 'react-dom'],
   },
 
   /******* React DOM Server *******/
   {
-    babelOpts: babelOptsReact,
-    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactDOMServer',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/ReactDOMServerBrowserEntry',
-    externals: ['prop-types', 'prop-types/checkPropTypes'],
-    fbEntry: 'src/renderers/dom/ReactDOMServerBrowserEntry',
-    hasteName: 'ReactDOMServer',
-    isRenderer: true,
     label: 'dom-server-browser',
-    manglePropertiesOnProd: false,
-    name: 'react-dom/server.browser',
-    paths: [
-      'src/renderers/dom/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
+    moduleType: RENDERER,
+    entry: 'react-dom/server.browser',
+    global: 'ReactDOMServer',
+    externals: ['react'],
   },
 
   {
-    babelOpts: babelOptsReact,
+    label: 'dom-server-node',
     bundleTypes: [NODE_DEV, NODE_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactDOMNodeStream',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/dom/ReactDOMServerNodeEntry',
-    externals: ['prop-types', 'prop-types/checkPropTypes', 'stream'],
-    isRenderer: true,
-    label: 'dom-server-server-node',
-    manglePropertiesOnProd: false,
-    name: 'react-dom/server.node',
-    paths: [
-      'src/renderers/dom/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    moduleType: RENDERER,
+    entry: 'react-dom/server.node',
+    externals: ['react', 'stream'],
   },
 
   /******* React ART *******/
   {
-    babelOpts: babelOptsReactART,
-    // TODO: we merge react-art repo into this repo so the NODE_DEV and NODE_PROD
-    // builds sync up to the building of the package directories
+    label: 'art',
     bundleTypes: [UMD_DEV, UMD_PROD, NODE_DEV, NODE_PROD, FB_DEV, FB_PROD],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactART',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/art/ReactARTFiberEntry',
-    externals: [
-      'art/modes/current',
-      'art/modes/fast-noSideEffects',
-      'art/core/transform',
-      'prop-types/checkPropTypes',
-      'react-dom',
-    ],
-    fbEntry: 'src/renderers/art/ReactARTFiberEntry',
-    hasteName: 'ReactARTFiber',
-    isRenderer: true,
-    label: 'art-fiber',
-    manglePropertiesOnProd: false,
-    name: 'react-art',
-    paths: [
-      'src/renderers/art/**/*.js',
-      'src/renderers/shared/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+    moduleType: RENDERER,
+    entry: 'react-art',
+    global: 'ReactART',
+    externals: ['react'],
+    babel: opts =>
+      Object.assign({}, opts, {
+        // Include JSX
+        presets: opts.presets.concat([require.resolve('babel-preset-react')]),
+      }),
   },
 
   /******* React Native *******/
   {
-    babelOpts: babelOptsReact,
+    label: 'native',
     bundleTypes: [RN_DEV, RN_PROD],
-    config: {
-      destDir: 'build/',
-      moduleName: 'ReactNativeFiber',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/native/ReactNativeFiberEntry',
+    moduleType: RENDERER,
+    entry: 'react-native-renderer',
+    global: 'ReactNativeRenderer',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
@@ -271,135 +128,105 @@ const bundles = [
       'deepDiffer',
       'deepFreezeAndThrowOnMutationInDev',
       'flattenStyle',
-      'prop-types/checkPropTypes',
     ],
-    hasteName: 'ReactNativeFiber',
-    isRenderer: true,
-    label: 'native-fiber',
-    manglePropertiesOnProd: false,
-    name: 'react-native-renderer',
-    paths: [
-      'src/renderers/native/**/*.js',
-      'src/renderers/shared/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-    useFiber: true,
   },
 
-  /******* React Native *******/
+  /******* React Native RT *******/
   {
-    babelOpts: babelOptsReact,
+    label: 'native-rt',
     bundleTypes: [RN_DEV, RN_PROD],
-    config: {
-      destDir: 'build/',
-      moduleName: 'ReactNativeRTFiber',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/native-rt/ReactNativeRTFiberEntry',
+    moduleType: RENDERER,
+    entry: 'react-rt-renderer',
+    global: 'ReactRTRenderer',
     externals: [
       'ExceptionsManager',
       'InitializeCore',
       'Platform',
-      'RCTEventEmitter',
+      'BatchedBridge',
       'RTManager',
-      'prop-types/checkPropTypes',
     ],
-    hasteName: 'ReactNativeRTFiber',
-    isRenderer: true,
-    label: 'native-rt-fiber',
-    manglePropertiesOnProd: false,
-    name: 'react-native-rt-renderer',
-    paths: [
-      'src/renderers/native/**/*.js', // This is used since we reuse the error dialog code
-      'src/renderers/native-rt/**/*.js',
-      'src/renderers/shared/**/*.js',
+  },
 
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-    useFiber: true,
+  /******* React Native CS *******/
+  {
+    label: 'native-cs',
+    bundleTypes: [RN_DEV, RN_PROD],
+    moduleType: RENDERER,
+    entry: 'react-cs-renderer',
+    global: 'ReactCSRenderer',
+    externals: ['CSStatefulComponent'],
   },
 
   /******* React Test Renderer *******/
   {
-    babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
-    config: {
-      destDir: 'build/',
-      moduleName: 'ReactTestRenderer',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/testing/ReactTestRendererFiberEntry',
-    externals: ['prop-types/checkPropTypes'],
-    fbEntry: 'src/renderers/testing/ReactTestRendererFiberEntry',
-    hasteName: 'ReactTestRendererFiber',
-    isRenderer: true,
-    label: 'test-fiber',
-    manglePropertiesOnProd: false,
-    name: 'react-test-renderer',
-    paths: [
-      'src/renderers/native/**/*.js',
-      'src/renderers/shared/**/*.js',
-      'src/renderers/testing/**/*.js',
-
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
-  },
-  {
-    babelOpts: babelOptsReact,
-    bundleTypes: [FB_DEV, NODE_DEV],
-    config: {
-      destDir: 'build/',
-      moduleName: 'ReactShallowRenderer',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/testing/ReactShallowRendererEntry',
-    externals: [
-      'react-dom',
-      'prop-types/checkPropTypes',
-      'react-test-renderer',
-    ],
-    fbEntry: 'src/renderers/testing/ReactShallowRendererEntry',
-    hasteName: 'ReactShallowRenderer',
-    isRenderer: true,
-    label: 'shallow-renderer',
-    manglePropertiesOnProd: false,
-    name: 'react-test-renderer/shallow',
-    paths: [
-      'src/renderers/shared/**/*.js',
-      'src/renderers/testing/**/*.js',
-      'src/shared/**/*.js',
-    ],
+    label: 'test',
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-test-renderer',
+    global: 'ReactTestRenderer',
+    externals: ['react'],
   },
 
-  /******* React Noop Renderer (used only for fixtures/fiber-debugger) *******/
   {
-    babelOpts: babelOptsReact,
-    bundleTypes: [NODE_DEV],
-    config: {
-      destDir: 'build/',
-      globals: {
-        react: 'React',
-      },
-      moduleName: 'ReactNoop',
-      sourceMap: false,
-    },
-    entry: 'src/renderers/noop/ReactNoopEntry',
-    externals: ['prop-types/checkPropTypes', 'jest-matchers'],
-    isRenderer: true,
-    label: 'noop-fiber',
-    manglePropertiesOnProd: false,
-    name: 'react-noop-renderer',
-    paths: [
-      'src/renderers/noop/**/*.js',
-      'src/renderers/shared/**/*.js',
+    label: 'test-shallow',
+    bundleTypes: [FB_DEV, NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-test-renderer/shallow',
+    global: 'ReactShallowRenderer',
+    externals: ['react'],
+  },
 
-      'src/ReactVersion.js',
-      'src/shared/**/*.js',
-    ],
+  /******* React Noop Renderer (used for tests) *******/
+  {
+    label: 'noop',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RENDERER,
+    entry: 'react-noop-renderer',
+    global: 'ReactNoopRenderer',
+    externals: ['react', 'expect'],
+    // React Noop uses generators. However GCC currently
+    // breaks when we attempt to use them in the output.
+    // So we precompile them with regenerator, and include
+    // it as a runtime dependency of React Noop. In practice
+    // this isn't an issue because React Noop is only used
+    // in our tests. We wouldn't want to do this for any
+    // public package though.
+    babel: opts =>
+      Object.assign({}, opts, {
+        plugins: opts.plugins.concat([
+          require.resolve('babel-plugin-transform-regenerator'),
+        ]),
+      }),
+  },
+
+  /******* React Reconciler *******/
+  {
+    label: 'react-reconciler',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: RECONCILER,
+    entry: 'react-reconciler',
+    global: 'ReactReconciler',
+    externals: ['react'],
+  },
+
+  /******* Reflection *******/
+  {
+    label: 'reconciler-reflection',
+    moduleType: RENDERER_UTILS,
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    entry: 'react-reconciler/reflection',
+    global: 'ReactFiberTreeReflection',
+    externals: [],
+  },
+
+  /******* React Call Return (experimental) *******/
+  {
+    label: 'react-call-return',
+    bundleTypes: [NODE_DEV, NODE_PROD],
+    moduleType: ISOMORPHIC,
+    entry: 'react-call-return',
+    global: 'ReactCallReturn',
+    externals: [],
   },
 ];
 
@@ -423,5 +250,6 @@ deepFreeze(bundles);
 
 module.exports = {
   bundleTypes,
+  moduleTypes,
   bundles,
 };

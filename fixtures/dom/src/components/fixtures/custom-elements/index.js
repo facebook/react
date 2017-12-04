@@ -42,11 +42,11 @@ export default class ButtonTestCases extends React.Component {
           <TestCase.ExpectedResult>
             You should see "Hello, World" printed below.{' '}
           </TestCase.ExpectedResult>
-          {supportsCustomElements
-            ? <my-element />
-            : <div>
-                This browser does not support custom elements.
-              </div>}
+          {supportsCustomElements ? (
+            <my-element />
+          ) : (
+            <div>This browser does not support custom elements.</div>
+          )}
         </TestCase>
       </FixtureSet>
     );

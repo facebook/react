@@ -1,6 +1,6 @@
 # Attribute Behavior Fixture
 
-**WIP:** This is a MVP, still needs polish.
+**WIP:** This is an MVP, still needs polish.
 
 ### Known Issues
 - There are currently two errors thrown when the page loads;

@@ -7,9 +7,21 @@ const ReactDOM = window.ReactDOM;
 class SelectFixture extends React.Component {
   state = {value: ''};
   _nestedDOMNode = null;
+  _singleFormDOMNode = null;
+  _multipleFormDOMNode = null;
 
   onChange = event => {
     this.setState({value: event.target.value});
+  };
+
+  resetSingleOptionForm = event => {
+    event.preventDefault();
+    this._singleFormDOMNode.reset();
+  };
+
+  resetMultipleOptionForm = event => {
+    event.preventDefault();
+    this._multipleFormDOMNode.reset();
   };
 
   componentDidMount() {
@@ -72,13 +84,15 @@ class SelectFixture extends React.Component {
           </TestCase.Steps>
 
           <TestCase.ExpectedResult>
-            The initial picked option should be "Please select an
-            item", however it should not be a selectable option.
+            The initial picked option should be "Please select an item", however
+            it should not be a selectable option.
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">
             <select defaultValue="">
-              <option value="" disabled>Please select an item</option>
+              <option value="" disabled>
+                Please select an item
+              </option>
               <option>0</option>
               <option>1</option>
               <option>2</option>
@@ -88,7 +102,8 @@ class SelectFixture extends React.Component {
 
         <TestCase title="An unselected disabled option" relatedIssues="2803">
           <TestCase.ExpectedResult>
-            The initial picked option value should "0": the first non-disabled option.
+            The initial picked option value should "0": the first non-disabled
+            option.
           </TestCase.ExpectedResult>
 
           <div className="test-fixture">
@@ -98,6 +113,49 @@ class SelectFixture extends React.Component {
               <option>1</option>
               <option>2</option>
             </select>
+          </div>
+        </TestCase>
+
+        <TestCase title="A single select being reset">
+          <TestCase.Steps>
+            <li>Open the select</li>
+            <li>Select "baz" or "foo"</li>
+            <li>Click the "Reset" button</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            The select should be reset to the inital value, "bar"
+          </TestCase.ExpectedResult>
+
+          <div className="test-fixture">
+            <form ref={n => (this._singleFormDOMNode = n)}>
+              <select defaultValue="bar">
+                <option value="foo">foo</option>
+                <option value="bar">bar</option>
+                <option value="baz">baz</option>
+              </select>
+              <button onClick={this.resetSingleOptionForm}>Reset</button>
+            </form>
+          </div>
+        </TestCase>
+
+        <TestCase title="A multiple select being reset">
+          <TestCase.Steps>
+            <li>Select any combination of options</li>
+            <li>Click the "Reset" button</li>
+          </TestCase.Steps>
+          <TestCase.ExpectedResult>
+            The select should be reset to the initial values "foo" and "baz"
+          </TestCase.ExpectedResult>
+
+          <div className="test-fixture">
+            <form ref={n => (this._multipleFormDOMNode = n)}>
+              <select multiple defaultValue={['foo', 'baz']}>
+                <option value="foo">foo</option>
+                <option value="bar">bar</option>
+                <option value="baz">baz</option>
+              </select>
+              <button onClick={this.resetMultipleOptionForm}>Reset</button>
+            </form>
           </div>
         </TestCase>
       </FixtureSet>

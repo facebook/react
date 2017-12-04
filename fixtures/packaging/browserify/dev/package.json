@@ -1,10 +1,12 @@
 {
-  "name": "webpack-test",
   "private": true,
+  "name": "browserify-dev-fixture",
   "dependencies": {
-    "browserify": "^13.3.0"
+    "browserify": "^13.3.0",
+    "react": "file:../../../../build/packages/react",
+    "react-dom": "file:../../../../build/packages/react-dom"
   },
   "scripts": {
-    "build": "rm -f output.js && NODE_PATH=../../../../build/packages browserify ./input.js -o output.js"
+    "build": "rm -f output.js && browserify ./input.js -o output.js"
   }
 }

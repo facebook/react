@@ -1,7 +1,7 @@
 {
   "name": "react-art",
   "description": "React ART is a JavaScript library for drawing vector graphics using React. It provides declarative and reactive bindings to the ART library. Using the same declarative API you can render the output to either Canvas, SVG or VML (IE8).",
-  "version": "16.0.0",
+  "version": "16.2.0",
   "main": "index.js",
   "repository": "facebook/react",
   "keywords": [
@@ -18,6 +18,7 @@
   },
   "homepage": "https://reactjs.org/",
   "dependencies": {
+    "art": "^0.10.1",
     "create-react-class": "^15.6.2",
     "fbjs": "^0.8.16",
     "loose-envify": "^1.1.0",
@@ -25,14 +26,17 @@
     "prop-types": "^15.6.0"
   },
   "peerDependencies": {
-    "react": "^16.0.0-beta.5"
+    "react": "^16.0.0"
   },
   "files": [
     "LICENSE",
     "README.md",
     "index.js",
     "cjs/",
-    "umd/"
+    "umd/",
+    "Circle.js",
+    "Rectangle.js",
+    "Wedge.js"
   ],
   "browserify": {
     "transform": [

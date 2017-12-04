@@ -1,20 +1,11 @@
 'use strict';
 
-// React's test can only work in NODE_ENV=test because of how things
-// are set up. So we might as well enforce it.
-process.env.NODE_ENV = 'test';
-
 var path = require('path');
 
 var babel = require('babel-core');
 var coffee = require('coffee-script');
 
-var tsPreprocessor = require('./ts-preprocessor');
-
-// This assumes the module map has been built. This might not be safe.
-// We should consider consuming this from a built fbjs module from npm.
-var moduleMap = require('fbjs/module-map');
-var babelPluginModules = require('fbjs-scripts/babel-6/rewrite-modules');
+var tsPreprocessor = require('./typescript/preprocessor');
 var createCacheKeyFunction = require('fbjs-scripts/jest/createCacheKeyFunction');
 
 // Use require.resolve to be resilient to file moves, npm updates, etc
@@ -23,12 +14,8 @@ var pathToBabel = path.join(
   '..',
   'package.json'
 );
-var pathToModuleMap = require.resolve('fbjs/module-map');
 var pathToBabelPluginDevWithCode = require.resolve(
   '../error-codes/replace-invariant-error-codes'
-);
-var pathToBabelPluginModules = require.resolve(
-  'fbjs-scripts/babel-6/rewrite-modules'
 );
 var pathToBabelPluginAsyncToGenerator = require.resolve(
   'babel-plugin-transform-async-to-generator'
@@ -36,18 +23,12 @@ var pathToBabelPluginAsyncToGenerator = require.resolve(
 var pathToBabelrc = path.join(__dirname, '..', '..', '.babelrc');
 var pathToErrorCodes = require.resolve('../error-codes/codes.json');
 
-// TODO: make sure this stays in sync with gulpfile
 var babelOptions = {
   plugins: [
-    pathToBabelPluginDevWithCode, // this pass has to run before `rewrite-modules`
-    [
-      babelPluginModules,
-      {
-        map: Object.assign({}, moduleMap, {
-          'object-assign': 'object-assign',
-        }),
-      },
-    ],
+    // For Node environment only. For builds, Rollup takes care of ESM.
+    require.resolve('babel-plugin-transform-es2015-modules-commonjs'),
+
+    pathToBabelPluginDevWithCode,
     // Keep stacks detailed in tests.
     // Don't put this in .babelrc so that we don't embed filenames
     // into ReactART builds that include JSX.
@@ -65,10 +46,7 @@ module.exports = {
     if (filePath.match(/\.ts$/) && !filePath.match(/\.d\.ts$/)) {
       return tsPreprocessor.compile(src, filePath);
     }
-    if (
-      !filePath.match(/\/node_modules\//) &&
-      !filePath.match(/\/third_party\//)
-    ) {
+    if (!filePath.match(/\/third_party\//)) {
       // for test files, we also apply the async-await transform, but we want to
       // make sure we don't accidentally apply that transform to product code.
       var isTestFile = !!filePath.match(/\/__tests__\//);
@@ -94,9 +72,7 @@ module.exports = {
     __filename,
     pathToBabel,
     pathToBabelrc,
-    pathToModuleMap,
     pathToBabelPluginDevWithCode,
-    pathToBabelPluginModules,
     pathToErrorCodes,
   ]),
 };

@@ -1,0 +1,39 @@
+image: Visual Studio 2017
+
+# Fix line endings in Windows. (runs before repo cloning)
+init:
+  - git config --global core.autocrlf input
+
+environment:
+  matrix:
+    - nodejs_version: 8
+
+# Finish on first failed build
+matrix:
+  fast_finish: true
+
+platform:
+  - x64
+
+branches:
+  only:
+    - master
+
+# Disable Visual Studio build and deploy
+build: off
+deploy: off
+
+install:
+  - ps: Install-Product node $env:nodejs_version $env:platform
+  - yarn install
+
+test_script:
+  - node --version
+  - yarn lint
+#  - yarn flow (TODO: investigate why it fails on Windows)
+  - yarn build
+  - yarn test
+
+cache:
+ - node_modules
+ - "%LOCALAPPDATA%/Yarn"

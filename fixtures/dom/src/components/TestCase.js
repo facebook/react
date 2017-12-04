@@ -59,60 +59,65 @@ class TestCase extends React.Component {
               type="checkbox"
               checked={complete}
               onChange={this.handleChange}
-            />
-            {' '}{title}
+            />{' '}
+            {title}
           </label>
         </h2>
 
         <dl className="test-case__details">
           {introducedIn && <dt>First broken in: </dt>}
-          {introducedIn &&
+          {introducedIn && (
             <dd>
               <a
                 href={'https://github.com/facebook/react/tag/v' + introducedIn}>
                 <code>{introducedIn}</code>
               </a>
-            </dd>}
+            </dd>
+          )}
 
           {resolvedIn && <dt>First supported in: </dt>}
-          {resolvedIn &&
+          {resolvedIn && (
             <dd>
               <a href={'https://github.com/facebook/react/tag/v' + resolvedIn}>
                 <code>{resolvedIn}</code>
               </a>
-            </dd>}
+            </dd>
+          )}
 
           {resolvedBy && <dt>Fixed by: </dt>}
-          {resolvedBy &&
+          {resolvedBy && (
             <dd>
               <a
                 href={
                   'https://github.com/facebook/react/pull/' +
-                    resolvedBy.slice(1)
+                  resolvedBy.slice(1)
                 }>
                 <code>{resolvedBy}</code>
               </a>
-            </dd>}
+            </dd>
+          )}
 
           {affectedBrowsers && <dt>Affected browsers: </dt>}
           {affectedBrowsers && <dd>{affectedBrowsers}</dd>}
 
           {relatedIssues && <dt>Related Issues: </dt>}
-          {relatedIssues && <dd><IssueList issues={relatedIssues} /></dd>}
+          {relatedIssues && (
+            <dd>
+              <IssueList issues={relatedIssues} />
+            </dd>
+          )}
         </dl>
 
-        <p className="test-case__desc">
-          {description}
-        </p>
+        <p className="test-case__desc">{description}</p>
 
         <div className="test-case__body">
-          {!isTestFixed &&
+          {!isTestFixed && (
             <p className="test-case__invalid-version">
-              <strong>Note:</strong>
-              {' '}
-              This test case was fixed in a later version of React.
-              This test is not expected to pass for the selected version, and that's ok!
-            </p>}
+              <strong>Note:</strong> This test case was fixed in a later version
+              of React. This test is not expected to pass for the selected
+              version, and that's ok!
+            </p>
+          )}
 
           {children}
         </div>
@@ -129,9 +134,7 @@ TestCase.Steps = class extends React.Component {
     return (
       <div>
         <h3>Steps to reproduce:</h3>
-        <ol>
-          {children}
-        </ol>
+        <ol>{children}</ol>
       </div>
     );
   }
@@ -143,9 +146,7 @@ TestCase.ExpectedResult = class extends React.Component {
     return (
       <div>
         <h3>Expected Result:</h3>
-        <p>
-          {children}
-        </p>
+        <p>{children}</p>
       </div>
     );
   }

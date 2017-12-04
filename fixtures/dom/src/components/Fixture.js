@@ -9,11 +9,7 @@ class Fixture extends React.Component {
   render() {
     const {children} = this.props;
 
-    return (
-      <div className="test-fixture">
-        {children}
-      </div>
-    );
+    return <div className="test-fixture">{children}</div>;
   }
 }
 

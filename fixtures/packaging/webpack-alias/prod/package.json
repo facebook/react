@@ -1,6 +1,6 @@
 {
-  "name": "webpack-test",
   "private": true,
+  "name": "webpack-alias-prod-fixture",
   "dependencies": {
     "webpack": "^1.14.0"
   },

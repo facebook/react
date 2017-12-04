@@ -1,5 +1,5 @@
-import React from 'react';
 import PropTypes from 'prop-types';
+const React = window.React;
 
 const propTypes = {
   title: PropTypes.node.isRequired,

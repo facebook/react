@@ -17,9 +17,13 @@ body {
 }
 
 button {
+  background: white;
+  border-radius: 2px;
+  border: 1px solid rgba(0, 0, 0, 0.24);
+  cursor: pointer;
+  font-size: 16px;
   margin: 10px;
-  font-size: 18px;
-  padding: 5px;
+  padding: 6px 8px;
 }
 
 .header {

@@ -1,11 +1,13 @@
 {
-  "name": "webpack-test",
   "private": true,
+  "name": "browserify-prod-fixture",
   "dependencies": {
-    "browserify": "^13.3.0"
+    "browserify": "^13.3.0",
+    "react": "file:../../../../build/packages/react",
+    "react-dom": "file:../../../../build/packages/react-dom"
   },
   "scripts": {
-    "build": "rm -f output.js && NODE_PATH=../../../../build/packages browserify ./input.js -g [envify --NODE_ENV 'production'] -o output.js"
+    "build": "rm -f output.js && browserify ./input.js -g [envify --NODE_ENV 'production'] -o output.js"
   },
   "devDependencies": {
     "envify": "^4.0.0"

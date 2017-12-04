@@ -7,8 +7,8 @@ const fixtureDirs = fs.readdirSync(__dirname).filter(file => {
 });
 
 const cmdArgs = [
-  {cmd: 'npm', args: ['install']},
-  {cmd: 'npm', args: ['run', 'build']},
+  {cmd: 'yarn', args: ['install']},
+  {cmd: 'yarn', args: ['build']},
 ];
 
 function buildFixture(cmdArg, path) {
