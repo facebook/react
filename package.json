@@ -98,19 +98,19 @@
     "node": "8.x"
   },
   "scripts": {
-    "build": "npm run version-check && node ./scripts/rollup/build.js",
-    "linc": "node ./scripts/tasks/linc.js",
-    "lint": "node ./scripts/tasks/eslint.js",
-    "lint-build": "node ./scripts/rollup/validate/index.js",
-    "postinstall": "node node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
+    "build": "npm run version-check && $NODE ./scripts/rollup/build.js",
+    "linc": "$NODE ./scripts/tasks/linc.js",
+    "lint": "$NODE ./scripts/tasks/eslint.js",
+    "lint-build": "$NODE ./scripts/rollup/validate/index.js",
+    "postinstall": "$NODE node_modules/fbjs-scripts/node/check-dev-engines.js package.json",
     "test": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.source.js",
     "test-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.source.js",
     "test-prod-build": "yarn test-build-prod",
     "test-build": "cross-env NODE_ENV=development jest --config ./scripts/jest/config.build.js",
     "test-build-prod": "cross-env NODE_ENV=production jest --config ./scripts/jest/config.build.js",
-    "flow": "node ./scripts/tasks/flow.js",
-    "prettier": "node ./scripts/prettier/index.js write-changed",
-    "prettier-all": "node ./scripts/prettier/index.js write",
-    "version-check": "node ./scripts/tasks/version-check.js"
+    "flow": "$NODE ./scripts/tasks/flow.js",
+    "prettier": "$NODE ./scripts/prettier/index.js write-changed",
+    "prettier-all": "$NODE ./scripts/prettier/index.js write",
+    "version-check": "$NODE ./scripts/tasks/version-check.js"
   }
 }
