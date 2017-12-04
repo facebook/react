@@ -257,6 +257,7 @@ function ChildReconciler(shouldTrackSideEffects) {
   }
 
   function useFiber(
+    returnFiber: Fiber,
     fiber: Fiber,
     pendingProps: mixed,
     expirationTime: ExpirationTime,
@@ -266,6 +267,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     const clone = createWorkInProgress(fiber, pendingProps, expirationTime);
     clone.index = 0;
     clone.sibling = null;
+    clone.return = returnFiber;
     return clone;
   }
 
@@ -323,8 +325,12 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, textContent, expirationTime);
-      existing.return = returnFiber;
+      const existing = useFiber(
+        returnFiber,
+        current,
+        textContent,
+        expirationTime,
+      );
       return existing;
     }
   }
@@ -337,9 +343,13 @@ function ChildReconciler(shouldTrackSideEffects) {
   ): Fiber {
     if (current !== null && current.type === element.type) {
       // Move based on index
-      const existing = useFiber(current, element.props, expirationTime);
+      const existing = useFiber(
+        returnFiber,
+        current,
+        element.props,
+        expirationTime,
+      );
       existing.ref = coerceRef(current, element);
-      existing.return = returnFiber;
       if (__DEV__) {
         existing._debugSource = element._source;
         existing._debugOwner = element._owner;
@@ -376,8 +386,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Move based on index
-      const existing = useFiber(current, call, expirationTime);
-      existing.return = returnFiber;
+      const existing = useFiber(returnFiber, current, call, expirationTime);
       return existing;
     }
   }
@@ -400,9 +409,8 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Move based on index
-      const existing = useFiber(current, null, expirationTime);
+      const existing = useFiber(returnFiber, current, null, expirationTime);
       existing.type = returnNode.value;
-      existing.return = returnFiber;
       return existing;
     }
   }
@@ -429,8 +437,12 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, portal.children || [], expirationTime);
-      existing.return = returnFiber;
+      const existing = useFiber(
+        returnFiber,
+        current,
+        portal.children || [],
+        expirationTime,
+      );
       return existing;
     }
   }
@@ -454,8 +466,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       return created;
     } else {
       // Update
-      const existing = useFiber(current, fragment, expirationTime);
-      existing.return = returnFiber;
+      const existing = useFiber(returnFiber, current, fragment, expirationTime);
       return existing;
     }
   }
@@ -1168,8 +1179,12 @@ function ChildReconciler(shouldTrackSideEffects) {
       // We already have an existing node so let's just update it and delete
       // the rest.
       deleteRemainingChildren(returnFiber, currentFirstChild.sibling);
-      const existing = useFiber(currentFirstChild, textContent, expirationTime);
-      existing.return = returnFiber;
+      const existing = useFiber(
+        returnFiber,
+        currentFirstChild,
+        textContent,
+        expirationTime,
+      );
       return existing;
     }
     // The existing first child is not a text node so we need to create one
@@ -1203,6 +1218,7 @@ function ChildReconciler(shouldTrackSideEffects) {
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
+            returnFiber,
             child,
             element.type === REACT_FRAGMENT_TYPE
               ? element.props.children
@@ -1210,7 +1226,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             expirationTime,
           );
           existing.ref = coerceRef(child, element);
-          existing.return = returnFiber;
           if (__DEV__) {
             existing._debugSource = element._source;
             existing._debugOwner = element._owner;
@@ -1261,8 +1276,7 @@ function ChildReconciler(shouldTrackSideEffects) {
       if (child.key === key) {
         if (child.tag === CallComponent) {
           deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, call, expirationTime);
-          existing.return = returnFiber;
+          const existing = useFiber(returnFiber, child, call, expirationTime);
           return existing;
         } else {
           deleteRemainingChildren(returnFiber, child);
@@ -1294,9 +1308,8 @@ function ChildReconciler(shouldTrackSideEffects) {
     if (child !== null) {
       if (child.tag === ReturnComponent) {
         deleteRemainingChildren(returnFiber, child.sibling);
-        const existing = useFiber(child, null, expirationTime);
+        const existing = useFiber(returnFiber, child, null, expirationTime);
         existing.type = returnNode.value;
-        existing.return = returnFiber;
         return existing;
       } else {
         deleteRemainingChildren(returnFiber, child);
@@ -1332,11 +1345,11 @@ function ChildReconciler(shouldTrackSideEffects) {
         ) {
           deleteRemainingChildren(returnFiber, child.sibling);
           const existing = useFiber(
+            returnFiber,
             child,
             portal.children || [],
             expirationTime,
           );
-          existing.return = returnFiber;
           return existing;
         } else {
           deleteRemainingChildren(returnFiber, child);
