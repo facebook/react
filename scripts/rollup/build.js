@@ -10,6 +10,7 @@ const stripBanner = require('rollup-plugin-strip-banner');
 const chalk = require('chalk');
 const path = require('path');
 const resolve = require('rollup-plugin-node-resolve');
+const os = require('os');
 const fs = require('fs');
 const rimraf = require('rimraf');
 const argv = require('minimist')(process.argv.slice(2));
@@ -48,6 +49,7 @@ const shouldExtractErrors = argv['extract-errors'];
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
+const npmPackagesTmpDir = path.join(os.tmpdir(), 'react-npm-packages');
 
 const closureOptions = {
   compilationLevel: 'SIMPLE',
@@ -435,8 +437,9 @@ rimraf('build', async () => {
   try {
     // create a new build directory
     fs.mkdirSync('build');
-    // create the .tmp folder for local npm packing and unpacking
-    fs.mkdirSync(path.join('build', '.tmp'));
+    // create the temp directory for local npm packing and unpacking
+    // in operating system's default temporary directory
+    fs.mkdirSync(npmPackagesTmpDir);
     // create the packages folder for NODE+UMD bundles
     fs.mkdirSync(path.join('build', 'packages'));
     // create the dist folder for UMD bundles
@@ -478,6 +481,12 @@ rimraf('build', async () => {
           'used when the error map needs to be rebuilt.\n'
       );
     }
+    rimraf(npmPackagesTmpDir, err => {
+      if (err) {
+        console.error(err);
+        process.exit(1);
+      }
+    });
   } catch (err) {
     console.error(err);
     process.exit(1);

@@ -1,6 +1,7 @@
 'use strict';
 
 const basename = require('path').basename;
+const os = require('os');
 const fs = require('fs');
 const join = require('path').join;
 const resolve = require('path').resolve;
@@ -19,6 +20,7 @@ const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const facebookWWW = 'facebook-www';
+const npmPackagesTmpDir = join(os.tmpdir(), 'react-npm-packages');
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
@@ -87,7 +89,7 @@ async function createFacebookWWWBuild() {
 }
 
 async function copyBundleIntoNodePackage(packageName, filename, bundleType) {
-  const packageDirectory = resolve(`./build/.tmp/${packageName}`);
+  const packageDirectory = resolve(`${npmPackagesTmpDir}/${packageName}`);
   if (!fs.existsSync(packageDirectory)) {
     return;
   }
@@ -125,7 +127,7 @@ async function copyBundleIntoNodePackage(packageName, filename, bundleType) {
 
 async function copyNodePackageTemplate(packageName) {
   const from = resolve(`./packages/${packageName}`);
-  const to = resolve(`./build/.tmp/${packageName}`);
+  const to = resolve(`${npmPackagesTmpDir}/${packageName}`);
   const npmFrom = resolve(`${from}/npm`);
   if (!fs.existsSync(npmFrom)) {
     // The package is not meant for npm consumption.
@@ -141,22 +143,22 @@ async function copyNodePackageTemplate(packageName) {
   await asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`);
 }
 
-async function localPackaging(packageName) {
-  const tmp = resolve(`./build/.tmp/${packageName}`);
-  const extract = `${tmp}/extract`;
+async function packForNpmAndUnpack(packageName) {
+  const packageTmpDir = resolve(`${npmPackagesTmpDir}/${packageName}`);
+  const extractTmpDir = resolve(`${packageTmpDir}/extract`);
   const build = resolve(`./build/packages/${packageName}`);
   const npmFrom = resolve(`./packages/${packageName}/npm`);
   if (!fs.existsSync(npmFrom)) {
     return;
   }
-  let tgzName = await asyncExecuteCommand(`cd ${tmp} && npm pack`);
+  let tgzName = await asyncExecuteCommand(`cd ${packageTmpDir} && npm pack`);
   // In npm packages, files are grouped into a root directory(named 'package').
   // We only copy the packed files instead of extract the root 'package' directly to build directory
   await asyncExtractTar({
-    src: `${tmp}/${tgzName.trim()}`,
-    dest: extract,
+    src: `${packageTmpDir}/${tgzName.trim()}`,
+    dest: extractTmpDir,
   });
-  await asyncCopyTo(`${extract}/package`, build);
+  await asyncCopyTo(`${extractTmpDir}/package`, build);
 }
 
 async function createNodePackage(bundleType, packageName, filename) {
@@ -168,7 +170,7 @@ async function createNodePackage(bundleType, packageName, filename) {
   await copyBundleIntoNodePackage(packageName, filename, bundleType);
   // Packing packages locally, simulate npm publish,
   // Then unpacking generated packages to build directory
-  await localPackaging(packageName);
+  await packForNpmAndUnpack(packageName);
 }
 
 function getOutputPathRelativeToBuildFolder(bundleType, filename, hasteName) {
