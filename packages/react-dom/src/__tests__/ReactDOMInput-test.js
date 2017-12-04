@@ -248,7 +248,7 @@ describe('ReactDOMInput', () => {
     }
   });
 
-  it('performs as state change from "" to 0', () => {
+  it('performs a state change from "" to 0', () => {
     class Stub extends React.Component {
       state = {
         value: '',
