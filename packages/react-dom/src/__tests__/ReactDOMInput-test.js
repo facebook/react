@@ -1701,6 +1701,7 @@ describe('ReactDOMInput', () => {
 
       expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
     });
   });
 
@@ -1753,6 +1754,7 @@ describe('ReactDOMInput', () => {
 
       expect(node.value).toBe('');
       expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
     });
 
     it('treats updated function defaultValue as an empty string', function() {
@@ -1763,6 +1765,7 @@ describe('ReactDOMInput', () => {
 
       expect(node.value).toBe('foo');
       expect(node.getAttribute('value')).toBe('');
+      // TODO: we should warn here.
     });
   });
 });
