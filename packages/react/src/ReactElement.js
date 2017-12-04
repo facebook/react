@@ -167,7 +167,7 @@ const ReactElement = function(type, key, ref, self, source, owner, props) {
  * Create and return a new ReactElement of the given type.
  * See https://reactjs.org/docs/react-api.html#createelement
  */
-export function createElement(type, config, children) {
+export function createElement(type, config, ...children) {
   let propName;
 
   // Reserved names are extracted
@@ -201,20 +201,16 @@ export function createElement(type, config, children) {
 
   // Children can be more than one argument, and those are transferred onto
   // the newly allocated props object.
-  const childrenLength = arguments.length - 2;
+  const childrenLength = children.length;
   if (childrenLength === 1) {
-    props.children = children;
+    props.children = children[0];
   } else if (childrenLength > 1) {
-    const childArray = Array(childrenLength);
-    for (let i = 0; i < childrenLength; i++) {
-      childArray[i] = arguments[i + 2];
-    }
     if (__DEV__) {
       if (Object.freeze) {
-        Object.freeze(childArray);
+        Object.freeze(children);
       }
     }
-    props.children = childArray;
+    props.children = children;
   }
 
   // Resolve default props
