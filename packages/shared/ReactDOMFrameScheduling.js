@@ -28,7 +28,7 @@ if (__DEV__) {
     warning(
       false,
       'React depends on requestAnimationFrame. Make sure that you load a ' +
-        'polyfill in older browsers. http://fb.me/react-polyfills',
+        'polyfill in older browsers. https://fb.me/react-polyfills',
     );
   }
 }

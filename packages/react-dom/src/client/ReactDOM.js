@@ -86,7 +86,7 @@ if (__DEV__) {
     warning(
       false,
       'React depends on Map and Set built-in types. Make sure that you load a ' +
-        'polyfill in older browsers. http://fb.me/react-polyfills',
+        'polyfill in older browsers. https://fb.me/react-polyfills',
     );
   }
 
