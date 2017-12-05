@@ -62,6 +62,39 @@ if (__DEV__) {
     time: true,
     // There are working polyfills for <dialog>. Let people use it.
     dialog: true,
+    // MathML tags are only officially supported by Firefox, but are often
+    // used with polyfills in other browsers. So at least all implemented
+    // tags (after MDN) should be whitelisted.
+    math: true,
+    maction: true,
+    menclose: true,
+    merror: true,
+    mfenced: true,
+    mfrac: true,
+    mi: true,
+    mmultiscripts: true,
+    mn: true,
+    mo: true,
+    mover: true,
+    mpadded: true,
+    mphantom: true,
+    mroot: true,
+    mrow: true,
+    ms: true,
+    mspace: true,
+    msqrt: true,
+    mstyle: true,
+    msub: true,
+    msup: true,
+    msubsup: true,
+    mtable: true,
+    mtd: true,
+    mtext: true,
+    mtr: true,
+    munder: true,
+    munderover: true,
+    semantics: true,
+    annotation: true,
   };
 
   var validatePropertiesInDevelopment = function(type, props) {
