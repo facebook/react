@@ -218,6 +218,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // In the initial pass we might need to construct the instance.
         constructClassInstance(workInProgress, workInProgress.pendingProps);
         mountClassInstance(workInProgress, renderExpirationTime);
+
+        // Simulate an async bailout/interruption by invoking lifecycle twice.
+        // We do this here rather than inside of ReactFiberClassComponent,
+        // To more realistically simulate the interruption behavior of async,
+        // Which would never call componentWillMount() twice on the same instance.
+        if (debugRenderPhaseSideEffects) {
+          constructClassInstance(workInProgress, workInProgress.pendingProps);
+          mountClassInstance(workInProgress, renderExpirationTime);
+        }
+
         shouldUpdate = true;
       } else {
         invariant(false, 'Resuming work not yet implemented.');

@@ -28,6 +28,10 @@ describe('ReactAsyncClassComponent', () => {
       let shouldComponentUpdate = false;
       class ClassComponent extends React.Component {
         state = {};
+        constructor(props) {
+          super(props);
+          log.push('constructor');
+        }
         componentDidMount() {
           log.push('componentDidMount');
         }
@@ -58,7 +62,9 @@ describe('ReactAsyncClassComponent', () => {
 
       const component = ReactTestRenderer.create(<ClassComponent />);
       expect(log).toEqual([
+        'constructor',
         'componentWillMount',
+        'constructor',
         'componentWillMount',
         'render',
         'render',
