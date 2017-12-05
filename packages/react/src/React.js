@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+console.log('lol')
+
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
 import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
