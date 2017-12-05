@@ -8,7 +8,7 @@
 // For HTML, certain tags should omit their close tag. We keep a whitelist for
 // those special-case tags.
 
-var omittedCloseTags = {
+const omittedCloseTags = {
   area: true,
   base: true,
   br: true,

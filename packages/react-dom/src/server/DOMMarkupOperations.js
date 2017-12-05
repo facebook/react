@@ -19,11 +19,11 @@ import warning from 'fbjs/lib/warning';
 
 // isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
-var VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
+const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
   '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
 );
-var illegalAttributeNameCache = {};
-var validatedAttributeNameCache = {};
+const illegalAttributeNameCache = {};
+const validatedAttributeNameCache = {};
 function isAttributeNameSafe(attributeName) {
   if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
     return true;
@@ -80,12 +80,12 @@ export function createMarkupForRoot() {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name, value) {
-  var propertyInfo = getPropertyInfo(name);
+  const propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
     if (shouldIgnoreValue(propertyInfo, value)) {
       return '';
     }
-    var attributeName = propertyInfo.attributeName;
+    const attributeName = propertyInfo.attributeName;
     if (
       propertyInfo.hasBooleanValue ||
       (propertyInfo.hasOverloadedBooleanValue && value === true)

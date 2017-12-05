@@ -37,12 +37,14 @@ import getComponentName from 'shared/getComponentName';
 import {NoWork} from './ReactFiberExpirationTime';
 import {NoContext, AsyncUpdates} from './ReactTypeOfInternalContext';
 
+let hasBadMapPolyfill;
+
 if (__DEV__) {
-  var hasBadMapPolyfill = false;
+  hasBadMapPolyfill = false;
   try {
-    var nonExtensibleObject = Object.preventExtensions({});
-    var testMap = new Map([[nonExtensibleObject, null]]);
-    var testSet = new Set([nonExtensibleObject]);
+    const nonExtensibleObject = Object.preventExtensions({});
+    const testMap = new Map([[nonExtensibleObject, null]]);
+    const testSet = new Set([nonExtensibleObject]);
     // This is necessary for Rollup to not consider these unused.
     // https://github.com/rollup/rollup/issues/1771
     // TODO: we can remove these if Rollup fixes the bug.
@@ -149,8 +151,10 @@ export type Fiber = {|
   _debugIsCurrentlyTiming?: boolean,
 |};
 
+let debugCounter;
+
 if (__DEV__) {
-  var debugCounter = 1;
+  debugCounter = 1;
 }
 
 function FiberNode(

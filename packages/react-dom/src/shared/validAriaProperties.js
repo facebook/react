@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-var ariaProperties = {
+const ariaProperties = {
   'aria-current': 0, // state
   'aria-details': 0,
   'aria-disabled': 0, // state

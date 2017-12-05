@@ -23,12 +23,20 @@ import ReactCurrentOwner from './ReactCurrentOwner';
 import {isValidElement, createElement, cloneElement} from './ReactElement';
 import ReactDebugCurrentFrame from './ReactDebugCurrentFrame';
 
+let currentlyValidatingElement;
+let propTypesMisspellWarningShown;
+
+let getDisplayName = () => {};
+let getStackAddendum = () => {};
+
+let VALID_FRAGMENT_PROPS;
+
 if (__DEV__) {
-  var currentlyValidatingElement = null;
+  currentlyValidatingElement = null;
 
-  var propTypesMisspellWarningShown = false;
+  propTypesMisspellWarningShown = false;
 
-  var getDisplayName = function(element): string {
+  getDisplayName = function(element): string {
     if (element == null) {
       return '#empty';
     } else if (typeof element === 'string' || typeof element === 'number') {
@@ -42,7 +50,7 @@ if (__DEV__) {
     }
   };
 
-  var getStackAddendum = function(): string {
+  getStackAddendum = function(): string {
     let stack = '';
     if (currentlyValidatingElement) {
       const name = getDisplayName(currentlyValidatingElement);
@@ -57,7 +65,7 @@ if (__DEV__) {
     return stack;
   };
 
-  var VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
+  VALID_FRAGMENT_PROPS = new Map([['children', true], ['key', true]]);
 }
 
 function getDeclarationErrorAddendum() {
