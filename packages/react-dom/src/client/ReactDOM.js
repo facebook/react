@@ -700,6 +700,9 @@ const DOMRenderer = ReactFiberReconciler({
       newProps: Props,
       internalInstanceHandle: Object,
     ): void {
+      // This check is required for hydration
+      // but this check run twice in a non hydration context
+      // TODO: Ensure to do this check only once.
       if (shouldAutoFocusHostComponent(type, newProps)) {
         ((domElement: any):
           | HTMLButtonElement
