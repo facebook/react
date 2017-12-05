@@ -18,9 +18,9 @@ describe('ReactDOM', () => {
   // supports real submit events.
   /*
   it('should bubble onSubmit', function() {
-    var count = 0;
-    var form;
-    var Parent = React.createClass({
+    const count = 0;
+    const form;
+    const Parent = React.createClass({
       handleSubmit: function() {
         count++;
         return false;
@@ -29,7 +29,7 @@ describe('ReactDOM', () => {
         return <Child />;
       }
     });
-    var Child = React.createClass({
+    const Child = React.createClass({
       render: function() {
         return <form><input type="submit" value="Submit" /></form>;
       },
@@ -37,7 +37,7 @@ describe('ReactDOM', () => {
         form = ReactDOM.findDOMNode(this);
       }
     });
-    var instance = ReactTestUtils.renderIntoDocument(<Parent />);
+    const instance = ReactTestUtils.renderIntoDocument(<Parent />);
     form.submit();
     expect(count).toEqual(1);
   });
