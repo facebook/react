@@ -625,7 +625,7 @@ const DOMRenderer = ReactFiberReconciler({
     rootContainerInstance: Container,
   ): boolean {
     setInitialProperties(domElement, type, props, rootContainerInstance);
-    return shouldAutoFocusHostComponent(type, props);
+    return true;
   },
 
   prepareUpdate(
