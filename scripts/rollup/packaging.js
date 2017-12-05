@@ -1,7 +1,6 @@
 'use strict';
 
 const basename = require('path').basename;
-const os = require('os');
 const fs = require('fs');
 const join = require('path').join;
 const resolve = require('path').resolve;
@@ -20,7 +19,6 @@ const RN_DEV = Bundles.bundleTypes.RN_DEV;
 const RN_PROD = Bundles.bundleTypes.RN_PROD;
 
 const facebookWWW = 'facebook-www';
-const npmPackagesTmpDir = join(os.tmpdir(), 'react-npm-packages');
 
 // these files need to be copied to the react-native build
 const reactNativeSrcDependencies = [
@@ -88,7 +86,12 @@ async function createFacebookWWWBuild() {
   await asyncCopyTo(from, to);
 }
 
-async function copyBundleIntoNodePackage(packageName, filename, bundleType) {
+async function copyBundleIntoNodePackage(
+  packageName,
+  filename,
+  bundleType,
+  npmPackagesTmpDir
+) {
   const packageDirectory = resolve(`${npmPackagesTmpDir}/${packageName}`);
   if (!fs.existsSync(packageDirectory)) {
     return;
@@ -125,7 +128,7 @@ async function copyBundleIntoNodePackage(packageName, filename, bundleType) {
   }
 }
 
-async function copyNodePackageTemplate(packageName) {
+async function copyNodePackageTemplate(packageName, npmPackagesTmpDir) {
   const from = resolve(`./packages/${packageName}`);
   const to = resolve(`${npmPackagesTmpDir}/${packageName}`);
   const npmFrom = resolve(`${from}/npm`);
@@ -143,7 +146,7 @@ async function copyNodePackageTemplate(packageName) {
   await asyncCopyTo(resolve('./LICENSE'), `${to}/LICENSE`);
 }
 
-async function packForNpmAndUnpack(packageName) {
+async function packForNpmAndUnpack(packageName, npmPackagesTmpDir) {
   const packageTmpDir = resolve(`${npmPackagesTmpDir}/${packageName}`);
   const extractTmpDir = resolve(`${packageTmpDir}/extract`);
   const build = resolve(`./build/packages/${packageName}`);
@@ -161,16 +164,26 @@ async function packForNpmAndUnpack(packageName) {
   await asyncCopyTo(`${extractTmpDir}/package`, build);
 }
 
-async function createNodePackage(bundleType, packageName, filename) {
+async function createNodePackage(
+  bundleType,
+  packageName,
+  filename,
+  npmPackagesTmpDir
+) {
   // the only case where we don't want to copy the package is for FB bundles
   if (bundleType === FB_DEV || bundleType === FB_PROD) {
     return;
   }
-  await copyNodePackageTemplate(packageName);
-  await copyBundleIntoNodePackage(packageName, filename, bundleType);
+  await copyNodePackageTemplate(packageName, npmPackagesTmpDir);
+  await copyBundleIntoNodePackage(
+    packageName,
+    filename,
+    bundleType,
+    npmPackagesTmpDir
+  );
   // Packing packages locally, simulate npm publish,
   // Then unpacking generated packages to build directory
-  await packForNpmAndUnpack(packageName);
+  await packForNpmAndUnpack(packageName, npmPackagesTmpDir);
 }
 
 function getOutputPathRelativeToBuildFolder(bundleType, filename, hasteName) {

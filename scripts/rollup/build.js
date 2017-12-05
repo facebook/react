@@ -27,6 +27,7 @@ const syncReactNativeCS = require('./sync').syncReactNativeCS;
 const Packaging = require('./packaging');
 const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
+const uuidv1 = require('uuid/v1');
 
 const UMD_DEV = Bundles.bundleTypes.UMD_DEV;
 const UMD_PROD = Bundles.bundleTypes.UMD_PROD;
@@ -49,7 +50,10 @@ const shouldExtractErrors = argv['extract-errors'];
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
 };
-const npmPackagesTmpDir = path.join(os.tmpdir(), 'react-npm-packages');
+const npmPackagesTmpDir = path.join(
+  os.tmpdir(),
+  `react-npm-packages-${uuidv1()}`
+);
 
 const closureOptions = {
   compilationLevel: 'SIMPLE',
@@ -399,7 +403,12 @@ async function createBundle(bundle, bundleType) {
         bundle.moduleType
       )
     );
-    await Packaging.createNodePackage(bundleType, packageName, filename);
+    await Packaging.createNodePackage(
+      bundleType,
+      packageName,
+      filename,
+      npmPackagesTmpDir
+    );
     console.log(`${chalk.bgGreen.black(' COMPLETE ')} ${logKey}\n`);
   } catch (error) {
     if (error.code) {
