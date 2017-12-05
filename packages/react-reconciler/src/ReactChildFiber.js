@@ -553,6 +553,17 @@ function ChildReconciler(shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
+    if (getIteratorFn(newChild)) {
+      const created = createFiberFromFragment(
+        newChild,
+        returnFiber.internalContextTag,
+        expirationTime,
+        null,
+      );
+      created.return = returnFiber;
+      return created;
+    }
+
     if (__DEV__) {
       if (typeof newChild === 'function') {
         warnOnFunctionType();
@@ -666,6 +677,20 @@ function ChildReconciler(shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
+    if (getIteratorFn(newChild)) {
+      if (key !== null) {
+        return null;
+      }
+
+      return updateFragment(
+        returnFiber,
+        oldFiber,
+        newChild,
+        expirationTime,
+        null,
+      );
+    }
+
     if (__DEV__) {
       if (typeof newChild === 'function') {
         warnOnFunctionType();
@@ -771,6 +796,17 @@ function ChildReconciler(shouldTrackSideEffects) {
       throwOnInvalidObjectType(returnFiber, newChild);
     }
 
+    if (getIteratorFn(newChild)) {
+      const matchedFiber = existingChildren.get(newIdx) || null;
+      return updateFragment(
+        returnFiber,
+        matchedFiber,
+        newChild,
+        expirationTime,
+        null,
+      );
+    }
+
     if (__DEV__) {
       if (typeof newChild === 'function') {
         warnOnFunctionType();
@@ -833,7 +869,7 @@ function ChildReconciler(shouldTrackSideEffects) {
     newChildren: Array<*>,
     expirationTime: ExpirationTime,
   ): Fiber | null {
-    // This algorithm can't optimize by searching from boths ends since we
+    // This algorithm can't optimize by searching from both ends since we
     // don't have backpointers on fibers. I'm trying to see how far we can get
     // with that model. If it ends up not being worth the tradeoffs, we can
     // add it later.
