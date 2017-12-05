@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-console.log('lol')
+console.log('lol');
 
 import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
