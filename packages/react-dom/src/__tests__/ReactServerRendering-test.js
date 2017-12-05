@@ -388,7 +388,7 @@ describe('ReactDOMServer', () => {
       if (__DEV__) {
         expect(console.error.calls.count()).toBe(1);
         expect(console.error.calls.argsFor(0)[0]).toBe(
-          'Warning: Text content did not match. Server: "server" Client: "client"'
+          'Warning: Text content did not match. Server: "server" Client: "client"',
         );
       }
     });
