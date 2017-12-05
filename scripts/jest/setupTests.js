@@ -39,6 +39,10 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  expect.extend({
+    toWarnDev: require('./matchers/toWarnDev'),
+  });
+
   ['error', 'warn'].forEach(methodName => {
     var oldMethod = console[methodName];
     var newMethod = function() {
