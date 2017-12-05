@@ -426,6 +426,34 @@ describe('ReactTestUtils', () => {
         jasmine.objectContaining({target: input}),
       );
     });
+
+    it('should set the correct event type when simulating synthetic events', () => {
+      expect.assertions(1);
+
+      let handler = function(event) {
+        expect(event.nativeEvent.type).toEqual('click');
+      };
+
+      let button = ReactTestUtils.renderIntoDocument(
+        <button onClick={handler} />,
+      );
+
+      ReactTestUtils.Simulate.click(button);
+    });
+
+    it('should set the correct event type when simulating native events', () => {
+      expect.assertions(1);
+
+      let handler = function(event) {
+        expect(event.nativeEvent.type).toEqual('click');
+      };
+
+      let button = ReactTestUtils.renderIntoDocument(
+        <button onClick={handler} />,
+      );
+
+      ReactTestUtils.SimulateNative.click(button);
+    });
   });
 
   it('should call setState callback with no arguments', () => {

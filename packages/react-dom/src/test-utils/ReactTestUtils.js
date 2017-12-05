@@ -32,7 +32,9 @@ var {
 
 var topLevelTypes = BrowserEventConstants.topLevelTypes;
 
-function Event(suffix) {}
+function FakeNativeEvent(type) {
+  this.type = type;
+}
 
 /**
  * @class ReactTestUtils
@@ -359,9 +361,8 @@ function makeSimulator(eventType) {
     var dispatchConfig =
       EventPluginRegistry.eventNameDispatchConfigs[eventType];
 
-    var fakeNativeEvent = new Event();
+    var fakeNativeEvent = new FakeNativeEvent(eventType.toLowerCase());
     fakeNativeEvent.target = domNode;
-    fakeNativeEvent.type = eventType.toLowerCase();
 
     // We don't use SyntheticEvent.getPooled in order to not have to worry about
     // properly destroying any properties assigned from `eventData` upon release
@@ -438,20 +439,21 @@ buildSimulators();
  * to dispatch synthetic events.
  */
 
-function makeNativeSimulator(eventType) {
+function makeNativeSimulator(topLevelType) {
   return function(domComponentOrNode, nativeEventData) {
-    var fakeNativeEvent = new Event(eventType);
+    var eventType = topLevelTypes[topLevelType];
+    var fakeNativeEvent = new FakeNativeEvent(eventType);
     Object.assign(fakeNativeEvent, nativeEventData);
     if (ReactTestUtils.isDOMComponent(domComponentOrNode)) {
       ReactTestUtils.simulateNativeEventOnDOMComponent(
-        eventType,
+        topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
     } else if (domComponentOrNode.tagName) {
       // Will allow on actual dom nodes.
       ReactTestUtils.simulateNativeEventOnNode(
-        eventType,
+        topLevelType,
         domComponentOrNode,
         fakeNativeEvent,
       );
