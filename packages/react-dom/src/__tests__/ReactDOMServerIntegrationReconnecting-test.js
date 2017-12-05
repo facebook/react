@@ -42,7 +42,7 @@ describe('ReactDOMServerIntegration', () => {
   });
 
   describe('reconnecting to server markup', function() {
-    var EmptyComponent;
+    let EmptyComponent;
     beforeEach(() => {
       EmptyComponent = class extends React.Component {
         render() {

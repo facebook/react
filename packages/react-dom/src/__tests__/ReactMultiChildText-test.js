@@ -9,21 +9,21 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactTestUtils = require('react-dom/test-utils');
+const React = require('react');
+const ReactDOM = require('react-dom');
+const ReactTestUtils = require('react-dom/test-utils');
 
 // Helpers
-var testAllPermutations = function(testCases) {
-  for (var i = 0; i < testCases.length; i += 2) {
-    var renderWithChildren = testCases[i];
-    var expectedResultAfterRender = testCases[i + 1];
+const testAllPermutations = function(testCases) {
+  for (let i = 0; i < testCases.length; i += 2) {
+    const renderWithChildren = testCases[i];
+    const expectedResultAfterRender = testCases[i + 1];
 
-    for (var j = 0; j < testCases.length; j += 2) {
-      var updateWithChildren = testCases[j];
-      var expectedResultAfterUpdate = testCases[j + 1];
+    for (let j = 0; j < testCases.length; j += 2) {
+      const updateWithChildren = testCases[j];
+      const expectedResultAfterUpdate = testCases[j + 1];
 
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<div>{renderWithChildren}</div>, container);
       expectChildren(container, expectedResultAfterRender);
 
@@ -33,9 +33,9 @@ var testAllPermutations = function(testCases) {
   }
 };
 
-var expectChildren = function(container, children) {
-  var outerNode = container.firstChild;
-  var textNode;
+const expectChildren = function(container, children) {
+  const outerNode = container.firstChild;
+  let textNode;
   if (typeof children === 'string') {
     textNode = outerNode.firstChild;
 
@@ -47,10 +47,10 @@ var expectChildren = function(container, children) {
       expect(textNode.data).toBe('' + children);
     }
   } else {
-    var mountIndex = 0;
+    let mountIndex = 0;
 
-    for (var i = 0; i < children.length; i++) {
-      var child = children[i];
+    for (let i = 0; i < children.length; i++) {
+      const child = children[i];
 
       if (typeof child === 'string') {
         textNode = outerNode.childNodes[mountIndex];
@@ -58,7 +58,7 @@ var expectChildren = function(container, children) {
         expect(textNode.data).toBe('' + child);
         mountIndex++;
       } else {
-        var elementDOMNode = outerNode.childNodes[mountIndex];
+        const elementDOMNode = outerNode.childNodes[mountIndex];
         expect(elementDOMNode.tagName).toBe('DIV');
         mountIndex++;
       }

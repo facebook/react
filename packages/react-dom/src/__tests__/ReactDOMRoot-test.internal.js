@@ -9,10 +9,10 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
-var ReactDOMServer = require('react-dom/server');
-var AsyncComponent = React.unstable_AsyncComponent;
+let React = require('react');
+let ReactDOM = require('react-dom');
+let ReactDOMServer = require('react-dom/server');
+let AsyncComponent = React.unstable_AsyncComponent;
 
 describe('ReactDOMRoot', () => {
   let container;
@@ -29,7 +29,7 @@ describe('ReactDOMRoot', () => {
     scheduledCallback = null;
     flush = function(units = Infinity) {
       if (scheduledCallback !== null) {
-        var didStop = false;
+        let didStop = false;
         while (scheduledCallback !== null && !didStop) {
           const cb = scheduledCallback;
           scheduledCallback = null;

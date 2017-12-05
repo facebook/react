@@ -9,12 +9,12 @@
 
 'use strict';
 
-var React;
-var ReactCallReturn;
-var ReactDOM;
-var ReactDOMServer;
-var ReactTestUtils;
-var PropTypes;
+let React;
+let ReactCallReturn;
+let ReactDOM;
+let ReactDOMServer;
+let ReactTestUtils;
+let PropTypes;
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
@@ -33,14 +33,14 @@ describe('ReactDOMServer', () => {
 
   describe('renderToString', () => {
     it('should generate simple markup', () => {
-      var response = ReactDOMServer.renderToString(<span>hello world</span>);
+      const response = ReactDOMServer.renderToString(<span>hello world</span>);
       expect(response).toMatch(
         new RegExp('<span data-reactroot=""' + '>hello world</span>'),
       );
     });
 
     it('should generate simple markup for self-closing tags', () => {
-      var response = ReactDOMServer.renderToString(<img />);
+      const response = ReactDOMServer.renderToString(<img />);
       expect(response).toMatch(new RegExp('<img data-reactroot=""' + '/>'));
     });
 
@@ -51,7 +51,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToString(<NullComponent />);
+      const response = ReactDOMServer.renderToString(<NullComponent />);
       expect(response).toBe('');
     });
 
@@ -74,7 +74,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToString(<Parent />);
+      const response = ReactDOMServer.renderToString(<Parent />);
       expect(response).toMatch(
         new RegExp(
           '<div ' +
@@ -92,7 +92,7 @@ describe('ReactDOMServer', () => {
 
     it('should only execute certain lifecycle methods', () => {
       function runTest() {
-        var lifecycle = [];
+        const lifecycle = [];
 
         class TestComponent extends React.Component {
           constructor(props) {
@@ -135,7 +135,7 @@ describe('ReactDOMServer', () => {
           }
         }
 
-        var response = ReactDOMServer.renderToString(<TestComponent />);
+        const response = ReactDOMServer.renderToString(<TestComponent />);
 
         expect(response).toMatch(
           new RegExp(
@@ -161,8 +161,8 @@ describe('ReactDOMServer', () => {
       spyOnDev(console, 'warn');
       spyOnDev(console, 'error');
 
-      var mountCount = 0;
-      var numClicks = 0;
+      let mountCount = 0;
+      let numClicks = 0;
 
       class TestComponent extends React.Component {
         componentDidMount() {
@@ -182,10 +182,10 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var element = document.createElement('div');
+      const element = document.createElement('div');
       ReactDOM.render(<TestComponent />, element);
 
-      var lastMarkup = element.innerHTML;
+      let lastMarkup = element.innerHTML;
 
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
@@ -210,7 +210,7 @@ describe('ReactDOMServer', () => {
       lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
       element.innerHTML = lastMarkup;
 
-      var instance = ReactDOM.render(<TestComponent name="x" />, element);
+      let instance = ReactDOM.render(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
       if (__DEV__) {
         expect(console.warn.calls.count()).toBe(1);
@@ -259,8 +259,8 @@ describe('ReactDOMServer', () => {
     it('should have the correct mounting behavior (new hydrate API)', () => {
       spyOnDev(console, 'error');
 
-      var mountCount = 0;
-      var numClicks = 0;
+      let mountCount = 0;
+      let numClicks = 0;
 
       class TestComponent extends React.Component {
         componentDidMount() {
@@ -280,10 +280,10 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var element = document.createElement('div');
+      const element = document.createElement('div');
       ReactDOM.render(<TestComponent />, element);
 
-      var lastMarkup = element.innerHTML;
+      let lastMarkup = element.innerHTML;
 
       // Exercise the update path. Markup should not change,
       // but some lifecycle methods should be run again.
@@ -308,7 +308,7 @@ describe('ReactDOMServer', () => {
       lastMarkup = ReactDOMServer.renderToString(<TestComponent name="x" />);
       element.innerHTML = lastMarkup;
 
-      var instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
+      let instance = ReactDOM.hydrate(<TestComponent name="x" />, element);
       expect(mountCount).toEqual(3);
       expect(element.innerHTML).toBe(lastMarkup);
 
@@ -341,7 +341,7 @@ describe('ReactDOMServer', () => {
     // want it to call focus() when hydrating because this can mess up existing
     // focus before the JS has loaded.
     it('should emit autofocus on the server but not focus() when hydrating', () => {
-      var element = document.createElement('div');
+      const element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(
         <input autoFocus={true} />,
       );
@@ -358,7 +358,7 @@ describe('ReactDOMServer', () => {
     });
 
     it('should not focus on either server or client with autofocus={false}', () => {
-      var element = document.createElement('div');
+      const element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(
         <input autoFocus={false} />,
       );
@@ -414,7 +414,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+      const response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span><div>inner text</div></span>');
     });
@@ -430,7 +430,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+      const response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('<span>hello world</span>');
     });
@@ -442,14 +442,14 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+      const response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
       expect(response).toBe('');
     });
 
     it('should only execute certain lifecycle methods', () => {
       function runTest() {
-        var lifecycle = [];
+        const lifecycle = [];
 
         class TestComponent extends React.Component {
           constructor(props) {
@@ -492,7 +492,7 @@ describe('ReactDOMServer', () => {
           }
         }
 
-        var response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
+        const response = ReactDOMServer.renderToStaticMarkup(<TestComponent />);
 
         expect(response).toBe('<span>Component name: TestComponent</span>');
         expect(lifecycle).toEqual([
@@ -523,7 +523,7 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-      var markup = ReactDOMServer.renderToString(<Component />);
+      const markup = ReactDOMServer.renderToString(<Component />);
       expect(markup).toContain('hello, world');
     });
 
@@ -542,7 +542,7 @@ describe('ReactDOMServer', () => {
           return <div>{this.state.text}</div>;
         }
       }
-      var markup = ReactDOMServer.renderToString(<Component />);
+      const markup = ReactDOMServer.renderToString(<Component />);
       expect(markup).toContain('hello, world');
     });
 
@@ -557,7 +557,7 @@ describe('ReactDOMServer', () => {
         }
       }
 
-      var markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToString(
         <Component text="hello, world" />,
       );
       expect(markup).toContain('hello, world');
@@ -594,7 +594,7 @@ describe('ReactDOMServer', () => {
         text: PropTypes.string,
       };
 
-      var markup = ReactDOMServer.renderToString(
+      const markup = ReactDOMServer.renderToString(
         <ContextProvider>
           <Component />
         </ContextProvider>,
@@ -661,7 +661,7 @@ describe('ReactDOMServer', () => {
       );
     }
 
-    var markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
+    const markup = ReactDOMServer.renderToStaticMarkup(<Foo />);
     expect(markup).toBe('<div>hello</div>');
     jest.runOnlyPendingTimers();
     if (__DEV__) {
@@ -694,7 +694,7 @@ describe('ReactDOMServer', () => {
           'This is a no-op.\n\nPlease check the code for the Baz component.',
       );
     }
-    var markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
+    const markup = ReactDOMServer.renderToStaticMarkup(<Baz />);
     expect(markup).toBe('<div></div>');
   });
 
@@ -776,7 +776,7 @@ describe('ReactDOMServer', () => {
   });
 
   it('should throw rendering portals on the server', () => {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     expect(() => {
       ReactDOMServer.renderToString(
         <div>{ReactDOM.createPortal(<div />, div)}</div>,
@@ -788,7 +788,7 @@ describe('ReactDOMServer', () => {
   });
 
   it('should throw rendering call/return on the server', () => {
-    var div = document.createElement('div');
+    const div = document.createElement('div');
     expect(() => {
       ReactDOMServer.renderToString(
         <div>{ReactCallReturn.unstable_createReturn(42)}</div>,
