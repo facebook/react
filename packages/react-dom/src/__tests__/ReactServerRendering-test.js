@@ -372,6 +372,28 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
     });
 
+    // Regression test for https://github.com/facebook/react/issues/11726
+    it('should not focus on either server or client with autofocus={false} even if there is a markup mismatch', () => {
+      spyOnDev(console, 'error');
+
+      var element = document.createElement('div');
+      element.innerHTML = ReactDOMServer.renderToString(
+        <button autoFocus={false}>server</button>,
+      );
+      expect(element.firstChild.autofocus).toBe(false);
+
+      element.firstChild.focus = jest.fn();
+      ReactDOM.hydrate(<button autoFocus={false}>client</button>, element);
+
+      expect(element.firstChild.focus).not.toHaveBeenCalled();
+      if (__DEV__) {
+        expect(console.error.calls.count()).toBe(1);
+        expect(console.error.calls.argsFor(0)[0]).toBe(
+          'Warning: Text content did not match. Server: "server" Client: "client"',
+        );
+      }
+    });
+
     it('should throw with silly args', () => {
       expect(
         ReactDOMServer.renderToString.bind(ReactDOMServer, {x: 123}),
