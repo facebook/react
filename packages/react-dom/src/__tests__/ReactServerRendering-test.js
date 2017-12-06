@@ -357,6 +357,7 @@ describe('ReactDOMServer', () => {
       expect(element.firstChild.focus).not.toHaveBeenCalled();
     });
 
+    // Regression test for https://github.com/facebook/react/issues/11726
     it('should not focus on either server or client with autofocus={false}', () => {
       var element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(
