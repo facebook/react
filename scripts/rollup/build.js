@@ -25,7 +25,12 @@ const codeFrame = require('babel-code-frame');
 const Wrappers = require('./wrappers');
 
 // Errors in promises should be fatal.
+let loggedErrors = new Set();
 process.on('unhandledRejection', err => {
+  if (loggedErrors.has(err)) {
+    // No need to print it twice.
+    process.exit(1);
+  }
   throw err;
 });
 
@@ -409,6 +414,7 @@ function handleRollupWarning(warning) {
 }
 
 function handleRollupError(error) {
+  loggedErrors.add(error);
   if (!error.code) {
     console.error(error);
     return;
