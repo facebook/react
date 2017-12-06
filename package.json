@@ -73,6 +73,7 @@
     "jest-runtime": "^21.3.0-beta.4",
     "merge-stream": "^1.0.0",
     "minimist": "^1.2.0",
+    "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",
     "object-assign": "^4.1.1",
     "platform": "^1.1.0",
@@ -93,7 +94,6 @@
     "through2": "^2.0.0",
     "tmp": "~0.0.28",
     "typescript": "~1.8.10",
-    "uuid": "^3.1.0",
     "yargs": "^6.3.0"
   },
   "devEngines": {
