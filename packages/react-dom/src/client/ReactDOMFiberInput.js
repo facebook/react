@@ -25,17 +25,17 @@ type InputWithWrapperState = HTMLInputElement & {
   },
 };
 
-var {
+const {
   getCurrentFiberOwnerName,
   getCurrentFiberStackAddendum,
 } = ReactDebugCurrentFiber;
-var didWarnValueDefaultValue = false;
-var didWarnCheckedDefaultChecked = false;
-var didWarnControlledToUncontrolled = false;
-var didWarnUncontrolledToControlled = false;
+let didWarnValueDefaultValue = false;
+let didWarnCheckedDefaultChecked = false;
+let didWarnControlledToUncontrolled = false;
+let didWarnUncontrolledToControlled = false;
 
 function isControlled(props) {
-  var usesChecked = props.type === 'checkbox' || props.type === 'radio';
+  const usesChecked = props.type === 'checkbox' || props.type === 'radio';
   return usesChecked ? props.checked != null : props.value != null;
 }
 
@@ -57,10 +57,10 @@ function isControlled(props) {
  */
 
 export function getHostProps(element: Element, props: Object) {
-  var node = ((element: any): InputWithWrapperState);
-  var checked = props.checked;
+  const node = ((element: any): InputWithWrapperState);
+  const checked = props.checked;
 
-  var hostProps = Object.assign({}, props, {
+  const hostProps = Object.assign({}, props, {
     defaultChecked: undefined,
     defaultValue: undefined,
     value: undefined,
@@ -116,8 +116,8 @@ export function initWrapperState(element: Element, props: Object) {
     }
   }
 
-  var node = ((element: any): InputWithWrapperState);
-  var defaultValue = props.defaultValue == null ? '' : props.defaultValue;
+  const node = ((element: any): InputWithWrapperState);
+  const defaultValue = props.defaultValue == null ? '' : props.defaultValue;
 
   node._wrapperState = {
     initialChecked:
@@ -130,17 +130,17 @@ export function initWrapperState(element: Element, props: Object) {
 }
 
 export function updateChecked(element: Element, props: Object) {
-  var node = ((element: any): InputWithWrapperState);
-  var checked = props.checked;
+  const node = ((element: any): InputWithWrapperState);
+  const checked = props.checked;
   if (checked != null) {
     DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
   }
 }
 
 export function updateWrapper(element: Element, props: Object) {
-  var node = ((element: any): InputWithWrapperState);
+  const node = ((element: any): InputWithWrapperState);
   if (__DEV__) {
-    var controlled = isControlled(props);
+    const controlled = isControlled(props);
 
     if (
       !node._wrapperState.controlled &&
@@ -178,7 +178,7 @@ export function updateWrapper(element: Element, props: Object) {
 
   updateChecked(element, props);
 
-  var value = getSafeValue(props.value);
+  const value = getSafeValue(props.value);
 
   if (value != null) {
     if (props.type === 'number') {
@@ -206,7 +206,7 @@ export function updateWrapper(element: Element, props: Object) {
 }
 
 export function postMountWrapper(element: Element, props: Object) {
-  var node = ((element: any): InputWithWrapperState);
+  const node = ((element: any): InputWithWrapperState);
 
   if (props.hasOwnProperty('value') || props.hasOwnProperty('defaultValue')) {
     // Do not assign value if it is already set. This prevents user text input
@@ -226,7 +226,7 @@ export function postMountWrapper(element: Element, props: Object) {
   // will sometimes influence the value of checked (even after detachment).
   // Reference: https://bugs.chromium.org/p/chromium/issues/detail?id=608416
   // We need to temporarily unset name to avoid disrupting radio button groups.
-  var name = node.name;
+  const name = node.name;
   if (name !== '') {
     node.name = '';
   }
@@ -238,15 +238,15 @@ export function postMountWrapper(element: Element, props: Object) {
 }
 
 export function restoreControlledState(element: Element, props: Object) {
-  var node = ((element: any): InputWithWrapperState);
+  const node = ((element: any): InputWithWrapperState);
   updateWrapper(node, props);
   updateNamedCousins(node, props);
 }
 
 function updateNamedCousins(rootNode, props) {
-  var name = props.name;
+  const name = props.name;
   if (props.type === 'radio' && name != null) {
-    var queryRoot: Element = rootNode;
+    let queryRoot: Element = rootNode;
 
     while (queryRoot.parentNode) {
       queryRoot = ((queryRoot.parentNode: any): Element);
@@ -259,12 +259,12 @@ function updateNamedCousins(rootNode, props) {
     // the input might not even be in a form. It might not even be in the
     // document. Let's just use the local `querySelectorAll` to ensure we don't
     // miss anything.
-    var group = queryRoot.querySelectorAll(
+    const group = queryRoot.querySelectorAll(
       'input[name=' + JSON.stringify('' + name) + '][type="radio"]',
     );
 
-    for (var i = 0; i < group.length; i++) {
-      var otherNode = ((group[i]: any): HTMLInputElement);
+    for (let i = 0; i < group.length; i++) {
+      const otherNode = ((group[i]: any): HTMLInputElement);
       if (otherNode === rootNode || otherNode.form !== rootNode.form) {
         continue;
       }
@@ -272,7 +272,7 @@ function updateNamedCousins(rootNode, props) {
       // and the same name are rendered into the same form (same as #1939).
       // That's probably okay; we don't support it just as we don't support
       // mixing React radio buttons with non-React ones.
-      var otherProps = getFiberCurrentPropsFromNode(otherNode);
+      const otherProps = getFiberCurrentPropsFromNode(otherNode);
       invariant(
         otherProps,
         'ReactDOMInput: Mixing React and non-React radio inputs with the ' +

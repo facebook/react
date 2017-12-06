@@ -12,7 +12,7 @@ import getEventModifierState from './getEventModifierState';
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var MouseEventInterface = {
+const MouseEventInterface = {
   screenX: null,
   screenY: null,
   clientX: null,

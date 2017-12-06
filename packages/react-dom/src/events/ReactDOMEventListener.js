@@ -13,8 +13,8 @@ import EventListener from 'fbjs/lib/EventListener';
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
 
-var CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
-var callbackBookkeepingPool = [];
+const CALLBACK_BOOKKEEPING_POOL_SIZE = 10;
+const callbackBookkeepingPool = [];
 
 /**
  * Find the deepest React component completely containing the root of the
@@ -63,19 +63,19 @@ function releaseTopLevelCallbackBookKeeping(instance) {
 }
 
 function handleTopLevelImpl(bookKeeping) {
-  var targetInst = bookKeeping.targetInst;
+  let targetInst = bookKeeping.targetInst;
 
   // Loop through the hierarchy, in case there's any nested components.
   // It's important that we build the array of ancestors before calling any
   // event handlers, because event handlers can modify the DOM, leading to
   // inconsistencies with ReactMount's node cache. See #1105.
-  var ancestor = targetInst;
+  let ancestor = targetInst;
   do {
     if (!ancestor) {
       bookKeeping.ancestors.push(ancestor);
       break;
     }
-    var root = findRootContainerNode(ancestor);
+    const root = findRootContainerNode(ancestor);
     if (!root) {
       break;
     }
@@ -83,7 +83,7 @@ function handleTopLevelImpl(bookKeeping) {
     ancestor = getClosestInstanceFromNode(root);
   } while (ancestor);
 
-  for (var i = 0; i < bookKeeping.ancestors.length; i++) {
+  for (let i = 0; i < bookKeeping.ancestors.length; i++) {
     targetInst = bookKeeping.ancestors[i];
     _handleTopLevel(
       bookKeeping.topLevelType,
@@ -157,8 +157,8 @@ export function dispatchEvent(topLevelType, nativeEvent) {
     return;
   }
 
-  var nativeEventTarget = getEventTarget(nativeEvent);
-  var targetInst = getClosestInstanceFromNode(nativeEventTarget);
+  const nativeEventTarget = getEventTarget(nativeEvent);
+  let targetInst = getClosestInstanceFromNode(nativeEventTarget);
   if (
     targetInst !== null &&
     typeof targetInst.tag === 'number' &&
@@ -171,7 +171,7 @@ export function dispatchEvent(topLevelType, nativeEvent) {
     targetInst = null;
   }
 
-  var bookKeeping = getTopLevelCallbackBookKeeping(
+  const bookKeeping = getTopLevelCallbackBookKeeping(
     topLevelType,
     nativeEvent,
     targetInst,

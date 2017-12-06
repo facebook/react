@@ -14,7 +14,7 @@ import getEventModifierState from './getEventModifierState';
  * @interface KeyboardEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-var KeyboardEventInterface = {
+const KeyboardEventInterface = {
   key: getEventKey,
   location: null,
   ctrlKey: null,
