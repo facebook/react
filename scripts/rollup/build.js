@@ -374,7 +374,7 @@ async function createBundle(bundle, bundleType) {
     const result = await rollup(rollupConfig);
     await result.write(rollupOutputOptions);
   } catch (error) {
-    console.log(`${chalk.bgRed.black(' FAILED ')} ${logKey}\n`);
+    console.log(`${chalk.bgRed.black(' OH NOES! ')} ${logKey}\n`);
     handleRollupError(error);
     throw error;
   }
