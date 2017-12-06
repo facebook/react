@@ -14,16 +14,11 @@ const fs = require('fs');
 const argv = require('minimist')(process.argv.slice(2));
 const Modules = require('./modules');
 const Bundles = require('./bundles');
+const Stats = require('./stats');
+const Sync = require('./sync');
 const sizes = require('./plugins/sizes-plugin');
 const useForks = require('./plugins/use-forks-plugin');
-const Stats = require('./stats');
 const extractErrorCodes = require('../error-codes/extract-errors');
-const {
-  syncReactDom,
-  syncReactNative,
-  syncReactNativeRT,
-  syncReactNativeCS,
-} = require('./sync').syncReactDom;
 const Packaging = require('./packaging');
 const {asyncCopyTo, asyncRimRaf} = require('./utils');
 const codeFrame = require('babel-code-frame');
@@ -51,8 +46,8 @@ const requestedBundleTypes = (argv.type || '')
 const requestedBundleNames = (argv._[0] || '')
   .split(',')
   .map(type => type.toLowerCase());
-const syncFbsource = argv['sync-fbsource'];
-const syncWww = argv['sync-www'];
+const syncFBSourcePath = argv['sync-fbsource'];
+const syncWWWPath = argv['sync-www'];
 const shouldExtractErrors = argv['extract-errors'];
 const errorCodeOpts = {
   errorMapFilePath: 'scripts/error-codes/codes.json',
@@ -461,12 +456,12 @@ async function buildEverything() {
   await Packaging.copyAllShims();
   await Packaging.prepareNpmPackages();
 
-  if (syncFbsource) {
-    await syncReactNative('build/react-native', syncFbsource);
-    await syncReactNativeRT('build/react-rt', syncFbsource);
-    await syncReactNativeCS('build/react-cs', syncFbsource);
-  } else if (syncWww) {
-    await syncReactDom('build/facebook-www', syncWww);
+  if (syncFBSourcePath) {
+    await Sync.syncReactNative('build/react-native', syncFBSourcePath);
+    await Sync.syncReactNativeRT('build/react-rt', syncFBSourcePath);
+    await Sync.syncReactNativeCS('build/react-cs', syncFBSourcePath);
+  } else if (syncWWWPath) {
+    await Sync.syncReactDom('build/facebook-www', syncWWWPath);
   }
 
   console.log(Stats.printResults());
