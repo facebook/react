@@ -149,10 +149,11 @@ describe('ReactStatelessComponent', () => {
     }).toThrowError(
       __DEV__
         ? 'Stateless function components cannot have refs.'
-        : // TODO: the different message in production seems like a bug.
-          // It happens because we don't save _owner in production for
-          // functional components. We should probably show a better message.
-          'Element ref was specified as a string (me) but no owner was set.',
+        : // It happens because we don't save _owner in production for
+          // functional components.
+          'Element ref was specified as a string (me) but no owner was set. ' +
+          "You may be adding a ref to a component that was not created inside a component's render method, or " +
+          'you have multiple copies of React loaded. (details: https://fb.me/react-refs-must-have-owner).',
     );
   });
 

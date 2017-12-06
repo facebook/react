@@ -392,9 +392,9 @@ describe('creating element with ref in constructor', () => {
     expect(function() {
       ReactTestUtils.renderIntoDocument(<RefTest />);
     }).toThrowError(
-      'Element ref was specified as a string (p) but no owner was ' +
-        'set. You may have multiple copies of React loaded. ' +
-        '(details: https://fb.me/react-refs-must-have-owner).',
+      'Element ref was specified as a string (p) but no owner was set. ' +
+        "You may be adding a ref to a component that was not created inside a component's render method, or " +
+        'you have multiple copies of React loaded. (details: https://fb.me/react-refs-must-have-owner).',
     );
   });
 });

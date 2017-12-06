@@ -148,7 +148,7 @@
   "146": "React Component in warnForMissingKey should have a _store. This error is likely caused by a bug in React. Please file an issue.",
   "147": "Missing owner for string ref %s. This error is likely caused by a bug in React. Please file an issue.",
   "148": "Expected ref to be a function or a string.",
-  "149": "Element ref was specified as a string (%s) but no owner was set. You may have multiple copies of React loaded. (details: https://fb.me/react-refs-must-have-owner).",
+  "149": "Element ref was specified as a string (%s) but no owner was set. You may be adding a ref to a component that was not created inside a component's render method, or you have multiple copies of React loaded. (details: https://fb.me/react-refs-must-have-owner).",
   "150": "An object is not an iterable. This error is likely caused by a bug in React. Please file an issue.",
   "151": "An iterable object provided no iterator.",
   "152": "%s(...): Nothing was returned from render. This usually means a return statement is missing. Or, to render nothing, return null.",
