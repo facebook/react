@@ -1,6 +1,6 @@
 'use strict';
 
-const {readdirSync, unlinkSync} = require('fs');
+const {existsSync, readdirSync, unlinkSync} = require('fs');
 const Bundles = require('./bundles');
 const {
   asyncCopyTo,
@@ -135,6 +135,10 @@ async function prepareNpmPackage(name) {
 }
 
 async function prepareNpmPackages() {
+  if (!existsSync('build/packages')) {
+    // We didn't build any npm packages.
+    return;
+  }
   const builtPackageFolders = readdirSync('build/packages').filter(
     dir => dir.charAt(0) !== '.'
   );
