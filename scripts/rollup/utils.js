@@ -1,60 +1,89 @@
 'use strict';
 
 const ncp = require('ncp').ncp;
-const join = require('path').join;
-const resolve = require('path').resolve;
+const path = require('path');
+const mkdirp = require('mkdirp');
+const rimraf = require('rimraf');
 const exec = require('child_process').exec;
 const targz = require('targz');
 
 function asyncCopyTo(from, to) {
-  return new Promise(_resolve => {
-    ncp(from, to, error => {
-      if (error) {
-        console.error(error);
-        process.exit(1);
-      }
-      _resolve();
-    });
-  });
-}
-
-function resolvePath(path) {
-  if (path[0] === '~') {
-    return join(process.env.HOME, path.slice(1));
-  } else {
-    return resolve(path);
-  }
+  return asyncMkDirP(path.dirname(to)).then(
+    () =>
+      new Promise((resolve, reject) => {
+        ncp(from, to, error => {
+          if (error) {
+            // Wrap to have a useful stack trace.
+            reject(new Error(error));
+            return;
+          }
+          resolve();
+        });
+      })
+  );
 }
 
 function asyncExecuteCommand(command) {
-  return new Promise(_resolve =>
+  return new Promise((resolve, reject) =>
     exec(command, (error, stdout) => {
-      if (!error) {
-        _resolve(stdout);
-      } else {
-        console.error(error);
-        process.exit(1);
+      if (error) {
+        reject(error);
+        return;
       }
+      resolve(stdout);
     })
   );
 }
 
 function asyncExtractTar(options) {
-  return new Promise(_resolve =>
+  return new Promise((resolve, reject) =>
     targz.decompress(options, error => {
-      if (!error) {
-        _resolve();
-      } else {
-        console.error(error);
-        process.exit(1);
+      if (error) {
+        reject(error);
+        return;
       }
+      resolve();
     })
   );
 }
 
+function asyncMkDirP(filepath) {
+  return new Promise((resolve, reject) =>
+    mkdirp(filepath, error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    })
+  );
+}
+
+function asyncRimRaf(filepath) {
+  return new Promise((resolve, reject) =>
+    rimraf(filepath, error => {
+      if (error) {
+        reject(error);
+        return;
+      }
+      resolve();
+    })
+  );
+}
+
+function resolvePath(filepath) {
+  if (filepath[0] === '~') {
+    return path.join(process.env.HOME, filepath.slice(1));
+  } else {
+    return path.resolve(filepath);
+  }
+}
+
 module.exports = {
-  asyncCopyTo: asyncCopyTo,
-  resolvePath: resolvePath,
-  asyncExecuteCommand: asyncExecuteCommand,
-  asyncExtractTar: asyncExtractTar,
+  asyncCopyTo,
+  resolvePath,
+  asyncExecuteCommand,
+  asyncExtractTar,
+  asyncMkDirP,
+  asyncRimRaf,
 };
