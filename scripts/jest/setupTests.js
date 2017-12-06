@@ -40,7 +40,7 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
   }
 
   expect.extend({
-    toWarnDev: require('./matchers/toWarnDev'),
+    ...require('./matchers/toWarnDev'),
   });
 
   ['error', 'warn'].forEach(methodName => {
