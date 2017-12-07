@@ -111,6 +111,30 @@ export const ATTRIBUTE_NAME_CHAR =
 
 export const ID_ATTRIBUTE_NAME = 'data-reactid';
 export const ROOT_ATTRIBUTE_NAME = 'data-reactroot';
+export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
+  '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
+);
+
+const illegalAttributeNameCache = {};
+const validatedAttributeNameCache = {};
+
+export function isAttributeNameSafe(attributeName) {
+  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
+    return true;
+  }
+  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
+    return false;
+  }
+  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
+    validatedAttributeNameCache[attributeName] = true;
+    return true;
+  }
+  illegalAttributeNameCache[attributeName] = true;
+  if (__DEV__) {
+    warning(false, 'Invalid attribute name: `%s`', attributeName);
+  }
+  return false;
+}
 
 /**
  * Map from property "standard name" to an object with info about how to set
