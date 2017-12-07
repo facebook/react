@@ -12,17 +12,20 @@ var EventListenerWWW = require('EventListener');
 import typeof * as EventListenerType from '../EventListener';
 import typeof * as EventListenerShimType from './EventListener-www';
 
-export function addEventListener(
+export function addEventBubbleListener(
   element: Element,
   eventType: string,
   listener: Function,
-  useCapture: boolean,
 ): void {
-  if (useCapture) {
-    EventListenerWWW.capture(element, eventType, listener);
-  } else {
-    EventListenerWWW.listen(element, eventType, listener);
-  }
+  EventListenerWWW.listen(element, eventType, listener);
+}
+
+export function addEventCaptureListener(
+  element: Element,
+  eventType: string,
+  listener: Function,
+): void {
+  EventListenerWWW.capture(element, eventType, listener);
 }
 
 // Flow magic to verify the exports of this file match the original version.

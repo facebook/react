@@ -7,11 +7,18 @@
  * @flow
  */
 
-export function addEventListener(
+export function addEventBubbleListener(
   element: Element,
   eventType: string,
   listener: Function,
-  useCapture: boolean,
 ): void {
-  element.addEventListener(eventType, listener, useCapture);
+  element.addEventListener(eventType, listener, false);
+}
+
+export function addEventCaptureListener(
+  element: Element,
+  eventType: string,
+  listener: Function,
+): void {
+  element.addEventListener(eventType, listener, true);
 }
