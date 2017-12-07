@@ -34,6 +34,8 @@ var babelOptions = {
     // into ReactART builds that include JSX.
     // TODO: I have not verified that this actually works.
     require.resolve('babel-plugin-transform-react-jsx-source'),
+
+    require.resolve('../babel/transform-prevent-infinite-loops'),
   ],
   retainLines: true,
 };
