@@ -39,6 +39,22 @@ if (process.env.REACT_CLASS_EQUIVALENCE_TEST) {
     global.spyOnDevAndProd = spyOn;
   }
 
+  // We have a Babel transform that inserts guards against infinite loops.
+  // If a loop runs for too many iterations, we throw an error and set this
+  // global variable. The global lets us detect an infinite loop even if
+  // the actual error object ends up being caught and ignored. An infinite
+  // loop must always fail the test!
+  env.beforeEach(() => {
+    global.infiniteLoopError = null;
+  });
+  env.afterEach(() => {
+    const error = global.infiniteLoopError;
+    global.infiniteLoopError = null;
+    if (error) {
+      throw error;
+    }
+  });
+
   ['error', 'warn'].forEach(methodName => {
     var oldMethod = console[methodName];
     var newMethod = function() {

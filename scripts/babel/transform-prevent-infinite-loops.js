@@ -18,44 +18,49 @@ const MAX_SOURCE_ITERATIONS = 1500;
 // For example, in the fuzz tester.
 const MAX_TEST_ITERATIONS = 5000;
 
-module.exports = ({types: t}) => ({
-  visitor: {
-    'WhileStatement|ForStatement|DoWhileStatement': (path, file) => {
-      const filename = file.file.opts.filename;
-      const MAX_ITERATIONS =
-        filename.indexOf('__tests__') === -1
-          ? MAX_SOURCE_ITERATIONS
-          : MAX_TEST_ITERATIONS;
-
-      // An iterator that is incremented with each iteration
-      const iterator = path.scope.parent.generateUidIdentifier('loopIt');
-      const iteratorInit = t.numericLiteral(0);
-      path.scope.parent.push({
-        id: iterator,
-        init: iteratorInit,
-      });
-      // If statement and throw error if it matches our criteria
-      const guard = t.ifStatement(
-        t.binaryExpression(
-          '>',
-          t.updateExpression('++', iterator, true),
-          t.numericLiteral(MAX_ITERATIONS)
-        ),
-        t.throwStatement(
-          t.newExpression(t.identifier('RangeError'), [
-            t.stringLiteral(
-              `Potential infinite loop: exceeded ${MAX_ITERATIONS} iterations.`
-            ),
-          ])
-        )
+module.exports = ({types: t, template}) => {
+  // We set a global so that we can later fail the test
+  // even if the error ends up being caught by the code.
+  const buildGuard = template(`
+    if (ITERATOR++ > MAX_ITERATIONS) {
+      global.infiniteLoopError = new RangeError(
+        'Potential infinite loop: exceeded ' +
+        MAX_ITERATIONS +
+        ' iterations.'
       );
-      // No block statment e.g. `while (1) 1;`
-      if (!path.get('body').isBlockStatement()) {
-        const statement = path.get('body').node;
-        path.get('body').replaceWith(t.blockStatement([guard, statement]));
-      } else {
-        path.get('body').unshiftContainer('body', guard);
-      }
+      throw global.infiniteLoopError;
+    }
+  `);
+
+  return {
+    visitor: {
+      'WhileStatement|ForStatement|DoWhileStatement': (path, file) => {
+        const filename = file.file.opts.filename;
+        const MAX_ITERATIONS =
+          filename.indexOf('__tests__') === -1
+            ? MAX_SOURCE_ITERATIONS
+            : MAX_TEST_ITERATIONS;
+
+        // An iterator that is incremented with each iteration
+        const iterator = path.scope.parent.generateUidIdentifier('loopIt');
+        const iteratorInit = t.numericLiteral(0);
+        path.scope.parent.push({
+          id: iterator,
+          init: iteratorInit,
+        });
+        // If statement and throw error if it matches our criteria
+        const guard = buildGuard({
+          ITERATOR: iterator,
+          MAX_ITERATIONS: t.numericLiteral(MAX_ITERATIONS),
+        });
+        // No block statment e.g. `while (1) 1;`
+        if (!path.get('body').isBlockStatement()) {
+          const statement = path.get('body').node;
+          path.get('body').replaceWith(t.blockStatement([guard, statement]));
+        } else {
+          path.get('body').unshiftContainer('body', guard);
+        }
+      },
     },
-  },
-});
+  };
+};
