@@ -16,9 +16,11 @@ function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');
 }
 
-function expectInvalidNestingWarning(shouldWarn, tagsList, warningsList = []) {
+function expectInvalidNestingWarning(tags, warnings = []) {
+  tags = [...tags];
+  warnings = [...warnings];
+
   let element = null;
-  const tags = [...tagsList];
   if (__DEV__) {
     console.error.calls.reset();
   }
@@ -29,18 +31,13 @@ function expectInvalidNestingWarning(shouldWarn, tagsList, warningsList = []) {
   ReactDOM.render(element, container);
 
   if (__DEV__) {
-    let warnings = warningsList;
-    if (shouldWarn) {
-      expect(console.error.calls.count()).toEqual(warningsList.length);
-      while (warnings.length) {
-        expect(
-          normalizeCodeLocInfo(
-            console.error.calls.argsFor(warnings.length - 1)[0],
-          ),
-        ).toContain(warnings.pop());
-      }
-    } else {
-      expect(console.error.calls.count()).toEqual(0);
+    expect(console.error.calls.count()).toEqual(warnings.length);
+    while (warnings.length) {
+      expect(
+        normalizeCodeLocInfo(
+          console.error.calls.argsFor(warnings.length - 1)[0],
+        ),
+      ).toContain(warnings.pop());
     }
   }
 }
@@ -48,50 +45,44 @@ function expectInvalidNestingWarning(shouldWarn, tagsList, warningsList = []) {
 describe('validateDOMNesting', () => {
   it('allows valid nestings', () => {
     spyOnDev(console, 'error');
-    expectInvalidNestingWarning(false, ['table', 'tbody', 'tr', 'td', 'b']);
-    expectInvalidNestingWarning(false, ['div', 'a', 'object', 'a']);
-    expectInvalidNestingWarning(false, ['div', 'p', 'button', 'p']);
-    expectInvalidNestingWarning(false, ['p', 'svg', 'foreignObject', 'p']);
-    expectInvalidNestingWarning(false, ['html', 'body', 'div']);
+    expectInvalidNestingWarning(['table', 'tbody', 'tr', 'td', 'b']);
+    expectInvalidNestingWarning(['div', 'a', 'object', 'a']);
+    expectInvalidNestingWarning(['div', 'p', 'button', 'p']);
+    expectInvalidNestingWarning(['p', 'svg', 'foreignObject', 'p']);
+    expectInvalidNestingWarning(['html', 'body', 'div']);
 
     // Invalid, but not changed by browser parsing so we allow them
-    expectInvalidNestingWarning(false, ['div', 'ul', 'ul', 'li']);
-    expectInvalidNestingWarning(false, ['div', 'label', 'div']);
-    expectInvalidNestingWarning(false, ['div', 'ul', 'li', 'section', 'li']);
-    expectInvalidNestingWarning(false, ['div', 'ul', 'li', 'dd', 'li']);
+    expectInvalidNestingWarning(['div', 'ul', 'ul', 'li']);
+    expectInvalidNestingWarning(['div', 'label', 'div']);
+    expectInvalidNestingWarning(['div', 'ul', 'li', 'section', 'li']);
+    expectInvalidNestingWarning(['div', 'ul', 'li', 'dd', 'li']);
   });
 
   it('prevents problematic nestings', () => {
     spyOnDev(console, 'error');
     expectInvalidNestingWarning(
-      true,
       ['body', 'datalist', 'option'],
       [
         'render(): Rendering components directly into document.body is discouraged',
       ],
     );
     expectInvalidNestingWarning(
-      true,
       ['table', 'tr'],
       ['validateDOMNesting(...): <tr> cannot appear as a child of <table>'],
     );
     expectInvalidNestingWarning(
-      true,
       ['p', 'p'],
       ['validateDOMNesting(...): <p> cannot appear as a descendant of <p>'],
     );
     expectInvalidNestingWarning(
-      true,
       ['div', 'ul', 'li', 'div', 'li'],
       ['validateDOMNesting(...): <li> cannot appear as a descendant of <li>'],
     );
     expectInvalidNestingWarning(
-      true,
       ['div', 'html'],
       ['validateDOMNesting(...): <html> cannot appear as a child of <div>'],
     );
     expectInvalidNestingWarning(
-      true,
       ['body', 'body'],
       [
         'render(): Rendering components directly into document.body is discouraged',
@@ -99,7 +90,6 @@ describe('validateDOMNesting', () => {
       ],
     );
     expectInvalidNestingWarning(
-      true,
       ['svg', 'foreignObject', 'body', 'p'],
       [
         'validateDOMNesting(...): <body> cannot appear as a child of <foreignObject>',
@@ -107,12 +97,10 @@ describe('validateDOMNesting', () => {
       ],
     );
     expectInvalidNestingWarning(
-      true,
       ['a', 'a'],
       ['validateDOMNesting(...): <a> cannot appear as a descendant of <a>'],
     );
     expectInvalidNestingWarning(
-      true,
       ['form', 'form'],
       [
         'validateDOMNesting(...): <form> cannot appear as a descendant of <form>',
