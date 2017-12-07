@@ -24,3 +24,11 @@ declare module 'ReactFiberErrorDialog' {
     showErrorDialog: (error: mixed) => boolean,
   };
 }
+
+// EventListener www fork
+declare module 'EventListener' {
+  declare module.exports: {
+    listen: (target: Element, type: string, callback: Function) => mixed,
+    capture: (target: Element, type: string, callback: Function) => mixed,
+  };
+}
