@@ -90,7 +90,7 @@ export function createMarkupForProperty(name, value) {
       propertyInfo.hasBooleanValue ||
       (propertyInfo.hasOverloadedBooleanValue && value === true)
     ) {
-      return attributeName;
+      return attributeName + '=""';
     } else if (
       typeof value !== 'boolean' ||
       shouldAttributeAcceptBooleanValue(name)
