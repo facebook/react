@@ -16,11 +16,11 @@ const MAX_ITERATIONS = 2000;
 
 module.exports = ({types: t}) => ({
   visitor: {
-    'WhileStatement|ForStatement|DoWhileStatement': p => {
+    'WhileStatement|ForStatement|DoWhileStatement': path => {
       // An iterator that is incremented with each iteration
-      const iterator = p.scope.parent.generateUidIdentifier('loopIt');
+      const iterator = path.scope.parent.generateUidIdentifier('loopIt');
       const iteratorInit = t.numericLiteral(0);
-      p.scope.parent.push({
+      path.scope.parent.push({
         id: iterator,
         init: iteratorInit,
       });
@@ -40,11 +40,11 @@ module.exports = ({types: t}) => ({
         )
       );
       // No block statment e.g. `while (1) 1;`
-      if (!p.get('body').isBlockStatement()) {
-        const statement = p.get('body').node;
-        p.get('body').replaceWith(t.blockStatement([guard, statement]));
+      if (!path.get('body').isBlockStatement()) {
+        const statement = path.get('body').node;
+        path.get('body').replaceWith(t.blockStatement([guard, statement]));
       } else {
-        p.get('body').unshiftContainer('body', guard);
+        path.get('body').unshiftContainer('body', guard);
       }
     },
   },
