@@ -9,20 +9,14 @@
 
 'use strict';
 
+// This should be reasonable for all loops that happen in our tests.
+// Note that if the number is too large, the tests will take too long to fail
+// for this to be useful (each individual test case might hit an infinite loop).
+const MAX_ITERATIONS = 2000;
+
 module.exports = ({types: t}) => ({
   visitor: {
     'WhileStatement|ForStatement|DoWhileStatement': p => {
-      // A variable holding when the loop was started
-      const loopStart = p.scope.parent.generateUidIdentifier('loopStart');
-      const loopStartInit = t.callExpression(
-        t.memberExpression(t.identifier('Date'), t.identifier('now')),
-        []
-      );
-      p.scope.parent.push({
-        id: loopStart,
-        init: loopStartInit,
-      });
-
       // An iterator that is incremented with each iteration
       const iterator = p.scope.parent.generateUidIdentifier('loopIt');
       const iteratorInit = t.numericLiteral(0);
@@ -30,57 +24,21 @@ module.exports = ({types: t}) => ({
         id: iterator,
         init: iteratorInit,
       });
-
-      // setTimeout to protect against breaking async and generator funcs.
-      p.insertBefore(
-        t.expressionStatement(
-          t.callExpression(t.identifier('setTimeout'), [
-            t.functionExpression(
-              null,
-              [],
-              t.blockStatement([
-                t.expressionStatement(
-                  t.assignmentExpression(
-                    '=',
-                    loopStart,
-                    t.identifier('Infinity')
-                  )
-                ),
-              ])
-            ),
-          ])
-        )
-      );
-
       // If statement and throw error if it matches our criteria
       const guard = t.ifStatement(
-        t.logicalExpression(
-          '&&',
-          t.binaryExpression(
-            '>',
-            t.updateExpression('++', iterator, true),
-            t.numericLiteral(10000) // iterations
-          ),
-          t.binaryExpression(
-            '>',
-            t.binaryExpression(
-              '-',
-              t.callExpression(
-                t.memberExpression(t.identifier('Date'), t.identifier('now')),
-                []
-              ),
-              loopStart
-            ),
-            t.numericLiteral(5000) // ms
-          )
+        t.binaryExpression(
+          '>',
+          t.updateExpression('++', iterator, true),
+          t.numericLiteral(MAX_ITERATIONS)
         ),
         t.throwStatement(
           t.newExpression(t.identifier('RangeError'), [
-            t.stringLiteral('Potential infinite loop.'),
+            t.stringLiteral(
+              `Potential infinite loop: exceeded ${MAX_ITERATIONS} iterations.`
+            ),
           ])
         )
       );
-
       // No block statment e.g. `while (1) 1;`
       if (!p.get('body').isBlockStatement()) {
         const statement = p.get('body').node;
