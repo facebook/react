@@ -51,6 +51,7 @@ const requestedBundleTypes = (argv.type || '')
 const requestedBundleNames = (argv._[0] || '')
   .split(',')
   .map(type => type.toLowerCase());
+const forcePrettyOutput = argv['pretty'];
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
 const shouldExtractErrors = argv['extract-errors'];
@@ -191,7 +192,7 @@ function getPlugins(
   const isInGlobalScope = bundleType === UMD_DEV || bundleType === UMD_PROD;
   const isFBBundle = bundleType === FB_DEV || bundleType === FB_PROD;
   const isRNBundle = bundleType === RN_DEV || bundleType === RN_PROD;
-  const shouldStayReadable = isFBBundle || isRNBundle;
+  const shouldStayReadable = isFBBundle || isRNBundle || forcePrettyOutput;
   return [
     // Extract error codes from invariant() messages into a file.
     shouldExtractErrors && {
@@ -471,7 +472,9 @@ async function buildEverything() {
   }
 
   console.log(Stats.printResults());
-  Stats.saveResults();
+  if (!forcePrettyOutput) {
+    Stats.saveResults();
+  }
 
   if (shouldExtractErrors) {
     console.warn(
