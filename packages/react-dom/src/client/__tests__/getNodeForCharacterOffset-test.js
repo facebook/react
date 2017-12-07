@@ -9,74 +9,70 @@
 
 'use strict';
 
-// TODO: can we express this test with only public API?
-var getNodeForCharacterOffset = require('../getNodeForCharacterOffset').default;
-
-// Create node from HTML string
-function createNode(html) {
-  var node = (getTestDocument() || document).createElement('div');
-  node.innerHTML = html;
-  return node;
-}
-
-function getTestDocument(markup) {
-  var doc = document.implementation.createHTMLDocument('');
-  doc.open();
-  doc.write(
-    markup ||
-      '<!doctype html><html><meta charset=utf-8><title>test doc</title>',
-  );
-  doc.close();
-  return doc;
-}
-
-// Check getNodeForCharacterOffset return value matches expected result.
-function expectNodeOffset(result, textContent, nodeOffset) {
-  expect(result.node.textContent).toBe(textContent);
-  expect(result.offset).toBe(nodeOffset);
-}
-
 describe('getNodeForCharacterOffset', () => {
-  it('should handle siblings', () => {
-    var node = createNode('<i>123</i><i>456</i><i>789</i>');
+  var React;
+  var ReactDOM;
 
-    expectNodeOffset(getNodeForCharacterOffset(node, 0), '123', 0);
-    expectNodeOffset(getNodeForCharacterOffset(node, 4), '456', 1);
+  beforeEach(() => {
+    React = require('react');
+    ReactDOM = require('react-dom');
   });
 
-  it('should handle trailing chars', () => {
-    var node = createNode('<i>123</i><i>456</i><i>789</i>');
+  it('should re-render an input with the same selection', done => {
+    const container = document.createElement('div');
+    let node, component;
+    document.body.appendChild(container);
 
-    expectNodeOffset(getNodeForCharacterOffset(node, 3), '123', 3);
-    expectNodeOffset(getNodeForCharacterOffset(node, 9), '789', 3);
-  });
+    class InputComponent extends React.Component {
+      constructor(props) {
+        super(props);
 
-  it('should handle trees', () => {
-    var node = createNode(
-      '<i>' +
-        '<i>1</i>' +
-        '<i>' +
-        '<i>' +
-        '<i>2</i>' +
-        '<i></i>' +
-        '</i>' +
-        '</i>' +
-        '<i>' +
-        '3' +
-        '<i>45</i>' +
-        '</i>' +
-        '</i>',
-    );
+        this.state = {
+          oneFirst: true,
+          oneValue: 'foo',
+          twoValue: 'foo',
+        };
+      }
 
-    expectNodeOffset(getNodeForCharacterOffset(node, 3), '3', 1);
-    expectNodeOffset(getNodeForCharacterOffset(node, 5), '45', 2);
-    expect(getNodeForCharacterOffset(node, 10)).toBeUndefined();
-  });
+      componentWillMount() {
+        component = this;
+      }
 
-  it('should handle non-existent offset', () => {
-    var node = createNode('<i>123</i>');
+      handleChange(e) {
+        this.setState({value: e.target.value});
+      }
 
-    expect(getNodeForCharacterOffset(node, -1)).toBeUndefined();
-    expect(getNodeForCharacterOffset(node, 4)).toBeUndefined();
+      renderForms() {
+        if (this.state.oneFirst) {
+          return [
+            <input
+              key="1"
+              value={this.state.oneValue}
+              ref={e => (node = e)}
+              readOnly={true}
+            />,
+            <input key="2" value={this.state.twoValue} readOnly={true} />,
+          ];
+        } else {
+          return [
+            <input key="2" value={this.state.twoValue} readOnly={true} />,
+            <input key="1" value={this.state.oneValue} readOnly={true} />,
+          ];
+        }
+      }
+
+      render() {
+        return <form>{this.renderForms()}</form>;
+      }
+    }
+
+    ReactDOM.render(<InputComponent />, container);
+
+    node.focus();
+    node.setSelectionRange(0, 1);
+
+    component.setState({oneFirst: false}, () => {
+      done();
+    });
   });
 });
