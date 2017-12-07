@@ -9,12 +9,21 @@
 
 const lintOnFiles = require('../eslint');
 const listChangedFiles = require('../shared/listChangedFiles');
+const judgeJSFilesVersion = require('../shared/judgeJSFilesVersion');
 
 const changedFiles = [...listChangedFiles()];
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
+const {es5Files, es6Files} = judgeJSFilesVersion(jsFiles);
 
-const report = lintOnFiles(jsFiles);
-if (report.errorCount > 0 || getSourceCodeWarnings(report)) {
+const es6Report = lintOnFiles({isES6: true, filePatterns: es6Files});
+const es5Report = lintOnFiles({isES6: false, filePatterns: es5Files});
+
+if (
+  es6Report.errorCount > 0 ||
+  getSourceCodeWarnings(es6Report) ||
+  es5Report.errorCount > 0 ||
+  getSourceCodeWarnings(es5Report)
+) {
   console.log('Lint failed for changed files.');
   process.exit(1);
 } else {

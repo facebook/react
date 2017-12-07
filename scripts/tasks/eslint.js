@@ -8,8 +8,17 @@
 'use strict';
 
 const lintOnFiles = require('../eslint');
-const report = lintOnFiles(['.']);
-if (report.errorCount > 0 || report.warningCount > 0) {
+const {es5Path, es6Path} = require('../shared/esPath');
+
+const es6Report = lintOnFiles({isES6: true, filePatterns: es6Path});
+const es5Report = lintOnFiles({isES6: false, filePatterns: es5Path});
+
+if (
+  es6Report.errorCount > 0 ||
+  es6Report.warningCount > 0 ||
+  es5Report.errorCount > 0 ||
+  es5Report.warningCount
+) {
   console.log('Lint failed.');
   process.exit(1);
 } else {

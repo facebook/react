@@ -8,10 +8,14 @@
 'use strict';
 
 const CLIEngine = require('eslint').CLIEngine;
-const cli = new CLIEngine();
-const formatter = cli.getFormatter();
+const eslintPath = './scripts/eslint';
 
-module.exports = function lintOnFiles(filePatterns) {
+module.exports = function lintOnFiles({isES6, filePatterns}) {
+  const configFile = isES6
+    ? `${eslintPath}/es6Config.js`
+    : `${eslintPath}/es5Config.js`;
+  const cli = new CLIEngine({configFile});
+  const formatter = cli.getFormatter();
   const report = cli.executeOnFiles(filePatterns);
   const formattedResults = formatter(report.results);
   console.log(formattedResults);
