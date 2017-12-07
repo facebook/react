@@ -8,7 +8,6 @@
 import {batchedUpdates} from 'events/ReactGenericBatching';
 import {isFiberMounted} from 'react-reconciler/reflection';
 import {HostRoot} from 'shared/ReactTypeOfWork';
-import EventListener from 'fbjs/lib/EventListener';
 
 import getEventTarget from './getEventTarget';
 import {getClosestInstanceFromNode} from '../client/ReactDOMComponentTree';
@@ -124,10 +123,10 @@ export function trapBubbledEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
-  return EventListener.listen(
-    element,
+  element.addEventListener(
     handlerBaseName,
     dispatchEvent.bind(null, topLevelType),
+    false,
   );
 }
 
@@ -145,10 +144,10 @@ export function trapCapturedEvent(topLevelType, handlerBaseName, element) {
   if (!element) {
     return null;
   }
-  return EventListener.capture(
-    element,
+  element.addEventListener(
     handlerBaseName,
     dispatchEvent.bind(null, topLevelType),
+    true,
   );
 }
 
