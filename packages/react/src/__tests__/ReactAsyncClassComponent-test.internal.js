@@ -99,6 +99,73 @@ describe('ReactAsyncClassComponent', () => {
       ]);
     });
 
+    it('should invoke precommit lifecycle methods once for legacy components', () => {
+      let log = [];
+      let shouldComponentUpdate = false;
+      class ClassComponent extends React.legacy_Component {
+        state = {};
+        constructor(props) {
+          super(props);
+          log.push('constructor');
+        }
+        componentDidMount() {
+          log.push('componentDidMount');
+        }
+        componentDidUpdate() {
+          log.push('componentDidUpdate');
+        }
+        componentWillMount() {
+          log.push('componentWillMount');
+        }
+        componentWillReceiveProps() {
+          log.push('componentWillReceiveProps');
+        }
+        componentWillUnmount() {
+          log.push('componentWillUnmount');
+        }
+        componentWillUpdate() {
+          log.push('componentWillUpdate');
+        }
+        shouldComponentUpdate() {
+          log.push('shouldComponentUpdate');
+          return shouldComponentUpdate;
+        }
+        render() {
+          log.push('render');
+          return null;
+        }
+      }
+
+      const component = ReactTestRenderer.create(<ClassComponent />);
+      expect(log).toEqual([
+        'constructor',
+        'componentWillMount',
+        'render',
+        'componentDidMount',
+      ]);
+
+      log = [];
+      shouldComponentUpdate = true;
+
+      component.update(<ClassComponent />);
+      expect(log).toEqual([
+        'componentWillReceiveProps',
+        'shouldComponentUpdate',
+        'componentWillUpdate',
+        'render',
+        'componentDidUpdate',
+      ]);
+
+      log = [];
+      shouldComponentUpdate = false;
+
+      component.update(<ClassComponent />);
+      expect(log).toEqual([
+        'componentWillReceiveProps',
+        'shouldComponentUpdate',
+      ]);
+    });
+
     it('should invoke setState callbacks twice', () => {
       class ClassComponent extends React.Component {
         state = {
@@ -123,6 +190,32 @@ describe('ReactAsyncClassComponent', () => {
       // Callback should be invoked twice
       expect(setStateCount).toBe(2);
       // But each time `state` should be the previous value
+      expect(instance.state.count).toBe(2);
+    });
+
+    it('should invoke setState callbacks once for legacy components', () => {
+      class ClassComponent extends React.legacy_Component {
+        state = {
+          count: 1,
+        };
+        render() {
+          return null;
+        }
+      }
+
+      let setStateCount = 0;
+
+      const rendered = ReactTestRenderer.create(<ClassComponent />);
+      const instance = rendered.getInstance();
+      instance.setState(state => {
+        setStateCount++;
+        return {
+          count: state.count + 1,
+        };
+      });
+
+      // Callback should be invoked once
+      expect(setStateCount).toBe(1);
       expect(instance.state.count).toBe(2);
     });
   });

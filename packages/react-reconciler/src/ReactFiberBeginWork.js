@@ -223,7 +223,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         // We do this here rather than inside of ReactFiberClassComponent,
         // To more realistically simulate the interruption behavior of async,
         // Which would never call componentWillMount() twice on the same instance.
-        if (debugRenderPhaseSideEffects) {
+        if (
+          debugRenderPhaseSideEffects &&
+          !workInProgress.type.prototype
+            .unstable_ignoreDebugRenderPhaseSideEffects
+        ) {
           constructClassInstance(workInProgress, workInProgress.pendingProps);
           mountClassInstance(workInProgress, renderExpirationTime);
         }
@@ -275,12 +279,20 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (__DEV__) {
       ReactDebugCurrentFiber.setCurrentPhase('render');
       nextChildren = instance.render();
-      if (debugRenderPhaseSideEffects) {
+      if (
+        debugRenderPhaseSideEffects &&
+        !workInProgress.type.prototype
+          .unstable_ignoreDebugRenderPhaseSideEffects
+      ) {
         instance.render();
       }
       ReactDebugCurrentFiber.setCurrentPhase(null);
     } else {
-      if (debugRenderPhaseSideEffects) {
+      if (
+        debugRenderPhaseSideEffects &&
+        !workInProgress.type.prototype
+          .unstable_ignoreDebugRenderPhaseSideEffects
+      ) {
         instance.render();
       }
       nextChildren = instance.render();

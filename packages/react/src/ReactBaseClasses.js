@@ -18,8 +18,7 @@ function Component(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
-  // We initialize the default updater but the real one gets injected by the
-  // renderer.
+  // Initialize the default updater; the real one gets injected by the renderer.
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
@@ -117,6 +116,20 @@ if (__DEV__) {
   }
 }
 
+function ComponentDummy() {}
+ComponentDummy.prototype = Component.prototype;
+
+function configurePrototype(ComponentSubclass, prototypeProperties) {
+  const prototype = (ComponentSubclass.prototype = new ComponentDummy());
+  prototype.constructor = ComponentSubclass;
+
+  // Avoid an extra prototype jump for these methods.
+  Object.assign(prototype, Component.prototype);
+
+  // Mixin additional properties
+  Object.assign(prototype, prototypeProperties);
+}
+
 /**
  * Base class helpers for the updating state of a component.
  */
@@ -125,36 +138,55 @@ function PureComponent(props, context, updater) {
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
-  // We initialize the default updater but the real one gets injected by the
-  // renderer.
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-function ComponentDummy() {}
-ComponentDummy.prototype = Component.prototype;
-const pureComponentPrototype = (PureComponent.prototype = new ComponentDummy());
-pureComponentPrototype.constructor = PureComponent;
-// Avoid an extra prototype jump for these methods.
-Object.assign(pureComponentPrototype, Component.prototype);
-pureComponentPrototype.isPureReactComponent = true;
+configurePrototype(PureComponent, {isPureReactComponent: true});
 
 function AsyncComponent(props, context, updater) {
   // Duplicated from Component.
   this.props = props;
   this.context = context;
   this.refs = emptyObject;
-  // We initialize the default updater but the real one gets injected by the
-  // renderer.
   this.updater = updater || ReactNoopUpdateQueue;
 }
 
-const asyncComponentPrototype = (AsyncComponent.prototype = new ComponentDummy());
-asyncComponentPrototype.constructor = AsyncComponent;
-// Avoid an extra prototype jump for these methods.
-Object.assign(asyncComponentPrototype, Component.prototype);
-asyncComponentPrototype.unstable_isAsyncReactComponent = true;
-asyncComponentPrototype.render = function() {
-  return this.props.children;
-};
+configurePrototype(AsyncComponent, {
+  unstable_isAsyncReactComponent: true,
+  render: function() {
+    return this.props.children;
+  },
+});
 
-export {Component, PureComponent, AsyncComponent};
+function LegacyComponent(props, context, updater) {
+  // Duplicated from Component.
+  this.props = props;
+  this.context = context;
+  this.refs = emptyObject;
+  this.updater = updater || ReactNoopUpdateQueue;
+}
+
+configurePrototype(LegacyComponent, {
+  unstable_ignoreDebugRenderPhaseSideEffects: true,
+});
+
+function LegacyPureComponent(props, context, updater) {
+  // Duplicated from Component.
+  this.props = props;
+  this.context = context;
+  this.refs = emptyObject;
+  this.updater = updater || ReactNoopUpdateQueue;
+}
+
+configurePrototype(LegacyPureComponent, {
+  unstable_ignoreDebugRenderPhaseSideEffects: true,
+  unstable_isAsyncReactComponent: true,
+});
+
+export {
+  Component,
+  LegacyComponent,
+  LegacyPureComponent,
+  PureComponent,
+  AsyncComponent,
+};

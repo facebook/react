@@ -175,7 +175,11 @@ export default function(
       stopPhaseTimer();
 
       // Simulate an async bailout/interruption by invoking lifecycle twice.
-      if (debugRenderPhaseSideEffects) {
+      if (
+        debugRenderPhaseSideEffects &&
+        !workInProgress.type.prototype
+          .unstable_ignoreDebugRenderPhaseSideEffects
+      ) {
         instance.shouldComponentUpdate(newProps, newState, newContext);
       }
 
@@ -413,7 +417,10 @@ export default function(
     stopPhaseTimer();
 
     // Simulate an async bailout/interruption by invoking lifecycle twice.
-    if (debugRenderPhaseSideEffects) {
+    if (
+      debugRenderPhaseSideEffects &&
+      !workInProgress.type.prototype.unstable_ignoreDebugRenderPhaseSideEffects
+    ) {
       instance.componentWillReceiveProps(newProps, newContext);
     }
 
@@ -677,7 +684,11 @@ export default function(
         stopPhaseTimer();
 
         // Simulate an async bailout/interruption by invoking lifecycle twice.
-        if (debugRenderPhaseSideEffects) {
+        if (
+          debugRenderPhaseSideEffects &&
+          !workInProgress.type.prototype
+            .unstable_ignoreDebugRenderPhaseSideEffects
+        ) {
           instance.componentWillUpdate(newProps, newState, newContext);
         }
       }
