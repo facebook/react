@@ -18,7 +18,7 @@ function normalizeCodeLocInfo(str) {
 
 function expectInvalidNestingWarning(shouldWarn, tagsList, warningsList = []) {
   let element = null;
-  let tags = tagsList;
+  const tags = [...tagsList];
   if (__DEV__) {
     console.error.calls.reset();
   }
