@@ -24,7 +24,11 @@ import setTextContent from './setTextContent';
 import {listenTo, trapBubbledEvent} from '../events/ReactBrowserEventEmitter';
 import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
-import {getPropertyInfo, shouldSetAttribute} from '../shared/DOMProperty';
+import {
+  getPropertyInfo,
+  shouldSkipAttribute,
+  shouldTreatAttributeValueAsNull,
+} from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
 import isCustomComponent from '../shared/isCustomComponent';
@@ -314,13 +318,13 @@ function setInitialDOMProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (isCustomComponentTag) {
-      DOMPropertyOperations.setValueForAttribute(domElement, propKey, nextProp);
     } else if (nextProp != null) {
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertently setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, nextProp);
+      DOMPropertyOperations.setValueForProperty(
+        domElement,
+        propKey,
+        nextProp,
+        isCustomComponentTag,
+      );
     }
   }
 }
@@ -341,23 +345,13 @@ function updateDOMProperties(
       setInnerHTML(domElement, propValue);
     } else if (propKey === CHILDREN) {
       setTextContent(domElement, propValue);
-    } else if (isCustomComponentTag) {
-      if (propValue != null) {
-        DOMPropertyOperations.setValueForAttribute(
-          domElement,
-          propKey,
-          propValue,
-        );
-      } else {
-        DOMPropertyOperations.deleteValueForAttribute(domElement, propKey);
-      }
-    } else if (propValue != null) {
-      DOMPropertyOperations.setValueForProperty(domElement, propKey, propValue);
     } else {
-      // If we're updating to null or undefined, we should remove the property
-      // from the DOM node instead of inadvertently setting to a string. This
-      // brings us in line with the same behavior we have on initial render.
-      DOMPropertyOperations.deleteValueForProperty(domElement, propKey);
+      DOMPropertyOperations.setValueForProperty(
+        domElement,
+        propKey,
+        propValue,
+        isCustomComponentTag,
+      );
     }
   }
 }
@@ -965,7 +959,11 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (__DEV__) {
+    } else if (
+      __DEV__ &&
+      // Convince Flow we've calculated it (it's DEV-only in this method.)
+      typeof isCustomComponentTag === 'boolean'
+    ) {
       // Validate that the properties correspond to their expected values.
       let serverValue;
       let propertyInfo;
@@ -1010,7 +1008,14 @@ export function diffHydratedProperties(
         if (nextProp !== serverValue) {
           warnForPropDifference(propKey, serverValue, nextProp);
         }
-      } else if (shouldSetAttribute(propKey, nextProp)) {
+      } else if (
+        !shouldSkipAttribute(propKey, isCustomComponentTag) &&
+        !shouldTreatAttributeValueAsNull(
+          propKey,
+          nextProp,
+          isCustomComponentTag,
+        )
+      ) {
         if ((propertyInfo = getPropertyInfo(propKey))) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);

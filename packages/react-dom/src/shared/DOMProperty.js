@@ -3,9 +3,23 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import warning from 'fbjs/lib/warning';
+
+type PropertyInfo = {|
+  attributeName: string,
+  attributeNamespace: string | null,
+  propertyName: string,
+  mustUseProperty: boolean,
+  hasBooleanValue: boolean,
+  hasNumericValue: boolean,
+  hasPositiveNumericValue: boolean,
+  hasOverloadedBooleanValue: boolean,
+  hasStringBooleanValue: boolean,
+|};
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
@@ -54,7 +68,7 @@ function injectDOMPropertyConfig(domPropertyConfig) {
     const lowerCased = propName.toLowerCase();
     const propConfig = Properties[propName];
 
-    const propertyInfo = {
+    const propertyInfo: PropertyInfo = {
       attributeName: lowerCased,
       attributeNamespace: null,
       propertyName: propName,
@@ -118,7 +132,7 @@ export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
 const illegalAttributeNameCache = {};
 const validatedAttributeNameCache = {};
 
-export function isAttributeNameSafe(attributeName) {
+export function isAttributeNameSafe(attributeName: string): boolean {
   if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
     return true;
   }
@@ -163,12 +177,14 @@ export function isAttributeNameSafe(attributeName) {
  */
 export const properties = {};
 
-/**
- * Checks whether a property name is a writeable attribute.
- * @method
- */
-export function shouldSetAttribute(name, value) {
+export function shouldSkipAttribute(
+  name: string,
+  isCustomComponentTag: boolean,
+): boolean {
   if (isReservedProp(name)) {
+    return true;
+  }
+  if (isCustomComponentTag) {
     return false;
   }
   if (
@@ -176,43 +192,69 @@ export function shouldSetAttribute(name, value) {
     (name[0] === 'o' || name[0] === 'O') &&
     (name[1] === 'n' || name[1] === 'N')
   ) {
+    return true;
+  }
+  return false;
+}
+
+export function isBadlyTypedAttributeValue(
+  name: string,
+  value: mixed,
+  isCustomComponentTag: boolean,
+): boolean {
+  if (isReservedProp(name)) {
     return false;
   }
-  if (value === null) {
-    return true;
-  }
   switch (typeof value) {
-    case 'boolean':
-      return shouldAttributeAcceptBooleanValue(name);
-    case 'undefined':
-    case 'number':
-    case 'string':
-    case 'object':
+    case 'function':
+    // $FlowIssue symbol is perfectly valid here
+    case 'symbol': // eslint-disable-line
       return true;
+    case 'boolean':
+      break;
     default:
-      // function, symbol
       return false;
   }
-}
-
-export function getPropertyInfo(name) {
-  return properties.hasOwnProperty(name) ? properties[name] : null;
-}
-
-export function shouldAttributeAcceptBooleanValue(name) {
-  if (isReservedProp(name)) {
-    return true;
+  if (isCustomComponentTag) {
+    return false;
   }
   let propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
-    return (
+    return !(
       propertyInfo.hasBooleanValue ||
       propertyInfo.hasStringBooleanValue ||
       propertyInfo.hasOverloadedBooleanValue
     );
   }
   const prefix = name.toLowerCase().slice(0, 5);
-  return prefix === 'data-' || prefix === 'aria-';
+  return prefix !== 'data-' && prefix !== 'aria-';
+}
+
+export function shouldTreatAttributeValueAsNull(
+  name: string,
+  value: mixed,
+  isCustomComponentTag: boolean,
+): boolean {
+  if (value === null || typeof value === 'undefined') {
+    return true;
+  }
+  const propertyInfo = getPropertyInfo(name);
+  if (propertyInfo) {
+    if (propertyInfo.hasBooleanValue) {
+      return !value;
+    } else if (propertyInfo.hasOverloadedBooleanValue) {
+      return value === false;
+    } else if (propertyInfo.hasNumericValue && isNaN(value)) {
+      return true;
+    } else if (propertyInfo.hasPositiveNumericValue && (value: any) < 1) {
+      return true;
+    }
+  }
+  return isBadlyTypedAttributeValue(name, value, isCustomComponentTag);
+}
+
+export function getPropertyInfo(name: string): PropertyInfo | null {
+  return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
 /**
@@ -224,7 +266,7 @@ export function shouldAttributeAcceptBooleanValue(name) {
  * @param {string} name
  * @return {boolean} If the name is within reserved props
  */
-export function isReservedProp(name) {
+export function isReservedProp(name: string): boolean {
   return RESERVED_PROPS.hasOwnProperty(name);
 }
 

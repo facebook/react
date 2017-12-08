@@ -15,8 +15,7 @@ import warning from 'fbjs/lib/warning';
 import {
   ATTRIBUTE_NAME_CHAR,
   isReservedProp,
-  shouldAttributeAcceptBooleanValue,
-  shouldSetAttribute,
+  isBadlyTypedAttributeValue,
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
@@ -191,7 +190,7 @@ if (__DEV__) {
 
     if (
       typeof value === 'boolean' &&
-      !shouldAttributeAcceptBooleanValue(name)
+      isBadlyTypedAttributeValue(name, value, false)
     ) {
       if (value) {
         warning(
@@ -235,7 +234,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (!shouldSetAttribute(name, value)) {
+    if (isBadlyTypedAttributeValue(name, value, false)) {
       warnedProperties[name] = true;
       return false;
     }
