@@ -3,9 +3,23 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import warning from 'fbjs/lib/warning';
+
+type PropertyInfo = {|
+  attributeName: string,
+  attributeNamespace: string | null,
+  propertyName: string,
+  mustUseProperty: boolean,
+  hasBooleanValue: boolean,
+  hasNumericValue: boolean,
+  hasPositiveNumericValue: boolean,
+  hasOverloadedBooleanValue: boolean,
+  hasStringBooleanValue: boolean,
+|};
 
 // These attributes should be all lowercase to allow for
 // case insensitive checks
@@ -54,7 +68,7 @@ function injectDOMPropertyConfig(domPropertyConfig) {
     const lowerCased = propName.toLowerCase();
     const propConfig = Properties[propName];
 
-    const propertyInfo = {
+    const propertyInfo: PropertyInfo = {
       attributeName: lowerCased,
       attributeNamespace: null,
       propertyName: propName,
@@ -118,7 +132,7 @@ export const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
 const illegalAttributeNameCache = {};
 const validatedAttributeNameCache = {};
 
-export function isAttributeNameSafe(attributeName) {
+export function isAttributeNameSafe(attributeName: string): boolean {
   if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
     return true;
   }
@@ -163,7 +177,10 @@ export function isAttributeNameSafe(attributeName) {
  */
 export const properties = {};
 
-export function shouldSkipAttribute(name, isCustomComponentTag) {
+export function shouldSkipAttribute(
+  name: string,
+  isCustomComponentTag: boolean,
+): boolean {
   if (isReservedProp(name)) {
     return true;
   }
@@ -180,12 +197,17 @@ export function shouldSkipAttribute(name, isCustomComponentTag) {
   return false;
 }
 
-export function isBadlyTypedAttributeValue(name, value, isCustomComponentTag) {
+export function isBadlyTypedAttributeValue(
+  name: string,
+  value: mixed,
+  isCustomComponentTag: boolean,
+): boolean {
   if (isReservedProp(name)) {
     return false;
   }
   switch (typeof value) {
     case 'function':
+    // $FlowIssue symbol is perfectly valid here
     case 'symbol':
       return true;
     case 'boolean':
@@ -209,10 +231,10 @@ export function isBadlyTypedAttributeValue(name, value, isCustomComponentTag) {
 }
 
 export function shouldTreatAttributeValueAsNull(
-  name,
-  value,
-  isCustomComponentTag,
-) {
+  name: string,
+  value: mixed,
+  isCustomComponentTag: boolean,
+): boolean {
   if (value === null || typeof value === 'undefined') {
     return true;
   }
@@ -224,14 +246,14 @@ export function shouldTreatAttributeValueAsNull(
       return value === false;
     } else if (propertyInfo.hasNumericValue && isNaN(value)) {
       return true;
-    } else if (propertyInfo.hasPositiveNumericValue && value < 1) {
+    } else if (propertyInfo.hasPositiveNumericValue && (value: any) < 1) {
       return true;
     }
   }
   return isBadlyTypedAttributeValue(name, value, isCustomComponentTag);
 }
 
-export function getPropertyInfo(name) {
+export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
@@ -244,7 +266,7 @@ export function getPropertyInfo(name) {
  * @param {string} name
  * @return {boolean} If the name is within reserved props
  */
-export function isReservedProp(name) {
+export function isReservedProp(name: string): boolean {
   return RESERVED_PROPS.hasOwnProperty(name);
 }
 

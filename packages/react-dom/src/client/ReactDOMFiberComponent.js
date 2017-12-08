@@ -959,7 +959,11 @@ export function diffHydratedProperties(
         }
         ensureListeningTo(rootContainerElement, propKey);
       }
-    } else if (__DEV__) {
+    } else if (
+      __DEV__ &&
+      // Convince Flow we've calculated it (it's DEV-only in this method.)
+      typeof isCustomComponentTag === 'boolean'
+    ) {
       // Validate that the properties correspond to their expected values.
       let serverValue;
       let propertyInfo;

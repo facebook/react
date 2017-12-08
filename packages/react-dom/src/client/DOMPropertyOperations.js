@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {
@@ -17,12 +19,17 @@ import {
  * The "expected" argument is used as a hint of what the expected value is.
  * Some properties have multiple equivalent values.
  */
-export function getValueForProperty(node, name, expected) {
+export function getValueForProperty(
+  node: Element,
+  name: string,
+  expected: mixed,
+): mixed {
   if (__DEV__) {
     const propertyInfo = getPropertyInfo(name);
     if (propertyInfo) {
       if (propertyInfo.mustUseProperty) {
-        return node[propertyInfo.propertyName];
+        const {propertyName} = propertyInfo;
+        return (node: any)[propertyName];
       } else {
         const attributeName = propertyInfo.attributeName;
 
@@ -37,7 +44,7 @@ export function getValueForProperty(node, name, expected) {
             if (shouldTreatAttributeValueAsNull(name, expected, false)) {
               return value;
             }
-            if (value === '' + expected) {
+            if (value === '' + (expected: any)) {
               return expected;
             }
             return value;
@@ -62,7 +69,7 @@ export function getValueForProperty(node, name, expected) {
 
         if (shouldTreatAttributeValueAsNull(name, expected, false)) {
           return stringValue === null ? expected : stringValue;
-        } else if (stringValue === '' + expected) {
+        } else if (stringValue === '' + (expected: any)) {
           return expected;
         } else {
           return stringValue;
@@ -77,7 +84,11 @@ export function getValueForProperty(node, name, expected) {
  * The third argument is used as a hint of what the expected value is. Some
  * attributes have multiple equivalent values.
  */
-export function getValueForAttribute(node, name, expected) {
+export function getValueForAttribute(
+  node: Element,
+  name: string,
+  expected: mixed,
+): mixed {
   if (__DEV__) {
     if (!isAttributeNameSafe(name)) {
       return;
@@ -86,7 +97,7 @@ export function getValueForAttribute(node, name, expected) {
       return expected === undefined ? undefined : null;
     }
     const value = node.getAttribute(name);
-    if (value === '' + expected) {
+    if (value === '' + (expected: any)) {
       return expected;
     }
     return value;
@@ -100,7 +111,12 @@ export function getValueForAttribute(node, name, expected) {
  * @param {string} name
  * @param {*} value
  */
-export function setValueForProperty(node, name, value, isCustomComponentTag) {
+export function setValueForProperty(
+  node: Element,
+  name: string,
+  value: mixed,
+  isCustomComponentTag: boolean,
+) {
   if (shouldSkipAttribute(name, isCustomComponentTag)) {
     return;
   }
@@ -115,7 +131,7 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
       if (value == null) {
         node.removeAttribute(attributeName);
       } else {
-        node.setAttribute(attributeName, '' + value);
+        node.setAttribute(attributeName, '' + (value: any));
       }
     }
     return;
@@ -128,11 +144,11 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
   if (mustUseProperty) {
     const {propertyName} = propertyInfo;
     if (value === null) {
-      node[propertyName] = hasBooleanValue ? false : '';
+      (node: any)[propertyName] = hasBooleanValue ? false : '';
     } else {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
-      node[propertyName] = value;
+      (node: any)[propertyName] = value;
     }
     return;
   }
@@ -147,7 +163,7 @@ export function setValueForProperty(node, name, value, isCustomComponentTag) {
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,
       // ('' + value) makes it output the correct toString()-value.
-      attributeValue = '' + value;
+      attributeValue = '' + (value: any);
     }
     if (attributeNamespace) {
       node.setAttributeNS(attributeNamespace, attributeName, attributeValue);
