@@ -45,9 +45,6 @@ export function createMarkupForProperty(name, value) {
     return '';
   }
   if (shouldTreatAttributeValueAsNull(name, value, false)) {
-    value = null;
-  }
-  if (value === null) {
     return '';
   }
   const propertyInfo = getPropertyInfo(name);
