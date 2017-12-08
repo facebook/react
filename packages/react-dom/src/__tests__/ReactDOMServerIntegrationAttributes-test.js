@@ -213,16 +213,6 @@ describe('ReactDOMServerIntegration', () => {
           expect(e.className).toBe('test');
         },
       );
-
-      itRenders('class for custom elements', async render => {
-        const e = await render(<div is="custom-element" class="test" />, 0);
-        expect(e.getAttribute('class')).toBe('test');
-      });
-
-      itRenders('className for custom elements', async render => {
-        const e = await render(<div is="custom-element" className="test" />, 0);
-        expect(e.getAttribute('className')).toBe('test');
-      });
     });
 
     describe('htmlFor property', function() {
@@ -255,16 +245,6 @@ describe('ReactDOMServerIntegration', () => {
       itRenders('no htmlFor prop with null value', async render => {
         const e = await render(<div htmlFor={null} />);
         expect(e.hasAttribute('htmlFor')).toBe(false);
-      });
-
-      itRenders('htmlFor attribute on custom elements', async render => {
-        const e = await render(<div is="custom-element" htmlFor="test" />);
-        expect(e.getAttribute('htmlFor')).toBe('test');
-      });
-
-      itRenders('for attribute on custom elements', async render => {
-        const e = await render(<div is="custom-element" for="test" />);
-        expect(e.getAttribute('for')).toBe('test');
       });
     });
 
@@ -529,35 +509,6 @@ describe('ReactDOMServerIntegration', () => {
         expect(e.getAttribute('foo')).toBe('bar');
       });
 
-      itRenders('unknown attributes for custom elements', async render => {
-        const e = await render(<custom-element foo="bar" />);
-        expect(e.getAttribute('foo')).toBe('bar');
-      });
-
-      itRenders(
-        'no unknown attributes for custom elements with null value',
-        async render => {
-          const e = await render(<custom-element foo={null} />);
-          expect(e.hasAttribute('foo')).toBe(false);
-        },
-      );
-
-      itRenders(
-        'unknown attributes for custom elements using is',
-        async render => {
-          const e = await render(<div is="custom-element" foo="bar" />);
-          expect(e.getAttribute('foo')).toBe('bar');
-        },
-      );
-
-      itRenders(
-        'no unknown attributes for custom elements using is with null value',
-        async render => {
-          const e = await render(<div is="custom-element" foo={null} />);
-          expect(e.hasAttribute('foo')).toBe(false);
-        },
-      );
-
       itRenders('SVG tags with dashes in them', async render => {
         const e = await render(
           <svg>
@@ -593,5 +544,73 @@ describe('ReactDOMServerIntegration', () => {
       const e = await render(<div on="tap:do-something" />);
       expect(e.getAttribute('on')).toEqual('tap:do-something');
     });
+  });
+
+  // These tests mostly verify the existing behavior.
+  // It may not always make sense but we can't change it in minors.
+  describe('custom elements', () => {
+    itRenders('class for custom elements', async render => {
+      const e = await render(<div is="custom-element" class="test" />, 0);
+      expect(e.getAttribute('class')).toBe('test');
+    });
+
+    itRenders('className for custom elements', async render => {
+      const e = await render(<div is="custom-element" className="test" />, 0);
+      expect(e.getAttribute('className')).toBe('test');
+    });
+
+    itRenders('htmlFor attribute on custom elements', async render => {
+      const e = await render(<div is="custom-element" htmlFor="test" />);
+      expect(e.getAttribute('htmlFor')).toBe('test');
+    });
+
+    itRenders('for attribute on custom elements', async render => {
+      const e = await render(<div is="custom-element" for="test" />);
+      expect(e.getAttribute('for')).toBe('test');
+    });
+
+    itRenders('unknown attributes for custom elements', async render => {
+      const e = await render(<custom-element foo="bar" />);
+      expect(e.getAttribute('foo')).toBe('bar');
+    });
+
+    itRenders('unknown `on*` attributes for custom elements', async render => {
+      const e = await render(<custom-element onunknown="bar" />);
+      expect(e.getAttribute('onunknown')).toBe('bar');
+    });
+
+    itRenders('unknown boolean `true` attributes as strings', async render => {
+      const e = await render(<custom-element foo={true} />);
+      expect(e.getAttribute('foo')).toBe('true');
+    });
+
+    itRenders('unknown boolean `false` attributes as strings', async render => {
+      const e = await render(<custom-element foo={false} />);
+      expect(e.getAttribute('foo')).toBe('false');
+    });
+
+    itRenders(
+      'no unknown attributes for custom elements with null value',
+      async render => {
+        const e = await render(<custom-element foo={null} />);
+        expect(e.hasAttribute('foo')).toBe(false);
+      },
+    );
+
+    itRenders(
+      'unknown attributes for custom elements using is',
+      async render => {
+        const e = await render(<div is="custom-element" foo="bar" />);
+        expect(e.getAttribute('foo')).toBe('bar');
+      },
+    );
+
+    itRenders(
+      'no unknown attributes for custom elements using is with null value',
+      async render => {
+        const e = await render(<div is="custom-element" foo={null} />);
+        expect(e.hasAttribute('foo')).toBe(false);
+      },
+    );
   });
 });
