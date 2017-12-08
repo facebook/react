@@ -51,7 +51,7 @@ const requestedBundleTypes = (argv.type || '')
 const requestedBundleNames = (argv._[0] || '')
   .split(',')
   .map(type => type.toLowerCase());
-const forcePrettyOutput = argv['pretty'];
+const forcePrettyOutput = argv.pretty;
 const syncFBSourcePath = argv['sync-fbsource'];
 const syncWWWPath = argv['sync-www'];
 const shouldExtractErrors = argv['extract-errors'];
