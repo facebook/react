@@ -659,14 +659,36 @@ const DOMRenderer = ReactFiberReconciler({
   },
 
   shouldSetTextContent(type: string, props: Props): boolean {
-    return (
-      type === 'textarea' ||
+    if (type === 'textarea') {
+      return true;
+    }
+
+    if (
       typeof props.children === 'string' ||
-      typeof props.children === 'number' ||
-      (typeof props.dangerouslySetInnerHTML === 'object' &&
-        props.dangerouslySetInnerHTML !== null &&
-        typeof props.dangerouslySetInnerHTML.__html === 'string')
-    );
+      typeof props.children === 'number'
+    ) {
+      return true;
+    }
+
+    if (
+      typeof props.dangerouslySetInnerHTML === 'object' &&
+      props.dangerouslySetInnerHTML !== null
+    ) {
+      if (typeof props.dangerouslySetInnerHTML.__html === 'string') {
+        return true;
+      }
+
+      // Or allow any type of object through - this is to allow React to render
+      // the `toString` method of objects. (#11792)
+      if (
+        typeof props.dangerouslySetInnerHTML.__html === 'object' &&
+        props.dangerouslySetInnerHTML.__html !== 'null'
+      ) {
+        return true;
+      }
+    }
+
+    return false;
   },
 
   shouldDeprioritizeSubtree(type: string, props: Props): boolean {

@@ -197,6 +197,16 @@ describe('ReactDOMTextComponent', () => {
     expect(el.textContent).toBe('');
   });
 
+  it('can reconcile text from pre-rendered markup using dangerouslySetInnerHTML and an object with toString', () => {
+    const HelloObject = {toString: () => 'Hello'};
+    const el = document.createElement('div');
+    let reactEl = <p dangerouslySetInnerHTML={{__html: HelloObject}} />;
+    el.innerHTML = ReactDOMServer.renderToString(reactEl);
+
+    ReactDOM.hydrate(reactEl, el);
+    expect(el.textContent).toBe('Hello');
+  });
+
   xit('can reconcile text arbitrarily split into multiple nodes', () => {
     const el = document.createElement('div');
     let inst = ReactDOM.render(
