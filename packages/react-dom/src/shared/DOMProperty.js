@@ -208,7 +208,7 @@ export function isBadlyTypedAttributeValue(
   switch (typeof value) {
     case 'function':
     // $FlowIssue symbol is perfectly valid here
-    case 'symbol':
+    case 'symbol': // eslint-disable-line
       return true;
     case 'boolean':
       break;
