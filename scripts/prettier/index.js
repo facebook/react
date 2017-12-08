@@ -14,7 +14,7 @@ const glob = require('glob');
 const prettier = require('prettier');
 const fs = require('fs');
 const listChangedFiles = require('../shared/listChangedFiles');
-const {es5Path, es6Path} = require('../shared/esPath');
+const {es5Path, es6Path, esNextPath} = require('../shared/esPath');
 
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
@@ -29,15 +29,18 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: es6Path,
+    patterns: esNextPath,
     ignore: ['**/node_modules/**'],
   },
   scripts: {
-    patterns: es5Path,
+    patterns: [...es5Path, ...es6Path],
     ignore: [
       '**/node_modules/**',
       // Built files and React repo clone
       'scripts/bench/benchmarks/**',
+      // shims & flow treat as ESNext
+      'scripts/flow/*.js',
+      'scripts/rollup/shims/**/*.js',
     ],
     options: {
       trailingComma: 'es5',
@@ -45,7 +48,7 @@ const config = {
   },
 };
 
-var changedFiles = listChangedFiles();
+const changedFiles = listChangedFiles();
 let didWarn = false;
 let didError = false;
 Object.keys(config).forEach(key => {

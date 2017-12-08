@@ -7,9 +7,9 @@
 
 'use strict';
 
-var expect = global.expect;
+const expect = global.expect;
 
-var numExpectations = 0;
+let numExpectations = 0;
 
 global.expect = function() {
   numExpectations += 1;

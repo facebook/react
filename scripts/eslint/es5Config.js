@@ -1,9 +1,10 @@
 const eslintrc = require('../../.eslintrc');
 
 module.exports = Object.assign({}, eslintrc, {
-  parseOptions: {
+  parser: 'espree',
+  parserOptions: {
     ecmaVersion: 5,
-    sourceType: 'module',
+    sourceType: 'script',
     ecmaFeatures: {
       jsx: true,
     },

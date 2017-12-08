@@ -6,23 +6,28 @@
  */
 'use strict';
 
-const es6Path = [
+const esNextPath = [
   // Internal forwarding modules
   'packages/*/*.js',
   // Source files
   'packages/*/src/**/*.js',
   'packages/shared/**/*.js',
+  // shims & flow
+  'scripts/flow/*.js',
+  'scripts/rollup/shims/**/*.js',
 ];
+
+const es6Path = ['scripts/**/*.js'];
 
 const es5Path = [
   // Forwarding modules that get published to npm (must be ES5)
   'packages/*/npm/**/*.js',
   // Need to work on Node
-  'scripts/**/*.js',
   'fixtures/**/*.js',
 ];
 
 module.exports = {
+  esNextPath,
   es6Path,
   es5Path,
 };

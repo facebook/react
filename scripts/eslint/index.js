@@ -8,16 +8,40 @@
 'use strict';
 
 const CLIEngine = require('eslint').CLIEngine;
-const eslintPath = './scripts/eslint';
-const {es5Path, es6Path} = require('../shared/esPath');
+const {es5Path, es6Path, esNextPath} = require('../shared/esPath');
 
-module.exports = function lintOnFiles({isES6, filePatterns}) {
-  const configFile = isES6
-    ? `${eslintPath}/es6Config.js`
-    : `${eslintPath}/es5Config.js`;
+const es5Options = {
+  configFile: `${__dirname}/es5Config.js`,
+  ignorePattern: [...es6Path, ...esNextPath],
+};
 
-  const ignorePattern = isES6 ? es5Path : es6Path;
-  const cli = new CLIEngine({configFile, ignorePattern});
+const es6Options = {
+  configFile: `${__dirname}/es6Config.js`,
+  ignorePattern: [...es5Path, ...esNextPath],
+};
+
+const esNextOptions = {
+  configFile: `${__dirname}/esNextConfig.js`,
+  ignorePattern: [...es5Path, ...es6Path],
+};
+
+module.exports = function lintOnFiles({ecmaVersion, filePatterns}) {
+  let options;
+  switch (ecmaVersion) {
+    case '5':
+      options = es5Options;
+      break;
+    case '6':
+      options = es6Options;
+      break;
+    case 'next':
+      options = esNextOptions;
+      break;
+    default:
+      console.error('ecmaVersion only accpet value: "5", "6", "next"');
+  }
+
+  const cli = new CLIEngine({...options});
   const formatter = cli.getFormatter();
   const report = cli.executeOnFiles(filePatterns);
 

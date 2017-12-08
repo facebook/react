@@ -10,7 +10,7 @@ const execFileSync = require('child_process').execFileSync;
 
 const exec = (command, args) => {
   console.log('> ' + [command].concat(args).join(' '));
-  var options = {
+  const options = {
     cwd: process.cwd(),
     env: process.env,
     stdio: 'pipe',

@@ -12,10 +12,13 @@ const listChangedFiles = require('../shared/listChangedFiles');
 const changedFiles = [...listChangedFiles()];
 const jsFiles = changedFiles.filter(file => file.match(/.js$/g));
 
-const es6Report = lintOnFiles({isES6: true, filePatterns: jsFiles});
-const es5Report = lintOnFiles({isES6: false, filePatterns: jsFiles});
+const esNextReport = lintOnFiles({ecmaVersion: 'next', filePatterns: jsFiles});
+const es6Report = lintOnFiles({ecmaVersion: '6', filePatterns: jsFiles});
+const es5Report = lintOnFiles({ecmaVersion: '5', filePatterns: jsFiles});
 
 if (
+  esNextReport.errorCount > 0 ||
+  getSourceCodeWarnings(esNextReport) ||
   es6Report.errorCount > 0 ||
   getSourceCodeWarnings(es6Report) ||
   es5Report.errorCount > 0 ||
