@@ -1,7 +1,16 @@
-const {config, ERROR} = require('./baseConfig');
+const eslintrc = require('../../.eslintrc');
 
-module.exports = Object.assign({}, config, {
-  rules: Object.assign({}, config.rules, {
+const ERROR = 2;
+
+module.exports = Object.assign({}, eslintrc, {
+  parseOptions: {
+    ecmaVersion: 6,
+    sourceType: 'module',
+    ecmaFeatures: {
+      jsx: true,
+    },
+  },
+  rules: Object.assign({}, eslintrc.rules, {
     'no-var': ERROR,
   }),
 });
