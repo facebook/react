@@ -6,41 +6,14 @@
  */
 
 import {
-  ATTRIBUTE_NAME_CHAR,
-  ATTRIBUTE_NAME_START_CHAR,
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
   getPropertyInfo,
   shouldAttributeAcceptBooleanValue,
   shouldSetAttribute,
+  isAttributeNameSafe,
 } from '../shared/DOMProperty';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
-import warning from 'fbjs/lib/warning';
-
-// isAttributeNameSafe() is currently duplicated in DOMPropertyOperations.
-// TODO: Find a better place for this.
-const VALID_ATTRIBUTE_NAME_REGEX = new RegExp(
-  '^[' + ATTRIBUTE_NAME_START_CHAR + '][' + ATTRIBUTE_NAME_CHAR + ']*$',
-);
-const illegalAttributeNameCache = {};
-const validatedAttributeNameCache = {};
-function isAttributeNameSafe(attributeName) {
-  if (validatedAttributeNameCache.hasOwnProperty(attributeName)) {
-    return true;
-  }
-  if (illegalAttributeNameCache.hasOwnProperty(attributeName)) {
-    return false;
-  }
-  if (VALID_ATTRIBUTE_NAME_REGEX.test(attributeName)) {
-    validatedAttributeNameCache[attributeName] = true;
-    return true;
-  }
-  illegalAttributeNameCache[attributeName] = true;
-  if (__DEV__) {
-    warning(false, 'Invalid attribute name: `%s`', attributeName);
-  }
-  return false;
-}
 
 // shouldIgnoreValue() is currently duplicated in DOMPropertyOperations.
 // TODO: Find a better place for this.
