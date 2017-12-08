@@ -2551,4 +2551,34 @@ describe('ReactDOMComponent', () => {
       }
     });
   });
+
+  // These tests mostly verify the existing behavior.
+  // It may not always makes sense but we can't change it in minors.
+  describe('Custom elements', () => {
+    it('does not strip unknown boolean attributes', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<some-custom-element foo={true} />, container);
+      const node = container.firstChild;
+      expect(node.getAttribute('foo')).toBe('true');
+      ReactDOM.render(<some-custom-element foo={false} />, container);
+      expect(node.getAttribute('foo')).toBe('false');
+      ReactDOM.render(<some-custom-element />, container);
+      expect(node.hasAttribute('foo')).toBe(false);
+      ReactDOM.render(<some-custom-element foo={true} />, container);
+      expect(node.hasAttribute('foo')).toBe(true);
+    });
+
+    it('does not strip the on* attributes', () => {
+      const container = document.createElement('div');
+      ReactDOM.render(<some-custom-element onx="bar" />, container);
+      const node = container.firstChild;
+      expect(node.getAttribute('onx')).toBe('bar');
+      ReactDOM.render(<some-custom-element onx="buzz" />, container);
+      expect(node.getAttribute('onx')).toBe('buzz');
+      ReactDOM.render(<some-custom-element />, container);
+      expect(node.hasAttribute('onx')).toBe(false);
+      ReactDOM.render(<some-custom-element onx="bar" />, container);
+      expect(node.getAttribute('onx')).toBe('bar');
+    });
+  });
 });
