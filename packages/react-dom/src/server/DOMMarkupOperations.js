@@ -3,6 +3,8 @@
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
+ *
+ * @flow
  */
 
 import {
@@ -25,11 +27,11 @@ import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
  * @param {string} id Unescaped ID.
  * @return {string} Markup string.
  */
-export function createMarkupForID(id) {
+export function createMarkupForID(id: string): string {
   return ID_ATTRIBUTE_NAME + '=' + quoteAttributeValueForBrowser(id);
 }
 
-export function createMarkupForRoot() {
+export function createMarkupForRoot(): string {
   return ROOT_ATTRIBUTE_NAME + '=""';
 }
 
@@ -40,7 +42,7 @@ export function createMarkupForRoot() {
  * @param {*} value
  * @return {?string} Markup string, or null if the property was invalid.
  */
-export function createMarkupForProperty(name, value) {
+export function createMarkupForProperty(name: string, value: mixed): string {
   if (name !== 'style' && shouldSkipAttribute(name, false)) {
     return '';
   }
@@ -70,7 +72,10 @@ export function createMarkupForProperty(name, value) {
  * @param {*} value
  * @return {string} Markup string, or empty string if the property was invalid.
  */
-export function createMarkupForCustomAttribute(name, value) {
+export function createMarkupForCustomAttribute(
+  name: string,
+  value: mixed,
+): string {
   if (!isAttributeNameSafe(name) || value == null) {
     return '';
   }
