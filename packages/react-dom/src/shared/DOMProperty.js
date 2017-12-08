@@ -228,10 +228,7 @@ export function shouldTreatAttributeValueAsNull(
       return true;
     }
   }
-  if (isBadlyTypedAttributeValue(name, value, isCustomComponentTag)) {
-    return true;
-  }
-  return false;
+  return isBadlyTypedAttributeValue(name, value, isCustomComponentTag);
 }
 
 export function getPropertyInfo(name) {
