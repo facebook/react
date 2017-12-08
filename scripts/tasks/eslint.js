@@ -8,9 +8,9 @@
 'use strict';
 
 const lintOnFiles = require('../eslint');
-const {es5Path, es6Path} = require('../shared/esPath');
+const {es5Path} = require('../shared/esPath');
 
-const es6Report = lintOnFiles({isES6: true, filePatterns: es6Path});
+const es6Report = lintOnFiles({isES6: true, filePatterns: ['.']});
 const es5Report = lintOnFiles({isES6: false, filePatterns: es5Path});
 
 if (
