@@ -14,8 +14,8 @@ import warning from 'fbjs/lib/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
-  isReservedProp,
   isBadlyTypedAttributeValue,
+  getPropertyInfo,
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
 import possibleStandardNames from './possibleStandardNames';
@@ -154,7 +154,8 @@ if (__DEV__) {
       return true;
     }
 
-    const isReserved = isReservedProp(name);
+    const propertyInfo = getPropertyInfo(name);
+    const isReserved = propertyInfo !== null && propertyInfo.isReserved;
 
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
@@ -190,7 +191,7 @@ if (__DEV__) {
 
     if (
       typeof value === 'boolean' &&
-      isBadlyTypedAttributeValue(name, value, false)
+      isBadlyTypedAttributeValue(name, value, propertyInfo, false)
     ) {
       if (value) {
         warning(
@@ -234,7 +235,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (isBadlyTypedAttributeValue(name, value, false)) {
+    if (isBadlyTypedAttributeValue(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;
       return false;
     }

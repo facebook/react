@@ -41,7 +41,14 @@ export function getValueForProperty(
             if (value === '') {
               return true;
             }
-            if (shouldTreatAttributeValueAsNull(name, expected, false)) {
+            if (
+              shouldTreatAttributeValueAsNull(
+                name,
+                expected,
+                propertyInfo,
+                false,
+              )
+            ) {
               return value;
             }
             if (value === '' + (expected: any)) {
@@ -50,7 +57,9 @@ export function getValueForProperty(
             return value;
           }
         } else if (node.hasAttribute(attributeName)) {
-          if (shouldTreatAttributeValueAsNull(name, expected, false)) {
+          if (
+            shouldTreatAttributeValueAsNull(name, expected, propertyInfo, false)
+          ) {
             // We had an attribute but shouldn't have had one, so read it
             // for the error message.
             return node.getAttribute(attributeName);
@@ -67,7 +76,9 @@ export function getValueForProperty(
           stringValue = node.getAttribute(attributeName);
         }
 
-        if (shouldTreatAttributeValueAsNull(name, expected, false)) {
+        if (
+          shouldTreatAttributeValueAsNull(name, expected, propertyInfo, false)
+        ) {
           return stringValue === null ? expected : stringValue;
         } else if (stringValue === '' + (expected: any)) {
           return expected;
@@ -117,15 +128,22 @@ export function setValueForProperty(
   value: mixed,
   isCustomComponentTag: boolean,
 ) {
-  if (shouldSkipAttribute(name, isCustomComponentTag)) {
+  const propertyInfo = getPropertyInfo(name);
+  if (shouldSkipAttribute(name, propertyInfo, isCustomComponentTag)) {
     return;
   }
-  const propertyInfo = isCustomComponentTag ? null : getPropertyInfo(name);
-  if (shouldTreatAttributeValueAsNull(name, value, isCustomComponentTag)) {
+  if (
+    shouldTreatAttributeValueAsNull(
+      name,
+      value,
+      propertyInfo,
+      isCustomComponentTag,
+    )
+  ) {
     value = null;
   }
   // If the prop isn't in the special list, treat it as a simple attribute.
-  if (!propertyInfo) {
+  if (isCustomComponentTag || !propertyInfo) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
       if (value === null) {

@@ -43,13 +43,13 @@ export function createMarkupForRoot(): string {
  * @return {?string} Markup string, or null if the property was invalid.
  */
 export function createMarkupForProperty(name: string, value: mixed): string {
-  if (name !== 'style' && shouldSkipAttribute(name, false)) {
-    return '';
-  }
-  if (shouldTreatAttributeValueAsNull(name, value, false)) {
-    return '';
-  }
   const propertyInfo = getPropertyInfo(name);
+  if (name !== 'style' && shouldSkipAttribute(name, propertyInfo, false)) {
+    return '';
+  }
+  if (shouldTreatAttributeValueAsNull(name, value, propertyInfo, false)) {
+    return '';
+  }
   if (propertyInfo) {
     const attributeName = propertyInfo.attributeName;
     if (

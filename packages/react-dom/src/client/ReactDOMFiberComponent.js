@@ -966,7 +966,7 @@ export function diffHydratedProperties(
     ) {
       // Validate that the properties correspond to their expected values.
       let serverValue;
-      let propertyInfo;
+      const propertyInfo = getPropertyInfo(propKey);
       if (suppressHydrationWarning) {
         // Don't bother comparing. We're ignoring all these warnings.
       } else if (
@@ -1009,14 +1009,15 @@ export function diffHydratedProperties(
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       } else if (
-        !shouldSkipAttribute(propKey, isCustomComponentTag) &&
+        !shouldSkipAttribute(propKey, propertyInfo, isCustomComponentTag) &&
         !shouldTreatAttributeValueAsNull(
           propKey,
           nextProp,
+          propertyInfo,
           isCustomComponentTag,
         )
       ) {
-        if ((propertyInfo = getPropertyInfo(propKey))) {
+        if (propertyInfo !== null) {
           // $FlowFixMe - Should be inferred as not undefined.
           extraAttributeNames.delete(propertyInfo.attributeName);
           serverValue = DOMPropertyOperations.getValueForProperty(

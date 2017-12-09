@@ -13,6 +13,7 @@ type PropertyInfo = {|
   attributeName: string,
   attributeNamespace: string | null,
   propertyName: string,
+  isReserved: boolean,
   mustUseProperty: boolean,
   hasBooleanValue: boolean,
   hasNumericValue: boolean,
@@ -20,22 +21,6 @@ type PropertyInfo = {|
   hasOverloadedBooleanValue: boolean,
   hasStringBooleanValue: boolean,
 |};
-
-// These attributes should be all lowercase to allow for
-// case insensitive checks
-const RESERVED_PROPS = {
-  children: true,
-  dangerouslySetInnerHTML: true,
-  // TODO: This prevents the assignment of defaultValue to regular
-  // elements (not just inputs). Now that ReactDOMInput assigns to the
-  // defaultValue property -- do we need this?
-  defaultValue: true,
-  defaultChecked: true,
-  innerHTML: true,
-  suppressContentEditableWarning: true,
-  suppressHydrationWarning: true,
-  style: true,
-};
 
 function checkMask(value, bitmask) {
   return (value & bitmask) === bitmask;
@@ -47,6 +32,7 @@ const HAS_NUMERIC_VALUE = 0x8;
 const HAS_POSITIVE_NUMERIC_VALUE = 0x10 | 0x8;
 const HAS_OVERLOADED_BOOLEAN_VALUE = 0x20;
 const HAS_STRING_BOOLEAN_VALUE = 0x40;
+const IS_RESERVED = 0x80;
 
 function injectDOMPropertyConfig(domPropertyConfig) {
   const Properties = domPropertyConfig.Properties || {};
@@ -85,6 +71,7 @@ function injectDOMPropertyConfig(domPropertyConfig) {
         HAS_OVERLOADED_BOOLEAN_VALUE,
       ),
       hasStringBooleanValue: checkMask(propConfig, HAS_STRING_BOOLEAN_VALUE),
+      isReserved: checkMask(propConfig, IS_RESERVED),
     };
     if (__DEV__) {
       warning(
@@ -175,13 +162,14 @@ export function isAttributeNameSafe(attributeName: string): boolean {
  *   Removed when strictly equal to false; present without a value when
  *   strictly equal to true; present with a value otherwise.
  */
-export const properties = {};
+const properties = {};
 
 export function shouldSkipAttribute(
   name: string,
+  propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
-  if (isReservedProp(name)) {
+  if (propertyInfo !== null && propertyInfo.isReserved) {
     return true;
   }
   if (isCustomComponentTag) {
@@ -200,9 +188,10 @@ export function shouldSkipAttribute(
 export function isBadlyTypedAttributeValue(
   name: string,
   value: mixed,
+  propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
-  if (isReservedProp(name)) {
+  if (propertyInfo !== null && propertyInfo.isReserved) {
     return false;
   }
   switch (typeof value) {
@@ -218,8 +207,7 @@ export function isBadlyTypedAttributeValue(
   if (isCustomComponentTag) {
     return false;
   }
-  let propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
+  if (propertyInfo !== null) {
     return !(
       propertyInfo.hasBooleanValue ||
       propertyInfo.hasStringBooleanValue ||
@@ -233,13 +221,13 @@ export function isBadlyTypedAttributeValue(
 export function shouldTreatAttributeValueAsNull(
   name: string,
   value: mixed,
+  propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
   if (value === null || typeof value === 'undefined') {
     return true;
   }
-  const propertyInfo = getPropertyInfo(name);
-  if (propertyInfo) {
+  if (propertyInfo !== null) {
     if (propertyInfo.hasBooleanValue && !value) {
       return true;
     } else if (propertyInfo.hasOverloadedBooleanValue && value === false) {
@@ -250,25 +238,34 @@ export function shouldTreatAttributeValueAsNull(
       return true;
     }
   }
-  return isBadlyTypedAttributeValue(name, value, isCustomComponentTag);
+  return isBadlyTypedAttributeValue(
+    name,
+    value,
+    propertyInfo,
+    isCustomComponentTag,
+  );
 }
 
 export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
-/**
- * Checks to see if a property name is within the list of properties
- * reserved for internal React operations. These properties should
- * not be set on an HTML element.
- *
- * @private
- * @param {string} name
- * @return {boolean} If the name is within reserved props
- */
-export function isReservedProp(name: string): boolean {
-  return RESERVED_PROPS.hasOwnProperty(name);
-}
+// Reserved properties that are handled by React specially and shouldn't be set.
+const ReservedPropertyConfig = {
+  Properties: {
+    children: IS_RESERVED,
+    dangerouslySetInnerHTML: IS_RESERVED,
+    // TODO: This prevents the assignment of defaultValue to regular
+    // elements (not just inputs). Now that ReactDOMInput assigns to the
+    // defaultValue property -- do we need this?
+    defaultValue: IS_RESERVED,
+    defaultChecked: IS_RESERVED,
+    innerHTML: IS_RESERVED,
+    suppressContentEditableWarning: IS_RESERVED,
+    suppressHydrationWarning: IS_RESERVED,
+    style: IS_RESERVED,
+  },
+};
 
 const HTMLDOMPropertyConfig = {
   // When adding attributes to this list, be sure to also add them to
@@ -315,9 +312,6 @@ const HTMLDOMPropertyConfig = {
     // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
     span: HAS_POSITIVE_NUMERIC_VALUE,
     spellCheck: HAS_STRING_BOOLEAN_VALUE,
-    // Style must be explicitly set in the attribute list. React components
-    // expect a style object
-    style: 0,
     // Keep it in the whitelist because it is case-sensitive for SVG.
     tabIndex: 0,
     // itemScope is for for Microdata support.
@@ -479,5 +473,6 @@ SVG_ATTRS.forEach(original => {
   SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
 });
 
+injectDOMPropertyConfig(ReservedPropertyConfig);
 injectDOMPropertyConfig(HTMLDOMPropertyConfig);
 injectDOMPropertyConfig(SVGDOMPropertyConfig);
