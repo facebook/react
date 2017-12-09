@@ -30,6 +30,8 @@ import {
   CallComponent,
   CallHandlerPhase,
   ReturnComponent,
+  ProviderComponent,
+  ConsumerComponent,
   Fragment,
   Mode,
 } from 'shared/ReactTypeOfWork';
@@ -582,6 +584,14 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       case HostPortal:
         popHostContainer(workInProgress);
         updateHostContainer(workInProgress);
+        return null;
+      case ProviderComponent:
+        const context = workInProgress.type;
+        // Pop provider fiber
+        const lastProvider = workInProgress.stateNode;
+        context.lastProvider = lastProvider;
+        return null;
+      case ConsumerComponent:
         return null;
       // Error cases
       case IndeterminateComponent:

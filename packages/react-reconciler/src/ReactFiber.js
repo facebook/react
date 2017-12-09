@@ -7,7 +7,11 @@
  */
 
 import type {ReactElement, Source} from 'shared/ReactElementType';
-import type {ReactFragment, ReactPortal} from 'shared/ReactTypes';
+import type {
+  ReactPortal,
+  ReactProvider,
+  ReactConsumer,
+} from 'shared/ReactTypes';
 import type {TypeOfWork} from 'shared/ReactTypeOfWork';
 import type {TypeOfInternalContext} from './ReactTypeOfInternalContext';
 import type {TypeOfSideEffect} from 'shared/ReactTypeOfSideEffect';
@@ -27,6 +31,8 @@ import {
   ReturnComponent,
   Fragment,
   Mode,
+  ProviderComponent,
+  ConsumerComponent,
 } from 'shared/ReactTypeOfWork';
 import getComponentName from 'shared/getComponentName';
 
@@ -469,5 +475,39 @@ export function createFiberFromPortal(
     pendingChildren: null, // Used by persistent updates
     implementation: portal.implementation,
   };
+  return fiber;
+}
+
+export function createFiberFromProvider<T>(
+  provider: ReactProvider<T>,
+  internalContextTag: TypeOfInternalContext,
+  expirationTime: ExpirationTime,
+): Fiber {
+  const pendingProps = provider;
+  const fiber = createFiber(
+    ProviderComponent,
+    pendingProps,
+    provider.key,
+    internalContextTag,
+  );
+  fiber.expirationTime = expirationTime;
+  fiber.type = provider.context;
+  return fiber;
+}
+
+export function createFiberFromConsumer<T>(
+  consumer: ReactConsumer<T>,
+  internalContextTag: TypeOfInternalContext,
+  expirationTime: ExpirationTime,
+): Fiber {
+  const pendingProps = consumer;
+  const fiber = createFiber(
+    ConsumerComponent,
+    pendingProps,
+    consumer.key,
+    internalContextTag,
+  );
+  fiber.expirationTime = expirationTime;
+  fiber.type = consumer.context;
   return fiber;
 }

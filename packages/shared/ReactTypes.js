@@ -14,7 +14,9 @@ export type ReactNode =
   | ReactReturn<any>
   | ReactPortal
   | ReactText
-  | ReactFragment;
+  | ReactFragment
+  | ReactProvider<any>
+  | ReactConsumer<any>;
 
 export type ReactFragment = ReactEmpty | Iterable<React$Node>;
 
@@ -54,4 +56,28 @@ export type ReactPortal = {
   children: ReactNodeList,
   // TODO: figure out the API for cross-renderer implementation.
   implementation: any,
+};
+
+export type ReactProvider<T> = {
+  $$typeof: Symbol | number,
+  key: null | string,
+  context: ReactContext<T>,
+  value: T,
+  children: ReactNodeList,
+};
+
+export type ReactConsumer<T> = {
+  $$typeof: Symbol | number,
+  key: null | string,
+  context: ReactContext<T>,
+  memoizedValue: T | null,
+  // TODO: ReactCall calls this "handler." Which one should we use?
+  render: (value: T) => ReactNodeList,
+};
+
+export type ReactContext<T> = {
+  provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T>,
+  consume(render: (value: T) => ReactNodeList, key?: string): ReactConsumer<T>,
+  defaultValue: T,
+  lastProvider: any, // Fiber | null
 };

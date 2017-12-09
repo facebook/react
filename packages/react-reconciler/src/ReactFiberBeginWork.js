@@ -8,6 +8,11 @@
  */
 
 import type {HostConfig} from 'react-reconciler';
+import type {
+  ReactProvider,
+  ReactConsumer,
+  ReactContext,
+} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {HostContext} from './ReactFiberHostContext';
 import type {HydrationContext} from './ReactFiberHydrationContext';
@@ -27,6 +32,8 @@ import {
   ReturnComponent,
   Fragment,
   Mode,
+  ProviderComponent,
+  ConsumerComponent,
 } from 'shared/ReactTypeOfWork';
 import {
   PerformedWork,
@@ -53,8 +60,8 @@ import {processUpdateQueue} from './ReactFiberUpdateQueue';
 import {
   getMaskedContext,
   getUnmaskedContext,
-  hasContextChanged,
-  pushContextProvider,
+  hasContextChanged as hasLegacyContextChanged,
+  pushContextProvider as pushLegacyContextProvider,
   pushTopLevelContextObject,
   invalidateContextProvider,
 } from './ReactFiberContext';
@@ -147,13 +154,10 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateFragment(current, workInProgress) {
     const nextChildren = workInProgress.pendingProps;
-    if (hasContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (
-      nextChildren === null ||
-      workInProgress.memoizedProps === nextChildren
-    ) {
+    } else if (workInProgress.memoizedProps === nextChildren) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     reconcileChildren(current, workInProgress, nextChildren);
@@ -163,7 +167,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateMode(current, workInProgress) {
     const nextChildren = workInProgress.pendingProps.children;
-    if (hasContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (
@@ -189,7 +193,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const fn = workInProgress.type;
     const nextProps = workInProgress.pendingProps;
 
-    if (hasContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else {
@@ -228,7 +232,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Push context providers early to prevent context stack mismatches.
     // During mounting we don't know the child context yet as the instance doesn't exist.
     // We will invalidate the child context in finishClassComponent() right after rendering.
-    const hasContext = pushContextProvider(workInProgress);
+    const hasContext = pushLegacyContextProvider(workInProgress);
 
     let shouldUpdate;
     if (current === null) {
@@ -397,7 +401,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const nextProps = workInProgress.pendingProps;
     const prevProps = current !== null ? current.memoizedProps : null;
 
-    if (hasContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (memoizedProps === nextProps) {
@@ -492,7 +496,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (
       typeof value === 'object' &&
       value !== null &&
-      typeof value.render === 'function'
+      typeof value.render === 'function' &&
+      value.$$typeof === undefined
     ) {
       const Component = workInProgress.type;
 
@@ -521,7 +526,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Push context providers early to prevent context stack mismatches.
       // During mounting we don't know the child context yet as the instance doesn't exist.
       // We will invalidate the child context in finishClassComponent() right after rendering.
-      const hasContext = pushContextProvider(workInProgress);
+      const hasContext = pushLegacyContextProvider(workInProgress);
       adoptClassInstance(workInProgress, value);
       mountClassInstance(workInProgress, renderExpirationTime);
       return finishClassComponent(current, workInProgress, true, hasContext);
@@ -587,7 +592,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
   function updateCallComponent(current, workInProgress, renderExpirationTime) {
     let nextProps = workInProgress.pendingProps;
-    if (hasContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (workInProgress.memoizedProps === nextProps) {
@@ -630,7 +635,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   ) {
     pushHostContainer(workInProgress, workInProgress.stateNode.containerInfo);
     const nextChildren = workInProgress.pendingProps;
-    if (hasContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
     } else if (workInProgress.memoizedProps === nextChildren) {
@@ -654,6 +659,188 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       reconcileChildren(current, workInProgress, nextChildren);
       memoizeProps(workInProgress, nextChildren);
     }
+    return workInProgress.child;
+  }
+
+  function pushContextProvider(workInProgress) {
+    const context: ReactContext<any> = workInProgress.type;
+    // Store a reference to the previous provider
+    // TODO: Only need to do this on mount
+    workInProgress.stateNode = context.lastProvider;
+    // Push this onto the list of providers. We'll pop in the complete phase.
+    context.lastProvider = workInProgress;
+  }
+
+  function propagateContextChange<V>(
+    workInProgress: Fiber,
+    context: ReactContext<V>,
+    renderExpirationTime: ExpirationTime,
+  ): void {
+    let fiber = workInProgress.child;
+    while (fiber !== null) {
+      let nextFiber;
+      // Visit this fiber.
+      switch (fiber.tag) {
+        case ConsumerComponent:
+          // Check if the context matches.
+          if (fiber.type === context) {
+            // Update the expiration time of all the ancestors, including
+            // the alternates.
+            let node = fiber;
+            while (node !== null) {
+              const alternate = node.alternate;
+              if (
+                node.expirationTime === NoWork ||
+                node.expirationTime > renderExpirationTime
+              ) {
+                node.expirationTime = renderExpirationTime;
+                if (
+                  alternate !== null &&
+                  (alternate.expirationTime === NoWork ||
+                    alternate.expirationTime > renderExpirationTime)
+                ) {
+                  alternate.expirationTime = renderExpirationTime;
+                }
+              } else if (
+                alternate !== null &&
+                (alternate.expirationTime === NoWork ||
+                  alternate.expirationTime > renderExpirationTime)
+              ) {
+                alternate.expirationTime = renderExpirationTime;
+              } else {
+                // Neither alternate was updated, which means the rest of the
+                // ancestor path already has sufficient priority.
+                break;
+              }
+              node = node.return;
+            }
+            // Don't scan deeper than a matching consumer. When we render the
+            // consumer, we'll continue scanning from that point. This way the
+            // scanning work is time-sliced.
+            nextFiber = null;
+          } else {
+            // Traverse down.
+            nextFiber = fiber.child;
+          }
+          break;
+        case ProviderComponent:
+          // Don't scan deeper if this is a matching provider
+          nextFiber = fiber.type === context ? null : fiber.child;
+          break;
+        default:
+          // Traverse down.
+          nextFiber = fiber.child;
+          break;
+      }
+      if (nextFiber !== null) {
+        // Set the return pointer of the child to the work-in-progress fiber.
+        nextFiber.return = fiber;
+      } else {
+        // No child. Traverse to next sibling.
+        nextFiber = fiber;
+        while (nextFiber !== null) {
+          if (nextFiber === workInProgress) {
+            // We're back to the root of this subtree. Exit.
+            nextFiber = null;
+            break;
+          }
+          let sibling = nextFiber.sibling;
+          if (sibling !== null) {
+            nextFiber = sibling;
+            break;
+          }
+          // No more siblings. Traverse up.
+          nextFiber = nextFiber.return;
+        }
+      }
+      fiber = nextFiber;
+    }
+  }
+
+  function updateProviderComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    const context: ReactContext<any> = workInProgress.type;
+
+    const newProvider: ReactProvider<any> = workInProgress.pendingProps;
+    const oldProvider: ReactProvider<any> | null = workInProgress.memoizedProps;
+
+    pushContextProvider(workInProgress);
+
+    if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (oldProvider === newProvider) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    workInProgress.memoizedProps = newProvider;
+
+    const newValue = newProvider.value;
+    const oldValue = oldProvider !== null ? oldProvider.value : null;
+    // TODO: Use Object.is instead of ===
+    if (newValue !== oldValue) {
+      propagateContextChange(workInProgress, context, renderExpirationTime);
+    }
+
+    if (oldProvider !== null && oldProvider.children === newProvider.children) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+    const newChildren = newProvider.children;
+    reconcileChildren(current, workInProgress, newChildren);
+    return workInProgress.child;
+  }
+
+  function updateConsumerComponent(
+    current,
+    workInProgress,
+    renderExpirationTime,
+  ) {
+    const context: ReactContext<any> = workInProgress.type;
+
+    const newConsumer: ReactConsumer<any> = workInProgress.pendingProps;
+    const oldConsumer: ReactConsumer<any> = workInProgress.memoizedProps;
+
+    // Get the nearest ancestor provider.
+    const providerFiber: Fiber | null = context.lastProvider;
+
+    let newValue;
+    if (providerFiber === null) {
+      // This is a detached consumer (has no provider). Use the default
+      // context value.
+      newValue = context.defaultValue;
+    } else {
+      const provider = providerFiber.pendingProps;
+      invariant(
+        provider,
+        'Provider should have pending props. This error is likely caused by ' +
+          'a bug in React. Please file an issue.',
+      );
+      newValue = provider.value;
+    }
+    // The old context value is stored on the consumer object. We can't use the
+    // provider's memoizedProps because those have already been updated by the
+    // time we get here, in the provider's begin phase.
+    const oldValue = oldConsumer !== null ? oldConsumer.memoizedValue : null;
+    newConsumer.memoizedValue = newValue;
+
+    // Context change propagation stops at matching consumers, for time-slicing.
+    // Continue the propagation here.
+    // TODO: Use Object.is instead of ===
+    if (newValue !== oldValue) {
+      propagateContextChange(workInProgress, context, renderExpirationTime);
+      // Because the context value has changed, do not bail out, even if the
+      // consumer objects match.
+    } else if (hasLegacyContextChanged()) {
+      // Normally we can bail out on props equality but if context has changed
+      // we don't do the bailout and we have to reuse existing props instead.
+    } else if (newConsumer === oldConsumer) {
+      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+    }
+
+    const newChildren = newConsumer.render(newValue);
+    reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
   }
 
@@ -710,13 +897,16 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         pushHostRootContext(workInProgress);
         break;
       case ClassComponent:
-        pushContextProvider(workInProgress);
+        pushLegacyContextProvider(workInProgress);
         break;
       case HostPortal:
         pushHostContainer(
           workInProgress,
           workInProgress.stateNode.containerInfo,
         );
+        break;
+      case ProviderComponent:
+        pushContextProvider(workInProgress);
         break;
     }
     // TODO: What if this is currently in progress?
@@ -796,6 +986,18 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return updateFragment(current, workInProgress);
       case Mode:
         return updateMode(current, workInProgress);
+      case ProviderComponent:
+        return updateProviderComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
+      case ConsumerComponent:
+        return updateConsumerComponent(
+          current,
+          workInProgress,
+          renderExpirationTime,
+        );
       default:
         invariant(
           false,
@@ -813,7 +1015,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // Push context providers here to avoid a push/pop context mismatch.
     switch (workInProgress.tag) {
       case ClassComponent:
-        pushContextProvider(workInProgress);
+        pushLegacyContextProvider(workInProgress);
         break;
       case HostRoot:
         pushHostRootContext(workInProgress);

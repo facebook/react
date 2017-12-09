@@ -18,6 +18,7 @@ import {
   cloneElement,
   isValidElement,
 } from './ReactElement';
+import {createContext} from 'shared/ReactContext';
 import {
   createElementWithValidation,
   createFactoryWithValidation,
@@ -40,6 +41,9 @@ const React = {
 
   Fragment: REACT_FRAGMENT_TYPE,
   StrictMode: REACT_STRICT_MODE_TYPE,
+
+  // TODO: Feature flag
+  createContext,
 
   createElement: __DEV__ ? createElementWithValidation : createElement,
   cloneElement: __DEV__ ? cloneElementWithValidation : cloneElement,
