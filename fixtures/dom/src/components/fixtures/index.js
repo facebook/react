@@ -10,6 +10,7 @@ import DateInputFixtures from './date-inputs';
 import ErrorHandling from './error-handling';
 import EventPooling from './event-pooling';
 import CustomElementFixtures from './custom-elements';
+import ScrollFixtures from './scroll';
 
 const React = window.React;
 
@@ -43,6 +44,8 @@ function FixturesPage() {
       return <EventPooling />;
     case '/custom-elements':
       return <CustomElementFixtures />;
+    case '/scroll':
+      return <ScrollFixtures />;
     default:
       return <p>Please select a test fixture.</p>;
   }
