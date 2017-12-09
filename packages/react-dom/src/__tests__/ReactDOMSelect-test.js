@@ -556,6 +556,25 @@ describe('ReactDOMSelect', () => {
       expect(console.error.calls.count()).toBe(1);
     }
   });
+  
+  it('should warn if selected is set on <option>', () => {
+    spyOnDev(console, 'error');
+  
+    ReactTestUtils.renderIntoDocument(
+      <select>
+        <option selected={true} />
+        <option selected={true} />
+      </select>,
+    );
+    if (__DEV__) {
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Use the `defaultValue` or `value` props on <select> instead of ' +
+          'setting `selected` on <option>.',
+      );
+      // Test deduplication
+      expect(console.error.calls.count()).toBe(1);
+    }
+  });
 
   it('should warn if value is null and multiple is true', () => {
     spyOnDev(console, 'error');
