@@ -10,6 +10,7 @@
 import warning from 'fbjs/lib/warning';
 
 export type PropertyInfo = {|
+  acceptsBooleanValue: boolean,
   attributeName: string,
   attributeNamespace: string | null,
   propertyName: string,
@@ -54,24 +55,37 @@ function injectDOMPropertyConfig(domPropertyConfig) {
     const lowerCased = propName.toLowerCase();
     const propConfig = Properties[propName];
 
+    const isReserved = checkMask(propConfig, IS_RESERVED);
+    const mustUseProperty = checkMask(propConfig, MUST_USE_PROPERTY);
+    const hasBooleanValue = checkMask(propConfig, HAS_BOOLEAN_VALUE);
+    const hasNumericValue = checkMask(propConfig, HAS_NUMERIC_VALUE);
+    const hasPositiveNumericValue = checkMask(
+      propConfig,
+      HAS_POSITIVE_NUMERIC_VALUE,
+    );
+    const hasOverloadedBooleanValue = checkMask(
+      propConfig,
+      HAS_OVERLOADED_BOOLEAN_VALUE,
+    );
+    const hasStringBooleanValue = checkMask(
+      propConfig,
+      HAS_STRING_BOOLEAN_VALUE,
+    );
+    const acceptsBooleanValue =
+      hasBooleanValue || hasOverloadedBooleanValue || hasStringBooleanValue;
+
     const propertyInfo: PropertyInfo = {
       attributeName: lowerCased,
       attributeNamespace: null,
+      acceptsBooleanValue,
       propertyName: propName,
-
-      mustUseProperty: checkMask(propConfig, MUST_USE_PROPERTY),
-      hasBooleanValue: checkMask(propConfig, HAS_BOOLEAN_VALUE),
-      hasNumericValue: checkMask(propConfig, HAS_NUMERIC_VALUE),
-      hasPositiveNumericValue: checkMask(
-        propConfig,
-        HAS_POSITIVE_NUMERIC_VALUE,
-      ),
-      hasOverloadedBooleanValue: checkMask(
-        propConfig,
-        HAS_OVERLOADED_BOOLEAN_VALUE,
-      ),
-      hasStringBooleanValue: checkMask(propConfig, HAS_STRING_BOOLEAN_VALUE),
-      isReserved: checkMask(propConfig, IS_RESERVED),
+      isReserved,
+      mustUseProperty,
+      hasBooleanValue,
+      hasNumericValue,
+      hasPositiveNumericValue,
+      hasOverloadedBooleanValue,
+      hasStringBooleanValue,
     };
     if (__DEV__) {
       warning(
@@ -204,11 +218,7 @@ export function isBadlyTypedAttributeValue(
         return false;
       }
       if (propertyInfo !== null) {
-        return !(
-          propertyInfo.hasBooleanValue ||
-          propertyInfo.hasStringBooleanValue ||
-          propertyInfo.hasOverloadedBooleanValue
-        );
+        return !propertyInfo.acceptsBooleanValue;
       } else {
         const prefix = name.toLowerCase().slice(0, 5);
         return prefix !== 'data-' && prefix !== 'aria-';
