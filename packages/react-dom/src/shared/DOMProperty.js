@@ -199,23 +199,24 @@ export function isBadlyTypedAttributeValue(
     // $FlowIssue symbol is perfectly valid here
     case 'symbol': // eslint-disable-line
       return true;
-    case 'boolean':
-      break;
+    case 'boolean': {
+      if (isCustomComponentTag) {
+        return false;
+      }
+      if (propertyInfo !== null) {
+        return !(
+          propertyInfo.hasBooleanValue ||
+          propertyInfo.hasStringBooleanValue ||
+          propertyInfo.hasOverloadedBooleanValue
+        );
+      } else {
+        const prefix = name.toLowerCase().slice(0, 5);
+        return prefix !== 'data-' && prefix !== 'aria-';
+      }
+    }
     default:
       return false;
   }
-  if (isCustomComponentTag) {
-    return false;
-  }
-  if (propertyInfo !== null) {
-    return !(
-      propertyInfo.hasBooleanValue ||
-      propertyInfo.hasStringBooleanValue ||
-      propertyInfo.hasOverloadedBooleanValue
-    );
-  }
-  const prefix = name.toLowerCase().slice(0, 5);
-  return prefix !== 'data-' && prefix !== 'aria-';
 }
 
 export function shouldTreatAttributeValueAsNull(
