@@ -567,7 +567,6 @@ describe('ReactDOMSelect', () => {
       </select>,
     );
     if (__DEV__) {
-      // Test deduplication
       expect(console.error.calls.count()).toBe(1);
     }
 
@@ -582,6 +581,8 @@ describe('ReactDOMSelect', () => {
         'Use the `defaultValue` or `value` props on <select> instead of ' +
           'setting `selected` on <option>.',
       );
+      // Test deduplication
+      expect(console.error.calls.count()).toBe(1);
     }
   });
 
