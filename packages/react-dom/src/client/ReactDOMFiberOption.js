@@ -37,13 +37,15 @@ function flattenChildren(children) {
 
 export function validateProps(element: Element, props: Object) {
   // TODO (yungsters): Remove support for `selected` in <option>.
-  if (__DEV__ && !didWarnSelectedSetOnOption) {
-    warning(
-      props.selected == null,
-      'Use the `defaultValue` or `value` props on <select> instead of ' +
-        'setting `selected` on <option>.',
-    );
-    didWarnSelectedSetOnOption = true;
+  if (__DEV__) {
+    if (!didWarnSelectedSetOnOption) {
+      warning(
+        props.selected == null,
+        'Use the `defaultValue` or `value` props on <select> instead of ' +
+          'setting `selected` on <option>.',
+      );
+      didWarnSelectedSetOnOption = true;
+    }
   }
 }
 
