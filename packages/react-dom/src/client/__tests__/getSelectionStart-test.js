@@ -13,7 +13,6 @@ const React = require('react');
 const ReactDOM = require('react-dom');
 
 describe('getSelectionText', () => {
-
   describe('when the node is a text area', () => {
     it('has a value for selectionStart', () => {
       const container = document.createElement('div');
@@ -37,9 +36,9 @@ describe('getSelectionText', () => {
       const container = document.createElement('div');
       ReactDOM.render(<div />, container);
       container.firstChild.contentEditable = true;
-      
+
       expect(container.firstChild).toBeTruthy();
       expect(container.firstChild.selectionStart).toBeUndefined();
-    })
-  })
+    });
+  });
 });
