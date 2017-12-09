@@ -17,6 +17,7 @@ import {
   TOP_RESET,
   TOP_SCROLL,
   TOP_SUBMIT,
+  TOP_WHEEL,
   getRawEventName,
   mediaEventTypes,
 } from './DOMTopLevelEventTypes';
@@ -27,6 +28,12 @@ import {
   trapCapturedEvent,
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
+import BrowserEventConstants from './BrowserEventConstants';
+import invariant from 'fbjs/lib/invariant';
+
+export * from 'events/ReactEventEmitterMixin';
+
+const {topLevelTypes} = BrowserEventConstants;
 
 /**
  * Summary of `ReactBrowserEventEmitter` event handling:
@@ -92,15 +99,18 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
-function getListeningForDocument(mountAt: any) {
-  // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
+function getListenerTrackingFor(node) {
+  // In IE8, `node` is a host object and doesn't have `hasOwnProperty`
   // directly.
-  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
-    mountAt[topListenersIDKey] = reactTopListenersCounter++;
-    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+  if (!Object.prototype.hasOwnProperty.call(node, topListenersIDKey)) {
+    node[topListenersIDKey] = reactTopListenersCounter++;
+    alreadyListeningTo[node[topListenersIDKey]] = {};
   }
-  return alreadyListeningTo[mountAt[topListenersIDKey]];
+  return alreadyListeningTo[node[topListenersIDKey]];
 }
+
+const BUBBLE = 0;
+const CAPTURE = 1;
 
 /**
  * We listen for bubbled touch events on the document object.
@@ -126,8 +136,9 @@ function getListeningForDocument(mountAt: any) {
 export function listenTo(
   registrationName: string,
   mountAt: Document | Element,
+  domElement: Element
 ) {
-  const isListening = getListeningForDocument(mountAt);
+  const isListening = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
@@ -135,7 +146,8 @@ export function listenTo(
     if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
       switch (dependency) {
         case TOP_SCROLL:
-          trapCapturedEvent(TOP_SCROLL, mountAt);
+        case TOP_WHEEL:
+          trapCapturedEvent(TOP_SCROLL, domElement);
           break;
         case TOP_FOCUS:
         case TOP_BLUR:
@@ -176,7 +188,7 @@ export function isListeningToAllDependencies(
   registrationName: string,
   mountAt: Document | Element,
 ) {
-  const isListening = getListeningForDocument(mountAt);
+  const isListening = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
