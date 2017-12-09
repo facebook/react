@@ -128,7 +128,7 @@ export function setValueForProperty(
   if (!propertyInfo) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
-      if (value == null) {
+      if (value === null) {
         node.removeAttribute(attributeName);
       } else {
         node.setAttribute(attributeName, '' + (value: any));

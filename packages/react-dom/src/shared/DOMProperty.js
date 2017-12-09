@@ -240,10 +240,10 @@ export function shouldTreatAttributeValueAsNull(
   }
   const propertyInfo = getPropertyInfo(name);
   if (propertyInfo) {
-    if (propertyInfo.hasBooleanValue) {
-      return !value;
-    } else if (propertyInfo.hasOverloadedBooleanValue) {
-      return value === false;
+    if (propertyInfo.hasBooleanValue && !value) {
+      return true;
+    } else if (propertyInfo.hasOverloadedBooleanValue && value === false) {
+      return true;
     } else if (propertyInfo.hasNumericValue && isNaN(value)) {
       return true;
     } else if (propertyInfo.hasPositiveNumericValue && (value: any) < 1) {

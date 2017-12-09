@@ -62,6 +62,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div width={null} />);
         expect(e.hasAttribute('width')).toBe(false);
       });
+
+      itRenders('no string prop with function value', async render => {
+        const e = await render(<div width={function() {}} />, 1);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
+
+      itRenders('no string prop with symbol value', async render => {
+        const e = await render(<div width={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('width')).toBe(false);
+      });
     });
 
     describe('boolean properties', function() {
@@ -122,6 +132,16 @@ describe('ReactDOMServerIntegration', () => {
         const e = await render(<div hidden={null} />);
         expect(e.hasAttribute('hidden')).toBe(false);
       });
+
+      itRenders('no boolean prop with function value', async render => {
+        const e = await render(<div hidden={function() {}} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
+
+      itRenders('no boolean prop with symbol value', async render => {
+        const e = await render(<div hidden={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('hidden')).toBe(false);
+      });
     });
 
     describe('download property (combined boolean/string attribute)', function() {
@@ -162,6 +182,16 @@ describe('ReactDOMServerIntegration', () => {
 
       itRenders('no download prop with undefined value', async render => {
         const e = await render(<div download={undefined} />);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with function value', async render => {
+        const e = await render(<div download={function() {}} />, 1);
+        expect(e.hasAttribute('download')).toBe(false);
+      });
+
+      itRenders('no download prop with symbol value', async render => {
+        const e = await render(<div download={Symbol('foo')} />, 1);
         expect(e.hasAttribute('download')).toBe(false);
       });
     });
