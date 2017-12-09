@@ -556,10 +556,10 @@ describe('ReactDOMSelect', () => {
       expect(console.error.calls.count()).toBe(1);
     }
   });
-  
+
   it('should warn if selected is set on <option>', () => {
     spyOnDev(console, 'error');
-  
+
     ReactTestUtils.renderIntoDocument(
       <select>
         <option selected={true} />
