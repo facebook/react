@@ -331,15 +331,16 @@ describe('ReactBrowserEventEmitter', () => {
 
   it('should listen to events only once', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document, document);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document, document);
     expect(EventTarget.prototype.addEventListener).toHaveBeenCalledTimes(1);
   });
 
   it('should work with event plugins without dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CLICK_KEY, document, document);
 
     expect(EventTarget.prototype.addEventListener.calls.argsFor(0)[0]).toBe(
       'click',
@@ -349,7 +350,7 @@ describe('ReactBrowserEventEmitter', () => {
   it('should work with event plugins with dependencies', () => {
     spyOnDevAndProd(EventTarget.prototype, 'addEventListener');
 
-    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document);
+    ReactBrowserEventEmitter.listenTo(ON_CHANGE_KEY, document, document);
 
     const setEventListeners = [];
     const listenCalls = EventTarget.prototype.addEventListener.calls.allArgs();
@@ -364,5 +365,39 @@ describe('ReactBrowserEventEmitter', () => {
     for (let i = 0; i < setEventListeners.length; i++) {
       expect(dependencies.indexOf(setEventListeners[i])).toBeTruthy();
     }
+  });
+
+  describe('local listener attachment', function() {
+    it('does attach a new listener for the same event type', () => {
+      var container = document.createElement('div');
+      var spy = jest.fn();
+
+      ReactDOM.render(<div onTouchMove={() => spy()} />, container);
+      ReactDOM.render(<div onTouchMove={() => spy()} />, container);
+
+      var el = container.querySelector('div');
+
+      el.dispatchEvent(new Event('touchmove'));
+
+      expect(spy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not call old listeners on a second update with a new handler', () => {
+      var container = document.createElement('div');
+      var a = jest.fn();
+      var b = jest.fn();
+
+      ReactDOM.render(<div onTouchMove={a} />, container);
+      ReactDOM.render(<div onTouchMove={b} />, container);
+
+      var el = container.querySelector('div');
+
+      el.dispatchEvent(new Event('touchmove'));
+
+      // The first handler should have been torn down
+      expect(a).toHaveBeenCalledTimes(0);
+      // The second handler is now attached
+      expect(b).toHaveBeenCalledTimes(1);
+    });
   });
 });
