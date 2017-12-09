@@ -2691,4 +2691,19 @@ describe('ReactDOMComponent', () => {
       expect(node.getAttribute('onx')).toBe('bar');
     });
   });
+
+  describe('Trapping local event listeners', () => {
+    it('triggers load if onload is not present on an image', () => {
+      return new Promise(function(resolve, reject) {
+        const el = ReactTestUtils.renderIntoDocument(
+          <div onLoad={resolve} onError={reject}>
+            <img />
+          </div>,
+        );
+
+        el.querySelector('img').src =
+          'data:image/gif;base64,R0lGODlhAQABAIAAAP///wAAACH5BAEAAAAALAAAAAABAAEAAAICRAEAOw==';
+      });
+    });
+  });
 });

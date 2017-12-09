@@ -6,7 +6,6 @@
  */
 
 import {registrationNameDependencies} from 'events/EventPluginRegistry';
-
 import {
   setEnabled,
   isEnabled,
@@ -15,6 +14,7 @@ import {
 } from './ReactDOMEventListener';
 import isEventSupported from './isEventSupported';
 import BrowserEventConstants from './BrowserEventConstants';
+import invariant from 'fbjs/lib/invariant';
 
 export * from 'events/ReactEventEmitterMixin';
 
@@ -84,15 +84,27 @@ let reactTopListenersCounter = 0;
  */
 const topListenersIDKey = '_reactListenersID' + ('' + Math.random()).slice(2);
 
-function getListeningForDocument(mountAt) {
-  // In IE8, `mountAt` is a host object and doesn't have `hasOwnProperty`
+function getListenerTrackingFor(node) {
+  // In IE8, `node` is a host object and doesn't have `hasOwnProperty`
   // directly.
-  if (!Object.prototype.hasOwnProperty.call(mountAt, topListenersIDKey)) {
-    mountAt[topListenersIDKey] = reactTopListenersCounter++;
-    alreadyListeningTo[mountAt[topListenersIDKey]] = {};
+  if (!Object.prototype.hasOwnProperty.call(node, topListenersIDKey)) {
+    node[topListenersIDKey] = reactTopListenersCounter++;
+    alreadyListeningTo[node[topListenersIDKey]] = {};
   }
-  return alreadyListeningTo[mountAt[topListenersIDKey]];
+  return alreadyListeningTo[node[topListenersIDKey]];
 }
+
+const BUBBLE = 0;
+const CAPTURE = 1;
+
+const localEvents = {
+  topTouchMove: BUBBLE,
+  topTouchStart: BUBBLE,
+  topTouchCancel: BUBBLE,
+  topTouchEnd: BUBBLE,
+  topScroll: CAPTURE,
+  topWheel: CAPTURE,
+};
 
 /**
  * We listen for bubbled touch events on the document object.
@@ -115,17 +127,27 @@ function getListeningForDocument(mountAt) {
  * @param {string} registrationName Name of listener (e.g. `onClick`).
  * @param {object} contentDocumentHandle Document which owns the container
  */
-export function listenTo(registrationName, contentDocumentHandle) {
-  const mountAt = contentDocumentHandle;
-  const isListening = getListeningForDocument(mountAt);
+export function listenTo(registrationName, mountAt, domElement) {
+  const isListening = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
 
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
-    if (!(isListening.hasOwnProperty(dependency) && isListening[dependency])) {
-      if (dependency === 'topScroll') {
-        trapCapturedEvent('topScroll', 'scroll', mountAt);
-      } else if (dependency === 'topFocus' || dependency === 'topBlur') {
+
+    if (localEvents.hasOwnProperty(dependency)) {
+      const isLocallyListening = getListenerTrackingFor(domElement);
+
+      if (!isLocallyListening.hasOwnProperty(dependency)) {
+        if (localEvents[dependency] === CAPTURE) {
+          trapCapturedEvent(dependency, topLevelTypes[dependency], domElement);
+        } else {
+          trapBubbledEvent(dependency, topLevelTypes[dependency], domElement);
+        }
+
+        isLocallyListening[dependency] = true;
+      }
+    } else if (!isListening.hasOwnProperty(dependency)) {
+      if (dependency === 'topFocus' || dependency === 'topBlur') {
         trapCapturedEvent('topFocus', 'focus', mountAt);
         trapCapturedEvent('topBlur', 'blur', mountAt);
 
@@ -144,15 +166,16 @@ export function listenTo(registrationName, contentDocumentHandle) {
         isListening.topClose = true;
       } else if (topLevelTypes.hasOwnProperty(dependency)) {
         trapBubbledEvent(dependency, topLevelTypes[dependency], mountAt);
+        isListening[dependency] = true;
+      } else {
+        invariant(false, 'Unexpected event dependency %s', dependency);
       }
-
-      isListening[dependency] = true;
     }
   }
 }
 
 export function isListeningToAllDependencies(registrationName, mountAt) {
-  const isListening = getListeningForDocument(mountAt);
+  const isListening = getListenerTrackingFor(mountAt);
   const dependencies = registrationNameDependencies[registrationName];
   for (let i = 0; i < dependencies.length; i++) {
     const dependency = dependencies[i];
