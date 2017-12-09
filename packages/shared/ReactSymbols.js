@@ -40,3 +40,16 @@ export function getIteratorFn(maybeIterable: ?any): ?() => ?Iterator<*> {
   }
   return null;
 }
+
+const reactSymbols = [
+  REACT_ELEMENT_TYPE,
+  REACT_CALL_TYPE,
+  REACT_RETURN_TYPE,
+  REACT_PORTAL_TYPE,
+  REACT_FRAGMENT_TYPE,
+  MAYBE_ITERATOR_SYMBOL,
+  FAUX_ITERATOR_SYMBOL,
+];
+export function isReactSymbol(type: any) {
+  return reactSymbols.some(r => type === r);
+}

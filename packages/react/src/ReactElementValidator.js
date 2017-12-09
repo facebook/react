@@ -15,7 +15,11 @@
 import lowPriorityWarning from 'shared/lowPriorityWarning';
 import describeComponentFrame from 'shared/describeComponentFrame';
 import getComponentName from 'shared/getComponentName';
-import {getIteratorFn, REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
+import {
+  getIteratorFn,
+  REACT_FRAGMENT_TYPE,
+  isReactSymbol,
+} from 'shared/ReactSymbols';
 import checkPropTypes from 'prop-types/checkPropTypes';
 import warning from 'fbjs/lib/warning';
 
@@ -281,7 +285,7 @@ export function createElementWithValidation(type, props, children) {
   const validType =
     typeof type === 'string' ||
     typeof type === 'function' ||
-    typeof type === 'symbol' ||
+    isReactSymbol(type) ||
     typeof type === 'number';
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.
@@ -336,7 +340,7 @@ export function createElementWithValidation(type, props, children) {
     }
   }
 
-  if (typeof type === 'symbol' && type === REACT_FRAGMENT_TYPE) {
+  if (type === REACT_FRAGMENT_TYPE) {
     validateFragmentProps(element);
   } else {
     validatePropTypes(element);
