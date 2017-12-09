@@ -287,6 +287,11 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
+      itRenders('numeric property with zero value', async render => {
+        const e = await render(<ol start={0} />);
+        expect(e.getAttribute('start')).toBe('0');
+      });
+
       itRenders(
         'no positive numeric property with zero value',
         async render => {
@@ -295,9 +300,27 @@ describe('ReactDOMServerIntegration', () => {
         },
       );
 
-      itRenders('numeric property with zero value', async render => {
-        const e = await render(<ol start={0} />);
-        expect(e.getAttribute('start')).toBe('0');
+      itRenders('no numeric prop with function value', async render => {
+        const e = await render(<ol start={function() {}} />, 1);
+        expect(e.hasAttribute('start')).toBe(false);
+      });
+
+      itRenders('no numeric prop with symbol value', async render => {
+        const e = await render(<ol start={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('start')).toBe(false);
+      });
+
+      itRenders(
+        'no positive numeric prop with function value',
+        async render => {
+          const e = await render(<input size={function() {}} />, 1);
+          expect(e.hasAttribute('size')).toBe(false);
+        },
+      );
+
+      itRenders('no positive numeric prop with symbol value', async render => {
+        const e = await render(<input size={Symbol('foo')} />, 1);
+        expect(e.hasAttribute('size')).toBe(false);
       });
     });
 

@@ -238,6 +238,11 @@ export function shouldTreatAttributeValueAsNull(
   if (value === null || typeof value === 'undefined') {
     return true;
   }
+  if (
+    isBadlyTypedAttributeValue(name, value, propertyInfo, isCustomComponentTag)
+  ) {
+    return true;
+  }
   if (propertyInfo !== null) {
     if (propertyInfo.hasBooleanValue && !value) {
       return true;
@@ -249,12 +254,7 @@ export function shouldTreatAttributeValueAsNull(
       return true;
     }
   }
-  return isBadlyTypedAttributeValue(
-    name,
-    value,
-    propertyInfo,
-    isCustomComponentTag,
-  );
+  return false;
 }
 
 export function getPropertyInfo(name: string): PropertyInfo | null {
