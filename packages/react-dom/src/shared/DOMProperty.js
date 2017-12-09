@@ -9,7 +9,7 @@
 
 import warning from 'fbjs/lib/warning';
 
-type PropertyInfo = {|
+export type PropertyInfo = {|
   attributeName: string,
   attributeNamespace: string | null,
   propertyName: string,

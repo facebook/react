@@ -1024,6 +1024,7 @@ export function diffHydratedProperties(
             domElement,
             propKey,
             nextProp,
+            propertyInfo,
           );
         } else {
           let ownNamespace = parentNamespace;

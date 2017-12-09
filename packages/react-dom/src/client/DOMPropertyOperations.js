@@ -14,6 +14,8 @@ import {
   isAttributeNameSafe,
 } from '../shared/DOMProperty';
 
+import type {PropertyInfo} from '../shared/DOMProperty';
+
 /**
  * Get the value for a property on a node. Only used in DEV for SSR validation.
  * The "expected" argument is used as a hint of what the expected value is.
@@ -23,68 +25,61 @@ export function getValueForProperty(
   node: Element,
   name: string,
   expected: mixed,
+  propertyInfo: PropertyInfo,
 ): mixed {
   if (__DEV__) {
-    const propertyInfo = getPropertyInfo(name);
-    if (propertyInfo) {
-      if (propertyInfo.mustUseProperty) {
-        const {propertyName} = propertyInfo;
-        return (node: any)[propertyName];
-      } else {
-        const attributeName = propertyInfo.attributeName;
+    if (propertyInfo.mustUseProperty) {
+      const {propertyName} = propertyInfo;
+      return (node: any)[propertyName];
+    } else {
+      const attributeName = propertyInfo.attributeName;
 
-        let stringValue = null;
+      let stringValue = null;
 
-        if (propertyInfo.hasOverloadedBooleanValue) {
-          if (node.hasAttribute(attributeName)) {
-            const value = node.getAttribute(attributeName);
-            if (value === '') {
-              return true;
-            }
-            if (
-              shouldTreatAttributeValueAsNull(
-                name,
-                expected,
-                propertyInfo,
-                false,
-              )
-            ) {
-              return value;
-            }
-            if (value === '' + (expected: any)) {
-              return expected;
-            }
-            return value;
+      if (propertyInfo.hasOverloadedBooleanValue) {
+        if (node.hasAttribute(attributeName)) {
+          const value = node.getAttribute(attributeName);
+          if (value === '') {
+            return true;
           }
-        } else if (node.hasAttribute(attributeName)) {
           if (
             shouldTreatAttributeValueAsNull(name, expected, propertyInfo, false)
           ) {
-            // We had an attribute but shouldn't have had one, so read it
-            // for the error message.
-            return node.getAttribute(attributeName);
+            return value;
           }
-          if (propertyInfo.hasBooleanValue) {
-            // If this was a boolean, it doesn't matter what the value is
-            // the fact that we have it is the same as the expected.
+          if (value === '' + (expected: any)) {
             return expected;
           }
-          // Even if this property uses a namespace we use getAttribute
-          // because we assume its namespaced name is the same as our config.
-          // To use getAttributeNS we need the local name which we don't have
-          // in our config atm.
-          stringValue = node.getAttribute(attributeName);
+          return value;
         }
-
+      } else if (node.hasAttribute(attributeName)) {
         if (
           shouldTreatAttributeValueAsNull(name, expected, propertyInfo, false)
         ) {
-          return stringValue === null ? expected : stringValue;
-        } else if (stringValue === '' + (expected: any)) {
-          return expected;
-        } else {
-          return stringValue;
+          // We had an attribute but shouldn't have had one, so read it
+          // for the error message.
+          return node.getAttribute(attributeName);
         }
+        if (propertyInfo.hasBooleanValue) {
+          // If this was a boolean, it doesn't matter what the value is
+          // the fact that we have it is the same as the expected.
+          return expected;
+        }
+        // Even if this property uses a namespace we use getAttribute
+        // because we assume its namespaced name is the same as our config.
+        // To use getAttributeNS we need the local name which we don't have
+        // in our config atm.
+        stringValue = node.getAttribute(attributeName);
+      }
+
+      if (
+        shouldTreatAttributeValueAsNull(name, expected, propertyInfo, false)
+      ) {
+        return stringValue === null ? expected : stringValue;
+      } else if (stringValue === '' + (expected: any)) {
+        return expected;
+      } else {
+        return stringValue;
       }
     }
   }
