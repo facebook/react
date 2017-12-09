@@ -37,7 +37,7 @@ describe('getSelectionText', () => {
       ReactDOM.render(<div />, container);
       container.firstChild.contentEditable = true;
 
-      expect(container.firstChild).toBeTruthy();
+      expect(container.firstChild.contentEditable).toBeTruthy();
       expect(container.firstChild.selectionStart).toBeUndefined();
     });
   });
