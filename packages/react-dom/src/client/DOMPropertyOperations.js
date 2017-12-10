@@ -12,6 +12,8 @@ import {
   shouldSkipAttribute,
   shouldTreatAttributeValueAsNull,
   isAttributeNameSafe,
+  BOOLEAN,
+  OVERLOADED_BOOLEAN,
 } from '../shared/DOMProperty';
 
 import type {PropertyInfo} from '../shared/DOMProperty';
@@ -36,7 +38,7 @@ export function getValueForProperty(
 
       let stringValue = null;
 
-      if (propertyInfo.hasOverloadedBooleanValue) {
+      if (propertyInfo.type === OVERLOADED_BOOLEAN) {
         if (node.hasAttribute(attributeName)) {
           const value = node.getAttribute(attributeName);
           if (value === '') {
@@ -60,7 +62,7 @@ export function getValueForProperty(
           // for the error message.
           return node.getAttribute(attributeName);
         }
-        if (propertyInfo.hasBooleanValue) {
+        if (propertyInfo.type === BOOLEAN) {
           // If this was a boolean, it doesn't matter what the value is
           // the fact that we have it is the same as the expected.
           return expected;
@@ -149,15 +151,12 @@ export function setValueForProperty(
     }
     return;
   }
-  const {
-    hasBooleanValue,
-    hasOverloadedBooleanValue,
-    mustUseProperty,
-  } = propertyInfo;
+  const {mustUseProperty} = propertyInfo;
   if (mustUseProperty) {
     const {propertyName} = propertyInfo;
     if (value === null) {
-      (node: any)[propertyName] = hasBooleanValue ? false : '';
+      const {type} = propertyInfo;
+      (node: any)[propertyName] = type === BOOLEAN ? false : '';
     } else {
       // Contrary to `setAttribute`, object properties are properly
       // `toString`ed by IE8/9.
@@ -170,8 +169,9 @@ export function setValueForProperty(
   if (value === null) {
     node.removeAttribute(attributeName);
   } else {
+    const {type} = propertyInfo;
     let attributeValue;
-    if (hasBooleanValue || (hasOverloadedBooleanValue && value === true)) {
+    if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
       attributeValue = '';
     } else {
       // `setAttribute` with objects becomes only `[object]` in IE8/9,

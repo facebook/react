@@ -10,6 +10,8 @@
 import {
   ID_ATTRIBUTE_NAME,
   ROOT_ATTRIBUTE_NAME,
+  BOOLEAN,
+  OVERLOADED_BOOLEAN,
   getPropertyInfo,
   isAttributeNameSafe,
   shouldSkipAttribute,
@@ -53,8 +55,8 @@ export function createMarkupForProperty(name: string, value: mixed): string {
   if (propertyInfo) {
     const attributeName = propertyInfo.attributeName;
     if (
-      propertyInfo.hasBooleanValue ||
-      (propertyInfo.hasOverloadedBooleanValue && value === true)
+      propertyInfo.type === BOOLEAN ||
+      (propertyInfo.type === OVERLOADED_BOOLEAN && value === true)
     ) {
       return attributeName + '=""';
     } else {

@@ -9,113 +9,38 @@
 
 import warning from 'fbjs/lib/warning';
 
+type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+// A reserved attribute.
+// It is handled by React separately and shouldn't be written to the DOM.
+export const RESERVED = 0;
+// A simple string attribute.
+// Attributes that aren't in the whitelist are presumed to have this type.
+export const STRING = 1;
+// A simple string attribute that also accepts booleans from the user
+// (but coerces them to string and doesn't have any special handling for them).
+export const STRING_BOOLEAN = 2;
+// An attribute that should be removed when set to a falsey value.
+export const BOOLEAN = 3;
+// An attribute that can be used as a flag as well as with a value.
+// Removed when strictly equal to false; present without a value when
+// strictly equal to true; present with a value otherwise.
+export const OVERLOADED_BOOLEAN = 4;
+// An attribute that must be numeric or parse as a numeric and should be
+// removed when set to a falsey value.
+export const NUMERIC = 5;
+// An attribute that must be positive numeric or parse as a positive
+// numeric and should be removed when set to a falsey value.
+export const POSITIVE_NUMERIC = 6;
+
 export type PropertyInfo = {|
-  acceptsBooleanValue: boolean,
-  attributeName: string,
-  attributeNamespace: string | null,
-  propertyName: string,
-  isReserved: boolean,
-  mustUseProperty: boolean,
-  hasBooleanValue: boolean,
-  hasNumericValue: boolean,
-  hasPositiveNumericValue: boolean,
-  hasOverloadedBooleanValue: boolean,
-  hasStringBooleanValue: boolean,
+  +acceptsBooleans: boolean,
+  +attributeName: string,
+  +attributeNamespace: string | null,
+  +mustUseProperty: boolean,
+  +propertyName: string,
+  +type: PropertyType,
 |};
-
-function checkMask(value, bitmask) {
-  return (value & bitmask) === bitmask;
-}
-
-const MUST_USE_PROPERTY = 0x1;
-const HAS_BOOLEAN_VALUE = 0x4;
-const HAS_NUMERIC_VALUE = 0x8;
-const HAS_POSITIVE_NUMERIC_VALUE = 0x10 | 0x8;
-const HAS_OVERLOADED_BOOLEAN_VALUE = 0x20;
-const HAS_STRING_BOOLEAN_VALUE = 0x40;
-const IS_RESERVED = 0x80;
-
-function injectDOMPropertyConfig(domPropertyConfig) {
-  const Properties = domPropertyConfig.Properties || {};
-  const DOMAttributeNamespaces = domPropertyConfig.DOMAttributeNamespaces || {};
-  const DOMAttributeNames = domPropertyConfig.DOMAttributeNames || {};
-
-  for (const propName in Properties) {
-    if (__DEV__) {
-      warning(
-        !properties.hasOwnProperty(propName),
-        "injectDOMPropertyConfig(...): You're trying to inject DOM property " +
-          "'%s' which has already been injected. You may be accidentally " +
-          'injecting the same DOM property config twice, or you may be ' +
-          'injecting two configs that have conflicting property names.',
-        propName,
-      );
-    }
-
-    const lowerCased = propName.toLowerCase();
-    const propConfig = Properties[propName];
-
-    const isReserved = checkMask(propConfig, IS_RESERVED);
-    const mustUseProperty = checkMask(propConfig, MUST_USE_PROPERTY);
-    const hasBooleanValue = checkMask(propConfig, HAS_BOOLEAN_VALUE);
-    const hasNumericValue = checkMask(propConfig, HAS_NUMERIC_VALUE);
-    const hasPositiveNumericValue = checkMask(
-      propConfig,
-      HAS_POSITIVE_NUMERIC_VALUE,
-    );
-    const hasOverloadedBooleanValue = checkMask(
-      propConfig,
-      HAS_OVERLOADED_BOOLEAN_VALUE,
-    );
-    const hasStringBooleanValue = checkMask(
-      propConfig,
-      HAS_STRING_BOOLEAN_VALUE,
-    );
-    const acceptsBooleanValue =
-      hasBooleanValue || hasOverloadedBooleanValue || hasStringBooleanValue;
-
-    const propertyInfo: PropertyInfo = {
-      attributeName: lowerCased,
-      attributeNamespace: null,
-      acceptsBooleanValue,
-      propertyName: propName,
-      isReserved,
-      mustUseProperty,
-      hasBooleanValue,
-      hasNumericValue,
-      hasPositiveNumericValue,
-      hasOverloadedBooleanValue,
-      hasStringBooleanValue,
-    };
-    if (__DEV__) {
-      warning(
-        propertyInfo.hasBooleanValue +
-          propertyInfo.hasNumericValue +
-          propertyInfo.hasOverloadedBooleanValue <=
-          1,
-        'DOMProperty: Value can be one of boolean, overloaded boolean, or ' +
-          'numeric value, but not a combination: %s',
-        propName,
-      );
-    }
-
-    if (DOMAttributeNames.hasOwnProperty(propName)) {
-      const attributeName = DOMAttributeNames[propName];
-
-      propertyInfo.attributeName = attributeName;
-    }
-
-    if (DOMAttributeNamespaces.hasOwnProperty(propName)) {
-      propertyInfo.attributeNamespace = DOMAttributeNamespaces[propName];
-    }
-
-    // Downcase references to whitelist properties to check for membership
-    // without case-sensitivity. This allows the whitelist to pick up
-    // `allowfullscreen`, which should be written using the property configuration
-    // for `allowFullscreen`
-    properties[propName] = propertyInfo;
-  }
-}
 
 /* eslint-disable max-len */
 export const ATTRIBUTE_NAME_START_CHAR =
@@ -151,39 +76,12 @@ export function isAttributeNameSafe(attributeName: string): boolean {
   return false;
 }
 
-/**
- * Map from property "standard name" to an object with info about how to set
- * the property in the DOM. Each object contains:
- *
- * attributeName:
- *   Used when rendering markup or with `*Attribute()`.
- * attributeNamespace
- * propertyName:
- *   Used on DOM node instances. (This includes properties that mutate due to
- *   external factors.)
- * mustUseProperty:
- *   Whether the property must be accessed and mutated as an object property.
- * hasBooleanValue:
- *   Whether the property should be removed when set to a falsey value.
- * hasNumericValue:
- *   Whether the property must be numeric or parse as a numeric and should be
- *   removed when set to a falsey value.
- * hasPositiveNumericValue:
- *   Whether the property must be positive numeric or parse as a positive
- *   numeric and should be removed when set to a falsey value.
- * hasOverloadedBooleanValue:
- *   Whether the property can be used as a flag as well as with a value.
- *   Removed when strictly equal to false; present without a value when
- *   strictly equal to true; present with a value otherwise.
- */
-const properties = {};
-
 export function shouldSkipAttribute(
   name: string,
   propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
-  if (propertyInfo !== null && propertyInfo.isReserved) {
+  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
     return true;
   }
   if (isCustomComponentTag) {
@@ -205,7 +103,7 @@ export function isBadlyTypedAttributeValue(
   propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
-  if (propertyInfo !== null && propertyInfo.isReserved) {
+  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
     return false;
   }
   switch (typeof value) {
@@ -218,7 +116,7 @@ export function isBadlyTypedAttributeValue(
         return false;
       }
       if (propertyInfo !== null) {
-        return !propertyInfo.acceptsBooleanValue;
+        return !propertyInfo.acceptsBooleans;
       } else {
         const prefix = name.toLowerCase().slice(0, 5);
         return prefix !== 'data-' && prefix !== 'aria-';
@@ -244,14 +142,15 @@ export function shouldTreatAttributeValueAsNull(
     return true;
   }
   if (propertyInfo !== null) {
-    if (propertyInfo.hasBooleanValue && !value) {
-      return true;
-    } else if (propertyInfo.hasOverloadedBooleanValue && value === false) {
-      return true;
-    } else if (propertyInfo.hasNumericValue && isNaN(value)) {
-      return true;
-    } else if (propertyInfo.hasPositiveNumericValue && (value: any) < 1) {
-      return true;
+    switch (propertyInfo.type) {
+      case BOOLEAN:
+        return !value;
+      case OVERLOADED_BOOLEAN:
+        return value === false;
+      case NUMERIC:
+        return isNaN(value);
+      case POSITIVE_NUMERIC:
+        return isNaN(value) || (value: any) < 1;
     }
   }
   return false;
@@ -261,95 +160,148 @@ export function getPropertyInfo(name: string): PropertyInfo | null {
   return properties.hasOwnProperty(name) ? properties[name] : null;
 }
 
-// Reserved properties that are handled by React specially and shouldn't be set.
-const ReservedPropertyConfig = {
-  Properties: {
-    children: IS_RESERVED,
-    dangerouslySetInnerHTML: IS_RESERVED,
-    // TODO: This prevents the assignment of defaultValue to regular
-    // elements (not just inputs). Now that ReactDOMInput assigns to the
-    // defaultValue property -- do we need this?
-    defaultValue: IS_RESERVED,
-    defaultChecked: IS_RESERVED,
-    innerHTML: IS_RESERVED,
-    suppressContentEditableWarning: IS_RESERVED,
-    suppressHydrationWarning: IS_RESERVED,
-    style: IS_RESERVED,
-  },
-};
+function PropertyInfoRecord(
+  name: string,
+  type: PropertyType,
+  mustUseProperty: boolean,
+  attributeName: string,
+  attributeNamespace: string | null,
+) {
+  this.acceptsBooleans =
+    type === STRING_BOOLEAN || type === BOOLEAN || type === OVERLOADED_BOOLEAN;
+  this.attributeName = attributeName;
+  this.attributeNamespace = attributeNamespace;
+  this.mustUseProperty = mustUseProperty;
+  this.propertyName = name;
+  this.type = type;
+}
 
-const HTMLDOMPropertyConfig = {
-  // When adding attributes to this list, be sure to also add them to
-  // the `possibleStandardNames` module to ensure casing and incorrect
-  // name warnings.
-  Properties: {
-    allowFullScreen: HAS_BOOLEAN_VALUE,
-    // specifies target context for links with `preload` type
-    async: HAS_BOOLEAN_VALUE,
-    // Note: there is a special case that prevents it from being written to the DOM
-    // on the client side because the browsers are inconsistent. Instead we call focus().
-    autoFocus: HAS_BOOLEAN_VALUE,
-    autoPlay: HAS_BOOLEAN_VALUE,
-    capture: HAS_OVERLOADED_BOOLEAN_VALUE,
-    checked: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    cols: HAS_POSITIVE_NUMERIC_VALUE,
-    contentEditable: HAS_STRING_BOOLEAN_VALUE,
-    controls: HAS_BOOLEAN_VALUE,
-    default: HAS_BOOLEAN_VALUE,
-    defer: HAS_BOOLEAN_VALUE,
-    disabled: HAS_BOOLEAN_VALUE,
-    download: HAS_OVERLOADED_BOOLEAN_VALUE,
-    draggable: HAS_STRING_BOOLEAN_VALUE,
-    formNoValidate: HAS_BOOLEAN_VALUE,
-    hidden: HAS_BOOLEAN_VALUE,
-    loop: HAS_BOOLEAN_VALUE,
-    // Caution; `option.selected` is not updated if `select.multiple` is
-    // disabled with `removeAttribute`.
-    multiple: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    muted: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    noValidate: HAS_BOOLEAN_VALUE,
-    open: HAS_BOOLEAN_VALUE,
-    playsInline: HAS_BOOLEAN_VALUE,
-    readOnly: HAS_BOOLEAN_VALUE,
-    required: HAS_BOOLEAN_VALUE,
-    reversed: HAS_BOOLEAN_VALUE,
-    rows: HAS_POSITIVE_NUMERIC_VALUE,
-    rowSpan: HAS_NUMERIC_VALUE,
-    scoped: HAS_BOOLEAN_VALUE,
-    seamless: HAS_BOOLEAN_VALUE,
-    selected: MUST_USE_PROPERTY | HAS_BOOLEAN_VALUE,
-    size: HAS_POSITIVE_NUMERIC_VALUE,
-    start: HAS_NUMERIC_VALUE,
-    // support for projecting regular DOM Elements via V1 named slots ( shadow dom )
-    span: HAS_POSITIVE_NUMERIC_VALUE,
-    spellCheck: HAS_STRING_BOOLEAN_VALUE,
-    // Keep it in the whitelist because it is case-sensitive for SVG.
-    tabIndex: 0,
-    // itemScope is for for Microdata support.
-    // See http://schema.org/docs/gs.html
-    itemScope: HAS_BOOLEAN_VALUE,
-    // These attributes must stay in the white-list because they have
-    // different attribute names (see DOMAttributeNames below)
-    acceptCharset: 0,
-    className: 0,
-    htmlFor: 0,
-    httpEquiv: 0,
-    // Set the string boolean flag to allow the behavior
-    value: HAS_STRING_BOOLEAN_VALUE,
-  },
-  DOMAttributeNames: {
-    acceptCharset: 'accept-charset',
-    className: 'class',
-    htmlFor: 'for',
-    httpEquiv: 'http-equiv',
-  },
-};
+// When adding attributes to this list, be sure to also add them to
+// the `possibleStandardNames` module to ensure casing and incorrect
+// name warnings.
+const properties = {};
+[
+  'children',
+  'dangerouslySetInnerHTML',
+  // TODO: This prevents the assignment of defaultValue to regular
+  // elements (not just inputs). Now that ReactDOMInput assigns to the
+  // defaultValue property -- do we need this?
+  'defaultValue',
+  'defaultChecked',
+  'innerHTML',
+  'suppressContentEditableWarning',
+  'suppressHydrationWarning',
+  'style',
+].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    RESERVED,
+    false, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+  );
+});
+new Map([
+  ['acceptCharset', 'accept-charset'],
+  ['className', 'class'],
+  ['htmlFor', 'for'],
+  ['httpEquiv', 'http-equiv'],
+]).forEach((attributeName, name) => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName, // attributeName
+    null, // attributeNamespace
+  );
+});
+['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING_BOOLEAN,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+  );
+});
+['autoReverse', 'externalResourcesRequired', 'preserveAlpha'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING_BOOLEAN,
+    false, // mustUseProperty
+    name, // attributeName
+    null, // attributeNamespace
+  );
+});
+[
+  'allowFullScreen',
+  'async',
+  'autoFocus',
+  'autoPlay',
+  'controls',
+  'default',
+  'defer',
+  'disabled',
+  'formNoValidate',
+  'hidden',
+  'loop',
+  'noValidate',
+  'open',
+  'playsInline',
+  'readOnly',
+  'required',
+  'reversed',
+  'scoped',
+  'seamless',
+  'itemScope',
+].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEAN,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+  );
+});
+['checked', 'multiple', 'muted', 'selected'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    BOOLEAN,
+    true, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+  );
+});
+['capture', 'download'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    OVERLOADED_BOOLEAN,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+  );
+});
+['cols', 'rows', 'size', 'span'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    POSITIVE_NUMERIC,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+  );
+});
+['rowSpan', 'start'].forEach(name => {
+  properties[name] = new PropertyInfoRecord(
+    name,
+    NUMERIC,
+    false, // mustUseProperty
+    name.toLowerCase(), // attributeName
+    null, // attributeNamespace
+  );
+});
 
-const NS = {
-  xlink: 'http://www.w3.org/1999/xlink',
-  xml: 'http://www.w3.org/XML/1998/namespace',
-};
-
+const CAMELIZE = /[\-\:]([a-z])/g;
+const capitalize = token => token[1].toUpperCase();
 /**
  * This is a list of all SVG attributes that need special casing,
  * namespacing, or boolean value assignment.
@@ -363,7 +315,7 @@ const NS = {
  * SMIL Spec:
  * https://www.w3.org/TR/smil
  */
-const SVG_ATTRS = [
+[
   'accent-height',
   'alignment-baseline',
   'arabic-form',
@@ -436,6 +388,17 @@ const SVG_ATTRS = [
   'word-spacing',
   'writing-mode',
   'x-height',
+].forEach(attributeName => {
+  const name = attributeName.replace(CAMELIZE, capitalize);
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName,
+    null, // attributeNamespace
+  );
+});
+[
   'xlink:actuate',
   'xlink:arcrole',
   'xlink:href',
@@ -443,47 +406,37 @@ const SVG_ATTRS = [
   'xlink:show',
   'xlink:title',
   'xlink:type',
-  'xml:base',
-  'xmlns:xlink',
-  'xml:lang',
-  'xml:space',
-];
-
-const SVGDOMPropertyConfig = {
-  Properties: {
-    autoReverse: HAS_STRING_BOOLEAN_VALUE,
-    externalResourcesRequired: HAS_STRING_BOOLEAN_VALUE,
-    preserveAlpha: HAS_STRING_BOOLEAN_VALUE,
-  },
-  DOMAttributeNames: {
-    autoReverse: 'autoReverse',
-    externalResourcesRequired: 'externalResourcesRequired',
-    preserveAlpha: 'preserveAlpha',
-  },
-  DOMAttributeNamespaces: {
-    xlinkActuate: NS.xlink,
-    xlinkArcrole: NS.xlink,
-    xlinkHref: NS.xlink,
-    xlinkRole: NS.xlink,
-    xlinkShow: NS.xlink,
-    xlinkTitle: NS.xlink,
-    xlinkType: NS.xlink,
-    xmlBase: NS.xml,
-    xmlLang: NS.xml,
-    xmlSpace: NS.xml,
-  },
-};
-
-const CAMELIZE = /[\-\:]([a-z])/g;
-const capitalize = token => token[1].toUpperCase();
-
-SVG_ATTRS.forEach(original => {
-  const reactName = original.replace(CAMELIZE, capitalize);
-
-  SVGDOMPropertyConfig.Properties[reactName] = 0;
-  SVGDOMPropertyConfig.DOMAttributeNames[reactName] = original;
+].forEach(attributeName => {
+  const name = attributeName.replace(CAMELIZE, capitalize);
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName,
+    'http://www.w3.org/1999/xlink',
+  );
 });
-
-injectDOMPropertyConfig(ReservedPropertyConfig);
-injectDOMPropertyConfig(HTMLDOMPropertyConfig);
-injectDOMPropertyConfig(SVGDOMPropertyConfig);
+['xml:base', 'xml:lang', 'xml:space'].forEach(attributeName => {
+  const name = attributeName.replace(CAMELIZE, capitalize);
+  properties[name] = new PropertyInfoRecord(
+    name,
+    STRING,
+    false, // mustUseProperty
+    attributeName,
+    'http://www.w3.org/XML/1998/namespace',
+  );
+});
+properties['xmlnsXlink'] = new PropertyInfoRecord(
+  'xmlnsXlink',
+  STRING,
+  false, // mustUseProperty
+  'xmlns:xlink', // attributeName
+  null, // attributeNamespace
+);
+properties.tabIndex = new PropertyInfoRecord(
+  'tabIndex',
+  STRING,
+  false, // mustUseProperty
+  'tabindex', // attributeName
+  null, // attributeNamespace
+);

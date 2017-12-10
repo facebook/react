@@ -14,6 +14,7 @@ import warning from 'fbjs/lib/warning';
 
 import {
   ATTRIBUTE_NAME_CHAR,
+  RESERVED,
   isBadlyTypedAttributeValue,
   getPropertyInfo,
 } from './DOMProperty';
@@ -155,7 +156,7 @@ if (__DEV__) {
     }
 
     const propertyInfo = getPropertyInfo(name);
-    const isReserved = propertyInfo !== null && propertyInfo.isReserved;
+    const isReserved = propertyInfo !== null && propertyInfo.type === RESERVED;
 
     // Known attributes should match the casing specified in the property config.
     if (possibleStandardNames.hasOwnProperty(lowerCasedName)) {
