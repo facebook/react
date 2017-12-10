@@ -14,23 +14,34 @@ type PropertyType = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 // A reserved attribute.
 // It is handled by React separately and shouldn't be written to the DOM.
 export const RESERVED = 0;
+
 // A simple string attribute.
 // Attributes that aren't in the whitelist are presumed to have this type.
 export const STRING = 1;
-// A simple string attribute that also accepts booleans from the user
-// (but coerces them to string and doesn't have any special handling for them).
-export const STRING_BOOLEAN = 2;
-// An attribute that should be removed when set to a falsey value.
+
+// A string attribute that accepts booleans in React. In HTML, these are called
+// "enumerated" attributes with "true" and "false" as possible values.
+// When true, it should be set to a "true" string.
+// When false, it should be set to a "false" string.
+export const BOOLEANISH_STRING = 2;
+
+// A real boolean attribute.
+// When true, it should be present (set either to an empty string or its name).
+// When false, it should be omitted.
 export const BOOLEAN = 3;
+
 // An attribute that can be used as a flag as well as with a value.
-// Removed when strictly equal to false; present without a value when
-// strictly equal to true; present with a value otherwise.
+// When true, it should be present (set either to an empty string or its name).
+// When false, it should be omitted.
+// For any other value, should be present with that value.
 export const OVERLOADED_BOOLEAN = 4;
-// An attribute that must be numeric or parse as a numeric and should be
-// removed when set to a falsey value.
+
+// An attribute that must be numeric or parse as a numeric.
+// When falsy, it should be removed.
 export const NUMERIC = 5;
-// An attribute that must be positive numeric or parse as a positive
-// numeric and should be removed when set to a falsey value.
+
+// An attribute that must be positive numeric or parse as a positive numeric.
+// When falsy, it should be removed.
 export const POSITIVE_NUMERIC = 6;
 
 export type PropertyInfo = {|
@@ -173,7 +184,9 @@ function PropertyInfoRecord(
   attributeNamespace: string | null,
 ) {
   this.acceptsBooleans =
-    type === STRING_BOOLEAN || type === BOOLEAN || type === OVERLOADED_BOOLEAN;
+    type === BOOLEANISH_STRING ||
+    type === BOOLEAN ||
+    type === OVERLOADED_BOOLEAN;
   this.attributeName = attributeName;
   this.attributeNamespace = attributeNamespace;
   this.mustUseProperty = mustUseProperty;
@@ -185,6 +198,8 @@ function PropertyInfoRecord(
 // the `possibleStandardNames` module to ensure casing and incorrect
 // name warnings.
 const properties = {};
+
+// These props are reserved by React. They shouldn't be written to the DOM.
 [
   'children',
   'dangerouslySetInnerHTML',
@@ -206,6 +221,9 @@ const properties = {};
     null, // attributeNamespace
   );
 });
+
+// A few React string attributes have a different name.
+// This is a mapping from React prop names to the attribute names.
 new Map([
   ['acceptCharset', 'accept-charset'],
   ['className', 'class'],
@@ -220,27 +238,40 @@ new Map([
     null, // attributeNamespace
   );
 });
+
+// These are "enumerated" HTML attributes that accept "true" and "false".
+// In React, we let users pass `true` and `false` even though technically
+// these aren't boolean attributes (they are coerced to strings).
 ['contentEditable', 'draggable', 'spellCheck', 'value'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
-    STRING_BOOLEAN,
+    BOOLEANISH_STRING,
     false, // mustUseProperty
     name.toLowerCase(), // attributeName
     null, // attributeNamespace
   );
 });
+
+// These are "enumerated" SVG attributes that accept "true" and "false".
+// In React, we let users pass `true` and `false` even though technically
+// these aren't boolean attributes (they are coerced to strings).
+// Since these are SVG attributes, their attribute names are case-sensitive.
 ['autoReverse', 'externalResourcesRequired', 'preserveAlpha'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
-    STRING_BOOLEAN,
+    BOOLEANISH_STRING,
     false, // mustUseProperty
     name, // attributeName
     null, // attributeNamespace
   );
 });
+
+// These are HTML boolean attributes.
 [
   'allowFullScreen',
   'async',
+  // Note: there is a special case that prevents it from being written to the DOM
+  // on the client side because the browsers are inconsistent. Instead we call focus().
   'autoFocus',
   'autoPlay',
   'controls',
@@ -258,6 +289,7 @@ new Map([
   'reversed',
   'scoped',
   'seamless',
+  // Microdata
   'itemScope',
 ].forEach(name => {
   properties[name] = new PropertyInfoRecord(
@@ -268,7 +300,17 @@ new Map([
     null, // attributeNamespace
   );
 });
-['checked', 'multiple', 'muted', 'selected'].forEach(name => {
+
+// These are the few React props that we set as DOM properties
+// rather than attributes. These are all booleans.
+[
+  'checked',
+  // Note: `option.selected` is not updated if `select.multiple` is
+  // disabled with `removeAttribute`. We have special logic for handling this.
+  'multiple',
+  'muted',
+  'selected',
+].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
     BOOLEAN,
@@ -277,6 +319,9 @@ new Map([
     null, // attributeNamespace
   );
 });
+
+// These are HTML attributes that are "overloaded booleans": they behave like
+// booleans, but can also accept a string value.
 ['capture', 'download'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -286,6 +331,8 @@ new Map([
     null, // attributeNamespace
   );
 });
+
+// These are HTML attributes that must be positive numbers.
 ['cols', 'rows', 'size', 'span'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -295,6 +342,8 @@ new Map([
     null, // attributeNamespace
   );
 });
+
+// These are HTML attributes that must be numbers.
 ['rowSpan', 'start'].forEach(name => {
   properties[name] = new PropertyInfoRecord(
     name,
@@ -307,19 +356,12 @@ new Map([
 
 const CAMELIZE = /[\-\:]([a-z])/g;
 const capitalize = token => token[1].toUpperCase();
-/**
- * This is a list of all SVG attributes that need special casing,
- * namespacing, or boolean value assignment.
- *
- * When adding attributes to this list, be sure to also add them to
- * the `possibleStandardNames` module to ensure casing and incorrect
- * name warnings.
- *
- * SVG Attributes List:
- * https://www.w3.org/TR/SVG/attindex.html
- * SMIL Spec:
- * https://www.w3.org/TR/smil
- */
+
+// This is a list of all SVG attributes that need special casing, namespacing,
+// or boolean value assignment. Regular attributes that just accept strings
+// and have the same names are omitted, just like in the HTML whitelist.
+// Some of these attributes can be hard to find. This list was created by
+// scrapping the MDN documentation.
 [
   'accent-height',
   'alignment-baseline',
@@ -392,6 +434,7 @@ const capitalize = token => token[1].toUpperCase();
   'vert-origin-y',
   'word-spacing',
   'writing-mode',
+  'xmlns:xlink',
   'x-height',
 ].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
@@ -403,6 +446,8 @@ const capitalize = token => token[1].toUpperCase();
     null, // attributeNamespace
   );
 });
+
+// String SVG attributes with the xlink namespace.
 [
   'xlink:actuate',
   'xlink:arcrole',
@@ -421,6 +466,8 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/1999/xlink',
   );
 });
+
+// String SVG attributes with the xml namespace.
 ['xml:base', 'xml:lang', 'xml:space'].forEach(attributeName => {
   const name = attributeName.replace(CAMELIZE, capitalize);
   properties[name] = new PropertyInfoRecord(
@@ -431,13 +478,10 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/XML/1998/namespace',
   );
 });
-properties.xmlnsXlink = new PropertyInfoRecord(
-  'xmlnsXlink',
-  STRING,
-  false, // mustUseProperty
-  'xmlns:xlink', // attributeName
-  null, // attributeNamespace
-);
+
+// Special case: this attribute exists both in HTML and SVG.
+// Its "tabindex" attribute name is case-sensitive in SVG so we can't just use
+// its React `tabIndex` name, like we do for attributes that exist only in HTML.
 properties.tabIndex = new PropertyInfoRecord(
   'tabIndex',
   STRING,
