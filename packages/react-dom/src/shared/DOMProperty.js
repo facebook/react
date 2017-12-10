@@ -81,8 +81,8 @@ export function shouldSkipAttribute(
   propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
 ): boolean {
-  if (propertyInfo !== null && propertyInfo.type === RESERVED) {
-    return true;
+  if (propertyInfo !== null) {
+    return propertyInfo.type === RESERVED;
   }
   if (isCustomComponentTag) {
     return false;
