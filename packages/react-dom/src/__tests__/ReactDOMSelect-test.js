@@ -540,6 +540,7 @@ describe('ReactDOMSelect', () => {
       </select>,
     );
     if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
       expect(console.error.calls.argsFor(0)[0]).toContain(
         '`value` prop on `select` should not be null. ' +
           'Consider using an empty string to clear the component or `undefined` ' +
@@ -554,6 +555,34 @@ describe('ReactDOMSelect', () => {
     );
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
+    }
+  });
+
+  it('should warn if selected is set on <option>', () => {
+    spyOnDev(console, 'error');
+
+    ReactTestUtils.renderIntoDocument(
+      <select>
+        <option selected={true} />
+        <option selected={true} />
+      </select>,
+    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+    }
+
+    ReactTestUtils.renderIntoDocument(
+      <select>
+        <option selected={true} />
+        <option selected={true} />
+      </select>,
+    );
+    if (__DEV__) {
+      expect(console.error.calls.count()).toBe(1);
+      expect(console.error.calls.argsFor(0)[0]).toContain(
+        'Use the `defaultValue` or `value` props on <select> instead of ' +
+          'setting `selected` on <option>.',
+      );
     }
   });
 

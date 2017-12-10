@@ -10,6 +10,8 @@
 import React from 'react';
 import warning from 'fbjs/lib/warning';
 
+let didWarnSelectedSetOnOption = false;
+
 function flattenChildren(children) {
   let content = '';
 
@@ -36,11 +38,14 @@ function flattenChildren(children) {
 export function validateProps(element: Element, props: Object) {
   // TODO (yungsters): Remove support for `selected` in <option>.
   if (__DEV__) {
-    warning(
-      props.selected == null,
-      'Use the `defaultValue` or `value` props on <select> instead of ' +
-        'setting `selected` on <option>.',
-    );
+    if (!didWarnSelectedSetOnOption) {
+      warning(
+        props.selected == null,
+        'Use the `defaultValue` or `value` props on <select> instead of ' +
+          'setting `selected` on <option>.',
+      );
+      didWarnSelectedSetOnOption = true;
+    }
   }
 }
 
