@@ -282,7 +282,7 @@ export function createElementWithValidation(type, props, children) {
     typeof type === 'string' ||
     typeof type === 'function' ||
     typeof type === 'number' ||
-    type === 'REACT_FRAGMENT_TYPE';
+    type === REACT_FRAGMENT_TYPE;
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.
   if (!validType) {
