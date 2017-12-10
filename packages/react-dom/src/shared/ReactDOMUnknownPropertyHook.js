@@ -15,7 +15,7 @@ import warning from 'fbjs/lib/warning';
 import {
   ATTRIBUTE_NAME_CHAR,
   RESERVED,
-  isBadlyTypedAttributeValue,
+  shouldRemoveAttributeWithWarning,
   getPropertyInfo,
 } from './DOMProperty';
 import isCustomComponent from './isCustomComponent';
@@ -192,7 +192,7 @@ if (__DEV__) {
 
     if (
       typeof value === 'boolean' &&
-      isBadlyTypedAttributeValue(name, value, propertyInfo, false)
+      shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)
     ) {
       if (value) {
         warning(
@@ -236,7 +236,7 @@ if (__DEV__) {
     }
 
     // Warn when a known attribute is a bad type
-    if (isBadlyTypedAttributeValue(name, value, propertyInfo, false)) {
+    if (shouldRemoveAttributeWithWarning(name, value, propertyInfo, false)) {
       warnedProperties[name] = true;
       return false;
     }

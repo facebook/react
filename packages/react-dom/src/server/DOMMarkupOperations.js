@@ -14,8 +14,8 @@ import {
   OVERLOADED_BOOLEAN,
   getPropertyInfo,
   isAttributeNameSafe,
-  shouldSkipAttribute,
-  shouldTreatAttributeValueAsNull,
+  shouldIgnoreAttribute,
+  shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import quoteAttributeValueForBrowser from './quoteAttributeValueForBrowser';
 
@@ -46,10 +46,10 @@ export function createMarkupForRoot(): string {
  */
 export function createMarkupForProperty(name: string, value: mixed): string {
   const propertyInfo = getPropertyInfo(name);
-  if (name !== 'style' && shouldSkipAttribute(name, propertyInfo, false)) {
+  if (name !== 'style' && shouldIgnoreAttribute(name, propertyInfo, false)) {
     return '';
   }
-  if (shouldTreatAttributeValueAsNull(name, value, propertyInfo, false)) {
+  if (shouldRemoveAttribute(name, value, propertyInfo, false)) {
     return '';
   }
   if (propertyInfo) {

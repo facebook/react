@@ -76,7 +76,7 @@ export function isAttributeNameSafe(attributeName: string): boolean {
   return false;
 }
 
-export function shouldSkipAttribute(
+export function shouldIgnoreAttribute(
   name: string,
   propertyInfo: PropertyInfo | null,
   isCustomComponentTag: boolean,
@@ -97,7 +97,7 @@ export function shouldSkipAttribute(
   return false;
 }
 
-export function isBadlyTypedAttributeValue(
+export function shouldRemoveAttributeWithWarning(
   name: string,
   value: mixed,
   propertyInfo: PropertyInfo | null,
@@ -127,7 +127,7 @@ export function isBadlyTypedAttributeValue(
   }
 }
 
-export function shouldTreatAttributeValueAsNull(
+export function shouldRemoveAttribute(
   name: string,
   value: mixed,
   propertyInfo: PropertyInfo | null,
@@ -137,7 +137,12 @@ export function shouldTreatAttributeValueAsNull(
     return true;
   }
   if (
-    isBadlyTypedAttributeValue(name, value, propertyInfo, isCustomComponentTag)
+    shouldRemoveAttributeWithWarning(
+      name,
+      value,
+      propertyInfo,
+      isCustomComponentTag,
+    )
   ) {
     return true;
   }

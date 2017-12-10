@@ -26,8 +26,8 @@ import * as CSSPropertyOperations from '../shared/CSSPropertyOperations';
 import {Namespaces, getIntrinsicNamespace} from '../shared/DOMNamespaces';
 import {
   getPropertyInfo,
-  shouldSkipAttribute,
-  shouldTreatAttributeValueAsNull,
+  shouldIgnoreAttribute,
+  shouldRemoveAttribute,
 } from '../shared/DOMProperty';
 import assertValidProps from '../shared/assertValidProps';
 import {DOCUMENT_NODE, DOCUMENT_FRAGMENT_NODE} from '../shared/HTMLNodeType';
@@ -1009,8 +1009,8 @@ export function diffHydratedProperties(
           warnForPropDifference(propKey, serverValue, nextProp);
         }
       } else if (
-        !shouldSkipAttribute(propKey, propertyInfo, isCustomComponentTag) &&
-        !shouldTreatAttributeValueAsNull(
+        !shouldIgnoreAttribute(propKey, propertyInfo, isCustomComponentTag) &&
+        !shouldRemoveAttribute(
           propKey,
           nextProp,
           propertyInfo,
