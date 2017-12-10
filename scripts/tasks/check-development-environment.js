@@ -51,8 +51,7 @@ const localYarnVersion = getLocalYarnVersion();
 
 if (!gte(localYarnVersion, MIN_YARN_VERSION)) {
   console.log(
-    'Your local %s version lower than mininal yarn version. Expected >= %s, saw %s.',
-    'yarn',
+    'Your local Yarn version lower than mininal yarn version. Expected >= %s, saw %s.',
     MIN_YARN_VERSION,
     localYarnVersion
   );
