@@ -431,7 +431,7 @@ const capitalize = token => token[1].toUpperCase();
     'http://www.w3.org/XML/1998/namespace',
   );
 });
-properties['xmlnsXlink'] = new PropertyInfoRecord(
+properties.xmlnsXlink = new PropertyInfoRecord(
   'xmlnsXlink',
   STRING,
   false, // mustUseProperty
