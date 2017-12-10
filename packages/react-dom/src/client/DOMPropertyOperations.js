@@ -140,7 +140,7 @@ export function setValueForProperty(
     value = null;
   }
   // If the prop isn't in the special list, treat it as a simple attribute.
-  if (isCustomComponentTag || !propertyInfo) {
+  if (isCustomComponentTag || propertyInfo === null) {
     if (isAttributeNameSafe(name)) {
       const attributeName = name;
       if (value === null) {
