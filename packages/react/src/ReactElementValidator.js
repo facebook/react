@@ -281,7 +281,6 @@ export function createElementWithValidation(type, props, children) {
   const validType =
     typeof type === 'string' ||
     typeof type === 'function' ||
-    typeof type === 'number' ||
     // Note: its typeof might be other than 'symbol' if it's a polyfill.
     type === REACT_FRAGMENT_TYPE;
 
