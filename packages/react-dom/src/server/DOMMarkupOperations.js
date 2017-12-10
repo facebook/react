@@ -52,12 +52,10 @@ export function createMarkupForProperty(name: string, value: mixed): string {
   if (shouldRemoveAttribute(name, value, propertyInfo, false)) {
     return '';
   }
-  if (propertyInfo) {
+  if (propertyInfo !== null) {
     const attributeName = propertyInfo.attributeName;
-    if (
-      propertyInfo.type === BOOLEAN ||
-      (propertyInfo.type === OVERLOADED_BOOLEAN && value === true)
-    ) {
+    const {type} = propertyInfo;
+    if (type === BOOLEAN || (type === OVERLOADED_BOOLEAN && value === true)) {
       return attributeName + '=""';
     } else {
       return attributeName + '=' + quoteAttributeValueForBrowser(value);
