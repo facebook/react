@@ -38,9 +38,9 @@ function flattenChildren(children) {
 export function validateProps(element: Element, props: Object) {
   // TODO (yungsters): Remove support for `selected` in <option>.
   if (__DEV__) {
-    if (!didWarnSelectedSetOnOption) {
+    if (props.selected != null && !didWarnSelectedSetOnOption) {
       warning(
-        props.selected == null,
+        false,
         'Use the `defaultValue` or `value` props on <select> instead of ' +
           'setting `selected` on <option>.',
       );
