@@ -118,8 +118,8 @@
 | `accentHeight=(string 'false')`| (changed)| `"false"` |
 | `accentHeight=(string 'on')`| (changed)| `"on"` |
 | `accentHeight=(string 'off')`| (changed)| `"off"` |
-| `accentHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `accentHeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `accentHeight=(symbol)`| (initial, warning)| `<null>` |
+| `accentHeight=(function)`| (initial, warning)| `<null>` |
 | `accentHeight=(null)`| (initial)| `<null>` |
 | `accentHeight=(undefined)`| (initial)| `<null>` |
 
@@ -218,8 +218,8 @@
 | `acceptCharset=(string 'false')`| (changed)| `"false"` |
 | `acceptCharset=(string 'on')`| (changed)| `"on"` |
 | `acceptCharset=(string 'off')`| (changed)| `"off"` |
-| `acceptCharset=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `acceptCharset=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `acceptCharset=(symbol)`| (initial, warning)| `<empty string>` |
+| `acceptCharset=(function)`| (initial, warning)| `<empty string>` |
 | `acceptCharset=(null)`| (initial)| `<empty string>` |
 | `acceptCharset=(undefined)`| (initial)| `<empty string>` |
 
@@ -368,8 +368,8 @@
 | `alignmentBaseline=(string 'false')`| (changed)| `"false"` |
 | `alignmentBaseline=(string 'on')`| (changed)| `"on"` |
 | `alignmentBaseline=(string 'off')`| (changed)| `"off"` |
-| `alignmentBaseline=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `alignmentBaseline=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `alignmentBaseline=(symbol)`| (initial, warning)| `<null>` |
+| `alignmentBaseline=(function)`| (initial, warning)| `<null>` |
 | `alignmentBaseline=(null)`| (initial)| `<null>` |
 | `alignmentBaseline=(undefined)`| (initial)| `<null>` |
 
@@ -393,8 +393,8 @@
 | `allowFullScreen=(string 'false')`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(string 'on')`| (changed)| `<boolean: true>` |
 | `allowFullScreen=(string 'off')`| (changed)| `<boolean: true>` |
-| `allowFullScreen=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `allowFullScreen=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `allowFullScreen=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `allowFullScreen=(function)`| (initial, warning)| `<boolean: false>` |
 | `allowFullScreen=(null)`| (initial)| `<boolean: false>` |
 | `allowFullScreen=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -593,8 +593,8 @@
 | `arabicForm=(string 'false')`| (changed)| `"false"` |
 | `arabicForm=(string 'on')`| (changed)| `"on"` |
 | `arabicForm=(string 'off')`| (changed)| `"off"` |
-| `arabicForm=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `arabicForm=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `arabicForm=(symbol)`| (initial, warning)| `<null>` |
+| `arabicForm=(function)`| (initial, warning)| `<null>` |
 | `arabicForm=(null)`| (initial)| `<null>` |
 | `arabicForm=(undefined)`| (initial)| `<null>` |
 
@@ -743,8 +743,8 @@
 | `async=(string 'false')`| (changed)| `<boolean: true>` |
 | `async=(string 'on')`| (changed)| `<boolean: true>` |
 | `async=(string 'off')`| (changed)| `<boolean: true>` |
-| `async=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `async=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `async=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `async=(function)`| (initial, warning)| `<boolean: false>` |
 | `async=(null)`| (initial)| `<boolean: false>` |
 | `async=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -893,8 +893,8 @@
 | `autoPlay=(string 'false')`| (changed)| `<boolean: true>` |
 | `autoPlay=(string 'on')`| (changed)| `<boolean: true>` |
 | `autoPlay=(string 'off')`| (changed)| `<boolean: true>` |
-| `autoPlay=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `autoPlay=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `autoPlay=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `autoPlay=(function)`| (initial, warning)| `<boolean: false>` |
 | `autoPlay=(null)`| (initial)| `<boolean: false>` |
 | `autoPlay=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -918,8 +918,8 @@
 | `autoReverse=(string 'false')`| (initial, ssr mismatch)| `<null>` |
 | `autoReverse=(string 'on')`| (initial, ssr mismatch)| `<null>` |
 | `autoReverse=(string 'off')`| (initial, ssr mismatch)| `<null>` |
-| `autoReverse=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `autoReverse=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `autoReverse=(symbol)`| (initial, warning)| `<null>` |
+| `autoReverse=(function)`| (initial, warning)| `<null>` |
 | `autoReverse=(null)`| (initial)| `<null>` |
 | `autoReverse=(undefined)`| (initial)| `<null>` |
 
@@ -1043,8 +1043,8 @@
 | `baselineShift=(string 'false')`| (changed)| `"false"` |
 | `baselineShift=(string 'on')`| (changed)| `"on"` |
 | `baselineShift=(string 'off')`| (changed)| `"off"` |
-| `baselineShift=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `baselineShift=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `baselineShift=(symbol)`| (initial, warning)| `<null>` |
+| `baselineShift=(function)`| (initial, warning)| `<null>` |
 | `baselineShift=(null)`| (initial)| `<null>` |
 | `baselineShift=(undefined)`| (initial)| `<null>` |
 
@@ -1243,8 +1243,8 @@
 | `capHeight=(string 'false')`| (changed)| `"false"` |
 | `capHeight=(string 'on')`| (changed)| `"on"` |
 | `capHeight=(string 'off')`| (changed)| `"off"` |
-| `capHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `capHeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `capHeight=(symbol)`| (initial, warning)| `<null>` |
+| `capHeight=(function)`| (initial, warning)| `<null>` |
 | `capHeight=(null)`| (initial)| `<null>` |
 | `capHeight=(undefined)`| (initial)| `<null>` |
 
@@ -1268,8 +1268,8 @@
 | `capture=(string 'false')`| (changed)| `"false"` |
 | `capture=(string 'on')`| (changed)| `"on"` |
 | `capture=(string 'off')`| (changed)| `"off"` |
-| `capture=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `capture=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `capture=(symbol)`| (initial, warning)| `<null>` |
+| `capture=(function)`| (initial, warning)| `<null>` |
 | `capture=(null)`| (initial)| `<null>` |
 | `capture=(undefined)`| (initial)| `<null>` |
 
@@ -1393,8 +1393,8 @@
 | `checked=(string 'false')`| (changed)| `<boolean: true>` |
 | `checked=(string 'on')`| (changed)| `<boolean: true>` |
 | `checked=(string 'off')`| (changed)| `<boolean: true>` |
-| `checked=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `checked=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `checked=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `checked=(function)`| (initial, warning)| `<boolean: false>` |
 | `checked=(null)`| (initial)| `<boolean: false>` |
 | `checked=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -1568,8 +1568,8 @@
 | `className=(string 'false')`| (changed)| `"false"` |
 | `className=(string 'on')`| (changed)| `"on"` |
 | `className=(string 'off')`| (changed)| `"off"` |
-| `className=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `className=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `className=(symbol)`| (initial, warning)| `<empty string>` |
+| `className=(function)`| (initial, warning)| `<empty string>` |
 | `className=(null)`| (initial)| `<empty string>` |
 | `className=(undefined)`| (initial)| `<empty string>` |
 
@@ -1643,8 +1643,8 @@
 | `clipPath=(string 'false')`| (changed)| `"false"` |
 | `clipPath=(string 'on')`| (changed)| `"on"` |
 | `clipPath=(string 'off')`| (changed)| `"off"` |
-| `clipPath=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `clipPath=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `clipPath=(symbol)`| (initial, warning)| `<null>` |
+| `clipPath=(function)`| (initial, warning)| `<null>` |
 | `clipPath=(null)`| (initial)| `<null>` |
 | `clipPath=(undefined)`| (initial)| `<null>` |
 
@@ -1718,8 +1718,8 @@
 | `clipRule=(string 'false')`| (changed)| `"false"` |
 | `clipRule=(string 'on')`| (changed)| `"on"` |
 | `clipRule=(string 'off')`| (changed)| `"off"` |
-| `clipRule=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `clipRule=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `clipRule=(symbol)`| (initial, warning)| `<null>` |
+| `clipRule=(function)`| (initial, warning)| `<null>` |
 | `clipRule=(null)`| (initial)| `<null>` |
 | `clipRule=(undefined)`| (initial)| `<null>` |
 
@@ -1793,8 +1793,8 @@
 | `colorInterpolation=(string 'false')`| (changed)| `"false"` |
 | `colorInterpolation=(string 'on')`| (changed)| `"on"` |
 | `colorInterpolation=(string 'off')`| (changed)| `"off"` |
-| `colorInterpolation=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorInterpolation=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorInterpolation=(symbol)`| (initial, warning)| `<null>` |
+| `colorInterpolation=(function)`| (initial, warning)| `<null>` |
 | `colorInterpolation=(null)`| (initial)| `<null>` |
 | `colorInterpolation=(undefined)`| (initial)| `<null>` |
 
@@ -1843,8 +1843,8 @@
 | `colorInterpolationFilters=(string 'false')`| (changed)| `"false"` |
 | `colorInterpolationFilters=(string 'on')`| (changed)| `"on"` |
 | `colorInterpolationFilters=(string 'off')`| (changed)| `"off"` |
-| `colorInterpolationFilters=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorInterpolationFilters=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorInterpolationFilters=(symbol)`| (initial, warning)| `<null>` |
+| `colorInterpolationFilters=(function)`| (initial, warning)| `<null>` |
 | `colorInterpolationFilters=(null)`| (initial)| `<null>` |
 | `colorInterpolationFilters=(undefined)`| (initial)| `<null>` |
 
@@ -1893,8 +1893,8 @@
 | `colorProfile=(string 'false')`| (changed)| `"false"` |
 | `colorProfile=(string 'on')`| (changed)| `"on"` |
 | `colorProfile=(string 'off')`| (changed)| `"off"` |
-| `colorProfile=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorProfile=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorProfile=(symbol)`| (initial, warning)| `<null>` |
+| `colorProfile=(function)`| (initial, warning)| `<null>` |
 | `colorProfile=(null)`| (initial)| `<null>` |
 | `colorProfile=(undefined)`| (initial)| `<null>` |
 
@@ -1943,8 +1943,8 @@
 | `colorRendering=(string 'false')`| (changed)| `"false"` |
 | `colorRendering=(string 'on')`| (changed)| `"on"` |
 | `colorRendering=(string 'off')`| (changed)| `"off"` |
-| `colorRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `colorRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `colorRendering=(symbol)`| (initial, warning)| `<null>` |
+| `colorRendering=(function)`| (initial, warning)| `<null>` |
 | `colorRendering=(null)`| (initial)| `<null>` |
 | `colorRendering=(undefined)`| (initial)| `<null>` |
 
@@ -1968,7 +1968,7 @@
 | `cols=(string 'false')`| (initial)| `<number: 20>` |
 | `cols=(string 'on')`| (initial)| `<number: 20>` |
 | `cols=(string 'off')`| (initial)| `<number: 20>` |
-| `cols=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 20>` |
+| `cols=(symbol)`| (initial, warning)| `<number: 20>` |
 | `cols=(function)`| (initial, warning)| `<number: 20>` |
 | `cols=(null)`| (initial)| `<number: 20>` |
 | `cols=(undefined)`| (initial)| `<number: 20>` |
@@ -2043,7 +2043,7 @@
 | `contentEditable=(string 'false')`| (changed)| `"false"` |
 | `contentEditable=(string 'on')`| (initial)| `"inherit"` |
 | `contentEditable=(string 'off')`| (initial)| `"inherit"` |
-| `contentEditable=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `"inherit"` |
+| `contentEditable=(symbol)`| (initial, warning)| `"inherit"` |
 | `contentEditable=(function)`| (initial, warning)| `"inherit"` |
 | `contentEditable=(null)`| (initial)| `"inherit"` |
 | `contentEditable=(undefined)`| (initial)| `"inherit"` |
@@ -2143,8 +2143,8 @@
 | `controls=(string 'false')`| (changed)| `<boolean: true>` |
 | `controls=(string 'on')`| (changed)| `<boolean: true>` |
 | `controls=(string 'off')`| (changed)| `<boolean: true>` |
-| `controls=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `controls=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `controls=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `controls=(function)`| (initial, warning)| `<boolean: false>` |
 | `controls=(null)`| (initial)| `<boolean: false>` |
 | `controls=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2518,8 +2518,8 @@
 | `default=(string 'false')`| (changed)| `<boolean: true>` |
 | `default=(string 'on')`| (changed)| `<boolean: true>` |
 | `default=(string 'off')`| (changed)| `<boolean: true>` |
-| `default=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `default=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `default=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `default=(function)`| (initial, warning)| `<boolean: false>` |
 | `default=(null)`| (initial)| `<boolean: false>` |
 | `default=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2568,8 +2568,8 @@
 | `defaultChecked=(string 'false')`| (initial, ssr mismatch)| `<boolean: false>` |
 | `defaultChecked=(string 'on')`| (initial, ssr mismatch)| `<boolean: false>` |
 | `defaultChecked=(string 'off')`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(symbol)`| (initial, ssr mismatch)| `<boolean: false>` |
-| `defaultChecked=(function)`| (initial, ssr mismatch)| `<boolean: false>` |
+| `defaultChecked=(symbol)`| (initial)| `<boolean: false>` |
+| `defaultChecked=(function)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(null)`| (initial)| `<boolean: false>` |
 | `defaultChecked=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2593,8 +2593,8 @@
 | `defaultValue=(string 'false')`| (changed)| `"false"` |
 | `defaultValue=(string 'on')`| (changed)| `"on"` |
 | `defaultValue=(string 'off')`| (changed)| `"off"` |
-| `defaultValue=(symbol)`| (initial, ssr error, ssr mismatch)| `<empty string>` |
-| `defaultValue=(function)`| (initial, ssr mismatch)| `<empty string>` |
+| `defaultValue=(symbol)`| (initial, ssr warning)| `<empty string>` |
+| `defaultValue=(function)`| (initial, ssr warning)| `<empty string>` |
 | `defaultValue=(null)`| (initial, ssr warning)| `<empty string>` |
 | `defaultValue=(undefined)`| (initial)| `<empty string>` |
 
@@ -2643,8 +2643,8 @@
 | `defer=(string 'false')`| (changed)| `<boolean: true>` |
 | `defer=(string 'on')`| (changed)| `<boolean: true>` |
 | `defer=(string 'off')`| (changed)| `<boolean: true>` |
-| `defer=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `defer=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `defer=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `defer=(function)`| (initial, warning)| `<boolean: false>` |
 | `defer=(null)`| (initial)| `<boolean: false>` |
 | `defer=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2768,8 +2768,8 @@
 | `disabled=(string 'false')`| (changed)| `<boolean: true>` |
 | `disabled=(string 'on')`| (changed)| `<boolean: true>` |
 | `disabled=(string 'off')`| (changed)| `<boolean: true>` |
-| `disabled=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `disabled=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `disabled=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `disabled=(function)`| (initial, warning)| `<boolean: false>` |
 | `disabled=(null)`| (initial)| `<boolean: false>` |
 | `disabled=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -2868,8 +2868,8 @@
 | `dominantBaseline=(string 'false')`| (changed)| `"false"` |
 | `dominantBaseline=(string 'on')`| (changed)| `"on"` |
 | `dominantBaseline=(string 'off')`| (changed)| `"off"` |
-| `dominantBaseline=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `dominantBaseline=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `dominantBaseline=(symbol)`| (initial, warning)| `<null>` |
+| `dominantBaseline=(function)`| (initial, warning)| `<null>` |
 | `dominantBaseline=(null)`| (initial)| `<null>` |
 | `dominantBaseline=(undefined)`| (initial)| `<null>` |
 
@@ -2893,8 +2893,8 @@
 | `download=(string 'false')`| (changed)| `"false"` |
 | `download=(string 'on')`| (changed)| `"on"` |
 | `download=(string 'off')`| (changed)| `"off"` |
-| `download=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `download=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `download=(symbol)`| (initial, warning)| `<empty string>` |
+| `download=(function)`| (initial, warning)| `<empty string>` |
 | `download=(null)`| (initial)| `<empty string>` |
 | `download=(undefined)`| (initial)| `<empty string>` |
 
@@ -2943,7 +2943,7 @@
 | `draggable=(string 'false')`| (initial)| `<boolean: false>` |
 | `draggable=(string 'on')`| (initial)| `<boolean: false>` |
 | `draggable=(string 'off')`| (initial)| `<boolean: false>` |
-| `draggable=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<boolean: false>` |
+| `draggable=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `draggable=(function)`| (initial, warning)| `<boolean: false>` |
 | `draggable=(null)`| (initial)| `<boolean: false>` |
 | `draggable=(undefined)`| (initial)| `<boolean: false>` |
@@ -3168,8 +3168,8 @@
 | `enableBackground=(string 'false')`| (changed)| `"false"` |
 | `enableBackground=(string 'on')`| (changed)| `"on"` |
 | `enableBackground=(string 'off')`| (changed)| `"off"` |
-| `enableBackground=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `enableBackground=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `enableBackground=(symbol)`| (initial, warning)| `<null>` |
+| `enableBackground=(function)`| (initial, warning)| `<null>` |
 | `enableBackground=(null)`| (initial)| `<null>` |
 | `enableBackground=(undefined)`| (initial)| `<null>` |
 
@@ -3268,7 +3268,7 @@
 | `externalResourcesRequired=(string 'false')`| (changed, ssr mismatch)| `"false"` |
 | `externalResourcesRequired=(string 'on')`| (changed, ssr mismatch)| `"on"` |
 | `externalResourcesRequired=(string 'off')`| (changed, ssr mismatch)| `"off"` |
-| `externalResourcesRequired=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
+| `externalResourcesRequired=(symbol)`| (initial, warning)| `<null>` |
 | `externalResourcesRequired=(function)`| (initial, warning)| `<null>` |
 | `externalResourcesRequired=(null)`| (initial)| `<null>` |
 | `externalResourcesRequired=(undefined)`| (initial)| `<null>` |
@@ -3318,8 +3318,8 @@
 | `fillOpacity=(string 'false')`| (changed)| `"false"` |
 | `fillOpacity=(string 'on')`| (changed)| `"on"` |
 | `fillOpacity=(string 'off')`| (changed)| `"off"` |
-| `fillOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fillOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fillOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `fillOpacity=(function)`| (initial, warning)| `<null>` |
 | `fillOpacity=(null)`| (initial)| `<null>` |
 | `fillOpacity=(undefined)`| (initial)| `<null>` |
 
@@ -3368,8 +3368,8 @@
 | `fillRule=(string 'false')`| (changed)| `"false"` |
 | `fillRule=(string 'on')`| (changed)| `"on"` |
 | `fillRule=(string 'off')`| (changed)| `"off"` |
-| `fillRule=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fillRule=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fillRule=(symbol)`| (initial, warning)| `<null>` |
+| `fillRule=(function)`| (initial, warning)| `<null>` |
 | `fillRule=(null)`| (initial)| `<null>` |
 | `fillRule=(undefined)`| (initial)| `<null>` |
 
@@ -3518,8 +3518,8 @@
 | `floodColor=(string 'false')`| (changed)| `"false"` |
 | `floodColor=(string 'on')`| (changed)| `"on"` |
 | `floodColor=(string 'off')`| (changed)| `"off"` |
-| `floodColor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `floodColor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `floodColor=(symbol)`| (initial, warning)| `<null>` |
+| `floodColor=(function)`| (initial, warning)| `<null>` |
 | `floodColor=(null)`| (initial)| `<null>` |
 | `floodColor=(undefined)`| (initial)| `<null>` |
 
@@ -3568,8 +3568,8 @@
 | `floodOpacity=(string 'false')`| (changed)| `"false"` |
 | `floodOpacity=(string 'on')`| (changed)| `"on"` |
 | `floodOpacity=(string 'off')`| (changed)| `"off"` |
-| `floodOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `floodOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `floodOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `floodOpacity=(function)`| (initial, warning)| `<null>` |
 | `floodOpacity=(null)`| (initial)| `<null>` |
 | `floodOpacity=(undefined)`| (initial)| `<null>` |
 
@@ -3793,8 +3793,8 @@
 | `fontFamily=(string 'false')`| (changed)| `"false"` |
 | `fontFamily=(string 'on')`| (changed)| `"on"` |
 | `fontFamily=(string 'off')`| (changed)| `"off"` |
-| `fontFamily=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontFamily=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontFamily=(symbol)`| (initial, warning)| `<null>` |
+| `fontFamily=(function)`| (initial, warning)| `<null>` |
 | `fontFamily=(null)`| (initial)| `<null>` |
 | `fontFamily=(undefined)`| (initial)| `<null>` |
 
@@ -3818,8 +3818,8 @@
 | `fontSize=(string 'false')`| (changed)| `"false"` |
 | `fontSize=(string 'on')`| (changed)| `"on"` |
 | `fontSize=(string 'off')`| (changed)| `"off"` |
-| `fontSize=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontSize=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontSize=(symbol)`| (initial, warning)| `<null>` |
+| `fontSize=(function)`| (initial, warning)| `<null>` |
 | `fontSize=(null)`| (initial)| `<null>` |
 | `fontSize=(undefined)`| (initial)| `<null>` |
 
@@ -3843,8 +3843,8 @@
 | `fontSizeAdjust=(string 'false')`| (changed)| `"false"` |
 | `fontSizeAdjust=(string 'on')`| (changed)| `"on"` |
 | `fontSizeAdjust=(string 'off')`| (changed)| `"off"` |
-| `fontSizeAdjust=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontSizeAdjust=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontSizeAdjust=(symbol)`| (initial, warning)| `<null>` |
+| `fontSizeAdjust=(function)`| (initial, warning)| `<null>` |
 | `fontSizeAdjust=(null)`| (initial)| `<null>` |
 | `fontSizeAdjust=(undefined)`| (initial)| `<null>` |
 
@@ -3868,8 +3868,8 @@
 | `fontStretch=(string 'false')`| (changed)| `"false"` |
 | `fontStretch=(string 'on')`| (changed)| `"on"` |
 | `fontStretch=(string 'off')`| (changed)| `"off"` |
-| `fontStretch=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontStretch=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontStretch=(symbol)`| (initial, warning)| `<null>` |
+| `fontStretch=(function)`| (initial, warning)| `<null>` |
 | `fontStretch=(null)`| (initial)| `<null>` |
 | `fontStretch=(undefined)`| (initial)| `<null>` |
 
@@ -3893,8 +3893,8 @@
 | `fontStyle=(string 'false')`| (changed)| `"false"` |
 | `fontStyle=(string 'on')`| (changed)| `"on"` |
 | `fontStyle=(string 'off')`| (changed)| `"off"` |
-| `fontStyle=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontStyle=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontStyle=(symbol)`| (initial, warning)| `<null>` |
+| `fontStyle=(function)`| (initial, warning)| `<null>` |
 | `fontStyle=(null)`| (initial)| `<null>` |
 | `fontStyle=(undefined)`| (initial)| `<null>` |
 
@@ -3918,8 +3918,8 @@
 | `fontVariant=(string 'false')`| (changed)| `"false"` |
 | `fontVariant=(string 'on')`| (changed)| `"on"` |
 | `fontVariant=(string 'off')`| (changed)| `"off"` |
-| `fontVariant=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontVariant=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontVariant=(symbol)`| (initial, warning)| `<null>` |
+| `fontVariant=(function)`| (initial, warning)| `<null>` |
 | `fontVariant=(null)`| (initial)| `<null>` |
 | `fontVariant=(undefined)`| (initial)| `<null>` |
 
@@ -3943,8 +3943,8 @@
 | `fontWeight=(string 'false')`| (changed)| `"false"` |
 | `fontWeight=(string 'on')`| (changed)| `"on"` |
 | `fontWeight=(string 'off')`| (changed)| `"off"` |
-| `fontWeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `fontWeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `fontWeight=(symbol)`| (initial, warning)| `<null>` |
+| `fontWeight=(function)`| (initial, warning)| `<null>` |
 | `fontWeight=(null)`| (initial)| `<null>` |
 | `fontWeight=(undefined)`| (initial)| `<null>` |
 
@@ -4143,8 +4143,8 @@
 | `formNoValidate=(string 'false')`| (changed)| `<boolean: true>` |
 | `formNoValidate=(string 'on')`| (changed)| `<boolean: true>` |
 | `formNoValidate=(string 'off')`| (changed)| `<boolean: true>` |
-| `formNoValidate=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `formNoValidate=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `formNoValidate=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `formNoValidate=(function)`| (initial, warning)| `<boolean: false>` |
 | `formNoValidate=(null)`| (initial)| `<boolean: false>` |
 | `formNoValidate=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -4518,8 +4518,8 @@
 | `glyphName=(string 'false')`| (changed)| `"false"` |
 | `glyphName=(string 'on')`| (changed)| `"on"` |
 | `glyphName=(string 'off')`| (changed)| `"off"` |
-| `glyphName=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `glyphName=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `glyphName=(symbol)`| (initial, warning)| `<null>` |
+| `glyphName=(function)`| (initial, warning)| `<null>` |
 | `glyphName=(null)`| (initial)| `<null>` |
 | `glyphName=(undefined)`| (initial)| `<null>` |
 
@@ -4543,8 +4543,8 @@
 | `glyphOrientationHorizontal=(string 'false')`| (changed)| `"false"` |
 | `glyphOrientationHorizontal=(string 'on')`| (changed)| `"on"` |
 | `glyphOrientationHorizontal=(string 'off')`| (changed)| `"off"` |
-| `glyphOrientationHorizontal=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `glyphOrientationHorizontal=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `glyphOrientationHorizontal=(symbol)`| (initial, warning)| `<null>` |
+| `glyphOrientationHorizontal=(function)`| (initial, warning)| `<null>` |
 | `glyphOrientationHorizontal=(null)`| (initial)| `<null>` |
 | `glyphOrientationHorizontal=(undefined)`| (initial)| `<null>` |
 
@@ -4568,8 +4568,8 @@
 | `glyphOrientationVertical=(string 'false')`| (changed)| `"false"` |
 | `glyphOrientationVertical=(string 'on')`| (changed)| `"on"` |
 | `glyphOrientationVertical=(string 'off')`| (changed)| `"off"` |
-| `glyphOrientationVertical=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `glyphOrientationVertical=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `glyphOrientationVertical=(symbol)`| (initial, warning)| `<null>` |
+| `glyphOrientationVertical=(function)`| (initial, warning)| `<null>` |
 | `glyphOrientationVertical=(null)`| (initial)| `<null>` |
 | `glyphOrientationVertical=(undefined)`| (initial)| `<null>` |
 
@@ -4768,8 +4768,8 @@
 | `hidden=(string 'false')`| (changed)| `<boolean: true>` |
 | `hidden=(string 'on')`| (changed)| `<boolean: true>` |
 | `hidden=(string 'off')`| (changed)| `<boolean: true>` |
-| `hidden=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `hidden=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `hidden=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `hidden=(function)`| (initial, warning)| `<boolean: false>` |
 | `hidden=(null)`| (initial)| `<boolean: false>` |
 | `hidden=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -4868,8 +4868,8 @@
 | `horizAdvX=(string 'false')`| (changed)| `"false"` |
 | `horizAdvX=(string 'on')`| (changed)| `"on"` |
 | `horizAdvX=(string 'off')`| (changed)| `"off"` |
-| `horizAdvX=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `horizAdvX=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `horizAdvX=(symbol)`| (initial, warning)| `<null>` |
+| `horizAdvX=(function)`| (initial, warning)| `<null>` |
 | `horizAdvX=(null)`| (initial)| `<null>` |
 | `horizAdvX=(undefined)`| (initial)| `<null>` |
 
@@ -4893,8 +4893,8 @@
 | `horizOriginX=(string 'false')`| (changed)| `"false"` |
 | `horizOriginX=(string 'on')`| (changed)| `"on"` |
 | `horizOriginX=(string 'off')`| (changed)| `"off"` |
-| `horizOriginX=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `horizOriginX=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `horizOriginX=(symbol)`| (initial, warning)| `<null>` |
+| `horizOriginX=(function)`| (initial, warning)| `<null>` |
 | `horizOriginX=(null)`| (initial)| `<null>` |
 | `horizOriginX=(undefined)`| (initial)| `<null>` |
 
@@ -4968,8 +4968,8 @@
 | `htmlFor=(string 'false')`| (changed)| `"false"` |
 | `htmlFor=(string 'on')`| (changed)| `"on"` |
 | `htmlFor=(string 'off')`| (changed)| `"off"` |
-| `htmlFor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `htmlFor=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `htmlFor=(symbol)`| (initial, warning)| `<empty string>` |
+| `htmlFor=(function)`| (initial, warning)| `<empty string>` |
 | `htmlFor=(null)`| (initial)| `<empty string>` |
 | `htmlFor=(undefined)`| (initial)| `<empty string>` |
 
@@ -5018,8 +5018,8 @@
 | `httpEquiv=(string 'false')`| (changed)| `"false"` |
 | `httpEquiv=(string 'on')`| (changed)| `"on"` |
 | `httpEquiv=(string 'off')`| (changed)| `"off"` |
-| `httpEquiv=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `httpEquiv=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `httpEquiv=(symbol)`| (initial, warning)| `<empty string>` |
+| `httpEquiv=(function)`| (initial, warning)| `<empty string>` |
 | `httpEquiv=(null)`| (initial)| `<empty string>` |
 | `httpEquiv=(undefined)`| (initial)| `<empty string>` |
 
@@ -5168,8 +5168,8 @@
 | `imageRendering=(string 'false')`| (changed)| `"false"` |
 | `imageRendering=(string 'on')`| (changed)| `"on"` |
 | `imageRendering=(string 'off')`| (changed)| `"off"` |
-| `imageRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `imageRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `imageRendering=(symbol)`| (initial, warning)| `<null>` |
+| `imageRendering=(function)`| (initial, warning)| `<null>` |
 | `imageRendering=(null)`| (initial)| `<null>` |
 | `imageRendering=(undefined)`| (initial)| `<null>` |
 
@@ -5493,8 +5493,8 @@
 | `itemScope=(string 'false')`| (changed)| `<empty string>` |
 | `itemScope=(string 'on')`| (changed)| `<empty string>` |
 | `itemScope=(string 'off')`| (changed)| `<empty string>` |
-| `itemScope=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `itemScope=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `itemScope=(symbol)`| (initial, warning)| `<null>` |
+| `itemScope=(function)`| (initial, warning)| `<null>` |
 | `itemScope=(null)`| (initial)| `<null>` |
 | `itemScope=(undefined)`| (initial)| `<null>` |
 
@@ -6093,8 +6093,8 @@
 | `letterSpacing=(string 'false')`| (changed)| `"false"` |
 | `letterSpacing=(string 'on')`| (changed)| `"on"` |
 | `letterSpacing=(string 'off')`| (changed)| `"off"` |
-| `letterSpacing=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `letterSpacing=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `letterSpacing=(symbol)`| (initial, warning)| `<null>` |
+| `letterSpacing=(function)`| (initial, warning)| `<null>` |
 | `letterSpacing=(null)`| (initial)| `<null>` |
 | `letterSpacing=(undefined)`| (initial)| `<null>` |
 
@@ -6143,8 +6143,8 @@
 | `lightingColor=(string 'false')`| (changed)| `"false"` |
 | `lightingColor=(string 'on')`| (changed)| `"on"` |
 | `lightingColor=(string 'off')`| (changed)| `"off"` |
-| `lightingColor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `lightingColor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `lightingColor=(symbol)`| (initial, warning)| `<null>` |
+| `lightingColor=(function)`| (initial, warning)| `<null>` |
 | `lightingColor=(null)`| (initial)| `<null>` |
 | `lightingColor=(undefined)`| (initial)| `<null>` |
 
@@ -6243,8 +6243,8 @@
 | `loop=(string 'false')`| (changed)| `<boolean: true>` |
 | `loop=(string 'on')`| (changed)| `<boolean: true>` |
 | `loop=(string 'off')`| (changed)| `<boolean: true>` |
-| `loop=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `loop=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `loop=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `loop=(function)`| (initial, warning)| `<boolean: false>` |
 | `loop=(null)`| (initial)| `<boolean: false>` |
 | `loop=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -6443,8 +6443,8 @@
 | `markerEnd=(string 'false')`| (changed)| `"false"` |
 | `markerEnd=(string 'on')`| (changed)| `"on"` |
 | `markerEnd=(string 'off')`| (changed)| `"off"` |
-| `markerEnd=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `markerEnd=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `markerEnd=(symbol)`| (initial, warning)| `<null>` |
+| `markerEnd=(function)`| (initial, warning)| `<null>` |
 | `markerEnd=(null)`| (initial)| `<null>` |
 | `markerEnd=(undefined)`| (initial)| `<null>` |
 
@@ -6493,8 +6493,8 @@
 | `markerMid=(string 'false')`| (changed)| `"false"` |
 | `markerMid=(string 'on')`| (changed)| `"on"` |
 | `markerMid=(string 'off')`| (changed)| `"off"` |
-| `markerMid=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `markerMid=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `markerMid=(symbol)`| (initial, warning)| `<null>` |
+| `markerMid=(function)`| (initial, warning)| `<null>` |
 | `markerMid=(null)`| (initial)| `<null>` |
 | `markerMid=(undefined)`| (initial)| `<null>` |
 
@@ -6518,8 +6518,8 @@
 | `markerStart=(string 'false')`| (changed)| `"false"` |
 | `markerStart=(string 'on')`| (changed)| `"on"` |
 | `markerStart=(string 'off')`| (changed)| `"off"` |
-| `markerStart=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `markerStart=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `markerStart=(symbol)`| (initial, warning)| `<null>` |
+| `markerStart=(function)`| (initial, warning)| `<null>` |
 | `markerStart=(null)`| (initial)| `<null>` |
 | `markerStart=(undefined)`| (initial)| `<null>` |
 
@@ -7068,8 +7068,8 @@
 | `multiple=(string 'false')`| (changed)| `<boolean: true>` |
 | `multiple=(string 'on')`| (changed)| `<boolean: true>` |
 | `multiple=(string 'off')`| (changed)| `<boolean: true>` |
-| `multiple=(symbol)`| (changed, warning)| `<boolean: true>` |
-| `multiple=(function)`| (changed, warning)| `<boolean: true>` |
+| `multiple=(symbol)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
+| `multiple=(function)`| (changed, warning, ssr mismatch)| `<boolean: true>` |
 | `multiple=(null)`| (initial)| `<boolean: false>` |
 | `multiple=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -7193,8 +7193,8 @@
 | `noValidate=(string 'false')`| (changed)| `<boolean: true>` |
 | `noValidate=(string 'on')`| (changed)| `<boolean: true>` |
 | `noValidate=(string 'off')`| (changed)| `<boolean: true>` |
-| `noValidate=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `noValidate=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `noValidate=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `noValidate=(function)`| (initial, warning)| `<boolean: false>` |
 | `noValidate=(null)`| (initial)| `<boolean: false>` |
 | `noValidate=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -7443,8 +7443,8 @@
 | `open=(string 'false')`| (changed)| `<boolean: true>` |
 | `open=(string 'on')`| (changed)| `<boolean: true>` |
 | `open=(string 'off')`| (changed)| `<boolean: true>` |
-| `open=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `open=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `open=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `open=(function)`| (initial, warning)| `<boolean: false>` |
 | `open=(null)`| (initial)| `<boolean: false>` |
 | `open=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -7693,8 +7693,8 @@
 | `overlinePosition=(string 'false')`| (changed)| `"false"` |
 | `overlinePosition=(string 'on')`| (changed)| `"on"` |
 | `overlinePosition=(string 'off')`| (changed)| `"off"` |
-| `overlinePosition=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `overlinePosition=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `overlinePosition=(symbol)`| (initial, warning)| `<null>` |
+| `overlinePosition=(function)`| (initial, warning)| `<null>` |
 | `overlinePosition=(null)`| (initial)| `<null>` |
 | `overlinePosition=(undefined)`| (initial)| `<null>` |
 
@@ -7718,8 +7718,8 @@
 | `overlineThickness=(string 'false')`| (changed)| `"false"` |
 | `overlineThickness=(string 'on')`| (changed)| `"on"` |
 | `overlineThickness=(string 'off')`| (changed)| `"off"` |
-| `overlineThickness=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `overlineThickness=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `overlineThickness=(symbol)`| (initial, warning)| `<null>` |
+| `overlineThickness=(function)`| (initial, warning)| `<null>` |
 | `overlineThickness=(null)`| (initial)| `<null>` |
 | `overlineThickness=(undefined)`| (initial)| `<null>` |
 
@@ -7768,8 +7768,8 @@
 | `paintOrder=(string 'false')`| (changed)| `"false"` |
 | `paintOrder=(string 'on')`| (changed)| `"on"` |
 | `paintOrder=(string 'off')`| (changed)| `"off"` |
-| `paintOrder=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `paintOrder=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `paintOrder=(symbol)`| (initial, warning)| `<null>` |
+| `paintOrder=(function)`| (initial, warning)| `<null>` |
 | `paintOrder=(null)`| (initial)| `<null>` |
 | `paintOrder=(undefined)`| (initial)| `<null>` |
 
@@ -7793,8 +7793,8 @@
 | `panose-1=(string 'false')`| (changed, warning)| `"false"` |
 | `panose-1=(string 'on')`| (changed, warning)| `"on"` |
 | `panose-1=(string 'off')`| (changed, warning)| `"off"` |
-| `panose-1=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `panose-1=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `panose-1=(symbol)`| (initial, warning)| `<null>` |
+| `panose-1=(function)`| (initial, warning)| `<null>` |
 | `panose-1=(null)`| (initial, warning)| `<null>` |
 | `panose-1=(undefined)`| (initial, warning)| `<null>` |
 
@@ -7993,8 +7993,8 @@
 | `playsInline=(string 'false')`| (changed)| `<empty string>` |
 | `playsInline=(string 'on')`| (changed)| `<empty string>` |
 | `playsInline=(string 'off')`| (changed)| `<empty string>` |
-| `playsInline=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `playsInline=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `playsInline=(symbol)`| (initial, warning)| `<null>` |
+| `playsInline=(function)`| (initial, warning)| `<null>` |
 | `playsInline=(null)`| (initial)| `<null>` |
 | `playsInline=(undefined)`| (initial)| `<null>` |
 
@@ -8043,8 +8043,8 @@
 | `pointerEvents=(string 'false')`| (changed)| `"false"` |
 | `pointerEvents=(string 'on')`| (changed)| `"on"` |
 | `pointerEvents=(string 'off')`| (changed)| `"off"` |
-| `pointerEvents=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `pointerEvents=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `pointerEvents=(symbol)`| (initial, warning)| `<null>` |
+| `pointerEvents=(function)`| (initial, warning)| `<null>` |
 | `pointerEvents=(null)`| (initial)| `<null>` |
 | `pointerEvents=(undefined)`| (initial)| `<null>` |
 
@@ -8243,7 +8243,7 @@
 | `preserveAlpha=(string 'false')`| (initial)| `<boolean: false>` |
 | `preserveAlpha=(string 'on')`| (initial)| `<boolean: false>` |
 | `preserveAlpha=(string 'off')`| (initial)| `<boolean: false>` |
-| `preserveAlpha=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<boolean: false>` |
+| `preserveAlpha=(symbol)`| (initial, warning)| `<boolean: false>` |
 | `preserveAlpha=(function)`| (initial, warning)| `<boolean: false>` |
 | `preserveAlpha=(null)`| (initial)| `<boolean: false>` |
 | `preserveAlpha=(undefined)`| (initial)| `<boolean: false>` |
@@ -8468,8 +8468,8 @@
 | `readOnly=(string 'false')`| (changed)| `<boolean: true>` |
 | `readOnly=(string 'on')`| (changed)| `<boolean: true>` |
 | `readOnly=(string 'off')`| (changed)| `<boolean: true>` |
-| `readOnly=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `readOnly=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `readOnly=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `readOnly=(function)`| (initial, warning)| `<boolean: false>` |
 | `readOnly=(null)`| (initial)| `<boolean: false>` |
 | `readOnly=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -8618,8 +8618,8 @@
 | `renderingIntent=(string 'false')`| (changed)| `"false"` |
 | `renderingIntent=(string 'on')`| (changed)| `"on"` |
 | `renderingIntent=(string 'off')`| (changed)| `"off"` |
-| `renderingIntent=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `renderingIntent=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `renderingIntent=(symbol)`| (initial, warning)| `<null>` |
+| `renderingIntent=(function)`| (initial, warning)| `<null>` |
 | `renderingIntent=(null)`| (initial)| `<null>` |
 | `renderingIntent=(undefined)`| (initial)| `<null>` |
 
@@ -8693,8 +8693,8 @@
 | `required=(string 'false')`| (changed)| `<boolean: true>` |
 | `required=(string 'on')`| (changed)| `<boolean: true>` |
 | `required=(string 'off')`| (changed)| `<boolean: true>` |
-| `required=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `required=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `required=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `required=(function)`| (initial, warning)| `<boolean: false>` |
 | `required=(null)`| (initial)| `<boolean: false>` |
 | `required=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -8868,8 +8868,8 @@
 | `reversed=(string 'false')`| (changed)| `<boolean: true>` |
 | `reversed=(string 'on')`| (changed)| `<boolean: true>` |
 | `reversed=(string 'off')`| (changed)| `<boolean: true>` |
-| `reversed=(symbol)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
-| `reversed=(function)`| (initial, warning, ssr mismatch)| `<boolean: false>` |
+| `reversed=(symbol)`| (initial, warning)| `<boolean: false>` |
+| `reversed=(function)`| (initial, warning)| `<boolean: false>` |
 | `reversed=(null)`| (initial)| `<boolean: false>` |
 | `reversed=(undefined)`| (initial)| `<boolean: false>` |
 
@@ -8943,7 +8943,7 @@
 | `rows=(string 'false')`| (initial)| `<number: 2>` |
 | `rows=(string 'on')`| (initial)| `<number: 2>` |
 | `rows=(string 'off')`| (initial)| `<number: 2>` |
-| `rows=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 2>` |
+| `rows=(symbol)`| (initial, warning)| `<number: 2>` |
 | `rows=(function)`| (initial, warning)| `<number: 2>` |
 | `rows=(null)`| (initial)| `<number: 2>` |
 | `rows=(undefined)`| (initial)| `<number: 2>` |
@@ -9118,8 +9118,8 @@
 | `scoped=(string 'false')`| (changed)| `<empty string>` |
 | `scoped=(string 'on')`| (changed)| `<empty string>` |
 | `scoped=(string 'off')`| (changed)| `<empty string>` |
-| `scoped=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `scoped=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `scoped=(symbol)`| (initial, warning)| `<null>` |
+| `scoped=(function)`| (initial, warning)| `<null>` |
 | `scoped=(null)`| (initial)| `<null>` |
 | `scoped=(undefined)`| (initial)| `<null>` |
 
@@ -9168,8 +9168,8 @@
 | `seamless=(string 'false')`| (changed)| `<empty string>` |
 | `seamless=(string 'on')`| (changed)| `<empty string>` |
 | `seamless=(string 'off')`| (changed)| `<empty string>` |
-| `seamless=(symbol)`| (initial, warning, ssr mismatch)| `<null>` |
-| `seamless=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `seamless=(symbol)`| (initial, warning)| `<null>` |
+| `seamless=(function)`| (initial, warning)| `<null>` |
 | `seamless=(null)`| (initial)| `<null>` |
 | `seamless=(undefined)`| (initial)| `<null>` |
 
@@ -9343,8 +9343,8 @@
 | `shapeRendering=(string 'false')`| (changed)| `"false"` |
 | `shapeRendering=(string 'on')`| (changed)| `"on"` |
 | `shapeRendering=(string 'off')`| (changed)| `"off"` |
-| `shapeRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `shapeRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `shapeRendering=(symbol)`| (initial, warning)| `<null>` |
+| `shapeRendering=(function)`| (initial, warning)| `<null>` |
 | `shapeRendering=(null)`| (initial)| `<null>` |
 | `shapeRendering=(undefined)`| (initial)| `<null>` |
 
@@ -9368,7 +9368,7 @@
 | `size=(string 'false')`| (initial)| `<number: 20>` |
 | `size=(string 'on')`| (initial)| `<number: 20>` |
 | `size=(string 'off')`| (initial)| `<number: 20>` |
-| `size=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 20>` |
+| `size=(symbol)`| (initial, warning)| `<number: 20>` |
 | `size=(function)`| (initial, warning)| `<number: 20>` |
 | `size=(null)`| (initial)| `<number: 20>` |
 | `size=(undefined)`| (initial)| `<number: 20>` |
@@ -9568,7 +9568,7 @@
 | `spellCheck=(string 'false')`| (changed)| `<boolean: false>` |
 | `spellCheck=(string 'on')`| (initial)| `<boolean: true>` |
 | `spellCheck=(string 'off')`| (initial)| `<boolean: true>` |
-| `spellCheck=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<boolean: true>` |
+| `spellCheck=(symbol)`| (initial, warning)| `<boolean: true>` |
 | `spellCheck=(function)`| (initial, warning)| `<boolean: true>` |
 | `spellCheck=(null)`| (initial)| `<boolean: true>` |
 | `spellCheck=(undefined)`| (initial)| `<boolean: true>` |
@@ -9818,7 +9818,7 @@
 | `start=(string 'false')`| (initial)| `<number: 1>` |
 | `start=(string 'on')`| (initial)| `<number: 1>` |
 | `start=(string 'off')`| (initial)| `<number: 1>` |
-| `start=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: 1>` |
+| `start=(symbol)`| (initial, warning)| `<number: 1>` |
 | `start=(function)`| (initial, warning)| `<number: 1>` |
 | `start=(null)`| (initial)| `<number: 1>` |
 | `start=(undefined)`| (initial)| `<number: 1>` |
@@ -10068,8 +10068,8 @@
 | `stopColor=(string 'false')`| (changed)| `"false"` |
 | `stopColor=(string 'on')`| (changed)| `"on"` |
 | `stopColor=(string 'off')`| (changed)| `"off"` |
-| `stopColor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `stopColor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `stopColor=(symbol)`| (initial, warning)| `<null>` |
+| `stopColor=(function)`| (initial, warning)| `<null>` |
 | `stopColor=(null)`| (initial)| `<null>` |
 | `stopColor=(undefined)`| (initial)| `<null>` |
 
@@ -10093,8 +10093,8 @@
 | `stopOpacity=(string 'false')`| (changed)| `"false"` |
 | `stopOpacity=(string 'on')`| (changed)| `"on"` |
 | `stopOpacity=(string 'off')`| (changed)| `"off"` |
-| `stopOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `stopOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `stopOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `stopOpacity=(function)`| (initial, warning)| `<null>` |
 | `stopOpacity=(null)`| (initial)| `<null>` |
 | `stopOpacity=(undefined)`| (initial)| `<null>` |
 
@@ -10168,8 +10168,8 @@
 | `strikethroughPosition=(string 'false')`| (changed)| `"false"` |
 | `strikethroughPosition=(string 'on')`| (changed)| `"on"` |
 | `strikethroughPosition=(string 'off')`| (changed)| `"off"` |
-| `strikethroughPosition=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strikethroughPosition=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strikethroughPosition=(symbol)`| (initial, warning)| `<null>` |
+| `strikethroughPosition=(function)`| (initial, warning)| `<null>` |
 | `strikethroughPosition=(null)`| (initial)| `<null>` |
 | `strikethroughPosition=(undefined)`| (initial)| `<null>` |
 
@@ -10193,8 +10193,8 @@
 | `strikethroughThickness=(string 'false')`| (changed)| `"false"` |
 | `strikethroughThickness=(string 'on')`| (changed)| `"on"` |
 | `strikethroughThickness=(string 'off')`| (changed)| `"off"` |
-| `strikethroughThickness=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strikethroughThickness=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strikethroughThickness=(symbol)`| (initial, warning)| `<null>` |
+| `strikethroughThickness=(function)`| (initial, warning)| `<null>` |
 | `strikethroughThickness=(null)`| (initial)| `<null>` |
 | `strikethroughThickness=(undefined)`| (initial)| `<null>` |
 
@@ -10468,8 +10468,8 @@
 | `strokeDasharray=(string 'false')`| (changed)| `"false"` |
 | `strokeDasharray=(string 'on')`| (changed)| `"on"` |
 | `strokeDasharray=(string 'off')`| (changed)| `"off"` |
-| `strokeDasharray=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeDasharray=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeDasharray=(symbol)`| (initial, warning)| `<null>` |
+| `strokeDasharray=(function)`| (initial, warning)| `<null>` |
 | `strokeDasharray=(null)`| (initial)| `<null>` |
 | `strokeDasharray=(undefined)`| (initial)| `<null>` |
 
@@ -10493,8 +10493,8 @@
 | `strokeDashoffset=(string 'false')`| (changed)| `"false"` |
 | `strokeDashoffset=(string 'on')`| (changed)| `"on"` |
 | `strokeDashoffset=(string 'off')`| (changed)| `"off"` |
-| `strokeDashoffset=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeDashoffset=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeDashoffset=(symbol)`| (initial, warning)| `<null>` |
+| `strokeDashoffset=(function)`| (initial, warning)| `<null>` |
 | `strokeDashoffset=(null)`| (initial)| `<null>` |
 | `strokeDashoffset=(undefined)`| (initial)| `<null>` |
 
@@ -10518,8 +10518,8 @@
 | `strokeLinecap=(string 'false')`| (changed)| `"false"` |
 | `strokeLinecap=(string 'on')`| (changed)| `"on"` |
 | `strokeLinecap=(string 'off')`| (changed)| `"off"` |
-| `strokeLinecap=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeLinecap=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeLinecap=(symbol)`| (initial, warning)| `<null>` |
+| `strokeLinecap=(function)`| (initial, warning)| `<null>` |
 | `strokeLinecap=(null)`| (initial)| `<null>` |
 | `strokeLinecap=(undefined)`| (initial)| `<null>` |
 
@@ -10543,8 +10543,8 @@
 | `strokeLinejoin=(string 'false')`| (changed)| `"false"` |
 | `strokeLinejoin=(string 'on')`| (changed)| `"on"` |
 | `strokeLinejoin=(string 'off')`| (changed)| `"off"` |
-| `strokeLinejoin=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeLinejoin=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeLinejoin=(symbol)`| (initial, warning)| `<null>` |
+| `strokeLinejoin=(function)`| (initial, warning)| `<null>` |
 | `strokeLinejoin=(null)`| (initial)| `<null>` |
 | `strokeLinejoin=(undefined)`| (initial)| `<null>` |
 
@@ -10568,8 +10568,8 @@
 | `strokeMiterlimit=(string 'false')`| (changed)| `"false"` |
 | `strokeMiterlimit=(string 'on')`| (changed)| `"on"` |
 | `strokeMiterlimit=(string 'off')`| (changed)| `"off"` |
-| `strokeMiterlimit=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeMiterlimit=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeMiterlimit=(symbol)`| (initial, warning)| `<null>` |
+| `strokeMiterlimit=(function)`| (initial, warning)| `<null>` |
 | `strokeMiterlimit=(null)`| (initial)| `<null>` |
 | `strokeMiterlimit=(undefined)`| (initial)| `<null>` |
 
@@ -10593,8 +10593,8 @@
 | `strokeOpacity=(string 'false')`| (changed)| `"false"` |
 | `strokeOpacity=(string 'on')`| (changed)| `"on"` |
 | `strokeOpacity=(string 'off')`| (changed)| `"off"` |
-| `strokeOpacity=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeOpacity=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeOpacity=(symbol)`| (initial, warning)| `<null>` |
+| `strokeOpacity=(function)`| (initial, warning)| `<null>` |
 | `strokeOpacity=(null)`| (initial)| `<null>` |
 | `strokeOpacity=(undefined)`| (initial)| `<null>` |
 
@@ -10618,8 +10618,8 @@
 | `strokeWidth=(string 'false')`| (changed)| `"false"` |
 | `strokeWidth=(string 'on')`| (changed)| `"on"` |
 | `strokeWidth=(string 'off')`| (changed)| `"off"` |
-| `strokeWidth=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `strokeWidth=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `strokeWidth=(symbol)`| (initial, warning)| `<null>` |
+| `strokeWidth=(function)`| (initial, warning)| `<null>` |
 | `strokeWidth=(null)`| (initial)| `<null>` |
 | `strokeWidth=(undefined)`| (initial)| `<null>` |
 
@@ -10768,7 +10768,7 @@
 | `tabIndex=(string 'false')`| (initial)| `<number: -1>` |
 | `tabIndex=(string 'on')`| (initial)| `<number: -1>` |
 | `tabIndex=(string 'off')`| (initial)| `<number: -1>` |
-| `tabIndex=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: -1>` |
+| `tabIndex=(symbol)`| (initial, warning)| `<number: -1>` |
 | `tabIndex=(function)`| (initial, warning)| `<number: -1>` |
 | `tabIndex=(null)`| (initial)| `<number: -1>` |
 | `tabIndex=(undefined)`| (initial)| `<number: -1>` |
@@ -10793,7 +10793,7 @@
 | `tabIndex=(string 'false')`| (initial)| `<number: -1>` |
 | `tabIndex=(string 'on')`| (initial)| `<number: -1>` |
 | `tabIndex=(string 'off')`| (initial)| `<number: -1>` |
-| `tabIndex=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<number: -1>` |
+| `tabIndex=(symbol)`| (initial, warning)| `<number: -1>` |
 | `tabIndex=(function)`| (initial, warning)| `<number: -1>` |
 | `tabIndex=(null)`| (initial)| `<number: -1>` |
 | `tabIndex=(undefined)`| (initial)| `<number: -1>` |
@@ -10993,8 +10993,8 @@
 | `textAnchor=(string 'false')`| (changed)| `"false"` |
 | `textAnchor=(string 'on')`| (changed)| `"on"` |
 | `textAnchor=(string 'off')`| (changed)| `"off"` |
-| `textAnchor=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `textAnchor=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `textAnchor=(symbol)`| (initial, warning)| `<null>` |
+| `textAnchor=(function)`| (initial, warning)| `<null>` |
 | `textAnchor=(null)`| (initial)| `<null>` |
 | `textAnchor=(undefined)`| (initial)| `<null>` |
 
@@ -11018,8 +11018,8 @@
 | `textDecoration=(string 'false')`| (changed)| `"false"` |
 | `textDecoration=(string 'on')`| (changed)| `"on"` |
 | `textDecoration=(string 'off')`| (changed)| `"off"` |
-| `textDecoration=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `textDecoration=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `textDecoration=(symbol)`| (initial, warning)| `<null>` |
+| `textDecoration=(function)`| (initial, warning)| `<null>` |
 | `textDecoration=(null)`| (initial)| `<null>` |
 | `textDecoration=(undefined)`| (initial)| `<null>` |
 
@@ -11068,8 +11068,8 @@
 | `textRendering=(string 'false')`| (changed)| `"false"` |
 | `textRendering=(string 'on')`| (changed)| `"on"` |
 | `textRendering=(string 'off')`| (changed)| `"off"` |
-| `textRendering=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `textRendering=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `textRendering=(symbol)`| (initial, warning)| `<null>` |
+| `textRendering=(function)`| (initial, warning)| `<null>` |
 | `textRendering=(null)`| (initial)| `<null>` |
 | `textRendering=(undefined)`| (initial)| `<null>` |
 
@@ -11343,8 +11343,8 @@
 | `underlinePosition=(string 'false')`| (changed)| `"false"` |
 | `underlinePosition=(string 'on')`| (changed)| `"on"` |
 | `underlinePosition=(string 'off')`| (changed)| `"off"` |
-| `underlinePosition=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `underlinePosition=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `underlinePosition=(symbol)`| (initial, warning)| `<null>` |
+| `underlinePosition=(function)`| (initial, warning)| `<null>` |
 | `underlinePosition=(null)`| (initial)| `<null>` |
 | `underlinePosition=(undefined)`| (initial)| `<null>` |
 
@@ -11368,8 +11368,8 @@
 | `underlineThickness=(string 'false')`| (changed)| `"false"` |
 | `underlineThickness=(string 'on')`| (changed)| `"on"` |
 | `underlineThickness=(string 'off')`| (changed)| `"off"` |
-| `underlineThickness=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `underlineThickness=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `underlineThickness=(symbol)`| (initial, warning)| `<null>` |
+| `underlineThickness=(function)`| (initial, warning)| `<null>` |
 | `underlineThickness=(null)`| (initial)| `<null>` |
 | `underlineThickness=(undefined)`| (initial)| `<null>` |
 
@@ -11468,8 +11468,8 @@
 | `unicodeBidi=(string 'false')`| (changed)| `"false"` |
 | `unicodeBidi=(string 'on')`| (changed)| `"on"` |
 | `unicodeBidi=(string 'off')`| (changed)| `"off"` |
-| `unicodeBidi=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `unicodeBidi=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `unicodeBidi=(symbol)`| (initial, warning)| `<null>` |
+| `unicodeBidi=(function)`| (initial, warning)| `<null>` |
 | `unicodeBidi=(null)`| (initial)| `<null>` |
 | `unicodeBidi=(undefined)`| (initial)| `<null>` |
 
@@ -11493,8 +11493,8 @@
 | `unicodeRange=(string 'false')`| (changed)| `"false"` |
 | `unicodeRange=(string 'on')`| (changed)| `"on"` |
 | `unicodeRange=(string 'off')`| (changed)| `"off"` |
-| `unicodeRange=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `unicodeRange=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `unicodeRange=(symbol)`| (initial, warning)| `<null>` |
+| `unicodeRange=(function)`| (initial, warning)| `<null>` |
 | `unicodeRange=(null)`| (initial)| `<null>` |
 | `unicodeRange=(undefined)`| (initial)| `<null>` |
 
@@ -11543,7 +11543,7 @@
 | `unitsPerEm=(string 'false')`| (initial)| `<null>` |
 | `unitsPerEm=(string 'on')`| (initial)| `<null>` |
 | `unitsPerEm=(string 'off')`| (initial)| `<null>` |
-| `unitsPerEm=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
+| `unitsPerEm=(symbol)`| (initial, warning)| `<null>` |
 | `unitsPerEm=(function)`| (initial, warning)| `<null>` |
 | `unitsPerEm=(null)`| (initial)| `<null>` |
 | `unitsPerEm=(undefined)`| (initial)| `<null>` |
@@ -11743,8 +11743,8 @@
 | `vAlphabetic=(string 'false')`| (changed)| `"false"` |
 | `vAlphabetic=(string 'on')`| (changed)| `"on"` |
 | `vAlphabetic=(string 'off')`| (changed)| `"off"` |
-| `vAlphabetic=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vAlphabetic=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vAlphabetic=(symbol)`| (initial, warning)| `<null>` |
+| `vAlphabetic=(function)`| (initial, warning)| `<null>` |
 | `vAlphabetic=(null)`| (initial)| `<null>` |
 | `vAlphabetic=(undefined)`| (initial)| `<null>` |
 
@@ -11768,8 +11768,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning, ssr warning)| `<empty string>` |
+| `value=(function)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11793,8 +11793,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
-| `value=(function)`| (initial, warning, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
+| `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11818,7 +11818,7 @@
 | `value=(string 'false')`| (initial)| `<empty string>` |
 | `value=(string 'on')`| (initial)| `<empty string>` |
 | `value=(string 'off')`| (initial)| `<empty string>` |
-| `value=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<empty string>` |
+| `value=(symbol)`| (initial, warning)| `<empty string>` |
 | `value=(function)`| (initial, warning)| `<empty string>` |
 | `value=(null)`| (initial, warning, ssr warning)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
@@ -11868,8 +11868,8 @@
 | `value=(string 'false')`| (changed)| `"false"` |
 | `value=(string 'on')`| (changed)| `"on"` |
 | `value=(string 'off')`| (changed)| `"off"` |
-| `value=(symbol)`| (changed, error, warning, ssr error)| `` |
-| `value=(function)`| (changed, warning)| `"function f() {}"` |
+| `value=(symbol)`| (changed, error, warning, ssr mismatch)| `` |
+| `value=(function)`| (changed, warning, ssr mismatch)| `"function f() {}"` |
 | `value=(null)`| (initial)| `<empty string>` |
 | `value=(undefined)`| (initial)| `<empty string>` |
 
@@ -11968,8 +11968,8 @@
 | `vectorEffect=(string 'false')`| (changed)| `"false"` |
 | `vectorEffect=(string 'on')`| (changed)| `"on"` |
 | `vectorEffect=(string 'off')`| (changed)| `"off"` |
-| `vectorEffect=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vectorEffect=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vectorEffect=(symbol)`| (initial, warning)| `<null>` |
+| `vectorEffect=(function)`| (initial, warning)| `<null>` |
 | `vectorEffect=(null)`| (initial)| `<null>` |
 | `vectorEffect=(undefined)`| (initial)| `<null>` |
 
@@ -12118,8 +12118,8 @@
 | `vertAdvY=(string 'false')`| (changed)| `"false"` |
 | `vertAdvY=(string 'on')`| (changed)| `"on"` |
 | `vertAdvY=(string 'off')`| (changed)| `"off"` |
-| `vertAdvY=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vertAdvY=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vertAdvY=(symbol)`| (initial, warning)| `<null>` |
+| `vertAdvY=(function)`| (initial, warning)| `<null>` |
 | `vertAdvY=(null)`| (initial)| `<null>` |
 | `vertAdvY=(undefined)`| (initial)| `<null>` |
 
@@ -12143,8 +12143,8 @@
 | `vertOriginX=(string 'false')`| (changed)| `"false"` |
 | `vertOriginX=(string 'on')`| (changed)| `"on"` |
 | `vertOriginX=(string 'off')`| (changed)| `"off"` |
-| `vertOriginX=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vertOriginX=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vertOriginX=(symbol)`| (initial, warning)| `<null>` |
+| `vertOriginX=(function)`| (initial, warning)| `<null>` |
 | `vertOriginX=(null)`| (initial)| `<null>` |
 | `vertOriginX=(undefined)`| (initial)| `<null>` |
 
@@ -12168,8 +12168,8 @@
 | `vertOriginY=(string 'false')`| (changed)| `"false"` |
 | `vertOriginY=(string 'on')`| (changed)| `"on"` |
 | `vertOriginY=(string 'off')`| (changed)| `"off"` |
-| `vertOriginY=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vertOriginY=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vertOriginY=(symbol)`| (initial, warning)| `<null>` |
+| `vertOriginY=(function)`| (initial, warning)| `<null>` |
 | `vertOriginY=(null)`| (initial)| `<null>` |
 | `vertOriginY=(undefined)`| (initial)| `<null>` |
 
@@ -12193,8 +12193,8 @@
 | `vHanging=(string 'false')`| (changed)| `"false"` |
 | `vHanging=(string 'on')`| (changed)| `"on"` |
 | `vHanging=(string 'off')`| (changed)| `"off"` |
-| `vHanging=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vHanging=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vHanging=(symbol)`| (initial, warning)| `<null>` |
+| `vHanging=(function)`| (initial, warning)| `<null>` |
 | `vHanging=(null)`| (initial)| `<null>` |
 | `vHanging=(undefined)`| (initial)| `<null>` |
 
@@ -12218,8 +12218,8 @@
 | `vIdeographic=(string 'false')`| (changed)| `"false"` |
 | `vIdeographic=(string 'on')`| (changed)| `"on"` |
 | `vIdeographic=(string 'off')`| (changed)| `"off"` |
-| `vIdeographic=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vIdeographic=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vIdeographic=(symbol)`| (initial, warning)| `<null>` |
+| `vIdeographic=(function)`| (initial, warning)| `<null>` |
 | `vIdeographic=(null)`| (initial)| `<null>` |
 | `vIdeographic=(undefined)`| (initial)| `<null>` |
 
@@ -12343,8 +12343,8 @@
 | `vMathematical=(string 'false')`| (changed)| `"false"` |
 | `vMathematical=(string 'on')`| (changed)| `"on"` |
 | `vMathematical=(string 'off')`| (changed)| `"off"` |
-| `vMathematical=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `vMathematical=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `vMathematical=(symbol)`| (initial, warning)| `<null>` |
+| `vMathematical=(function)`| (initial, warning)| `<null>` |
 | `vMathematical=(null)`| (initial)| `<null>` |
 | `vMathematical=(undefined)`| (initial)| `<null>` |
 
@@ -12518,8 +12518,8 @@
 | `wordSpacing=(string 'false')`| (changed)| `"false"` |
 | `wordSpacing=(string 'on')`| (changed)| `"on"` |
 | `wordSpacing=(string 'off')`| (changed)| `"off"` |
-| `wordSpacing=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `wordSpacing=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `wordSpacing=(symbol)`| (initial, warning)| `<null>` |
+| `wordSpacing=(function)`| (initial, warning)| `<null>` |
 | `wordSpacing=(null)`| (initial)| `<null>` |
 | `wordSpacing=(undefined)`| (initial)| `<null>` |
 
@@ -12593,8 +12593,8 @@
 | `writingMode=(string 'false')`| (changed)| `"false"` |
 | `writingMode=(string 'on')`| (changed)| `"on"` |
 | `writingMode=(string 'off')`| (changed)| `"off"` |
-| `writingMode=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `writingMode=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `writingMode=(symbol)`| (initial, warning)| `<null>` |
+| `writingMode=(function)`| (initial, warning)| `<null>` |
 | `writingMode=(null)`| (initial)| `<null>` |
 | `writingMode=(undefined)`| (initial)| `<null>` |
 
@@ -12743,8 +12743,8 @@
 | `xHeight=(string 'false')`| (changed)| `"false"` |
 | `xHeight=(string 'on')`| (changed)| `"on"` |
 | `xHeight=(string 'off')`| (changed)| `"off"` |
-| `xHeight=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xHeight=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xHeight=(symbol)`| (initial, warning)| `<null>` |
+| `xHeight=(function)`| (initial, warning)| `<null>` |
 | `xHeight=(null)`| (initial)| `<null>` |
 | `xHeight=(undefined)`| (initial)| `<null>` |
 
@@ -12968,8 +12968,8 @@
 | `xlinkActuate=(string 'false')`| (changed)| `"false"` |
 | `xlinkActuate=(string 'on')`| (changed)| `"on"` |
 | `xlinkActuate=(string 'off')`| (changed)| `"off"` |
-| `xlinkActuate=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkActuate=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkActuate=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkActuate=(function)`| (initial, warning)| `<null>` |
 | `xlinkActuate=(null)`| (initial)| `<null>` |
 | `xlinkActuate=(undefined)`| (initial)| `<null>` |
 
@@ -13018,8 +13018,8 @@
 | `xlinkArcrole=(string 'false')`| (changed)| `"false"` |
 | `xlinkArcrole=(string 'on')`| (changed)| `"on"` |
 | `xlinkArcrole=(string 'off')`| (changed)| `"off"` |
-| `xlinkArcrole=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkArcrole=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkArcrole=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkArcrole=(function)`| (initial, warning)| `<null>` |
 | `xlinkArcrole=(null)`| (initial)| `<null>` |
 | `xlinkArcrole=(undefined)`| (initial)| `<null>` |
 
@@ -13043,8 +13043,8 @@
 | `xlinkHref=(string 'false')`| (changed)| `"false"` |
 | `xlinkHref=(string 'on')`| (changed)| `"on"` |
 | `xlinkHref=(string 'off')`| (changed)| `"off"` |
-| `xlinkHref=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkHref=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkHref=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkHref=(function)`| (initial, warning)| `<null>` |
 | `xlinkHref=(null)`| (initial)| `<null>` |
 | `xlinkHref=(undefined)`| (initial)| `<null>` |
 
@@ -13068,8 +13068,8 @@
 | `xlinkRole=(string 'false')`| (changed)| `"false"` |
 | `xlinkRole=(string 'on')`| (changed)| `"on"` |
 | `xlinkRole=(string 'off')`| (changed)| `"off"` |
-| `xlinkRole=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkRole=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkRole=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkRole=(function)`| (initial, warning)| `<null>` |
 | `xlinkRole=(null)`| (initial)| `<null>` |
 | `xlinkRole=(undefined)`| (initial)| `<null>` |
 
@@ -13093,8 +13093,8 @@
 | `xlinkShow=(string 'false')`| (changed)| `"false"` |
 | `xlinkShow=(string 'on')`| (changed)| `"on"` |
 | `xlinkShow=(string 'off')`| (changed)| `"off"` |
-| `xlinkShow=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkShow=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkShow=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkShow=(function)`| (initial, warning)| `<null>` |
 | `xlinkShow=(null)`| (initial)| `<null>` |
 | `xlinkShow=(undefined)`| (initial)| `<null>` |
 
@@ -13118,8 +13118,8 @@
 | `xlinkTitle=(string 'false')`| (changed)| `"false"` |
 | `xlinkTitle=(string 'on')`| (changed)| `"on"` |
 | `xlinkTitle=(string 'off')`| (changed)| `"off"` |
-| `xlinkTitle=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkTitle=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkTitle=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkTitle=(function)`| (initial, warning)| `<null>` |
 | `xlinkTitle=(null)`| (initial)| `<null>` |
 | `xlinkTitle=(undefined)`| (initial)| `<null>` |
 
@@ -13143,8 +13143,8 @@
 | `xlinkType=(string 'false')`| (changed)| `"false"` |
 | `xlinkType=(string 'on')`| (changed)| `"on"` |
 | `xlinkType=(string 'off')`| (changed)| `"off"` |
-| `xlinkType=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xlinkType=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xlinkType=(symbol)`| (initial, warning)| `<null>` |
+| `xlinkType=(function)`| (initial, warning)| `<null>` |
 | `xlinkType=(null)`| (initial)| `<null>` |
 | `xlinkType=(undefined)`| (initial)| `<null>` |
 
@@ -13243,8 +13243,8 @@
 | `xmlBase=(string 'false')`| (changed)| `"false"` |
 | `xmlBase=(string 'on')`| (changed)| `"on"` |
 | `xmlBase=(string 'off')`| (changed)| `"off"` |
-| `xmlBase=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlBase=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlBase=(symbol)`| (initial, warning)| `<null>` |
+| `xmlBase=(function)`| (initial, warning)| `<null>` |
 | `xmlBase=(null)`| (initial)| `<null>` |
 | `xmlBase=(undefined)`| (initial)| `<null>` |
 
@@ -13268,8 +13268,8 @@
 | `xmlLang=(string 'false')`| (changed)| `"false"` |
 | `xmlLang=(string 'on')`| (changed)| `"on"` |
 | `xmlLang=(string 'off')`| (changed)| `"off"` |
-| `xmlLang=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlLang=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlLang=(symbol)`| (initial, warning)| `<null>` |
+| `xmlLang=(function)`| (initial, warning)| `<null>` |
 | `xmlLang=(null)`| (initial)| `<null>` |
 | `xmlLang=(undefined)`| (initial)| `<null>` |
 
@@ -13343,8 +13343,8 @@
 | `xmlnsXlink=(string 'false')`| (changed)| `"false"` |
 | `xmlnsXlink=(string 'on')`| (changed)| `"on"` |
 | `xmlnsXlink=(string 'off')`| (changed)| `"off"` |
-| `xmlnsXlink=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlnsXlink=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlnsXlink=(symbol)`| (initial, warning)| `<null>` |
+| `xmlnsXlink=(function)`| (initial, warning)| `<null>` |
 | `xmlnsXlink=(null)`| (initial)| `<null>` |
 | `xmlnsXlink=(undefined)`| (initial)| `<null>` |
 
@@ -13368,8 +13368,8 @@
 | `xmlSpace=(string 'false')`| (changed)| `"false"` |
 | `xmlSpace=(string 'on')`| (changed)| `"on"` |
 | `xmlSpace=(string 'off')`| (changed)| `"off"` |
-| `xmlSpace=(symbol)`| (initial, warning, ssr error, ssr mismatch)| `<null>` |
-| `xmlSpace=(function)`| (initial, warning, ssr mismatch)| `<null>` |
+| `xmlSpace=(symbol)`| (initial, warning)| `<null>` |
+| `xmlSpace=(function)`| (initial, warning)| `<null>` |
 | `xmlSpace=(null)`| (initial)| `<null>` |
 | `xmlSpace=(undefined)`| (initial)| `<null>` |
 

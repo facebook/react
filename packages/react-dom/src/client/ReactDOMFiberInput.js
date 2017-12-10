@@ -133,7 +133,7 @@ export function updateChecked(element: Element, props: Object) {
   const node = ((element: any): InputWithWrapperState);
   const checked = props.checked;
   if (checked != null) {
-    DOMPropertyOperations.setValueForProperty(node, 'checked', checked);
+    DOMPropertyOperations.setValueForProperty(node, 'checked', checked, false);
   }
 }
 
