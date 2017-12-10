@@ -34,7 +34,7 @@ function getLocalYarnVersion() {
     return yarnVersion;
   } else {
     if (caughtError.code === 'ENOENT') {
-      console.log(
+      console.error(
         'Could not find a Yarn installation. Please make sure Yarn is installed and ' +
           'that the `yarn` command works in your command line shell.'
       );
