@@ -282,7 +282,9 @@ export function createElementWithValidation(type, props, children) {
     typeof type === 'string' ||
     typeof type === 'function' ||
     typeof type === 'number' ||
+    // Note: its typeof might be other than 'symbol' if it's a polyfill.
     type === REACT_FRAGMENT_TYPE;
+
   // We warn in this case but don't throw. We expect the element creation to
   // succeed and there will likely be errors in render.
   if (!validType) {
