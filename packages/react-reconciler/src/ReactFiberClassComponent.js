@@ -42,6 +42,7 @@ const isArray = Array.isArray;
 
 let didWarnAboutStateAssignmentForComponent;
 let warnOnInvalidCallback;
+let warnAboutStateAssignment;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = {};
@@ -54,6 +55,24 @@ if (__DEV__) {
       callerName,
       callback,
     );
+  };
+
+  warnAboutStateAssignment = function(
+    workInProgress: Fiber,
+    lifeCycle: string,
+  ) {
+    const componentName = getComponentName(workInProgress) || 'Component';
+    if (!didWarnAboutStateAssignmentForComponent[componentName]) {
+      warning(
+        false,
+        '%s.%s(): Assigning directly to this.state is ' +
+          "deprecated (except inside a component's " +
+          'constructor). Use setState instead.',
+        componentName,
+        lifeCycle,
+      );
+      didWarnAboutStateAssignmentForComponent[componentName] = true;
+    }
   };
 
   // This is so gross but it's at least non-critical and can be removed if
@@ -389,13 +408,7 @@ export default function(
 
     if (oldState !== instance.state) {
       if (__DEV__) {
-        warning(
-          false,
-          '%s.componentWillMount(): Assigning directly to this.state is ' +
-            "deprecated (except inside a component's " +
-            'constructor). Use setState instead.',
-          getComponentName(workInProgress),
-        );
+        warnAboutStateAssignment(workInProgress, 'componentWillMount');
       }
       updater.enqueueReplaceState(instance, instance.state, null);
     }
@@ -419,17 +432,7 @@ export default function(
 
     if (instance.state !== oldState) {
       if (__DEV__) {
-        const componentName = getComponentName(workInProgress) || 'Component';
-        if (!didWarnAboutStateAssignmentForComponent[componentName]) {
-          warning(
-            false,
-            '%s.componentWillReceiveProps(): Assigning directly to ' +
-              "this.state is deprecated (except inside a component's " +
-              'constructor). Use setState instead.',
-            componentName,
-          );
-          didWarnAboutStateAssignmentForComponent[componentName] = true;
-        }
+        warnAboutStateAssignment(workInProgress, 'componentWillReceiveProps');
       }
       updater.enqueueReplaceState(instance, instance.state, null);
     }
