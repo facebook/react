@@ -42,6 +42,7 @@ const isArray = Array.isArray;
 
 let didWarnAboutStateAssignmentForComponent;
 let warnOnInvalidCallback;
+let warnAboutStateAssignment;
 
 if (__DEV__) {
   didWarnAboutStateAssignmentForComponent = {};
@@ -53,6 +54,20 @@ if (__DEV__) {
         'function. Instead received: %s.',
       callerName,
       callback,
+    );
+  };
+
+  warnAboutStateAssignment = function(
+    componentName: string,
+    lifeCycle: string,
+  ) {
+    warning(
+      false,
+      '%s.%s(): Assigning directly to this.state is ' +
+        "deprecated (except inside a component's " +
+        'constructor). Use setState instead.',
+      componentName,
+      lifeCycle,
     );
   };
 
@@ -389,13 +404,8 @@ export default function(
 
     if (oldState !== instance.state) {
       if (__DEV__) {
-        warning(
-          false,
-          '%s.componentWillMount(): Assigning directly to this.state is ' +
-            "deprecated (except inside a component's " +
-            'constructor). Use setState instead.',
-          getComponentName(workInProgress),
-        );
+        const componentName = getComponentName(workInProgress) || 'Component';
+        warnAboutStateAssignment(componentName, 'componentWillMount');
       }
       updater.enqueueReplaceState(instance, instance.state, null);
     }
@@ -421,13 +431,7 @@ export default function(
       if (__DEV__) {
         const componentName = getComponentName(workInProgress) || 'Component';
         if (!didWarnAboutStateAssignmentForComponent[componentName]) {
-          warning(
-            false,
-            '%s.componentWillReceiveProps(): Assigning directly to ' +
-              "this.state is deprecated (except inside a component's " +
-              'constructor). Use setState instead.',
-            componentName,
-          );
+          warnAboutStateAssignment(componentName, 'componentWillReceiveProps');
           didWarnAboutStateAssignmentForComponent[componentName] = true;
         }
       }
