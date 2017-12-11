@@ -38,14 +38,7 @@ const config = {
   },
   scripts: {
     patterns: [...npmPath, ...nodePath],
-    ignore: [
-      '**/node_modules/**',
-      // Built files and React repo clone
-      'scripts/bench/benchmarks/**',
-      // shims & flow treat as ESNext
-      'scripts/flow/*.js',
-      'scripts/rollup/shims/**/*.js',
-    ],
+    ignore: ['**/node_modules/**'],
     options: {
       trailingComma: 'es5',
     },
