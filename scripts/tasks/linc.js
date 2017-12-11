@@ -9,9 +9,7 @@
 
 const runESLint = require('../eslint');
 
-console.log();
 console.log('Linting changed files...');
-console.log();
 
 if (runESLint({onlyChanged: true})) {
   console.log('Lint passed for changed files.');

@@ -7,35 +7,36 @@
 
 'use strict';
 
+const minimatch = require('minimatch');
 const CLIEngine = require('eslint').CLIEngine;
 const listChangedFiles = require('../shared/listChangedFiles');
-const {
-  npmPaths,
-  nodePaths,
-  sourcePaths,
-} = require('../shared/pathsByLanguageVersion');
+const {es5Paths, esNextPaths} = require('../shared/pathsByLanguageVersion');
 
-const sourceOptions = {
-  configFile: `${__dirname}/eslintrc.source.js`,
-  ignorePattern: [...npmPaths, ...nodePaths],
-};
-const nodeOptions = {
-  configFile: `${__dirname}/eslintrc.node.js`,
-  ignorePattern: [...npmPaths, ...sourcePaths],
-};
-const npmOptions = {
-  configFile: `${__dirname}/eslintrc.npm.js`,
-  ignorePattern: [...nodePaths, ...sourcePaths],
-};
+const allPaths = ['**/*.js'];
 
-function runESLintOnFilesWithOptions(filePatterns, options) {
+let changedFiles = null;
+
+function runESLintOnFilesWithOptions(filePatterns, onlyChanged, options) {
   const cli = new CLIEngine(options);
   const formatter = cli.getFormatter();
-  const report = cli.executeOnFiles(filePatterns);
 
-  // When using `ignorePattern`, eslint will show `File ignored...` warning message when match ignore file.
-  // We don't care about it, but there is currently no way to tell ESLint to not emit it.
+  if (onlyChanged && changedFiles === null) {
+    // Calculate lazily.
+    changedFiles = [...listChangedFiles()];
+  }
+  const finalFilePatterns = onlyChanged
+    ? intersect(changedFiles, filePatterns)
+    : filePatterns;
+  const report = cli.executeOnFiles(finalFilePatterns);
+
+  // When using `ignorePattern`, eslint will show `File ignored...` warnings for any ignores.
+  // We don't care because we *expect* some passed files will be ignores if `ignorePattern` is used.
   const messages = report.results.filter(item => {
+    if (!onlyChanged) {
+      // Don't suppress the message on a full run.
+      // We only expect it to happen for "only changed" runs.
+      return true;
+    }
     const ignoreMessage =
       'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.';
     return !(item.messages[0] && item.messages[0].message === ignoreMessage);
@@ -49,27 +50,35 @@ function runESLintOnFilesWithOptions(filePatterns, options) {
   };
 }
 
+function intersect(files, patterns) {
+  let intersection = [];
+  patterns.forEach(pattern => {
+    intersection = [
+      ...intersection,
+      ...minimatch.match(files, pattern, {matchBase: true}),
+    ];
+  });
+  return [...new Set(intersection)];
+}
+
 function runESLint({onlyChanged}) {
   if (typeof onlyChanged !== 'boolean') {
     throw new Error('Pass options.onlyChanged as a boolean.');
   }
-  const changedFiles = onlyChanged ? [...listChangedFiles()] : null;
   let errorCount = 0;
   let warningCount = 0;
   let output = '';
   [
-    runESLintOnFilesWithOptions(
-      onlyChanged ? changedFiles : sourcePaths,
-      sourceOptions
-    ),
-    runESLintOnFilesWithOptions(
-      onlyChanged ? changedFiles : nodePaths,
-      nodeOptions
-    ),
-    runESLintOnFilesWithOptions(
-      onlyChanged ? changedFiles : npmPaths,
-      npmOptions
-    ),
+    runESLintOnFilesWithOptions(allPaths, onlyChanged, {
+      configFile: `${__dirname}/eslintrc.default.js`,
+      ignorePattern: [...es5Paths, ...esNextPaths],
+    }),
+    runESLintOnFilesWithOptions(esNextPaths, onlyChanged, {
+      configFile: `${__dirname}/eslintrc.esnext.js`,
+    }),
+    runESLintOnFilesWithOptions(es5Paths, onlyChanged, {
+      configFile: `${__dirname}/eslintrc.es5.js`,
+    }),
   ].forEach(result => {
     errorCount += result.errorCount;
     warningCount += result.warningCount;

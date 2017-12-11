@@ -9,12 +9,10 @@
 
 const runESLint = require('../eslint');
 
-console.log();
 console.log('Linting all files...');
 if (!process.CI) {
   console.log('Hint: run `yarn linc` to only lint changed files.');
 }
-console.log();
 
 if (runESLint({onlyChanged: false})) {
   console.log('Lint passed.');
