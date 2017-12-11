@@ -1394,6 +1394,35 @@ describe('ReactDOMComponent', () => {
         expect(console.log.calls.argsFor(1)[0]).toContain('onLoad called');
       }
     });
+
+    it('should work load and error events on <link> component', () => {
+      spyOnDevAndProd(console, 'log');
+      const container = document.createElement('div');
+      ReactDOM.render(
+        <link
+          href="http://example.org/link"
+          onLoad={e => console.log('onLoad called')}
+          onError={e => console.log('onError called')}
+        />,
+        container,
+      );
+
+      const loadEvent = document.createEvent('Event');
+      const errorEvent = document.createEvent('Event');
+      const link = container.getElementsByTagName('link')[0];
+
+      loadEvent.initEvent('load', false, false);
+      errorEvent.initEvent('error', false, false);
+
+      link.dispatchEvent(loadEvent);
+      link.dispatchEvent(errorEvent);
+
+      if (__DEV__) {
+        expect(console.log.calls.count()).toBe(2);
+        expect(console.log.calls.argsFor(0)[0]).toContain('onLoad called');
+        expect(console.log.calls.argsFor(1)[0]).toContain('onError called');
+      }
+    });
   });
 
   describe('updateComponent', () => {
