@@ -8,7 +8,11 @@
 'use strict';
 
 const lintOnFiles = require('../eslint');
-const {nodePath, npmPath, sourcePath} = require('../shared/esPath');
+const {
+  nodePath,
+  npmPath,
+  sourcePath,
+} = require('../shared/pathsByLanguageVersion');
 
 const esNextReport = lintOnFiles({
   ecmaVersion: 'next',

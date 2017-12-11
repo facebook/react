@@ -8,7 +8,11 @@
 'use strict';
 
 const CLIEngine = require('eslint').CLIEngine;
-const {npmPath, nodePath, sourcePath} = require('../shared/esPath');
+const {
+  npmPath,
+  nodePath,
+  sourcePath,
+} = require('../shared/pathsByLanguageVersion');
 
 const npmOptions = {
   configFile: `${__dirname}/eslintrc.npm.js`,

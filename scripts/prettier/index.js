@@ -14,7 +14,11 @@ const glob = require('glob');
 const prettier = require('prettier');
 const fs = require('fs');
 const listChangedFiles = require('../shared/listChangedFiles');
-const {npmPath, nodePath, sourcePath} = require('../shared/esPath');
+const {
+  npmPath,
+  nodePath,
+  sourcePath,
+} = require('../shared/pathsByLanguageVersion');
 
 const mode = process.argv[2] || 'check';
 const shouldWrite = mode === 'write' || mode === 'write-changed';
