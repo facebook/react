@@ -8,14 +8,14 @@
 'use strict';
 
 const lintOnFiles = require('../eslint');
-const {es6Path, es5Path, esNextPath} = require('../shared/esPath');
+const {nodePath, npmPath, sourcePath} = require('../shared/esPath');
 
 const esNextReport = lintOnFiles({
   ecmaVersion: 'next',
-  filePatterns: esNextPath,
+  filePatterns: sourcePath,
 });
-const es6Report = lintOnFiles({ecmaVersion: '6', filePatterns: es6Path});
-const es5Report = lintOnFiles({ecmaVersion: '5', filePatterns: es5Path});
+const es6Report = lintOnFiles({ecmaVersion: '6', filePatterns: nodePath});
+const es5Report = lintOnFiles({ecmaVersion: '5', filePatterns: npmPath});
 
 if (
   esNextReport.errorCount > 0 ||

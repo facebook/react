@@ -8,34 +8,34 @@
 'use strict';
 
 const CLIEngine = require('eslint').CLIEngine;
-const {es5Path, es6Path, esNextPath} = require('../shared/esPath');
+const {npmPath, nodePath, sourcePath} = require('../shared/esPath');
 
-const es5Options = {
-  configFile: `${__dirname}/es5Config.js`,
-  ignorePattern: [...es6Path, ...esNextPath],
+const npmOptions = {
+  configFile: `${__dirname}/eslintrc.npm.js`,
+  ignorePattern: [...nodePath, ...sourcePath],
 };
 
-const es6Options = {
-  configFile: `${__dirname}/es6Config.js`,
-  ignorePattern: [...es5Path, ...esNextPath],
+const nodeOptions = {
+  configFile: `${__dirname}/eslintrc.node.js`,
+  ignorePattern: [...npmPath, ...sourcePath],
 };
 
-const esNextOptions = {
-  configFile: `${__dirname}/esNextConfig.js`,
-  ignorePattern: [...es5Path, ...es6Path],
+const sourceOptions = {
+  configFile: `${__dirname}/eslintrc.source.js`,
+  ignorePattern: [...npmPath, ...nodePath],
 };
 
 module.exports = function lintOnFiles({ecmaVersion, filePatterns}) {
   let options;
   switch (ecmaVersion) {
     case '5':
-      options = es5Options;
+      options = npmOptions;
       break;
     case '6':
-      options = es6Options;
+      options = nodeOptions;
       break;
     case 'next':
-      options = esNextOptions;
+      options = sourceOptions;
       break;
     default:
       console.error('ecmaVersion only accpet value: "5", "6", "next"');

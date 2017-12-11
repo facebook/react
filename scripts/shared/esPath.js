@@ -6,7 +6,7 @@
  */
 'use strict';
 
-const esNextPath = [
+const sourcePath = [
   // Internal forwarding modules
   'packages/*/*.js',
   // Source files
@@ -17,17 +17,15 @@ const esNextPath = [
   'scripts/rollup/shims/**/*.js',
 ];
 
-const es6Path = ['scripts/**/*.js'];
+const nodePath = ['scripts/**/*.js', 'fixtures/**/*.js'];
 
-const es5Path = [
+const npmPath = [
   // Forwarding modules that get published to npm (must be ES5)
   'packages/*/npm/**/*.js',
-  // Need to work on Node
-  'fixtures/**/*.js',
 ];
 
 module.exports = {
-  esNextPath,
-  es6Path,
-  es5Path,
+  sourcePath,
+  nodePath,
+  npmPath,
 };

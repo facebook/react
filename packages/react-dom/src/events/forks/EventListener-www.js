@@ -7,7 +7,7 @@
  * @flow
  */
 
-var EventListenerWWW = require('EventListener');
+const EventListenerWWW = require('EventListener');
 
 import typeof * as EventListenerType from '../EventListener';
 import typeof * as EventListenerShimType from './EventListener-www';
