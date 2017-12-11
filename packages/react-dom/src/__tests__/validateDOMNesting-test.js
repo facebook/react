@@ -9,8 +9,8 @@
 
 'use strict';
 
-var React = require('react');
-var ReactDOM = require('react-dom');
+const React = require('react');
+const ReactDOM = require('react-dom');
 
 function normalizeCodeLocInfo(str) {
   return str && str.replace(/at .+?:\d+/g, 'at **');

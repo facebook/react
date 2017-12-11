@@ -26,14 +26,14 @@ module.exports = function autoImporter(babel) {
       CallExpression: function(path, file) {
         if (path.get('callee').matchesPattern('Object.assign')) {
           // generate identifier and require if it hasn't been already
-          var id = getAssignIdent(path, file, this);
+          const id = getAssignIdent(path, file, this);
           path.node.callee = id;
         }
       },
 
       MemberExpression: function(path, file) {
         if (path.matchesPattern('Object.assign')) {
-          var id = getAssignIdent(path, file, this);
+          const id = getAssignIdent(path, file, this);
           path.replaceWith(id);
         }
       },

@@ -65,15 +65,16 @@ const _touchConfig = function(
 ) {
   const allTouchObjects = allTouchHandles.map(touch);
   const changedTouchObjects = subsequence(allTouchObjects, changedIndices);
-  const activeTouchObjects = topType === 'topTouchStart'
-    ? allTouchObjects
-    : topType === 'topTouchMove'
+  const activeTouchObjects =
+    topType === 'topTouchStart'
+      ? allTouchObjects
+      : topType === 'topTouchMove'
         ? allTouchObjects
         : topType === 'topTouchEnd'
+          ? antiSubsequence(allTouchObjects, changedIndices)
+          : topType === 'topTouchCancel'
             ? antiSubsequence(allTouchObjects, changedIndices)
-            : topType === 'topTouchCancel'
-                ? antiSubsequence(allTouchObjects, changedIndices)
-                : null;
+            : null;
 
   return {
     nativeEvent: touchEvent(
@@ -234,19 +235,24 @@ const registerTestHandlers = function(eventTestConfig, readableIDToID) {
     for (const readableID in eventTypeTestConfig) {
       const nodeConfig = eventTypeTestConfig[readableID];
       const id = readableIDToID[readableID];
-      const handler = nodeConfig.order === NA
-        ? neverFire.bind(null, readableID, registrationName)
-        : // We partially apply readableID and nodeConfig, as they change in the
-          // parent closure across iterations.
-          function(rID, config, e) {
-            expect(
-              rID + '->' + registrationName + ' index:' + runs.dispatchCount++,
-            ).toBe(rID + '->' + registrationName + ' index:' + config.order);
-            if (config.assertEvent) {
-              config.assertEvent(e);
-            }
-            return config.returnVal;
-          }.bind(null, readableID, nodeConfig);
+      const handler =
+        nodeConfig.order === NA
+          ? neverFire.bind(null, readableID, registrationName)
+          : // We partially apply readableID and nodeConfig, as they change in the
+            // parent closure across iterations.
+            function(rID, config, e) {
+              expect(
+                rID +
+                  '->' +
+                  registrationName +
+                  ' index:' +
+                  runs.dispatchCount++,
+              ).toBe(rID + '->' + registrationName + ' index:' + config.order);
+              if (config.assertEvent) {
+                config.assertEvent(e);
+              }
+              return config.returnVal;
+            }.bind(null, readableID, nodeConfig);
       putListener(getInstanceFromNode(id), registrationName, handler);
     }
   };
@@ -1362,7 +1368,7 @@ describe('ResponderEventPlugin', () => {
   });
 
   it('should determine the first common ancestor correctly', () => {
-    // This test was moved here from the ReactTreeTraversal test since only the 
+    // This test was moved here from the ReactTreeTraversal test since only the
     // ResponderEventPlugin uses `getLowestCommonAncestor`
     const React = require('react');
     const ReactTestUtils = require('react-dom/test-utils');
@@ -1379,7 +1385,7 @@ describe('ResponderEventPlugin', () => {
         );
       }
     }
-    
+
     class ParentComponent extends React.Component {
       render() {
         return (
@@ -1443,7 +1449,9 @@ describe('ResponderEventPlugin', () => {
         ReactDOMComponentTree.getInstanceFromNode(plan.one),
         ReactDOMComponentTree.getInstanceFromNode(plan.two),
       );
-      expect(firstCommon).toBe(ReactDOMComponentTree.getInstanceFromNode(plan.com));
+      expect(firstCommon).toBe(
+        ReactDOMComponentTree.getInstanceFromNode(plan.com),
+      );
     }
   });
 });

@@ -72,6 +72,7 @@
     "jest-jasmine2": "^21.3.0-beta.4",
     "jest-runtime": "^21.3.0-beta.4",
     "merge-stream": "^1.0.0",
+    "minimatch": "^3.0.4",
     "minimist": "^1.2.0",
     "mkdirp": "^0.5.1",
     "ncp": "^2.0.0",

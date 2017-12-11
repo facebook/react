@@ -376,7 +376,7 @@ describe('ReactDOMServer', () => {
     it('should not focus on either server or client with autofocus={false} even if there is a markup mismatch', () => {
       spyOnDev(console, 'error');
 
-      var element = document.createElement('div');
+      const element = document.createElement('div');
       element.innerHTML = ReactDOMServer.renderToString(
         <button autoFocus={false}>server</button>,
       );

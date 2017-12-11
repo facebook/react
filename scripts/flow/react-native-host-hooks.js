@@ -39,7 +39,7 @@ declare module 'UIManager' {
     reactTag: number,
     viewName: string,
     rootTag: number,
-    props: ?Object
+    props: ?Object,
   ): void;
   declare function manageChildren(
     containerTag: number,
@@ -47,30 +47,30 @@ declare module 'UIManager' {
     moveToIndices: Array<number>,
     addChildReactTags: Array<number>,
     addAtIndices: Array<number>,
-    removeAtIndices: Array<number>
+    removeAtIndices: Array<number>,
   ): void;
   declare function measure(hostComponent: mixed, callback: Function): void;
   declare function measureInWindow(
     nativeTag: ?number,
-    callback: Function
+    callback: Function,
   ): void;
   declare function measureLayout(
     nativeTag: mixed,
     nativeNode: number,
     onFail: Function,
-    onSuccess: Function
+    onSuccess: Function,
   ): void;
   declare function removeRootView(containerTag: number): void;
   declare function removeSubviewsFromContainerWithID(containerId: number): void;
   declare function replaceExistingNonRootView(): void;
   declare function setChildren(
     containerTag: number,
-    reactTags: Array<number>
+    reactTags: Array<number>,
   ): void;
   declare function updateView(
     reactTag: number,
     viewName: string,
-    props: ?Object
+    props: ?Object,
   ): void;
   declare function __takeSnapshot(
     view?: 'window' | Element<any> | number,
@@ -79,7 +79,7 @@ declare module 'UIManager' {
       height?: number,
       format?: 'png' | 'jpeg',
       quality?: number,
-    }
+    },
   ): Promise<any>;
 }
 declare module 'View' {
@@ -90,14 +90,14 @@ declare module 'RTManager' {
   declare function createNode(
     tag: number,
     classType: string,
-    props: ?Object
+    props: ?Object,
   ): void;
 
   declare function beginUpdates(): void;
 
   declare function appendChildToContext(
     contextTag: number,
-    childTag: number
+    childTag: number,
   ): void;
   declare function appendChild(parentTag: number, childTag: number): void;
   declare function prependChild(childTag: number, beforeTag: number): void;

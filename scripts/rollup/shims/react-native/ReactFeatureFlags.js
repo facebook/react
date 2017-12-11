@@ -9,7 +9,7 @@
 
 'use strict';
 
-var ReactFeatureFlags = {
+const ReactFeatureFlags = {
   debugRenderPhaseSideEffects: false,
 };
 

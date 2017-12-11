@@ -443,10 +443,10 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should not set null/undefined attributes', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       // Initial render.
       ReactDOM.render(<img src={null} data-foo={undefined} />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
       expect(node.hasAttribute('src')).toBe(false);
       expect(node.hasAttribute('data-foo')).toBe(false);
       // Update in one direction.
@@ -468,9 +468,9 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should apply React-specific aliases to HTML elements', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<form acceptCharset="foo" />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
       // Test attribute initialization.
       expect(node.getAttribute('accept-charset')).toBe('foo');
       expect(node.hasAttribute('acceptCharset')).toBe(false);
@@ -501,9 +501,9 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should apply React-specific aliases to SVG elements', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<svg arabicForm="foo" />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
       // Test attribute initialization.
       expect(node.getAttribute('arabic-form')).toBe('foo');
       expect(node.hasAttribute('arabicForm')).toBe(false);
@@ -543,9 +543,9 @@ describe('ReactDOMComponent', () => {
     });
 
     it('should not apply React-specific aliases to custom elements', () => {
-      var container = document.createElement('div');
+      const container = document.createElement('div');
       ReactDOM.render(<some-custom-element arabicForm="foo" />, container);
-      var node = container.firstChild;
+      const node = container.firstChild;
       // Should not get transformed to arabic-form as SVG would be.
       expect(node.getAttribute('arabicForm')).toBe('foo');
       expect(node.hasAttribute('arabic-form')).toBe(false);

@@ -7,11 +7,16 @@
 
 'use strict';
 
-const lintOnFiles = require('../eslint');
-const report = lintOnFiles(['.']);
-if (report.errorCount > 0 || report.warningCount > 0) {
+const runESLint = require('../eslint');
+
+console.log('Linting all files...');
+if (!process.CI) {
+  console.log('Hint: run `yarn linc` to only lint changed files.');
+}
+
+if (runESLint({onlyChanged: false})) {
+  console.log('Lint passed.');
+} else {
   console.log('Lint failed.');
   process.exit(1);
-} else {
-  console.log('Lint passed.');
 }
