@@ -1400,10 +1400,7 @@ describe('ReactDOMComponent', () => {
       const onLoad = jest.fn();
 
       ReactDOM.render(
-        <link
-          href="http://example.org/link"
-          onLoad={onLoad}
-        />,
+        <link href="http://example.org/link" onLoad={onLoad} />,
         container,
       );
 
@@ -1421,10 +1418,7 @@ describe('ReactDOMComponent', () => {
       const onError = jest.fn();
 
       ReactDOM.render(
-        <link
-          href="http://example.org/link"
-          onError={onError}
-        />,
+        <link href="http://example.org/link" onError={onError} />,
         container,
       );
 
