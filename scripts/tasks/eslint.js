@@ -7,30 +7,18 @@
 
 'use strict';
 
-const lintOnFiles = require('../eslint');
-const {
-  nodePath,
-  npmPath,
-  sourcePath,
-} = require('../shared/pathsByLanguageVersion');
+const runESLint = require('../eslint');
 
-const esNextReport = lintOnFiles({
-  ecmaVersion: 'next',
-  filePatterns: sourcePath,
-});
-const es6Report = lintOnFiles({ecmaVersion: '6', filePatterns: nodePath});
-const es5Report = lintOnFiles({ecmaVersion: '5', filePatterns: npmPath});
+console.log();
+console.log('Linting all files...');
+if (!process.CI) {
+  console.log('Hint: run `yarn linc` to only lint changed files.');
+}
+console.log();
 
-if (
-  esNextReport.errorCount > 0 ||
-  esNextReport.warningCount > 0 ||
-  es6Report.errorCount > 0 ||
-  es6Report.warningCount > 0 ||
-  es5Report.errorCount > 0 ||
-  es5Report.warningCount
-) {
+if (runESLint({onlyChanged: false})) {
+  console.log('Lint passed.');
+} else {
   console.log('Lint failed.');
   process.exit(1);
-} else {
-  console.log('Lint passed.');
 }

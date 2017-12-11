@@ -6,26 +6,29 @@
  */
 'use strict';
 
-const sourcePath = [
+// Files that are transformed and can use ES6/Flow/JSX.
+const sourcePaths = [
   // Internal forwarding modules
   'packages/*/*.js',
   // Source files
   'packages/*/src/**/*.js',
   'packages/shared/**/*.js',
-  // shims & flow
+  // Shims & flow
   'scripts/flow/*.js',
   'scripts/rollup/shims/**/*.js',
 ];
 
-const nodePath = ['scripts/**/*.js', 'fixtures/**/*.js'];
+// Our internal scripts that should run on Node.
+const nodePaths = ['scripts/**/*.js', 'fixtures/**/*.js'];
 
-const npmPath = [
+// Files that we distribute on npm that should be ES5-only.
+const npmPaths = [
   // Forwarding modules that get published to npm (must be ES5)
   'packages/*/npm/**/*.js',
 ];
 
 module.exports = {
-  sourcePath,
-  nodePath,
-  npmPath,
+  sourcePaths,
+  nodePaths,
+  npmPaths,
 };

@@ -9,6 +9,9 @@
 
 const eslintrc = require('../../.eslintrc');
 
+// We apply these settings to files that we ship through npm.
+// They must be ES5.
+
 module.exports = Object.assign({}, eslintrc, {
   parser: 'espree',
   parserOptions: {

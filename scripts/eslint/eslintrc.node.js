@@ -11,6 +11,10 @@ const eslintrc = require('../../.eslintrc');
 
 const ERROR = 2;
 
+// We apply these settings to files that should run on Node.
+// They can't use JSX or ES6 modules, and must be in strict mode.
+// They can, however, use other ES6 features.
+
 module.exports = Object.assign({}, eslintrc, {
   parser: 'espree',
   parserOptions: {

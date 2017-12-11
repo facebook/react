@@ -8,58 +8,75 @@
 'use strict';
 
 const CLIEngine = require('eslint').CLIEngine;
+const listChangedFiles = require('../shared/listChangedFiles');
 const {
-  npmPath,
-  nodePath,
-  sourcePath,
+  npmPaths,
+  nodePaths,
+  sourcePaths,
 } = require('../shared/pathsByLanguageVersion');
-
-const npmOptions = {
-  configFile: `${__dirname}/eslintrc.npm.js`,
-  ignorePattern: [...nodePath, ...sourcePath],
-};
-
-const nodeOptions = {
-  configFile: `${__dirname}/eslintrc.node.js`,
-  ignorePattern: [...npmPath, ...sourcePath],
-};
 
 const sourceOptions = {
   configFile: `${__dirname}/eslintrc.source.js`,
-  ignorePattern: [...npmPath, ...nodePath],
+  ignorePattern: [...npmPaths, ...nodePaths],
+};
+const nodeOptions = {
+  configFile: `${__dirname}/eslintrc.node.js`,
+  ignorePattern: [...npmPaths, ...sourcePaths],
+};
+const npmOptions = {
+  configFile: `${__dirname}/eslintrc.npm.js`,
+  ignorePattern: [...nodePaths, ...sourcePaths],
 };
 
-module.exports = function lintOnFiles({ecmaVersion, filePatterns}) {
-  let options;
-  switch (ecmaVersion) {
-    case '5':
-      options = npmOptions;
-      break;
-    case '6':
-      options = nodeOptions;
-      break;
-    case 'next':
-      options = sourceOptions;
-      break;
-    default:
-      console.error('ecmaVersion only accpet value: "5", "6", "next"');
-  }
-
-  const cli = new CLIEngine({...options});
+function runESLintOnFilesWithOptions(filePatterns, options) {
+  const cli = new CLIEngine(options);
   const formatter = cli.getFormatter();
   const report = cli.executeOnFiles(filePatterns);
 
   // When using `ignorePattern`, eslint will show `File ignored...` warning message when match ignore file.
-  // Currently, the only way to turn off this warning message is to set quiet = true.
-  // But it will remove `all warnings`, it's not appropriate to turn off other warning message
-  // So that's why we filter out the ignore pattern message.
-  // related issue: https://github.com/eslint/eslint/issues/5623
-  const filteredReport = report.results.filter(item => {
+  // We don't care about it, but there is currently no way to tell ESLint to not emit it.
+  const messages = report.results.filter(item => {
     const ignoreMessage =
       'File ignored because of a matching ignore pattern. Use "--no-ignore" to override.';
     return !(item.messages[0] && item.messages[0].message === ignoreMessage);
   });
-  const formattedResults = formatter(filteredReport);
-  console.log(formattedResults);
-  return report;
-};
+
+  const ignoredMessageCount = report.results.length - messages.length;
+  return {
+    output: formatter(messages),
+    errorCount: report.errorCount,
+    warningCount: report.warningCount - ignoredMessageCount,
+  };
+}
+
+function runESLint({onlyChanged}) {
+  if (typeof onlyChanged !== 'boolean') {
+    throw new Error('Pass options.onlyChanged as a boolean.');
+  }
+  const changedFiles = onlyChanged ? [...listChangedFiles()] : null;
+  let errorCount = 0;
+  let warningCount = 0;
+  let output = '';
+  [
+    runESLintOnFilesWithOptions(
+      onlyChanged ? changedFiles : sourcePaths,
+      sourceOptions
+    ),
+    runESLintOnFilesWithOptions(
+      onlyChanged ? changedFiles : nodePaths,
+      nodeOptions
+    ),
+    runESLintOnFilesWithOptions(
+      onlyChanged ? changedFiles : npmPaths,
+      npmOptions
+    ),
+  ].forEach(result => {
+    errorCount += result.errorCount;
+    warningCount += result.warningCount;
+    output += result.output;
+  });
+  console.log(output);
+  return errorCount === 0 && warningCount === 0;
+}
+
+module.exports = runESLint;

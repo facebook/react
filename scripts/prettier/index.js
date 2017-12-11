@@ -15,9 +15,9 @@ const prettier = require('prettier');
 const fs = require('fs');
 const listChangedFiles = require('../shared/listChangedFiles');
 const {
-  npmPath,
-  nodePath,
-  sourcePath,
+  npmPaths,
+  nodePaths,
+  sourcePaths,
 } = require('../shared/pathsByLanguageVersion');
 
 const mode = process.argv[2] || 'check';
@@ -33,11 +33,11 @@ const defaultOptions = {
 };
 const config = {
   default: {
-    patterns: sourcePath,
+    patterns: sourcePaths,
     ignore: ['**/node_modules/**'],
   },
   scripts: {
-    patterns: [...npmPath, ...nodePath],
+    patterns: [...npmPaths, ...nodePaths],
     ignore: ['**/node_modules/**'],
     options: {
       trailingComma: 'es5',
