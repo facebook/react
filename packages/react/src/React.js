@@ -9,7 +9,13 @@ import assign from 'object-assign';
 import ReactVersion from 'shared/ReactVersion';
 import {REACT_FRAGMENT_TYPE} from 'shared/ReactSymbols';
 
-import {Component, PureComponent, AsyncComponent} from './ReactBaseClasses';
+import {
+  Component,
+  LegacyComponent,
+  LegacyPureComponent,
+  PureComponent,
+  AsyncComponent,
+} from './ReactBaseClasses';
 import {forEach, map, count, toArray, only} from './ReactChildren';
 import ReactCurrentOwner from './ReactCurrentOwner';
 import {
@@ -35,6 +41,8 @@ const React = {
   },
 
   Component,
+  legacy_Component: LegacyComponent,
+  legacy_PureComponent: LegacyPureComponent,
   PureComponent,
   unstable_AsyncComponent: AsyncComponent,
 

@@ -180,13 +180,22 @@ export function getUpdateExpirationTime(fiber: Fiber): ExpirationTime {
   return updateQueue.expirationTime;
 }
 
-function getStateFromUpdate(update, instance, prevState, props) {
+function getStateFromUpdate(
+  workInProgress,
+  update,
+  instance,
+  prevState,
+  props,
+) {
   const partialState = update.partialState;
   if (typeof partialState === 'function') {
     const updateFn = partialState;
 
     // Invoke setState callback an extra time to help detect side-effects.
-    if (debugRenderPhaseSideEffects) {
+    if (
+      debugRenderPhaseSideEffects &&
+      !workInProgress.type.prototype.unstable_ignoreDebugRenderPhaseSideEffects
+    ) {
       updateFn.call(instance, prevState, props);
     }
 
@@ -279,10 +288,22 @@ export function processUpdateQueue<State>(
     // Process the update
     let partialState;
     if (update.isReplace) {
-      state = getStateFromUpdate(update, instance, state, props);
+      state = getStateFromUpdate(
+        workInProgress,
+        update,
+        instance,
+        state,
+        props,
+      );
       dontMutatePrevState = true;
     } else {
-      partialState = getStateFromUpdate(update, instance, state, props);
+      partialState = getStateFromUpdate(
+        workInProgress,
+        update,
+        instance,
+        state,
+        props,
+      );
       if (partialState) {
         if (dontMutatePrevState) {
           // $FlowFixMe: Idk how to type this properly.
