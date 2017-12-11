@@ -9,6 +9,8 @@
 
 const eslintrc = require('../../.eslintrc');
 
+const ERROR = 2;
+
 // We apply these settings to files that we ship through npm.
 // They must be ES5.
 
@@ -17,5 +19,8 @@ module.exports = Object.assign({}, eslintrc, {
   parserOptions: {
     ecmaVersion: 5,
     sourceType: 'script',
+  },
+  rules: {
+    strict: ERROR,
   },
 });
