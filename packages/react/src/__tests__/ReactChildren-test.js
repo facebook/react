@@ -95,7 +95,8 @@ describe('ReactChildren', () => {
       context,
     );
     expect(callback).toHaveBeenCalledWith(reactCall, 0);
-    expect(mappedChildren[0]).toEqual(reactCall);
+    expect(mappedChildren[0].type).toEqual(reactCall.type);
+    expect(mappedChildren[0].props).toEqual(reactCall.props);
   });
 
   it('should support Return components', () => {
@@ -119,7 +120,8 @@ describe('ReactChildren', () => {
       context,
     );
     expect(callback).toHaveBeenCalledWith(reactReturn, 0);
-    expect(mappedChildren[0]).toEqual(reactReturn);
+    expect(mappedChildren[0].props).toEqual(reactReturn.props);
+    expect(mappedChildren[0].type).toEqual(reactReturn.type);
   });
 
   it('should treat single arrayless child as being in array', () => {

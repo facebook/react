@@ -621,11 +621,6 @@ class ReactDOMServerRenderer {
             'Portals are not currently supported by the server renderer. ' +
               'Render them conditionally so that they only appear on the client render.',
           );
-          invariant(
-            $$typeof !== REACT_CALL_TYPE && $$typeof !== REACT_RETURN_TYPE,
-            'The experimental Call and Return types are not currently ' +
-              'supported by the server renderer.',
-          );
           // Catch-all to prevent an infinite loop if React.Children.toArray() supports some new type.
           invariant(
             false,
@@ -678,6 +673,12 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
+    invariant(
+      element.type !== REACT_CALL_TYPE && element.type !== REACT_RETURN_TYPE,
+      'The experimental Call and Return types are not currently ' +
+        'supported by the server renderer.',
+    );
+
     const tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;

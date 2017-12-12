@@ -9,8 +9,13 @@
 
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 
+import {REACT_CALL_TYPE} from 'shared/ReactSymbols';
+
 function getComponentName(fiber: Fiber): string | null {
   const {type} = fiber;
+  if (type === REACT_CALL_TYPE) {
+    return '<ReactCall>';
+  }
   if (typeof type === 'string') {
     return type;
   }
