@@ -26,6 +26,11 @@ const ReactART = require('react-art');
 const ARTSVGMode = require('art/modes/svg');
 const ARTCurrentMode = require('art/modes/current');
 
+const renderer = require('react-test-renderer');
+const Circle = require('react-art/Circle');
+const Rectangle = require('react-art/Rectangle');
+const Wedge = require('react-art/Wedge');
+
 function testDOMNodeStructure(domNode, expectedStructure) {
   expect(domNode).toBeDefined();
   expect(domNode.nodeName).toBe(expectedStructure.nodeName);
@@ -327,5 +332,29 @@ describe('ReactART', () => {
     instance = render(onClick2);
     doClick(instance);
     expect(onClick2).toBeCalled();
+  });
+});
+
+// TODO: more tests covering the components functionalities.
+describe('ReactARTComponents', () => {
+  it('should generate a Shape module with props for drawing the Circle', () => {
+    const circle = renderer.create(
+      <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
+    );
+    expect(circle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a Shape module with props for drawing the Rectangle', () => {
+    const rectangle = renderer.create(
+      <Rectangle width={50} height={50} stroke="green" fill="blue" />,
+    );
+    expect(rectangle.toJSON()).toMatchSnapshot();
+  });
+
+  it('should generate a Shape module with props for drawing the Wedge', () => {
+    const wedge = renderer.create(
+      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
+    );
+    expect(wedge.toJSON()).toMatchSnapshot();
   });
 });
