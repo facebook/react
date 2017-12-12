@@ -11,8 +11,6 @@ import warning from 'fbjs/lib/warning';
 import {
   getIteratorFn,
   REACT_ELEMENT_TYPE,
-  REACT_CALL_TYPE,
-  REACT_RETURN_TYPE,
   REACT_PORTAL_TYPE,
 } from 'shared/ReactSymbols';
 
@@ -125,8 +123,6 @@ function traverseAllChildrenImpl(
       case 'object':
         switch (children.$$typeof) {
           case REACT_ELEMENT_TYPE:
-          case REACT_CALL_TYPE:
-          case REACT_RETURN_TYPE:
           case REACT_PORTAL_TYPE:
             invokeCallback = true;
         }

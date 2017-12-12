@@ -8,7 +8,6 @@
  */
 
 import type {HostConfig} from 'react-reconciler';
-import type {ReactCall} from 'shared/ReactTypes';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 import type {HostContext} from './ReactFiberHostContext';
@@ -93,7 +92,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       ) {
         invariant(false, 'A call cannot have host component children.');
       } else if (node.tag === ReturnComponent) {
-        returns.push(node.type);
+        returns.push(node.pendingProps.value);
       } else if (node.child !== null) {
         node.child.return = node;
         node = node.child;
@@ -115,9 +114,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress: Fiber,
     renderExpirationTime: ExpirationTime,
   ) {
-    const call = (workInProgress.memoizedProps: ?ReactCall);
+    const props = workInProgress.memoizedProps;
     invariant(
-      call,
+      props,
       'Should be resolved by now. This error is likely caused by a bug in ' +
         'React. Please file an issue.',
     );
@@ -135,9 +134,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     // TODO: Compare this to a generator or opaque helpers like Children.
     const returns: Array<mixed> = [];
     appendAllReturns(returns, workInProgress);
-    const fn = call.handler;
-    const props = call.props;
-    const nextChildren = fn(props, returns);
+    const fn = props.handler;
+    const childProps = props.props;
+    const nextChildren = fn(childProps, returns);
 
     const currentFirstChild = current !== null ? current.child : null;
     workInProgress.child = reconcileChildFibers(
