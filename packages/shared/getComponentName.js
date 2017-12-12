@@ -26,13 +26,13 @@ function getComponentName(fiber: Fiber): string | null {
   }
   switch (type) {
     case REACT_FRAGMENT_TYPE:
-      return '<ReactFragment>';
+      return 'ReactFragment';
     case REACT_PORTAL_TYPE:
-      return '<ReactPortal>';
+      return 'ReactPortal';
     case REACT_CALL_TYPE:
-      return '<ReactCall>';
+      return 'ReactCall';
     case REACT_RETURN_TYPE:
-      return '<ReactReturn>';
+      return 'ReactReturn';
   }
   return null;
 }
