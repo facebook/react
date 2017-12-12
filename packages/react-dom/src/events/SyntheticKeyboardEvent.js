@@ -14,7 +14,7 @@ import getEventModifierState from './getEventModifierState';
  * @interface KeyboardEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-const KeyboardEventInterface = {
+const SyntheticKeyboardEvent = SyntheticUIEvent.extend({
   key: getEventKey,
   location: null,
   ctrlKey: null,
@@ -60,29 +60,6 @@ const KeyboardEventInterface = {
     }
     return 0;
   },
-};
-
-/**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
- * @extends {SyntheticUIEvent}
- */
-function SyntheticKeyboardEvent(
-  dispatchConfig,
-  dispatchMarker,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  return SyntheticUIEvent.call(
-    this,
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
-SyntheticUIEvent.augmentClass(SyntheticKeyboardEvent, KeyboardEventInterface);
+});
 
 export default SyntheticKeyboardEvent;
