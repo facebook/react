@@ -349,76 +349,78 @@ describe('ReactARTComponents', () => {
 
   it('should warn if radius is missing on a Circle component', () => {
     spyOnDev(console, 'error');
-    const circle = renderer.create(
-      <Circle stroke="green" strokeWidth={3} fill="blue" />
-    );
+    renderer.create(<Circle stroke="green" strokeWidth={3} fill="blue" />);
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(1);
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, but its value is `undefined`.' +
-          '\n    in Circle (at **)'
+        'Warning: Failed prop type: The prop `radius` is marked as required in `Circle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Circle (at **)',
       );
     }
   });
 
   it('should generate a Shape module with props for drawing the Rectangle', () => {
     const rectangle = renderer.create(
-      <Rectangle width={50} height={50} stroke="green" fill="blue" />
+      <Rectangle width={50} height={50} stroke="green" fill="blue" />,
     );
     expect(rectangle.toJSON()).toMatchSnapshot();
   });
 
   it('should warn if width/height is missing on a Rectangle component', () => {
     spyOnDev(console, 'error');
-    const rectangle = renderer.create(
-      <Rectangle stroke="green" fill="blue" />
-    );
+    renderer.create(<Rectangle stroke="green" fill="blue" />);
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(2);
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, but its value is `undefined`.' +
-          '\n    in Rectangle (at **)'
+        'Warning: Failed prop type: The prop `width` is marked as required in `Rectangle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Rectangle (at **)',
       );
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, but its value is `undefined`.' +
-          '\n    in Rectangle (at **)'
+        'Warning: Failed prop type: The prop `height` is marked as required in `Rectangle`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Rectangle (at **)',
       );
     }
   });
 
   it('should generate a Shape module with props for drawing the Wedge', () => {
     const wedge = renderer.create(
-      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />
+      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
     );
     expect(wedge.toJSON()).toMatchSnapshot();
   });
 
   it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
     spyOnDev(console, 'error');
-    const wedge = renderer.create(
-      <Wedge fill="blue" />
-    );
+    renderer.create(<Wedge fill="blue" />);
     if (__DEV__) {
       expect(console.error.calls.count()).toBe(3);
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(0)[0])).toEqual(
-        'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, but its value is `undefined`.' +
-          '\n    in Wedge (at **)'
+        'Warning: Failed prop type: The prop `outerRadius` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
       );
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(1)[0])).toEqual(
-        'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, but its value is `undefined`.' +
-          '\n    in Wedge (at **)'
+        'Warning: Failed prop type: The prop `startAngle` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
       );
       expect(normalizeCodeLocInfo(console.error.calls.argsFor(2)[0])).toEqual(
-        'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, but its value is `undefined`.' +
-          '\n    in Wedge (at **)'
+        'Warning: Failed prop type: The prop `endAngle` is marked as required in `Wedge`, ' +
+          'but its value is `undefined`.' +
+          '\n    in Wedge (at **)',
       );
     }
   });
 
   it('should turn degrees to radians', () => {
-    const wedgeInstance = renderer.create(
-      <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />
-    ).getInstance();
+    const wedgeInstance = renderer
+      .create(
+        <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
+      )
+      .getInstance();
     expect(wedgeInstance._degreesToRadians(0)).toBe(0);
     expect(wedgeInstance._degreesToRadians(180)).toBe(3.141592653589793);
     expect(wedgeInstance._degreesToRadians(720)).toBe(6.283185307179586);
