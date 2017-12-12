@@ -99,8 +99,6 @@ const CAPTURE = 1;
 
 const localEvents = {
   topAbort: CAPTURE,
-  topAbort: CAPTURE,
-  topCanPlay: CAPTURE,
   topCanPlay: CAPTURE,
   topCanPlayThrough: CAPTURE,
   topDurationChange: CAPTURE,
