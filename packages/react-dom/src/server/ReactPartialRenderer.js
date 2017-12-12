@@ -642,28 +642,37 @@ class ReactDOMServerRenderer {
         }
         this.stack.push(frame);
         return '';
-      } else if (
-        ((nextChild: any): ReactElement).type === REACT_FRAGMENT_TYPE
-      ) {
-        const nextChildren = toArray(
-          ((nextChild: any): ReactElement).props.children,
-        );
-        const frame: Frame = {
-          domNamespace: parentNamespace,
-          children: nextChildren,
-          childIndex: 0,
-          context: context,
-          footer: '',
-        };
-        if (__DEV__) {
-          ((frame: any): FrameDev).debugElementStack = [];
-        }
-        this.stack.push(frame);
-        return '';
-      } else {
-        // Safe because we just checked it's an element.
-        const nextElement = ((nextChild: any): ReactElement);
-        return this.renderDOM(nextElement, context, parentNamespace);
+      }
+      // Safe because we just checked it's an element.
+      const nextElement = ((nextChild: any): ReactElement);
+      const elementType = nextElement.type;
+      switch (elementType) {
+        case REACT_FRAGMENT_TYPE:
+          const nextChildren = toArray(
+            ((nextChild: any): ReactElement).props.children,
+          );
+          const frame: Frame = {
+            domNamespace: parentNamespace,
+            children: nextChildren,
+            childIndex: 0,
+            context: context,
+            footer: '',
+          };
+          if (__DEV__) {
+            ((frame: any): FrameDev).debugElementStack = [];
+          }
+          this.stack.push(frame);
+          return '';
+        case REACT_CALL_TYPE:
+        case REACT_RETURN_TYPE:
+          invariant(
+            false,
+            'The experimental Call and Return types are not currently ' +
+              'supported by the server renderer.',
+          );
+        // eslint-disable-next-line-no-fallthrough
+        default:
+          return this.renderDOM(nextElement, context, parentNamespace);
       }
     }
   }
@@ -673,12 +682,6 @@ class ReactDOMServerRenderer {
     context: Object,
     parentNamespace: string,
   ): string {
-    invariant(
-      element.type !== REACT_CALL_TYPE && element.type !== REACT_RETURN_TYPE,
-      'The experimental Call and Return types are not currently ' +
-        'supported by the server renderer.',
-    );
-
     const tag = element.type.toLowerCase();
 
     let namespace = parentNamespace;
