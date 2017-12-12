@@ -12,7 +12,7 @@ import getEventModifierState from './getEventModifierState';
  * @interface TouchEvent
  * @see http://www.w3.org/TR/touch-events/
  */
-const TouchEventInterface = {
+const SyntheticTouchEvent = SyntheticUIEvent.extend({
   touches: null,
   targetTouches: null,
   changedTouches: null,
@@ -21,29 +21,6 @@ const TouchEventInterface = {
   ctrlKey: null,
   shiftKey: null,
   getModifierState: getEventModifierState,
-};
-
-/**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
- * @extends {SyntheticUIEvent}
- */
-function SyntheticTouchEvent(
-  dispatchConfig,
-  dispatchMarker,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  return SyntheticUIEvent.call(
-    this,
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
-SyntheticUIEvent.augmentClass(SyntheticTouchEvent, TouchEventInterface);
+});
 
 export default SyntheticTouchEvent;

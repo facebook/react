@@ -12,7 +12,7 @@ import getEventModifierState from './getEventModifierState';
  * @interface MouseEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-const MouseEventInterface = {
+const SyntheticMouseEvent = SyntheticUIEvent.extend({
   screenX: null,
   screenY: null,
   clientX: null,
@@ -34,29 +34,6 @@ const MouseEventInterface = {
         : event.fromElement)
     );
   },
-};
-
-/**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
- * @extends {SyntheticUIEvent}
- */
-function SyntheticMouseEvent(
-  dispatchConfig,
-  dispatchMarker,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  return SyntheticUIEvent.call(
-    this,
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
-SyntheticUIEvent.augmentClass(SyntheticMouseEvent, MouseEventInterface);
+});
 
 export default SyntheticMouseEvent;

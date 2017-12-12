@@ -11,31 +11,8 @@ import SyntheticUIEvent from './SyntheticUIEvent';
  * @interface FocusEvent
  * @see http://www.w3.org/TR/DOM-Level-3-Events/
  */
-const FocusEventInterface = {
+const SyntheticFocusEvent = SyntheticUIEvent.extend({
   relatedTarget: null,
-};
-
-/**
- * @param {object} dispatchConfig Configuration used to dispatch this event.
- * @param {string} dispatchMarker Marker identifying the event target.
- * @param {object} nativeEvent Native browser event.
- * @extends {SyntheticUIEvent}
- */
-function SyntheticFocusEvent(
-  dispatchConfig,
-  dispatchMarker,
-  nativeEvent,
-  nativeEventTarget,
-) {
-  return SyntheticUIEvent.call(
-    this,
-    dispatchConfig,
-    dispatchMarker,
-    nativeEvent,
-    nativeEventTarget,
-  );
-}
-
-SyntheticUIEvent.augmentClass(SyntheticFocusEvent, FocusEventInterface);
+});
 
 export default SyntheticFocusEvent;
