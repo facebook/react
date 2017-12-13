@@ -42,6 +42,7 @@ import {
   Err,
   Ref,
 } from 'shared/ReactTypeOfSideEffect';
+import is from 'shared/is';
 import {ReactCurrentOwner} from 'shared/ReactGlobalSharedState';
 import {debugRenderPhaseSideEffects} from 'shared/ReactFeatureFlags';
 import invariant from 'fbjs/lib/invariant';
@@ -780,8 +781,9 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
 
     const newValue = newProps.value;
     const oldValue = oldProps !== null ? oldProps.value : null;
-    // TODO: Use Object.is instead of ===
-    if (newValue !== oldValue) {
+
+    // Use Object.is to compare the new context value to the old value.
+    if (!is(newValue, oldValue)) {
       propagateContextChange(workInProgress, context, renderExpirationTime);
     }
 
@@ -808,10 +810,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const providerFiber: Fiber | null = context.lastProvider;
 
     let newValue;
+    let valueDidChange;
     if (providerFiber === null) {
       // This is a detached consumer (has no provider). Use the default
       // context value.
       newValue = context.defaultValue;
+      valueDidChange = false;
     } else {
       const provider = providerFiber.pendingProps;
       invariant(
@@ -824,11 +828,13 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       // Context change propagation stops at matching consumers, for time-
       // slicing. Continue the propagation here.
       if (oldProps === null) {
+        valueDidChange = true;
         propagateContextChange(workInProgress, context, renderExpirationTime);
       } else {
         const oldValue = oldProps !== null ? oldProps.__memoizedValue : null;
-        // TODO: Use Object.is instead of ===
-        if (newValue !== oldValue) {
+        // Use Object.is to compare the new context value to the old value.
+        if (!is(newValue, oldValue)) {
+          valueDidChange = true;
           propagateContextChange(workInProgress, context, renderExpirationTime);
         }
       }
@@ -842,7 +848,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (newProps === oldProps) {
+    } else if (newProps === oldProps && !valueDidChange) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
     const newChildren = newProps.render(newValue);

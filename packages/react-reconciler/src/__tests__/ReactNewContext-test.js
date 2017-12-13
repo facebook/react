@@ -306,6 +306,67 @@ describe('ReactNewContext', () => {
     ]);
   });
 
+  it('compares context values with Object.is semantics', () => {
+    const Context = React.createContext(1);
+
+    function Provider(props) {
+      ReactNoop.yield('Provider');
+      return Context.provide(props.value, props.children);
+    }
+
+    function Consumer(props) {
+      ReactNoop.yield('Consumer');
+      return Context.consume(value => {
+        ReactNoop.yield('Consumer render prop');
+        return <span prop={'Result: ' + value} />;
+      });
+    }
+
+    class Indirection extends React.Component {
+      shouldComponentUpdate() {
+        return false;
+      }
+      render() {
+        ReactNoop.yield('Indirection');
+        return this.props.children;
+      }
+    }
+
+    function App(props) {
+      ReactNoop.yield('App');
+      return (
+        <Provider value={props.value}>
+          <Indirection>
+            <Indirection>
+              <Consumer />
+            </Indirection>
+          </Indirection>
+        </Provider>
+      );
+    }
+
+    ReactNoop.render(<App value={NaN} />);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      'Provider',
+      'Indirection',
+      'Indirection',
+      'Consumer',
+      'Consumer render prop',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
+
+    // Update
+    ReactNoop.render(<App value={NaN} />);
+    expect(ReactNoop.flush()).toEqual([
+      'App',
+      'Provider',
+      // Consumer should not re-render again
+      // 'Consumer render prop',
+    ]);
+    expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
+  });
+
   describe('fuzz test', () => {
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     const contexts = new Map(
