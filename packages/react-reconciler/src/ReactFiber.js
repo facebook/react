@@ -320,20 +320,13 @@ export function createFiberFromElement(
   let fiber;
   const type = element.type;
   const key = element.key;
-  const pendingProps = element.props;
+  let pendingProps = element.props;
+
+  let fiberTag;
   if (typeof type === 'function') {
-    fiber = shouldConstruct(type)
-      ? createFiber(ClassComponent, pendingProps, key, internalContextTag)
-      : createFiber(
-          IndeterminateComponent,
-          pendingProps,
-          key,
-          internalContextTag,
-        );
-    fiber.type = type;
+    fiberTag = shouldConstruct(type) ? ClassComponent : IndeterminateComponent;
   } else if (typeof type === 'string') {
-    fiber = createFiber(HostComponent, pendingProps, key, internalContextTag);
-    fiber.type = type;
+    fiberTag = HostComponent;
   } else {
     switch (type) {
       case REACT_FRAGMENT_TYPE:
@@ -344,65 +337,38 @@ export function createFiberFromElement(
           key,
         );
       case REACT_STRICT_MODE_TYPE:
-        fiber = createFiber(
-          Mode,
-          pendingProps,
-          key,
-          internalContextTag | StrictMode,
-        );
-        fiber.type = REACT_STRICT_MODE_TYPE;
+        fiberTag = Mode;
+        internalContextTag |= StrictMode;
         break;
       case REACT_CALL_TYPE:
-        fiber = createFiber(
-          CallComponent,
-          pendingProps,
-          key,
-          internalContextTag,
-        );
-        fiber.type = REACT_CALL_TYPE;
+        fiberTag = CallComponent;
         break;
       case REACT_RETURN_TYPE:
-        fiber = createFiber(
-          ReturnComponent,
-          pendingProps,
-          key,
-          internalContextTag,
-        );
-        fiber.type = REACT_RETURN_TYPE;
+        fiberTag = ReturnComponent;
         break;
       default: {
         if (typeof type === 'object' && type !== null) {
           switch (type.$$typeof) {
             case REACT_PROVIDER_TYPE:
-              fiber = createFiber(
-                ProviderComponent,
-                pendingProps,
-                key,
-                internalContextTag,
-              );
-              fiber.type = type;
+              fiberTag = ProviderComponent;
               break;
             case REACT_CONSUMER_TYPE:
-              fiber = createFiber(
-                ConsumerComponent,
-                pendingProps,
-                key,
-                internalContextTag,
-              );
-              fiber.type = type;
+              fiberTag = ConsumerComponent;
               break;
             default:
               if (typeof type.tag === 'number') {
                 // Currently assumed to be a continuation and therefore is a
                 // fiber already.
-                // TODO: The yield system is currently broken for updates in some
-                // cases. The reified yield stores a fiber, but we don't know which
-                // fiber that is; the current or a workInProgress? When the
-                // continuation gets rendered here we don't know if we can reuse
-                // that fiber or if we need to clone it. There is probably a clever
-                // way to restructure this.
+                // TODO: The yield system is currently broken for updates in
+                // some cases. The reified yield stores a fiber, but we don't
+                // know which fiber that is; the current or a workInProgress?
+                // When the continuation gets rendered here we don't know if we
+                // can reuse that fiber or if we need to clone it. There is
+                // probably a clever way to restructure this.
                 fiber = ((type: any): Fiber);
                 fiber.pendingProps = pendingProps;
+                fiber.expirationTime = expirationTime;
+                return fiber;
               } else {
                 throwOnInvalidElementType(type, owner);
               }
@@ -415,12 +381,14 @@ export function createFiberFromElement(
     }
   }
 
+  fiber = createFiber(fiberTag, pendingProps, key, internalContextTag);
+  fiber.type = type;
+  fiber.expirationTime = expirationTime;
+
   if (__DEV__) {
     fiber._debugSource = element._source;
     fiber._debugOwner = element._owner;
   }
-
-  fiber.expirationTime = expirationTime;
 
   return fiber;
 }
