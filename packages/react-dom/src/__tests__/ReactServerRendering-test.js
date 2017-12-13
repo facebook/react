@@ -384,6 +384,46 @@ describe('ReactDOMServer', () => {
       expect(markup).toContain('hello, world');
     });
 
+    it('renders with new context API', () => {
+      const Context = React.createContext(0);
+
+      function Provider(props) {
+        return Context.provide(props.value, props.children);
+      }
+
+      function Consumer(props) {
+        return Context.consume(value => {
+          return 'Result: ' + value;
+        });
+      }
+
+      const Indirection = React.Fragment;
+
+      function App(props) {
+        return (
+          <Provider value={props.value}>
+            <Provider value={2}>
+              <Consumer />
+            </Provider>
+            <Indirection>
+              <Indirection>
+                <Consumer />
+                <Provider value={3}>
+                  <Consumer />
+                </Provider>
+              </Indirection>
+            </Indirection>
+            <Consumer />
+          </Provider>
+        );
+      }
+
+      const markup = ReactDOMServer.renderToString(<App value={1} />);
+      // Extract the numbers rendered by the consumers
+      const results = markup.match(/\d+/g).map(Number);
+      expect(results).toEqual([2, 1, 3, 1]);
+    });
+
     it('renders components with different batching strategies', () => {
       class StaticComponent extends React.Component {
         render() {
