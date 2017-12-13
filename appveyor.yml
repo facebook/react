@@ -30,7 +30,7 @@ install:
 test_script:
   - node --version
   - yarn lint
-#  - yarn flow (TODO: investigate why it fails on Windows)
+  - yarn flow
   - yarn build
   - yarn test
 
