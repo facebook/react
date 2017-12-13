@@ -340,7 +340,7 @@ describe('ReactARTComponents', () => {
     return str && str.replace(/\(at .+?:\d+\)/g, '(at **)');
   }
 
-  it('should generate a Shape module with props for drawing the Circle', () => {
+  it('should generate a <Shape> with props for drawing the Circle', () => {
     const circle = renderer.create(
       <Circle radius={10} stroke="green" strokeWidth={3} fill="blue" />,
     );
@@ -360,7 +360,7 @@ describe('ReactARTComponents', () => {
     }
   });
 
-  it('should generate a Shape module with props for drawing the Rectangle', () => {
+  it('should generate a <Shape> with props for drawing the Rectangle', () => {
     const rectangle = renderer.create(
       <Rectangle width={50} height={50} stroke="green" fill="blue" />,
     );
@@ -385,7 +385,7 @@ describe('ReactARTComponents', () => {
     }
   });
 
-  it('should generate a Shape module with props for drawing the Wedge', () => {
+  it('should generate a <Shape> with props for drawing the Wedge', () => {
     const wedge = renderer.create(
       <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
     );
@@ -413,24 +413,5 @@ describe('ReactARTComponents', () => {
           '\n    in Wedge (at **)',
       );
     }
-  });
-
-  it('should turn degrees to radians', () => {
-    const wedgeInstance = renderer
-      .create(
-        <Wedge outerRadius={50} startAngle={0} endAngle={360} fill="blue" />,
-      )
-      .getInstance();
-    expect(wedgeInstance._degreesToRadians(0)).toBe(0);
-    expect(wedgeInstance._degreesToRadians(180)).toBe(3.141592653589793);
-    expect(wedgeInstance._degreesToRadians(720)).toBe(6.283185307179586);
-    expect(wedgeInstance._degreesToRadians(-180)).toBe(-3.141592653589793);
-    // Below are some edge cases we may need to handle in _degreesToRadians or _createArcPath
-    expect(wedgeInstance._degreesToRadians(NaN)).toEqual(NaN);
-    expect(wedgeInstance._degreesToRadians(Infinity)).toEqual(NaN);
-    // prop-types warns below cases in development environment, not production
-    expect(wedgeInstance._degreesToRadians({})).toEqual(NaN);
-    expect(wedgeInstance._degreesToRadians('')).toEqual(6.283185307179586);
-    expect(wedgeInstance._degreesToRadians([])).toEqual(6.283185307179586);
   });
 });
