@@ -392,6 +392,13 @@ describe('ReactARTComponents', () => {
     expect(wedge.toJSON()).toMatchSnapshot();
   });
 
+  it('should return null if startAngle equals to endAngle on Wedge', () => {
+    const wedge = renderer.create(
+      <Wedge outerRadius={50} startAngle={0} endAngle={0} fill="blue" />,
+    );
+    expect(wedge.toJSON()).toBeNull();
+  });
+
   it('should warn if outerRadius/startAngle/endAngle is missing on a Wedge component', () => {
     spyOnDev(console, 'error');
     renderer.create(<Wedge fill="blue" />);

@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ReactARTComponents should generate a Shape module with props for drawing the Circle 1`] = `
+exports[`ReactARTComponents should generate a <Shape> with props for drawing the Circle 1`] = `
 <Shape
   d={
      {
@@ -25,7 +25,7 @@ exports[`ReactARTComponents should generate a Shape module with props for drawin
 />
 `;
 
-exports[`ReactARTComponents should generate a Shape module with props for drawing the Rectangle 1`] = `
+exports[`ReactARTComponents should generate a <Shape> with props for drawing the Rectangle 1`] = `
 <Shape
   d={
      {
@@ -51,7 +51,7 @@ exports[`ReactARTComponents should generate a Shape module with props for drawin
 />
 `;
 
-exports[`ReactARTComponents should generate a Shape module with props for drawing the Wedge 1`] = `
+exports[`ReactARTComponents should generate a <Shape> with props for drawing the Wedge 1`] = `
 <Shape
   d={
      {
