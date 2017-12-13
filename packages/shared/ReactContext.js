@@ -7,7 +7,11 @@
  * @flow
  */
 
-import {REACT_PROVIDER_TYPE, REACT_CONSUMER_TYPE} from 'shared/ReactSymbols';
+import {
+  REACT_PROVIDER_TYPE,
+  REACT_CONSUMER_TYPE,
+  REACT_ELEMENT_TYPE,
+} from 'shared/ReactSymbols';
 
 import type {
   ReactContext,
@@ -17,14 +21,20 @@ import type {
 } from 'shared/ReactTypes';
 
 export function createContext<T>(defaultValue: T): ReactContext<T> {
+  let providerType;
+  let consumerType;
+
   const context = {
     provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T> {
       return {
-        $$typeof: REACT_PROVIDER_TYPE,
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: providerType,
         key: key === null || key === undefined ? null : '' + key,
-        context, // Recursive
-        value,
-        children,
+        ref: null,
+        props: {
+          value,
+          children,
+        },
       };
     },
     consume(
@@ -32,15 +42,28 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
       key?: string,
     ): ReactConsumer<T> {
       return {
-        $$typeof: REACT_CONSUMER_TYPE,
+        $$typeof: REACT_ELEMENT_TYPE,
+        type: consumerType,
         key: key === null || key === undefined ? null : '' + key,
-        context, // Recursive
-        memoizedValue: null,
-        render,
+        ref: null,
+        props: {
+          render,
+          __memoizedValue: null,
+        },
       };
     },
     defaultValue,
     lastProvider: null,
   };
+
+  providerType = {
+    $$typeof: REACT_PROVIDER_TYPE,
+    context,
+  };
+  consumerType = {
+    $$typeof: REACT_CONSUMER_TYPE,
+    context,
+  };
+
   return context;
 }

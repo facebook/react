@@ -7,6 +7,7 @@
  * @flow
  */
 
+import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -586,7 +587,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         updateHostContainer(workInProgress);
         return null;
       case ProviderComponent:
-        const context = workInProgress.type;
+        const providerType: ReactProviderType<any> = workInProgress.type;
+        const context: ReactContext<any> = providerType.context;
         // Pop provider fiber
         const lastProvider = workInProgress.stateNode;
         context.lastProvider = lastProvider;

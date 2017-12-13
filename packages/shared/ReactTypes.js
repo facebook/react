@@ -1,3 +1,5 @@
+import {Symbol} from './node_modules/typescript/lib/typescript';
+
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  *
@@ -49,30 +51,37 @@ export type ReactReturn<V> = {
   },
 };
 
-export type ReactPortal = {
-  $$typeof: Symbol | number,
-  key: null | string,
-  containerInfo: any,
-  children: ReactNodeList,
-  // TODO: figure out the API for cross-renderer implementation.
-  implementation: any,
-};
-
 export type ReactProvider<T> = {
   $$typeof: Symbol | number,
+  type: ReactProviderType<T>,
   key: null | string,
+  ref: null,
+  props: {
+    value: T,
+    children?: ReactNodeList,
+  },
+};
+
+export type ReactProviderType<T> = {
+  $$typeof: Symbol | number,
   context: ReactContext<T>,
-  value: T,
-  children: ReactNodeList,
 };
 
 export type ReactConsumer<T> = {
   $$typeof: Symbol | number,
+  type: ReactConsumerType<T>,
   key: null | string,
+  ref: null,
+  props: {
+    render: (value: T) => ReactNodeList,
+    // TODO: Remove this hack
+    __memoizedValue: T | null,
+  },
+};
+
+export type ReactConsumerType<T> = {
+  $$typeof: Symbol | number,
   context: ReactContext<T>,
-  memoizedValue: T | null,
-  // TODO: ReactCall calls this "handler." Which one should we use?
-  render: (value: T) => ReactNodeList,
 };
 
 export type ReactContext<T> = {
@@ -80,4 +89,13 @@ export type ReactContext<T> = {
   consume(render: (value: T) => ReactNodeList, key?: string): ReactConsumer<T>,
   defaultValue: T,
   lastProvider: any, // Fiber | null
+};
+
+export type ReactPortal = {
+  $$typeof: Symbol | number,
+  key: null | string,
+  containerInfo: any,
+  children: ReactNodeList,
+  // TODO: figure out the API for cross-renderer implementation.
+  implementation: any,
 };

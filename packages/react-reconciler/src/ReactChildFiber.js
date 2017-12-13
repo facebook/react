@@ -8,11 +8,7 @@
  */
 
 import type {ReactElement} from 'shared/ReactElementType';
-import type {
-  ReactPortal,
-  ReactProvider,
-  ReactConsumer,
-} from 'shared/ReactTypes';
+import type {ReactPortal} from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
 import type {ExpirationTime} from 'react-reconciler/src/ReactFiberExpirationTime';
 
@@ -22,8 +18,6 @@ import {
   REACT_ELEMENT_TYPE,
   REACT_FRAGMENT_TYPE,
   REACT_PORTAL_TYPE,
-  REACT_PROVIDER_TYPE,
-  REACT_CONSUMER_TYPE,
 } from 'shared/ReactSymbols';
 import {
   FunctionalComponent,
@@ -31,8 +25,6 @@ import {
   HostText,
   HostPortal,
   Fragment,
-  ProviderComponent,
-  ConsumerComponent,
 } from 'shared/ReactTypeOfWork';
 import emptyObject from 'fbjs/lib/emptyObject';
 import invariant from 'fbjs/lib/invariant';
@@ -44,8 +36,6 @@ import {
   createFiberFromFragment,
   createFiberFromText,
   createFiberFromPortal,
-  createFiberFromProvider,
-  createFiberFromConsumer,
 } from './ReactFiber';
 import ReactDebugCurrentFiber from './ReactDebugCurrentFiber';
 
@@ -423,52 +413,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     }
   }
 
-  function updateProviderComponent(
-    returnFiber: Fiber,
-    current: Fiber | null,
-    provider: ReactProvider<any>,
-    expirationTime: ExpirationTime,
-  ) {
-    if (current !== null && current.type === provider.context) {
-      // Move based on index
-      const existing = useFiber(current, provider, expirationTime);
-      existing.return = returnFiber;
-      return existing;
-    } else {
-      // Insert
-      const created = createFiberFromProvider(
-        provider,
-        returnFiber.internalContextTag,
-        expirationTime,
-      );
-      created.return = returnFiber;
-      return created;
-    }
-  }
-
-  function updateConsumerComponent(
-    returnFiber: Fiber,
-    current: Fiber | null,
-    consumer: ReactConsumer<any>,
-    expirationTime: ExpirationTime,
-  ) {
-    if (current !== null && current.type === consumer.context) {
-      // Move based on index
-      const existing = useFiber(current, consumer, expirationTime);
-      existing.return = returnFiber;
-      return existing;
-    } else {
-      // Insert
-      const created = createFiberFromConsumer(
-        consumer,
-        returnFiber.internalContextTag,
-        expirationTime,
-      );
-      created.return = returnFiber;
-      return created;
-    }
-  }
-
   function createChild(
     returnFiber: Fiber,
     newChild: any,
@@ -501,24 +445,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         }
         case REACT_PORTAL_TYPE: {
           const created = createFiberFromPortal(
-            newChild,
-            returnFiber.internalContextTag,
-            expirationTime,
-          );
-          created.return = returnFiber;
-          return created;
-        }
-        case REACT_PROVIDER_TYPE: {
-          const created = createFiberFromProvider(
-            newChild,
-            returnFiber.internalContextTag,
-            expirationTime,
-          );
-          created.return = returnFiber;
-          return created;
-        }
-        case REACT_CONSUMER_TYPE: {
-          const created = createFiberFromConsumer(
             newChild,
             returnFiber.internalContextTag,
             expirationTime,
@@ -611,30 +537,6 @@ function ChildReconciler(shouldTrackSideEffects) {
             return null;
           }
         }
-        case REACT_PROVIDER_TYPE: {
-          if (newChild.key === key) {
-            return updateProviderComponent(
-              returnFiber,
-              oldFiber,
-              newChild,
-              expirationTime,
-            );
-          } else {
-            return null;
-          }
-        }
-        case REACT_CONSUMER_TYPE: {
-          if (newChild.key === key) {
-            return updateConsumerComponent(
-              returnFiber,
-              oldFiber,
-              newChild,
-              expirationTime,
-            );
-          } else {
-            return null;
-          }
-        }
       }
 
       if (isArray(newChild) || getIteratorFn(newChild)) {
@@ -711,30 +613,6 @@ function ChildReconciler(shouldTrackSideEffects) {
               newChild.key === null ? newIdx : newChild.key,
             ) || null;
           return updatePortal(
-            returnFiber,
-            matchedFiber,
-            newChild,
-            expirationTime,
-          );
-        }
-        case REACT_PROVIDER_TYPE: {
-          const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
-          return updateProviderComponent(
-            returnFiber,
-            matchedFiber,
-            newChild,
-            expirationTime,
-          );
-        }
-        case REACT_CONSUMER_TYPE: {
-          const matchedFiber =
-            existingChildren.get(
-              newChild.key === null ? newIdx : newChild.key,
-            ) || null;
-          return updateConsumerComponent(
             returnFiber,
             matchedFiber,
             newChild,
@@ -1281,78 +1159,6 @@ function ChildReconciler(shouldTrackSideEffects) {
     return created;
   }
 
-  function reconcileSingleProvider(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber | null,
-    provider: ReactProvider<any>,
-    expirationTime: ExpirationTime,
-  ): Fiber {
-    const key = provider.key;
-    let child = currentFirstChild;
-    while (child !== null) {
-      // TODO: If key === null and child.key === null, then this only applies to
-      // the first item in the list.
-      if (child.key === key && child.type === provider.context) {
-        if (child.tag === ProviderComponent) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, provider, expirationTime);
-          existing.return = returnFiber;
-          return existing;
-        } else {
-          deleteRemainingChildren(returnFiber, child);
-          break;
-        }
-      } else {
-        deleteChild(returnFiber, child);
-      }
-      child = child.sibling;
-    }
-
-    const created = createFiberFromProvider(
-      provider,
-      returnFiber.internalContextTag,
-      expirationTime,
-    );
-    created.return = returnFiber;
-    return created;
-  }
-
-  function reconcileSingleConsumer(
-    returnFiber: Fiber,
-    currentFirstChild: Fiber | null,
-    consumer: ReactConsumer<any>,
-    expirationTime: ExpirationTime,
-  ): Fiber {
-    const key = consumer.key;
-    let child = currentFirstChild;
-    while (child !== null) {
-      // TODO: If key === null and child.key === null, then this only applies to
-      // the first item in the list.
-      if (child.key === key && child.type === consumer.context) {
-        if (child.tag === ConsumerComponent) {
-          deleteRemainingChildren(returnFiber, child.sibling);
-          const existing = useFiber(child, consumer, expirationTime);
-          existing.return = returnFiber;
-          return existing;
-        } else {
-          deleteRemainingChildren(returnFiber, child);
-          break;
-        }
-      } else {
-        deleteChild(returnFiber, child);
-      }
-      child = child.sibling;
-    }
-
-    const created = createFiberFromConsumer(
-      consumer,
-      returnFiber.internalContextTag,
-      expirationTime,
-    );
-    created.return = returnFiber;
-    return created;
-  }
-
   // This API will tag the children with the side-effect of the reconciliation
   // itself. They will be added to the side-effect list as we pass through the
   // children and the parent.
@@ -1396,24 +1202,6 @@ function ChildReconciler(shouldTrackSideEffects) {
         case REACT_PORTAL_TYPE:
           return placeSingleChild(
             reconcileSinglePortal(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_PROVIDER_TYPE:
-          return placeSingleChild(
-            reconcileSingleProvider(
-              returnFiber,
-              currentFirstChild,
-              newChild,
-              expirationTime,
-            ),
-          );
-        case REACT_CONSUMER_TYPE:
-          return placeSingleChild(
-            reconcileSingleConsumer(
               returnFiber,
               currentFirstChild,
               newChild,

@@ -9,8 +9,8 @@
 
 import type {HostConfig} from 'react-reconciler';
 import type {
-  ReactProvider,
-  ReactConsumer,
+  ReactProviderType,
+  ReactConsumerType,
   ReactContext,
 } from 'shared/ReactTypes';
 import type {Fiber} from 'react-reconciler/src/ReactFiber';
@@ -663,7 +663,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   }
 
   function pushContextProvider(workInProgress) {
-    const context: ReactContext<any> = workInProgress.type;
+    const context: ReactContext<any> = workInProgress.type.context;
     // Store a reference to the previous provider
     // TODO: Only need to do this on mount
     workInProgress.stateNode = context.lastProvider;
@@ -683,7 +683,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
       switch (fiber.tag) {
         case ConsumerComponent:
           // Check if the context matches.
-          if (fiber.type === context) {
+          if (fiber.type.context === context) {
             // Update the expiration time of all the ancestors, including
             // the alternates.
             let node = fiber;
@@ -762,32 +762,33 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    const context: ReactContext<any> = workInProgress.type;
+    const providerType: ReactProviderType<any> = workInProgress.type;
+    const context: ReactContext<any> = providerType.context;
 
-    const newProvider: ReactProvider<any> = workInProgress.pendingProps;
-    const oldProvider: ReactProvider<any> | null = workInProgress.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    const oldProps = workInProgress.memoizedProps;
 
     pushContextProvider(workInProgress);
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (oldProvider === newProvider) {
+    } else if (oldProps === newProps) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    workInProgress.memoizedProps = newProvider;
+    workInProgress.memoizedProps = newProps;
 
-    const newValue = newProvider.value;
-    const oldValue = oldProvider !== null ? oldProvider.value : null;
+    const newValue = newProps.value;
+    const oldValue = oldProps !== null ? oldProps.value : null;
     // TODO: Use Object.is instead of ===
     if (newValue !== oldValue) {
       propagateContextChange(workInProgress, context, renderExpirationTime);
     }
 
-    if (oldProvider !== null && oldProvider.children === newProvider.children) {
+    if (oldProps !== null && oldProps.children === newProps.children) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-    const newChildren = newProvider.children;
+    const newChildren = newProps.children;
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
   }
@@ -797,10 +798,11 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    const context: ReactContext<any> = workInProgress.type;
+    const consumerType: ReactConsumerType<any> = workInProgress.type;
+    const context: ReactContext<any> = consumerType.context;
 
-    const newConsumer: ReactConsumer<any> = workInProgress.pendingProps;
-    const oldConsumer: ReactConsumer<any> = workInProgress.memoizedProps;
+    const newProps = workInProgress.pendingProps;
+    const oldProps = workInProgress.memoizedProps;
 
     // Get the nearest ancestor provider.
     const providerFiber: Fiber | null = context.lastProvider;
@@ -818,28 +820,32 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
           'a bug in React. Please file an issue.',
       );
       newValue = provider.value;
+
+      // Context change propagation stops at matching consumers, for time-
+      // slicing. Continue the propagation here.
+      if (oldProps === null) {
+        propagateContextChange(workInProgress, context, renderExpirationTime);
+      } else {
+        const oldValue = oldProps !== null ? oldProps.__memoizedValue : null;
+        // TODO: Use Object.is instead of ===
+        if (newValue !== oldValue) {
+          propagateContextChange(workInProgress, context, renderExpirationTime);
+        }
+      }
     }
+
     // The old context value is stored on the consumer object. We can't use the
     // provider's memoizedProps because those have already been updated by the
     // time we get here, in the provider's begin phase.
-    const oldValue = oldConsumer !== null ? oldConsumer.memoizedValue : null;
-    newConsumer.memoizedValue = newValue;
+    newProps.__memoizedValue = newValue;
 
-    // Context change propagation stops at matching consumers, for time-slicing.
-    // Continue the propagation here.
-    // TODO: Use Object.is instead of ===
-    if (newValue !== oldValue) {
-      propagateContextChange(workInProgress, context, renderExpirationTime);
-      // Because the context value has changed, do not bail out, even if the
-      // consumer objects match.
-    } else if (hasLegacyContextChanged()) {
+    if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
       // we don't do the bailout and we have to reuse existing props instead.
-    } else if (newConsumer === oldConsumer) {
+    } else if (newProps === oldProps) {
       return bailoutOnAlreadyFinishedWork(current, workInProgress);
     }
-
-    const newChildren = newConsumer.render(newValue);
+    const newChildren = newProps.render(newValue);
     reconcileChildren(current, workInProgress, newChildren);
     return workInProgress.child;
   }
