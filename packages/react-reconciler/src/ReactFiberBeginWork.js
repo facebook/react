@@ -66,6 +66,7 @@ import {
   pushTopLevelContextObject,
   invalidateContextProvider,
 } from './ReactFiberContext';
+import {pushProvider, getProvider} from './ReactFiberNewContext';
 import {NoWork, Never} from './ReactFiberExpirationTime';
 import {AsyncUpdates} from './ReactTypeOfInternalContext';
 
@@ -663,15 +664,6 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     return workInProgress.child;
   }
 
-  function pushContextProvider(workInProgress) {
-    const context: ReactContext<any> = workInProgress.type.context;
-    // Store a reference to the previous provider
-    // TODO: Only need to do this on mount
-    workInProgress.stateNode = context.lastProvider;
-    // Push this onto the list of providers. We'll pop in the complete phase.
-    context.lastProvider = workInProgress;
-  }
-
   function propagateContextChange<V>(
     workInProgress: Fiber,
     context: ReactContext<V>,
@@ -769,7 +761,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const newProps = workInProgress.pendingProps;
     const oldProps = workInProgress.memoizedProps;
 
-    pushContextProvider(workInProgress);
+    pushProvider(workInProgress);
 
     if (hasLegacyContextChanged()) {
       // Normally we can bail out on props equality but if context has changed
@@ -807,7 +799,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     const oldProps = workInProgress.memoizedProps;
 
     // Get the nearest ancestor provider.
-    const providerFiber: Fiber | null = context.lastProvider;
+    const providerFiber: Fiber | null = getProvider(context);
 
     let newValue;
     let valueDidChange;
@@ -918,7 +910,7 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         );
         break;
       case ProviderComponent:
-        pushContextProvider(workInProgress);
+        pushProvider(workInProgress);
         break;
     }
     // TODO: What if this is currently in progress?

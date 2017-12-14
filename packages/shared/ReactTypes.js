@@ -88,7 +88,6 @@ export type ReactContext<T> = {
   provide(value: T, children: ReactNodeList, key?: string): ReactProvider<T>,
   consume(render: (value: T) => ReactNodeList, key?: string): ReactConsumer<T>,
   defaultValue: T,
-  lastProvider: any, // Fiber | null
 };
 
 export type ReactPortal = {

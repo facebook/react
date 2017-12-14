@@ -53,7 +53,6 @@ export function createContext<T>(defaultValue: T): ReactContext<T> {
       };
     },
     defaultValue,
-    lastProvider: null,
   };
 
   providerType = {

@@ -367,6 +367,59 @@ describe('ReactNewContext', () => {
     expect(ReactNoop.getChildren()).toEqual([span('Result: NaN')]);
   });
 
+  it('context unwinds when interrupted', () => {
+    const Context = React.createContext('Default');
+
+    function Provider(props) {
+      return Context.provide(props.value, props.children);
+    }
+
+    function Consumer(props) {
+      return Context.consume(value => {
+        return <span prop={'Result: ' + value} />;
+      });
+    }
+
+    function BadRender() {
+      throw new Error('Bad render');
+    }
+
+    class ErrorBoundary extends React.Component {
+      state = {error: null};
+      componentDidCatch(error) {
+        this.setState({error});
+      }
+      render() {
+        if (this.state.error) {
+          return null;
+        }
+        return this.props.children;
+      }
+    }
+
+    function App(props) {
+      return (
+        <React.Fragment>
+          <Provider value="Does not unwind">
+            <ErrorBoundary>
+              <Provider value="Unwinds after BadRender throws">
+                <BadRender />
+              </Provider>
+            </ErrorBoundary>
+            <Consumer />
+          </Provider>
+        </React.Fragment>
+      );
+    }
+
+    ReactNoop.render(<App value="A" />);
+    ReactNoop.flush();
+    expect(ReactNoop.getChildren()).toEqual([
+      // The second provider should use the default value. This proves the
+      span('Result: Does not unwind'),
+    ]);
+  });
+
   describe('fuzz test', () => {
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     const contexts = new Map(

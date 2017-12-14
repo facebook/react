@@ -7,7 +7,6 @@
  * @flow
  */
 
-import type {ReactProviderType, ReactContext} from 'shared/ReactTypes';
 import type {HostConfig} from 'react-reconciler';
 import type {Fiber} from './ReactFiber';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
@@ -41,9 +40,10 @@ import invariant from 'fbjs/lib/invariant';
 
 import {reconcileChildFibers} from './ReactChildFiber';
 import {
-  popContextProvider,
-  popTopLevelContextObject,
+  popContextProvider as popLegacyContextProvider,
+  popTopLevelContextObject as popTopLevelLegacyContextObject,
 } from './ReactFiberContext';
+import {popProvider} from './ReactFiberNewContext';
 
 export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
   config: HostConfig<T, P, I, TI, HI, PI, C, CC, CX, PL>,
@@ -404,12 +404,12 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         return null;
       case ClassComponent: {
         // We are leaving this subtree, so pop context if any.
-        popContextProvider(workInProgress);
+        popLegacyContextProvider(workInProgress);
         return null;
       }
       case HostRoot: {
         popHostContainer(workInProgress);
-        popTopLevelContextObject(workInProgress);
+        popTopLevelLegacyContextObject(workInProgress);
         const fiberRoot = (workInProgress.stateNode: FiberRoot);
         if (fiberRoot.pendingContext) {
           fiberRoot.context = fiberRoot.pendingContext;
@@ -587,11 +587,8 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
         updateHostContainer(workInProgress);
         return null;
       case ProviderComponent:
-        const providerType: ReactProviderType<any> = workInProgress.type;
-        const context: ReactContext<any> = providerType.context;
         // Pop provider fiber
-        const lastProvider = workInProgress.stateNode;
-        context.lastProvider = lastProvider;
+        popProvider(workInProgress);
         return null;
       case ConsumerComponent:
         return null;
