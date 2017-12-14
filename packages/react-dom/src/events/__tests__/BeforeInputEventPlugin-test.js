@@ -17,7 +17,9 @@ describe('BeforeInputEventPlugin', () => {
 
   function loadReactDOM(envSimulator) {
     jest.resetModules();
-    !!envSimulator && envSimulator();
+    if (envSimulator) {
+      envSimulator();
+    }
     return require('react-dom');
   }
 
@@ -556,7 +558,7 @@ describe('BeforeInputEventPlugin', () => {
     },
   ];
 
-  const testInputComponent = (env, scenarios) => {
+  const testInputComponent = (env, scenes) => {
     let event;
     let spy;
     ReactDOM = loadReactDOM(env.emulator);
@@ -571,7 +573,7 @@ describe('BeforeInputEventPlugin', () => {
       container,
     );
 
-    scenarios.forEach((s, id) => {
+    scenes.forEach((s, id) => {
       event = null;
       spy = jest.fn();
       s.eventSimulator.apply(null, [node, ...s.eventSimulatorArgs]);
@@ -579,7 +581,7 @@ describe('BeforeInputEventPlugin', () => {
     });
   };
 
-  const testContentEditableComponent = (env, scenarios) => {
+  const testContentEditableComponent = (env, scenes) => {
     let event;
     let spy;
     ReactDOM = loadReactDOM(env.emulator);
@@ -594,7 +596,7 @@ describe('BeforeInputEventPlugin', () => {
       container,
     );
 
-    scenarios.forEach((s, id) => {
+    scenes.forEach((s, id) => {
       event = null;
       spy = jest.fn();
       s.eventSimulator.apply(null, [node, ...s.eventSimulatorArgs]);
