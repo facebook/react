@@ -19,6 +19,7 @@ import type {HydrationContext} from './ReactFiberHydrationContext';
 import type {FiberRoot} from './ReactFiberRoot';
 import type {ExpirationTime} from './ReactFiberExpirationTime';
 
+import {enableNewContextAPI} from 'shared/ReactFeatureFlags';
 import {
   IndeterminateComponent,
   FunctionalComponent,
@@ -669,84 +670,86 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     context: ReactContext<V>,
     renderExpirationTime: ExpirationTime,
   ): void {
-    let fiber = workInProgress.child;
-    while (fiber !== null) {
-      let nextFiber;
-      // Visit this fiber.
-      switch (fiber.tag) {
-        case ConsumerComponent:
-          // Check if the context matches.
-          if (fiber.type.context === context) {
-            // Update the expiration time of all the ancestors, including
-            // the alternates.
-            let node = fiber;
-            while (node !== null) {
-              const alternate = node.alternate;
-              if (
-                node.expirationTime === NoWork ||
-                node.expirationTime > renderExpirationTime
-              ) {
-                node.expirationTime = renderExpirationTime;
+    if (enableNewContextAPI) {
+      let fiber = workInProgress.child;
+      while (fiber !== null) {
+        let nextFiber;
+        // Visit this fiber.
+        switch (fiber.tag) {
+          case ConsumerComponent:
+            // Check if the context matches.
+            if (fiber.type.context === context) {
+              // Update the expiration time of all the ancestors, including
+              // the alternates.
+              let node = fiber;
+              while (node !== null) {
+                const alternate = node.alternate;
                 if (
+                  node.expirationTime === NoWork ||
+                  node.expirationTime > renderExpirationTime
+                ) {
+                  node.expirationTime = renderExpirationTime;
+                  if (
+                    alternate !== null &&
+                    (alternate.expirationTime === NoWork ||
+                      alternate.expirationTime > renderExpirationTime)
+                  ) {
+                    alternate.expirationTime = renderExpirationTime;
+                  }
+                } else if (
                   alternate !== null &&
                   (alternate.expirationTime === NoWork ||
                     alternate.expirationTime > renderExpirationTime)
                 ) {
                   alternate.expirationTime = renderExpirationTime;
+                } else {
+                  // Neither alternate was updated, which means the rest of the
+                  // ancestor path already has sufficient priority.
+                  break;
                 }
-              } else if (
-                alternate !== null &&
-                (alternate.expirationTime === NoWork ||
-                  alternate.expirationTime > renderExpirationTime)
-              ) {
-                alternate.expirationTime = renderExpirationTime;
-              } else {
-                // Neither alternate was updated, which means the rest of the
-                // ancestor path already has sufficient priority.
-                break;
+                node = node.return;
               }
-              node = node.return;
+              // Don't scan deeper than a matching consumer. When we render the
+              // consumer, we'll continue scanning from that point. This way the
+              // scanning work is time-sliced.
+              nextFiber = null;
+            } else {
+              // Traverse down.
+              nextFiber = fiber.child;
             }
-            // Don't scan deeper than a matching consumer. When we render the
-            // consumer, we'll continue scanning from that point. This way the
-            // scanning work is time-sliced.
-            nextFiber = null;
-          } else {
+            break;
+          case ProviderComponent:
+            // Don't scan deeper if this is a matching provider
+            nextFiber = fiber.type === context ? null : fiber.child;
+            break;
+          default:
             // Traverse down.
             nextFiber = fiber.child;
-          }
-          break;
-        case ProviderComponent:
-          // Don't scan deeper if this is a matching provider
-          nextFiber = fiber.type === context ? null : fiber.child;
-          break;
-        default:
-          // Traverse down.
-          nextFiber = fiber.child;
-          break;
-      }
-      if (nextFiber !== null) {
-        // Set the return pointer of the child to the work-in-progress fiber.
-        nextFiber.return = fiber;
-      } else {
-        // No child. Traverse to next sibling.
-        nextFiber = fiber;
-        while (nextFiber !== null) {
-          if (nextFiber === workInProgress) {
-            // We're back to the root of this subtree. Exit.
-            nextFiber = null;
             break;
-          }
-          let sibling = nextFiber.sibling;
-          if (sibling !== null) {
-            nextFiber = sibling;
-            break;
-          }
-          // No more siblings. Traverse up.
-          nextFiber = nextFiber.return;
         }
+        if (nextFiber !== null) {
+          // Set the return pointer of the child to the work-in-progress fiber.
+          nextFiber.return = fiber;
+        } else {
+          // No child. Traverse to next sibling.
+          nextFiber = fiber;
+          while (nextFiber !== null) {
+            if (nextFiber === workInProgress) {
+              // We're back to the root of this subtree. Exit.
+              nextFiber = null;
+              break;
+            }
+            let sibling = nextFiber.sibling;
+            if (sibling !== null) {
+              nextFiber = sibling;
+              break;
+            }
+            // No more siblings. Traverse up.
+            nextFiber = nextFiber.return;
+          }
+        }
+        fiber = nextFiber;
       }
-      fiber = nextFiber;
     }
   }
 
@@ -755,36 +758,40 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    const providerType: ReactProviderType<any> = workInProgress.type;
-    const context: ReactContext<any> = providerType.context;
+    if (enableNewContextAPI) {
+      const providerType: ReactProviderType<any> = workInProgress.type;
+      const context: ReactContext<any> = providerType.context;
 
-    const newProps = workInProgress.pendingProps;
-    const oldProps = workInProgress.memoizedProps;
+      const newProps = workInProgress.pendingProps;
+      const oldProps = workInProgress.memoizedProps;
 
-    pushProvider(workInProgress);
+      pushProvider(workInProgress);
 
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (oldProps === newProps) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      if (hasLegacyContextChanged()) {
+        // Normally we can bail out on props equality but if context has changed
+        // we don't do the bailout and we have to reuse existing props instead.
+      } else if (oldProps === newProps) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      workInProgress.memoizedProps = newProps;
+
+      const newValue = newProps.value;
+      const oldValue = oldProps !== null ? oldProps.value : null;
+
+      // Use Object.is to compare the new context value to the old value.
+      if (!is(newValue, oldValue)) {
+        propagateContextChange(workInProgress, context, renderExpirationTime);
+      }
+
+      if (oldProps !== null && oldProps.children === newProps.children) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      const newChildren = newProps.children;
+      reconcileChildren(current, workInProgress, newChildren);
+      return workInProgress.child;
+    } else {
+      return null;
     }
-    workInProgress.memoizedProps = newProps;
-
-    const newValue = newProps.value;
-    const oldValue = oldProps !== null ? oldProps.value : null;
-
-    // Use Object.is to compare the new context value to the old value.
-    if (!is(newValue, oldValue)) {
-      propagateContextChange(workInProgress, context, renderExpirationTime);
-    }
-
-    if (oldProps !== null && oldProps.children === newProps.children) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
-    }
-    const newChildren = newProps.children;
-    reconcileChildren(current, workInProgress, newChildren);
-    return workInProgress.child;
   }
 
   function updateConsumerComponent(
@@ -792,60 +799,68 @@ export default function<T, P, I, TI, HI, PI, C, CC, CX, PL>(
     workInProgress,
     renderExpirationTime,
   ) {
-    const consumerType: ReactConsumerType<any> = workInProgress.type;
-    const context: ReactContext<any> = consumerType.context;
+    if (enableNewContextAPI) {
+      const consumerType: ReactConsumerType<any> = workInProgress.type;
+      const context: ReactContext<any> = consumerType.context;
 
-    const newProps = workInProgress.pendingProps;
-    const oldProps = workInProgress.memoizedProps;
+      const newProps = workInProgress.pendingProps;
+      const oldProps = workInProgress.memoizedProps;
 
-    // Get the nearest ancestor provider.
-    const providerFiber: Fiber | null = getProvider(context);
+      // Get the nearest ancestor provider.
+      const providerFiber: Fiber | null = getProvider(context);
 
-    let newValue;
-    let valueDidChange;
-    if (providerFiber === null) {
-      // This is a detached consumer (has no provider). Use the default
-      // context value.
-      newValue = context.defaultValue;
-      valueDidChange = false;
-    } else {
-      const provider = providerFiber.pendingProps;
-      invariant(
-        provider,
-        'Provider should have pending props. This error is likely caused by ' +
-          'a bug in React. Please file an issue.',
-      );
-      newValue = provider.value;
-
-      // Context change propagation stops at matching consumers, for time-
-      // slicing. Continue the propagation here.
-      if (oldProps === null) {
-        valueDidChange = true;
-        propagateContextChange(workInProgress, context, renderExpirationTime);
+      let newValue;
+      let valueDidChange;
+      if (providerFiber === null) {
+        // This is a detached consumer (has no provider). Use the default
+        // context value.
+        newValue = context.defaultValue;
+        valueDidChange = false;
       } else {
-        const oldValue = oldProps !== null ? oldProps.__memoizedValue : null;
-        // Use Object.is to compare the new context value to the old value.
-        if (!is(newValue, oldValue)) {
+        const provider = providerFiber.pendingProps;
+        invariant(
+          provider,
+          'Provider should have pending props. This error is likely caused by ' +
+            'a bug in React. Please file an issue.',
+        );
+        newValue = provider.value;
+
+        // Context change propagation stops at matching consumers, for time-
+        // slicing. Continue the propagation here.
+        if (oldProps === null) {
           valueDidChange = true;
           propagateContextChange(workInProgress, context, renderExpirationTime);
+        } else {
+          const oldValue = oldProps !== null ? oldProps.__memoizedValue : null;
+          // Use Object.is to compare the new context value to the old value.
+          if (!is(newValue, oldValue)) {
+            valueDidChange = true;
+            propagateContextChange(
+              workInProgress,
+              context,
+              renderExpirationTime,
+            );
+          }
         }
       }
-    }
 
-    // The old context value is stored on the consumer object. We can't use the
-    // provider's memoizedProps because those have already been updated by the
-    // time we get here, in the provider's begin phase.
-    newProps.__memoizedValue = newValue;
+      // The old context value is stored on the consumer object. We can't use the
+      // provider's memoizedProps because those have already been updated by the
+      // time we get here, in the provider's begin phase.
+      newProps.__memoizedValue = newValue;
 
-    if (hasLegacyContextChanged()) {
-      // Normally we can bail out on props equality but if context has changed
-      // we don't do the bailout and we have to reuse existing props instead.
-    } else if (newProps === oldProps && !valueDidChange) {
-      return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      if (hasLegacyContextChanged()) {
+        // Normally we can bail out on props equality but if context has changed
+        // we don't do the bailout and we have to reuse existing props instead.
+      } else if (newProps === oldProps && !valueDidChange) {
+        return bailoutOnAlreadyFinishedWork(current, workInProgress);
+      }
+      const newChildren = newProps.render(newValue);
+      reconcileChildren(current, workInProgress, newChildren);
+      return workInProgress.child;
+    } else {
+      return null;
     }
-    const newChildren = newProps.render(newValue);
-    reconcileChildren(current, workInProgress, newChildren);
-    return workInProgress.child;
   }
 
   /*

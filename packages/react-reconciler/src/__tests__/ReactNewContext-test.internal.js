@@ -9,6 +9,9 @@
 
 'use strict';
 
+let ReactFeatureFlags = require('shared/ReactFeatureFlags');
+ReactFeatureFlags.enableNewContextAPI = true;
+
 let React = require('react');
 let ReactNoop;
 let gen;
@@ -16,6 +19,8 @@ let gen;
 describe('ReactNewContext', () => {
   beforeEach(() => {
     jest.resetModules();
+    ReactFeatureFlags = require('shared/ReactFeatureFlags');
+    ReactFeatureFlags.enableNewContextAPI = true;
     React = require('react');
     ReactNoop = require('react-noop-renderer');
     gen = require('random-seed');
@@ -31,7 +36,7 @@ describe('ReactNewContext', () => {
   }
 
   it('simple mount and update', () => {
-    const Context = React.createContext(1);
+    const Context = React.unstable_createContext(1);
 
     function Provider(props) {
       return Context.provide(props.value, props.children);
@@ -68,7 +73,7 @@ describe('ReactNewContext', () => {
   });
 
   it('propagates through shouldComponentUpdate false', () => {
-    const Context = React.createContext(1);
+    const Context = React.unstable_createContext(1);
 
     function Provider(props) {
       ReactNoop.yield('Provider');
@@ -128,7 +133,7 @@ describe('ReactNewContext', () => {
   });
 
   it('consumers bail out if context value is the same', () => {
-    const Context = React.createContext(1);
+    const Context = React.unstable_createContext(1);
 
     function Provider(props) {
       ReactNoop.yield('Provider');
@@ -188,7 +193,7 @@ describe('ReactNewContext', () => {
   });
 
   it('nested providers', () => {
-    const Context = React.createContext(1);
+    const Context = React.unstable_createContext(1);
 
     function Provider(props) {
       return Context.consume(contextValue =>
@@ -241,7 +246,7 @@ describe('ReactNewContext', () => {
   });
 
   it('multiple consumers in different branches', () => {
-    const Context = React.createContext(1);
+    const Context = React.unstable_createContext(1);
 
     function Provider(props) {
       return Context.consume(contextValue =>
@@ -307,7 +312,7 @@ describe('ReactNewContext', () => {
   });
 
   it('compares context values with Object.is semantics', () => {
-    const Context = React.createContext(1);
+    const Context = React.unstable_createContext(1);
 
     function Provider(props) {
       ReactNoop.yield('Provider');
@@ -368,7 +373,7 @@ describe('ReactNewContext', () => {
   });
 
   it('context unwinds when interrupted', () => {
-    const Context = React.createContext('Default');
+    const Context = React.unstable_createContext('Default');
 
     function Provider(props) {
       return Context.provide(props.value, props.children);
@@ -424,7 +429,7 @@ describe('ReactNewContext', () => {
     const contextKeys = ['A', 'B', 'C', 'D', 'E', 'F', 'G'];
     const contexts = new Map(
       contextKeys.map(key => {
-        const Context = React.createContext(0);
+        const Context = React.unstable_createContext(0);
         Context.displayName = 'Context' + key;
         return [key, Context];
       }),

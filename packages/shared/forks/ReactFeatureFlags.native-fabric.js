@@ -17,6 +17,7 @@ export const enableAsyncSubtreeAPI = true;
 export const enableCreateRoot = false;
 export const enableUserTimingAPI = __DEV__;
 export const warnAboutDeprecatedLifecycles = false;
+export const enableNewContextAPI = false;
 
 // React Fabric uses persistent reconciler.
 export const enableMutatingReconciler = false;
