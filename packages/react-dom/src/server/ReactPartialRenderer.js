@@ -124,33 +124,6 @@ if (__DEV__) {
   };
 }
 
-// Context (new API)
-let providerStack: Array<ReactProvider<any>> = []; // Stack of provider objects
-let index = -1;
-
-export function pushProvider<T>(provider: ReactProvider<T>): void {
-  index += 1;
-  providerStack[index] = provider;
-  const context: ReactContext<any> = provider.type.context;
-  context.currentProvider = provider;
-}
-
-export function popProvider<T>(provider: ReactProvider<T>): void {
-  if (__DEV__) {
-    warning(index > -1 && provider === providerStack[index], 'Unexpected pop.');
-  }
-  // $FlowFixMe - Intentionally unsound
-  providerStack[index] = null;
-  index -= 1;
-  const context: ReactContext<any> = provider.type.context;
-  if (index < 0) {
-    context.currentProvider = null;
-  } else {
-    const previousProvider = providerStack[index];
-    context.currentProvider = previousProvider;
-  }
-}
-
 let didWarnDefaultInputValue = false;
 let didWarnDefaultChecked = false;
 let didWarnDefaultSelectValue = false;
@@ -657,6 +630,9 @@ class ReactDOMServerRenderer {
   previousWasTextNode: boolean;
   makeStaticMarkup: boolean;
 
+  providerStack: Array<ReactProvider<any>>;
+  providerIndex: number;
+
   constructor(children: mixed, makeStaticMarkup: boolean) {
     const flatChildren = flattenTopLevelChildren(children);
 
@@ -678,6 +654,37 @@ class ReactDOMServerRenderer {
     this.currentSelectValue = null;
     this.previousWasTextNode = false;
     this.makeStaticMarkup = makeStaticMarkup;
+
+    // Context (new API)
+    this.providerStack = []; // Stack of provider objects
+    this.providerIndex = -1;
+  }
+
+  pushProvider<T>(provider: ReactProvider<T>): void {
+    this.providerIndex += 1;
+    this.providerStack[this.providerIndex] = provider;
+    const context: ReactContext<any> = provider.type.context;
+    context.currentProvider = provider;
+  }
+
+  popProvider<T>(provider: ReactProvider<T>): void {
+    if (__DEV__) {
+      warning(
+        this.providerIndex > -1 &&
+          provider === this.providerStack[this.providerIndex],
+        'Unexpected pop.',
+      );
+    }
+    // $FlowFixMe - Intentionally unsound
+    this.providerStack[this.providerIndex] = null;
+    this.providerIndex -= 1;
+    const context: ReactContext<any> = provider.type.context;
+    if (this.providerIndex < 0) {
+      context.currentProvider = null;
+    } else {
+      const previousProvider = this.providerStack[this.providerIndex];
+      context.currentProvider = previousProvider;
+    }
   }
 
   read(bytes: number): string | null {
@@ -707,7 +714,7 @@ class ReactDOMServerRenderer {
           frame.type.type.$$typeof === REACT_PROVIDER_TYPE
         ) {
           const provider: ReactProvider<any> = (frame.type: any);
-          popProvider(provider);
+          this.popProvider(provider);
         }
         continue;
       }
@@ -835,7 +842,7 @@ class ReactDOMServerRenderer {
               ((frame: any): FrameDev).debugElementStack = [];
             }
 
-            pushProvider(provider);
+            this.pushProvider(provider);
 
             this.stack.push(frame);
             return '';
